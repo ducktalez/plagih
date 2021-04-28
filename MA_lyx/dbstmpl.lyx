@@ -148,9 +148,9 @@ In this thesis, a novel technique to create interpretable reinforcement
  learning policies is introduced.
  From an interpretability perspective, it is advantageous if solutions resemble
  known and familiar strategies.
- Therefore, we propose to use genetic programming to enhance a previously
- developed domain expert strategy, by elaborating essential algorithmic
- and structural improvements, instead of starting from scratch.
+ Therefore, we propose to use genetic programming to elaborate essential
+ algorithmic improvements to a domain expert's strategy instead of starting
+ from scratch.
  To achieve this, the tree edit distance between the program's computation
  tree and a genetic improvement is calculated and used as a complexity metric.
  Additionally, the option to select a fixed core in the expert program is
@@ -161,26 +161,84 @@ In this thesis, a novel technique to create interpretable reinforcement
 The approach is tested on the mountain car and industrial benchmark by performin
 g a symbolic regression on transition samples that were collected by black
  box agents.
- The tests include over 100 combinations of agents, policies and other aspects,
- which are compared to regular runs.
  
 \end_layout
 
 \begin_layout Abstract
-The evaluation shows that the familiarity paradigm has no disadvantages
- compared to regular GP, but is easier to interpret.
- Problems with very small programs, in which a few edits can have fundamental
- effects, can be solved by using fixed core structures.
- The black box agent of the industrial benchmark could not be sufficiently
- approximated, yet familiar candidates with equivalent performance are found.
+=
 \end_layout
 
 \begin_layout Abstract
+The evaluation shows that familiarity can be preserved in GP candidates
+ with no performance drawbacks compared to regular GP.
+ 
+\end_layout
+
+\begin_layout Abstract
+1.
+ TED führt allgemein zum Erhalt familiärer Strukturen
+\end_layout
+
+\begin_layout Abstract
+2.
+ Problems with very small programs, in which a few edits can have fundamental
+ effects, can be solved by using fixed core structures.
+ 
+\end_layout
+
+\begin_layout Abstract
+- no performance drawback compared to regular GP
+\end_layout
+
+\begin_layout Abstract
+- better interpretability, pareto candidates
+\end_layout
+
+\begin_layout Abstract
+- opportunities for GP, interpretability, thriving a GP process
+\end_layout
+
+\begin_layout Abstract
+=
+\end_layout
+
+\begin_layout Abstract
+Die Auswertung hat gezeigt, dass die TED die Baumstruktur Strategie eindeutig
+ von regulären resultaten unterscheiden, ohne negative Auswirkungen auf
+ die Performance zu haben.
+ Problems with very small programs, in which a few edits can have fundamental
+ effects, can be solved by using fixed core structures.
+ Durch die Vorgabe Experten auch leichter zu interpretieren sind.
+ 
+\end_layout
+
+\begin_layout Abstract
+=
+\end_layout
+
+\begin_layout Abstract
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+xxx
+\end_layout
+
+\begin_layout Plain Layout
 Further constraints on the search space (e.g., fixed nodes, limited set of
  operators, action space constraint) do not significantly restrict offline
  performance, but even induce comparatively good online performance.
  Therefore, the presented approach offers many possibilities, both for genetic
  programming and as a way to find more easily interpretable policies.
+\end_layout
+
+\begin_layout Plain Layout
+=
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -12220,26 +12278,29 @@ name "sec:summary"
 status open
 
 \begin_layout Plain Layout
-In this thesis, a novel technique to create familiar reinforcement learning
- policies was proposed by extending an expert program with genetic programming
- to function like a black box policy.
+In this thesis, familiarity was introduced as concept for a novel approach
+ to create interpretable RL policies based on prior known expert strategies.
  
 \end_layout
 
 \begin_layout Plain Layout
-Domain experts programs represent the best human effort to solve a problem
- and are thus a anchor point for interpretability and trust.
+We considered a RL problem where an autonomous agent outperformed a domain
+ expert as explainability gap.
 \end_layout
 
 \begin_layout Plain Layout
-This approach was implemented in three steps.
- First, a previously developed strategy must be represented as computational
- tree.
- Second, transition samples tree edit distance using the edit distance to
- the familiar solution as complexity metric in a GP process.
- Additionally, a fixed core can be selected manually to further protect
- familiar structures in programs.
- 
+This approach requires two prerequisites; a familiar expert program, represented
+ as computational tree, and transition samples , which provides transition
+ samples for a symbolic regression.
+ , which is represented as computational tree Familiarity is mainly preserved
+ by using the tree edit distance to the expert program as complexity metric,
+ but can also explicitly protected by manually selecting a fixed core structure.
+ We proposed to extend the familiar program with genetic programming to
+ explain what the black box strategy has in advance.
+\end_layout
+
+\begin_layout Plain Layout
+xxx
 \end_layout
 
 \end_inset
@@ -12248,21 +12309,20 @@ This approach was implemented in three steps.
 \end_layout
 
 \begin_layout Standard
-In this thesis, familiarity was introduced as concept for a novel method
+In this thesis, familiarity was introduced as concept for a novel approach
  to create interpretable RL policies based on prior known expert strategies.
  
 \end_layout
 
 \begin_layout Standard
-Domain experts programs represent an anchor point for interpretability and
- trust, which are extended with genetic programming to function like a black
- box policy.
- This is achieved by using the edit distance to the origin program as complexity
- criterion in a genetic programming process.
- Additionally, the user can select fixed nodes to explicitly protect tree
- structures.
- Familiar candidates are then created by performing a symbolic regression
- on pre-collected black box transition samples.
+Domain experts programs were extended with genetic programming to function
+ like a black box policy.
+ This was achieved by using the edit distance to the origin program as complexit
+y metric in a genetic programming process.
+ In addition, the user can explicitly protect the core structure of the
+ tree by selecting fixed nodes.
+ Familiar candidates are created by performing a symbolic regression on
+ pre-collected black box transition samples.
 \end_layout
 
 \begin_layout Standard
@@ -12271,18 +12331,27 @@ The approach was evaluated on the mountain car and the industrial benchmark,
 ons.
  For all runs, several candidates were found in which the respective expert
  strategies were clearly recognizable.
- Selecting a fixed core allows a very specific protection of structures,
- which showed great effect especially in simple programs.
- Compared to regular runs, no negative effect on the regression error was
- observed.
- However, the specifications led to a more homogeneous Pareto front, which
- facilitated a direct comparison of the candidates and resulted in fewer
- negative outliers in the online performance.
+ 
 \end_layout
 
 \begin_layout Standard
-The proposed methods to create familiar RL policies have shown to enhance
- interpretability without sacrificing performance.
+xx the ted! xxx
+\end_layout
+
+\begin_layout Standard
+Selecting a fixed core allows a very specific protection of structures,
+ which showed great effect especially in simple programs.
+ Compared to regular runs, no negative effect on the regression error was
+ observed.
+ The interpretability increased as the expert strategy provided an anchor
+ point for interpretability and also led to a more homogeneous Pareto front,
+ which facilitated a direct comparison of the candidates.
+ 
+\end_layout
+
+\begin_layout Standard
+In summary, the proposed methods to create familiar RL policies have shown
+ to enhance interpretability without sacrificing performance.
  In addition, opportunities arise through guiding the optimization by targeted
  preservation of relevant structures to efficiently create strategies that
  are relatively complex.

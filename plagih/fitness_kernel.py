@@ -275,12 +275,18 @@ class MatchKernel(GPKernel):
         super().__init__(*args)
 
     def fitness_compare(self, fitness1, fitness2):
+        """
+
+        """
         if fitness2 is None:
             return True
         else:
             return fitness1 > fitness2
 
     def best_fitness_function(self, *args, **kwargs):
+        """
+
+        """
         return max(*args, **kwargs)
 
     def tf_get_pairwise_fitness(self, solution, kernel_result):

@@ -1,10 +1,15 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
 \origin unavailable
 \textclass article
+\begin_preamble
+% Added by lyx2lyx
+\renewcommand{\textendash}{--}
+\renewcommand{\textemdash}{---}
+\end_preamble
 \use_default_options true
 \begin_modules
 theorems-ams-bytype
@@ -24,8 +29,6 @@ theorems-ams-bytype
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype false
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -55,7 +58,6 @@ theorems-ams-bytype
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -64,10 +66,7 @@ theorems-ams-bytype
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -2481,6 +2480,150 @@ Hier muss ich wiedersprechen.
 \end_layout
 
 \begin_layout Section
+Die Universumssimulation v2
+\end_layout
+
+\begin_layout Standard
+ML erreicht so gute Ergebnisse, weil der Mensch seinen Einfluss wegnimmt
+ und es der Maschine überlässt, eine Lösung zu finden.
+ Statt dem Programm wird nur die Netzarchitektur vorgegeben, beim RL kann
+ ein Agent langfristig planen - noch weniger zu definieren wird schwer,
+ obwohl es bereits versucht wird (Bilderkennung ohne Filter, Curiosity driven
+ learning, ...).
+ Aber der menschliche Einfluss bleibt trotzdem vorhanden.
+\end_layout
+
+\begin_layout Standard
+Ist es möglich ein System zu definieren, das keinen menschlichen Einfluss
+ hat?
+\end_layout
+
+\begin_layout Standard
+Dafürbrauchen wir:
+\end_layout
+
+\begin_layout Itemize
+Ein Raum für Informationen [Bits 0, 1]
+\end_layout
+
+\begin_layout Itemize
+Ein sich nicht wiederholendes Muster [Primzahlen als initialwerte]
+\end_layout
+
+\begin_layout Itemize
+Global logische Abläufe [Gravitationskraft, Wirkung alles atome aufeinander]
+\end_layout
+
+\begin_layout Itemize
+Zeit: Auseinander folgende, logische Zustände
+\end_layout
+
+\begin_layout Itemize
+Visualisierung: Licht/Photonen/Farben [zweiter Raum]
+\end_layout
+
+\begin_layout Subsection
+Der mit der schnellen Lösung
+\end_layout
+
+\begin_layout Standard
+Als schnelle Lösung wird vorgeschlagen, die Physikalische Welt mit all seinen
+ Eigenschaften zu implementieren.
+ Quasi die gesamte Welt in einer realen Physics engine.
+ Aber auch wieder nein; viel zu viele Vorgaben.
+ Wir müssen noch weiter vorne, an der Essenz der Existenz ansetzen.
+\end_layout
+
+\begin_layout Subsection
+Die Existenz
+\end_layout
+
+\begin_layout Standard
+Wo fangen wir dann an, wenn wir nichts, wirklich nichts annehmen wollen?
+ Bzw.
+ das absolute Minimum?
+\end_layout
+
+\begin_layout Standard
+Nichts wäre eine logische Lösung, reicht aber nicht.
+\end_layout
+
+\begin_layout Standard
+Damit etwas existiert, muss seiner Existenz eine Bedeutung zugewiesen werden;
+ soll bedeuten: Die Existenz fällt in unserer Simulation auf, weil auch
+ die Option bestanden hätte, dass etwas nicht existiert.
+ Damit das bit 
+\begin_inset Quotes eld
+\end_inset
+
+1
+\begin_inset Quotes erd
+\end_inset
+
+ existieren kann muss die Option da sein, dass dieses Bit auch 0 sein könnte.
+ Bits sind zwar eine sehr technische implementierung, aber die Theorie ist
+ dieselbe: Es muss zuerst den Raum geben um Informationen darzustellen um
+ Informationen darzustellen.
+ 
+\end_layout
+
+\begin_layout Standard
+Wären auch drei Zustände möglich oder sinnvoll? Also, vielleicht eine weitere
+ Unterscheidung in 
+\begin_inset Quotes eld
+\end_inset
+
+existiert
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+existeirt nicht
+\begin_inset Quotes erd
+\end_inset
+
+ und 
+\begin_inset Quotes eld
+\end_inset
+
+Gegenteil existiert
+\begin_inset Quotes erd
+\end_inset
+
+? Mag sein, kann ich mir aber nicht vorstellen.
+ Zwei reicht aus.
+\end_layout
+
+\begin_layout Standard
+Zufall kann nicht existieren
+\end_layout
+
+\begin_layout Subsection
+Zufall und Logik, Raum und Zeit
+\end_layout
+
+\begin_layout Standard
+Dieser philosophische Ansatz darf eigentlich nicht von uns beeinflusst werden.
+ Alles muss irgendwie logisch ablaufen, ohne das wir vorgaben machen.
+ Also: Setzen wir einfach zufällig bits? Also whitenoise?
+\end_layout
+
+\begin_layout Subsection
+Der Philosoph
+\end_layout
+
+\begin_layout Subsection
+Der Techniker
+\end_layout
+
+\begin_layout Subsection
+Der Anwender
+\end_layout
+
+\begin_layout Section
 Echte Lösung des Touring tests: Lasst uns eine unglaubliche Simulation starten.
 \end_layout
 
@@ -2663,6 +2806,10 @@ realen
 Zugegeben, ein komisches Universum, das nur auf Bilderkennung basiert.
  Wie sollte die Simulation am besten aussehen, damit sie sich von alleine
  entwickelt?
+\end_layout
+
+\begin_layout Subsubsection
+Technische Umsetzung
 \end_layout
 
 \begin_layout Standard
@@ -3143,10 +3290,6 @@ Minecraft als engine?
 \begin_layout Standard
 Doch wie erwähnt kann man sehr viele Dinge erlernen.
  Aber wie sollte das ohne externes Rewardsystem gehen?
-\end_layout
-
-\begin_layout Standard
-Die Lösung liegt in einer
 \end_layout
 
 \begin_layout Standard

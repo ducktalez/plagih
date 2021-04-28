@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -13,6 +13,8 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -33,8 +35,6 @@ fix-cm
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -76,7 +76,6 @@ fix-cm
 \suppress_date false
 \justification false
 \use_refstyle 0
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -86,10 +85,7 @@ fix-cm
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -343,7 +339,6 @@ emph{explainable artificial intelligence} (XAI)
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -359,7 +354,6 @@ right to explanation
 \begin_inset CommandInset citation
 LatexCommand cite
 key "EUdataregulations2018"
-literal "true"
 
 \end_inset
 
@@ -368,7 +362,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -392,7 +385,6 @@ dable terms to humans
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
-literal "true"
 
 \end_inset
 
@@ -402,7 +394,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-perturbation"
-literal "true"
 
 \end_inset
 
@@ -411,7 +402,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-LIME"
-literal "true"
 
 \end_inset
 
@@ -434,7 +424,6 @@ emph{Layerwise Relevance Propagation}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
-literal "true"
 
 \end_inset
 
@@ -472,7 +461,6 @@ In this work, a novel technique is presented that extends a previously developed
 \begin_inset CommandInset citation
 LatexCommand cite
 key "fehrer_hein_tokic_udluft_2020"
-literal "true"
 
 \end_inset
 
@@ -711,7 +699,6 @@ Reinforcement Learning: An Introduction
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Sutton-Barto-reinforcement-1998"
-literal "true"
 
 \end_inset
 
@@ -761,7 +748,6 @@ ntly from real system
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -786,7 +772,6 @@ In contrast to performance, interpretability has many manifestations and
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
-literal "true"
 
 \end_inset
 
@@ -827,7 +812,6 @@ In this thesis, we deal with RL problems, which are incomplete as they are
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
-literal "true"
 
 \end_inset
 
@@ -863,7 +847,6 @@ reference "sec:Genetic-Programming"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
-literal "true"
 
 \end_inset
 
@@ -1009,7 +992,6 @@ emph{Genetic programming}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_patent_1990"
-literal "true"
 
 \end_inset
 
@@ -1109,7 +1091,6 @@ The selection process is often implemented as tournament, where the fittest
 \begin_inset CommandInset citation
 LatexCommand cite
 key "gp-tournament-selection"
-literal "true"
 
 \end_inset
 
@@ -1782,7 +1763,6 @@ emph{closure}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -1886,7 +1866,6 @@ emph{ramped half-n-half}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "gp-half-ramped"
-literal "true"
 
 \end_inset
 
@@ -2387,7 +2366,6 @@ Industrial control strategies feature many peculiarities which can now be
 \begin_inset CommandInset citation
 LatexCommand cite
 key "siemens-gas-turbine-rl-nn"
-literal "true"
 
 \end_inset
 
@@ -2395,7 +2373,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft,siemens-rl-stochastic-bayesian-nn"
-literal "true"
 
 \end_inset
 
@@ -2410,7 +2387,6 @@ able policies.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -2421,7 +2397,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
-literal "true"
 
 \end_inset
 
@@ -2433,7 +2408,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -2449,7 +2423,6 @@ Despite their simplicity, the generated formulas are often hardly comprehensible
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tresp_prior_knowledge"
-literal "true"
 
 \end_inset
 
@@ -2460,7 +2433,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "residual-dynamic-learning"
-literal "true"
 
 \end_inset
 
@@ -2810,7 +2782,6 @@ reference "fig:TED_edits"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -2821,7 +2792,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -2929,7 +2899,6 @@ For this work, a genetic programming framework was developed with particular
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -2941,7 +2910,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -3301,7 +3269,6 @@ The TED is calculated both a robustly and efficiently with APTED
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -3693,7 +3660,6 @@ First, the expression is extracted and unified using SymPy
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -4554,7 +4520,6 @@ reference "sec:Industrial-benchmark"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -4833,7 +4798,6 @@ In the mountain car problem, a car is supposed to drive up a mountain that
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -5433,7 +5397,6 @@ status open
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -5459,7 +5422,6 @@ $-103.41$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -6526,7 +6488,6 @@ The industrial benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -6592,7 +6553,6 @@ $5353$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
-literal "true"
 
 \end_inset
 
@@ -6605,7 +6565,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -6657,9 +6616,6 @@ The data for the symbolic regression are generated online, on the benchmark,
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "tab:The-generated-data"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -9175,7 +9131,6 @@ reference "fig:xiao-origin-plot"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -11728,7 +11683,6 @@ reference "fig:Histograms-mc-ib"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -11822,8 +11776,9 @@ n error; the approach, however, differed in both the genotype (the formula
 
 \begin_layout Standard
 The benefits of familiarity are difficult to quantify.
- A very simple mathematical formula can be much more difficult to understand
- than a comprehensive strategy that is intuitive.
+ From the point of view of interpretability, a very simple mathematical
+ formula can be much more difficult to understand than a comprehensive strategy
+ that is intuitive.
  
 \end_layout
 
@@ -11835,27 +11790,34 @@ The benefits of familiarity are difficult to quantify.
 
 \begin_layout Standard
 -Reguläre GP unterbietet bei gleicher Knotenzahl familiäre Kandidaten meistens,
- erreicht dies aber meist durch overfitting einer Formel.
-\end_layout
-
-\begin_layout Standard
--Die Knotenzahl ist für die Interpretierbarkeit dabei weitaus weniger relevant
+ erreicht dies aber meist durch overfitting der Formel.
+ Die Knotenzahl ist deshalb für die Interpretierbarkeit weniger relevant
  als die Struktur der Lösung.
+\end_layout
+
+\begin_layout Standard
+-- Die if-Bedingung zeigt den Widerspruch zwischen Interpretierbarkeit und
+ Knotenzahl deutlich; so hat der if-Operator mit 3 Eingaben zwar den größten
+ Branchingfaktor, strukturiert aber den Verständnisprozess weil alle Kindäste
+ separat betrachtet und diese als isolierte chunks leichter interpretiert
+ werden können.
  
 \end_layout
 
 \begin_layout Standard
-- Einfache Kandidaten overfitten das problem oft und sind deswegen weniger
- gut interpretierbar.
+Gute If-Anweisungen zu erstellen erfordert eine intelligente Aufteilung
+ eines Problems in mehrere Fälle.
+ Für den Menschen ist das die weitverbreitetste Möglichkeit um Programme
+ zu strukturieren.
+ Für GP ist eine sinnvolle Zusammensetzung der drei Eingaben gleichzeitig,
+ was durch zufällige Evolution schwer zu optimieren ist.
+ 
 \end_layout
 
 \begin_layout Standard
--- In diesem Fall veranschaulicht die if-Bedingung den Widerspruch zwischen
- Interpretierbarkeit und Knotenzahl am besten.
- So ist der if-Operator mit 3 Eingaben zwar den größten Branchingfaktor,
- strukturiert aber den Verständnisprozess weil alle Kindäste separat betrachtet
- und diese als isolierte chunks leichter interpretiert werden können.
- 
+Stattdessen ist es leichter, dasselbe Ergebnis mit einer leicht zu optimierenden
+ Formel zu overfitten, wodurch if-Unterscheidungen von der paretofront verdrängt
+ werden.
 \end_layout
 
 \begin_layout Standard
@@ -11869,15 +11831,6 @@ reference "fig:if-operator-composition"
 \end_inset
 
 .
- 
-\end_layout
-
-\begin_layout Standard
-Gute If-Anweisungen zu erstellen erfordert eine intelligente Unterscheidung
- eines komplexen Sachverhaltes in zwei oder mehr Fälle.
- Eine sinnvolle if-Bedingung erfordert eine sinnvolle Zusammensetzung von
- drei Eingaben gleichzeitig, was durch Evolution erst einmal schwer zu optimiere
-n ist.
  
 \end_layout
 
@@ -12045,7 +11998,6 @@ A general limitation in symbolic regression is the ability to sufficiently
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -12489,7 +12441,6 @@ emph{Eureqa}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "eureqa-review"
-literal "true"
 
 \end_inset
 

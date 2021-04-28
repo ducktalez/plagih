@@ -133,7 +133,7 @@ class CoolCore:
             label_list.extend(labels_at_depth)
         return label_list
 
-    def get_leafnodes_breath(self):
+    def get_lowest_nodes(self):
         """
         todo test
         return the nodes on the lowest level (breath-first).
@@ -145,14 +145,14 @@ class CoolCore:
         if not self.childs:
             return [self.nodepath]  # returning as list, easiert to flatten later with itertools
         else:
-            return list(itertools.chain(*[cc.get_leafnodes_breath() for cc in self.childs]))
+            return list(itertools.chain(*[cc.get_lowest_nodes() for cc in self.childs]))
 
     def append_labellist_breath(self, nodelist):
         """
         appends a list of labels to the lowest tree level
         """
         # 1. get the nodes on the lowest level
-        leaf_positions = self.get_leafnodes_breath()
+        leaf_positions = self.get_lowest_nodes()
 
         # if len(nodelist) != len(leaf_positions):algorithm
         #     raise Exception(f'Leaf nodes do not match insert nodes ({len(nodelist)}, {len(leaf_positions)})')
@@ -170,7 +170,17 @@ class CoolCore:
         if not self.childs:
             return [self.nodepath]  # returning as list, easiert to flatten later with itertools
         else:
-            return list(itertools.chain(*[cc.get_leafnodes_breath() for cc in self.childs]))
+            return list(itertools.chain(*[cc.get_lowest_nodes() for cc in self.childs]))
+        return  # todo
+
+    def append_random_layer(self, construction='full'):
+        """
+        """
+        # go to the current leaf nodes
+        if not self.childs:
+            return [self.nodepath]  # returning as list, easiert to flatten later with itertools
+        else:
+            return list(itertools.chain(*[cc.get_lowest_nodes() for cc in self.childs]))
         return  # todo
 
     def labellist_modifylist_from_coolcore(self):
@@ -627,9 +637,6 @@ class CoolTree:
         return expr
 
     def insert_branch(self, node_path, coolbranch):
-        """
-
-        """
         self.core.complete = False
 
         if len(node_path) == 1:  # [1] -> set child 1

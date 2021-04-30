@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -15,7 +15,6 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -36,6 +35,8 @@ fix-cm
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -77,6 +78,7 @@ fix-cm
 \suppress_date false
 \justification false
 \use_refstyle 0
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -86,7 +88,10 @@ fix-cm
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -155,60 +160,19 @@ In this thesis, a novel technique to create interpretable reinforcement
 
 \begin_layout Abstract
 The approach is tested on the mountain car and industrial benchmark by performin
-g a symbolic regression on transition samples that were collected by black
- box agents.
- 
-\end_layout
-
-\begin_layout Abstract
-=
-\end_layout
-
-\begin_layout Abstract
-The evaluation of the candidates shows that familiarity can be preserved,
- allowing better interpretability without major performance drawbacks compared
- to regular GP.
- The TED provides 
-\end_layout
-
-\begin_layout Abstract
-- Problems with very small programs, in which a few edits can have fundamental
- effects, can be solved by using fixed core structures.
-\end_layout
-
-\begin_layout Abstract
-=Familiarity
-\end_layout
-
-\begin_layout Abstract
-- The experts approach guidance makes them easier to interprete and also
- allows better comparatibility among pareto candidates.
-\end_layout
-
-\begin_layout Abstract
-- no performance drawback compared to regular GP
-\end_layout
-
-\begin_layout Abstract
-=opportunities for GP, interpretability, thriving a GP process
-\end_layout
-
-\begin_layout Abstract
-=
-\end_layout
-
-\begin_layout Abstract
-Die Auswertung hat gezeigt, dass die TED die Baumstruktur Strategie eindeutig
- von regulären resultaten unterscheiden, ohne negative Auswirkungen auf
- die Performance zu haben.
- Problems with very small programs, in which a few edits can have fundamental
- effects, can be solved by using fixed core structures.
- Durch die Vorgabe Experten auch leichter zu interpretieren sind.
- 
-\end_layout
-
-\begin_layout Abstract
-=
+g a symbolic regression on transition samples that were collected by a black
+ box agent.
+ The evaluation shows that the familiarity of expert programs can be preserved
+ in GP candidates, making them easier to interprete and having no major
+ drawbacks compared to regular runs.
+ In cases, where the TED does not protect the desired structure, selecting
+ a fixed core may be required.
+ The central nodes of an expert program often structure the approach, which
+ is the contrary of what regular GP would drive for, leading to GP results
+ that tend to overfit less.
+ Familiar GP is a new, viable way to create interpretable policies, can
+ make GP solutions more robust, unifies the Pareto front and can be used
+ without risk as an alternative to regular GP.
 \end_layout
 
 \begin_layout Abstract
@@ -397,6 +361,7 @@ emph{explainable artificial intelligence} (XAI)
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -412,6 +377,7 @@ right to explanation
 \begin_inset CommandInset citation
 LatexCommand cite
 key "EUdataregulations2018"
+literal "true"
 
 \end_inset
 
@@ -420,6 +386,7 @@ key "EUdataregulations2018"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -443,6 +410,7 @@ dable terms to humans
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -452,6 +420,7 @@ key "XAI_survey"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-perturbation"
+literal "true"
 
 \end_inset
 
@@ -460,6 +429,7 @@ key "XAI-perturbation"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-LIME"
+literal "true"
 
 \end_inset
 
@@ -482,6 +452,7 @@ emph{Layerwise Relevance Propagation}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
+literal "true"
 
 \end_inset
 
@@ -519,6 +490,7 @@ In this work, a novel technique is presented that extends a previously developed
 \begin_inset CommandInset citation
 LatexCommand cite
 key "fehrer_hein_tokic_udluft_2020"
+literal "true"
 
 \end_inset
 
@@ -757,6 +729,7 @@ Reinforcement Learning: An Introduction
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Sutton-Barto-reinforcement-1998"
+literal "true"
 
 \end_inset
 
@@ -806,6 +779,7 @@ ntly from real system
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -830,6 +804,7 @@ In contrast to performance, interpretability has many manifestations and
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
+literal "true"
 
 \end_inset
 
@@ -870,6 +845,7 @@ In this thesis, we deal with RL problems, which are incomplete as they are
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
+literal "true"
 
 \end_inset
 
@@ -905,6 +881,7 @@ reference "sec:Genetic-Programming"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
+literal "true"
 
 \end_inset
 
@@ -1050,6 +1027,7 @@ emph{Genetic programming}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_patent_1990"
+literal "true"
 
 \end_inset
 
@@ -1149,6 +1127,7 @@ The selection process is often implemented as tournament, where the fittest
 \begin_inset CommandInset citation
 LatexCommand cite
 key "gp-tournament-selection"
+literal "true"
 
 \end_inset
 
@@ -1824,6 +1803,7 @@ emph{closure}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -1918,6 +1898,7 @@ emph{ramped half-n-half}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "gp-half-ramped"
+literal "true"
 
 \end_inset
 
@@ -2414,6 +2395,7 @@ Industrial control strategies feature many peculiarities which can now be
 \begin_inset CommandInset citation
 LatexCommand cite
 key "siemens-gas-turbine-rl-nn"
+literal "true"
 
 \end_inset
 
@@ -2421,6 +2403,7 @@ key "siemens-gas-turbine-rl-nn"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft,siemens-rl-stochastic-bayesian-nn"
+literal "true"
 
 \end_inset
 
@@ -2435,6 +2418,7 @@ able policies.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -2445,6 +2429,7 @@ key "Hein_Udluft_Runkler_interpretable_gp"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
+literal "true"
 
 \end_inset
 
@@ -2456,6 +2441,7 @@ key "hein_fuzzy_gp"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -2471,6 +2457,7 @@ Despite their simplicity, the generated formulas are often hardly comprehensible
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tresp_prior_knowledge"
+literal "true"
 
 \end_inset
 
@@ -2481,6 +2468,7 @@ key "Tresp_prior_knowledge"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "residual-dynamic-learning"
+literal "true"
 
 \end_inset
 
@@ -2830,6 +2818,7 @@ reference "fig:TED_edits"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -2840,6 +2829,7 @@ key "tedOldestPaper"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -2947,6 +2937,7 @@ For this work, a genetic programming framework was developed with particular
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -2958,6 +2949,7 @@ key "karooGPpaper"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -3888,6 +3880,7 @@ First, the expression is extracted and unified using SymPy
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -4748,6 +4741,7 @@ reference "sec:Industrial-benchmark"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -5026,6 +5020,7 @@ In the mountain car problem, a car is supposed to drive up a mountain that
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -5625,6 +5620,7 @@ status open
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -5650,6 +5646,7 @@ $-103.41$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -6716,6 +6713,7 @@ The industrial benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -6781,6 +6779,7 @@ $5353$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
+literal "true"
 
 \end_inset
 
@@ -6793,6 +6792,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -9359,6 +9359,7 @@ reference "fig:xiao-origin-plot"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -11911,6 +11912,7 @@ reference "fig:Histograms-mc-ib"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -11996,32 +11998,34 @@ In the experiments, extensions were found for all expert strategies, with
 \end_layout
 
 \begin_layout Standard
-Compared to regular GP results, familiar candidates achieved a similar regressio
-n error, but differed significantly in both the genotype (the tree structure)
- and phenotype (the behaviour), which were more similar to the origin program.
+- Compared to regular GP results, they achieved a similar regression error
 \end_layout
 
 \begin_layout Standard
-The benefits of familiarity for interpretability are difficult to quantify.
- A very simple mathematical formula can be much more difficult to understand
- than a comprehensive strategy that is intuitive, as can be seen in 
+The benefits of familiarity for interpretability are difficult to quantify,
+ as a very simple mathematical formula can be much more difficult to understand
+ than a comprehensive strategy that is intuitive.
+ The main advantage is, that by preserving the core of a tree, the central
+ idea is adopted as well, which has very likely a structuring purpose.
+ Regular GP metrics drive a population to a functional, holistic and easy
+ to evolve tree architecture.
+ .
+ xxx The contradiction between interpretability and complexity becomes clear
+ with the If-operator.
+ With 3 inputs, it has the largest branching factor of all operators, which
+ leads to node-rich and complex trees.
+ On the other side, it improves interpretability like no other operator,
+ as each child branch can be interpreted as a separate chunk.
+ Since an equivalent effect can also be achieved with less complex formulas
+ (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:if-operator-composition"
 
 \end_inset
 
-.
- The human approach is to abstract a problem and divide it into several,
- well-aranged tasks.
- Regular GP finds simple formulae that are well optimizable with random
- mutation.
- The If-condition shows the contradiction between interpretability and number
- of nodes clearly; with 3 inputs, it has the largest branching factor, but
- it breaks down the understanding process as every child branch can be considere
-d separately and interpreted more easily as isolated chunk.
- Familiar GP also looks for the simplest possible extensions, but the default
- through the core approach tends to lead to the use of the same basic reasoning.
+), it rarely occurs in regular GP candidates.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -12134,14 +12138,14 @@ name "fig:if-operator-composition"
 \end_layout
 
 \begin_layout Standard
-Minor difficulties were encountered in runs with simple strategies, where
+Minor difficulties may encountered in runs with simple strategies, where
  a few edits can lead to decay of the kernel structure due to the small
  number of nodes.
- A solution to this problem was achieved by manually defining a fixed core.
- Defining fixed nodes also had a positive effect in complex origin trees,
- by significantly reducing the runtime.
+ A solution is achieved by manually defining a fixed core.
+ Fixed core nodes also had a positive effect in complex origin trees by
+ significantly reducing the runtime.
  The constraints through fixed knots, as well as other limitations (e.g.,
- a reduced set of operators, exclusion of actions), did not have a major
+ a reduced set of operators, exclusion of actions), did not show a significant
  impact on the regression error.
  On the contrary, it even had positive effects by creating a more homogeneous
  population, allowing for a better comparison between individual candidates.
@@ -12158,16 +12162,16 @@ t role.
  This can prevent deliberate simplifications and even lead to artificial
  constructions of operators around the constants in order to protect their
  values.
- Observations are less affected by this problem, but have another comparatively
- important role in complexity, as the size of their set represents the dimension
- of the input vector.
+ Observations are less affected by this problem, but have yet another comparativ
+ely important role as their unique set represents the dimension of the input
+ vector.
  Taking into account the disproportionate effect of terminal nodes, we propose
  to trim the TED; a simple solution is to exclude constant nodes when computing
  the TED.
  Furthermore, the symmetric distance between the sets of observations can
  be considered to fully exclude terminal nodes from the edit distance.
- Also, it is recommended to unify and order computational trees before calculati
-ng the TED, as was proposed in 
+ Apart from that, it is also recommended to unify and order computational
+ trees before calculating the TED, as was proposed in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:sympy-tree-reduction"
@@ -12181,29 +12185,33 @@ reference "sec:sympy-tree-reduction"
 \begin_layout Standard
 A general limitation in symbolic regression is the ability to sufficiently
  approximate the hidden strategy of a black box with a function.
- For example, in the case of the PSONN policy used in the IB, the strategy
- was too sparse, so the regression error was insufficiently reduced in both
- the regular and familiar runs, which was already been described by Hein
- in 
+ For example, the PSONN policy (IB) is a very fuzzy strategy, so the regression
+ error was insufficiently reduced in both the regular and familiar runs.
+ This fits with the results of Hein, who described this Problem in 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
 .
  To a lesser extent, this problem also occurred with the SARSA-75 policy,
  for which the regression error was more difficult to reduce than with the
- SARSA-200 version, which followed a better but also simpler strategy.
- It is also recommended to consider the regression error of the origin program
- before starting a run, as a large difference indicates that the strategies
- are fundamentally different and might be incompatible with each other.
+ more accurate SARSA-200 version.
+ The potential problem of failing to reduce the regression error can be
+ indicated by considering the regression error of the experts program.
+ If it is too large, either the black box agent is using a sparse strategy,
+ or the approaches are fundamentally incompatible.
+ 
 \end_layout
 
 \begin_layout Standard
-Overall, the positive effects of familiarity were many, allowing for better
- interpretability and guiding the search for a conceivably difficult formula
- without limiting performance.
+Overall, the positive effects of familiarity were manifold.
+ It provides a practical paradigm to reuse the preliminary abstracted knowledge
+ of an expert for better interpretability, it can lead GP to overfit less
+ by driving an abstracted approach into a population and has shown no major
+ drawbacks or risks compared to regular GP.
  
 \end_layout
 
@@ -12230,6 +12238,11 @@ name "sec:summary"
 \end_layout
 
 \begin_layout Standard
+This thesis introduced a method to create familiar a novel method to create
+ interpretable RL strategies by improving a agent has ahead of the expert
+\end_layout
+
+\begin_layout Standard
 \begin_inset Note Note
 status open
 
@@ -12240,23 +12253,76 @@ In this thesis, familiarity was introduced as concept for a novel approach
 \end_layout
 
 \begin_layout Plain Layout
-We considered a RL problem where an autonomous agent outperformed a domain
- expert as explainability gap.
+In this thesis, a familiar expert solution for a RL problem was extended
+ with genetic programming to function like a better autonomous agent.
+ Was  This was achieved by using the edit distance to the origin program
+ as complexity metric, as well as by selecting a fixed core.
+ 
 \end_layout
 
 \begin_layout Plain Layout
-This approach requires two prerequisites; a familiar expert program, represented
- as computational tree, and transition samples , which provides transition
- samples for a symbolic regression.
- , which is represented as computational tree Familiarity is mainly preserved
- by using the tree edit distance to the expert program as complexity metric,
- but can also explicitly protected by manually selecting a fixed core structure.
+===
+\end_layout
+
+\begin_layout Plain Layout
+We considered a RL problem where an autonomous agent outperformed a domain
+ expert.
+ The computational tree of the origin is used as origin for a symbolic regressio
+n on transition samples.
+ Familiarity is mainly preserved by using the tree edit distance to the
+ expert program as complexity metric, but can also explicitly protected
+ by manually selecting a fixed core structure.
  We proposed to extend the familiar program with genetic programming to
  explain what the black box strategy has in advance.
 \end_layout
 
 \begin_layout Plain Layout
-xxx
+===
+\end_layout
+
+\begin_layout Plain Layout
+Familiar candidates are created by performing a symbolic regression on pre-colle
+cted black box transition samples.
+\end_layout
+
+\begin_layout Plain Layout
+0
+\end_layout
+
+\begin_layout Plain Layout
+0
+\end_layout
+
+\begin_layout Plain Layout
+0
+\end_layout
+
+\begin_layout Plain Layout
+This thesis introduced a new approach that finds algorithmic improvements
+ for an expert program with genetic programming.
+ That uses familiarity as a paradigm for GP, which -that explains the difference
+ between an expert strategy and a -that extends a familiar expert program
+ with genetic programming to function in a way that is as good as an artificial
+ agent.
+ In many RL problems, where ML policies outperform human solutions, the
+ wish for interpretability For a domain expert, it is of special interest
+ to understand what such an agent has in advance to his strategy.
+ 
+\end_layout
+
+\begin_layout Plain Layout
+We present a novel approach to make a black box approach interpretable by
+ using a familiar program as interpretable anchor point for further extensions.
+ Often This requires a FEP that is outperformed by a BB.
+ We consider the Mehrwissen We introduced familiarity as a novel concept
+ to make the interpretability of a formula dependent on how closely it resembles
+ previously known strategies.
+ Familiar structures are preserved by using the TED to the expert program
+ as a complexity metric.
+ This automatically leads to recycle the known approach as efficiently as
+ possible, but also allows to break old habits apart if necessary.
+ For additional protection, a fixed core structure can also be selected.
+ 
 \end_layout
 
 \end_inset
@@ -12265,20 +12331,14 @@ xxx
 \end_layout
 
 \begin_layout Standard
-In this thesis, familiarity was introduced as concept for a novel approach
- to create interpretable RL policies based on prior known expert strategies.
+In this thesis, a technique was presented to extend a known expert solution
+ with genetic programming to function in a way that is as good as an autonomous
+ agent.
  
 \end_layout
 
 \begin_layout Standard
-Domain experts programs were extended with genetic programming to function
- like a black box policy.
- This was achieved by using the edit distance to the origin program as complexit
-y metric in a genetic programming process.
- In addition, the user can explicitly protect the core structure of the
- tree by selecting fixed nodes.
- Familiar candidates are created by performing a symbolic regression on
- pre-collected black box transition samples.
+===
 \end_layout
 
 \begin_layout Standard
@@ -12634,6 +12694,7 @@ emph{Eureqa}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "eureqa-review"
+literal "true"
 
 \end_inset
 

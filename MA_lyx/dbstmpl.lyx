@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -15,6 +15,8 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -35,8 +37,6 @@ fix-cm
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -78,7 +78,6 @@ fix-cm
 \suppress_date false
 \justification false
 \use_refstyle 0
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -88,10 +87,7 @@ fix-cm
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -181,14 +177,6 @@ status open
 
 \begin_layout Plain Layout
 xxx
-\end_layout
-
-\begin_layout Plain Layout
-Further constraints on the search space (e.g., fixed nodes, limited set of
- operators, action space constraint) do not significantly restrict offline
- performance, but even induce comparatively good online performance.
- Therefore, the presented approach offers many possibilities, both for genetic
- programming and as a way to find more easily interpretable policies.
 \end_layout
 
 \begin_layout Plain Layout
@@ -401,7 +389,6 @@ g process is not explained and regarded as a black box.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -433,7 +420,6 @@ emph{explainable artificial intelligence} (XAI)
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -449,7 +435,6 @@ right to explanation
 \begin_inset CommandInset citation
 LatexCommand cite
 key "EUdataregulations2018"
-literal "true"
 
 \end_inset
 
@@ -462,7 +447,6 @@ Explanatory methods include using perturbation (e.g.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-perturbation"
-literal "true"
 
 \end_inset
 
@@ -471,7 +455,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-LIME"
-literal "true"
 
 \end_inset
 
@@ -494,7 +477,6 @@ emph{Layerwise Relevance Propagation}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
-literal "true"
 
 \end_inset
 
@@ -507,7 +489,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
-literal "true"
 
 \end_inset
 
@@ -619,7 +600,6 @@ This paper presents a technique for finding algorithmic improvements to
 \begin_inset CommandInset citation
 LatexCommand cite
 key "fehrer_hein_tokic_udluft_2020"
-literal "true"
 
 \end_inset
 
@@ -855,7 +835,6 @@ Reinforcement Learning: An Introduction
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Sutton-Barto-reinforcement-1998"
-literal "true"
 
 \end_inset
 
@@ -907,7 +886,6 @@ ntly from real system
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -931,7 +909,6 @@ dable terms to humans
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
-literal "true"
 
 \end_inset
 
@@ -942,7 +919,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
-literal "true"
 
 \end_inset
 
@@ -993,7 +969,6 @@ More than around the task, the method-related interpretability is the main
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
-literal "true"
 
 \end_inset
 
@@ -1217,7 +1192,6 @@ emph{Genetic programming}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_patent_1990"
-literal "true"
 
 \end_inset
 
@@ -1317,7 +1291,6 @@ The selection process is often implemented as tournament, where the fittest
 \begin_inset CommandInset citation
 LatexCommand cite
 key "gp-tournament-selection"
-literal "true"
 
 \end_inset
 
@@ -1934,7 +1907,6 @@ emph{closure}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -2028,7 +2000,6 @@ emph{ramped half-n-half}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "gp-half-ramped"
-literal "true"
 
 \end_inset
 
@@ -2525,7 +2496,6 @@ Industrial control strategies feature many peculiarities which can now be
 \begin_inset CommandInset citation
 LatexCommand cite
 key "siemens-gas-turbine-rl-nn"
-literal "true"
 
 \end_inset
 
@@ -2533,7 +2503,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft,siemens-rl-stochastic-bayesian-nn"
-literal "true"
 
 \end_inset
 
@@ -2548,7 +2517,6 @@ able policies.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -2559,7 +2527,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
-literal "true"
 
 \end_inset
 
@@ -2571,7 +2538,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -2587,7 +2553,6 @@ Despite their simplicity, the generated formulas are often hardly comprehensible
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tresp_prior_knowledge"
-literal "true"
 
 \end_inset
 
@@ -2598,7 +2563,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "residual-dynamic-learning"
-literal "true"
 
 \end_inset
 
@@ -2995,7 +2959,6 @@ reference "fig:TED_edits"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -3006,7 +2969,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -3095,7 +3057,6 @@ For this work, a genetic programming framework was developed with particular
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -3107,7 +3068,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -4038,7 +3998,6 @@ First, the expression is extracted and unified using SymPy
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -4899,7 +4858,6 @@ reference "sec:Industrial-benchmark"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -5178,7 +5136,6 @@ In the mountain car problem, a car is supposed to drive up a mountain that
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -5778,7 +5735,6 @@ status open
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -5804,7 +5760,6 @@ $-103.41$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -6871,7 +6826,6 @@ The industrial benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -6937,7 +6891,6 @@ $5353$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
-literal "true"
 
 \end_inset
 
@@ -6950,7 +6903,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -9493,7 +9445,6 @@ This close-form preset policy was presented by Xiao
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -9534,9 +9485,6 @@ All Pareto candidates demonstrated increased real performance, most of them
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:xiao-origin-plot"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -12081,7 +12029,6 @@ reference "fig:Histograms-mc-ib"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -12315,6 +12262,7 @@ Minor difficulties may encountered in runs with simple strategies, where
  impact on the regression error.
  On the contrary, it even had positive effects by creating a more homogeneous
  population, allowing for a better comparison between individual candidates.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -12357,7 +12305,6 @@ A general limitation in symbolic regression is the ability to sufficiently
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -12765,7 +12712,6 @@ emph{Eureqa}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "eureqa-review"
-literal "true"
 
 \end_inset
 

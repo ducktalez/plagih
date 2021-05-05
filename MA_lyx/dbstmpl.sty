@@ -28,6 +28,14 @@
 \RequirePackage{mathtools}
 
 \RequirePackage[section]{placeins}
+\RequirePackage[capitalise]{cleveref}
+%\renewcommand{\ref}{\cref}%I am lazy and have \ref in my thesis
+%\renewcommand{\prettyref}{\cref}%I am lazy and have \pretty ref in my thesis aswell
+
+\AtBeginDocument{%
+    \let\ref\Cref
+    \let\prettyref\Cref
+}
 
 % putting tables next to images with https://tex.stackexchange.com/questions/6850/table-and-figure-side-by-side-with-independent-captions
 \RequirePackage{floatrow}
@@ -66,9 +74,6 @@
 
 
 
-\RequirePackage[capitalise]{cleveref}
-\renewcommand{\ref}{\cref}%I am lazy and have \ref in my thesis
-\renewcommand{\prettyref}{\cref}%I am lazy and have \pretty ref in my thesis aswell
 
 
 

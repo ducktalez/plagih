@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -16,7 +16,6 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -37,12 +36,14 @@ fix-cm
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
 \bibtex_command default
 \index_command default
-\float_placement tph
+\float_placement tbph
 \paperfontsize 11
 \spacing single
 \use_hyperref true
@@ -78,6 +79,7 @@ fix-cm
 \suppress_date false
 \justification false
 \use_refstyle 0
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -87,7 +89,10 @@ fix-cm
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -389,6 +394,7 @@ g process is not explained and regarded as a black box.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -420,6 +426,7 @@ emph{explainable artificial intelligence} (XAI)
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -435,6 +442,7 @@ right to explanation
 \begin_inset CommandInset citation
 LatexCommand cite
 key "EUdataregulations2018"
+literal "true"
 
 \end_inset
 
@@ -443,10 +451,15 @@ key "EUdataregulations2018"
 
 \begin_layout Standard
 Explanatory methods include using perturbation (e.g.
- meaningful perturbations 
+ meaningful perturbations
+\begin_inset space ~
+\end_inset
+
+
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-perturbation"
+literal "true"
 
 \end_inset
 
@@ -455,6 +468,7 @@ key "XAI-perturbation"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-LIME"
+literal "true"
 
 \end_inset
 
@@ -477,6 +491,7 @@ emph{Layerwise Relevance Propagation}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
+literal "true"
 
 \end_inset
 
@@ -489,6 +504,7 @@ key "XAI_LRP_Frauenhofer"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
+literal "true"
 
 \end_inset
 
@@ -593,13 +609,14 @@ Contribution
 \end_layout
 
 \begin_layout Standard
-This paper presents a technique for finding algorithmic improvements to
+This thesis presents a technique for finding algorithmic improvements to
  a previously developed expert program using genetic programming.
  Experts strategy is used as an anchor point for better interpretability,
  which is a novel approach in the field of XAI 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "fehrer_hein_tokic_udluft_2020"
+literal "true"
 
 \end_inset
 
@@ -723,15 +740,15 @@ name "chap:Applied-methods"
 In this chapter, background information and applied methodologies are introduced.
  In 
 \begin_inset CommandInset ref
-LatexCommand formatted
+LatexCommand ref
 reference "sec:Reinforcement-learning"
 
 \end_inset
 
- principles of reinforcement learning are introduced, manifestations of
+, principles of reinforcement learning are introduced, manifestations of
  interpretability are discussed in 
 \begin_inset CommandInset ref
-LatexCommand formatted
+LatexCommand ref
 reference "sec:Interpretable-Machine-Learning"
 
 \end_inset
@@ -740,7 +757,7 @@ reference "sec:Interpretable-Machine-Learning"
  Genetic programming is presented as the main method to create interpretable
  policies in 
 \begin_inset CommandInset ref
-LatexCommand formatted
+LatexCommand ref
 reference "sec:Genetic-Programming"
 
 \end_inset
@@ -748,7 +765,7 @@ reference "sec:Genetic-Programming"
 .
  Lastly, related work is suggested in 
 \begin_inset CommandInset ref
-LatexCommand formatted
+LatexCommand ref
 reference "sec:Related-Work"
 
 \end_inset
@@ -835,6 +852,7 @@ Reinforcement Learning: An Introduction
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Sutton-Barto-reinforcement-1998"
+literal "true"
 
 \end_inset
 
@@ -886,6 +904,7 @@ ntly from real system
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -909,6 +928,7 @@ dable terms to humans
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -919,6 +939,7 @@ key "XAI_survey"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
+literal "true"
 
 \end_inset
 
@@ -948,10 +969,10 @@ What are method-related relevant factors being explored? (e.g.
 \end_layout
 
 \begin_layout Standard
-In this thesis, we deal with RL problems, which are incomplete as they are
- not fully testable and can be solved in various ways.
- The level of evaluation is also not limited, as applications can also be
- learned through proxy models.
+RL problems are incomplete as they are not fully testable and can be solved
+ in various ways.
+ The level of evaluation is not limited, as applications can also be learned
+ through proxy models.
  Considering the task-related relevant factors, we are particularly interested
  in global interpretability, as post-hoc explanations for a only a subset
  of decisions is not sufficient to understand and trust policies that depend
@@ -969,6 +990,7 @@ More than around the task, the method-related interpretability is the main
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
+literal "true"
 
 \end_inset
 
@@ -977,22 +999,29 @@ key "XAI_doshivelez2017rigorous"
  is the number of cognitive chunks, which can be defined as a metric for
  most approaches.
  For example, complexity measures for formulae consider the absolute number
- of mathematical components (number of chunks), and sometimes the complexity
- of the components (form of cognitive chunks).
+ of mathematical components, and sometimes their complexity (form of cognitive
+ chunks).
  However, this metric must ignore other important factors such as the compositio
-nality of cognitive chunks, which is why simple formulas are often still
- difficult to comprehend (see 
+nality, which is why simple formulas are often still difficult to comprehend.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+(see 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:Four-different-approaches"
 
 \end_inset
 
-).
- 
+)
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset Float figure
 wide false
 sideways false
@@ -1145,6 +1174,11 @@ name "fig:Four-different-approaches"
 
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
 \begin_inset ERT
 status open
@@ -1192,6 +1226,7 @@ emph{Genetic programming}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_patent_1990"
+literal "true"
 
 \end_inset
 
@@ -1287,10 +1322,11 @@ reference "tab:gp-Evolutionary-concepts"
 \noun off
 \color none
 The selection process is often implemented as tournament, where the fittest
- of 3 randomly chosen candidates is chosen 
+ of 3 randomly chosen candidates survives 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "gp-tournament-selection"
+literal "true"
 
 \end_inset
 
@@ -1317,7 +1353,7 @@ status open
 
 \begin_layout Plain Layout
 
-Algorithm~
+
 \backslash
 ref{alg:gp-evolutionary-main}
 \end_layout
@@ -1351,7 +1387,7 @@ name "fig:crossover"
 
 \end_inset
 
- Visualization of the evolution of a programming tree by mutation or crossover,
+ Visualization of the evolution of a programming tree by mutation and crossover,
  for which a branch is recombined with another parent tree.
 \end_layout
 
@@ -1872,7 +1908,7 @@ status open
 
 
 \backslash
-FloatBarrier %xx
+FloatBarrier %xxx
 \end_layout
 
 \end_inset
@@ -1899,20 +1935,21 @@ emph{closure}
 
 \end_inset
 
-, which requires a strategy for dealing with type conversion and handling
- of invalid expressions.
+ and requires a strategy for dealing with type conversion and handling of
+ invalid expressions.
  A conversion between Boolean and numeric values should be strongly typed,
  as this produces more natural mathematical compositions than automatic
  conversion 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
 .
  This requires explicit type conversion, e.g.
- with comparison operators or if operators, as well as mutually exclusive
+ with comparison operators or If-operators, as well as mutually exclusive
  crossover evolution to ensure closure.
  Type-correct expressions can still be mathematically invalid, which is
  difficult to prevent.
@@ -1939,8 +1976,8 @@ rightarrow 1$).
 \end_layout
 
 \begin_layout Standard
-Random trees and branches also must be constructed in order to find new
- genes, for which the 
+Finding new genes requires the construction of random trees and branches,
+ for which the 
 \begin_inset ERT
 status open
 
@@ -1956,7 +1993,7 @@ emph{grow}
 \end_inset
 
  method are available.
- Both methods build trees nodes to a certain depth, but the 
+ Both methods build append nodes to a certain depth, but the 
 \begin_inset ERT
 status open
 
@@ -1973,8 +2010,8 @@ emph{full}
  also allows terminal nodes to be inserted by chance (50%).
  The full method has a much higher branching factor and creates more complex
  formulae than the grow method.
- This affects the tree structure, which also affects the formulae, as can
- be seen in 
+ This affects the tree structure and thus the formula, as can be seen in
+ 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:grow-vs-full-method"
@@ -1982,8 +2019,7 @@ reference "fig:grow-vs-full-method"
 \end_inset
 
 .
- Since neither is clearly preferable, a combination of both methods is proposed
- in 
+ Since neither is clearly preferable, a 
 \begin_inset ERT
 status open
 
@@ -1996,10 +2032,11 @@ emph{ramped half-n-half}
 
 \end_inset
 
- 
+ combination of both methods is proposed 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "gp-half-ramped"
+literal "true"
 
 \end_inset
 
@@ -2112,15 +2149,14 @@ name "Symbolic-Regression"
 
 \begin_layout Standard
 The fitness function determines how well a candidate solves the task.
- To train on offline data, symbolic regression can be performed.
- This evaluates the mapping of mathematical expressions around a data set
- using the regression error.
+ To train on offline data, a symbolic regression can be performed, which
+ evaluates the mapping of mathematical expressions around a data set using
+ the regression error.
  Two regression metrics were used for this work.
  The mean average error (MAE) is defined as the average deviation from the
- target solution and is true to distance.
- The mean squared error (MSE) squares the individual deviations, which is
- harder to interpret, but penalizes outliers more which can lead to better
- overall generalization.
+ target solution and is true to distance and the mean squared error (MSE)
+ squares the individual deviations, which is harder to interpret, but penalizes
+ outliers more which can lead to better overall generalization.
  
 \end_layout
 
@@ -2492,10 +2528,11 @@ name "sec:Related-Work"
 
 \begin_layout Standard
 Industrial control strategies feature many peculiarities which can now be
- addressed with reinforcement learning, such as highly dimensional 
+ addressed with reinforcement learning, such as high dimensionality 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "siemens-gas-turbine-rl-nn"
+literal "true"
 
 \end_inset
 
@@ -2503,6 +2540,7 @@ key "siemens-gas-turbine-rl-nn"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft,siemens-rl-stochastic-bayesian-nn"
+literal "true"
 
 \end_inset
 
@@ -2517,6 +2555,7 @@ able policies.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -2527,32 +2566,34 @@ key "Hein_Udluft_Runkler_interpretable_gp"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
+literal "true"
 
 \end_inset
 
 , the possibility of deriving a fuzzy rule set for more complex problems
  is presented.
- The possibility of training on a surrogate model, such as performing a
- symbolic regression on previously collected transition samples is evaluated
+ More secure offline training on a surrogate model, such as by performing
+ a symbolic regression on previously collected transition samples, is evaluated
  in 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
-, which, considering some limitations allows for a secure learning process.
+.
+ Despite their simplicity, the generated formulas are often hardly comprehensibl
+e because they are too mathematical and contain no recognizable intuition.
+ 
 \end_layout
 
 \begin_layout Standard
-Despite their simplicity, the generated formulas are often hardly comprehensible
- because they are too mathematical and contain no recognizable intuition.
- We argue that it is advantageous when solutions resemble previously known
- strategies.
- In 
+In 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tresp_prior_knowledge"
+literal "true"
 
 \end_inset
 
@@ -2563,6 +2604,7 @@ key "Tresp_prior_knowledge"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "residual-dynamic-learning"
+literal "true"
 
 \end_inset
 
@@ -2611,7 +2653,7 @@ reference "img:plausibility-concept"
 \end_inset
 
 .
- The concept of familiarity is introduced in 
+ The paradigm of familiarity is introduced in 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "sec:Familiarity"
@@ -2619,7 +2661,7 @@ reference "sec:Familiarity"
 \end_inset
 
  and potential and expected benefits are discussed.
- In order to protect famimliar structures, the 
+ In order to protect familiar structures, the 
 \begin_inset ERT
 status open
 
@@ -2667,27 +2709,6 @@ reference "sec:sympy-tree-reduction"
 .
 \end_layout
 
-\begin_layout Section
-Familiarity
-\begin_inset CommandInset label
-LatexCommand label
-name "sec:Familiarity"
-
-\end_inset
-
-
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-xx
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Standard
 \begin_inset Float figure
 wide false
@@ -2699,7 +2720,7 @@ status open
 \begin_inset Graphics
 	filename img/inkscape/concept.svg
 	lyxscale 50
-	width 100text%
+	width 89text%
 
 \end_inset
 
@@ -2732,6 +2753,27 @@ name "img:plausibility-concept"
 
 \end_layout
 
+\begin_layout Section
+Familiarity 
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Familiarity"
+
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+xx
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
 Familiarity is introduced as the key paradigm of interpretability, which
  denotes the similarity to a previously known humanly developed strategy.
@@ -2742,13 +2784,13 @@ reference "sec:Interpretable-Machine-Learning"
 
 \end_inset
 
-, using simplicity as single deciding factor for interpretability can neverthele
-ss seem like an arbitrary composition.
- Defining a metric for interpretability including factors other than the
- number of nodes, let alone combining all relevant factors in a single and
- practical interpretability metric, is sheer impossible, as the way in which
- an expert considers a policy interpretable strongly depends on personal
- experience working on the problem.
+, using simplicity as single deciding factor for interpretability often
+ leads to formulae that seem like arbitrary compositions.
+ However, defining a metric for interpretability including factors other
+ than the number of nodes, let alone combining all relevant factors in a
+ single and practical interpretability metric, is sheer impossible, as the
+ way in which an expert considers a policy interpretable strongly depends
+ on personal experience working on the problem.
  However, an expert program implicitly includes a lot of the desired features
  inherently.
  
@@ -2761,8 +2803,8 @@ A program is the algorithmic representation of an experts best effort to
  work, making it the optimal anchor point for interpretability.
  Familiar chunks of a strategy do not have to be re-understood and allow
  to focus on novelties.
- Furthermore, the compositionality of chunks can be controlled by structuring
- the solution approach.
+ Furthermore, the compositionality of chunks can be addressed by structuring
+ the solution approach in a useful manner.
 \end_layout
 
 \begin_layout Standard
@@ -2770,7 +2812,7 @@ A program is the algorithmic representation of an experts best effort to
 \end_layout
 
 \begin_layout Section
-Familiarity Measurement with the Edit Distance 
+Tree Edit Distance 
 \begin_inset CommandInset label
 LatexCommand label
 name "sec:Familiarity-Measurement-TED"
@@ -2918,7 +2960,7 @@ name "xaiMeasurementRequirements"
 \begin_layout Standard
 The tree edit distance (TED) marks the logical resulting measure considering
  the node-count based paradigm most GP implementations are based on.
- The TED is calculated as the 
+ It is calculated as the 
 \begin_inset Quotes eld
 \end_inset
 
@@ -2944,14 +2986,7 @@ text{modify}
 
 \end_inset
 
- (
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:TED_edits"
-
-\end_inset
-
-) needed to transform T into T'
+ needed to transform T into T'
 \begin_inset Quotes erd
 \end_inset
 
@@ -2959,6 +2994,14 @@ reference "fig:TED_edits"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
+
+\end_inset
+
+, an example transformation can be seen in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:TED_edits"
 
 \end_inset
 
@@ -2969,6 +3012,7 @@ key "tedOldestPaper"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -3057,6 +3101,7 @@ For this work, a genetic programming framework was developed with particular
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -3068,6 +3113,7 @@ key "karooGPpaper"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -3145,7 +3191,7 @@ mathcal{N}(x,0.1)$
 
 ).
  For observations with retrospective values, a distribution for randomly
- choosing the time index was developed that favors up-to-date entries (
+ choosing the time index that favors up-to-date entries (
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:Probabilities-for-selecting"
@@ -3158,7 +3204,7 @@ status open
 
 \begin_layout Plain Layout
 
-Algorithm~
+
 \backslash
 ref{alg:obs_indizes}
 \end_layout
@@ -3423,6 +3469,22 @@ name "fig:Probabilities-for-selecting"
 
 \end_layout
 
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+FloatBarrier
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Paragraph
 Olympus reproduction (Pareto reproduction)
 \end_layout
@@ -3430,7 +3492,6 @@ Olympus reproduction (Pareto reproduction)
 \begin_layout Standard
 Similar to the Greek gods who came to earth to reproduce, the Pareto candidates
  were also given the opportunity to intermingle with the current population.
- By chance, solutions already found, and their genes can be lost.
  In order not to lose already found solutions permanently, the genes of
  the best candidates are to provide a very small current to the population.
  The Olympus reproduction includes the possibility for the origin tree to
@@ -3481,7 +3542,7 @@ The implementation of a fixed core in the reference tree does not only require
  adjustments in the tree structure, but also modifications in the evolutionary
  process.
  A fixed core consists of a real subset of connected nodes, which have to
- be selected manually and root-down by the user.
+ be selected manually and root-down.
  At least one mutable junction must be provided for the evolutionary process,
  an example can be seen in 
 \begin_inset CommandInset ref
@@ -3601,7 +3662,7 @@ status open
 
 \begin_layout Plain Layout
 
-Algorithm~
+
 \backslash
 ref{alg:nodebased-construction-full}
 \end_layout
@@ -3922,11 +3983,12 @@ tion because it strongly influences TED, which cannot account for mathematical
 status open
 
 \begin_layout Plain Layout
-Sums are commutative and 
+E.g.
+ sums are commutative 
 \begin_inset Formula $(a+b)=(b+a)$
 \end_inset
 
- equivalent, but the edit-distance between the two representations is 2.
+, but the TED can still be 2.
 \end_layout
 
 \end_inset
@@ -3998,6 +4060,7 @@ First, the expression is extracted and unified using SymPy
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -4011,7 +4074,7 @@ status open
 
 \begin_layout Plain Layout
 
-Algorithm~
+
 \backslash
 ref{alg:math-simplification}
 \end_layout
@@ -4257,12 +4320,8 @@ reference "tab:sympy-sonderfälle"
  for mutations, structurally badly placed top level nodes can limit the
  evolution process.
  Potential benefits of using unified formulae was therefore not further
- evaluated, even though the implemented unification successfully reduces
+ evaluated, even though the implemented unification successfully reduced
  a large amount of Pareto entries.
-\begin_inset Newline newline
-\end_inset
-
-
 \begin_inset Note Note
 status open
 
@@ -4858,6 +4917,7 @@ reference "sec:Industrial-benchmark"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -5136,6 +5196,7 @@ In the mountain car problem, a car is supposed to drive up a mountain that
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -5149,10 +5210,7 @@ reference "mountaincar-overview"
 
 \end_inset
 
-) and could be normalized.
- However, to ensure a natural view on the expert's algorithm, we assume
- that the expert did not normalize the values in his program and uses raw
- values.
+) was not normalized to ensure a natural view on the expert's algorithm.
 \end_layout
 
 \begin_layout Standard
@@ -5529,7 +5587,7 @@ Doing nothing instead of accelerating loses speed but is nevertheless often
 \end_layout
 
 \begin_layout Itemize
-The initial action.
+The best initial action.
 \begin_inset Newline newline
 \end_inset
 
@@ -5735,6 +5793,7 @@ status open
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -5745,7 +5804,7 @@ target "https://github.com/openai/gym/wiki/Leaderboard"
 
  The featured approach uses SARSA with tiling and a neural network and achieves
  the goal of reaching the target in less than 110 steps on average after
- 75 training episodes with an average reward of 
+ 75 training episodes with a reward of 
 \begin_inset ERT
 status open
 
@@ -5760,6 +5819,7 @@ $-103.41$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -6148,6 +6208,46 @@ name "sec:Industrial-benchmark"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+The industrial benchmark was introduced by scientists at Siemens to meet
+ the high requirements of complex, real world industrial processes 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "industrialBenchmark"
+literal "true"
+
+\end_inset
+
+.
+ The state space is high-dimensional and only partially observable (
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "IB-observations-state"
+
+\end_inset
+
+), so that the development of the observations must be taken into account
+ in the form of a retrospective observation.
+ The reward depends on a combination of actions 0 and 1, as well as action
+ 2, which strongly punishes misbehavior.
+ Finally, high stochastic system dynamics further complicates learning reliable
+ policies.
+\end_layout
+
+\begin_layout Standard
+No good human-developed control strategies for the IB are known; the best
+ available strategy is doing 
+\begin_inset Quotes eld
+\end_inset
+
+nothing
+\begin_inset Quotes erd
+\end_inset
+
+, which is also considered to be respectably good.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -6819,45 +6919,6 @@ name "IB-observations-state"
 
 \end_layout
 
-\begin_layout Standard
-The industrial benchmark was introduced by scientists at Siemens to meet
- the high requirements of complex, real world industrial processes.
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "industrialBenchmark"
-
-\end_inset
-
- The state space is high-dimensional and only partially observable (
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "IB-observations-state"
-
-\end_inset
-
-) and the reward depends on a combination of actions 0 and 1, as well as
- action 2, which severely penalizes misconduct.
- The development of observations has to be taken into account (in the form
- of retrospective consideration).
- Finally, high stochastic system dynamics further complicates learning reliable
- policies.
-\end_layout
-
-\begin_layout Standard
-No good human-developed control strategies for the IB are known; the best
- available strategy is doing 
-\begin_inset Quotes eld
-\end_inset
-
-nothing
-\begin_inset Quotes erd
-\end_inset
-
-, which is also considered to be respectably good.
- 
-\end_layout
-
 \begin_layout Paragraph
 Black box: PSONN
 \end_layout
@@ -6891,6 +6952,7 @@ $5353$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
+literal "true"
 
 \end_inset
 
@@ -6903,14 +6965,15 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
  were randomized.
  Comparable values could be obtained by a randomized initial state, but
  the results were very volatile.
- The difference of agents in Hein's work was 7% worse on average.
- This value was used for comparison.
+ The difference of agents in Hein's work was 7% worse on average, which
+ was used for comparison.
  For the PSONN policy, this results in a adjusted penalty value of 
 \begin_inset ERT
 status open
@@ -6949,8 +7012,8 @@ name "sec:Offline-Data-Selection"
 
 \begin_layout Standard
 The data for the symbolic regression are generated online, on the benchmark,
- from the chosen black box approach.
- All observable states and the associated actions are saved (
+ using the appropriate black box approach and all observable states and
+ the associated actions are saved (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "tab:The-generated-data"
@@ -6962,12 +7025,11 @@ reference "tab:The-generated-data"
 \end_layout
 
 \begin_layout Standard
-If the priority is to improve performance, data selection is conceivable,
- but stochasticity or long-term strategies are often hard to distinguish
- from actual misconduct.
- Clustering for yet unknown state-combinations in the black box data compared,
- compared to the current solution was also discarded to guarantee balanced
- and authentic results.
+When the priority is to improve performance, data selection is conceivable,
+ but stochasticity or long-term strategies are often difficult to distinguish
+ from actual misbehavior.
+ Clustering for unknown state combinations in the black box data was also
+ discarded to guarantee balanced and authentic results.
 \end_layout
 
 \begin_layout Standard
@@ -7326,9 +7388,11 @@ reference "sec:GP-Suite-Implementation"
 
 \end_inset
 
-; to minimize the potential unfair influence of evolutions, a population
- of 1000 individuals trained over 4000 generations was chosen.
- 
+.
+ To minimize the possible unfair influence of evolution, a population of
+ 1000 individuals was chosen, trained comparatively long over 4000 generations.
+ A total of 90 different expressions were tested, from which only the most
+ important are presented below.
 \end_layout
 
 \begin_layout Standard
@@ -7346,7 +7410,7 @@ Mountain Car
 \begin_layout Standard
 Three approaches are analyzed in this benchmark.
  The first is simple and safe, fetching maximum momentum, the second is
- a more complex parabolic formula, and the third is a nested if-difference
+ a more complex parabolic formula, and the third is a nested If-distinction
  for which the reversal points have been manually optimized.
  Furthermore, fixed core structures and obligatory acceleration were tested.
  The latter means that action 1 cannot be selected in these runs, so that
@@ -7428,7 +7492,7 @@ Regular GP Results
 \end_layout
 
 \begin_layout Standard
-Regular GP runs could completely solve the problem from complexity 18.
+Regular GP runs could completely solve the problem from complexity 18 upwards.
  Altering solution strategies are noticeable in the medium-complex candidate
  range (
 \begin_inset CommandInset ref
@@ -7791,9 +7855,22 @@ complexity
 \begin_layout Plain Layout
 \noindent
 \align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace*{-3.8mm}
+\end_layout
+
+\end_inset
+
+
 \begin_inset Graphics
 	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-8.pdf
-	height 3cm
+	height 4cm
 
 \end_inset
 
@@ -7808,9 +7885,22 @@ complexity
 \begin_layout Plain Layout
 \noindent
 \align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace*{-3.8mm}
+\end_layout
+
+\end_inset
+
+
 \begin_inset Graphics
 	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-10.pdf
-	height 3cm
+	height 4cm
 
 \end_inset
 
@@ -7825,9 +7915,22 @@ complexity
 \begin_layout Plain Layout
 \noindent
 \align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace*{-3.8mm}
+\end_layout
+
+\end_inset
+
+
 \begin_inset Graphics
 	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-25.pdf
-	height 3cm
+	height 4cm
 
 \end_inset
 
@@ -8130,10 +8233,16 @@ reference "fig:MC-simple-plots"
 
 \end_inset
 
-) and can be implemented with an if-distinction (
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "img:mtc_simple_tree"
+) and can be implemented with an If-distinction (
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+cref{alg:mc-simple}
+\end_layout
 
 \end_inset
 
@@ -8164,6 +8273,81 @@ $14
 
 .
  
+\end_layout
+
+\begin_layout Standard
+In response to the limitations of the TED preserving familiar structures
+ in trees with only few nodes, another version with a fixed core was implemented
+, which can be seen in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "img:mtc_simple_tree"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{algorithm}[htp]  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+SetAlgoLined
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+uIf{vel$<0$}{0
+\backslash
+;}
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+uElse{2
+\backslash
+;}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+caption{Accelerating towards the current direction}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+label{alg:mc-simple}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithm}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -8331,6 +8515,13 @@ status open
 \end_inset
 
 
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/evaled_overview.pdf
+	height 5cm
+
+\end_inset
+
+
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
@@ -8340,7 +8531,18 @@ name "fig:mc200_MSE_simple-pareto"
 
 \end_inset
 
- Pareto front of the simplest expert policy.
+
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:mc200_simple-fix-pareto"
+
+\end_inset
+
+ Pareto front of the simplest expert policy, which is completely mutable
+ on the left and with a fixed core on the right.
+ The Pareto entries of the fixed version no longer have outliers at medium
+ complexity.
+ 
 \end_layout
 
 \end_inset
@@ -8351,10 +8553,23 @@ name "fig:mc200_MSE_simple-pareto"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Paragraph
+Fully mutable
 \end_layout
 
 \begin_layout Standard
-The TED loses its effect after a certain amount of changes, the first occurrence
+The Pareto candidates perform well at high complexities, but show relatively
+ poor performance at a medium range (
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:mc200_MSE_simple-pareto"
+
+\end_inset
+
+).
+ The TED loses its effect completely from 7 onwards, the first appearance
  can be seen in 
 \begin_inset CommandInset ref
 LatexCommand formatted
@@ -8363,15 +8578,62 @@ reference "fig:mc-simple-candidates"
 \end_inset
 
 .
- The Pareto candidates perform well with high complexities, but show relatively
- poor performance at medium complexity (
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:mc200_MSE_simple-pareto"
+ 
+\end_layout
+
+\begin_layout Paragraph
+Fixed Core
+\begin_inset CommandInset label
+LatexCommand label
+name "subsec:eval-fixed"
 
 \end_inset
 
-).
+
+\end_layout
+
+\begin_layout Standard
+With the SARSA-200 limit being 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$0.023$
+\end_layout
+
+\end_inset
+
+, the regression error could still be reduced to 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$0.05$
+\end_layout
+
+\end_inset
+
+, which hardly differs from unrestricted runs.
+ As can be seen in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:mc200_simple-fix-pareto"
+
+\end_inset
+
+, the real reward of the Pareto candidates improves relatively early and
+ seems more robust against outliers compared to the fully mutable and regular
+ GP results.
+ The most significant candidates are presented in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:simpleFix-3candidates"
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
@@ -8572,9 +8834,22 @@ R=-133.4
 \begin_inset Text
 
 \begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace*{-3.8mm}
+\end_layout
+
+\end_inset
+
+
 \begin_inset Graphics
 	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-4.pdf
-	height 3cm
+	height 4cm
 
 \end_inset
 
@@ -8587,9 +8862,22 @@ R=-133.4
 \begin_inset Text
 
 \begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace*{-3.8mm}
+\end_layout
+
+\end_inset
+
+
 \begin_inset Graphics
 	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-7.pdf
-	height 3cm
+	height 4cm
 
 \end_inset
 
@@ -8743,129 +9031,6 @@ name "fig:mc-simple-candidates"
 \end_inset
 
  Two candidates from the simple expert heuristic in closer examination.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-FloatBarrier
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-Simple If-Acceleration with a Fixed Core
-\begin_inset CommandInset label
-LatexCommand label
-name "subsec:eval-fixed"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-In response to the limitations of the TED preserving familiar structures
- in trees with only few nodes, a fixed core was defined in the aforementioned
- if-acceleration policy.
-\end_layout
-
-\begin_layout Standard
-With the SARSA-200 limit being 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$0.023$
-\end_layout
-
-\end_inset
-
-, the regression error could still be reduced to 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$0.05$
-\end_layout
-
-\end_inset
-
-, which hardly differs from unrestricted runs.
- As can be seen in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:mc200_simple-fix-pareto"
-
-\end_inset
-
-, the real reward of the Pareto candidates improves relatively early and
- seems more robust against outliers compared to the fully mutable and regular
- GP results.
- The most significant candidates are presented in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:simpleFix-3candidates"
-
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Standard
-\noindent
-\begin_inset Float figure
-placement h
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\noindent
-\align center
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/evaled_overview.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-The Pareto entries of the fixed version no longer have outliers at medium
- complexity.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:mc200_simple-fix-pareto"
-
-\end_inset
-
-
 \end_layout
 
 \end_inset
@@ -9125,9 +9290,22 @@ complexity
 \begin_inset Text
 
 \begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace*{-3.8mm}
+\end_layout
+
+\end_inset
+
+
 \begin_inset Graphics
 	filename ../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/space-6.pdf
-	height 3cm
+	height 4cm
 
 \end_inset
 
@@ -9140,9 +9318,22 @@ complexity
 \begin_inset Text
 
 \begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace*{-3.8mm}
+\end_layout
+
+\end_inset
+
+
 \begin_inset Graphics
 	filename ../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/space-11.pdf
-	height 3cm
+	height 4cm
 
 \end_inset
 
@@ -9155,9 +9346,22 @@ complexity
 \begin_inset Text
 
 \begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace*{-3.8mm}
+\end_layout
+
+\end_inset
+
+
 \begin_inset Graphics
 	filename ../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/space-20.pdf
-	height 3cm
+	height 4cm
 
 \end_inset
 
@@ -9243,7 +9447,7 @@ $-0.243$]][$0$,fixnode][$2$,fixnode]]}
 \begin_layout Plain Layout
 \align left
 The first candidate with nested if-condition also achieves the most significant
- jump in the real evaluation.
+ jump in the online evaluation.
  Conspicuous is a faulty reversal behavior shortly before the destination.
 \end_layout
 
@@ -9316,7 +9520,8 @@ $-0.047$]]][$0$,fixnode][$2$,fixnode]]}
 
 \begin_layout Plain Layout
 \align left
-The black box performance is even exceeded with this candidate.
+This candidate exceeds the black box performance, still using nests If-Statement
+s.
 \end_layout
 
 \begin_layout Plain Layout
@@ -9406,6 +9611,7 @@ name "fig:simpleFix-3candidates"
 
 \end_inset
 
+ Three selected candidates of the simple policy with a fixed core.
  As one of the few runs, an additional if-condition is used to control the
  behavior more precisely, which makes it easier to distinguish the candidates.
 \end_layout
@@ -9445,6 +9651,7 @@ This close-form preset policy was presented by Xiao
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -9455,14 +9662,14 @@ status open
 
 \begin_layout Plain Layout
 
-Algorithm~
+
 \backslash
 ref{alg:mc-xiao}
 \end_layout
 
 \end_inset
 
-,
+, 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:xiao-origin-plot"
@@ -9470,8 +9677,10 @@ reference "fig:xiao-origin-plot"
 \end_inset
 
 ).
- This policy is already fairly optimized and, with a reward of -102.6, almost
- as good as the SARSA-200 agent.
+ This policy is already fairly optimized, its average reward with -102.6
+ is almost as good as the SARSA-200 agent.
+ However, the upper bound actually has no function and even mistakenly tries
+ to reverse before the goal.
  The computational tree features 26 nodes, making it very robust against
  fundamental changes.
  With this origin, it is particularly interesting to see whether already
@@ -9506,6 +9715,9 @@ reference "fig:xiao-c8"
 \end_inset
 
 .
+ Changing the second If-case in the candidates removes the reversal near
+ the target, although not completely, which can be explained by a tendency
+ in the SARSA-200 policy to choose Action 0 in this area.
 \end_layout
 
 \begin_layout Standard
@@ -9723,7 +9935,7 @@ status open
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_xiao/sfehs_eval/space-0.pdf
-	height 4cm
+	height 5cm
 
 \end_inset
 
@@ -9924,9 +10136,22 @@ complexity
 \begin_inset Text
 
 \begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace*{-3.8mm}
+\end_layout
+
+\end_inset
+
+
 \begin_inset Graphics
 	filename ../benchmarks/slurm_runs/MTC200_MSE_xiao/sfehs_eval/space-5.pdf
-	height 3cm
+	height 4cm
 
 \end_inset
 
@@ -10136,9 +10361,22 @@ complexity
 \begin_inset Text
 
 \begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace*{-3.8mm}
+\end_layout
+
+\end_inset
+
+
 \begin_inset Graphics
 	filename ../benchmarks/slurm_runs/MTC200_MSE_xiao/sfehs_eval/space-8.pdf
-	height 3cm
+	height 4cm
 
 \end_inset
 
@@ -10279,7 +10517,7 @@ status open
 
 \begin_layout Plain Layout
 
-Algorithm~
+
 \backslash
 ref{alg:mc-ifex}
 \end_layout
@@ -10294,24 +10532,51 @@ reference "mc:mc-ifex-plot"
 \end_inset
 
 ).
- Through an extensive improvement process, two reversal points in if-cases
+ Through an extensive improvement process, two reversal points in If-cases
  have already been handled, otherwise the velocity is maximized.
- This relatively thoroughly elaborated specification is also intended to
- offer the evolutionary process many isolated optimization opportunities
  
 \begin_inset ERT
 status open
 
 \begin_layout Plain Layout
 
-With an initial reward of $-100.3$, this approach represents the best performing
+With an average reward of $-100.3$, this approach represents the best performing
  expert strategy.
 \end_layout
 
 \end_inset
 
- This experiment investigates the potential of a complex expert strategy
- with a very high level of abstraction in order.
+ The strategy is also intended to offer the evolutionary process many isolated
+ optimization opportunities.
+ 
+\end_layout
+
+\begin_layout Standard
+As can be seen in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:mc-ifex-pareto"
+
+\end_inset
+
+, all candidates are within a very good performing range, the fixed core
+ version performing slightly better.
+ For most candidates, many different branches were changed so that complex
+ extensions were split between several if-conditions, making even trees
+ with high TED easy to interpret.
+ One of the best candidates can be seen in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:mc-ifex-c8"
+
+\end_inset
+
+.
+ Due to the high complexity of the expert tree as well as its comparatively
+ high breadth, evolution was most time consuming among all expert strategies.
+ A fixed core could greatly improve runtime by inherently preventing many
+ highly divergent solutions and allowing for more meaningful crossover and
+ mutation of candidates.
 \end_layout
 
 \begin_layout Standard
@@ -10429,27 +10694,6 @@ end{algorithm}
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-As can be seen in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:mc-ifex-pareto"
-
-\end_inset
-
-, all candidates are within a very good performing range, the fixed core
- version performing slightly better.
- One of the best candidates can be seen in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:mc-ifex-c8"
-
-\end_inset
-
-.
- 
 \end_layout
 
 \begin_layout Standard
@@ -10624,7 +10868,7 @@ complexity
 \begin_inset Text
 
 \begin_layout Plain Layout
-8
+22
 \end_layout
 
 \end_inset
@@ -10680,9 +10924,22 @@ complexity
 \begin_inset Text
 
 \begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace*{-3.8mm}
+\end_layout
+
+\end_inset
+
+
 \begin_inset Graphics
 	filename ../benchmarks/slurm_runs3_easy/MTC200_MSE_simonBestFix2/sfehs_eval/space-22.pdf
-	height 3cm
+	height 4cm
 
 \end_inset
 
@@ -10725,13 +10982,13 @@ status open
 
  
 \backslash
-plforest{[$
+plforest{[{$
 \backslash
-text{if-then-else}$[$
+text{if-then-else}$},fixnode[{$
 \backslash
-lor$[$
+lor$},fixnode[{$
 \backslash
-land$[$
+land$},fixnode[$
 \backslash
 text{pos}<$
 \backslash
@@ -10743,9 +11000,9 @@ $-0.35$][$0.013$
 \backslash
 $<
 \backslash
-text{vel}$]][$
+text{vel}$]][{$
 \backslash
-land$[$
+land$},fixnode[$
 \backslash
 text{pos}-$
 \backslash
@@ -10765,11 +11022,11 @@ text{vel}<$
 \backslash
 
 \backslash
-$0.015$]]][$2$][$
+$0.015$]]][$2$,fixnode][$
 \backslash
-text{if-then-else}$[$
+text{if-then-else}$,fixnode[{$
 \backslash
-land$[$
+land$},fixnode[$
 \backslash
 text{vel}<$
 \backslash
@@ -10777,7 +11034,7 @@ text{vel}<$
 \backslash
 $0.02$][$
 \backslash
-land$[$>$[$
+land$,fixnode[$>$[$
 \backslash
 text{if-then-else}$[$
 \backslash
@@ -10789,16 +11046,11 @@ cdot
 \backslash
 text{vel}$]][$-0.46$]][$
 \backslash
-text{pos}<-0.05$]]][$0$][$
+text{pos}<-0.05$]]][$0$,fixnode][$
 \backslash
-text{if-then-else}$[$
+text{if-then-else}$,fixnode[$
 \backslash
-text{vel}<0$][$0$][$2$]]]]}
-\end_layout
-
-\begin_layout Plain Layout
-
- 
+text{vel}<0$,fixnode][{$0$},fixnode][{$2$},fixnode]]]]}
 \end_layout
 
 \end_inset
@@ -10832,7 +11084,8 @@ name "fig:mc-ifex-c8"
 
 \end_inset
 
- Pareto candidate with 8 edits.
+ Pareto candidate with 22 edits.
+ Due to its size, some of the nodes were merged manually to fit the page.
 \end_layout
 
 \end_inset
@@ -10929,8 +11182,8 @@ status open
 \begin_inset Tabular
 <lyxtabular version="3" rows="7" columns="2">
 <features tabularvalignment="middle">
-<column alignment="center" valignment="top" width="50mm">
-<column alignment="center" valignment="top" width="50mm">
+<column alignment="center" valignment="top" width="60mm">
+<column alignment="center" valignment="top" width="60mm">
 <row>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
@@ -10992,6 +11245,19 @@ regular GP results
 \begin_inset Text
 
 \begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace*{-3.8mm}
+\end_layout
+
+\end_inset
+
+
 \begin_inset Graphics
 	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs2/MTC75_MSE_scratch/sfehs_eval/evaled_overview.pdf
 	height 5cm
@@ -11007,9 +11273,22 @@ regular GP results
 \begin_inset Text
 
 \begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace*{-3.8mm}
+\end_layout
+
+\end_inset
+
+
 \begin_inset Graphics
 	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs3_easy/MTC75_MSE_scratch/sfehs_eval/evaled_overview.pdf
-	height 4cm
+	height 5cm
 
 \end_inset
 
@@ -11044,6 +11323,19 @@ maximum velocity
 \begin_inset Text
 
 \begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace*{-3.8mm}
+\end_layout
+
+\end_inset
+
+
 \begin_inset Graphics
 	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs2/MTC75_MSE_simple/sfehs_eval/evaled_overview.pdf
 	height 5cm
@@ -11059,9 +11351,22 @@ maximum velocity
 \begin_inset Text
 
 \begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace*{-3.8mm}
+\end_layout
+
+\end_inset
+
+
 \begin_inset Graphics
 	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs3_easy/MTC75_MSE_simple/sfehs_eval/evaled_overview.pdf
-	height 4cm
+	height 5cm
 
 \end_inset
 
@@ -11096,6 +11401,19 @@ maximum velocity (fixed core)
 \begin_inset Text
 
 \begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace*{-3.8mm}
+\end_layout
+
+\end_inset
+
+
 \begin_inset Graphics
 	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs2/MTC75_MSE_simpleFix/sfehs_eval/evaled_overview.pdf
 	height 5cm
@@ -11111,9 +11429,22 @@ maximum velocity (fixed core)
 \begin_inset Text
 
 \begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace*{-3.8mm}
+\end_layout
+
+\end_inset
+
+
 \begin_inset Graphics
 	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs3_easy/MTC75_MSE_simpleFix/sfehs_eval/evaled_overview.pdf
-	height 4cm
+	height 5cm
 
 \end_inset
 
@@ -11641,8 +11972,8 @@ Expert Program Workaround
 For the IB, no human-written policy is known.
  Instead, a formula altering the appropriate actions was used as reference
  solution workaround.
- The strategy intended subtracting a certain value from the most current
- variable of the respective action 
+ The strategy was to subtract a certain value from the most current version
+ of the respective action 
 \begin_inset ERT
 status open
 
@@ -11660,8 +11991,8 @@ text{Shift}_{0}$)
 \end_inset
 
 .
- The real performance of the candidates, especially with more complex candidates
-, is comparable to all other runs (
+ The online performance of the candidates, especially in the complex field,
+ is comparable to the regular GP version and all other runs (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:ib-plots"
@@ -12029,27 +12360,26 @@ reference "fig:Histograms-mc-ib"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
 , where the regression error also did not fall significantly below a limit
  of 2.
- This means, that the PSONN black box policy could not be sufficiently approxima
-ted.
- Since the candidates cannot expect any performance gain, their evaluation
- would not be meaningful.
+ This means that the PSONN black box policy could not be sufficiently approximat
+ed.
+ No significant improvement could be expected from any candidate run, so
+ they could all have been discarded without online evaluation.
+ In the familiar version, this could additionally have been detected at
+ the beginning, where the high regression error of the initial strategy
+ indicated that the differences to the PSONN policy might be too substantial.
  
 \end_layout
 
 \begin_layout Standard
 Familiar GP candidates have no performance advantages compared to regular
- ones, despite their enhanced familiarity, both regression error and the
- fitness did not distinguish significantly.
- Comparing online performance arguably does not make sense when the approximatio
-n of the model did not converge.
+ ones, both regression error and the fitness did not distinguish significantly.
  However, familiarity was conserved without falling short to regular GP.
- Otherwise, symbolic regression is not applicable on such sparse transition
- samples.
 \end_layout
 
 \begin_layout Standard
@@ -12090,8 +12420,8 @@ name "fig:Histograms-mc-ib"
  Histograms presenting the deviation from the black box action in the MC
  (left) and the IB (right), both regarding the best available regular GP
  agent (MSE).
- MC agents have a very high success rate, while the best IB agent have lumps
- of failure on both sides.
+ MC agents have a very high success rate, while the best IB agents have
+ divergent clusters on both sides.
 \end_layout
 
 \end_inset
@@ -12109,8 +12439,8 @@ Discussion
 \end_layout
 
 \begin_layout Standard
-In the experiments, extensions were found for all expert strategies, with
- familiar structures clearly preserved.
+For both benchmarks, extensions were found for all expert strategies, whereby
+ known structures were clearly intact.
  Compared to regular GP results, no major negative effects on the regression
  error were observed.
 \end_layout
@@ -12251,17 +12581,18 @@ name "fig:if-operator-composition"
 \end_layout
 
 \begin_layout Standard
-Minor difficulties may encountered in runs with simple strategies, where
- a few edits can lead to decay of the kernel structure due to the small
- number of nodes.
- A solution is achieved by manually defining a fixed core.
- Fixed core nodes also had a positive effect in complex origin trees by
- significantly reducing the runtime.
- The constraints through fixed knots, as well as other limitations (e.g.,
+Minor difficulties can occur in runs with simple strategies, in which a
+ few edits already lead to a disintegration of the core structure due to
+ the small number of nodes.
+ A solution is achieved by manually defining a fixed core, which also had
+ a positive effect in complex origin trees by significantly reducing the
+ runtime.
+ The constraints through fixed nodes, as well as other limitations (e.g.,
  a reduced set of operators, exclusion of actions), did not show a significant
  impact on the regression error.
- On the contrary, it even had positive effects by creating a more homogeneous
- population, allowing for a better comparison between individual candidates.
+ On the contrary, it actually had a positive impact by creating a more homogeneo
+us population that allowed a better comparison between the individual Pareto
+ candidates, who also had a comparatively good and secure online performance.
  
 \end_layout
 
@@ -12305,6 +12636,7 @@ A general limitation in symbolic regression is the ability to sufficiently
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -12351,28 +12683,30 @@ name "sec:summary"
 \end_layout
 
 \begin_layout Standard
-This thesis proposed to use familiarity, the similarity to a previously
- known solution, as criterion for the interpretability of ML policies and
- introduced a novel approach which uses genetic programming to find algorithmic
- improvements to a domain expert strategy
+In this work, familiarity, the similarity to an already known solution,
+ was introduced as a paradigm for the interpretability of ML policies.
+ Reinforcement learning agents are often based on black box technologies
+ which need to be explained in order to be trusted.
+ We argued, that human-designed programs represent a beneficial anchor point
+ for interpretability and trust.
+ Based on this, a novel was presented, which uses genetic programming to
+ find algorithmic improvements to a domain expert program.
+ This was achieved by using the edit distance to the original tree as a
+ complexity metric, as well as an optional explicit protection of tree structure
+s by selecting fixed nodes.
+ The evolutionary process was given the task to find efficient extensions
+ so that the functionality of an inexplicably better black box solution
+ is achieved, for which a symbolic regression is performed on previously
+ collected transition samples.
+ To this end, a GP framework was developed that implements these techniques
+ as well as some resulting evolutionary principles.
 \end_layout
 
 \begin_layout Standard
-Domain experts programs represent an anchor point for interpretability and
- trust, which are extended with genetic programming to function like a black
- box policy.
- This was achieved by using the edit distance to the origin program as complexit
-y metric in a genetic programming process, as well as an optional explicit
- protection of tree structures by selecting fixed nodes.
- 
-\end_layout
-
-\begin_layout Standard
-The approach was evaluated by performing a symbolic regression on transition
- samples on the mountain car and the industrial benchmark.
- The evaluation showed that the familiarity of strategies can be preserved
- with the proposed techniques in the respective candidates without major
- performance drawbacks.
+The approach was evaluated on the mountain car and the industrial benchmark.
+ The evaluation showed that the familiarity of the strategies with the proposed
+ techniques can be maintained in the respective candidates without major
+ performance decrease.
  The TED allowed various extension to happen, with only a few exceptions
  where the core structure required a manual protection by defining fixed
  nodes.
@@ -12712,6 +13046,7 @@ emph{Eureqa}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "eureqa-review"
+literal "true"
 
 \end_inset
 

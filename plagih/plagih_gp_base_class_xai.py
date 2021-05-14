@@ -110,7 +110,7 @@ class ExplainableGP(object):
         load relevant stuff
         """
         self.choose_distributions = self.activate_distributions(path_distrib=None)  # asd sfeh path_distrib not None
-        self.choose_oparray2 = self.gp_load_oparray(path_operators=None, sfeh_no_crazyops=sfeh_no_crazyops)  # path_operators sfeh this file from config version1
+        self.choose_oparray3 = self.gp_load_oparray(path_operators=None, sfeh_no_crazyops=sfeh_no_crazyops)  # path_operators sfeh this file from config version1
 
         """
         initialize some variables
@@ -522,7 +522,7 @@ class ExplainableGP(object):
                 """
                 for nn in range(evolve_num):
                     cooltree = self.pop_selection_tournament(tourn_size)
-                    cooltree.evolve_mutate_point(self.choose_oparray2,
+                    cooltree.evolve_mutate_point(self.choose_oparray3,
                                                  self.env_vars.choose_obs,
                                                  self.choose_distributions, self.conf.float_decimals)
                     cooltree.meta.last_evolution = tag
@@ -531,22 +531,25 @@ class ExplainableGP(object):
             elif evolve_name == 'mutate branch':
                 # todo cooltree version
                 for nn in range(evolve_num):
-                    cooltree = self.pop_selection_tournament(tourn_size)
 
-                    new_tree = cooltree.get_oldtree()
                     build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
                     full_or_grow = build_spec.get('full_or_grow') or random.choice(['full', 'grow'])
-                    node_ids = tree_get_mutatable_nodes(new_tree, no_root=True)
-                    old_node = random.choice(node_ids)
-                    old_xtype = tree_node_get_xtype(new_tree, old_node)
-                    build_size = choose_build_size(size_mode, mean_min_max_var, tree=new_tree, node_id=old_node)
 
+                    cooltree = self.pop_selection_tournament(tourn_size)
+                    cooltree.evolve_mutate()
+                    coolids = cooltree.get_mutatable_nodepaths()
+                    mutate_nodeid = random.choice(coolids)
+                    print('huehuhe', coolids, 'chosen:', mutate_nodeid)
+                    cool_build_size = cool_choose_build_size(size_mode, mean_min_max_var, cooltree=cooltree, nodepath=rnd_nodepath)
+                    insert_coolbranch = construct_coolcore_depth(coolxtype_root, size_mode, mean_min_max_var,
+                                                                 self.env_vars.choose_obs, self.choose_oparray3,
+                                                                 self.choose_distributions, self.conf.float_decimals)
+
+                    # build a branch that fits the chosen nodes spot
                     core_insert = self.invent_core(size_mode, old_xtype, build_size, full_or_grow)
                     branch_nodes_ids = tree_node_get_branch(new_tree, old_node, karoo=True)
                     new_tree = tree_insert_subtree(new_tree, core_insert, branch_nodes_ids, karoo=True)
                     new_tree = tree_prune_depth(new_tree, self.conf.tree_depth_max, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
-                    # else:
-                    #     new_tree = None
 
                     new_cooltree = cooltree_from_oldtree(new_tree)
 
@@ -811,38 +814,25 @@ class ExplainableGP(object):
             # sfeh lel, 100% excepts as never loaded this
         except:
             self.printpl('i', 'Opt-in not specified: Operators-file does not exist. Creating one with a default list of mathematical operator_pool.')
-            # operator_pool = [('+', 2),
-            #                    ('-', 1), ('Usub', 1),
-            #                    ('*', 2), ('/', 1),
-            #                    ('Square', 0.75), ('**', 0.25),
-            #                    ('Abs', 0.5), ('sign', 0.5), ('Round', 0.5),  # sfeh stop chain of arity-1 op in buid method?
-            #                    ('sqrt', 0.25),
-            #                    # ('log', 0.1), ('log1p', 0.1),  # sfeh
-            #                    ('sin', 0.5),  # ('tan', 0.1), ('cos', 0.33), ('acos', 0.33), ('asin', 0.33), ('atan', 0.33),
-            #                    ('tanh', 0.2),
-            #                    ('Andb', 1), ('Orb', 1), ('Notb', 0.5), ('Xor', 1),
-            #                    ('==', 1), ('!=', 0.5),
-            #                    ('<', 0.5), ('<=', 0.5), ('>', 0.1), ('>=', 0.1),
-            #                    ('Ifte', 2),
-            #                    ('Mini', 1), ('Maxi', 1)]
-            operator_pool = [['+', 2],
-                               ['-', 1], ['Usub', 1],
-                               ['*', 2], ['/', 1],
-                               ['Square', 0.75], ['**', 0.25],
-                               ['Abs', 0.5], ['sign', 0.5], ['Round', 0.5],  # sfeh stop chain of arity-1 op in buid method?
-                               ['sqrt', 0.25],
-                               # ['log', 0.1], ['log1p', 0.1],  # sfeh
-                               ['sin', 0.5],  # ['tan', 0.1], ['cos', 0.33], ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
-                               ['tanh', 0.2],
-                               ['Andb', 1], ['Orb', 1], ['Notb', 0.5], ['Xor', 1],
-                               ['==', 1], ['!=', 0.5],
-                               ['<', 0.5], ['<=', 0.5], ['>', 0.1], ['>=', 0.1],
-                               ['Ifte', 2],
-                               ['Mini', 1], ['Maxi', 1]]
 
-        operator_pool = {x[0]: x[1] for x in operator_pool}
+            operator_pool = [['+', 2],
+                             ['-', 1], ['Usub', 1],
+                             ['*', 2], ['/', 1],
+                             ['Square', 0.75], ['**', 0.25],
+                             ['Abs', 0.5], ['sign', 0.5], ['Round', 0.5],  # sfeh stop chain of arity-1 op in buid method?
+                             ['sqrt', 0.25],
+                             # ['log', 0.1], ['log1p', 0.1],  # sfeh
+                             ['sin', 0.5],  # ['tan', 0.1], ['cos', 0.33], ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
+                             ['tanh', 0.2],
+                             ['Andb', 1], ['Orb', 1], ['Notb', 0.5], ['Xor', 1],
+                             ['==', 1], ['!=', 0.5],
+                             ['<', 0.5], ['<=', 0.5], ['>', 0.1], ['>=', 0.1],
+                             ['Ifte', 2],
+                             ['Mini', 1], ['Maxi', 1]]
+        operator_pool = {op[lp[0]]: lp[1] for lp in operator_pool}
         if sfeh_no_crazyops:
             del operator_pool['**']
+            # workaround sfeh
 
         yaml_dump(self.root_dir / 'backup/operators_used.yaml', operator_pool, default_flow_style=True)
 
@@ -850,11 +840,11 @@ class ExplainableGP(object):
         Check, if the user-specified operators allow closure
         """
         # sfeh dunno if that works... 2f not in x
-        opxtypes = [op[oper]['xtype'] for oper in operator_pool.keys()]
-        has_2f = any(['2f' in x for x in opxtypes])
-        has_2b = any(['2b' in x for x in opxtypes])
-        has_f2b = any(['f2b' in x for x in opxtypes])
-        has_b2f = any(['b2f' in x for x in opxtypes])
+        opxtypes = [op[oper]['coolxtype'] for oper in operator_pool.keys()]
+        has_2f = any([float == x[1] for x in opxtypes])
+        has_2b = any([bool == x[1] for x in opxtypes])
+        has_f2b = any([float in x[0] and bool == x[1] for x in opxtypes])
+        has_b2f = any([bool in x[0] and float == x[1] for x in opxtypes])
         if not all([has_2f, has_2b, has_f2b, has_b2f]):
             print_warning('w', f'Operators are not complete', print_type=self.print_type)
         if all([has_2f, has_2b]) and not all([has_f2b or has_b2f]):
@@ -863,42 +853,34 @@ class ExplainableGP(object):
         """
         Load all operator_pool ready-to-use from a file
         """
-        choose_oparray2 = {
+        choose_oparray3 = {
             # # all operator_pool (not needed)
             # None: {0: [], 1: [], 2: [], 3: [], None: []},
 
             # all operator_pool with a certain xtype-result
-            '2f': {0: [], 1: [], 2: [], 3: [], None: []},
-            '2b': {0: [], 1: [], 2: [], None: []},
-
-            # all operator_pool for point mutation
-            'f2f': {1: [], 2: [], None: []},
-            'f2b': {1: [], 2: [], None: []},
-            'b2b': {1: [], 2: [], None: []},
-            'b2f': {1: []},
-            'b2f2f': {3: [], None: []}
+            None: [],
+            float: [],  # 2f
+            bool: [],  #2b
+            (tuple([float]), float): [],  # x**2, sqrt, log, sin, ...
+            (tuple([float, float]), float): [],  # +, -, *, /, **, ...
+            (tuple([bool, float, float]), float): [],  # Ifte
+            (tuple([float, float]), bool): [],  # <, >, =, >=
+            (tuple([bool]), bool): [],  # not
+            (tuple([float]), bool): [],  # dummy
+            (tuple([bool, bool]), bool): [], # and, or, xor, ...
         }
 
-        for label, probability in operator_pool.items():
-            # label = ops_tupel[0]
-            ops_tupel = (label, float(probability))
+        for xlabel, probability in operator_pool.items():
+            ops_tupel = (xlabel, probability)
 
-            op_info = op[label]
-            xtype = op_info['xtype']
-            arity = op_info['arity']
+            choose_oparray3[None].append(ops_tupel)  # all operators #todo delete this? none required?
+            choose_oparray3[xlabel.coolxtype].append(ops_tupel)  # point mutations
+            choose_oparray3[xlabel.coolxtype[1]].append(ops_tupel)  # construction of trees
 
-            choose_oparray2[xtype][None].append(ops_tupel)
-            choose_oparray2[xtype][arity].append(ops_tupel)
-            choose_oparray2[xtype[-2:]][None].append(ops_tupel)
-            choose_oparray2[xtype[-2:]][arity].append(ops_tupel)
+        choose_oparray3 = list(zip(*choose_oparray3))  # [('+', 2), ('-', 1)] -> [+, -] [2, 1]
+        print('choose_oparray3 init', choose_oparray3)
 
-        for xtype, xrow in choose_oparray2.items():
-            for arity in xrow.keys():
-                # from a list of tuples [[op, prob], [+, 1], ...] to two lists [operator_pool] [probability]
-                operators_probabilities = list(zip(*choose_oparray2[xtype][arity]))
-                choose_oparray2[xtype][arity] = operators_probabilities
-
-        return choose_oparray2
+        return choose_oparray3
 
     def activate_distributions(self, path_distrib=None):
         """
@@ -912,18 +894,17 @@ class ExplainableGP(object):
             self.printpl('i', 'Opt-in not specified: Distributions-file (for random leaf-node constants) does not exist. Using default set.')
             lambdadist_as_string = self.conf.lambdadist_as_string
 
-        choose_distributions = {'2f': [], '2b': []}
+        choose_distributions = {float: [], bool: []}
 
         sample_amount = lambdadist_as_string.get('observed_floats')
         if sample_amount:
             obsnames = self.env_vars.obs_infos.keys()
             obs_samples = self.data_train[obsnames].to_numpy().flatten()
-
             obs_samples = np.random.choice(obs_samples, size=sample_amount)
-            choose_distributions['2f'].extend([lambda: random.choice(obs_samples)]),  # take one
+            choose_distributions[float].extend([lambda: random.choice(obs_samples)]),  # take one
 
-        choose_distributions['2f'].extend([eval(x) for x in lambdadist_as_string['2f']]),
-        choose_distributions['2b'].extend([eval(x) for x in lambdadist_as_string['2b']])
+        choose_distributions[float].extend([eval(x) for x in lambdadist_as_string[float]]),
+        choose_distributions[bool].extend([eval(x) for x in lambdadist_as_string[bool]])
 
         return choose_distributions
 
@@ -1194,17 +1175,59 @@ class ExplainableGP(object):
     #
     #     return label_list, arity_list, xtype_list
 
-    def invent_core(self, size_mode, first_xtype, build_size, full_or_grow):
+    def invent_core(self, size_mode, coolxtype_root, build_size, full_or_grow):
         """
         Creates a random core.
         "depth": creates a tree with a desired depth
         "nodes": creates a tree with a desired amount of nodes
         """
+
+        if 'depth' in size_mode:
+            # sfeh warning: Attention with this one. can get quite large with depth based
+            label_list, arity_list, xtype_list = invent_label_list_depth(coolxtype_root, build_size,
+                                                                         self.env_vars.choose_obs, self.choose_oparray3,
+                                                                         self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
+
+        elif 'nodes' in size_mode:
+
+            label_list, arity_list, xtype_list = invent_label_list_nodes(coolxtype_root, build_size,
+                                                                         self.env_vars.choose_obs, self.choose_oparray3,
+                                                                         self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
+        else:
+            raise Exception('Known full_or_grow was not found for building random trees.')
+
+        core = Core_From_Labels(label_list, arity_list, xtype_list).get_uninstanced_core()
+
+        return core
+
+    def invent_core2(self, size_mode, first_xtype, build_size, full_or_grow):
+        """
+        Creates a random core.
+        "depth": creates a tree with a desired depth
+        "nodes": creates a tree with a desired amount of nodes
+        """
+
+        if build_size <= 1:
+            # must insert terminal already
+            rnd_term = choose_term(first_xtype, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
+            return core_from_labels([rnd_term], 0, first_xtype)
+            # todo exit directly with one node
+        else:
+            rnd_label = choose_operator(first_xtype, self.choose_oparray2)
+            arity = label_get_arity(rnd_label)
+            build_coolcore = CoolCore(label=rnd_label, xtype=first_xtype, arity=arity)
+
         if 'depth' in size_mode:
             # sfeh warning: Attention with this one. can get quite large with depth based
             label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size,
                                                                          self.env_vars.choose_obs, self.choose_oparray2,
                                                                          self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
+            """
+            todo
+            todotodo
+            required: start xtype, open nodes
+            """
+            depth = 1
 
         elif 'nodes' in size_mode:
 
@@ -1285,17 +1308,13 @@ class ExplainableGP(object):
                 old_branch = tree_node_get_branch(tree, node_id, karoo=True)
                 build_size = build_split[i]
 
-                # label_list, arity_list, xtype_list = self.invent_label_list(size_mode, first_xtype, build_size, full_or_grow)
                 core = self.invent_core(size_mode, first_xtype, build_size, full_or_grow)
                 tree = tree_insert_subtree(tree, core, old_branch, karoo=True)
         else:
             action_xtype = self.env_vars.eval_action.xtype
             build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
-
-            # label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, full_or_grow)
             core = self.invent_core(size_mode, action_xtype, build_size, full_or_grow)
             tree = tree_convert_pcore_to_karoo(core)
-            # tree = Ptree_karoo(label_list, xtype_list, arity_list=arity_list).get_uninstanced_tree()
 
         return tree
 

@@ -1,8 +1,9 @@
 import os
 import re
 
+root_id = 1
+
 from plagih.Ptree2 import CoolCore
-from plagih.plagih_data import observation_get_family_and_time
 from plagih.plagih_sympy_extras import plagih_sympify
 from plagih.plagih_types import *
 from plagih.fitness_kernel import *
@@ -13,7 +14,6 @@ from pathlib import Path as Path
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
-
 
 N_id = 3
 N_depth = 4
@@ -33,7 +33,6 @@ T_parsimony = 14
 T_deleteable = [0, 2]  # TR_ID = 0, tree_depth_base = 2
 
 T_num_lines = 15
-root_id = 1
 
 node_is_modifiable = 1
 
@@ -367,10 +366,6 @@ def tree_node_set_modify(tree, node_id, value):
     return tree
 
 
-def tree_node_get_xtype(tree, node_id):
-    return tree[N_xtype][node_id]
-
-
 def tree_node_get_arity(tree, node_id, empty_is_zero=False):
     arity = tree[N_arity][int(node_id)]
     if arity == '':
@@ -400,16 +395,6 @@ def tree_node_get_depth(tree, node_id):
     return int(depth)
 
 
-def tree_node_get_lax_v3(tree, node_id):
-    """
-    no need for variables dict!
-    """
-    label = tree_node_get_label(tree, node_id)
-    arity = tree_node_get_arity(tree, node_id)
-    xtype = tree_node_get_xtype(tree, node_id)
-    return label, arity, xtype
-
-
 def tree_node_get_child(tree, node_id, child_num):
     """
     returns ONE specified child of a node.
@@ -420,17 +405,6 @@ def tree_node_get_child(tree, node_id, child_num):
         child_id = int(child_id)
 
     return child_id
-
-
-def tree_node_get_childs(tree, node_id):
-    """
-
-    """
-    child_list = []
-    arity = tree_node_get_arity(tree, node_id)
-    for child in range(arity):
-        child_list.append(tree_node_get_child(tree, node_id, child))
-    return child_list
 
 
 def tree_node_get_parent(tree, node_id):
@@ -596,25 +570,42 @@ def randomly_split_range(range_max, num_splits):
     return sample_dist
 
 
-def invent_label_list_depth(xtype_root, depth_goal, choose_obs, choose_oparray2, choose_distributions, float_decimals, min_depth=0, full_or_grow=None):
+def invent_label_list_depth(coolxtype_root, depth_goal, choose_obs, choose_oparray3, choose_distributions, float_decimals, min_depth=0, full_or_grow=None):
     """
     build a random, but within itself consistent label list
     Also, return the arities aswell (they are searched anyways)
     """
 
-    tbdo_xtypes = [xtype_root]
-    result_label_list = []
-    result_arity_list = []
-    result_xtype_list = []
+    oxtype_buffer = coolxtype_root[1]
+
+    depth = 0
+    while depth < depth_goal:  # todo depth_goal -1 why?
+        if full_or_grow == 'grow':
+            cons_buf = shuffle_tree_construction(len(xtype_buffer))
+        else:
+            cons_buf = ['func'] * len(xtype_buffer)
+
+        for xtype, ft in list(zip(xtype_buffer, cons_buf)):
+            if ft == 'term':
+                label = choose_term(xtype, choose_obs, choose_distributions, float_decimals)
+                coolxtype = 0
+            elif ft == 'func':
+                label = choose_operator(xtype, choose_oparray2, arity=None)
+                coolxtype = op[label]['coolxtype']
+    else:
+        # build terminal nodes
+        for xtype_parent in xtype_buffer:  # Build terminals now.
+            label, arity = choose_term(xtype_parent[-2:], choose_obs, choose_distributions, float_decimals), 0
+            lax_list.append([label, arity, xtype_parent])
 
     # Build a list with labels in row, and a list with their arities
-    for depth in range(min_depth, depth_goal-1):
+    for depth in range(min_depth, depth_goal - 1):  # -1 because of terminal layer
         next_xtype_list = []
 
         if depth < depth_goal - 1:
 
             functerm_list = ['func']
-            for _ in range(len(tbdo_xtypes) - 1):  # 1 -> at least one function
+            for _ in range(len(oxtype_buffer) - 1):  # 1 -> at least one function
                 if full_or_grow == 'grow' and depth >= min_depth:
                     functerm_list.append(random.choice(['func', 'term']))  # sfeh choice always 50:50? terminal-factor?
                 elif full_or_grow == 'full':
@@ -629,7 +620,7 @@ def invent_label_list_depth(xtype_root, depth_goal, choose_obs, choose_oparray2,
                     # xtype stays the same 'arity-2' version
                     arity = 0
                 elif functerm_list[ii] == 'func':
-                    label = choose_operator(xtype[-2:], choose_oparray2, arity=None)
+                    label = choose_operator(xtype[-2:], choose_oparray3, arity=None)
                     arity = label_get_arity(label)
                     xtype = op[label]['xtype']
                 else:
@@ -668,122 +659,10 @@ def shuffle_tree_construction(size):
     """
 
     """
-    terms = random.randint(0, size-1)  # -1 because at least one 'func'
-    cons_buf = ['term'] * terms + ['func'] * (size-terms)
+    terms = random.randint(0, size - 1)  # -1 because at least one 'func'
+    cons_buf = ['term'] * terms + ['func'] * (size - terms)
     np.random.shuffle(cons_buf)
     return cons_buf
-
-
-def invent_label_list_depth2(xtype_root, depth_goal, choose_obs, choose_oparray2, choose_distributions, float_decimals, full_or_grow=None):
-    """
-    TODO REPLACE OLD VERSION
-    """
-
-    xtype_buffer = [xtype_root[-2:]]  # start with root node, e.g. 'b2f2f' -> ['2f']
-
-    coolcore = CoolCore() # todo todotodo
-
-    lax_list = []
-
-    depth = 0
-    while depth < depth_goal:  # todo depth_goal -1 why?
-        if full_or_grow == 'grow':
-            cons_buf = shuffle_tree_construction(len(xtype_buffer))
-        else:
-            cons_buf = 'func' * len(xtype_buffer)
-
-        for xtype, ft in list(zip(xtype_buffer, cons_buf)):
-            if ft == 'term':
-                label = choose_term(xtype, choose_obs, choose_distributions, float_decimals)
-                coolxtype = 0
-            elif ft == 'func':
-                label = choose_operator(xtype, choose_oparray2, arity=None)
-                coolxtype = op[label]['coolxtype']
-
-        for ii, xtype_parent in enumerate(xtype_buffer):
-            if ft_buf[ii] == 'term':
-                label = choose_term(xtype_parent[-2:], choose_obs, choose_distributions, float_decimals)
-                arity = 0
-            elif ft_buf[ii] == 'func':
-                label = choose_operator(xtype_parent[-2:], choose_oparray2, arity=None)
-                arity = label_get_arity(label)
-                xtype_parent = op[label]['xtype']
-                if label == 'Ifte':
-                    xtype_buffer.extend(['2b', '2f', '2f'])
-                else:
-                    tmp_xtype = xtype_get_from_label(label)
-                    child_type = tmp_xtype[:2][::-1]  # the input of our function "reverted" is the xtype
-                    for _ in range(0, arity):  # when arity==2, add 2 times
-                        xtype_buffer.append(child_type)
-            else:
-                raise
-
-            # Add the label to the result list
-            lax_list.append([label, arity, xtype_parent])
-
-    else:
-        # build terminal nodes
-        for xtype_parent in xtype_buffer:  # Build terminals now.
-            label, arity = choose_term(xtype_parent[-2:], choose_obs, choose_distributions, float_decimals), 0
-
-            # Add the label to the result list
-            lax_list.append([label, arity, xtype_parent])
-
-    # Build a list with labels in row, and a list with their arities
-    for depth in range(depth_goal):  # e.g. min=0, max=4 -> [0, 1, 2, 3]
-        xtype_buffer = []
-
-        """
-        randomize the distribution of operators and terminals
-        """
-        # if depth < depth_goal - 1:  # ??? sfeh, why -1?
-        #     ft_buf = ['func']
-        #     for _ in range(len(xtype_buffer) - 1):  # 1 -> at least one function
-        #         if full_or_grow == 'grow' and depth >= min_depth:
-        #             ft_buf.append(random.choice(['func', 'term']))  # sfeh choice always 50:50? terminal-factor?
-        #         elif full_or_grow == 'full':
-        #             ft_buf.append('func')
-        #         else:
-        #             raise
-        #     np.random.shuffle(ft_buf)  # ['term', 'func', 'term', ...]
-
-            """
-            choose real labels for the shuffled func/term list, 
-            """
-            for ii, xtype_parent in enumerate(xtype_buffer):
-                if ft_buf[ii] == 'term':
-                    label = choose_term(xtype_parent[-2:], choose_obs, choose_distributions, float_decimals)
-                    # xtype: stays the same
-                    arity = 0
-                elif ft_buf[ii] == 'func':
-                    label = choose_operator(xtype_parent[-2:], choose_oparray2, arity=None)
-                    arity = label_get_arity(label)
-                    xtype_parent = op[label]['xtype']
-                    if label == 'Ifte':
-                        xtype_buffer.extend(['2b', '2f', '2f'])
-                    else:
-                        tmp_xtype = xtype_get_from_label(label)
-                        child_type = tmp_xtype[:2][::-1]  # the input of our function "reverted" is the xtype
-                        for _ in range(0, arity):  # when arity==2, add 2 times
-                            xtype_buffer.append(child_type)
-                else:
-                    raise
-
-                # Add the label to the result list
-                lax_list.append([label, arity, xtype_parent])
-
-        else:  # now, we are on the lowest dim_y.
-
-            for xtype_parent in xtype_buffer:  # Build terminals now.
-                label, arity = choose_term(xtype_parent[-2:], choose_obs, choose_distributions, float_decimals), 0
-
-                # Add the label to the result list
-                lax_list.append([label, arity, xtype_parent])
-
-        # Finally, update the list for the next round
-        xtype_buffer = xtype_buffer[:]
-
-    return lax_list
 
 
 def choose_build_size(size_mode, mean_min_max_var, tree=None, node_id=None, force=None):
@@ -821,7 +700,48 @@ def choose_build_size(size_mode, mean_min_max_var, tree=None, node_id=None, forc
     return int(build_size)
 
 
-def invent_label_list_nodes(t_xtype, goal_max_nodes, choose_obs, choose_oparray2, choose_distributions, float_decimals, full_or_grow='grow'):
+def cool_choose_build_size(size_mode, mean_min_max_var, cooltree=None, nodepath=None, force=None):
+    """
+    Very unified utility function that returns the required tree size from the following parameters
+    # branch_nodes, branch_depth, tree_depth, tree_nodes
+
+    It can either return a tree depth or an amount of tree nodes
+    """
+    mean, size_min, size_max, size_variance = mean_min_max_var
+    if size_mode == 'branch_nodes' or size_mode == 'branch_depth' or force == 'branch':
+        relative_size = 0
+    else:
+        if cooltree and nodepath:
+            pass
+        else:
+            raise Exception('No tree or node is given for computing the relative size')
+
+        if size_mode == 'tree_depth':
+            tree_size = cooltree.core.childs_depth_max
+            print('tree_size = cooltree.core.childs_depth_max:', tree_size)
+            if tree_size is None and 'delete_this':
+                raise Exception('ASDASDASD')
+            node_size = len(nodepath)
+        elif size_mode == 'tree_nodes':
+            tree_size = len(cooltree)
+            print('len(cooltree)?:', len(cooltree))
+            node_size = len(cooltree.get_nodepath(nodepath))
+            print('cooltree.get_nodepath(nodepath)?:', cooltree.get_nodepath(nodepath))
+        else:
+            raise Exception('Sizemode not known?')
+
+        relative_size = tree_size - node_size
+        print('asdasd', relative_size)
+
+    build_size = int(random.normalvariate(mean, size_variance))
+    if size_max is not None:
+        build_size = min(size_max - relative_size, build_size)
+    build_size = max(size_min, build_size)
+
+    return int(build_size)
+
+
+def invent_label_list_nodes(coolxtype, goal_max_nodes, choose_obs, choose_oparray3, choose_distributions, float_decimals, full_or_grow='grow'):
     """
     build a random function (as label list)
     -> labels, arities: ['+', '1.23', '2.34'], [2, 0, 0]
@@ -838,11 +758,12 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, choose_obs, choose_oparray2
     ->
     # sfeh t_xtype here is a filler, e.g. 2f -> + -> f2f
     """
-    tbdo_xtypes = [t_xtype]
+    tbdo_xtypes = [coolxtype]
     num_inserts = 1
     result_label_list = []
     result_arity_list = []
     result_xtype_list = []
+    result_lax_list = []
     done = False
 
     while not done:
@@ -873,7 +794,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, choose_obs, choose_oparray2
             arity = label_get_arity(label)
             label_xtype = op[label]['xtype']
             # ('GG', result_label_list, tmp_label_list, '(', len(result_label_list), num_inserts, '>', arity, ')', (len(result_label_list) + num_inserts + arity), goal_max_nodes)
-            if goal_max_nodes > (len(result_label_list) + num_inserts) + arity + 1:  # +1 = the start node which we must not forget
+            if goal_max_nodes > (len(result_lax_list) + num_inserts) + arity + 1:  # +1 = the start node which we must not forget
 
                 tmp_label_list[index] = label
                 tmp_arity_list[index] = arity
@@ -907,7 +828,8 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, choose_obs, choose_oparray2
         result_label_list.extend(tmp_label_list)
         result_arity_list.extend(tmp_arity_list)
         result_xtype_list.extend(tmp_xtype_list)
-
+        result_lax_list.extend(list(zip(tmp_label_list, tmp_arity_list, tmp_xtype_list)))
+        print(f'xxx todo\n{result_lax_list}\n{result_label_list}')
     else:
         # Fix the last leftover nodes
         for t_xtype in tbdo_xtypes:
@@ -916,6 +838,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, choose_obs, choose_oparray2
             result_label_list.append(label)
             result_arity_list.append(arity)
             result_xtype_list.append(label_xtype)
+            result_lax_list.append([label, arity, label_xtype])
 
     return result_label_list, result_arity_list, result_xtype_list
 
@@ -1009,6 +932,7 @@ def tree_get_parsimony(tree):
     if parsimony != '':
         parsimony = float(parsimony)
     return parsimony
+
 
 #
 # def tree_get_pycode(tree, node_id=root_id):
@@ -1125,6 +1049,17 @@ def tree_get_fix_nodes(tree, karoo=True):
             node_ids.append(int(node_id))
 
     return node_ids
+
+
+def tree_node_get_childs(tree, node_id):
+    """
+
+    """
+    child_list = []
+    arity = tree_node_get_arity(tree, node_id)
+    for child in range(arity):
+        child_list.append(tree_node_get_child(tree, node_id, child))
+    return child_list
 
 
 def tree_node_get_branch(tree, node_id, karoo=True):
@@ -1685,32 +1620,6 @@ def evolve_node_renum(tree):
 #     return tree  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
 
-def tree_remove_tilde(tree):
-    """
-    ~- workaround
-    """
-    pass
-    # while True:
-    #     for node_id in tree_iterate_range(tree, karoo=True):
-    #         if tree_node_get_label(tree, node_id) == '~':
-    #             print('this is apparently still needed')
-    #             raise Exception('this is apparently still needed')
-    #             try:
-    #                 c_id = tree_node_get_child(tree, node_id, 0)
-    #             except IndexError:
-    #                 return tree
-    #             clabel, carity, cxtype = tree_node_get_lax_v3(tree, c_id)
-    #             if carity == 0:
-    #                 tree = tree_node_set_label(tree, c_id, f'-{clabel}')
-    #                 tree = tree_remove_node_with_child0(tree, node_id)
-    #                 break
-    #         else:
-    #             pass
-    #     else:
-    #         break
-    return tree
-
-
 def tree_remove_node_with_child0(tree, node_id):
     child0 = tree_node_get_child(tree, node_id, 0)
     if child0 != '':
@@ -1838,7 +1747,7 @@ def tree_check_types(tree, karoo=True):
         if xtype == 'b2f2f':
             xtypes_required = ['2b', '2f', '2f']
         else:
-            xtypes_required = [xtype[:2][::-1]] * arity + [''] * (3-arity)  # ['2f', '2f', '']
+            xtypes_required = [xtype[:2][::-1]] * arity + [''] * (3 - arity)  # ['2f', '2f', '']
 
         # children_xtypes = xtype_label_get_child_xtypes(label, arity, env_vars)
         # print('asd tree check types\n',
@@ -1967,4 +1876,3 @@ def tree_iterate_range(tree, karoo=True):
         start = 0
     np_list = range(start, len(tree[N_label]))
     return np_list
-

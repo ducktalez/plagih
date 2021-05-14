@@ -1,7 +1,7 @@
 from pathlib import Path
 import sklearn.model_selection as skcv
 from plagih.printing import *
-from plagih.operators import op
+from plagih.operators import *
 import numpy as np
 import pandas as pd
 import re
@@ -13,28 +13,28 @@ import tensorflow as tf
 tf.compat.v1.disable_eager_execution()  # sfeh wasd wtf
 
 
-class Obs:
-
-    def filter_new_index(self):
-        if self.index_minmax is None:
-            return
-        else:
-            new_index = int(max(min(round(random.gauss(self.obs_index, 1)), self.index_minmax[1]), 0))
-            self.obs_index = new_index
-            self.name = f'{self.family}_{new_index}'
-
-    def __init__(self, name, ctype):
-        self.name = name
-        self.ctype = ctype
-        self.tf_type = tf.float32
-        self.xtype = '2f'
-
-        obs_family, obs_index, prelabel = observation_get_family_and_time(name, none_return=None)
-        self.family = obs_family
-        self.obs_index = obs_index  # is None when no index but 0 when
-
-        self.index_minmax = None
-        self.fun_filter_index = lambda: None  # as default, return own index
+# class Obs:
+#
+#     def filter_new_index(self):
+#         if self.index_minmax is None:
+#             return
+#         else:
+#             new_index = int(max(min(round(random.gauss(self.obs_index, 1)), self.index_minmax[1]), 0))
+#             self.obs_index = new_index
+#             self.name = f'{self.family}_{new_index}'
+#
+#     def __init__(self, name, ctype):
+#         self.name = name
+#         self.ctype = ctype
+#         self.tf_type = tf.float32
+#         self.iotype = float  # sfeh todo
+#
+#         obs_family, obs_index, prelabel = observation_get_family_and_time(name, none_return=None)
+#         self.family = obs_family
+#         self.obs_index = obs_index  # is None when no index but 0 when
+#
+#         self.index_minmax = None
+#         self.fun_filter_index = lambda: None  # as default, return own index
 
 
 def choice_weights(obs_list, max_hist=10):
@@ -67,7 +67,7 @@ class EvalAction:
         self.name = name
         self.ctype = ctype  # ! may be int!
         self.tf_type = tf.float32  # sfeh especiall when the type is integer
-        self.xtype = '2f'
+        self.iotype = float  # sfeh todo
 
         self.uniques = uniques
 
@@ -88,8 +88,8 @@ class EnvVars:
         # self.obs_krazy = {}  # lookup table with all observations - if an observation is not in here, it is a float # sfeh delete this
         self.obs_infos = {}
         self.eval_action: EvalAction = None
-        self.choose_obs = {'f2': None,
-                           '2b': None}
+        self.choose_obs = {float: None,
+                           bool: None}
 
 
 def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
@@ -141,19 +141,19 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
         except Exception as ex:
             print(f'Could not load samples csv correctly: {ex}')
 
-        ctype = locate(col_infos.get('type', 'float'))
+        iotype = locate(col_infos.get('type', 'float'))
 
         if is_action(column_name, col_infos.get('role')):
             if column_name == action_name or action_name is None:
                 cmin = col_infos.get('min', df[header].min())
                 cmax = col_infos.get('max', df[header].max())
                 uniques = df[header].unique()
-                eval_action = EvalAction(column_name, ctype, cmin, cmax, uniques)
+                eval_action = EvalAction(column_name, iotype, cmin, cmax, uniques)
             else:
-                drop_actions.append(column_name)  # drop from data
-                printez('i', f'Ignoring action {column_name} for this run')  # , print_type=print_type print_type does not exist yet
+                drop_actions.append(column_name)  # drop from data (only evaluate ONE action, drop other potential actions)
+                printez('i', f'Ignoring action {column_name} for this run')  # , print_type=print_type print_type does not exist yet sfeh
         else:
-            obs_list.append(Obs(column_name, ctype))
+            obs_list.append(Observation(column_name, iotype=iotype))
 
     df.rename(columns=rename_columns, inplace=True)
     df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
@@ -172,25 +172,20 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
         if len(family_meeting) > 1:
             choose_obs_2f.extend([x for x in family_meeting])
             choose_obs_p.extend(list(choice_weights(family_meeting)))
-
             index_minmax = (family_meeting[0].obs_index, family_meeting[-1].obs_index)
             for obs_tmp in family_meeting:
                 obs_tmp.index_minmax = index_minmax
                 env_vars.obs_infos[obs_tmp.name] = obs_tmp
-                # obs_tmp.fun_filter_index = lambda: obs_tmp.filter_new_index()  # int(max(min(round(random.gauss(obs_tmp.obs_index, 1)), index_minmax[1]), 0))
                 obs_info[obs_tmp.name] = obs_tmp
         else:
             # LOL UMAD? only one family member (probably even more common)
             obs_tmp = family_meeting[0]
-            # obs_tmp.fun_filter_index = lambda: None
             obs_info[obs_tmp.name] = obs_tmp
             choose_obs_2f.append(obs_tmp)
             choose_obs_p.append(1)
 
-    choose_obs = {'2f': lambda: random.choices(choose_obs_2f, weights=choose_obs_p)[0],
-                  '2b': None}
-
-    env_vars.choose_obs = choose_obs
+    env_vars.choose_obs = {float: lambda: random.choices(choose_obs_2f, weights=choose_obs_p)[0],
+                           bool: None}  # sfeh None? yeah, not important but still...
     env_vars.obs_infos = obs_info
 
     if eval_action:

@@ -137,10 +137,49 @@
 %  \includegraphics[height=0.25\textheight]{../img/rl_images/reinforcement_learning_diagram_sfeh_a4}
 %\end{frame}
 
+\begin{frame}{Genetic Programming}
+ \begin{columns}
+  \column{0.4\textwidth}
+  Evolutionary algorithm\\
+   \begin{itemize}
+    \item Representation as trees
+    \item Population: 1000
+    \item Generations: 4000
+   \end{itemize}
+   \bigskip
+   Optimization of genes\\
+   \begin{itemize}
+    \item Selection (tournament)
+    \item Mutation (point, branch)
+    \item Crossover
+   \end{itemize}
+  \column{0.60\textwidth}
+   \begin{figure}
+    \includegraphics[height=0.5\textheight]{../img/inkscape/GP-mutations.pdf}
+	\caption{Crossover recombines branches between two selected trees of the population.}
+   \end{figure}
+ \end{columns}
+\end{frame}
 
+\begin{frame}{``Simplicity'' vs. ``Familiarity''}
+ \centering
+ \begin{figure}[tph]
+  \plforest{[if-then-else[$<$[vel][$0$]][$0$][$2$]]}\hspace{8mm}\plforest{[{$+$}[abs[pos]][{$\cdot$}[{$174.162$}][{vel}]]]} \hspace{8mm}\plforest{[{$x^y$}[vel][{$-5.0$}]]} 
+  \caption{Three formulas with completely different structures that achieve almost identical results.}
+ \end{figure}
+\end{frame}
 
-
-\section*{Explainable AI} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Interpretability}
+``The ability to explain or to present in understandable terms to humans''\\
+\bigskip
+Manifestations (Doshi-Velez and Kim 17)
+ \begin{itemize}
+  \item Problem formulation
+  \item Evaluation level
+  \item Task-related (e.g. global/local, incompleteness, user expertise, time)
+  \item Method-related (e.g. form/number/compositionality of cognitive chunks, monotonicity, uncertainty)
+ \end{itemize}
+\end{frame}
 
 \begin{frame}<presentation:1>{Explanation Methods}
  \begin{tabular}{>{\raggedright}p{0.4\textwidth}>{\raggedright}p{0.4\textwidth}}
@@ -183,61 +222,6 @@
   $\rightarrow$ RL policies require\\global interpretability
  \end{columns}
 \end{frame}
-
-\begin{frame}{Interpretability}
-``The ability to explain or to present in understandable terms to humans''\\
-\bigskip
-Manifestations (Doshi-Velez and Kim 17)
- \begin{itemize}
-  \item Problem formulation
-  \item Evaluation level
-  \item Task-related (e.g. global/local, incompleteness, user expertise, time)
-  \item Method-related (e.g. form/number/compositionality of cognitive chunks, monotonicity, uncertainty)
- \end{itemize}
-\end{frame}
-
-
-
-
-
-
-\section*{Genetic Programming} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\begin{frame}{Genetic Programming}
- \begin{columns}
-  \column{0.4\textwidth}
-  Evolutionary algorithm\\
-   \begin{itemize}
-    \item Representation as trees
-    \item Population: 1000
-    \item Generations: 1000
-   \end{itemize}
-   \bigskip
-   Optimization of genes\\
-   \begin{itemize}
-    \item Selection (tournament)
-    \item Mutation (point, branch)
-    \item Crossover
-   \end{itemize}
-  \column{0.60\textwidth}
-   \begin{figure}
-    \includegraphics[height=0.5\textheight]{../img/inkscape/GP-mutations.pdf}
-	\caption{Crossover recombines branches between two selected trees of the population.}
-   \end{figure}
- \end{columns}
-\end{frame}
-
-\begin{frame}{``Simplicity'' vs. ``Familiarity''}
- \centering
- \begin{figure}[tph]
-  \plforest{[if-then-else[$<$[vel][$0$]][$0$][$2$]]}\hspace{8mm}\plforest{[{$+$}[abs[pos]][{$\cdot$}[{$174.162$}][{vel}]]]} \hspace{8mm}\plforest{[{$x^y$}[vel][{$-5.0$}]]} 
-  \caption{Three formulas with completely different structures that achieve almost identical results.}
- \end{figure}
-\end{frame}
-
-
-
-\section*{Familiar Genetic Programming} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{frame}{Explainability Gap}
 \centering

@@ -15,9 +15,8 @@ import numpy as np
 
 def label_get_arity(node_label):
     """
-    return terminal or function according to the label
+    return arity of a label
     """
-
     if node_label in op:
         arity_sfehdebug = op[node_label]['arity']
         return arity_sfehdebug
@@ -51,14 +50,8 @@ def random_choose_tempobs(obs_list, max_hist=10):
     return new_obs
 
 
-def choose_term(xtype, choose_obs, choose_distribution, float_decimals):
+def choose_term(itype, choose_obs, choose_distributions, float_decimals):
     """
-    Returns a terminal of xtype.
-
-    function: f2b -> 2b needed
-    terminal:  2f -> 2f needed
-    --> check if it is function, aka _2f
-    --> check if it is terminal, aka f2
 
     Modes:
     var_and_const: return randomly (50:50) a variable or a constant
@@ -67,30 +60,31 @@ def choose_term(xtype, choose_obs, choose_distribution, float_decimals):
     input options: f2f, f2b, b2f, b2b, f2b2b, 2f, 2b
     """
 
-    # insert a ?
-    if random.choice(['obs', 'distrib']) == 'obs' and choose_obs[xtype]:
-        # obs_list = random.choice(list(env_vars['env_observation_family'].values()))
-        term = choose_obs[xtype]()
-        term = term.name
+    # sfeh 50% chance observation/value
+    if random.choice(['obs', 'distrib']) == 'obs' and choose_obs[itype]:
+        obs = choose_obs[itype]()
+        print('SAME???', obs.name, obs.label)
+        return obs
     else:
-        dist_fun = random.choice(choose_distribution[xtype])
-        term = dist_fun()
-        if '2f' in xtype:  # sfeh int aswell?
-            term = float(round(term, float_decimals))
+        dist_fun = random.choice(choose_distributions[itype])
+        value = dist_fun()
+        if itype == float:  # sfeh int aswell?
+            value = float(round(value, float_decimals))
+            const = FloatConstant(value)
+        elif itype == bool:
+            const = BoolConstant(value)
+        else:
+            raise Exception('ASDASD NOOO WHYY')
+        return const
 
-    return str(term)  # sfeh str necessary?
 
-
-def choose_operator(xtype, choose_oparray2, arity=None):
+def choose_operator(coolxtype_key, choose_oparray3):
     """
-    Randomly choosing an operator for a given xtype.
+    Randomly choosing an operator-label for a given xtype.
     choose_oparray2 must be given, as they are different between runs.
     arity can also be set optionally, e.g. for point mutation
     """
-    func_list, probability_list = choose_oparray2[xtype][arity]
-    # except:
-    #     raise Exception('sfeh DELETE IF NOT REQUIRED, 22.07.')
-
+    func_list, probability_list = choose_oparray3[coolxtype_key]
     ops = random.choices(func_list, weights=probability_list)[0]  # [0] as this function can only return lists...
     return ops
 

@@ -47,7 +47,6 @@ class CoolCore:
             However, the hashes change between runs (a python security feature)
         """
         labellist = self.get_labellist_breath()
-
         return ','.join([str(x) for x in labellist])
 
     def __str__(self):
@@ -67,16 +66,9 @@ class CoolCore:
 
     def __len__(self):
         """
+        counting the amount of nodes recursively
         """
         return 1 + sum([len(cc) for cc in self.childs])
-
-    def finalize(self):
-        """
-
-        """
-        self.finalize_set_depth()
-        self.finalize_set_nodepath([0])
-        self.workaround_remove_tilde()
 
     def finalize_structure(self):
         """
@@ -98,22 +90,35 @@ class CoolCore:
         """
         self.plabel = new_core.plabel
         self.childs = new_core.childs if new_core.childs else []  # maybe must be updated recursively
-        self.is_fix = new_core.is_fix
-        self.complete = new_core.complete  # if the node is correct/done/okay
+        # self.is_fix = new_core.is_fix  # debatable
+        # self.complete = new_core.complete  # if the node is correct/done/okay
+        # depth needs to be fixed?
 
-    def get_mutatable_nodepaths(self):
+    def is_root(self):
+        """
+        delete this?
+        todo
+        """
+        if len(self.nodepath) == 1:
+            return True
+        else:
+            return False
+
+    def get_mutatable_nodes(self, coolxtype_out=None, allow_root=True):
         """
         return all nodes that are mutatable (non fixed)
+        sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!
         """
         coolids_list = []
         if not self.is_fix:
-            coolids_list.append(self.nodepath)
+            if coolxtype_out is None or coolxtype_out == self.plabel.coolxtype[1] and (allow_root or not self.is_root()):
+                # crossover requires excluding types that are not matching, and excludes the root node
+                coolids_list.append(self)
 
-        coolids_list.extend(list(itertools.chain(*[cc.get_mutatable_nodepaths for cc in self.childs])))
+        coolids_list.extend(list(itertools.chain(*[cc.get_mutatable_nodes(coolxtype_out=coolxtype_out, allow_root=allow_root) for cc in self.childs])))
 
     def finalize_set_nodepath(self, nodepath):
         """
-        aka nodepath?
         [0,2,1,0,0]
         """
         self.nodepath = nodepath
@@ -152,8 +157,6 @@ class CoolCore:
         else:
             return list(itertools.chain(*[cc.get_lowest_nodes() for cc in self.childs]))
 
-        return coolids_list
-
     def construct_append_layer_depth(self, choose_obs, choose_oparray3, choose_distributions, float_decimals, construct='full'):
         """
         appends a layer of nodes to a tree that is in construction
@@ -186,7 +189,7 @@ class CoolCore:
 
     def labellist_modifylist_from_coolcore(self):
         """
-
+        breadth-first labellist (karoo)
         """
         label_list = []
         xtype_list = []
@@ -203,7 +206,7 @@ class CoolCore:
 
     def get_nodes_at_layer(self, goal_depth, only_mutable=False, get_closest_depth=False):
         """
-        Returns a list with mutatable ids which are *lvl_goal* layers away from non modifiable nodes
+        Returns a list with mutatable ids which are *goal_depth* layers away from non modifiable nodes
         last_leaves: if you want so save all leave nodes aswell
 
         sum_layers=False, get_closest=True, return_all_layers=False
@@ -287,13 +290,6 @@ class CoolCore:
             # old_core:[sign, [Mini, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
             # new_core: [sign, [Mini, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.569271]]]
         return
-
-    def get_mutatable_nodes(self):
-        """
-        was tree_get_mutatable_nodes(tree) in oldtree
-        """
-        add_me = [] if self.is_fix else [self]
-        return add_me + sum([cc.get_mutatable_nodes() for cc in self.childs], [])
 
     def eval_parsimony(self, parsimony_distance, origin_cooltree=None, weights=None):
         """
@@ -451,30 +447,59 @@ class CoolCore:
         return '\n'.join([', '.join([str(lbl) for lbl in layer]) for layer in
                           layerlabellist])  # lbl-needed, sometines those are float values
 
-    def evolve_mutate(self, choose_oparray3, choose_obs, choose_distributions, float_decimals, mutate='branch'):
+    def evolve_mutate_branch_depth(self, depth_goal, choose_oparray3, choose_obs, choose_distributions, float_decimals, mutate='branch', full_or_grow='full'):
         """
-        todo
+        todo other version
         currently only one branch
         """
-        node_list = self.get_mutatable_nodes()
-        node = random.choice(node_list)
-        if mutate == 'branch':
-            new_node = construct_coolcore_depth(node.coolxtype, depth_goal, choose_oparray3, choose_obs, choose_distributions, float_decimals)  # , full_or_grow=full todo
+        coolxtype = self.plabel.coolxtype
+
+        # sfeh: making the root node (todo?)
+        if depth_goal == 1:
+            # return just one node
+            self.plabel = choose_term(coolxtype, choose_obs, choose_distributions, float_decimals)  # sfeh update node plabel
+            # delete this, deprecated in class
+            # coolcore = CoolCore(plabel=plabel)
+            # return coolcore
+        else:
+            self.plabel = choose_operator(coolxtype, choose_oparray3)
+            # coolcore = CoolCore(plabel=plabel)  # sfeh delete this
+
+            depth = 1
+
+            while depth < depth_goal - 1:  # depth_goal-1 as terminal nodes get added at the end
+                self.construct_append_layer_depth(choose_obs, choose_oparray3, choose_distributions, float_decimals, construct=full_or_grow)
+                # sfeh todo gleichmäßige Verteilung
+                # if full_or_grow == 'grow':
+                #     coolcore.construct_append_layer_depth(choose_obs, choose_oparray3, choose_distributions, float_decimals, construct)
+                # else:
+                #     cons_buf = ['func'] * len(oxtype_buffer)
+
+            else:
+                # build terminal nodes
+                self.construct_append_layer_depth(choose_obs, choose_oparray3, choose_distributions, float_decimals, construct=full_or_grow)
+
+    def evolve_mutate_filter(self, choose_oparray3, choose_obs, choose_distributions, float_decimals):
+        """
+        
+        """
+        if self.plabel.arity > 0:
+            self.plabel = choose_operator(self.plabel.coolxtype, choose_oparray3)  # Function is same type, same arity
+        else:
+            self.plabel = choose_term(self.plabel.coolxtype[1], choose_obs, choose_distributions, float_decimals)  # 3 -> '2f' -> 5
+
+        self.finalize_structure()
 
     def evolve_mutate_point(self, choose_oparray3, choose_obs, choose_distributions, float_decimals):
         """
         Mutate a single mutatable point in any Tree.
         """
-        # 1. choose a node
-        node_list = self.get_mutatable_nodes()
-        node = random.choice(node_list)
-        if node.arity > 0:
-            node.plabel = choose_operator(node.plabel.coolxtype, choose_oparray3)  # Function is same type, same arity
+        if self.plabel.arity > 0:
+            self.plabel = choose_operator(self.plabel.coolxtype, choose_oparray3)  # Function is same type, same arity
         else:
-            node.plabel = choose_term(node.plabel.coolxtype[1], choose_obs, choose_distributions, float_decimals)  # 3 -> '2f' -> 5
+            self.plabel = choose_term(self.plabel.coolxtype[1], choose_obs, choose_distributions, float_decimals)  # 3 -> '2f' -> 5
 
         self.finalize_structure()
-        # All node info should stay the same. xtype, arity
 
     def evolve_start(self):
         """
@@ -546,7 +571,7 @@ class CoolTree(CoolCore):
 
     def __init__(self, coolcore: CoolCore):
         super().__init__(coolcore)
-        # self.core = coolcore  # todo todotodo sfeh
+        # self.core = coolcore  # todo sfeh
         self.meta = self.PtreeMeta()
         self.history = deque([], maxlen=10)  # sfeh arbitrary value of 10 historic metainfo of this tree
         self.finalize_structure()
@@ -564,6 +589,14 @@ class CoolTree(CoolCore):
 
     # def write_histogram(self):
 
+    def finalize(self):
+        """
+        (only in root node)
+        """
+        self.finalize_set_depth()
+        self.finalize_set_nodepath([0])
+        self.workaround_remove_tilde()
+
     def get_layer_nodelist(self):
         """
         [+,[*,-]]
@@ -574,27 +607,23 @@ class CoolTree(CoolCore):
             label_layer_list.append([node_on_lvl for node_on_lvl in self.get_nodes_at_layer(depth)])
         return label_layer_list
 
-    def get_layer_labellist(self):
-        """
-
-        """
-        layerlist = self.get_layer_nodelist()
-        labellayerlist = []
-        for depth_list in layerlist:
-            labellayerlist.append([node_on_lvl.label for node_on_lvl in depth_list])
-        return labellayerlist
-
     # def workaround_normalize_exponentiation(self):
     #     self.core.workaround_normalize_exponentiation()
     #     # self.finish_nodes()  #
     #     self.finalize_completely()  #
 
     def finalize_completely(self):
+        """
+
+        """
         self.finalize_structure()
         # self.finalize_meta()  # todo
         self.complete = True
 
     def finalize_meta(self):
+        """
+
+        """
         # sfeh asd does this work?
         self.meta.expr_raw = self.get_expr_raw()
         self.meta.expr_sym = 'self.get_expr_sym()'  # todo
@@ -681,6 +710,7 @@ class CoolTree(CoolCore):
         """
         Get the meta information from a tree
         ! This does not evaluate fitness or parsimony !
+        delete this
         """
         tree_meta = {}
         parsimony = self.meta.parsimony
@@ -701,35 +731,55 @@ class CoolTree(CoolCore):
         observation_list = self.get_observation_list()
         return [x if x[0] != '-' else x[1:] for x in observation_list]
 
+    def evolve_mutate_filter_random(self, call_params, float_decimals):
+        """
+        Mutates a number of float terminal of a tree
+        todo
+        """
+        mode = call_params['mode']  # point/branch/all
+        yes_observations = call_params.get('yes_observations')  # point/branch/all
+        mutate_filter = 'gaussian_filter'  # sfeh change?
+
+        node_ids = self.get_mutatable_nodes()
+        node_id = random.choice(node_ids)  # sfeh should this be completely random?
+
+        if mode == 'branch':
+            node_id.evolve_mutate_filter(choose_oparray3, choose_obs, choose_distributions, float_decimals)
+        else:
+            pass
+            # mode == 'point'
+            # sfeh delete this? point can always hapen
+            # node_id.evolve_mutate_point(choose_oparray3, choose_obs, choose_distributions, float_decimals)
+
+        self.finalize_structure()
+
+    def evolve_mutate_point_random(self, choose_oparray3, choose_obs, choose_distributions, float_decimals):
+        """
+        Mutate a single mutatable point in any Tree.
+        """
+        # 1. choose a node
+        node_list = self.get_mutatable_nodes()
+        node = random.choice(node_list)
+        node.evolve_mutate_point(choose_oparray3, choose_obs, choose_distributions, float_decimals)
+
+        self.finalize_structure()
+
+    def evolve_mutate_branch_random(self, cool_build_size, choose_oparray3, choose_obs, choose_distributions, float_decimals, size_mode='depth', full_or_grow='full'):
+        """
+
+        """
+        node_list = self.get_mutatable_nodes()
+        node = random.choice(node_list)
+        node.evolve_mutate_branch_depth(cool_build_size, choose_oparray3, choose_obs, choose_distributions, float_decimals, full_or_grow=full_or_grow)
+
+        self.finalize_structure()
+
 
 def construct_coolcore_depth(coolxtype, size_mode, mean_min_max_var, choose_obs, choose_oparray3, choose_distributions, float_decimals, full_or_grow=None):
     """
     TODO REPLACE OLD VERSION
     """
-
-    lax_list = []
-    if depth_goal == 1:
-        # return just one node
-        plabel = choose_term(coolxtype, choose_obs, choose_distributions, float_decimals)
-        coolcore = CoolCore(plabel=plabel)
-        return coolcore
-    else:
-        plabel = choose_operator(coolxtype, choose_oparray3)
-        coolcore = CoolCore(plabel=plabel)
-        depth = 1
-
-        while depth < depth_goal - 1:  # depth_goal-1 as terminal nodes get added at the end
-            coolcore.construct_append_layer_depth(choose_obs, choose_oparray3, choose_distributions, float_decimals, construct=full_or_grow)
-            # sfeh todo gleichmäßige Verteilung
-            # if full_or_grow == 'grow':
-            #     coolcore.construct_append_layer_depth(choose_obs, choose_oparray3, choose_distributions, float_decimals, construct)
-            # else:
-            #     cons_buf = ['func'] * len(oxtype_buffer)
-
-        else:
-            # build terminal nodes
-            coolcore.construct_append_layer_depth(choose_obs, choose_oparray3, choose_distributions, float_decimals, construct=full_or_grow)
-        return coolcore
+    pass
 
 
 # # todo delete this

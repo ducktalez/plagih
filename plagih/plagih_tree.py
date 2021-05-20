@@ -511,31 +511,28 @@ def tree_init_core(node_amount, np_dtype):
     return tree
 
 
-def tree_try_get_swapids(a_tree, b_tree, version='default'):
+def tree_try_get_swapids(a_tree, b_tree):
     """
     Try to return two branches (aka ids) [for crossover] that can be crossed
+    # a_ids = tree_get_mutatable_layer_lv0(a_tree)  # sfeh wasd
     """
-    if version == 'default':
-        # choose a node from parent a
-        a_ids = tree_get_mutatable_nodes(a_tree, no_root=True)
-        # a_ids = tree_get_mutatable_layer_lv0(a_tree)  # sfeh wasd
-        a_id = random.choice(a_ids)
-        a_label, _, a_xtype = tree_node_get_lax_v3(a_tree, a_id)
+    # choose a node from parent a
+    a_ids = tree_get_mutatable_nodes(a_tree, no_root=True)
+    a_id = random.choice(a_ids)
 
-        # create a list from parent b with same xtype
-        b_node_ids = tree_get_mutatable_nodes(b_tree, no_root=True)
-        b_sametype_ids = b_node_ids[:]
-        for b_id in b_node_ids:
-            b_label, _, b_xtype = tree_node_get_lax_v3(b_tree, b_id)
-            if not xtype_equi_outcome(b_xtype, a_xtype):
-                b_sametype_ids.remove(b_id)  # remove one-by-one false partner nodes.
+    # create a list from parent b with same xtype
+    b_node_ids = tree_get_mutatable_nodes(b_tree, no_root=True)
+    b_sametype_ids = b_node_ids[:]
+    for b_id in b_node_ids:
+        if not xtype_equi_outcome(b_xtype, a_xtype):
+            b_sametype_ids.remove(b_id)  # remove one-by-one false partner nodes.
 
-        if b_sametype_ids:  # if entries were found, choose one. we are custom_done
-            b_id = random.choice(b_sametype_ids)
-            success = True
-        else:
-            b_id = random.choice(b_node_ids)
-            success = False
+    if b_sametype_ids:  # if entries were found, choose one. we are custom_done
+        b_id = random.choice(b_sametype_ids)
+        success = True
+    else:
+        b_id = random.choice(b_node_ids)
+        success = False
 
         return a_id, b_id, success
     else:

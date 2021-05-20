@@ -42,6 +42,20 @@ class Plabel:
     def __str__(self):
         return str(self.nlabel)
 
+    def mutate_point(self):
+        """
+        evolve a point
+        replace with same-arity, same type
+        """
+        pass
+
+    def evolve_branch(self):
+        """
+        evolve a subbranch
+        replace with same type, but any arity (child nodes are deleted)
+        """
+        pass
+
 
 class Add(Plabel):
     nlabel = '+'

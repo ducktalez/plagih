@@ -522,59 +522,71 @@ class ExplainableGP(object):
                 """
                 for nn in range(evolve_num):
                     cooltree = self.pop_selection_tournament(tourn_size)
-                    cooltree.evolve_mutate_point(self.choose_oparray3,
-                                                 self.env_vars.choose_obs,
-                                                 self.choose_distributions, self.conf.float_decimals)
+                    cooltree.evolve_mutate_point_random(self.choose_oparray3,
+                                                        self.env_vars.choose_obs,
+                                                        self.choose_distributions, self.conf.float_decimals)
                     cooltree.meta.last_evolution = tag
                     self.pop_append(cooltree)
 
             elif evolve_name == 'mutate branch':
                 # todo cooltree version
+                # todo question: tree.copy() or .deepcopy necessary??
                 for nn in range(evolve_num):
-
                     build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
                     full_or_grow = build_spec.get('full_or_grow') or random.choice(['full', 'grow'])
-
                     cooltree = self.pop_selection_tournament(tourn_size)
-                    cooltree.evolve_mutate()
-                    coolids = cooltree.get_mutatable_nodepaths()
-                    mutate_nodeid = random.choice(coolids)
-                    print('huehuhe', coolids, 'chosen:', mutate_nodeid)
-                    cool_build_size = cool_choose_build_size(size_mode, mean_min_max_var, cooltree=cooltree, nodepath=rnd_nodepath)
-                    insert_coolbranch = construct_coolcore_depth(coolxtype_root, size_mode, mean_min_max_var,
-                                                                 self.env_vars.choose_obs, self.choose_oparray3,
-                                                                 self.choose_distributions, self.conf.float_decimals)
-
-                    # build a branch that fits the chosen nodes spot
-                    core_insert = self.invent_core(size_mode, old_xtype, build_size, full_or_grow)
-                    branch_nodes_ids = tree_node_get_branch(new_tree, old_node, karoo=True)
-                    new_tree = tree_insert_subtree(new_tree, core_insert, branch_nodes_ids, karoo=True)
-                    new_tree = tree_prune_depth(new_tree, self.conf.tree_depth_max, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
-
-                    new_cooltree = cooltree_from_oldtree(new_tree)
-
-                    new_cooltree.meta.last_evolution = tag
-                    self.pop_append(new_cooltree)
+                    cool_build_size = cool_choose_build_size(size_mode, mean_min_max_var, cooltree=cooltree)
+                    cooltree.evolve_mutate_branch_random(cool_build_size, self.env_vars.choose_obs, self.choose_oparray3,
+                                                         self.choose_distributions, self.conf.float_decimals, size_mode=size_mode, full_or_grow=full_or_grow)
+                    # sfeh delete this?
+                    # new_tree = tree_prune_depth(new_tree, self.conf.tree_depth_max, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
+                    # new_cooltree.meta.last_evolution = tag
+                    self.pop_append(cooltree)
 
             elif evolve_name == 'crossover branch':
                 for nn in range(int(evolve_num / 2)):  # two childs
-                    parent_a = self.pop_selection_tournament(tourn_size)
-                    parent_b = self.pop_selection_tournament(tourn_size)
-                    parent_a = parent_a.get_oldtree()
-                    parent_b = parent_b.get_oldtree()
-                    child_a, child_b = self.pop_crossover_branch(parent_a, parent_b)
-                    child_a.meta.last_evolution = tag
-                    child_b.meta.last_evolution = tag
-                    self.pop_append(child_a)
-                    self.pop_append(child_b)
+                    left_parent = self.pop_selection_tournament(tourn_size)
+                    right_parent = self.pop_selection_tournament(tourn_size)
+
+                    """
+                    swap branches of two trees
+                    - select parent a and b
+                    - select swappable branche for a_parent from b_parent
+                        - select a node in a (and crossover here, no matter what)
+                    - delete a_parent branch and insert b_parent branch (which tactic?)
+                    todo into main cooltree?
+                    """
+                    # 1. two parents
+                    # 2. search nodes for left and right that can be exchanged. convert_needed
+                    try:
+                        left_parent_nodes = left_parent.get_mutatable_nodes(allow_root=False)
+                        left_rnd = random.choice(left_parent_nodes)
+                        swap_coolxtype_out = left_rnd.plabel.coolxtype[1]
+                        right_parent_nodes = right_parent.get_mutatable_nodes(coolxtype_out=swap_coolxtype_out)
+                        if right_parent_nodes:
+                            right_rnd = random.choice(right_parent_nodes)
+                        else:
+                            swap_coolxtype_out = float if swap_coolxtype_out == bool else bool  # the other swap type now
+                            right_parent_nodes = right_parent.get_mutatable_nodes(allow_root=False, coolxtype_out=swap_coolxtype_out)
+                            right_rnd = random.choice(right_parent_nodes)
+                            left_rnd = left_parent.get_mutatable_nodes(coolxtype_out=swap_coolxtype_out)
+                    except:
+                        raise Exception
+
+                    # todo deepcopy required??
+                    left_parent.new_core(right_rnd)
+                    right_parent.new_core(left_rnd)
+
+                    left_parent.meta.last_evolution = tag
+                    right_parent.meta.last_evolution = tag
+                    self.pop_append(left_parent)
+                    self.pop_append(right_parent)
 
             elif evolve_name == 'filter optimize':
 
                 for nn in range(evolve_num):
                     cooltree = self.pop_selection_tournament(tourn_size)
-                    tree = cooltree.get_oldtree()
-                    new_tree = self.pop_mutate_filter(call_params, tree)
-                    new_cooltree = cooltree_from_oldtree(new_tree)
+                    cooltree.evolve_mutate_filter_random(call_params, tree)
                     new_cooltree.meta.last_evolution = tag
                     self.pop_append(new_cooltree)
 
@@ -603,7 +615,7 @@ class ExplainableGP(object):
                 print_e(f"Evolution not known: '{evolve_name}'")
         missing_trees = self.conf.pop_max - len(self.population_tmp)
         if missing_trees > 0:
-            if missing_trees > 0.05*self.conf.pop_max:
+            if missing_trees > 0.05 * self.conf.pop_max:
                 self.printpl('ii', f'{missing_trees}/{self.conf.pop_max} trees are missing in this population!')
             else:
                 self.printpl('iii', f'{missing_trees}/{self.conf.pop_max} trees are missing in this population!')
@@ -639,7 +651,6 @@ class ExplainableGP(object):
         pareto_agents = {}
 
         for (parsim, fitness, cooltree) in self.pareto:
-
             histograms_path = self.plot_agent_histogram(parsim, cooltree, path_hist)  # sfeh todo
 
             forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest = self.file_pareto_latex(parsim, cooltree)
@@ -693,10 +704,10 @@ class ExplainableGP(object):
 
             paste_full = ''.join([tex_tabuline(x[:]) for x in tex_lines])
             paste_full = f"{str(self.conf.name).replace('_', '-')}  {tex_include_pdf('monitoring.png')}  {tex_include_pdf('sfehs_eval/evaled_overview.pdf')}\n\n" \
-                        "\\begin{tabular}{lllllllllllll}\n \\hline\n" \
-                        "dist & error & reward & parsimony & expression \\tabularnewline \\hline\n" \
-                        f"{paste_full}" \
-                        "\\hline\n\\end{tabular}\n\n"
+                         "\\begin{tabular}{lllllllllllll}\n \\hline\n" \
+                         "dist & error & reward & parsimony & expression \\tabularnewline \\hline\n" \
+                         f"{paste_full}" \
+                         "\\hline\n\\end{tabular}\n\n"
             file_dump(self.root_dir / f'analysis_overview_plus.tex', latex_treeviz_full_document(paste_full), print_type=self.print_type)
 
         elif 'IB' in self.conf.name:
@@ -743,7 +754,6 @@ class ExplainableGP(object):
                                                     tex_stacklist([f'{int(x)}' for x in y['parsims']]),
                                                     tex_stacklist([input_agentex(x, f'../benchmarks/{self.root_dir.parent.parent.name}/{self.root_dir.parent.name}/') for x in [0, 1, 2]])])
 
-
                     # tex_stacklist([f'{x:0.2f}' for x in y['regress_vals']]),
                     # f"{y['cnt']}",
                     # f"{y['experiment_safe']:0.0f}",
@@ -751,9 +761,9 @@ class ExplainableGP(object):
                     # f"{y['experiment_safe_r50']:0.0f}",
 
                 combined_overview = "\\begin{tabular}{llllllllll}\n\\hline \n" \
-                    f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])} \\hline\n" \
-                    f"{tex_line_overview}" \
-                    f"\\hline\n\\end{{tabular}}\n\n"
+                                    f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])} \\hline\n" \
+                                    f"{tex_line_overview}" \
+                                    f"\\hline\n\\end{{tabular}}\n\n"
 
                 combined_input = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
                                  f"{tex_tabuline(['dist', 'error', 'reward', 'parsimony', 'expressions'])}" \
@@ -761,9 +771,9 @@ class ExplainableGP(object):
                                  "\\hline\n\\end{longtable}\n"
 
                 combined_fulltrees = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
-                                 f"{tex_tabuline(['dist', 'error', 'reward', 'parsimony', 'expressions'])}" \
-                                 f"{tex_line_input}" \
-                                 "\\hline\n\\end{longtable}\n"
+                                     f"{tex_tabuline(['dist', 'error', 'reward', 'parsimony', 'expressions'])}" \
+                                     f"{tex_line_input}" \
+                                     "\\hline\n\\end{longtable}\n"
 
                 combined_overview = latex_treeviz_full_document(combined_overview)
                 file_dump(self.root_dir.parent / 'combined_overview.tex', combined_overview)
@@ -860,14 +870,14 @@ class ExplainableGP(object):
             # all operator_pool with a certain xtype-result
             None: [],
             float: [],  # 2f
-            bool: [],  #2b
+            bool: [],  # 2b
             (tuple([float]), float): [],  # x**2, sqrt, log, sin, ...
             (tuple([float, float]), float): [],  # +, -, *, /, **, ...
             (tuple([bool, float, float]), float): [],  # Ifte
             (tuple([float, float]), bool): [],  # <, >, =, >=
             (tuple([bool]), bool): [],  # not
             (tuple([float]), bool): [],  # dummy
-            (tuple([bool, bool]), bool): [], # and, or, xor, ...
+            (tuple([bool, bool]), bool): [],  # and, or, xor, ...
         }
 
         for xlabel, probability in operator_pool.items():
@@ -1097,62 +1107,6 @@ class ExplainableGP(object):
         self.tree_lut[tree_ident] = meta
         return
 
-    def pop_mutate_filter(self, call_params, tree):
-        """
-        Mutates a number of float terminal of a tree
-        """
-        mode = call_params['mode']  # point/branch/all
-        yes_observations = call_params.get('yes_observations')  # point/branch/all
-        mutate_filter = 'gaussian_filter'  # sfeh change?
-
-        node_ids = tree_get_mutatable_nodes(tree)
-        if mode == 'branch':
-            node_id = random.choice(node_ids)  # sfeh should this be completely random?
-            node_ids = tree_node_get_branch(tree, node_id)  # select the whole branch
-
-        float_nodes = []
-        obs_nodes = []
-        for node_id in node_ids:
-            if tree_node_get_xtype(tree, node_id) == '2f':
-                try:
-                    _ = float(tree_node_get_label(tree, node_id))
-                    float_nodes.append(node_id)
-                except ValueError:
-                    obs_nodes.append(node_id)
-
-        if mode == 'point':  # if pointmutation, return one nodeid as list
-            if yes_observations:
-                filter_id = [random.choice(float_nodes + obs_nodes)]
-                if filter_id in float_nodes:
-                    float_nodes = filter_id
-                else:
-                    obs_nodes = filter_id
-            else:
-                float_nodes = [random.choice(float_nodes)]
-
-        if float_nodes:
-            for node_id in float_nodes:
-                val = float(tree_node_get_label(tree, node_id))
-                val = label_constant_mutate(val, term_type=float, float_decimals=self.conf.float_decimals, filter_type=mutate_filter)
-                tree = tree_node_set_label(tree, node_id, val)
-
-        if obs_nodes and yes_observations:  # 'filtering' variables when they are from different times
-            for nid in obs_nodes:
-                obs_label = tree_node_get_label(tree, nid)
-
-                is_negative = obs_label[0] == '-'  # workaround for negative labels
-                if is_negative:
-                    obs_label = obs_label[1:]
-
-                hello_node = self.env_vars.obs_infos[obs_label]
-                hello_node.filter_new_index()
-                obs_label = hello_node.name
-
-                new_obs = '-' + obs_label if is_negative else obs_label
-                tree = tree_node_set_label(tree, nid, new_obs)
-
-        return tree
-
     # def invent_label_list(self, size_mode, first_xtype, build_size, full_or_grow):
     #     """
     #     Creates a random label list.
@@ -1224,7 +1178,6 @@ class ExplainableGP(object):
                                                                          self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
             """
             todo
-            todotodo
             required: start xtype, open nodes
             """
             depth = 1
@@ -1317,42 +1270,6 @@ class ExplainableGP(object):
             tree = tree_convert_pcore_to_karoo(core)
 
         return tree
-
-    def pop_crossover_branch(self, left_tree, right_tree):
-        """
-        swap branches of two trees
-        - select parent a and b
-        - select swappable branche for a_parent from b_parent
-            - select a node in a (and crossover here, no matter what)
-        - delete a_parent branch and insert b_parent branch (which tactic?)
-
-        """
-
-        # 1. two parents
-        # 2. search nodes for left and right that can be exchanged. convert_needed
-        left_id, right_id, success = tree_try_get_swapids(left_tree, right_tree)
-        if not success:
-            right_id, left_id, success = tree_try_get_swapids(right_tree, left_tree)
-
-        left_ids, left_labels, left_aritys, left_xtypes = tree_get_branch_ilax(left_tree, left_id)
-        right_ids, right_labels, right_aritys, right_xtypes = tree_get_branch_ilax(right_tree, right_id)
-
-        if not success:
-            print_warning('ww', f'Crossover conversion for these trees not possible: \n{left_tree}\n{right_tree}', print_type=self.print_type)
-            return None, None
-
-        left_core = Core_From_Labels(left_labels, left_aritys, left_xtypes).get_uninstanced_core()
-        right_core = Core_From_Labels(right_labels, right_aritys, right_xtypes).get_uninstanced_core()
-
-        left_offspring = tree_insert_subtree(left_tree, right_core, left_ids, karoo=True)
-        left_offspring = tree_prune_depth(left_offspring, self.conf.tree_depth_max, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
-
-        right_offspring = tree_insert_subtree(right_tree, left_core, right_ids, karoo=True)
-        right_offspring = tree_prune_depth(right_offspring, self.conf.tree_depth_max, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
-
-        left_offspring = cooltree_from_oldtree(left_offspring)
-        right_offspring = cooltree_from_oldtree(right_offspring)
-        return left_offspring, right_offspring
 
     def pareto_append(self, tree_entry, msg=None):
         """

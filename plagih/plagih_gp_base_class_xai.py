@@ -587,8 +587,8 @@ class ExplainableGP(object):
                 for nn in range(evolve_num):
                     cooltree = self.pop_selection_tournament(tourn_size)
                     cooltree.evolve_mutate_filter_random(call_params, tree)
-                    new_cooltree.meta.last_evolution = tag
-                    self.pop_append(new_cooltree)
+                    # new_cooltree.meta.last_evolution = tag
+                    self.pop_append(cooltree)
 
             elif evolve_name == 'revive pareto':
 
@@ -1193,83 +1193,6 @@ class ExplainableGP(object):
         core = Core_From_Labels(label_list, arity_list, xtype_list).get_uninstanced_core()
 
         return core
-
-    def helper_evolve_params_branch(self, call_params):
-        """
-        The call parameters in the evolution file need to be adjusted
-        delete if possible
-        """
-        build_spec = call_params.get('build_spec')
-
-        size_mode = build_spec['size_mode']
-
-        mean_min_max_var = build_spec.get('mean_min_max_var')  # (base, min, max, normal_distrib)
-        mean_min_max_var = list(mean_min_max_var)
-        if 'depth' in size_mode:
-            max_dummy = self.conf.tree_depth_max
-        elif 'nodes' in size_mode:
-            max_dummy = self.conf.parsimony_max
-        else:
-            raise
-
-        if mean_min_max_var[2] is None:
-            mean_min_max_var[2] = max_dummy
-        else:
-            mean_min_max_var[2] = min(mean_min_max_var[2], self.conf.parsimony_max)
-        mean_min_max_var = tuple(mean_min_max_var)
-
-        full_or_grow = build_spec['full_or_grow']
-
-        return build_spec, size_mode, mean_min_max_var, full_or_grow
-
-    def pop_random(self, call_params, from_origin=False):
-        """
-        Creates random trees for the population
-        """
-
-        build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
-
-        if from_origin:
-            """
-            insert a (random) number of branches at the first possible "layer"
-            (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
-            - get these nodes, randomly choose a subset of those
-            - get the amount of nodes we are allowed to add. (max nodes without the core-tree and the nodes we are about to delete)
-            - split the amount of nodes up (randomly) and add these new branches to the tree
-            """
-
-            from_origin = self.origin_cooltree.get_oldtree()
-            layer0_ids = tree_get_mutatable_layer(from_origin, 0)
-
-            build_split = []
-            if 'depth' in size_mode:
-                for ii in range(len(layer0_ids)):
-                    build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
-                    build_split.append(build_size)
-
-            elif 'nodes' in size_mode:
-                build_nodes = choose_build_size(size_mode, mean_min_max_var, force='branch')
-                build_split = randomly_split_range(build_nodes, len(layer0_ids))
-            else:
-                raise
-
-            tree = from_origin.copy()
-            for i in range(len(layer0_ids)):  # insert branches! get layer every time (node ids might have changed)
-                layer0_ids = tree_get_mutatable_layer_lv0(tree)
-                node_id = layer0_ids[i]
-                first_xtype = tree_node_get_xtype(tree, node_id)
-                old_branch = tree_node_get_branch(tree, node_id, karoo=True)
-                build_size = build_split[i]
-
-                core = self.invent_core(size_mode, first_xtype, build_size, full_or_grow)
-                tree = tree_insert_subtree(tree, core, old_branch, karoo=True)
-        else:
-            action_xtype = self.env_vars.eval_action.xtype
-            build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
-            core = self.invent_core(size_mode, action_xtype, build_size, full_or_grow)
-            tree = tree_convert_pcore_to_karoo(core)
-
-        return tree
 
     def pareto_append(self, tree_entry, msg=None):
         """

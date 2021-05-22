@@ -823,6 +823,83 @@ def construct_coolcore_depth(coolxtype, size_mode, mean_min_max_var, choose_obs,
 #     return cooltree
 
 
+def pop_random(call_params, from_origin=False):
+    """
+    Creates random trees for the population
+    """
+    build_spec, size_mode, mean_min_max_var, full_or_grow = helper_evolve_params_branch(call_params)
+
+    if from_origin:
+        """
+        insert a (random) number of branches at the first possible "layer"
+        (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
+        - get these nodes, randomly choose a subset of those
+        - get the amount of nodes we are allowed to add. (max nodes without the core-tree and the nodes we are about to delete)
+        - split the amount of nodes up (randomly) and add these new branches to the tree
+        """
+
+        layer0_ids = tree_get_mutatable_layer(from_origin, 0)
+
+        build_split = []
+        if 'depth' in size_mode:
+            for ii in range(len(layer0_ids)):
+                build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
+                build_split.append(build_size)
+
+        elif 'nodes' in size_mode:
+            build_nodes = choose_build_size(size_mode, mean_min_max_var, force='branch')
+            build_split = randomly_split_range(build_nodes, len(layer0_ids))
+        else:
+            raise
+
+        tree = from_origin.copy()
+        for i in range(len(layer0_ids)):  # insert branches! get layer every time (node ids might have changed)
+            layer0_ids = tree_get_mutatable_layer_lv0(tree)
+            node_id = layer0_ids[i]
+            first_xtype = tree_node_get_xtype(tree, node_id)
+            old_branch = tree_node_get_branch(tree, node_id, karoo=True)
+            build_size = build_split[i]
+
+            core = self.invent_core(size_mode, first_xtype, build_size, full_or_grow)
+            tree = tree_insert_subtree(tree, core, old_branch, karoo=True)
+    else:
+        action_xtype = self.env_vars.eval_action.xtype
+        build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
+        core = self.invent_core(size_mode, action_xtype, build_size, full_or_grow)
+        tree = tree_convert_pcore_to_karoo(core)
+
+    return tree
+
+
+def helper_evolve_params_branch(call_params, tree_depth_max=10, parsimony_max=30):
+    """
+    The call parameters in the evolution file need to be adjusted
+    delete if possible
+    """
+    build_spec = call_params.get('build_spec')
+
+    size_mode = build_spec['size_mode']
+
+    mean_min_max_var = build_spec.get('mean_min_max_var')  # (base, min, max, normal_distrib)
+    mean_min_max_var = list(mean_min_max_var)
+    if 'depth' in size_mode:
+        max_dummy = tree_depth_max
+    elif 'nodes' in size_mode:
+        max_dummy = parsimony_max
+    else:
+        raise
+
+    if mean_min_max_var[2] is None:
+        mean_min_max_var[2] = max_dummy
+    else:
+        mean_min_max_var[2] = min(mean_min_max_var[2], parsimony_max)
+    mean_min_max_var = tuple(mean_min_max_var)
+
+    full_or_grow = build_spec['full_or_grow']
+
+    return build_spec, size_mode, mean_min_max_var, full_or_grow
+
+
 def cooltree_from_labellist(label_list, modify_list=None):
     """
     A lazysolution

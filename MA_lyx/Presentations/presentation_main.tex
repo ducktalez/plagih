@@ -108,10 +108,23 @@
 
 \section*{Outline} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+
+
+
+\begin{frame}{Concept}
+\centering
+\includegraphics[height=0.89\textheight]{../img/inkscape/concept.pdf}
+\end{frame}
+
+
 \begin{frame}{Idea}
 \centering
 \includegraphics[height=0.8\textheight]{img/idea.pdf}
 \end{frame}
+
+
+
 
 \begin{frame}{Mountain Car Problem}
 \centering
@@ -133,9 +146,6 @@
   \end{tabular}
 \end{frame}
 
-%\begin{frame}{Reinforcement Learning}
-%  \includegraphics[height=0.25\textheight]{../img/rl_images/reinforcement_learning_diagram_sfeh_a4}
-%\end{frame}
 
 \begin{frame}{Genetic Programming}
  \begin{columns}
@@ -168,6 +178,7 @@
   \caption{Three formulas with completely different structures that achieve almost identical results.}
  \end{figure}
 \end{frame}
+
 
 \begin{frame}{Interpretability}
 ``The ability to explain or to present in understandable terms to humans''\\
@@ -253,11 +264,6 @@ Manifestations (Doshi-Velez and Kim 17)
 \end{columns}
 \end{frame}
 
-\begin{frame}{Concept}
-\centering
-\includegraphics[height=0.89\textheight]{../img/inkscape/concept.pdf}
-\end{frame}
-
 \begin{frame}{Tree Edit Distance}
 \centering
  \begin{figure}
@@ -265,46 +271,6 @@ Manifestations (Doshi-Velez and Kim 17)
   %\caption{The edit distance is the minimum number of edits (insert, change, delete) between trees.}
  \end{figure}
 \end{frame}
-
-\begin{frame}{Fixed Core}
- \begin{figure}
-  \includegraphics[width=0.6\linewidth]{../img/inkscape/fix_nodes_mutation.pdf}   
-  %\caption{The expert might want to only change the condition of the if-statement, as he can then better understand the distinction. In his start-up program, he would specify the nodes marked in dark blue as fixed so that they are not affected by the GP process.}
- \end{figure}
-\end{frame}
-
-\begin{frame}{Fixed Core}
- \begin{columns}
- \column{0.40\textwidth}
-  Implementation
-  \begin{itemize}
-   \item Explicit node protection
-   \item Relative tree depth
-   \item Random tree construction 
- 	\begin{itemize}
-  	 \item Nodecount-based 
-  	 \item Balanced
-  	 \item Method full/grow
- 	\end{itemize}
-  \end{itemize}
- \column{0.45\textwidth}
- Construction mode ``full'' and ``grow''\\
- {\centering $\{*, -, /, a, b, 2, 3\}$}
- \begin{figure}
- 	\includegraphics[scale=0.7]{../img/inkscape/full_vs_grow_example}
- \end{figure}
- \end{columns}
-\end{frame}
-
-%\begin{frame}{Tight Tree Nodes}
-%\begin{figure}[th]
-%\begin{table}{ccc}
-%\plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{$\div$}[{pos}][{$-1.834$}]][{$2.197$}]]} &  & %\plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{{${\frac{\text{pos}}{-1.834}}$}}][{$2.197$}]]}\end{tabular}\caption{Automatic visualization of a tree with all nodes and as a tight version.}
-%\end{table}
-%\end{frame}
-
-
-
 
 
 
@@ -324,13 +290,6 @@ Manifestations (Doshi-Velez and Kim 17)
  \end{tabular}
 \end{frame}
 
-\begin{frame}{Mountain Car ``Expert'' programs visualization}
- \begin{tabular}{>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}}
-  Simple & \multicolumn{2}{c}{Complex}\tabularnewline
-  ``Accelerating towards the current direction'' & ``Parabolic formula'' & ``Nested if- statement''\tabularnewline
-  \includegraphics[height=35mm]{img/mtc/decisions-SimpleAgent.pdf} & \includegraphics[height=35mm]{img/mtc/decisions-XiaoPresetAgent.png} & \includegraphics[height=35mm]{img/mtc/decisions-Good_Expert.png} \tabularnewline
-\end{tabular}
-\end{frame}
 
 
 
@@ -388,6 +347,17 @@ $\text{MSE=0.09}$ & $R=-98.8$\tabularnewline
 
 
 
+\begin{frame}{Mountain Car ``Expert'' programs visualization}
+ \begin{tabular}{>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}}
+  Simple & \multicolumn{2}{c}{Complex}\tabularnewline
+  ``Accelerating towards the current direction'' & ``Parabolic formula'' & ``Nested if- statement''\tabularnewline
+  \includegraphics[height=35mm]{img/mtc/decisions-SimpleAgent.pdf} & \includegraphics[height=35mm]{img/mtc/decisions-XiaoPresetAgent.png} & \includegraphics[height=35mm]{img/mtc/decisions-Good_Expert.png} \tabularnewline
+\end{tabular}
+\end{frame}
+
+
+
+
 
 
 
@@ -427,6 +397,47 @@ $\text{MSE=0.27}$ & R=-133.4\tabularnewline
 
 
 
+\begin{frame}{Fixed Core}
+ \begin{figure}
+  \includegraphics[width=0.6\linewidth]{../img/inkscape/fix_nodes_mutation.pdf}   
+  %\caption{The expert might want to only change the condition of the if-statement, as he can then better understand the distinction. In his start-up program, he would specify the nodes marked in dark blue as fixed so that they are not affected by the GP process.}
+ \end{figure}
+\end{frame}
+
+\begin{frame}{Fixed Core}
+ \begin{columns}
+ \column{0.40\textwidth}
+  Implementation
+  \begin{itemize}
+   \item Explicit node protection
+   \item Relative tree depth
+   \item Random tree construction 
+ 	\begin{itemize}
+  	 \item Nodecount-based 
+  	 \item Balanced
+  	 \item Method full/grow
+ 	\end{itemize}
+  \end{itemize}
+ \column{0.45\textwidth}
+ Construction mode ``full'' and ``grow''\\
+ {\centering $\{*, -, /, a, b, 2, 3\}$}
+ \begin{figure}
+ 	\includegraphics[scale=0.7]{../img/inkscape/full_vs_grow_example}
+ \end{figure}
+ \end{columns}
+\end{frame}
+
+%\begin{frame}{Tight Tree Nodes}
+%\begin{figure}[th]
+%\begin{table}{ccc}
+%\plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{$\div$}[{pos}][{$-1.834$}]][{$2.197$}]]} &  & %\plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{{${\frac{\text{pos}}{-1.834}}$}}][{$2.197$}]]}\end{tabular}\caption{Automatic visualization of a tree with all nodes and as a tight version.}
+%\end{table}
+%\end{frame}
+
+
+
+
+
 
 
 
@@ -434,17 +445,15 @@ $\text{MSE=0.27}$ & R=-133.4\tabularnewline
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+\begin{frame}{Mountain Car: Simple Expert Program (fixed)}
+ \centering
+ \includegraphics[height=0.85\textheight]{img/genetic_extensions.pdf}
+\end{frame}
 
 \begin{frame}{Mountain Car: Simple Expert Program (fixed)}
  \begin{figure}
    \includegraphics[height=5cm]{../../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/evaled_overview}
  \end{figure}
-\end{frame}
-
-
-\begin{frame}{Mountain Car: Simple Expert Program (fixed)}
- \centering
- \includegraphics[height=0.85\textheight]{img/genetic_extensions.pdf}
 \end{frame}
 
 
@@ -561,7 +570,15 @@ $\text{MSE=0.27}$ & R=-133.4\tabularnewline
 
 
 
-
+\begin{frame}{Mountain Car: SARSA-75}
+ \begin{figure}
+  \begin{tabular}{cc}
+   \includegraphics[height=4.3cm]{../img/MTC/decision_plots/sarsa75_uncertainty_overlay} &
+   \includegraphics[height=4cm]{../../benchmarks/mc/agents/img/dummy-sarsa_agent_75}\tabularnewline
+  \end{tabular}
+  \caption{SARSA-75 decision plots, revealing potential problems and trust issues.}
+ \end{figure}
+\end{frame}
 
 
 
@@ -646,8 +663,16 @@ $\text{MSE=0.27}$ & R=-133.4\tabularnewline
  \end{tabular}
 \end{frame}
 
-\begin{frame}{Industrial Benchmark: Results}
- \centering
+
+
+\begin{frame}{Industrial Benchmark: Results (regular GP)}
+ \begin{figure}[tph]
+  \includegraphics[height=5cm]{../../benchmarks/slurm_runs/IB_MSE_scratch/pareto_combined}\includegraphics[height=5cm]{../../benchmarks/slurm_runs/IB_MSE_scratch/regression_all}
+  \caption{The three Pareto fronts alongside the combined online evaluation.}
+ \end{figure}
+\end{frame}
+
+\begin{frame}{Industrial Benchmark: Results (familiar GP)}
  \begin{figure}[tph]
   \includegraphics[height=5cm]{../../benchmarks/slurm_runs/IB_MSE_s3m/pareto_combined.pdf}\includegraphics[height=5cm]{../../benchmarks/slurm_runs/IB_MSE_s3m/regression_all.pdf}
   %\caption{\label{fig:ib-plots} The improvements of the start policy improve the real performance without bad outliers. As the IB requires merging multiple Pareto candidates, it is good advice to discard the first combinations.}

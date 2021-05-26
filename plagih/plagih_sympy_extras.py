@@ -48,6 +48,7 @@ Useful information:
     is_MatAdd = False
     is_MatMul = False
 """
+import re
 
 from sympy import Function, sympify, symbols
 # from sympy.core.numbers import ComplexInfinity
@@ -294,6 +295,34 @@ def plagih_sympify(function_string, eval_locals=None):
         # raise
         # print(f'debugging further {ex}')
         return 'nan'  # 'nan' always evaluates to nan. ALl nan bugs should be solved.
+
+
+def expr_sympify(expr_raw):
+    """
+    Returns a simplified expression using sympify.
+    - sympify the expression
+    - If sympify evaluates to one of these errors: 'zoo', 'inf', '*I', 'nan', stop evaluation
+
+    Sympify is a python core module which reduced mathematical expressions.
+    Example: sympify('a+a+a+a') -> a*4
+    Note that the sympify was extended in plagih_sympify_extras.py with extra functions
+
+    Sympify fails: The results are, or contain, expressions that should/can not be evaluated
+    'zoo': (Complex infinity) E.g. when a int-number is divided by zero
+    'inf': (Regular infinity) E.g. when a float-number is divided by zero (...i know, why are there two infinities?)
+    '*I': (Complex number) E.g. when putting a number to the power of negative fractals, 1**(-0.5)
+    'nan': (Not a number) when Evaluation fails, E.g. types contradict, expression is empty, 'Mini(a, zoo' ...
+    """
+
+    try:
+        expr_sym = str(plagih_sympify(expr_raw))
+    except Exception as ex:
+        raise Exception(f'sympify_1: {expr_raw} reason: ({ex})')
+
+    if re.search('(zoo|inf|nan|\*I[^f])', expr_sym):  # ['zoo', 'inf', '*I', 'nan'], ignoring *Ifte though
+        raise Exception(f'Failed for expr: {expr_sym}')
+
+    return expr_sym
 
 
 if __name__ == "__main__":

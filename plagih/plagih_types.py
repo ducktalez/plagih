@@ -50,28 +50,23 @@ def random_choose_tempobs(obs_list, max_hist=10):
     return new_obs
 
 
-def choose_term(itype, choose_obs, choose_distributions, float_decimals):
+def choose_term(coolxtype_out, choose_obs, choose_distributions, float_decimals):
     """
 
-    Modes:
-    var_and_const: return randomly (50:50) a variable or a constant
-    terminal_only: return                  a variable
-
-    input options: f2f, f2b, b2f, b2b, f2b2b, 2f, 2b
     """
 
     # sfeh 50% chance observation/value
-    if random.choice(['obs', 'distrib']) == 'obs' and choose_obs[itype]:
-        obs = choose_obs[itype]()
-        print('SAME???', obs.name, obs.label)
+    if random.choice(['obs', 'distrib']) == 'obs' and choose_obs[coolxtype_out]:
+        obs = choose_obs[coolxtype_out]()
+        # print('SAME???', obs.name, obs.label)  # sfeh
         return obs
     else:
-        dist_fun = random.choice(choose_distributions[itype])
+        dist_fun = random.choice(choose_distributions[coolxtype_out])
         value = dist_fun()
-        if itype == float:  # sfeh int aswell?
+        if coolxtype_out == float:  # sfeh int aswell?
             value = float(round(value, float_decimals))
             const = FloatConstant(value)
-        elif itype == bool:
+        elif coolxtype_out == bool:
             const = BoolConstant(value)
         else:
             raise Exception('ASDASD NOOO WHYY')
@@ -81,8 +76,9 @@ def choose_term(itype, choose_obs, choose_distributions, float_decimals):
 def choose_operator(coolxtype_key, choose_oparray3):
     """
     Randomly choosing an operator-label for a given xtype.
-    choose_oparray2 must be given, as they are different between runs.
+    choose_oparray3 must be given, as they are different between runs.
     arity can also be set optionally, e.g. for point mutation
+    todoo DOUBLE-check if this coolxtype is chosen correcrtly... better: replace it
     """
     func_list, probability_list = choose_oparray3[coolxtype_key]
     ops = random.choices(func_list, weights=probability_list)[0]  # [0] as this function can only return lists...

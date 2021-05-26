@@ -1,8 +1,6 @@
 """
-'f2f', 'b2b', f = float, b = bool. 'float to bool'
 
 Functions, that might be addable in the future:
-'Integer': 'f2f', # converts a number to an integer.
 """
 import time
 
@@ -11,12 +9,13 @@ import matplotlib.pyplot as plt
 import multiprocessing as mp
 import matplotlib.ticker as ticker
 
+import logging
 from benchmarks.ib.combined_runs import *
 from benchmarks.mc.agents.quick_eval import auto_evaluate_run_end
 from plagih.file_interaction import *
+from plagih.plagih_sympy_extras import plagih_sympify
 from plagih.viz_with_latex import *
 from plagih.plagih_config import *
-from plagih.plagih_data import *
 from plagih.Ptree2 import *
 import random
 
@@ -457,15 +456,8 @@ class ExplainableGP(object):
         """
 
         if self.origin_cooltree is not None:
-            """
-            Origin exists, the population is the origin only
-            """
             self.pop_append(self.origin_cooltree)  # sfeh why not :P
-
         else:
-            """
-            No origin, starting a new population from scratch
-            """
             total_rate = sum([x['evolve_rate'] for x in self.evolve_random.values()])
 
             for tag, evolve_specs in self.evolve_random.items():
@@ -474,12 +466,11 @@ class ExplainableGP(object):
 
                 for nn in range(evolve_num):
                     if self.origin_is_fix:
-                        new_tree = self.pop_random(call_params, from_origin=True)
+                        cooltree = self.pop_random(call_params, from_origin=True)
                     else:
-                        new_tree = self.pop_random(call_params)
-                    new_cooltree = cooltree_from_oldtree(new_tree)
-                    new_cooltree.meta.last_evolution = tag
-                    self.pop_append(new_cooltree)
+                        cooltree = self.pop_random(call_params)
+                    cooltree.meta.last_evolution = tag
+                    self.pop_append(cooltree)
         return
 
     def gen_next_population(self):
@@ -536,7 +527,7 @@ class ExplainableGP(object):
                     full_or_grow = build_spec.get('full_or_grow') or random.choice(['full', 'grow'])
                     cooltree = self.pop_selection_tournament(tourn_size)
                     cool_build_size = cool_choose_build_size(size_mode, mean_min_max_var, cooltree=cooltree)
-                    cooltree.evolve_mutate_branch_random(cool_build_size, self.env_vars.choose_obs, self.choose_oparray3,
+                    cooltree.evolve_mutate_branch_random(cool_build_size, self.choose_oparray3, self.env_vars.choose_obs,
                                                          self.choose_distributions, self.conf.float_decimals, size_mode=size_mode, full_or_grow=full_or_grow)
                     # sfeh delete this?
                     # new_tree = tree_prune_depth(new_tree, self.conf.tree_depth_max, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
@@ -587,8 +578,8 @@ class ExplainableGP(object):
                 for nn in range(evolve_num):
                     cooltree = self.pop_selection_tournament(tourn_size)
                     cooltree.evolve_mutate_filter_random(call_params, tree)
-                    new_cooltree.meta.last_evolution = tag
-                    self.pop_append(new_cooltree)
+                    cooltree.meta.last_evolution = tag
+                    self.pop_append(cooltree)
 
             elif evolve_name == 'revive pareto':
 
@@ -601,18 +592,17 @@ class ExplainableGP(object):
 
                 if self.origin_is_fix:
                     for nn in range(evolve_num):
-                        new_tree = self.pop_random(call_params, from_origin=True)
-                        cooltree = cooltree_from_oldtree(new_tree)
+                        cooltree = self.pop_random(call_params, from_origin=True)
                         cooltree.meta.last_evolution = tag
                         self.pop_append(cooltree)
                 else:
                     for nn in range(evolve_num):
-                        new_tree = self.pop_random(call_params)
-                        cooltree = cooltree_from_oldtree(new_tree)
+                        cooltree = self.pop_random(call_params)
                         cooltree.meta.last_evolution = tag
                         self.pop_append(cooltree)
             else:
                 print_e(f"Evolution not known: '{evolve_name}'")
+
         missing_trees = self.conf.pop_max - len(self.population_tmp)
         if missing_trees > 0:
             if missing_trees > 0.05 * self.conf.pop_max:
@@ -850,7 +840,7 @@ class ExplainableGP(object):
         Check, if the user-specified operators allow closure
         """
         # sfeh dunno if that works... 2f not in x
-        opxtypes = [op[oper]['coolxtype'] for oper in operator_pool.keys()]
+        opxtypes = [oper.coolxtype for oper in operator_pool.keys()]
         has_2f = any([float == x[1] for x in opxtypes])
         has_2b = any([bool == x[1] for x in opxtypes])
         has_f2b = any([float in x[0] and bool == x[1] for x in opxtypes])
@@ -868,27 +858,25 @@ class ExplainableGP(object):
             # None: {0: [], 1: [], 2: [], 3: [], None: []},
 
             # all operator_pool with a certain xtype-result
-            None: [],
-            float: [],  # 2f
-            bool: [],  # 2b
-            (tuple([float]), float): [],  # x**2, sqrt, log, sin, ...
-            (tuple([float, float]), float): [],  # +, -, *, /, **, ...
-            (tuple([bool, float, float]), float): [],  # Ifte
-            (tuple([float, float]), bool): [],  # <, >, =, >=
-            (tuple([bool]), bool): [],  # not
-            (tuple([float]), bool): [],  # dummy
-            (tuple([bool, bool]), bool): [],  # and, or, xor, ...
+            None: [[], []],
+            float: [[], []],  # 2f
+            bool: [[], []],  # 2b
+            (tuple([float]), float): [[], []],  # x**2, sqrt, log, sin, ...
+            (tuple([float, float]), float): [[], []],  # +, -, *, /, **, ...
+            (tuple([bool, float, float]), float): [[], []],  # Ifte
+            (tuple([float, float]), bool): [[], []],  # <, >, =, >=
+            (tuple([bool]), bool): [[], []],  # not
+            (tuple([float]), bool): [[], []],  # dummy, currently no such operator
+            (tuple([bool, bool]), bool): [[], []],  # and, or, xor, ...
         }
 
         for xlabel, probability in operator_pool.items():
-            ops_tupel = (xlabel, probability)
-
-            choose_oparray3[None].append(ops_tupel)  # all operators #todo delete this? none required?
-            choose_oparray3[xlabel.coolxtype].append(ops_tupel)  # point mutations
-            choose_oparray3[xlabel.coolxtype[1]].append(ops_tupel)  # construction of trees
-
-        choose_oparray3 = list(zip(*choose_oparray3))  # [('+', 2), ('-', 1)] -> [+, -] [2, 1]
-        print('choose_oparray3 init', choose_oparray3)
+            choose_oparray3[None][0].append(xlabel)  # all operators #todo delete this? none required?
+            choose_oparray3[None][1].append(probability)
+            choose_oparray3[xlabel.coolxtype][0].append(xlabel)  # point mutations
+            choose_oparray3[xlabel.coolxtype][1].append(probability)
+            choose_oparray3[xlabel.coolxtype[1]][0].append(xlabel)   # construction of trees
+            choose_oparray3[xlabel.coolxtype[1]][1].append(probability)
 
         return choose_oparray3
 
@@ -969,18 +957,10 @@ class ExplainableGP(object):
         forest_tree_full = pl_forest(latex_brackettree(tree))
         forest_tree_tight = pl_forest(latex_brackettree_tight(latex_tree_semitight(tree)))
         # sfeh workaround delete this
-        hohoho = latex_tight_node(tree)
-        hohoho = hohoho.replace('cartPos', 'pos')
-        hohoho = hohoho.replace('cartVel', 'vel')
-        tex_expr_raw = f'${hohoho}$'
-        # print(f'HOIHOHOHOOHOHOHO {hohoho}')  # sfeh delete this
+        tex_expr_raw = f'${tree.export_visualization_latex()}$'  # sfeh dollars
         tex_expr_forest = pl_forest(f'[{tex_expr_raw}]')
 
-        """
-        save every tree-visualisation in subfolder
-        """
         path_subfolder_tex = path_make_dir(self.root_dir / 'visualisation')  # sfeh running this in every tree seems unneccesary
-        # create full document including just one tree (file must have a nice name)
 
         """
         The following lines delete this
@@ -991,8 +971,6 @@ class ExplainableGP(object):
         file_dump(path_subfolder_tex / f'{parsim:02d}_input.tex', tex_expr_raw, print_type=self.print_type)
         file_dump(path_subfolder_tex / f'{parsim:02d}_input_forest.tex', tex_expr_forest, verbose='ff', print_type=self.print_type)
         file_dump(path_subfolder_tex / f'{parsim:02d}_doc.tex', latex_treeviz_full_document(forest_tree_full), verbose='ff', print_type=self.print_type)  # delete this
-
-        # f'{parsim} with mean Regression Error {fitness}:\n {forest_tree_full} tight: {forest_tree_tight} tight2: {tex_expr_raw}\n\n\n'
 
         return forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest
 
@@ -1136,17 +1114,20 @@ class ExplainableGP(object):
         "nodes": creates a tree with a desired amount of nodes
         """
 
-        if 'depth' in size_mode:
-            # sfeh warning: Attention with this one. can get quite large with depth based
-            label_list, arity_list, xtype_list = invent_label_list_depth(coolxtype_root, build_size,
-                                                                         self.env_vars.choose_obs, self.choose_oparray3,
-                                                                         self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
-
+        if 'depth' in size_mode or 'nodes' in size_mode:  # todo
+            # # sfeh warning: Attention with this one. can get quite large with depth based
+            # label_list, arity_list, xtype_list = invent_label_list_depth(coolxtype_root, build_size,
+            #                                                              self.env_vars.choose_obs, self.choose_oparray3,
+            #                                                              self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
+            cooltree = CoolTree(BuildDummy(float))  # todo
+            cooltree.evolve_mutate_branch_random(build_size, self.choose_oparray3, self.env_vars.choose_obs,
+                                                 self.choose_distributions, self.conf.float_decimals, size_mode=size_mode, full_or_grow=full_or_grow)
+            return cooltree
         elif 'nodes' in size_mode:
-
-            label_list, arity_list, xtype_list = invent_label_list_nodes(coolxtype_root, build_size,
-                                                                         self.env_vars.choose_obs, self.choose_oparray3,
-                                                                         self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
+            pass
+            # label_list, arity_list, xtype_list = invent_label_list_nodes(coolxtype_root, build_size,
+            #                                                              self.env_vars.choose_obs, self.choose_oparray3,
+            #                                                              self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
         else:
             raise Exception('Known full_or_grow was not found for building random trees.')
 
@@ -1167,14 +1148,14 @@ class ExplainableGP(object):
             return core_from_labels([rnd_term], 0, first_xtype)
             # todo exit directly with one node
         else:
-            rnd_label = choose_operator(first_xtype, self.choose_oparray2)
+            rnd_label = choose_operator(first_xtype, self.choose_oparray3)
             arity = label_get_arity(rnd_label)
             build_coolcore = CoolCore(label=rnd_label, xtype=first_xtype, arity=arity)
 
         if 'depth' in size_mode:
             # sfeh warning: Attention with this one. can get quite large with depth based
             label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size,
-                                                                         self.env_vars.choose_obs, self.choose_oparray2,
+                                                                         self.env_vars.choose_obs, self.choose_oparray3,
                                                                          self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
             """
             todo
@@ -1185,7 +1166,7 @@ class ExplainableGP(object):
         elif 'nodes' in size_mode:
 
             label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size,
-                                                                         self.env_vars.choose_obs, self.choose_oparray2,
+                                                                         self.env_vars.choose_obs, self.choose_oparray3,
                                                                          self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
         else:
             raise Exception('Known full_or_grow was not found for building random trees.')
@@ -1238,8 +1219,13 @@ class ExplainableGP(object):
             - split the amount of nodes up (randomly) and add these new branches to the tree
             """
 
-            from_origin = self.origin_cooltree.get_oldtree()
-            layer0_ids = tree_get_mutatable_layer(from_origin, 0)
+            from_origin = copy.deepcopy(self.origin_cooltree)  # sfeh is deepcopy
+            # sfeh todo. KOMPLETT ZUFÄLLIG ODER auch >>nur Teilbäume<<
+
+            # todotodo
+            self.origin_cooltree.help_first_layer = None  # [{+..., <..., <...}]
+            # todotodo
+            layer0_ids = from_origin.tree_get_mutatable_layer(layer=0)
 
             build_split = []
             if 'depth' in size_mode:
@@ -1253,7 +1239,6 @@ class ExplainableGP(object):
             else:
                 raise
 
-            tree = from_origin.copy()
             for i in range(len(layer0_ids)):  # insert branches! get layer every time (node ids might have changed)
                 layer0_ids = tree_get_mutatable_layer_lv0(tree)
                 node_id = layer0_ids[i]
@@ -1264,12 +1249,11 @@ class ExplainableGP(object):
                 core = self.invent_core(size_mode, first_xtype, build_size, full_or_grow)
                 tree = tree_insert_subtree(tree, core, old_branch, karoo=True)
         else:
-            action_xtype = self.env_vars.eval_action.xtype
+            action_xtype = self.env_vars.eval_action.coolxtype[1]
             build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
-            core = self.invent_core(size_mode, action_xtype, build_size, full_or_grow)
-            tree = tree_convert_pcore_to_karoo(core)
+            cooltree = self.invent_core(size_mode, action_xtype, build_size, full_or_grow)
 
-        return tree
+        return cooltree
 
     def pareto_append(self, tree_entry, msg=None):
         """
@@ -1409,7 +1393,7 @@ class ExplainableGP(object):
 
         return copy.deepcopy(tourn_winner)
 
-    def load_origin_tree(self, path_origin_tree, label_list=None, modify_list=None):
+    def load_origin_tree(self, path_origin_tree):
         """
         The origin tree (which was already loaded) gets activated for its use in the GP-process
         """
@@ -1421,35 +1405,8 @@ class ExplainableGP(object):
         from the labellist-csv, loading the label list
         """
 
-        with Path.open(path_origin_tree, newline='') as csvFile:
-            reader = csv.reader(csvFile, delimiter=',')
-            for row in reader:
-                if len(row) > 0:
-                    if row[0] == 'label_list' or row[0] == 'node_label':
-                        label_list = [x.replace(' ', '') for x in row[1:]]
-                    elif row[0] == 'modify_list' or row[0] == 'node_modify':
-                        modify_list = [int(x.replace(' ', '')) for x in row[1:]]
-                    elif row[0] == '':
-                        pass
-                    else:
-                        print_e(f'Unexpected row start: {row[0]}')
-        # sfeh if file is a .txt file with an expression
-        # elif Path.is_file(tree_expr_txt_path):  # karoo_tree_from_expr(expr)
-        #     raise Exception('SFEH needs to create an option to make trees from expression')
-        #     # with Path.open(tree_expr_txt_path) as txt_file:
-        #     #     expr = txt_file.read()  # sfeh requires separate handling?
-        #     #     print('Assuming all variables are floats, sfeh')
-        #     #     tree = karoo_tree_from_expr(expr, 'sfeh')
-        #     #     tree_pretty_print(tree)
-        #     #     tree_save_csv(tree, tree_labels_csv_path)
-        #     #     raise  # sfeh
-
-        # if label_list is None:
-        #     raise Exception('Labels could not be created from file.')
-        # else:
-        #     print_warning('ii', 'No origin-tree file was provided. Continuing.')
-        # return label_list, modify_list
-
+        with Path.open(path_origin_tree, newline='') as file:
+            file.read()
         try:
             origin_cooltree = cooltree_from_labellist(label_list, modify_list=modify_list)
             expr_sym = origin_cooltree.get_expr_sym()
@@ -1487,7 +1444,8 @@ class ExplainableGP(object):
         """
 
         try:
-            expr_sym = cooltree.get_expr_sym()
+            expr_raw = cooltree.get_expr_raw()
+            expr_sym = expr_sympify(expr_raw)
         except Exception as evalex:
             raise Exception(f'eval:{evalex}')
 
@@ -1634,9 +1592,6 @@ class ExplainableGP(object):
                     axs[0].plot(self.monitor_evol[tag]['fitness'], label=f'{tag}')
                     axs[1].plot(self.monitor_evol[tag]['parsimony'], label=f'{tag}')
                     axs[2].plot((self.monitor_evol[tag]['lentree'] / self.monitor_evol[tag]['evolve_num']), label=f'{tag}')
-                    # axs[0].set_ylim(ymin=0), axs[0].legend(loc='lower left')
-                    # axs[1].set_ylim(ymin=0), axs[1].legend(loc='lower left')
-                    # axs[2].set_ylim(ymin=0), axs[2].legend(loc='lower left')
 
                 plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
                 path = self.root_dir / f'monitoring_evolutions.pdf'
@@ -1664,7 +1619,6 @@ class ExplainableGP(object):
         - average fitness
         - average tree parsimony
         """
-        # t = time.perf_counter()  # should this be used?
         gen_id = self.gen_id
         popul = self.population_tmp
 

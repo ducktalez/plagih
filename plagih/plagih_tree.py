@@ -3,8 +3,6 @@ import re
 
 root_id = 1
 
-from plagih.Ptree2 import CoolCore
-from plagih.plagih_sympy_extras import plagih_sympify
 from plagih.plagih_types import *
 from plagih.fitness_kernel import *
 import csv
@@ -535,8 +533,6 @@ def tree_try_get_swapids(a_tree, b_tree):
         success = False
 
         return a_id, b_id, success
-    else:
-        raise
 
 
 def randomly_split_range(range_max, num_splits):
@@ -573,7 +569,7 @@ def invent_label_list_depth(coolxtype_root, depth_goal, choose_obs, choose_oparr
     Also, return the arities aswell (they are searched anyways)
     """
 
-    oxtype_buffer = coolxtype_root[1]
+    xtype_buffer = [coolxtype_root]  # sfeh copy??
 
     depth = 0
     while depth < depth_goal:  # todo depth_goal -1 why?
@@ -587,13 +583,11 @@ def invent_label_list_depth(coolxtype_root, depth_goal, choose_obs, choose_oparr
                 label = choose_term(xtype, choose_obs, choose_distributions, float_decimals)
                 coolxtype = 0
             elif ft == 'func':
-                label = choose_operator(xtype, choose_oparray2, arity=None)
-                coolxtype = op[label]['coolxtype']
+                label = choose_operator(xtype, choose_oparray3)
     else:
-        # build terminal nodes
+        # build terminal nodesv
         for xtype_parent in xtype_buffer:  # Build terminals now.
             label, arity = choose_term(xtype_parent[-2:], choose_obs, choose_distributions, float_decimals), 0
-            lax_list.append([label, arity, xtype_parent])
 
     # Build a list with labels in row, and a list with their arities
     for depth in range(min_depth, depth_goal - 1):  # -1 because of terminal layer
@@ -787,7 +781,7 @@ def invent_label_list_nodes(coolxtype, goal_max_nodes, choose_obs, choose_oparra
         for enum, index in enumerate(func_at):  #
             t_xtype = tbdo_xtypes[index]
 
-            label = choose_operator(t_xtype, choose_oparray2, arity=None)
+            label = choose_operator(t_xtype, choose_oparray3)
             arity = label_get_arity(label)
             label_xtype = op[label]['xtype']
             # ('GG', result_label_list, tmp_label_list, '(', len(result_label_list), num_inserts, '>', arity, ')', (len(result_label_list) + num_inserts + arity), goal_max_nodes)
@@ -1219,34 +1213,6 @@ def tree_get_depth_ids(tree):
             depth += 1
             depth_id_list.append([node_id])
     return depth_id_list
-
-
-def expr_sympify(expr_raw):
-    """
-    Returns a simplified expression using sympify.
-    - sympify the expression
-    - If sympify evaluates to one of these errors: 'zoo', 'inf', '*I', 'nan', stop evaluation
-
-    Sympify is a python core module which reduced mathematical expressions.
-    Example: sympify('a+a+a+a') -> a*4
-    Note that the sympify was extended in plagih_sympify_extras.py with extra functions
-
-    Sympify fails: The results are, or contain, expressions that should/can not be evaluated
-    'zoo': (Complex infinity) E.g. when a int-number is divided by zero
-    'inf': (Regular infinity) E.g. when a float-number is divided by zero (...i know, why are there two infinities?)
-    '*I': (Complex number) E.g. when putting a number to the power of negative fractals, 1**(-0.5)
-    'nan': (Not a number) when Evaluation fails, E.g. types contradict, expression is empty, 'Mini(a, zoo' ...
-    """
-
-    try:
-        expr_sym = str(plagih_sympify(expr_raw))
-    except Exception as ex:
-        raise Exception(f'sympify_1: {expr_raw} reason: ({ex})')
-
-    if re.search('(zoo|inf|nan|\*I[^f])', expr_sym):  # ['zoo', 'inf', '*I', 'nan'], ignoring *Ifte though
-        raise Exception(f'Failed for expr: {expr_sym}')
-
-    return expr_sym
 
 
 def tree_branch_get_label_list(tree, node_ids, karoo=False):

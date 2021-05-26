@@ -43,11 +43,11 @@ class GpConfig:
         self.evolve_list_random = conf.get('evolve_list_random', None)  # sfeh
         self.complexity_measure = conf.get('complexity_measure', 'tree_edit_distance')  # sfeh check used origin here? backup loaded origin?
 
-        self.lambdadist_as_string = conf.get('lambdadist_as_string', {'2f': ['lambda: random.normalvariate(0,1)',
+        self.lambdadist_as_string = conf.get('lambdadist_as_string', {float: ['lambda: random.normalvariate(0,1)',
                                                                              'lambda: random.normalvariate(1,1)',
                                                                              'lambda: random.normalvariate(10,5)',
                                                                              'lambda: random.randint(1, 20)'],  # not required?
-                                                                      '2b': ['lambda: random.choice([True, False])'],
+                                                                      bool: ['lambda: random.choice([True, False])'],
                                                                       'observed_floats': 100})
 
         """

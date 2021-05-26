@@ -5,7 +5,6 @@ This extra file was added to have a file in the root directory that can be start
 
 from plagih.file_interaction import *
 from plagih.plagih_gp_base_class_xai import *
-from plagih.plagih_data import *
 from benchmarks.ib.combined_runs import *
 from benchmarks.mc.agents.quick_eval import *
 from pathlib import Path

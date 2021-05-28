@@ -110,6 +110,7 @@ class ExplainableGP(object):
         """
         self.choose_distributions = self.activate_distributions(path_distrib=None)  # asd sfeh path_distrib not None
         self.choose_oparray3 = self.gp_load_oparray(path_operators=None, sfeh_no_crazyops=sfeh_no_crazyops)  # path_operators sfeh this file from config version1
+        self.choosing = Choosing(self.choose_oparray3, self.env_vars.choose_obs, self.choose_distributions, float_decimals=self.float_decimals)
 
         """
         initialize some variables
@@ -466,10 +467,10 @@ class ExplainableGP(object):
 
                 for nn in range(evolve_num):
                     if self.origin_is_fix:
-                        cooltree = self.pop_random(call_params, from_origin=True)
+                        cooltree = pop_random(call_params, from_origin=True)
                     else:
-                        cooltree = self.pop_random(call_params)
-                    cooltree.meta.last_evolution = tag
+                        cooltree = pop_random(call_params)
+                    # cooltree.meta.last_evolution = tag  # todo
                     self.pop_append(cooltree)
         return
 
@@ -516,7 +517,7 @@ class ExplainableGP(object):
                     cooltree.evolve_mutate_point_random(self.choose_oparray3,
                                                         self.env_vars.choose_obs,
                                                         self.choose_distributions, self.conf.float_decimals)
-                    cooltree.meta.last_evolution = tag
+                    # cooltree.meta.last_evolution = tag
                     self.pop_append(cooltree)
 
             elif evolve_name == 'mutate branch':
@@ -577,7 +578,7 @@ class ExplainableGP(object):
 
                 for nn in range(evolve_num):
                     cooltree = self.pop_selection_tournament(tourn_size)
-                    cooltree.evolve_mutate_filter_random(call_params, tree)
+                    cooltree.evolve_mutate_filter_random(call_params, self.choose_oparray3, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
                     cooltree.meta.last_evolution = tag
                     self.pop_append(cooltree)
 
@@ -592,12 +593,12 @@ class ExplainableGP(object):
 
                 if self.origin_is_fix:
                     for nn in range(evolve_num):
-                        cooltree = self.pop_random(call_params, from_origin=True)
+                        cooltree = pop_random(call_params, from_origin=True)
                         cooltree.meta.last_evolution = tag
                         self.pop_append(cooltree)
                 else:
                     for nn in range(evolve_num):
-                        cooltree = self.pop_random(call_params)
+                        cooltree = pop_random(call_params)
                         cooltree.meta.last_evolution = tag
                         self.pop_append(cooltree)
             else:
@@ -815,21 +816,7 @@ class ExplainableGP(object):
         except:
             self.printpl('i', 'Opt-in not specified: Operators-file does not exist. Creating one with a default list of mathematical operator_pool.')
 
-            operator_pool = [['+', 2],
-                             ['-', 1], ['Usub', 1],
-                             ['*', 2], ['/', 1],
-                             ['Square', 0.75], ['**', 0.25],
-                             ['Abs', 0.5], ['sign', 0.5], ['Round', 0.5],  # sfeh stop chain of arity-1 op in buid method?
-                             ['sqrt', 0.25],
-                             # ['log', 0.1], ['log1p', 0.1],  # sfeh
-                             ['sin', 0.5],  # ['tan', 0.1], ['cos', 0.33], ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
-                             ['tanh', 0.2],
-                             ['Andb', 1], ['Orb', 1], ['Notb', 0.5], ['Xor', 1],
-                             ['==', 1], ['!=', 0.5],
-                             ['<', 0.5], ['<=', 0.5], ['>', 0.1], ['>=', 0.1],
-                             ['Ifte', 2],
-                             ['Mini', 1], ['Maxi', 1]]
-        operator_pool = {op[lp[0]]: lp[1] for lp in operator_pool}
+            # todotodo operator_poolrandom
         if sfeh_no_crazyops:
             del operator_pool['**']
             # workaround sfeh
@@ -837,47 +824,10 @@ class ExplainableGP(object):
         yaml_dump(self.root_dir / 'backup/operators_used.yaml', operator_pool, default_flow_style=True)
 
         """
-        Check, if the user-specified operators allow closure
-        """
-        # sfeh dunno if that works... 2f not in x
-        opxtypes = [oper.coolxtype for oper in operator_pool.keys()]
-        has_2f = any([float == x[1] for x in opxtypes])
-        has_2b = any([bool == x[1] for x in opxtypes])
-        has_f2b = any([float in x[0] and bool == x[1] for x in opxtypes])
-        has_b2f = any([bool in x[0] and float == x[1] for x in opxtypes])
-        if not all([has_2f, has_2b, has_f2b, has_b2f]):
-            print_warning('w', f'Operators are not complete', print_type=self.print_type)
-        if all([has_2f, has_2b]) and not all([has_f2b or has_b2f]):
-            raise Exception(f'Operators do not allow closure')
-
-        """
         Load all operator_pool ready-to-use from a file
         """
-        choose_oparray3 = {
-            # # all operator_pool (not needed)
-            # None: {0: [], 1: [], 2: [], 3: [], None: []},
 
-            # all operator_pool with a certain xtype-result
-            None: [[], []],
-            float: [[], []],  # 2f
-            bool: [[], []],  # 2b
-            (tuple([float]), float): [[], []],  # x**2, sqrt, log, sin, ...
-            (tuple([float, float]), float): [[], []],  # +, -, *, /, **, ...
-            (tuple([bool, float, float]), float): [[], []],  # Ifte
-            (tuple([float, float]), bool): [[], []],  # <, >, =, >=
-            (tuple([bool]), bool): [[], []],  # not
-            (tuple([float]), bool): [[], []],  # dummy, currently no such operator
-            (tuple([bool, bool]), bool): [[], []],  # and, or, xor, ...
-        }
-
-        for xlabel, probability in operator_pool.items():
-            choose_oparray3[None][0].append(xlabel)  # all operators #todo delete this? none required?
-            choose_oparray3[None][1].append(probability)
-            choose_oparray3[xlabel.coolxtype][0].append(xlabel)  # point mutations
-            choose_oparray3[xlabel.coolxtype][1].append(probability)
-            choose_oparray3[xlabel.coolxtype[1]][0].append(xlabel)   # construction of trees
-            choose_oparray3[xlabel.coolxtype[1]][1].append(probability)
-
+        choose_oparray3 = ChooseOparray3(operator_pool)
         return choose_oparray3
 
     def activate_distributions(self, path_distrib=None):
@@ -885,25 +835,7 @@ class ExplainableGP(object):
         Optional custom distributions specified by the user.
         """
         path_distrib = path_distrib or self.root_dir / self.paths.use_distributions_file
-
-        if Path.is_file(path_distrib):
-            lambdadist_as_string = yaml_load(path_distrib)
-        else:
-            self.printpl('i', 'Opt-in not specified: Distributions-file (for random leaf-node constants) does not exist. Using default set.')
-            lambdadist_as_string = self.conf.lambdadist_as_string
-
-        choose_distributions = {float: [], bool: []}
-
-        sample_amount = lambdadist_as_string.get('observed_floats')
-        if sample_amount:
-            obsnames = self.env_vars.obs_infos.keys()
-            obs_samples = self.data_train[obsnames].to_numpy().flatten()
-            obs_samples = np.random.choice(obs_samples, size=sample_amount)
-            choose_distributions[float].extend([lambda: random.choice(obs_samples)]),  # take one
-
-        choose_distributions[float].extend([eval(x) for x in lambdadist_as_string[float]]),
-        choose_distributions[bool].extend([eval(x) for x in lambdadist_as_string[bool]])
-
+        choose_distributions = ChooseDistributions(path_distrib, env_vars_obs_infos=self.env_vars.obs_infos, data_train=self.data_train, n_samples=100)
         return choose_distributions
 
     def plot_agent_histogram(self, parsim, cooltree, path_hist):
@@ -1107,74 +1039,6 @@ class ExplainableGP(object):
     #
     #     return label_list, arity_list, xtype_list
 
-    def invent_core(self, size_mode, coolxtype_root, build_size, full_or_grow):
-        """
-        Creates a random core.
-        "depth": creates a tree with a desired depth
-        "nodes": creates a tree with a desired amount of nodes
-        """
-
-        if 'depth' in size_mode or 'nodes' in size_mode:  # todo
-            # # sfeh warning: Attention with this one. can get quite large with depth based
-            # label_list, arity_list, xtype_list = invent_label_list_depth(coolxtype_root, build_size,
-            #                                                              self.env_vars.choose_obs, self.choose_oparray3,
-            #                                                              self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
-            cooltree = CoolTree(BuildDummy(float))  # todo
-            cooltree.evolve_mutate_branch_random(build_size, self.choose_oparray3, self.env_vars.choose_obs,
-                                                 self.choose_distributions, self.conf.float_decimals, size_mode=size_mode, full_or_grow=full_or_grow)
-            return cooltree
-        elif 'nodes' in size_mode:
-            pass
-            # label_list, arity_list, xtype_list = invent_label_list_nodes(coolxtype_root, build_size,
-            #                                                              self.env_vars.choose_obs, self.choose_oparray3,
-            #                                                              self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
-        else:
-            raise Exception('Known full_or_grow was not found for building random trees.')
-
-        core = Core_From_Labels(label_list, arity_list, xtype_list).get_uninstanced_core()
-
-        return core
-
-    def invent_core2(self, size_mode, first_xtype, build_size, full_or_grow):
-        """
-        Creates a random core.
-        "depth": creates a tree with a desired depth
-        "nodes": creates a tree with a desired amount of nodes
-        """
-
-        if build_size <= 1:
-            # must insert terminal already
-            rnd_term = choose_term(first_xtype, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
-            return core_from_labels([rnd_term], 0, first_xtype)
-            # todo exit directly with one node
-        else:
-            rnd_label = choose_operator(first_xtype, self.choose_oparray3)
-            arity = label_get_arity(rnd_label)
-            build_coolcore = CoolCore(label=rnd_label, xtype=first_xtype, arity=arity)
-
-        if 'depth' in size_mode:
-            # sfeh warning: Attention with this one. can get quite large with depth based
-            label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size,
-                                                                         self.env_vars.choose_obs, self.choose_oparray3,
-                                                                         self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
-            """
-            todo
-            required: start xtype, open nodes
-            """
-            depth = 1
-
-        elif 'nodes' in size_mode:
-
-            label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size,
-                                                                         self.env_vars.choose_obs, self.choose_oparray3,
-                                                                         self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
-        else:
-            raise Exception('Known full_or_grow was not found for building random trees.')
-
-        core = Core_From_Labels(label_list, arity_list, xtype_list).get_uninstanced_core()
-
-        return core
-
     def helper_evolve_params_branch(self, call_params):
         """
         The call parameters in the evolution file need to be adjusted
@@ -1202,58 +1066,6 @@ class ExplainableGP(object):
         full_or_grow = build_spec['full_or_grow']
 
         return build_spec, size_mode, mean_min_max_var, full_or_grow
-
-    def pop_random(self, call_params, from_origin=False):
-        """
-        Creates random trees for the population
-        """
-
-        build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
-
-        if from_origin:
-            """
-            insert a (random) number of branches at the first possible "layer"
-            (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
-            - get these nodes, randomly choose a subset of those
-            - get the amount of nodes we are allowed to add. (max nodes without the core-tree and the nodes we are about to delete)
-            - split the amount of nodes up (randomly) and add these new branches to the tree
-            """
-
-            from_origin = copy.deepcopy(self.origin_cooltree)  # sfeh is deepcopy
-            # sfeh todo. KOMPLETT ZUFÄLLIG ODER auch >>nur Teilbäume<<
-
-            # todotodo
-            self.origin_cooltree.help_first_layer = None  # [{+..., <..., <...}]
-            # todotodo
-            layer0_ids = from_origin.tree_get_mutatable_layer(layer=0)
-
-            build_split = []
-            if 'depth' in size_mode:
-                for ii in range(len(layer0_ids)):
-                    build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
-                    build_split.append(build_size)
-
-            elif 'nodes' in size_mode:
-                build_nodes = choose_build_size(size_mode, mean_min_max_var, force='branch')
-                build_split = randomly_split_range(build_nodes, len(layer0_ids))
-            else:
-                raise
-
-            for i in range(len(layer0_ids)):  # insert branches! get layer every time (node ids might have changed)
-                layer0_ids = tree_get_mutatable_layer_lv0(tree)
-                node_id = layer0_ids[i]
-                first_xtype = tree_node_get_xtype(tree, node_id)
-                old_branch = tree_node_get_branch(tree, node_id, karoo=True)
-                build_size = build_split[i]
-
-                core = self.invent_core(size_mode, first_xtype, build_size, full_or_grow)
-                tree = tree_insert_subtree(tree, core, old_branch, karoo=True)
-        else:
-            action_xtype = self.env_vars.eval_action.coolxtype[1]
-            build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
-            cooltree = self.invent_core(size_mode, action_xtype, build_size, full_or_grow)
-
-        return cooltree
 
     def pareto_append(self, tree_entry, msg=None):
         """
@@ -1346,8 +1158,8 @@ class ExplainableGP(object):
         try:
             cooltree.check_all()
         except Exception as ex:
-            print_warning('w', f'tree failed the quick check. last-mod: {cooltree.meta.last_evolution}. Reason:\n{ex}', print_type=self.print_type)
             return
+            print_warning('w', f'tree failed the quick check. last-mod: {cooltree.meta.last_evolution}. Reason:\n{ex}', print_type=self.print_type)
 
         # tree = self.tree_finish_nodes(tree, last_evolution=last_evolution)
 
@@ -1364,6 +1176,7 @@ class ExplainableGP(object):
             try:
                 fitness_train = self.tree_eval_fitness_offline_train(cooltree)
             except Exception as evalex:
+                return  # todotodo todo
                 print_warning('wwww', f'Exception while evaluating: {evalex}, tree: {cooltree}.', print_type=self.print_type)
                 return
 
@@ -1372,6 +1185,7 @@ class ExplainableGP(object):
         try:
             cooltree.set_fix_nodes(self.origin_cooltree)
         except Exception as ex:
+            return
             print(f'Nope, failed tree finish: {ex}\n{cooltree}')
 
         cooltree.meta.fitness_train = fitness_train

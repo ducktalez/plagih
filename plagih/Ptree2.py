@@ -459,6 +459,21 @@ class CoolCore:
         return '\n'.join([', '.join([str(lbl) for lbl in layer]) for layer in
                           layerlabellist])  # lbl-needed, sometines those are float values
 
+    def construct_random_tree_depth(self, depth):
+        """
+        Expand the branches of a tree to reach a certain depth/layer
+        Comment:
+        The depth-based function is easier than the grow method
+        """
+        if self.depth < depth:
+            for cc in self.plabel.coolxtype[0]:
+                pass
+                # todo todotodo
+            # choose_operator()
+            # self.plabel.coolxtype[0]
+        else:
+            pass
+
     def evolve_mutate_branch_depth(self, depth_goal, choose_oparray3, choose_obs, choose_distributions, float_decimals, mutate='branch', full_or_grow='full'):
         """
         todo other version
@@ -494,12 +509,13 @@ class CoolCore:
 
     def evolve_mutate_filter(self, choose_oparray3, choose_obs, choose_distributions, float_decimals):
         """
-        filtger the nodews in a single tree
+        filtger the nodes in a single tree
         """
-        self.plabel.mutate_filter()
         if self.plabel.arity > 0:
             for cc in self.childs:
                 cc.evolve_mutate_filter(choose_oparray3, choose_obs, choose_distributions, float_decimals)
+        else:
+            self.plabel.mutate_filter()
 
         self.finalize_structure()
 
@@ -808,7 +824,7 @@ def construct_coolcore_depth(coolxtype, size_mode, mean_min_max_var, choose_obs,
 #     return cooltree
 
 
-def pop_random(call_params, from_origin=False):
+def pop_random(call_params, coolxtype_root=float, from_origin=False):  # todo float is wrongg
     """
     Creates random trees for the population
     """
@@ -837,23 +853,71 @@ def pop_random(call_params, from_origin=False):
         else:
             raise
 
-        tree = from_origin.copy()
+        cooltree = copy.deepcopy(from_origin)
         for i in range(len(layer0_ids)):  # insert branches! get layer every time (node ids might have changed)
-            layer0_ids = tree_get_mutatable_layer_lv0(tree)
+            layer0_ids = tree_get_mutatable_layer_lv0(cooltree)
             node_id = layer0_ids[i]
             first_xtype = tree_node_get_xtype(tree, node_id)
             old_branch = tree_node_get_branch(tree, node_id, karoo=True)
             build_size = build_split[i]
 
-            core = self.invent_core(size_mode, first_xtype, build_size, full_or_grow)
+            cooltree = CoolTree(BuildDummy(float))
+            core = cooltree.invent_core(size_mode, first_xtype, build_size, full_or_grow)
             tree = tree_insert_subtree(tree, core, old_branch, karoo=True)
     else:
-        action_xtype = self.env_vars.eval_action.xtype
         build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
-        core = self.invent_core(size_mode, action_xtype, build_size, full_or_grow)
-        tree = tree_convert_pcore_to_karoo(core)
+        cooltree = invent_core(size_mode, coolxtype_root, build_size, full_or_grow)
 
     return tree
+
+
+def construct_random_tree_depth(coolxtype_root, depth, p_terminal=0):
+    """
+    was invent_core
+    Creates a random core.
+    "depth": creates a tree with a desired depth
+    "nodes": creates a tree with a desired amount of nodes
+    """
+    coolcore = CoolCore(BuildDummy(coolxtype_root))
+    coolcore.evolve_mutate_branch_random(build_size, self.choose_oparray3, self.env_vars.choose_obs,
+                                             self.choose_distributions, self.conf.float_decimals, size_mode=size_mode, full_or_grow=full_or_grow)
+    return cooltree
+
+
+def invent_core2(self, size_mode, first_xtype, build_size, full_or_grow):
+
+    if build_size <= 1:
+        # must insert terminal already
+        rnd_term = choose_term(first_xtype, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
+        return core_from_labels([rnd_term], 0, first_xtype)
+        # todo exit directly with one node
+    else:
+        rnd_label = choose_operator(first_xtype, self.choose_oparray3)
+        arity = label_get_arity(rnd_label)
+        build_coolcore = CoolCore(label=rnd_label, xtype=first_xtype, arity=arity)
+
+    if 'depth' in size_mode:
+        # sfeh warning: Attention with this one. can get quite large with depth based
+        label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size,
+                                                                     self.env_vars.choose_obs, self.choose_oparray3,
+                                                                     self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
+        """
+        todo
+        required: start xtype, open nodes
+        """
+        depth = 1
+
+    elif 'nodes' in size_mode:
+
+        label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size,
+                                                                     self.env_vars.choose_obs, self.choose_oparray3,
+                                                                     self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
+    else:
+        raise Exception('Known full_or_grow was not found for building random trees.')
+
+    core = Core_From_Labels(label_list, arity_list, xtype_list).get_uninstanced_core()
+
+    return core
 
 
 def helper_evolve_params_branch(call_params, tree_depth_max=10, parsimony_max=30):

@@ -579,7 +579,7 @@ class Max(Plabel):
     coolxtype = (tuple([float, float]), float)
 
 
-def choice_weights(obs_list, max_hist=10):
+def observation_select_index(obs_list, max_hist=10):
     """
     chooses variables but weighting how old they are.
     obs_list = ['gain_0', 'gain_1', 'gain_2', 'gain_3', 'gain_4']
@@ -642,6 +642,7 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
     """
     with Path.open(path_data_csv) as file:
         df = pd.read_csv(file, delimiter=delimiter)
+        # todo it is float64, float64, int64 with MTC.. does it work with Tensorflow?
 
     eval_action = None
     drop_actions = []
@@ -694,7 +695,7 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
         family_meeting = sorted([x for x in obs_list if x.family == fam], key=lambda lulz: lulz.obs_index)
         if len(family_meeting) > 1:
             choose_obs_2f.extend([x for x in family_meeting])
-            choose_obs_p.extend(list(choice_weights(family_meeting)))
+            choose_obs_p.extend(list(observation_select_index(family_meeting)))
             index_minmax = (family_meeting[0].obs_index, family_meeting[-1].obs_index)
             for obs_tmp in family_meeting:
                 obs_tmp.index_minmax = index_minmax
@@ -707,7 +708,7 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
             choose_obs_2f.append(obs_tmp)
             choose_obs_p.append(1)
 
-    env_vars.choose_obs = {float: lambda: random.choices(choose_obs_2f, weights=choose_obs_p)[0],
+    env_vars.choose_obs = {float: lambda: np.random.choice(choose_obs_2f, p=choose_obs_p),
                            bool: None}  # sfeh None? yeah, not important but still...
     env_vars.obs_infos = obs_info
 

@@ -649,6 +649,18 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
     obs_list = []
     rename_columns = {}
 
+    """
+    todo
+    todotodo
+    1. split col name
+    - check whether its an observation
+    --> check whether there are indizes
+    - check whether its an action
+    --> check unique valuea, min, max
+    - check if it should be ignored (deprecated action, irrelevant column)
+    2. 
+    """
+
     for ii, header in enumerate(df):
 
         header_split = header.split('|')  # split 1: cartVel|type=float|role=input --> {cartVel, type=float, role=input]
@@ -656,7 +668,7 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
         if column_name in op:
             raise Exception(f'Your samples hold a column that matches the potential tree operator {column_name}. That might end up in confusion, please rename the column.')
         rename_columns[header] = column_name
-
+        # todo the column name is actually just the base name
         col_infos = {}  # column_name: {'type': 'float', 'role': None, 'colpos': ii}}
         try:
             for col_param in header_split[1:]:
@@ -688,14 +700,14 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
     """
     env_vars = EnvVars()
     obs_families = [fam for fam in list(set(obs.family for obs in obs_list))]
-    choose_obs_2f = []
-    choose_obs_p = []
+    obs_list = []
+    obs_prop = []
     obs_info = {}
     for fam in obs_families:
         family_meeting = sorted([x for x in obs_list if x.family == fam], key=lambda lulz: lulz.obs_index)
         if len(family_meeting) > 1:
-            choose_obs_2f.extend([x for x in family_meeting])
-            choose_obs_p.extend(list(observation_select_index(family_meeting)))
+            obs_list.extend([x for x in family_meeting])
+            obs_prop.extend(list(observation_select_index(family_meeting)))
             index_minmax = (family_meeting[0].obs_index, family_meeting[-1].obs_index)
             for obs_tmp in family_meeting:
                 obs_tmp.index_minmax = index_minmax
@@ -705,11 +717,11 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
             # LOL UMAD? only one family member (probably even more common)
             obs_tmp = family_meeting[0]
             obs_info[obs_tmp.name] = obs_tmp
-            choose_obs_2f.append(obs_tmp)
-            choose_obs_p.append(1)
+            obs_list.append(obs_tmp)
+            obs_prop.append(1)  # just one value
 
-    env_vars.choose_obs = {float: lambda: np.random.choice(choose_obs_2f, p=choose_obs_p),
-                           bool: None}  # sfeh None? yeah, not important but still...
+    env_vars.choose_obs = {float: lambda: np.random.choice(obs_list, p=obs_prop),
+                           bool: None}  # sfeh None? no  lambda? yeah, not important but still...
     env_vars.obs_infos = obs_info
 
     if eval_action:

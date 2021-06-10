@@ -110,7 +110,7 @@ class ExplainableGP(object):
         """
         self.choose_distributions = self.activate_distributions(path_distrib=None)  # asd sfeh path_distrib not None
         self.choose_oparray3 = self.gp_load_oparray(path_operators=None, sfeh_no_crazyops=sfeh_no_crazyops)  # path_operators sfeh this file from config version1
-        self.choosing = Choosing(self.choose_oparray3, self.env_vars.choose_obs, self.choose_distributions, float_decimals=self.float_decimals)
+        self.choosing = Choosing(self.choose_oparray3, self.env_vars.choose_obs, self.choose_distributions, float_decimals=self.conf.float_decimals)
 
         """
         initialize some variables
@@ -814,20 +814,17 @@ class ExplainableGP(object):
             operator_pool = yaml_load(Path(path_operators))
             # sfeh lel, 100% excepts as never loaded this
         except:
-            self.printpl('i', 'Opt-in not specified: Operators-file does not exist. Creating one with a default list of mathematical operator_pool.')
+            self.printpl('i', 'Opt-in not specified: Operators-file does not exist.\n'
+                              'Creating one with a default list of mathematical operator_pool.')
+            operator_pool=None
+        choose_oparray3 = ChooseOparray3(operator_pool=operator_pool, sfeh_no_crazyops=sfeh_no_crazyops)
 
-            # todotodo operator_poolrandom
-        if sfeh_no_crazyops:
-            del operator_pool['**']
-            # workaround sfeh
-
-        yaml_dump(self.root_dir / 'backup/operators_used.yaml', operator_pool, default_flow_style=True)
+        yaml_dump(self.root_dir / 'backup/operators_used.yaml', operator_pool, default_flow_style=True)  # delete this??
 
         """
         Load all operator_pool ready-to-use from a file
         """
 
-        choose_oparray3 = ChooseOparray3(operator_pool)
         return choose_oparray3
 
     def activate_distributions(self, path_distrib=None):

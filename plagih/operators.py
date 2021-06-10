@@ -624,6 +624,10 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
         is there an index (past values, e.g. velocity_0, velocity_1) -> performing filter-evolve on the variables index (velocity_2 -> velocity_3)
     - evalaction data_train, data_test, is the action for the regression? -> more than one action might be required (IB has three action dimensions)
         - action min max -> for kernel regression bounded. occuring min and max values might not be the theoretical min/max values
+
+
+    deprecated:
+
     """
 
     def is_action(name, role):
@@ -644,14 +648,11 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
         df = pd.read_csv(file, delimiter=delimiter)
         # todo it is float64, float64, int64 with MTC.. does it work with Tensorflow?
 
-    eval_action = None
-    drop_actions = []
-    obs_list = []
-    rename_columns = {}
+    actionmain = None
+    observations = []
+    rename_columns = {}  # cartPos|type=int|... -> cartPos
 
     """
-    todo
-    todotodo
     1. split col name
     - check whether its an observation
     --> check whether there are indizes
@@ -666,72 +667,77 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
         header_split = header.split('|')  # split 1: cartVel|type=float|role=input --> {cartVel, type=float, role=input]
         column_name = header_split[0]  # The first entry is always the column name
         if column_name in op:
-            raise Exception(f'Your samples hold a column that matches the potential tree operator {column_name}. That might end up in confusion, please rename the column.')
-        rename_columns[header] = column_name
+            raise Exception(f'Your samples hold a column that matches the potential tree operator {column_name}.\n'
+                            f'That might end up in confusion, please rename the column.')
+
         # todo the column name is actually just the base name
+        rename_columns[header] = column_name
+
         col_infos = {}  # column_name: {'type': 'float', 'role': None, 'colpos': ii}}
         try:
-            for col_param in header_split[1:]:
-                param, value = col_param.split('=')
-                col_infos[param] = value
+            for colparam in header_split[1:]:
+                k, v = colparam.split('=')
+                col_infos[k] = v
         except Exception as ex:
             print(f'Could not load samples csv correctly: {ex}')
 
-        coolxtype_out = locate(col_infos.get('type', 'float'))
+        coolxtype_out = float
 
         if is_action(column_name, col_infos.get('role')):
             if column_name == action_name or action_name is None:
+                # todo min/max SHOULD be either given manually, be set to [0,1] or [-1,1] or depend on the data
                 cmin = col_infos.get('min', df[header].min())
                 cmax = col_infos.get('max', df[header].max())
                 uniques = df[header].unique()
-                eval_action = EvalAction(column_name, coolxtype_out, cmin, cmax, uniques)
+                actionmain = EvalAction(column_name, coolxtype_out, cmin, cmax, uniques)
             else:
-                drop_actions.append(column_name)  # drop from data (only evaluate ONE action, drop other potential actions)
+                # drop_actions.append(column_name)  # drop from data (only evaluate ONE action, drop other potential actions)
+                df = df.drop(column_name, axis=1)  # no need to keep other actions
                 printez('i', f'Ignoring action {column_name} for this run')  # , print_type=print_type print_type does not exist yet sfeh
         else:
-            obs_list.append(Observation(column_name, coolxtype_out=coolxtype_out))
+            observations.append(Observation(column_name, coolxtype_out=coolxtype_out))
 
     df.rename(columns=rename_columns, inplace=True)
     df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
-    df = df.drop(drop_actions, axis=1)  # no need to keep other actions
 
     """
     choosing random observations made easy
     """
-    env_vars = EnvVars()
-    obs_families = [fam for fam in list(set(obs.family for obs in obs_list))]
-    obs_list = []
+    environment = EnvVars()
+
     obs_prop = []
     obs_info = {}
+
+    obs_families = list(set(x.family for x in observations))
     for fam in obs_families:
-        family_meeting = sorted([x for x in obs_list if x.family == fam], key=lambda lulz: lulz.obs_index)
+        family_meeting = sorted([x for x in observations if x.family == fam], key=lambda o: o.obs_index)
         if len(family_meeting) > 1:
-            obs_list.extend([x for x in family_meeting])
+            observations.extend([x for x in family_meeting])
             obs_prop.extend(list(observation_select_index(family_meeting)))
             index_minmax = (family_meeting[0].obs_index, family_meeting[-1].obs_index)
-            for obs_tmp in family_meeting:
-                obs_tmp.index_minmax = index_minmax
-                env_vars.obs_infos[obs_tmp.name] = obs_tmp
-                obs_info[obs_tmp.name] = obs_tmp
+            for obs in family_meeting:
+                obs.index_minmax = index_minmax
+                environment.obs_infos[obs.name] = obs
+                obs_info[obs.name] = obs
         else:
             # LOL UMAD? only one family member (probably even more common)
-            obs_tmp = family_meeting[0]
-            obs_info[obs_tmp.name] = obs_tmp
-            obs_list.append(obs_tmp)
+            obs = family_meeting[0]
+            obs_info[obs.name] = obs
+            observations.append(obs)
             obs_prop.append(1)  # just one value
 
-    env_vars.choose_obs = {float: lambda: np.random.choice(obs_list, p=obs_prop),
+    environment.choose_obs = {float: lambda: np.random.choice(observations, p=obs_prop),
                            bool: None}  # sfeh None? no  lambda? yeah, not important but still...
-    env_vars.obs_infos = obs_info
+    environment.obs_infos = obs_info
 
-    if eval_action:
-        env_vars.eval_action = eval_action
+    if actionmain:
+        environment.eval_action = actionmain
     else:
         raise
 
     data_train, data_test = skcv.train_test_split(df, test_size=test_size, random_state=0)
 
-    return env_vars, data_train, data_test
+    return environment, data_train, data_test
 
 
 def observation_get_family_and_time(name, re_pattern='_\\d+$', none_return=None):

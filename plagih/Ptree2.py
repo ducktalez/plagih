@@ -857,7 +857,7 @@ def pop_random(call_params, coolxtype_root=float, from_origin=False):  # todo fl
         for i in range(len(layer0_ids)):  # insert branches! get layer every time (node ids might have changed)
             layer0_ids = tree_get_mutatable_layer_lv0(cooltree)
             node_id = layer0_ids[i]
-            first_xtype = tree_node_get_xtype(tree, node_id)
+            first_xtype = float  # tree_node_get_xtype(tree, node_id)  # todo
             old_branch = tree_node_get_branch(tree, node_id, karoo=True)
             build_size = build_split[i]
 

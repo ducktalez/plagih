@@ -35,7 +35,7 @@ class ChooseOparray3(Selectable):
         """
         return self.choose_oparray[coolxtype]()
 
-    def __init__(self, operator_pool=None):
+    def __init__(self, operator_pool=None, sfeh_no_crazyops=None):
         """
 
         """
@@ -43,6 +43,7 @@ class ChooseOparray3(Selectable):
         def check_operator_pool(operator_pool):
             """
             Check if the user-specified loaded operators allow closure
+            operator_pool: list with operators and their weight of being selected
             """
             # sfeh dunno if that works... 2f not in x
             opxtypes = [oper.coolxtype for oper in operator_pool.keys()]
@@ -71,6 +72,11 @@ class ChooseOparray3(Selectable):
                              ['Ifte', 2],
                              ['Mini', 1], ['Maxi', 1]]
             operator_pool = {op[lp[0]]: lp[1] for lp in operator_pool}  # sfeh this maps the actual class to the label
+
+        # todotodo operator_poolrandom
+        if sfeh_no_crazyops:
+            del operator_pool['**']
+            # workaround sfeh (delete this)
 
         check_operator_pool(operator_pool)
 

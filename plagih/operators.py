@@ -5,6 +5,8 @@ todo umbenennen in was neues
 import ast
 from pathlib import Path
 import sklearn.model_selection as skcv
+
+from plagih.plagih_types import *
 from plagih.printing import *
 import numpy as np
 import pandas as pd
@@ -33,14 +35,11 @@ tf.compat.v1.disable_eager_execution()  # sfeh wasd wtf
 #         self.tf_type = tf.float32
 #         self.iotype = float  # sfeh todo
 #
-#         obs_family, obs_index, prelabel = observation_get_family_and_time(name, none_return=None)
 #         self.family = obs_family
 #         self.obs_index = obs_index  # is None when no index but 0 when
 #
 #         self.index_minmax = None
 #         self.fun_filter_index = lambda: None  # as default, return own index
-
-
 
 # lol, lol. https://github.com/tensorflow/tensorflow/issues/27023 these messages are tingeling
 # import tensorflow.python.util.deprecation as deprecation  # not possible on python 3.6
@@ -153,6 +152,27 @@ class Observation(Plabel):
             self.latexF = f'{prelabel}\\text{{{obs_family}}}_{{{obs_index}}}'
         self.sym_str = value  # sfeh delete?
         self.pycode = value  # sfeh delete?
+
+
+def observation_get_family_and_time(name, re_pattern='_\\d+$', none_return=None):
+    """
+    When an observation is known, return the family, the time and the SIGN!!
+    todo put this function somewhere where it can actually help
+    """
+
+    core_label = re.split(re_pattern, name)[0]
+    if core_label[0] == '-':
+        core_label = core_label[1::]
+        prelabel = '-'
+    else:
+        prelabel = ''
+    try:
+        re_search = re.search(re_pattern, name)  # re_search => ['_12']
+        temp_diff = re_search[0].replace('_', '')  # (only) solution found (at [0]), e.g. '_14'. only keep the digits
+        temp_diff = int(temp_diff)
+    except Exception:
+        temp_diff = none_return
+    return core_label, temp_diff, prelabel
 
 
 class FloatConstant(Plabel):
@@ -577,188 +597,6 @@ class Max(Plabel):
     sym_str = 'Maxi({}, {})'
     pycode = 'max({}, {})'
     coolxtype = (tuple([float, float]), float)
-
-
-def observation_select_index(obs_list, max_hist=10):
-    """
-    chooses variables but weighting how old they are.
-    obs_list = ['gain_0', 'gain_1', 'gain_2', 'gain_3', 'gain_4']
-    -> [0.28, 0.23, 0.19, 0.16, 0.13]
-    sfeh: what about larger steps?
-    0, 1, 2, 3 is good, but
-    0, 5, 10, 15 is worse
-    what if variables are not all of same diff?
-    """
-    obs_list = np.delete(obs_list, np.s_[max_hist:])
-    x = len(obs_list)
-    fairness_bonus = np.log(x) + 1  # raising the opportunity of historic data just a little...
-    p = np.geomspace(1 + fairness_bonus, x + fairness_bonus, num=x)[::-1]  # reverse the geometric series
-    p = p / np.sum(p)  # the sum must be equal to 1  # not required with choices
-    return p
-
-
-class EnvVars:
-    """
-    observation
-    - take ~100 samples as constants
-    - get xtype for buildin tree from expr
-    - eval - get tensors with correct tf-type
-    - filter index
-    eval_action
-    """
-
-    def __init__(self):
-        # self.obs_krazy = {}  # lookup table with all observations - if an observation is not in here, it is a float # sfeh delete this
-        self.obs_infos = {}
-        self.eval_action: EvalAction = None
-        self.choose_obs = {float: None,
-                           bool: None}
-
-
-def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
-    """
-    Loads .csv data files.
-    Information that we need to extract for each column:
-    - choose_xtype choosing a random observation for leaf nodes
-    - filtering observation index
-        is there an index (past values, e.g. velocity_0, velocity_1) -> performing filter-evolve on the variables index (velocity_2 -> velocity_3)
-    - evalaction data_train, data_test, is the action for the regression? -> more than one action might be required (IB has three action dimensions)
-        - action min max -> for kernel regression bounded. occuring min and max values might not be the theoretical min/max values
-
-
-    deprecated:
-
-    """
-
-    def is_action(name, role):
-        if role is None:
-            is_act = any(x in role for x in ['out', 'action', 'act', 'result'])
-        else:
-            is_act = any(['a_' == name[:2],
-                          ii == len(df.columns) - 1,
-                          any(x in name for x in ['out', 'action', 'act', 'result'])])
-        return is_act
-
-    """
-    - Reading the .csv-file (with pandas)
-    - renaming column headers
-    - saving header info for later use
-    """
-    with Path.open(path_data_csv) as file:
-        df = pd.read_csv(file, delimiter=delimiter)
-        # todo it is float64, float64, int64 with MTC.. does it work with Tensorflow?
-
-    actionmain = None
-    observations = []
-    rename_columns = {}  # cartPos|type=int|... -> cartPos
-
-    """
-    1. split col name
-    - check whether its an observation
-    --> check whether there are indizes
-    - check whether its an action
-    --> check unique valuea, min, max
-    - check if it should be ignored (deprecated action, irrelevant column)
-    2. 
-    """
-
-    for ii, header in enumerate(df):
-
-        header_split = header.split('|')  # split 1: cartVel|type=float|role=input --> {cartVel, type=float, role=input]
-        column_name = header_split[0]  # The first entry is always the column name
-        if column_name in op:
-            raise Exception(f'Your samples hold a column that matches the potential tree operator {column_name}.\n'
-                            f'That might end up in confusion, please rename the column.')
-
-        # todo the column name is actually just the base name
-        rename_columns[header] = column_name
-
-        col_infos = {}  # column_name: {'type': 'float', 'role': None, 'colpos': ii}}
-        try:
-            for colparam in header_split[1:]:
-                k, v = colparam.split('=')
-                col_infos[k] = v
-        except Exception as ex:
-            print(f'Could not load samples csv correctly: {ex}')
-
-        coolxtype_out = float
-
-        if is_action(column_name, col_infos.get('role')):
-            if column_name == action_name or action_name is None:
-                # todo min/max SHOULD be either given manually, be set to [0,1] or [-1,1] or depend on the data
-                cmin = col_infos.get('min', df[header].min())
-                cmax = col_infos.get('max', df[header].max())
-                uniques = df[header].unique()
-                actionmain = EvalAction(column_name, coolxtype_out, cmin, cmax, uniques)
-            else:
-                # drop_actions.append(column_name)  # drop from data (only evaluate ONE action, drop other potential actions)
-                df = df.drop(column_name, axis=1)  # no need to keep other actions
-                printez('i', f'Ignoring action {column_name} for this run')  # , print_type=print_type print_type does not exist yet sfeh
-        else:
-            observations.append(Observation(column_name, coolxtype_out=coolxtype_out))
-
-    df.rename(columns=rename_columns, inplace=True)
-    df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
-
-    """
-    choosing random observations made easy
-    """
-    environment = EnvVars()
-
-    obs_prop = []
-    obs_info = {}
-
-    obs_families = list(set(x.family for x in observations))
-    for fam in obs_families:
-        family_meeting = sorted([x for x in observations if x.family == fam], key=lambda o: o.obs_index)
-        if len(family_meeting) > 1:
-            observations.extend([x for x in family_meeting])
-            obs_prop.extend(list(observation_select_index(family_meeting)))
-            index_minmax = (family_meeting[0].obs_index, family_meeting[-1].obs_index)
-            for obs in family_meeting:
-                obs.index_minmax = index_minmax
-                environment.obs_infos[obs.name] = obs
-                obs_info[obs.name] = obs
-        else:
-            # LOL UMAD? only one family member (probably even more common)
-            obs = family_meeting[0]
-            obs_info[obs.name] = obs
-            observations.append(obs)
-            obs_prop.append(1)  # just one value
-
-    environment.choose_obs = {float: lambda: np.random.choice(observations, p=obs_prop),
-                           bool: None}  # sfeh None? no  lambda? yeah, not important but still...
-    environment.obs_infos = obs_info
-
-    if actionmain:
-        environment.eval_action = actionmain
-    else:
-        raise
-
-    data_train, data_test = skcv.train_test_split(df, test_size=test_size, random_state=0)
-
-    return environment, data_train, data_test
-
-
-def observation_get_family_and_time(name, re_pattern='_\\d+$', none_return=None):
-    """
-    When an observation is known, return the family, the time and the SIGN!!
-    """
-
-    core_label = re.split(re_pattern, name)[0]
-    if core_label[0] == '-':
-        core_label = core_label[1::]
-        prelabel = '-'
-    else:
-        prelabel = ''
-    try:
-        re_search = re.search(re_pattern, name)  # re_search => ['_12']
-        temp_diff = re_search[0].replace('_', '')  # (only) solution found (at [0]), e.g. '_14'. only keep the digits
-        temp_diff = int(temp_diff)
-    except Exception:
-        temp_diff = none_return
-    return core_label, temp_diff, prelabel
-
 
 op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to float
     '+': Add,

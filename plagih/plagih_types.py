@@ -129,7 +129,7 @@ class ChooseDistributions(Selectable):
         """
 
         """
-        random.choice(self.terminal_distributions[coolxtype_out])()
+        return random.choice(self.terminal_distributions[coolxtype_out])()
 
     def __init__(self, path_distrib, env_vars_obs_infos=None, data_train=None, n_samples=100):
         """
@@ -147,17 +147,17 @@ class ChooseDistributions(Selectable):
         else:
             logging.info('Opt-in not specified: Distributions-file (for random leaf-node constants) does not exist. Using default set.')
 
-        self.sample_floats_from_data(env_vars_obs_infos=env_vars_obs_infos, data_train=data_train, n_samples=n_samples)
+        # self.sample_floats_from_data(env_vars_obs_infos, data_train, n_samples=n_samples)  # todo
 
-    def sample_floats_from_data(self, env_vars_obs_infos=None, data_train=None, n_samples=100):
+    def sample_floats_from_data(self, env_vars_obs_infos, data_train, n_samples=100):
         """
         Why only floats?
         ...do you really, even theoretically, want to load Boolean True/False samples??
         (okay, it might make sense as it better represents the actual distribution- NO FUCK IT.)
         """
-
         if env_vars_obs_infos is not None:
-            obsnames = env_vars_obs_infos.keys()
+            obsnames = env_vars_obs_infos.observables[float].keys()
+            # todo bool variables aswell?
             obs_samples = data_train[obsnames].to_numpy().flatten()
             obs_samples = np.random.choice(obs_samples, size=n_samples)
             self.terminal_distributions[float].extend([lambda: random.choice(obs_samples)]),  # take one
@@ -167,14 +167,16 @@ class ChooseObservation(Selectable):
     """
 
     """
+    observables = {float: lambda: None,
+                   bool: None}  # sfeh None? no  lambda? yeah, not important but still...
 
     def selecting(self, coolxtype_out):
         """
 
         """
-        pass
+        return self.observables[coolxtype_out]()
 
-    def __init__(self):
+    def __init__(self, observations_list):
         """
 
         """
@@ -197,6 +199,30 @@ class ChooseObservation(Selectable):
             lambda_new_obs = np.random.choice(obs_list, p=p)
             return lambda_new_obs  # returning a function this time
 
+        obs_prop = []
+        obs_info = {}
+
+        obs_families = list(set(x.family for x in observations_list))
+        for fam in obs_families:
+            family_meeting = sorted([x for x in observations_list if x.family == fam], key=lambda o: o.obs_index)
+            if len(family_meeting) > 1:
+                # e.g. pos_1, pos_2, pos_3, ...
+                observations_list.extend([x for x in family_meeting])
+                obs_prop.extend(list(observation_select_index(family_meeting)))
+                index_minmax = (family_meeting[0].obs_index, family_meeting[-1].obs_index)
+                for obs in family_meeting:
+                    obs.index_minmax = index_minmax
+                    # environment.obs_infos[obs.name] = obs  # todo okay do we need this? :s guess we will find out x.D haha
+                    obs_info[obs.name] = obs
+            else:
+                # LOL UMAD? only one family member (probably even more common)
+                obs = family_meeting[0]
+                obs_info[obs.name] = obs
+                observations_list.append(obs)
+                obs_prop.append(1)  # just one value
+                # todotodo todo
+        self.observables = {float: lambda: np.random.choice(observations_list, p=obs_prop),
+                            bool: None}  # sfeh None? no  lambda? yeah, not important but still...
 
 
 class Choosing:
@@ -221,7 +247,7 @@ class Choosing:
         Randomly choosing an operator-label for a given xtype.
         choose_oparray3 must be given, as they are different between runs.
         arity can also be set optionally, e.g. for point mutation
-        todoo DOUBLE-check if this coolxtype is chosen correcrtly... better: replace it
+        todo DOUBLE-check if this coolxtype is chosen correctly... better: replace it
         """
         func_list, probability_list = self.operators[coolxtype]
         return np.random.choice(func_list, p=probability_list)
@@ -241,6 +267,125 @@ def label_get_arity(node_label):
         return arity_sfehdebug
     else:
         return 0
+
+
+class EnvVars:
+    """
+    observation
+    - take ~100 samples as constants
+    - get xtype for buildin tree from expr
+    - eval - get tensors with correct tf-type
+    - filter index
+    eval_action
+    """
+
+    def __init__(self):
+        # self.obs_krazy = {}  # lookup table with all observations - if an observation is not in here, it is a float # sfeh delete this
+        self.obs_infos = {}
+        self.eval_action: EvalAction = None
+        self.choose_obs = {float: None,
+                           bool: None}
+
+
+def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
+    """
+    Loads .csv data files.
+    Information that we need to extract for each column:
+    - choose_xtype choosing a random observation for leaf nodes
+    - filtering observation index
+        is there an index (past values, e.g. velocity_0, velocity_1) -> performing filter-evolve on the variables index (velocity_2 -> velocity_3)
+    - evalaction data_train, data_test, is the action for the regression? -> more than one action might be required (IB has three action dimensions)
+        - action min max -> for kernel regression bounded. occuring min and max values might not be the theoretical min/max values
+
+
+    deprecated:
+
+    """
+
+    def is_action(name, role):
+        if role is None:
+            is_act = any(x in role for x in ['out', 'action', 'act', 'result'])
+        else:
+            is_act = any(['a_' == name[:2],
+                          ii == len(df.columns) - 1,
+                          any(x in name for x in ['out', 'action', 'act', 'result'])])
+        return is_act
+
+    """
+    - Reading the .csv-file (with pandas)
+    - renaming column headers
+    - saving header info for later use
+    """
+    with Path.open(path_data_csv) as file:
+        df = pd.read_csv(file, delimiter=delimiter)
+        # todo it is float64, float64, int64 with MTC.. does it work with Tensorflow?
+
+    actionmain = None
+    observations = []
+    rename_columns = {}  # cartPos|type=int|... -> cartPos
+
+    """
+    1. split col name
+    - check whether its an observation
+    --> check whether there are indizes
+    - check whether its an action
+    --> check unique valuea, min, max
+    - check if it should be ignored (deprecated action, irrelevant column)
+    2. 
+    """
+
+    for ii, header in enumerate(df):
+
+        header_split = header.split('|')  # split 1: cartVel|type=float|role=input --> {cartVel, type=float, role=input]
+        column_name = header_split[0]  # The first entry is always the column name
+        if column_name in op:
+            raise Exception(f'Your samples hold a column that matches the potential tree operator {column_name}.\n'
+                            f'That might end up in confusion, please rename the column.')
+
+        # todo the column name is actually just the base name
+        rename_columns[header] = column_name
+
+        col_infos = {}  # column_name: {'type': 'float', 'role': None, 'colpos': ii}}
+        try:
+            for colparam in header_split[1:]:
+                k, v = colparam.split('=')
+                col_infos[k] = v
+        except Exception as ex:
+            print(f'Could not load samples csv correctly: {ex}')
+
+        coolxtype_out = float
+
+        if is_action(column_name, col_infos.get('role')):
+            if column_name == action_name or action_name is None:
+                # todo min/max SHOULD be either given manually, be set to [0,1] or [-1,1] or depend on the data
+                cmin = col_infos.get('min', df[header].min())
+                cmax = col_infos.get('max', df[header].max())
+                uniques = df[header].unique()
+                actionmain = EvalAction(column_name, coolxtype_out, cmin, cmax, uniques)
+            else:
+                # drop_actions.append(column_name)  # drop from data (only evaluate ONE action, drop other potential actions) sfeh delete this
+                df = df.drop(column_name, axis=1)  # no need to keep other actions
+                printez('i', f'Ignoring action {column_name} for this run')  # , print_type=print_type print_type does not exist yet sfeh
+        else:
+            observations.append(Observation(column_name, coolxtype_out=coolxtype_out))
+
+    df.rename(columns=rename_columns, inplace=True)
+    df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
+
+    """
+    choosing random observations made easy
+    """
+    environment = EnvVars()
+    environment.obs_infos = ChooseObservation(observations)  # todo remove dat shit
+
+    if actionmain:
+        environment.eval_action = actionmain
+    else:
+        raise
+
+    data_train, data_test = skcv.train_test_split(df, test_size=test_size, random_state=0)
+
+    return environment, data_train, data_test
 
 
 def xtype_equi_outcome(a_xtype, b_xtype):

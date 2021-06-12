@@ -745,12 +745,6 @@ class ExplainableGP(object):
                                                     tex_stacklist([f'{int(x)}' for x in y['parsims']]),
                                                     tex_stacklist([input_agentex(x, f'../benchmarks/{self.root_dir.parent.parent.name}/{self.root_dir.parent.name}/') for x in [0, 1, 2]])])
 
-                    # tex_stacklist([f'{x:0.2f}' for x in y['regress_vals']]),
-                    # f"{y['cnt']}",
-                    # f"{y['experiment_safe']:0.0f}",
-                    # f"{y['experiment_r50']:0.0f}",
-                    # f"{y['experiment_safe_r50']:0.0f}",
-
                 combined_overview = "\\begin{tabular}{llllllllll}\n\\hline \n" \
                                     f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])} \\hline\n" \
                                     f"{tex_line_overview}" \
@@ -1155,7 +1149,6 @@ class ExplainableGP(object):
         try:
             cooltree.check_all()
         except Exception as ex:
-            return
             print_warning('w', f'tree failed the quick check. last-mod: {cooltree.meta.last_evolution}. Reason:\n{ex}', print_type=self.print_type)
 
         # tree = self.tree_finish_nodes(tree, last_evolution=last_evolution)
@@ -1173,7 +1166,6 @@ class ExplainableGP(object):
             try:
                 fitness_train = self.tree_eval_fitness_offline_train(cooltree)
             except Exception as evalex:
-                return  # todotodo todo
                 print_warning('wwww', f'Exception while evaluating: {evalex}, tree: {cooltree}.', print_type=self.print_type)
                 return
 
@@ -1182,7 +1174,6 @@ class ExplainableGP(object):
         try:
             cooltree.set_fix_nodes(self.origin_cooltree)
         except Exception as ex:
-            return
             print(f'Nope, failed tree finish: {ex}\n{cooltree}')
 
         cooltree.meta.fitness_train = fitness_train
@@ -1272,7 +1263,6 @@ class ExplainableGP(object):
         """
         if fitness_train != fitness_train or fitness_train == float('inf'):
             raise Exception(f"fitness is: '{fitness_train}'")  # happens, eg when values are soo wrong that it leaves the float-range
-        # fitness_train = round(fitness_train, self.conf.fitness_decimals)
 
         return fitness_train
 

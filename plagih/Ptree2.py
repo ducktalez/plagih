@@ -865,23 +865,21 @@ def pop_random(call_params, coolxtype_root=float, from_origin=False):  # todo fl
             core = cooltree.invent_core(size_mode, first_xtype, build_size, full_or_grow)
             tree = tree_insert_subtree(tree, core, old_branch, karoo=True)
     else:
-        build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
-        cooltree = invent_core(size_mode, coolxtype_root, build_size, full_or_grow)
+        build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')  # depth, in this case
+        """
+        was invent_core
+        Creates a random core.
+        "depth": creates a tree with a desired depth
+        "nodes": creates a tree with a desired amount of nodes
+        """
+        coolcore = CoolCore(BuildDummy(coolxtype_root))
+        # todo
+        # coolcore.evolve_mutate_branch_random(build_size, choose_oparray3, env_vars.choose_obs,
+        #                                      choose_distributions, float_decimals, size_mode=size_mode, full_or_grow=full_or_grow)
+        # coolcore.construct_random_tree_depth(size_mode, coolxtype_root, build_size, full_or_grow)
+        coolcore.construct_random_tree_depth(4)  # todo
 
-    return tree
-
-
-def construct_random_tree_depth(coolxtype_root, depth, p_terminal=0):
-    """
-    was invent_core
-    Creates a random core.
-    "depth": creates a tree with a desired depth
-    "nodes": creates a tree with a desired amount of nodes
-    """
-    coolcore = CoolCore(BuildDummy(coolxtype_root))
-    coolcore.evolve_mutate_branch_random(build_size, self.choose_oparray3, self.env_vars.choose_obs,
-                                             self.choose_distributions, self.conf.float_decimals, size_mode=size_mode, full_or_grow=full_or_grow)
-    return cooltree
+    return coolcore
 
 
 def invent_core2(self, size_mode, first_xtype, build_size, full_or_grow):
@@ -1015,20 +1013,8 @@ if __name__ == '__main__':
 
     trexpr = '(Ifte, (Orb, (cartPos < -1), (Andb, (cartPos < 0.1), (cartVel < -0.05))), 2, (Ifte, (Andb, (Andb, (cartPos > -0.45), (cartPos < -0.05)), (cartVel < -0.5)), 0, (Ifte, (cartVel < 0), 0, 2)))'
     trexpr = '(Ifte, (cartVel < 0), 0, 2)'
-    trexpr = plagih_sympify(trexpr)
+    # trexpr = plagih_sympify(trexpr)
 
-
-    def funtest(pos, vel):
-        if pos < -1 or (pos < 0.1 and vel < -0.05):
-            return 2
-        else:
-            if (pos > -0.45 and pos < -0.05) and vel < 0.02:
-                return 0
-            else:
-                if vel < 0:
-                    return 0
-                else:
-                    return 2
-
-
-    some_quick_test()
+    coolcore = CoolCore(BuildDummy(float))
+    coolcore.construct_random_tree_depth(4)  # todo
+    print(coolcore)

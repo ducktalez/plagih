@@ -173,7 +173,7 @@ def main():  # argv sys.argv[1:]
                         help='(Developer only) Flag that can be activated if certain code should be executed. Now used to fix Linux/Windows paths-bug.')
     parser.add_argument('-slurm_runs_folder', type=str, default='slurm_runs',
                         help='sfeh for fore than one version of the same run')
-    parser.add_argument('-sfeh_no_crazyops', action='store_true')
+    # parser.add_argument('-sfeh_no_crazyops', action='store_true')
 
     args = parser.parse_args()
 
@@ -198,7 +198,7 @@ def main():  # argv sys.argv[1:]
     """
     Starting the actual run
     """
-    gp = ExplainableGP(conf, root_dir, path_data_csv, path_origin_tree, args.mp_cpu_cores_max, developer_fix=args.developer_fix, sfeh_no_crazyops=args.sfeh_no_crazyops)
+    gp = ExplainableGP(conf, root_dir, path_data_csv, path_origin_tree, args.mp_cpu_cores_max, developer_fix=args.developer_fix)
 
     if args.analyse:
         if args.force_new_run:

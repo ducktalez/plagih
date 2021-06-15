@@ -5,7 +5,7 @@ import sklearn.metrics as skm
 # from sys import getsizeof
 
 
-class GPKernel:
+class Kernel:
     """
     The "abstract" Kernel class for the GP process.
     optional: creating another
@@ -36,7 +36,7 @@ class GPKernel:
         pass
 
 
-class RegressionKernel(GPKernel):
+class RegressionKernel(Kernel):
 
     def best_fitness_function(self, *args, **kwargs):
         return min(*args, **kwargs)
@@ -195,7 +195,7 @@ class RegressionKernel(GPKernel):
         return
 
 
-class ClassificationKernel(GPKernel):
+class ClassificationKernel(Kernel):
 
     def __init__(self, *args):
         pass
@@ -267,7 +267,7 @@ class ClassificationKernel(GPKernel):
         return pairwise_fitness
 
 
-class MatchKernel(GPKernel):
+class MatchKernel(Kernel):
     """
     The match kernel does
     """
@@ -349,7 +349,6 @@ def ast_convert_from_expr(expr, tensors=None, build=None):
     More information in ast_expr_to()
 
     """
-
     ast_tree = ast.parse(expr, mode='eval').body
     graph = ast_expr_to(ast_tree, tensors=tensors, build=build)
 
@@ -479,7 +478,6 @@ def ast_expr_to(node, tensors=None, build=None):
 
         else:
             raise Exception('Failed to identify the function. {}'.format(type(node)))
-
     else:
         raise TypeError('Node type could not be handeled in ast-evaluation: {}'.format(node))
 

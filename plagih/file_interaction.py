@@ -144,6 +144,10 @@ with plt.rc_context(rc=rc_params):
 
 """
 
+class FileInteraction:
+    pass
+    # todo?
+
 
 def path_make_dir(p: Path):
     """
@@ -159,27 +163,6 @@ def file_dump(path, data, verbose='SKIPsfeh', print_type=None):
     with Path.open(path, 'w') as file:
         file.write(data)
         printez(verbose, f'{path.as_posix()}', print_type=print_type)
-
-
-# def folder_make_dir(path):
-#     """
-#     Checks if the folders for the specified path exist and creates them otherwise.
-#     Apparently, this procedure is used often.
-#     """
-#     if not Path.is_dir(path):
-#         Path.mkdir(path)
-#     return path
-#
-#
-# def file_make_dir(file_path):
-#     """
-#     Creates the folder only knowing the file.
-#     paff/tuuu/fyle.txe  ->  *mkdir* paff/tuuu/
-#     """
-#     p = Path(file_path)
-#     if not p.parent.is_dir():
-#         p.parent.mkdir(parents=True)
-#     return p
 
 
 def pickle_dump(path, data, print_type=None):

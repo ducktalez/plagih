@@ -106,8 +106,8 @@ complete_params = []
 # --cpus-per-task=8 is better, but everyone uses these engines
 sbatch_sh = "#!/usr/bin/env bash\n" + '\n'.join(
     [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} $1 $2 $3 $4' for run_name in run_starts]
-    + [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} -slurm_runs_folder slurm_runs2 $1 $2 $3 $4' for run_name in run_starts]
-    + [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} -slurm_runs_folder slurm_runs3_easy -sfeh_no_crazyops $1 $2 $3 $4' for run_name in run_starts])
+    + [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} -slurm_runs_folder slurm_runs2 $1 $2 $3 $4' for run_name in run_starts])
+    # + [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} -slurm_runs_folder slurm_runs3_easy -sfeh_no_crazyops $1 $2 $3 $4' for run_name in run_starts])
 
 with Path.open(Path('start_all_slurm_sbatch_jobs.sh'), 'w') as sh_file:
     sh_file.write(sbatch_sh)

@@ -9,6 +9,9 @@ import matplotlib.pyplot as plt
 import multiprocessing as mp
 import matplotlib.ticker as ticker
 import logging
+
+from sklearn.model_selection import train_test_split
+
 from benchmarks.ib.combined_runs import *
 from benchmarks.mc.agents.quick_eval import auto_evaluate_run_end
 from plagih.file_interaction import *
@@ -17,7 +20,7 @@ from plagih.plagih_config import *
 import random
 import pandas as pd
 
-from plagih.plagih_sympy_extras import plagih_sympify
+from plagih.sympy_extras import plagih_sympify
 
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
@@ -58,7 +61,8 @@ class ExplainableGP(object):
     """
     sfeh
     """
-    def __init__(self, conf: GpConfig, root_dir: Path, path_data, path_origin_tree, mp_cpu_cores_max=1, developer_fix=None, sfeh_no_crazyops=None):
+
+    def __init__(self, conf: GpConfig, root_dir: Path, path_data, path_origin_tree, mp_cpu_cores_max=1, developer_fix=None):
         self.conf = conf
         self.root_dir = Path(root_dir)
         self.mp_cpu_cores_max = mp_cpu_cores_max  # sfeh
@@ -96,12 +100,12 @@ class ExplainableGP(object):
             csv_observations.remove(self.conf.action_name)
             choose_observations = ChooseObservation(csv_observations)
 
-            self.data_train, self.data_control = train_test_split(df, test_size=0.2, random_state=0)  # discussion: random state 0 okay? terst_size 0.2?
+            self.data_train, self.data_control = train_test_split(df, test_size=0.2, random_state=0)  # discussion: random state 0 okay? test_size 0.2?
             self.kernel = RegressionKernel(self.conf.kernel_name, self.data_train, self.tf_config, "/gpu:0",
                                            self.conf.action_name)  # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
 
         choose_distributions = self.activate_distributions(path_distrib=None)  # asd sfeh path_distrib not None
-        choose_oparray3 = self.gp_load_oparray(path_operators=None, sfeh_no_crazyops=sfeh_no_crazyops)  # path_operators sfeh this file from config version1
+        choose_oparray3 = self.gp_load_oparray(path_operators=None)  # path_operators sfeh this file from config version1
 
         self.choosing = Choosing(choose_oparray3, choose_observations, choose_distributions)
 
@@ -779,7 +783,7 @@ class ExplainableGP(object):
 
         return
 
-    def gp_load_oparray(self, path_operators=None, sfeh_no_crazyops=None):
+    def gp_load_oparray(self, path_operators=None):
         """
         Offers the possibility for the user to load a .yaml-file of operators for the gp-process.
         operator_pool is used otherwise.
@@ -791,12 +795,11 @@ class ExplainableGP(object):
 
         try:
             operator_pool = yaml_load(Path(path_operators))
-            # sfeh lel, 100% excepts as never loaded this
         except:
             self.printpl('i', 'Opt-in not specified: Operators-file does not exist.\n'
                               'Creating one with a default list of mathematical operator_pool.')
-            operator_pool=None
-        choose_oparray3 = ChooseOperators(operator_pool=operator_pool, sfeh_no_crazyops=sfeh_no_crazyops)
+            operator_pool = None
+        choose_oparray3 = ChooseOperators(operator_pool=operator_pool)
 
         yaml_dump(self.root_dir / 'backup/operators_used.yaml', operator_pool, default_flow_style=True)  # delete this??
 
@@ -977,43 +980,21 @@ class ExplainableGP(object):
 
         return
 
-    def treelut_tree_add(self, cooltree: FinalizedNode):
+    def treelut_tree_add(self, tree: Node):
         """
         update selected values in self.tree_meta
         LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         """
+        # todo
+        meta = {'fitness_train': tree.meta.fitness_train,
+                'parsimony': tree.meta.parsimony,
+                'expr_raw': tree.meta.expr_raw,
+                'expr_sym': tree.meta.expr_sym}
 
-        meta = {'fitness_train': cooltree.meta.fitness_train,
-                'parsimony': cooltree.meta.parsimony,
-                'expr_raw': cooltree.meta.expr_raw,
-                'expr_sym': cooltree.meta.expr_sym}
-
-        tree_ident = hash(cooltree)  # attention: hashes change between python runs. do not save anything on their hash values <.<
+        tree_ident = hash(tree)  # attention: hashes change between python runs. do not save anything on their hash values <.<
 
         self.tree_lut[tree_ident] = meta
         return
-
-    # def invent_label_list(self, size_mode, first_xtype, build_size, full_or_grow):
-    #     """
-    #     Creates a random label list.
-    #     "depth": creates a tree with a desired depth
-    #     "nodes": creates a tree with a desired amount of nodes
-    #     """
-    #     if 'depth' in size_mode:
-    #         # sfeh warning: Attention with this one. can get quite large with depth based
-    #         label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size,
-    #                                                                      self.env_vars.choose_obs, self.choose_oparray2,
-    #                                                                      self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
-    #
-    #     elif 'nodes' in size_mode:
-    #
-    #         label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size,
-    #                                                                      self.env_vars.choose_obs, self.choose_oparray2,
-    #                                                                      self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
-    #     else:
-    #         raise Exception('Known full_or_grow was not found for building random trees.')
-    #
-    #     return label_list, arity_list, xtype_list
 
     def helper_evolve_params_branch(self, call_params):
         """
@@ -1119,7 +1100,7 @@ class ExplainableGP(object):
         self.pareto_sort()  # sfeh check if required
         return
 
-    def pop_append(self, cooltree: FinalizedNode):
+    def pop_append(self, cooltree: Node):
         """
         Safely append a tree to the population.
         Even though the raw trees should have everything to display their expression,
@@ -1154,7 +1135,7 @@ class ExplainableGP(object):
                 print_warning('wwww', f'Exception while evaluating: {evalex}, tree: {cooltree}.', print_type=self.print_type)
                 return
 
-        expr_raw = cooltree.get_expr_raw()
+        expr_raw = cooltree.get_expr()
         expr_sym = expr_sympify(expr_raw)
         try:
             cooltree.set_fix_nodes(self.origin)
@@ -1231,7 +1212,7 @@ class ExplainableGP(object):
         """
 
         try:
-            expr_raw = cooltree.get_expr_raw()
+            expr_raw = cooltree.get_expr()
             expr_sym = expr_sympify(expr_raw)
         except Exception as evalex:
             raise Exception(f'eval:{evalex}')
@@ -1498,7 +1479,6 @@ class ExplainableGP(object):
             time_now = time.strftime("%d.%m %H:%M", time.localtime())
             print(f'[{time_now}] {text}')
         return
-
 
 # def activate_dataset(path_data, action_name):
 #     """

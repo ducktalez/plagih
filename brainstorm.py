@@ -121,8 +121,8 @@ class Huehue(object):
         x = x.e2()
         return x
 
+def lululu():
 
-if __name__ == '__main__':
     n = 100000
     manager = Manager()
     # l = manager.list([i*i for i in range(n)])
@@ -132,3 +132,43 @@ if __name__ == '__main__':
         hue.new_p(n=1000, v=v)
         t1 = time.perf_counter()
         print(f'{v} took: {t1- t0:.4f}, length: {len(hue.xlist)}')
+
+
+class A:
+    y=3
+
+    def __init__(self):
+        self.x = 1
+
+    def printer(self):
+        return self.y
+
+
+class B(A):
+    y=5
+
+    def __init__(self):
+        super().__init__()
+        self.x = 2
+
+
+class C(B):
+    y=6
+
+
+class CC(B):
+    y=66
+
+    def to_C(self):
+        return C()
+
+
+if __name__ == '__main__':
+    a = A()
+    b = B()
+    c = C()
+    print(c)
+    cc = CC()
+    print(cc)
+    x = cc.to_C()
+    print(x.printer(), x.y)

@@ -284,7 +284,7 @@ def plagih_sympify(function_string, eval_locals=None):
                         'Notb': Notb,
                         'Square': Square,
                         'Usub': Usub,
-                        'usub': Usub,  # sfeh delete this
+                        # 'usub': Usub,  # sfeh delete this
                         'Round': Round}
     local_sympy_dict.update(eval_locals or {})
 

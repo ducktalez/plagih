@@ -166,7 +166,7 @@ g a symbolic regression on transition samples that were collected by a black
  The evaluation shows that the familiarity of expert programs can be preserved
  in GP candidates, making them easier to interpret and having no major drawbacks
  compared to regular runs.
- In cases, where the TED does not protect the desired structure, selecting
+ In cases, where the TED does not protect the desired structure, select
  a fixed core may be required.
  The central nodes of an expert program often structure the approach, which
  is the opposite of what regular GP would aim for, leading to results that
@@ -3192,7 +3192,7 @@ mathcal{N}(x,0.1)$
  choosing the time index that favors up-to-date entries (
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "fig:Probabilities-for-selecting"
+reference "fig:Probabilities-for-select"
 
 \end_inset
 
@@ -3442,7 +3442,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Probabilities for selecting the timestep of an observation, considering
+Probabilities for select the timestep of an observation, considering
  5, 10 or 20 possibilities.
  Instead of a completely equal distribution, more recent values are selected
  slightly more frequently due to their higher presumed relevance according
@@ -3450,7 +3450,7 @@ Probabilities for selecting the timestep of an observation, considering
  
 \begin_inset CommandInset label
 LatexCommand label
-name "fig:Probabilities-for-selecting"
+name "fig:Probabilities-for-select"
 
 \end_inset
 
@@ -12653,7 +12653,7 @@ This thesis proposed familiarity, the similarity to a prior known solution,
  to find algorithmic improvements to a domain expert program.
  The protection of familiar structures was achieved by using the edit distance
  to the original tree as a complexity metric, as well as an optional explicit
- protection of tree structures by selecting fixed nodes.
+ protection of tree structures by select fixed nodes.
  The evolutionary process was given the task to find efficient extensions
  so that the functionality of an inexplicably better black box solution
  is achieved, for which a symbolic regression is performed on previously

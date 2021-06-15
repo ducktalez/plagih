@@ -3,66 +3,19 @@ todo umbenennen in was neues
 """
 
 import ast
-from pathlib import Path
-import sklearn.model_selection as skcv
-
-from plagih.plagih_types import *
-from plagih.printing import *
 import numpy as np
-import pandas as pd
 import re
-from pydoc import locate
 import random
-
-
 import tensorflow as tf
 tf.compat.v1.disable_eager_execution()  # sfeh wasd wtf
-
-
-# class Obs:
-#
-#     def mutate_filter(self):
-#         if self.index_minmax is None:
-#             return
-#         else:
-#             new_index = int(max(min(round(random.gauss(self.obs_index, 1)), self.index_minmax[1]), 0))
-#             self.obs_index = new_index
-#             self.name = f'{self.family}_{new_index}'
-#
-#     def __init__(self, name, ctype):
-#         self.name = name
-#         self.ctype = ctype
-#         self.tf_type = tf.float32
-#         self.iotype = float  # sfeh todo
-#
-#         self.family = obs_family
-#         self.obs_index = obs_index  # is None when no index but 0 when
-#
-#         self.index_minmax = None
-#         self.fun_filter_index = lambda: None  # as default, return own index
 
 # lol, lol. https://github.com/tensorflow/tensorflow/issues/27023 these messages are tingeling
 # import tensorflow.python.util.deprecation as deprecation  # not possible on python 3.6
 # deprecation._PRINT_DEPRECATION_WARNINGS = False
-import tensorflow as tf
 
-tf.compat.v1.disable_eager_execution()  # sfeh wasd wtf
+tf.compat.v1.disable_eager_execution()  # sfeh damn what was this line good for?
 
 """
-op: Dict to work as 'Database' for every expression-bit and its features
-- KEY: expression-bit: can occur in various forms, which group into following uses:
-    - ast.KEY: Found by pythons 'ast' when inline op like [+, -, *, ...] occurs
-    - 'KEY': Found by pythons 'ast' when non-inline functions are found as string
-    -> some operators are identical, but occur several times, e. g. ('And', '&', ast.BitAnd)
-- VALUE: several features that have to be regarded. Some are irrelevant or have to be done.
-    - name: (irrelevant) information what this function actually does. identical operators can be found like this.
-    - arity: Amount of inputs an operator has to have. This must always be constant (reason why pythons min/max does not work)
-    - tf: Tensorflow graph representation for the key. Was separated earlier. (!): [tf.bool, tf.float] are just variables of the used tf.cast function.
-    - gpbp: Genetic Programming Backpropagation: An open idea from sfeh to introduce backpropagation for genetic operators.
-    - latex: For visualizing trees with latex, these representations might look better
-
-Features should always be defined, even though they might not occur at all. If not used, they CAN be filled with dummy values like äöü
-Some, which are known of not being used yet are commented with '# not tested' or '# not used'
 sfeh: write test that checks all operators for sympificytion (...+branch-combinations, and more?)
 sfeh: use function-types (-> 'kommuttative'?)
 """
@@ -71,55 +24,27 @@ sfeh: use function-types (-> 'kommuttative'?)
 class Plabel:
     label = 'None'
     arity = 0
-    tf = None
-    sym_str = 'None'
     coolxtype = (tuple([None]), None)
-    pycode = 'None'
-    latex1 = 'None'
-    latexF = 'None'
+    # tf = None
+    # sym_str = 'None'
+    # pycode = 'None'
+    # latex1 = 'None'
+    # latexF = 'None'
 
     def __str__(self):
         return str(self.label)
 
-    def mutate_point(self):
-        """
-        evolve a point
-        replace with same-arity, same type
-        """
-        pass
-
-    def mutate_filter(self):
-        pass
-
-    def evolve_branch(self):
-        """
-        evolve a subbranch
-        replace with same type, but any arity (child nodes are deleted)
-        """
-        pass
-
-
-class BuildDummy(Plabel):
-    """
-    sfeh delete this? keep this?
-    """
-    def __init__(self, coolxtype_out, size=None):
-        self.coolxtype = (tuple([None]), coolxtype_out)
-
-
-class Ploperator(Plabel):
-    pass
-
 
 class Observation(Plabel):
     """
-
+    aka input values
     """
     arity = 0
 
     def mutate_filter(self):
         """
         was filter_new_index
+         # as default, return own index
         """
         if self.index_minmax is None:
             return
@@ -129,27 +54,26 @@ class Observation(Plabel):
             self.name = f'{self.family}_{new_index}'
 
     def __init__(self, value, coolxtype_out=float, obs_indizes=None):
-        obs_family, obs_index, prelabel = observation_get_family_and_time(value, none_return=None)
+        fam, obs_index, prelabel = observation_get_family_and_time(value, none_return=None)
 
         self.label = value
         self.name = value if value[0] != '-' else value[1:]  # sfeh delete todo
 
-        self.family = obs_family
+        self.family = fam
         self.obs_index = obs_index  # is None when no index but 0 when
 
-        self.iotype = coolxtype_out
+        self.xtype = coolxtype_out
         self.tf_type = tf.float32
 
         self.index_minmax = None
-        self.fun_filter_index = lambda: None  # as default, return own index
 
         self.obs_indizes = obs_indizes
         if obs_index is None:
-            self.latex1 = f'{prelabel}\\text{{{obs_family}}}'
-            self.latexF = f'{prelabel}\\text{{{obs_family}}}'
+            self.latex1 = f'{prelabel}\\text{{{fam}}}'
+            self.latexF = f'{prelabel}\\text{{{fam}}}'
         else:
-            self.latex1 = f'{prelabel}\\text{{{obs_family}}}_{{{obs_index}}}'
-            self.latexF = f'{prelabel}\\text{{{obs_family}}}_{{{obs_index}}}'
+            self.latex1 = f'{prelabel}\\text{{{fam}}}_{{{obs_index}}}'
+            self.latexF = f'{prelabel}\\text{{{fam}}}_{{{obs_index}}}'
         self.sym_str = value  # sfeh delete?
         self.pycode = value  # sfeh delete?
 
@@ -224,13 +148,9 @@ class EvalAction(Plabel):
     iotype = float  # sfeh todo
     coolxtype = [None, float]
 
-    def __init__(self, name, ctype, cmin, cmax, uniques):
+    def __init__(self, name):
         self.plabel = name
         self.name = name  # delete this
-        self.ctype = ctype  # ! may be int!
-
-        self.uniques = uniques
-        self.minmax = (ctype(cmin), ctype(cmax))
 
 
 class Add(Plabel):
@@ -598,14 +518,21 @@ class Max(Plabel):
     pycode = 'max({}, {})'
     coolxtype = (tuple([float, float]), float)
 
-op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to float
+
+op = {  # 'f2f': Classical mathematical operators, evaluate from float to float
     '+': Add,
+    ast.Add: Add,
     '-': Subtract,
+    ast.Sub: Subtract,
     'Usub': Usub,
+    ast.USub: Usub,
     '*': Multiply,
+    ast.Mult: Multiply,
     # Division: SAFE division by zero! -->tf.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented sfeh: is it okay to display this as '/'?
     '/': Divide_no_nan,
+    ast.Div: Divide_no_nan,
     '**': Power,
+    ast.Pow: Power,
     'Abs': Abs,
     'sign': Sign,
     'Round': Round,
@@ -620,133 +547,39 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     'asin': Asin,
     'atan': Atan,
     'tanh': Tanh,
-    # 'Integer': {'fun_class': '', 'label': 'Integer', 'arity': 1, 'xtype': 'f2f', 'coolxtype': ([], []), 'c-weight': 0.5, 'tf_name': '', 'tf': tf.cast({}, tf.int32), 'latex1': None, 'latexF': '{}',
-    # 'sym_reduce': None, 'sym_str': 'N({}, )', 'pycode': 'math.tanh({})'},
 
-    # 'b2b' Classical logical operators, evaluate from bool to bool
+    # bool->bool
     # DON'T USE tf.bitwise.bitwise_and
     # sympify('Or')->'|', sympify('And')->'&', sympify('Not')->'~'
     'Andb': And,
+    ast.And: And,
     'Orb': Or,
+    ast.Or: Or,
     'Xor': Xor,
+    # ast.BitXor: Xor,
     'Notb': Not,
+    ast.Not: Not,
 
-    # 'f2b' Classical comparative operators, evaluate from float to bool
+    # float->bool
     '==': Eq,
+    ast.Eq: Eq,
     '!=': Neq,
+    ast.NotEq: Neq,
     '<': Lt,  # a < b
+    ast.Lt: Lt,
     '<=': Le,
+    ast.LtE: Le,
     '>': Gt,  # a > b
+    ast.Gt: Gt,
     '>=': Ge,  # a >= 1
+    ast.GtE: Ge,
 
-    # Functions which need separate handling in sympify
     'Ifte': Ifte,  # sfeh essential for evaluation
-    # long version of Ifte-'pycode': 'if {0}:\n{1}\nelse:\n{2}'.format(a, textwrap.indent(str(b), '\t'), textwrap.indent(str(c), '\t'))
     'Mini': Min,  # with forced arity-2
     'Maxi': Max,  # with forced arity-2
 }
 
-## Currently not in use
-
-op = {
-    '+': op_what['+'],
-    ast.Add: op_what['+'],
-    '-': op_what['-'],
-    ast.Sub: op_what['-'],
-    '~': op_what['Usub'],
-    'Usub': op_what['Usub'],
-    'usub': op_what['Usub'],  # delete this sfeh
-    ast.USub: op_what['Usub'],
-    'Round': op_what['Round'],
-    '*': op_what['*'],
-    ast.Mult: op_what['*'],
-    '/': op_what['/'],
-    ast.Div: op_what['/'],
-    '**': op_what['**'],
-    ast.Pow: op_what['**'],
-    'abs': op_what['Abs'],  # delete this
-    'Abs': op_what['Abs'],
-    'sign': op_what['sign'],
-    'Square': op_what['Square'],
-    'sqrt': op_what['sqrt'],
-    'log': op_what['log'],
-    'log1p': op_what['log1p'],
-    'cos': op_what['cos'],
-    'sin': op_what['sin'],
-    'tan': op_what['tan'],
-    'acos': op_what['acos'],
-    'asin': op_what['asin'],
-    'atan': op_what['atan'],
-    'tanh': op_what['tanh'],
-    'Andb': op_what['Andb'],
-    'And': op_what['Andb'],
-    ast.And: op_what['Andb'],
-    '&': op_what['Orb'],
-    ast.BitAnd: op_what['Andb'],
-    'Orb': op_what['Orb'],
-    'Or': op_what['Orb'],
-    ast.Or: op_what['Orb'],
-    'Xor': op_what['Xor'],
-    'Notb': op_what['Notb'],
-    ast.Not: op_what['Notb'],
-    '==': op_what['=='],
-    ast.Eq: op_what['=='],
-    '!=': op_what['!='],
-    ast.NotEq: op_what['!='],
-    '<': op_what['<'],
-    ast.Lt: op_what['<'],
-    '<=': op_what['<='],
-    ast.LtE: op_what['<='],
-    '>': op_what['>'],
-    ast.Gt: op_what['>'],
-    '>=': op_what['>='],
-    ast.GtE: op_what['>='],
-    'Ifte': op_what['Ifte'],
-    'Mini': op_what['Mini'],
-    'Maxi': op_what['Maxi'],
-}
-
 latex_inline = ['+', '-', '*', '**', '==', '!=', '<', '<=', '>', '>=', 'Andb', 'Orb', 'Xor']
-
-op_test = {
-    '&': {'fun_class': '', 'label': '&', 'arity': 2, 'xtype': 'b2b', 'coolxtype': ([], []), 'c-weight': 0.5, 'tf_name': '', 'tf': tf.logical_and, 'latex1': '\\land', 'latexF': '({}\\wedge{})',
-          'sym_reduce': None, 'sym_str': '({} & {})', 'pycode': '({} and {})'},
-    'Power3': {'fun_class': '', 'label': '', 'arity': 1, 'xtype': 'f2f', 'coolxtype': ([], []), 'c-weight': 3, 'tf_name': '', 'tf': tf.pow, 'latex1': None, 'latexF': '{}',
-               'sym_reduce': None, 'sym_str': '({}**2)', 'pycode': '({}**2)'},
-    'Nand': {'fun_class': '', 'label': 'Nand', 'arity': 2, 'xtype': 'b2b', 'coolxtype': ([], []), 'c-weight': 1, 'tf_name': '', 'tf': 'ä', 'latex1': None, 'latexF': '{}',
-             'sym_reduce': None, 'sym_str': 'Nand({}, {})', 'pycode': 'Notb({} and {})'},
-    'Xand': {'fun_class': '', 'label': 'Xand', 'arity': 2, 'xtype': 'b2b', 'coolxtype': ([], []), 'c-weight': 1, 'tf_name': '', 'tf': 'ä', 'latex1': None, 'latexF': '{}',
-             'sym_reduce': None, 'sym_str': 'Xand({}, {})', 'pycode': 'Notb({} ^ {})'},
-    'Nor': {'fun_class': '', 'label': 'Nor', 'arity': 2, 'xtype': 'b2b', 'coolxtype': ([], []), 'c-weight': 1, 'tf_name': '', 'tf': 'ä', 'latex1': None, 'latexF': '{}',
-            'sym_reduce': None, 'sym_str': 'Nor({}, {})', 'pycode': None},
-    'Xnor': {'fun_class': '', 'label': 'Xnor', 'arity': 2, 'xtype': 'b2b', 'coolxtype': ([], []), 'c-weight': 1, 'tf_name': '', 'tf': 'ä', 'latex1': None, 'latexF': '{}',
-             'sym_reduce': None, 'sym_str': 'Xnor({}, {})', 'pycode': None},
-
-    'log2': {'fun_class': '', 'label': 'log2', 'arity': 1, 'xtype': 'f2f', 'coolxtype': ([], []), 'c-weight': 3, 'tf_name': '', 'tf': False, 'latex1': None, 'latexF': '{}',
-             'sym_reduce': None, 'sym_str': 'log({})', 'pycode': 'math.log({})'},
-    'log10': {'fun_class': '', 'label': 'log2', 'arity': 1, 'xtype': 'f2f', 'coolxtype': ([], []), 'c-weight': 3, 'tf_name': '', 'tf': False, 'latex1': None, 'latexF': '{}',
-              'sym_reduce': None, 'sym_str': 'log({})', 'pycode': 'math.log({})'},
-
-    # I think this is only used when trying to get the xtype of type(variable), e.g. 0.3 -> float -> '2f'
-    'float': {'fun_class': '', 'label': 'float', 'arity': 1, 'xtype': 'f2f', 'coolxtype': ([], []), 'c-weight': 1, 'tf_name': '', 'tf': 'ä', 'latex1': None, 'latexF': '{}',
-              'sym_str': None, 'pycode': 'float({})'},  # not tested
-    'int': {'fun_class': '', 'label': 'int', 'arity': 1, 'xtype': 'f2f', 'coolxtype': ([], []), 'c-weight': 1, 'tf_name': '', 'tf': 'ä', 'latex1': None, 'latexF': '{}',
-            'sym_reduce': None, 'sym_str': 'Integer({})', 'pycode': 'int({})'},  # not tested
-    'bool': {'fun_class': '', 'label': 'bool', 'arity': 1, 'xtype': 'f2b', 'coolxtype': ([], []), 'c-weight': 1, 'tf_name': '', 'tf': 'ä', 'latex1': None, 'latexF': '{}',
-             'sym_reduce': None, 'sym_str': '', 'pycode': 'bool({})'},  # not tested
-
-    # sfeh sqrt, is only 2nd root, also 3rd-root?
-
-    # Loops. Never used yet, not working (sfeh). Loops that make GP very unsafe in terms of evaluation time.
-    # Also very unclear how they should work.
-    # - Let user specify them completely. Limit use to 1 (or 2) per tree.
-    # - temporary variable(s) must be introduced that change within loop
-    # - Condition must be change within loop
-    'while': {'fun_class': '', 'label': 'while', 'arity': 2, 'xtype': 'b2?2?', 'coolxtype': ([], []), 'c-weight': 1, 'tf_name': '', 'tf': 'ä', 'latex1': None, 'latexF': '{}',
-              'sym_str': None, 'pycode': None},  # sfeh: not working # Condition must change in loop
-
-    # sfeh: not working # repeat n time, specify n (int) by user?
-}
 
 # sfeh https://docs.sympy.org/latest/tutorial/manipulation.html
 
@@ -756,4 +589,4 @@ op_test = {
 
 if __name__ == "__main__":
     for k, v in op.items():
-        print(f'Operators: {k}, {v}')
+        print(f'{k}\t: {v}')

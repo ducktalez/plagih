@@ -191,8 +191,8 @@ class RegressionKernel(GPKernel):
         """
         sfeh this is baad
         """
-        mse = skm.mean_squared_error(result['agent_result'], result['solution'])
-        return f"\n\n Regression bounded fitness score: {result['fitness']}\n Mean Squared Error: {mse}"
+        # return f"\n\n Regression bounded fitness score: {result['fitness']}\n Mean Squared Error: {}"
+        return
 
 
 class ClassificationKernel(GPKernel):

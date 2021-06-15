@@ -1,5 +1,6 @@
 def pause(menu_dict):
     """
+    todo
     """
 
     options = ['', '?', 'help', 'i', 'm', 'g', 's', 'db', 'ts', 'min', 'bal', 'l', 'pop', 'e', 'p', 'id', 'dir', 'load', 'w', 'add', 'q']

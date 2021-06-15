@@ -11,7 +11,7 @@ class GpConfig:
         """
         SFEH NEVER try to save paths here. switching between systems is worse than HitlerAIDS
         """
-        self.pl_version = 0.997  # must only update if vital changes were made, version important when loading old run
+        self.pl_version = 1.1  # must only update if vital changes were made, version important when loading old run
         self.name = args.prepared_run or None  # sfeh
 
         try:
@@ -25,7 +25,7 @@ class GpConfig:
         # can be updated from everywhere
         self.pop_max = args.pop_max or int(conf.get('pop_max', 1000))  #: 1000,  # amount is never tested
         self.gen_max = args.gen_max or int(conf.get('gen_max', 1000))  # : 1000,  # Maximum amount of generations
-        self.action_name = args.action_name or conf.get('action_name', None)
+        self.action_name = args.action_name or conf.get('action', None)
         self.kernel_name = args.kernel_name or conf.get('kernel_name', 'regression')
 
         # only from command line
@@ -33,8 +33,11 @@ class GpConfig:
 
         # only from config (as noone ever changed it :~P)
         self.tree_depth_max = int(conf.get('tree_depth_max', 10))  #: 10,  # maximum Tree depth for entire run
-        self.tourn_size = int(conf.get('tourn_size', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
         self.parsimony_max = conf.get('parsimony_max', 35)
+        self.tourn_size = int(conf.get('tourn_size', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
+
+        self.dc = conf.get('dc', [])
+
         self.period = conf.get('period', {'gen_plots': 50, 'gen_save': 25})  # sfeh 10 or 5 for debugging, something higher for actual runs
 
         self.float_decimals = conf.get('float_decimals', 6)  # makes the lut more practical - more hits are achieved. be careful with rounding to zero.  # sfeh check this
@@ -43,12 +46,7 @@ class GpConfig:
         self.evolve_list_random = conf.get('evolve_list_random', None)  # sfeh
         self.complexity_measure = conf.get('complexity_measure', 'tree_edit_distance')  # sfeh check used origin here? backup loaded origin?
 
-        self.lambdadist_as_string = conf.get('lambdadist_as_string', {float: ['lambda: random.normalvariate(0,1)',
-                                                                             'lambda: random.normalvariate(1,1)',
-                                                                             'lambda: random.normalvariate(10,5)',
-                                                                             'lambda: random.randint(1, 20)'],  # not required?
-                                                                      bool: ['lambda: random.choice([True, False])'],
-                                                                      'observed_floats': 100})
+        self.action_type_sfeh = float  # todo
 
         """
         Not used

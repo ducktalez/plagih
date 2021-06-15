@@ -204,18 +204,6 @@ def pickle_load(path: Path):
     return pickle_data
 
 
-# def pickle_dump(path, data, print_type=None):
-#     """
-#     saves prepared plagih data to pickle file
-#     """
-#
-#     path = path_make_dir(path)
-#     with Path.open(path, 'wb') as file:
-#         pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
-#         printez('f', f'{path.as_posix()}', print_type=print_type)
-#     return
-
-
 def yaml_load(yaml_path):
     """
     .yaml-file loader (saves two lines that I had to look up all the time)
@@ -250,6 +238,3 @@ if __name__ == '__main__':
         ax.set(xlabel='some label', ylabel='some other value')
         ax.legend(loc='lower left')
         plt.show()
-        # plt.yticks(MTC_XTICKS[0], MTC_XTICKS[1])
-        # plt.xticks(MTC_YTICKS[0], MTC_YTICKS[0])
-        # fig.xticks((0, 0.5, 1), (r'\bf{0}', r'\bf{.5}', r'\bf{1}'), color='k', size=20)

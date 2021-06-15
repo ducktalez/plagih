@@ -8,16 +8,16 @@ import math
 import matplotlib.pyplot as plt
 import multiprocessing as mp
 import matplotlib.ticker as ticker
-
 import logging
 from benchmarks.ib.combined_runs import *
 from benchmarks.mc.agents.quick_eval import auto_evaluate_run_end
 from plagih.file_interaction import *
-from plagih.plagih_sympy_extras import plagih_sympify
 from plagih.viz_with_latex import *
 from plagih.plagih_config import *
-from plagih.Ptree2 import *
 import random
+import pandas as pd
+
+from plagih.plagih_sympy_extras import plagih_sympify
 
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
@@ -58,7 +58,6 @@ class ExplainableGP(object):
     """
     sfeh
     """
-
     def __init__(self, conf: GpConfig, root_dir: Path, path_data, path_origin_tree, mp_cpu_cores_max=1, developer_fix=None, sfeh_no_crazyops=None):
         self.conf = conf
         self.root_dir = Path(root_dir)
@@ -74,90 +73,76 @@ class ExplainableGP(object):
 
         self.paths = FileLocations(self.root_dir)
 
-        self.env_vars = EnvVars()
-        self.data_train = None
-        self.data_control = None
+        """
+        load relevant stuff
+        """
+        with Path.open(path_data) as file:
+            # self.env_vars, choose_observations = data_from_csv(df, action_name=self.conf.action_name)
+            df = pd.read_csv(file, delimiter=',')
+            # todo it is float64, float64, int64 with MTC.. does it work with Tensorflow?
+            df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
 
-        # if path_data.suffix == '.p': data_prepared = pickle_load(path_data)
-        self.env_vars, self.data_train, self.data_control = data_from_csv(path_data, action_name=self.conf.action_name)
-        # FileNotFoundError(f'No data provided? File must be a pickle (.p) or csv (.csv) file. Loaded file: {path_data}')
+            for ii, header in enumerate(df):
+                if header in op:
+                    raise Exception(f'Your samples hold a column that matches the potential tree operator {header}.\n'
+                                    f'That might end up in confusion, please rename the column.')
+
+            if self.conf.action_name is None:
+                self.conf.action_name = df[len(df.columns) - 1]
+
+            df = df.drop(self.conf.dc, axis=1)  # no need to keep other actions
+            printez('i', f'Ignoring columns: {self.conf.dc}')  # , print_type=print_type print_type does not exist yet sfeh
+            csv_observations = list(df.columns)
+            csv_observations.remove(self.conf.action_name)
+            choose_observations = ChooseObservation(csv_observations)
+
+            self.data_train, self.data_control = train_test_split(df, test_size=0.2, random_state=0)  # discussion: random state 0 okay? terst_size 0.2?
+            self.kernel = RegressionKernel(self.conf.kernel_name, self.data_train, self.tf_config, "/gpu:0",
+                                           self.conf.action_name)  # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
+
+        choose_distributions = self.activate_distributions(path_distrib=None)  # asd sfeh path_distrib not None
+        choose_oparray3 = self.gp_load_oparray(path_operators=None, sfeh_no_crazyops=sfeh_no_crazyops)  # path_operators sfeh this file from config version1
+
+        self.choosing = Choosing(choose_oparray3, choose_observations, choose_distributions)
 
         # Evaluating kernel (that uses tensorflow)
         self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=self.conf.tf_device_log,
                                                   allow_soft_placement=True)  # TF device usage logging (for debugging) (default false. I lately used it to check if the GPU is used)
         self.tf_config.gpu_options.allow_growth = True
-        # sfeh for now, only regression kernel
-        self.origin_results = None
-        self.kernel = RegressionKernel(self.conf.kernel_name, self.data_train, self.tf_config, "/gpu:0",
-                                       self.env_vars.eval_action)  # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
-        self.print_type = self.conf.print_type
+        self.print_type = self.conf.print_type  # sfeh hmmm remove
 
-        self.pareto = []  # a dict with all pareto candidates. key is complexity, value is tree meta. [[1,344, meta], ...]
+        self.pareto = []  # a list with all pareto candidates. key is complexity, value is tree meta. [[1,344, meta], ...]
+
         if path_origin_tree:
-            self.origin_cooltree = self.load_origin_tree(path_origin_tree)
-            self.origin_cooltree.meta.last_evolution = 'origin'
-            self.origin_is_fix = self.origin_cooltree.core.is_fix
+            # todo make origin class
+            self.origin = self.load_origin_tree(path_origin_tree)
+            self.origin.meta.last_evolution = 'origin'
+            self.origin_is_fix = self.origin.core.is_fix
         else:
-            self.origin_cooltree = None
+            self.origin = None
             self.origin_is_fix = False
 
             if self.conf.complexity_measure in ['tree_edit_distance']:
                 self.conf.complexity_measure = 'tree_node_count'  # sfeh idea
-                print_warning('w', "Complexity measurement 'tree_edit_distance' is not possible without origin! Using 'tree_node_count' instead.", print_type=self.print_type)
+                print_warning('w', "Complexity measurement 'tree_edit_distance' is not possible without origin!\n"
+                                   "Using 'tree_node_count' instead.", print_type=self.print_type)
 
-        """
-        load relevant stuff
-        """
-        self.choose_distributions = self.activate_distributions(path_distrib=None)  # asd sfeh path_distrib not None
-        self.choose_oparray3 = self.gp_load_oparray(path_operators=None, sfeh_no_crazyops=sfeh_no_crazyops)  # path_operators sfeh this file from config version1
-        self.choosing = Choosing(self.choose_oparray3, self.env_vars.choose_obs, self.choose_distributions, float_decimals=self.conf.float_decimals)
-
-        """
-        initialize some variables
-        """
         # init values with dummies (just to have all self values here for overview)
         self.tree_lut = {}  # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
-        self.population_tmp = []
+        self.population = []
         self.pop_base = []  # population that is taken to the next generation
         self.best_fitness = None  # keeps track of the current best fitness
         self.gen_id = 0
 
-        class MonitoringGenerations:
-            # sfeh this might be better. maybe pandas?
-            def __init__(self):
-                self.population_tmp_done_size = {}
-                self.fitness_average = {}
-                self.fitness_variance = {}
-                self.best_candidate = {}
-                # 'complexity_list = {},  # not used, just uses memory
-                self.complexity_average = {}
-                self.complexity_variance = {}  # variance can be deleted, only std-error is needed delete v1
-                self.pop_trees_complexity_std_error = {}
-                self.gen_time = {}
-
-            # def load_old_monitoring_dict(self, monitoring_dict):
-            #     self.population_tmp_done_size = monitoring_dict.get('population_tmp_done-size', {})
-            #
-            #     self.fitness_average = monitoring_dict.get('fitness_average', {})
-            #     self.fitness_variance = monitoring_dict.get('fitness_variance', {})
-            #     self.best_candidate = monitoring_dict.get('best_candidate', {})
-            #     # 'complexity_list = monitoring_dict.get('complexity_list', {}),  # not used, just uses memory
-            #
-            #     self.complexity_average = monitoring_dict.get('complexity_average', {})
-            #     self.complexity_variance = monitoring_dict.get('complexity_variance', {})  # variance can be deleted, only std-error is needed delete v1
-            #     self.gen_time = monitoring_dict.get('gen_time', {})
-            #     self.evol_performance = monitoring_dict.get('evol_performance', {})
-
-        self.monitor_df = pd.DataFrame(columns=['pop_len', 'pop_unique',
-                                                'fit_avg', 'fit_std', 'fit_best',
-                                                'parsim_avg', 'parsim_std',
-                                                'complexity_avg',
-                                                'time', 'gens_since_last_pareto'])
+        self.monitor_df = pd.DataFrame(columns=['pop_len', 'pop_unique', 'time',
+                                                'fit_avg', 'fit_var', 'fit_best',
+                                                'complexity_avg', 'complexity_var', 'complexity_stderr',
+                                                'gens_since_last_pareto'])
 
         self.evolve_loop, self.evolve_random = self.make_evolve_rates()
         self.evolve_tags = list(self.evolve_loop.keys()) + list(self.evolve_random.keys())
-        # self.monitor_evoldf = pd.DataFrame(columns=self.evolve_tags)
-        self.monitor_evol = dict.fromkeys(self.evolve_tags, pd.DataFrame(columns=['fitness', 'parsimony', 'lentree', 'evolve_num', 'count']))
+
+        # self.monitor_evol = dict.fromkeys(self.evolve_tags, pd.DataFrame(columns=['fitness', 'parsimony', 'lentree', 'evolve_num', 'count']))
 
         self.print_g('gg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
@@ -436,8 +421,8 @@ class ExplainableGP(object):
 
             self.pop_analyse()
 
-            self.pop_base = self.population_tmp[:]
-            self.population_tmp = []
+            self.pop_base = self.population[:]
+            self.population = []
             self.print_g('ggg', f'Generation {self.gen_id} took a total time of: {time.perf_counter() - self.time_genstart:4.2f}.')
             self.gen_id += 1
         else:
@@ -456,8 +441,8 @@ class ExplainableGP(object):
         - Monitoring initialisation and monitoring
         """
 
-        if self.origin_cooltree is not None:
-            self.pop_append(self.origin_cooltree)  # sfeh why not :P
+        if self.origin is not None:
+            self.pop_append(self.origin)  # sfeh why not :P
         else:
             total_rate = sum([x['evolve_rate'] for x in self.evolve_random.values()])
 
@@ -527,7 +512,7 @@ class ExplainableGP(object):
                     build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
                     full_or_grow = build_spec.get('full_or_grow') or random.choice(['full', 'grow'])
                     cooltree = self.pop_selection_tournament(tourn_size)
-                    cool_build_size = cool_choose_build_size(size_mode, mean_min_max_var, cooltree=cooltree)
+                    cool_build_size = choose_build_size(size_mode, mean_min_max_var, cooltree=cooltree)
                     cooltree.evolve_mutate_branch_random(cool_build_size, self.choose_oparray3, self.env_vars.choose_obs,
                                                          self.choose_distributions, self.conf.float_decimals, size_mode=size_mode, full_or_grow=full_or_grow)
                     # sfeh delete this?
@@ -604,13 +589,13 @@ class ExplainableGP(object):
             else:
                 print_e(f"Evolution not known: '{evolve_name}'")
 
-        missing_trees = self.conf.pop_max - len(self.population_tmp)
+        missing_trees = self.conf.pop_max - len(self.population)
         if missing_trees > 0:
             if missing_trees > 0.05 * self.conf.pop_max:
                 self.printpl('ii', f'{missing_trees}/{self.conf.pop_max} trees are missing in this population!')
             else:
                 self.printpl('iii', f'{missing_trees}/{self.conf.pop_max} trees are missing in this population!')
-            while len(self.population_tmp) < self.conf.pop_max:
+            while len(self.population) < self.conf.pop_max:
                 return  # sfeh aka create trees here if desired
 
         # sfeh automatically fill with random trees (check this at the initiation)
@@ -811,7 +796,7 @@ class ExplainableGP(object):
             self.printpl('i', 'Opt-in not specified: Operators-file does not exist.\n'
                               'Creating one with a default list of mathematical operator_pool.')
             operator_pool=None
-        choose_oparray3 = ChooseOparray3(operator_pool=operator_pool, sfeh_no_crazyops=sfeh_no_crazyops)
+        choose_oparray3 = ChooseOperators(operator_pool=operator_pool, sfeh_no_crazyops=sfeh_no_crazyops)
 
         yaml_dump(self.root_dir / 'backup/operators_used.yaml', operator_pool, default_flow_style=True)  # delete this??
 
@@ -826,7 +811,7 @@ class ExplainableGP(object):
         Optional custom distributions specified by the user.
         """
         path_distrib = path_distrib or self.root_dir / self.paths.use_distributions_file
-        choose_distributions = ChooseDistributions(path_distrib, env_vars_obs_infos=self.env_vars.obs_infos, data_train=self.data_train, n_samples=100)
+        choose_distributions = ChooseConstants(path_distrib, env_vars_obs_infos=self.env_vars.obs_infos, data_train=self.data_train, n_samples=100)
         return choose_distributions
 
     def plot_agent_histogram(self, parsim, cooltree, path_hist):
@@ -872,7 +857,7 @@ class ExplainableGP(object):
             2: one single mathematical expression
         """
 
-        cooltree.set_fix_nodes(self.origin_cooltree)
+        cooltree.set_fix_nodes(self.origin)
         tree = cooltree.get_oldtree()
 
         pl_forest = lambda x: f'\\plforest{{{x}}}\n'
@@ -992,7 +977,7 @@ class ExplainableGP(object):
 
         return
 
-    def treelut_tree_add(self, cooltree: CoolTree):
+    def treelut_tree_add(self, cooltree: FinalizedNode):
         """
         update selected values in self.tree_meta
         LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
@@ -1078,7 +1063,7 @@ class ExplainableGP(object):
         try:
             self.printpl('aaa', 'Trying to simplify for pareto entry.')  # simplify the tree and save in pareto once again
             cooltree_sym.evolve_reduce(obs_infos=self.env_vars.obs_infos, completely=True)
-            parsimony = cooltree_sym.eval_parsimony(self.conf.complexity_measure, origin_cooltree=self.origin_cooltree)
+            parsimony = cooltree_sym.eval_parsimony(self.conf.complexity_measure, origin_cooltree=self.origin)
             if parsimony < cooltree.meta.parsimony:
                 self.printpl('aa', 'Successfully reduced pareto tree!')
                 sym_fitness = self.tree_eval_fitness_offline_train(cooltree_sym)  # sfeh actually not required, delete this
@@ -1097,8 +1082,8 @@ class ExplainableGP(object):
         """
         # first, make a local pareto front
         self.gens_since_last_pareto += 1
-        pop_parsimonies_dict = dict.fromkeys(sorted(set([cooltree.meta.parsimony for cooltree in self.population_tmp])))
-        for ct in self.population_tmp:
+        pop_parsimonies_dict = dict.fromkeys(sorted(set([cooltree.meta.parsimony for cooltree in self.population])))
+        for ct in self.population:
             p = ct.meta.parsimony
             try:
                 best_yet = pop_parsimonies_dict[p]
@@ -1113,7 +1098,7 @@ class ExplainableGP(object):
         self.pareto_sort()  # sfeh check if required
         return
 
-    def update_pareto_with_tree(self, cooltree: CoolTree):
+    def update_pareto_with_tree(self, cooltree: FinalizedNode):
         """
         inserts a tree into the pareto front
         """
@@ -1134,7 +1119,7 @@ class ExplainableGP(object):
         self.pareto_sort()  # sfeh check if required
         return
 
-    def pop_append(self, cooltree: CoolTree):
+    def pop_append(self, cooltree: FinalizedNode):
         """
         Safely append a tree to the population.
         Even though the raw trees should have everything to display their expression,
@@ -1159,7 +1144,7 @@ class ExplainableGP(object):
             parsimony = tree_meta['parsimony']
             fitness_train = round(tree_meta['fitness_train'], self.conf.float_decimals)  # sfeh just for now
         else:
-            parsimony = cooltree.eval_parsimony(self.conf.complexity_measure, origin_cooltree=self.origin_cooltree)
+            parsimony = cooltree.eval_parsimony(self.conf.complexity_measure, origin_cooltree=self.origin)
             if parsimony > self.conf.parsimony_max:
                 print_warning('wwww', f'Parsimony too high, last evolution: {cooltree.meta.last_evolution}', print_type=self.print_type)  # sfeh care about wwww. should not
                 return
@@ -1172,7 +1157,7 @@ class ExplainableGP(object):
         expr_raw = cooltree.get_expr_raw()
         expr_sym = expr_sympify(expr_raw)
         try:
-            cooltree.set_fix_nodes(self.origin_cooltree)
+            cooltree.set_fix_nodes(self.origin)
         except Exception as ex:
             print(f'Nope, failed tree finish: {ex}\n{cooltree}')
 
@@ -1183,7 +1168,7 @@ class ExplainableGP(object):
         # cooltree.set_meta(fitness_train, parsimony, last_evolution, expr_raw, expr_sym)
 
         self.treelut_tree_add(cooltree)
-        self.population_tmp.append(cooltree)
+        self.population.append(cooltree)
         return
 
     def pop_selection_tournament(self, tourn_size):
@@ -1234,7 +1219,7 @@ class ExplainableGP(object):
 
         return origin_cooltree  # self.origin_cooltree = copy.deepcopy(origin_cooltree)
 
-    def tree_eval_fitness_offline_train(self, cooltree: CoolTree):
+    def tree_eval_fitness_offline_train(self, cooltree: FinalizedNode):
         """
         Very fast eval-version that only computes fitness of the train data.
         tree_eval_complete gives more options
@@ -1266,7 +1251,7 @@ class ExplainableGP(object):
 
         return fitness_train
 
-    def tree_eval_fitness_online(self, cooltree: CoolTree, episodes=1, seed=0, env_parameters=None):
+    def tree_eval_fitness_online(self, cooltree: FinalizedNode, episodes=1, seed=0, env_parameters=None):
         """
         an online evaluation of a tree
         todo
@@ -1421,7 +1406,7 @@ class ExplainableGP(object):
         - average tree parsimony
         """
         gen_id = self.gen_id
-        popul = self.population_tmp
+        popul = self.population
 
         if len(popul) == 0:
             raise Exception('Your population isded, its empty. RIP all the computation power used to get here.')
@@ -1515,27 +1500,27 @@ class ExplainableGP(object):
         return
 
 
-def activate_dataset(path_data, action_name):
-    """
-    loading the data which the GP will be working on.
-    The .csv-file is prepared (loading correct data-type, splitting data, ...)
-    and saved as pickle-file for reloading runs.
-    This is especially important, as the split in training and test-data must be the same.
-
-    separate loading the prepared data into the main class.
-    Why like this? I needed to find a bug in the data_from_csv file and
-    did not want to start the whole stuff everytime
-
-        # self.data_train_panda, self.data_control_panda
-    """
-
-    if path_data.suffix == '.p':
-        data_prepared = pickle_load(path_data)
-    elif path_data.suffix == '.csv':
-        data_prepared = data_from_csv(path_data, action_name=action_name)
-    else:
-        raise FileNotFoundError(f'No data provided? File must be a pickle (.p) or csv (.csv) file. Loaded file: {path_data}')
-
-    env_vars, data_train, data_control = data_prepared  # data_control is data_test
-
-    return env_vars, data_train, data_control
+# def activate_dataset(path_data, action_name):
+#     """
+#     loading the data which the GP will be working on.
+#     The .csv-file is prepared (loading correct data-type, splitting data, ...)
+#     and saved as pickle-file for reloading runs.
+#     This is especially important, as the split in training and test-data must be the same.
+#
+#     separate loading the prepared data into the main class.
+#     Why like this? I needed to find a bug in the data_from_csv file and
+#     did not want to start the whole stuff everytime
+#
+#         # self.data_train_panda, self.data_control_panda
+#     """
+#
+#     if path_data.suffix == '.p':
+#         data_prepared = pickle_load(path_data)
+#     elif path_data.suffix == '.csv':
+#         data_prepared = data_from_csv(path_data, action_name=action_name)
+#     else:
+#         raise FileNotFoundError(f'No data provided? File must be a pickle (.p) or csv (.csv) file. Loaded file: {path_data}')
+#
+#     env_vars, data_train, data_control = data_prepared  # data_control is data_test
+#
+#     return env_vars, data_train, data_control

@@ -2,25 +2,20 @@
 
 Functions, that might be addable in the future:
 """
+import copy
+import math
+import random
 import time
 
-import math
-import matplotlib.pyplot as plt
-import multiprocessing as mp
-import matplotlib.ticker as ticker
-import logging
-
+import pandas as pd
 from sklearn.model_selection import train_test_split
 
 from benchmarks.ib.combined_runs import *
 from benchmarks.mc.agents.quick_eval import auto_evaluate_run_end
 from plagih.file_interaction import *
-from plagih.viz_with_latex import *
 from plagih.plagih_config import *
-import random
-import pandas as pd
-
-from plagih.sympy_extras import plagih_sympify
+from plagih.tree_factory import ChooseConstants
+from plagih.viz_with_latex import *
 
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
@@ -105,9 +100,9 @@ class ExplainableGP(object):
                                            self.conf.action_name)  # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
 
         choose_distributions = self.activate_distributions(path_distrib=None)  # asd sfeh path_distrib not None
-        choose_oparray3 = self.gp_load_oparray(path_operators=None)  # path_operators sfeh this file from config version1
+        choose_ops = self.gp_load_oparray(path_operators=None)  # path_operators sfeh this file from config version1
 
-        self.choosing = Choosing(choose_oparray3, choose_observations, choose_distributions)
+        self.tb = TreeBuilder(choose_ops, choose_observations, choose_distributions, self.conf.float_decimals)
 
         # Evaluating kernel (that uses tensorflow)
         self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=self.conf.tf_device_log,
@@ -342,10 +337,10 @@ class ExplainableGP(object):
         # oldsize = len(self.pareto)
         # pareto_list = self.pareto[:]
         # self.pareto = []
-        # for (parsimony, fitness_train, cooltree) in pareto_list:
+        # for (parsimony, fitness_train, tree) in pareto_list:
         #     fitness_train = round(fitness_train, self.conf.float_decimals)
-        #     cooltree.meta.fitness_train = round(fitness_train, self.conf.float_decimals)
-        #     entry = [parsimony, fitness_train, cooltree]
+        #     tree.meta.fitness_train = round(fitness_train, self.conf.float_decimals)
+        #     entry = [parsimony, fitness_train, tree]
         #     self.pareto_append(entry)
         # self.printpl('i', f'Updating pareto front from old run. length: {oldsize}, new pareto length: {len(self.pareto)}')
 
@@ -355,9 +350,9 @@ class ExplainableGP(object):
         poplen = len(self.pop_base)
         pop_base_copy = self.pop_base[:]
         self.pop_base = []
-        for cooltree in pop_base_copy:
-            cooltree.meta.fitness_train = round(cooltree.meta.fitness_train, self.conf.float_decimals)
-            self.pop_base.append(cooltree)
+        for tree in pop_base_copy:
+            tree.meta.fitness_train = round(tree.meta.fitness_train, self.conf.float_decimals)
+            self.pop_base.append(tree)
         self.printpl('i', f'Updating population from old run. length: {poplen}, new population length: {len(self.pop_base)}')
 
     def pareto_sort(self):
@@ -456,11 +451,11 @@ class ExplainableGP(object):
 
                 for nn in range(evolve_num):
                     if self.origin_is_fix:
-                        cooltree = pop_random(call_params, from_origin=True)
+                        tree = self.tb.pop_random(call_params, from_origin=True)
                     else:
-                        cooltree = pop_random(call_params)
-                    # cooltree.meta.last_evolution = tag  # todo
-                    self.pop_append(cooltree)
+                        tree = self.tb.pop_random(call_params)
+                    # tree.meta.last_evolution = tag  # todo
+                    self.pop_append(tree)
         return
 
     def gen_next_population(self):
@@ -487,42 +482,39 @@ class ExplainableGP(object):
                 
                 """
                 for nn in range(evolve_num):
-                    cooltree = self.pop_selection_tournament(tourn_size)
+                    tree = self.pop_selection_tournament(tourn_size)
                     if call_params.get('sympify_tree'):
                         try:
-                            cooltree.evolve_reduce(obs_infos=self.env_vars.obs_infos, completely=False)
-                            cooltree.meta.last_evolution = tag
+                            tree.evolve_reduce(obs_infos=self.env_vars.obs_infos, completely=False)
+                            tree.meta.last_evolution = tag
                         except Exception as ex:
                             print_warning('www', f'Evolve reproduce failed: {ex}', print_type=self.print_type)
 
-                    self.pop_append(cooltree)  # append anyways... it was worth a try :P
+                    self.pop_append(tree)  # append anyways... it was worth a try :P
 
             elif evolve_name == 'mutate point':
                 """
                 Point mutation, One point (terminal or function) gets mutated.
                 """
                 for nn in range(evolve_num):
-                    cooltree = self.pop_selection_tournament(tourn_size)
-                    cooltree.evolve_mutate_point_random(self.choose_oparray3,
-                                                        self.env_vars.choose_obs,
-                                                        self.choose_distributions, self.conf.float_decimals)
-                    # cooltree.meta.last_evolution = tag
-                    self.pop_append(cooltree)
+                    tree = self.pop_selection_tournament(tourn_size)
+                    tree.evolve_mutate_point_random(self.tb)
+                    # tree.meta.last_evolution = tag
+                    self.pop_append(tree)
 
             elif evolve_name == 'mutate branch':
-                # todo cooltree version
+                # todo tree version
                 # todo question: tree.copy() or .deepcopy necessary??
                 for nn in range(evolve_num):
                     build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
                     full_or_grow = build_spec.get('full_or_grow') or random.choice(['full', 'grow'])
-                    cooltree = self.pop_selection_tournament(tourn_size)
-                    cool_build_size = choose_build_size(size_mode, mean_min_max_var, cooltree=cooltree)
-                    cooltree.evolve_mutate_branch_random(cool_build_size, self.choose_oparray3, self.env_vars.choose_obs,
-                                                         self.choose_distributions, self.conf.float_decimals, size_mode=size_mode, full_or_grow=full_or_grow)
+                    tree = self.pop_selection_tournament(tourn_size)
+                    cool_build_size = choose_build_size(size_mode, mean_min_max_var, tree=tree)
+                    tree.evolve_mutate_branch(cool_build_size, self.tb, size_mode=size_mode, full_or_grow=full_or_grow)
                     # sfeh delete this?
                     # new_tree = tree_prune_depth(new_tree, self.conf.tree_depth_max, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
-                    # new_cooltree.meta.last_evolution = tag
-                    self.pop_append(cooltree)
+                    # new_tree.meta.last_evolution = tag
+                    self.pop_append(tree)
 
             elif evolve_name == 'crossover branch':
                 for nn in range(int(evolve_num / 2)):  # two childs
@@ -535,14 +527,14 @@ class ExplainableGP(object):
                     - select swappable branche for a_parent from b_parent
                         - select a node in a (and crossover here, no matter what)
                     - delete a_parent branch and insert b_parent branch (which tactic?)
-                    todo into main cooltree?
+                    todo into main tree?
                     """
                     # 1. two parents
                     # 2. search nodes for left and right that can be exchanged. convert_needed
                     try:
                         left_parent_nodes = left_parent.get_mutatable_nodes(allow_root=False)
                         left_rnd = random.choice(left_parent_nodes)
-                        swap_coolxtype_out = left_rnd.plabel.coolxtype[1]
+                        swap_coolxtype_out = left_rnd.label.coolxtype[1]
                         right_parent_nodes = right_parent.get_mutatable_nodes(coolxtype_out=swap_coolxtype_out)
                         if right_parent_nodes:
                             right_rnd = random.choice(right_parent_nodes)
@@ -566,30 +558,30 @@ class ExplainableGP(object):
             elif evolve_name == 'filter optimize':
 
                 for nn in range(evolve_num):
-                    cooltree = self.pop_selection_tournament(tourn_size)
-                    cooltree.evolve_mutate_filter_random(call_params, self.choose_oparray3, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
-                    cooltree.meta.last_evolution = tag
-                    self.pop_append(cooltree)
+                    tree = self.pop_selection_tournament(tourn_size)
+                    tree.evolve_mutate_filter_random(call_params, self.tb)
+                    tree.meta.last_evolution = tag
+                    self.pop_append(tree)
 
             elif evolve_name == 'revive pareto':
 
                 for nn in range(evolve_num):
-                    fitness_train, parsim, cooltree = random.choice(self.pareto)
-                    cooltree.meta.last_evolution = tag
-                    self.pop_append(cooltree)
+                    fitness_train, parsim, tree = random.choice(self.pareto)
+                    tree.meta.last_evolution = tag
+                    self.pop_append(tree)
 
             elif evolve_name == 'random trees':
 
                 if self.origin_is_fix:
                     for nn in range(evolve_num):
-                        cooltree = pop_random(call_params, from_origin=True)
-                        cooltree.meta.last_evolution = tag
-                        self.pop_append(cooltree)
+                        tree = self.tb.pop_random(call_params, from_origin=True)
+                        tree.meta.last_evolution = tag
+                        self.pop_append(tree)
                 else:
                     for nn in range(evolve_num):
-                        cooltree = pop_random(call_params)
-                        cooltree.meta.last_evolution = tag
-                        self.pop_append(cooltree)
+                        tree = self.tb.pop_random(call_params)
+                        tree.meta.last_evolution = tag
+                        self.pop_append(tree)
             else:
                 print_e(f"Evolution not known: '{evolve_name}'")
 
@@ -614,7 +606,7 @@ class ExplainableGP(object):
         Save all the pareto candidates to a file.
         (Quick feedback that requires little overhead)
         """
-        pareto_yaml = [f'Parsimony: \t{parsim} MeanError: \t{fitness} Expr: \t{cooltree.meta.expr_raw}' for (parsim, fitness, cooltree) in self.pareto]
+        pareto_yaml = [f'Parsimony: \t{parsim} MeanError: \t{fitness} Expr: \t{tree.meta.expr_raw}' for (parsim, fitness, tree) in self.pareto]
         yaml_dump(self.root_dir / 'paretofront.yaml', pareto_yaml, print_type=self.print_type)
 
         return
@@ -630,14 +622,14 @@ class ExplainableGP(object):
         path_hist = path_make_dir(self.root_dir / 'histograms/')
         pareto_agents = {}
 
-        for (parsim, fitness, cooltree) in self.pareto:
-            histograms_path = self.plot_agent_histogram(parsim, cooltree, path_hist)  # sfeh todo
+        for (parsim, fitness, tree) in self.pareto:
+            histograms_path = self.plot_agent_histogram(parsim, tree, path_hist)  # sfeh todo
 
-            forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest = self.file_pareto_latex(parsim, cooltree)
+            forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest = self.file_pareto_latex(parsim, tree)
 
             pareto_agents[parsim] = {'parsim': parsim,
                                      'fitness': fitness,
-                                     'cooltree': cooltree,
+                                     'tree': tree,
                                      'forest_tree_full': forest_tree_full, 'forest_tree_tight': forest_tree_tight, 'tex_expr_raw': tex_expr_raw, 'tex_expr_forest': tex_expr_forest,
                                      'histogram': histograms_path,
                                      }
@@ -799,7 +791,7 @@ class ExplainableGP(object):
             self.printpl('i', 'Opt-in not specified: Operators-file does not exist.\n'
                               'Creating one with a default list of mathematical operator_pool.')
             operator_pool = None
-        choose_oparray3 = ChooseOperators(operator_pool=operator_pool)
+        choose_operators = ChooseOperators(operator_pool=operator_pool)
 
         yaml_dump(self.root_dir / 'backup/operators_used.yaml', operator_pool, default_flow_style=True)  # delete this??
 
@@ -807,17 +799,17 @@ class ExplainableGP(object):
         Load all operator_pool ready-to-use from a file
         """
 
-        return choose_oparray3
+        return choose_operators
 
     def activate_distributions(self, path_distrib=None):
         """
         Optional custom distributions specified by the user.
         """
         path_distrib = path_distrib or self.root_dir / self.paths.use_distributions_file
-        choose_distributions = ChooseConstants(path_distrib, env_vars_obs_infos=self.env_vars.obs_infos, data_train=self.data_train, n_samples=100)
+        choose_distributions = ChooseConstants(path_distrib, data_train=self.data_train, n_samples=100)
         return choose_distributions
 
-    def plot_agent_histogram(self, parsim, cooltree, path_hist):
+    def plot_agent_histogram(self, parsim, tree, path_hist):
         """
         Make histograms for all pareto-efficient candidates
         sfeh: based on training data- maybe use test data...
@@ -830,8 +822,8 @@ class ExplainableGP(object):
         """
 
         action_bins = self.kernel.histogram_bins(self.env_vars.eval_action.minmax)
-        expr_sym = cooltree.get_expr_sym()
-        used_observations = cooltree.get_observation_list()
+        expr_sym = tree.get_expr_sym()
+        used_observations = tree.get_observation_list()
         pairwise_diff = self.kernel.eval_tf(expr_sym, used_observations)['pairwise_diff']
 
         with plt.rc_context(rc=pyplot_rc_tex):
@@ -844,7 +836,7 @@ class ExplainableGP(object):
 
         return histpath
 
-    def file_pareto_latex(self, parsim, cooltree):
+    def file_pareto_latex(self, parsim, tree):
         """
         Generates latex-file with the computational tree structure of all pareto agents
         - build tree from expression
@@ -860,13 +852,13 @@ class ExplainableGP(object):
             2: one single mathematical expression
         """
 
-        cooltree.set_fix_nodes(self.origin)
-        tree = cooltree.get_oldtree()
+        tree.set_fix_nodes(self.origin)
+        tree = tree.get_oldtree()
 
         pl_forest = lambda x: f'\\plforest{{{x}}}\n'
 
-        forest_tree_full = pl_forest(latex_brackettree(tree))
-        forest_tree_tight = pl_forest(latex_brackettree_tight(latex_tree_semitight(tree)))
+        forest_tree_full = None  # todo pl_forest(latex_brackettree(tree))
+        forest_tree_tight = None  # todo pl_forest(latex_brackettree_tight(latex_tree_semitight(tree)))
         # sfeh workaround delete this
         tex_expr_raw = f'${tree.export_visualization_latex()}$'  # sfeh dollars
         tex_expr_forest = pl_forest(f'[{tex_expr_raw}]')
@@ -906,10 +898,10 @@ class ExplainableGP(object):
     #     # all_agent_names = []
     #     # all_more_info = []
     #     #
-    #     # for (parsim, fitness, cooltree) in self.pareto:
+    #     # for (parsim, fitness, tree) in self.pareto:
     #     #     agent_name = f'{self.conf.name}_{parsim:.0f}'
     #     #
-    #     #     agent_as_python = cooltree.get_pycode()
+    #     #     agent_as_python = tree.get_pycode()
     #     #     all_agents.append(f"class {agent_name}:\n{complete_function.format(agent_as_python)}")
     #     #     all_agent_names.append(agent_name)
     #     #     all_more_info.append(f"('{agent_name}', {agent_name}(), {parsim}, {fitness})")
@@ -966,10 +958,10 @@ class ExplainableGP(object):
 
         pygents_list = []
 
-        for (parsim, fitness, cooltree) in self.pareto:
+        for (parsim, fitness, tree) in self.pareto:
             # agent_name = f'{self.conf.name}_{parsim:.0f}'
             agent_name = f'{self.conf.name}_{self.env_vars.eval_action.name}_{parsim:.0f}'
-            agent_as_python = cooltree.get_pycode()
+            agent_as_python = tree.get_pycode()
             pygents_list.append([parsim, float(fitness), agent_name, agent_as_python])
 
         yaml_dump(self.root_dir / 'pycode_list.yaml', pygents_list, print_type=self.print_type)
@@ -1039,18 +1031,18 @@ class ExplainableGP(object):
         self.pareto = [x for x in self.pareto[:] if x[0] < tree_entry[0] or x[1] < tree_entry[1] or (x[0] == tree_entry[0] and x[1] == tree_entry[1])]
         self.pareto_sort()  # as far as I can tell, not really necessary without using iter()
 
-        cooltree = tree_entry[2]
-        cooltree_sym = copy.deepcopy(cooltree)
+        tree = tree_entry[2]
+        tree_sym = copy.deepcopy(tree)
         try:
             self.printpl('aaa', 'Trying to simplify for pareto entry.')  # simplify the tree and save in pareto once again
-            cooltree_sym.evolve_reduce(obs_infos=self.env_vars.obs_infos, completely=True)
-            parsimony = cooltree_sym.eval_parsimony(self.conf.complexity_measure, origin_cooltree=self.origin)
-            if parsimony < cooltree.meta.parsimony:
+            tree_sym.evolve_reduce(obs_infos=self.env_vars.obs_infos, completely=True)
+            parsimony = tree_sym.eval_parsimony(self.conf.complexity_measure, origin_tree=self.origin)
+            if parsimony < tree.meta.parsimony:
                 self.printpl('aa', 'Successfully reduced pareto tree!')
-                sym_fitness = self.tree_eval_fitness_offline_train(cooltree_sym)  # sfeh actually not required, delete this
-                cooltree_sym.meta.fitness_train = sym_fitness
-                cooltree_sym.meta.parsimony = parsimony
-                self.update_pareto_with_tree(cooltree_sym)
+                sym_fitness = self.tree_eval_fitness_offline_train(tree_sym)  # sfeh actually not required, delete this
+                tree_sym.meta.fitness_train = sym_fitness
+                tree_sym.meta.parsimony = parsimony
+                self.update_pareto_with_tree(tree_sym)
         except Exception as ex:
             print_warning('www', f'Tree sympification did not work: {ex}', print_type=self.print_type)
 
@@ -1063,7 +1055,7 @@ class ExplainableGP(object):
         """
         # first, make a local pareto front
         self.gens_since_last_pareto += 1
-        pop_parsimonies_dict = dict.fromkeys(sorted(set([cooltree.meta.parsimony for cooltree in self.population])))
+        pop_parsimonies_dict = dict.fromkeys(sorted(set([tree.meta.parsimony for tree in self.population])))
         for ct in self.population:
             p = ct.meta.parsimony
             try:
@@ -1073,19 +1065,19 @@ class ExplainableGP(object):
             except:
                 pop_parsimonies_dict[p] = ct
 
-        for p, cooltree in pop_parsimonies_dict.items():
-            self.update_pareto_with_tree(cooltree)
+        for p, tree in pop_parsimonies_dict.items():
+            self.update_pareto_with_tree(tree)
 
         self.pareto_sort()  # sfeh check if required
         return
 
-    def update_pareto_with_tree(self, cooltree: FinalizedNode):
+    def update_pareto_with_tree(self, tree: FinalizedNode):
         """
         inserts a tree into the pareto front
         """
-        parsimony = cooltree.meta.parsimony
-        fitness_train = cooltree.meta.fitness_train
-        tree_entry = [parsimony, fitness_train, cooltree]
+        parsimony = tree.meta.parsimony
+        fitness_train = tree.meta.fitness_train
+        tree_entry = [parsimony, fitness_train, tree]
 
         p_simpler = [p for p in self.pareto if p[0] <= tree_entry[0]]  # all pareto entries that are less complex
 
@@ -1100,7 +1092,7 @@ class ExplainableGP(object):
         self.pareto_sort()  # sfeh check if required
         return
 
-    def pop_append(self, cooltree: Node):
+    def pop_append(self, tree: Node):
         """
         Safely append a tree to the population.
         Even though the raw trees should have everything to display their expression,
@@ -1113,43 +1105,43 @@ class ExplainableGP(object):
         # sfeh this check might be important...
 
         try:
-            cooltree.check_all()
+            tree.check_all()
         except Exception as ex:
-            print_warning('w', f'tree failed the quick check. last-mod: {cooltree.meta.last_evolution}. Reason:\n{ex}', print_type=self.print_type)
+            print_warning('w', f'tree failed the quick check. last-mod: {tree.meta.last_evolution}. Reason:\n{ex}', print_type=self.print_type)
 
         # tree = self.tree_finish_nodes(tree, last_evolution=last_evolution)
 
-        tree_ident = hash(cooltree)
+        tree_ident = hash(tree)
         if tree_ident in self.tree_lut:
             tree_meta = self.tree_lut[tree_ident]
             parsimony = tree_meta['parsimony']
             fitness_train = round(tree_meta['fitness_train'], self.conf.float_decimals)  # sfeh just for now
         else:
-            parsimony = cooltree.eval_parsimony(self.conf.complexity_measure, origin_cooltree=self.origin)
+            parsimony = tree.eval_parsimony(self.conf.complexity_measure, origin_tree=self.origin)
             if parsimony > self.conf.parsimony_max:
-                print_warning('wwww', f'Parsimony too high, last evolution: {cooltree.meta.last_evolution}', print_type=self.print_type)  # sfeh care about wwww. should not
+                print_warning('wwww', f'Parsimony too high, last evolution: {tree.meta.last_evolution}', print_type=self.print_type)  # sfeh care about wwww. should not
                 return
             try:
-                fitness_train = self.tree_eval_fitness_offline_train(cooltree)
+                fitness_train = self.tree_eval_fitness_offline_train(tree)
             except Exception as evalex:
-                print_warning('wwww', f'Exception while evaluating: {evalex}, tree: {cooltree}.', print_type=self.print_type)
+                print_warning('wwww', f'Exception while evaluating: {evalex}, tree: {tree}.', print_type=self.print_type)
                 return
 
-        expr_raw = cooltree.get_expr()
+        expr_raw = tree.get_expr()
         expr_sym = expr_sympify(expr_raw)
         try:
-            cooltree.set_fix_nodes(self.origin)
+            tree.set_fix_nodes(self.origin)
         except Exception as ex:
-            print(f'Nope, failed tree finish: {ex}\n{cooltree}')
+            print(f'Nope, failed tree finish: {ex}\n{tree}')
 
-        cooltree.meta.fitness_train = fitness_train
-        cooltree.meta.parsimony = parsimony
-        cooltree.meta.expr_raw = expr_raw
-        cooltree.meta.expr_sym = expr_sym
-        # cooltree.set_meta(fitness_train, parsimony, last_evolution, expr_raw, expr_sym)
+        tree.meta.fitness_train = fitness_train
+        tree.meta.parsimony = parsimony
+        tree.meta.expr_raw = expr_raw
+        tree.meta.expr_sym = expr_sym
+        # tree.set_meta(fitness_train, parsimony, last_evolution, expr_raw, expr_sym)
 
-        self.treelut_tree_add(cooltree)
-        self.population.append(cooltree)
+        self.treelut_tree_add(tree)
+        self.population.append(tree)
         return
 
     def pop_selection_tournament(self, tourn_size):
@@ -1157,7 +1149,7 @@ class ExplainableGP(object):
         config-selection. takes a number of trees (we use 3) and returns the best one (winner)
         """
         tournament_list = [random.choice(self.pop_base) for _ in range(tourn_size)]
-        tourn_winner = self.kernel.best_fitness_function(tournament_list, key=lambda cooltree: cooltree.meta.fitness_train)
+        tourn_winner = self.kernel.best_fitness_function(tournament_list, key=lambda tree: tree.meta.fitness_train)
 
         return copy.deepcopy(tourn_winner)
 
@@ -1176,8 +1168,8 @@ class ExplainableGP(object):
         with Path.open(path_origin_tree, newline='') as file:
             file.read()
         try:
-            origin_cooltree = cooltree_from_labellist(label_list, modify_list=modify_list)
-            expr_sym = origin_cooltree.get_expr_sym()
+            origin_tree = tree_from_labellist(label_list, modify_list=modify_list)
+            expr_sym = origin_tree.get_expr_sym()
         except Exception as sympex:
             raise Exception(f'Loaded origin_tree already failed because of: {sympex}')
 
@@ -1186,21 +1178,21 @@ class ExplainableGP(object):
         #     print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}\n'
         #                          ''.format(expr_raw, expr_sym))
 
-        used_observations = origin_cooltree.get_observation_list()
+        used_observations = origin_tree.get_observation_list()
         tf_origin_results = self.kernel.eval_tf(expr_sym, used_observations)
         fitness_train = round(tf_origin_results['mean_error'], self.conf.float_decimals)  # fitness currently IS the mean error
         if self.kernel.exploration_risk:
             self.kernel.origin_results = tf_origin_results['results_kernel']  # after getting the origin-results, these informations can be updated
 
-        origin_cooltree.meta.fitness_train = fitness_train
-        origin_cooltree.meta.parsimony = 0
+        origin_tree.meta.fitness_train = fitness_train
+        origin_tree.meta.parsimony = 0
 
-        self.pareto.append([0, fitness_train, origin_cooltree])  # the origin tree is the only candidate for now -> it is in the pareto front
+        self.pareto.append([0, fitness_train, origin_tree])  # the origin tree is the only candidate for now -> it is in the pareto front
         self.print_g('gg', f'Loading origin tree, regr. error {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
-        return origin_cooltree  # self.origin_cooltree = copy.deepcopy(origin_cooltree)
+        return origin_tree  # self.origin_tree = copy.deepcopy(origin_tree)
 
-    def tree_eval_fitness_offline_train(self, cooltree: FinalizedNode):
+    def tree_eval_fitness_offline_train(self, tree: Node):
         """
         Very fast eval-version that only computes fitness of the train data.
         tree_eval_complete gives more options
@@ -1212,12 +1204,12 @@ class ExplainableGP(object):
         """
 
         try:
-            expr_raw = cooltree.get_expr()
+            expr_raw = tree.get_expr()
             expr_sym = expr_sympify(expr_raw)
         except Exception as evalex:
             raise Exception(f'eval:{evalex}')
 
-        used_observations = cooltree.get_observation_list()
+        used_observations = tree.get_observation_list()
         fitness_train = round(self.kernel.eval_tf(expr_sym, used_observations, only_fitness=True), self.conf.float_decimals)
 
         """
@@ -1232,7 +1224,7 @@ class ExplainableGP(object):
 
         return fitness_train
 
-    def tree_eval_fitness_online(self, cooltree: FinalizedNode, episodes=1, seed=0, env_parameters=None):
+    def tree_eval_fitness_online(self, tree: FinalizedNode, episodes=1, seed=0, env_parameters=None):
         """
         an online evaluation of a tree
         todo
@@ -1313,7 +1305,7 @@ class ExplainableGP(object):
         """
         Write pyplot with pareto candidates
         """
-        tuples = [[parsim, fitness] for (parsim, fitness, cooltree) in self.pareto]
+        tuples = [[parsim, fitness] for (parsim, fitness, tree) in self.pareto]
         xx, yy = np.array(tuples).T
 
         if len(xx) == 0:
@@ -1392,15 +1384,15 @@ class ExplainableGP(object):
         if len(popul) == 0:
             raise Exception('Your population isded, its empty. RIP all the computation power used to get here.')
 
-        pop_fitness = [cooltree.meta.fitness_train for cooltree in popul]
+        pop_fitness = [tree.meta.fitness_train for tree in popul]
 
         # tmp_evol_performance = dict.fromkeys(self.monitor_evol.keys(), pd.DataFrame(columns=['fitness', 'parsimony', 'lentree']))
-        # for cooltree in popul:
-        #     last_evol = cooltree.meta.last_evolution
+        # for tree in popul:
+        #     last_evol = tree.meta.last_evolution
         #     if last_evol in self.evolve_tags:
-        #         row = {'fitness': cooltree.meta.fitness_train,
-        #                'parsimony': cooltree.meta.parsimony,
-        #                'lentree': len(cooltree)}
+        #         row = {'fitness': tree.meta.fitness_train,
+        #                'parsimony': tree.meta.parsimony,
+        #                'lentree': len(tree)}
         #         tmp_evol_performance[last_evol].loc[self.gen_id] = row
         #
         # for last_evol, evodata in tmp_evol_performance.items():
@@ -1419,8 +1411,8 @@ class ExplainableGP(object):
         #         if last_evol != 'origin' and last_evol != 'Rand3o':
         #             print_warning('w', f'delete_this, sfeh, okay when the following is origin: {last_evol}')
 
-        pop_parsim = [cooltree.meta.parsimony for cooltree in popul]
-        pop_treelen = [len(cooltree) for cooltree in popul]
+        pop_parsim = [tree.meta.parsimony for tree in popul]
+        pop_treelen = [len(tree) for tree in popul]
 
         pop_fitness_best = self.kernel.np_best_fitness(pop_fitness)
         try:
@@ -1504,3 +1496,37 @@ class ExplainableGP(object):
 #     env_vars, data_train, data_control = data_prepared  # data_control is data_test
 #
 #     return env_vars, data_train, data_control
+
+
+def data_from_csv(df, action):
+    """
+    todo
+    Loads .csv data files.
+    - Reading the .csv-file (with pandas)
+    - renaming column headers
+    - saving header info for later use
+
+    Information that we need to extract for each column:
+    - choose_xtype choosing a random observation for leaf nodes
+    - filtering observation index
+        is there an index (past values, e.g. velocity_0, velocity_1) -> performing filter-evolve on the variables index (velocity_2 -> velocity_3)
+    - evalaction data_train, data_test, is the action for the regression? -> more than one action might be required (IB has three action dimensions)
+        - action min max -> for kernel regression bounded. occuring min and max values might not be the theoretical min/max values
+
+
+    deprecated:
+
+    """
+
+    """
+    1. split col name
+    - check whether its an observation
+    --> check whether there are indizes
+    - check whether its an action
+    --> check unique valuea, min, max
+    - check if it should be ignored (deprecated action, irrelevant column)
+    2. 
+    """
+    # todo remove dat shit
+
+    return

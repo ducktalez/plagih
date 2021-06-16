@@ -68,8 +68,8 @@ class Nu:
         return self.x
 
 
-def mp_dummy(arg, **kwarg):
-    return Nu.e2(arg, **kwarg)
+def mp_dummy(arg):
+    return Nu.e2(arg)
 
 
 class Huehue(object):

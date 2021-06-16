@@ -1,5 +1,5 @@
 from plagih.printing import *
-from plagih.operators import *
+from plagih.tree_factory import *
 import numpy as np
 import sklearn.metrics as skm
 # from sys import getsizeof

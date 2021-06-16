@@ -1,15 +1,24 @@
+"""
+plagih_tree contain a new implementation of trees that we use in genetic programming to display a program.
+The old karoo "tree" is replaced with, for now, "treer" in the code.
+not all functions can use tree for now and some tree-functions require the old "tree"
+tree splits the karoo tree into the
+- meta-info (fitness, parsimony, tree-id, ...) and the
+The core of the tree, which "is" the tree, is stored recursively
+Example core: [+, 1, [*, [-, 2, 3], 2]] = 1 + ((2-3) * 2)
+
+sfeh: write test that checks all operators for sympificytion (...+branch-combinations, and more?)
+sfeh: use function-types (-> 'kommuttative'?)
+"""
+
 import ast
 import itertools
-import logging
 import random
 import re
-from collections import deque
-from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
 
-from plagih.file_interaction import yaml_load
 from plagih.fitness_kernel import *
 from plagih.sympy_extras import expr_sympify
 from plagih.tree_distances.tree_edit_distance import apted_distance
@@ -21,23 +30,6 @@ tf.compat.v1.disable_eager_execution()  # sfeh damn what was this line good for?
 # deprecation._PRINT_DEPRECATION_WARNINGS = False
 
 latex_inline = ['+', '-', '*', '**', '==', '!=', '<', '<=', '>', '>=', 'Andb', 'Orb', 'Xor']
-
-"""
-sfeh: write test that checks all operators for sympificytion (...+branch-combinations, and more?)
-sfeh: use function-types (-> 'kommuttative'?)
-"""
-
-# os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"  # does not work anyways... delete this
-"""
-Ptree2 contain a new implementation of trees that we use in genetic programming to display a program.
-The old karoo "tree" is replaced with, for now, "cooltreer" in the code.
-not all functions can use cooltree for now and some tree-functions require the old "tree"
-cooltree splits the karoo tree into the
-- meta-info (fitness, parsimony, tree-id, ...) and the
-- core (coolcore)
-The core of the tree, which "is" the tree, is stored recursively
-Example core: [+, 1, [*, [-, 2, 3], 2]] = 1 + ((2-3) * 2)
-"""
 
 
 class Node:
@@ -53,9 +45,15 @@ class Node:
     [2]:    including meta-data (fitness, complexity)
     """
     state = None
+    arity = 0
+    coolxtype = (tuple([None]), None)
+    tf = None
+    sym_expr = 'None'
+    pycode = 'None'
+    latex = ('None', 'None')
 
-    def __init__(self, plabel: Plabel, is_fix=False, childs=None):
-        self.plabel = plabel
+    def __init__(self, label=None, is_fix=False, childs=None):
+        self.label = label  # todo
         self.is_fix = is_fix
         self.childs = childs or []
         self.state = 0
@@ -74,7 +72,7 @@ class Node:
         Printing the nodes as nested array structure.
         sfeh: make this statement loadable!
         """
-        print_label = self.plabel.label
+        print_label = self.label.label
         if self.is_fix:
             print_label = f'({print_label})'
 
@@ -90,33 +88,27 @@ class Node:
         """
         return 1 + sum([len(cc) for cc in self.childs])
 
-    def get_expr(self, reducible=None, obs_names=None):
+    def eval_parsimony(self, parsimony_distance, origin_tree=None, weights=None):
         """
-        accumulate and return the complete expression the tree holds recursively
-        """
-        # if self.expr_raw is None:  # sfeh?
-        expr = self.plabel.sym_str
-        if self.plabel.arity > 0:
-            child_expr_list = [cc.get_expr(reducible=reducible, obs_names=obs_names) for cc in self.childs]
-            # if reducible:
-            #     # my_expr = op[self.label]['sym_reduce'] or my_expr
-            #     # symloc = sympy_symbol_defaults(obs_names)  # todo solve the problem... new version of sympy?
-            #     xxx = plagih_sympify(my_expr.format(*child_expr_list), eval_locals=symloc)  # sfeh the xxx variable
-            #     return xxx
-            expr = expr.format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
-        return expr
+        parsimony_distance: compute the chosen distance by the user.
+        #     'tree_node_count': tree_get_size,
+        #     'tree_depth': tree_get_depth,
+        #     'tree_edit_distance': tree_parsimony_ted,
 
-    def get_pycode(self):
+        # self.meta.parsimony = parsimony  # todo okay where meta? at root node...
         """
-
-        """
-        if self.plabel.arity == 0:
-            return f'{self.plabel}'
+        if parsimony_distance == 'tree_node_count':  # number of nodes
+            return len(self)  # returns the number of nodes  # sfeh weights
+        elif parsimony_distance == 'tree_edit_distance':  # tree_edit_distance, tree-edit-distance
+            apted1 = self.get_apted_notation()
+            apted2 = origin_tree.get_apted_notation()
+            distance, mapping = apted_distance(apted1, apted2)  # sfeh the mapping could be handy somewhere
+            if weights is None:
+                return distance
+            else:
+                raise
         else:
-            results = []
-            for child in self.childs:
-                results.append(child.get_pycode())  # = tree_node_get_label(tree, int(child))
-            return self.plabel.pycode.format(*results)  # abs -> lambda a: 'abs({})'.formadt(a) (result1)
+            raise Exception(f'Complexity measurement not available: {parsimony_distance}')
 
     def finalize_set_depth(self, depth=0, recursive=True):
         """
@@ -137,7 +129,7 @@ class Node:
         """
 
         """
-        self.plabel = new_core.plabel
+        self.label = new_core.label
         self.childs = new_core.childs if new_core.childs else []  # maybe must be updated recursively
         # self.is_fix = new_core.is_fix  # debatable
         # self.complete = new_core.complete  # if the node is correct/done/okay
@@ -150,98 +142,58 @@ class Node:
         """
         coolnode_list = []
         if not self.is_fix:
-            if coolxtype_out is None or coolxtype_out == self.plabel.coolxtype[1] and (allow_root or not self.is_root()):
+            if coolxtype_out is None or coolxtype_out == self.label.coolxtype[1] and (allow_root or not self.is_root()):
                 # crossover requires excluding types that are not matching, and excludes the root node
                 coolnode_list.append(self)
 
         coolnode_list.extend(list(itertools.chain(*[cc.get_mutatable_nodes(coolxtype_out=coolxtype_out, allow_root=allow_root) for cc in self.childs])))
         return coolnode_list
 
-    def evolve_append_layer_depth(self, choose_obs, choose_oparray3, choose_distributions, float_decimals, construct='full'):
-        """
-        appends a layer of nodes to a tree that is in construction
-        returns the
-        only_terminals: on the lowest level...
-        """
-        # go to the current leaf nodes
-        if not self.childs and self.plabel.arity > 0:  # alternatively check the amount of input parameters in coolxtype
-            # append, if we are on the lowest level and are looking at an operator
-            for itype in self.plabel.coolxtype[0]:
-                if construct == 'full':  # operators
-                    plabel = choose_operator(itype, choose_oparray3)
-                elif construct == 'grow':  # 50% chance operator/terminal
-                    if random.choice(['term', 'func']) == 'func':
-                        plabel = choose_operator(itype, choose_oparray3)
-                    else:
-                        plabel = choose_term(itype, choose_obs, choose_distributions, float_decimals)
-                elif construct == 'term':  # force terminals
-                    plabel = choose_term(itype, choose_obs, choose_distributions, float_decimals)
-                else:
-                    raise Exception('Never happening i hope lel sfeh')
-
-                self.childs.append(Node(plabel=plabel))
-            return len(self.childs)
-        else:
-            appended_nodes = 0
-            for cc in self.childs:
-                appended_nodes += cc.evolve_append_layer_depth(choose_obs, choose_oparray3, choose_distributions, float_decimals, construct=construct)
-            return appended_nodes
-
-    def reduce_me(self, obs_infos):
-        # sfeh asdasdasd reduce me is obviously bullshit crapshit.
-        #  sympify works with this combination only very few times
-        #  lets have a new idea.
-        expr_raw = self.get_expr(reducible=True, obs_names=obs_infos.keys())
-        try:
-            expr_sym = expr_sympify(expr_raw)
-        except:
-            raise Exception(f'Sympify failed. {expr_raw}')
-
-        new_core = [1, 2, 3]  # todo coolcore_from_expr(expr_sym, obs_infos)
-        if len(new_core) < len(self):
-            self.new_core(new_core)
-        elif len(new_core) > len(self):
-            raise Exception(
-                f'Reduced core is even more complex than before  ({len(new_core)}, {len(self)}). expr_raw: {expr_raw}')  # \nold_core:{self}\nnew_core: {new_core} May happen with sympification and Usub.
-            # example: Tree sympification did not work: Reduced core is even more complex than before. expr_raw: sign(Mini(((Velocity_2 * -0.790706) - sqrt(Gain_0)), (-0.569271 - Velocity_9)))
-            # old_core:[sign, [Mini, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
-            # new_core: [sign, [Mini, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.569271]]]
-        return
-
-    def evolve_mutate_branch_depth(self, depths, builder):
+    def evolve_mutate_branch_depth(self, depths, tb):
         """
         todo other version
         currently only one branch
         """
         # sfeh: making the root node (todo?)
         if depths == 1:
-            self.plabel = builder.choose_term(self.plabel.coolxtype[1])  # sfeh update node plabel
+            self.label = builder.choose_term(self.label.coolxtype[1])  # sfeh update node plabel
         else:
             depths -= 1
-            self.childs = [Node(builder.choose_any(xt, p_op=1)) for xt in self.plabel.coolxtype[0]]
+            self.childs = [Node(builder.choose_any(xt, p_op=1)) for xt in self.label.coolxtype[0]]
 
-    def evolve_mutate_filter(self, choose_oparray3, choose_obs, choose_distributions, float_decimals):
+    def evolve_mutate_filter(self, tb):
         """
         filtger the nodes in a single tree
         """
-        if self.plabel.arity > 0:
+        if self.label.arity > 0:
             for cc in self.childs:
-                cc.evolve_mutate_filter(choose_oparray3, choose_obs, choose_distributions, float_decimals)
+                cc.evolve_mutate_filter(tb)
         else:
-            self.plabel.mutate_filter()
+            self.label.mutate_filter()
 
-    def evolve_mutate_point(self, choose_oparray3, choose_obs, choose_distributions, float_decimals):
+    def evolve_mutate_point_ROOTNODE(self, tb):
+        """
+        todo rootnode
+        Mutate a single mutatable point in any Tree.
+        """
+        # 1. choose a node
+        node_list = self.get_mutatable_nodes()
+        node = random.choice(node_list)
+        node.evolve_mutate_point(tb)
+
+    def evolve_mutate_point(self, tb):
         """
         Mutate a single mutatable point in any Tree.
         """
-        if self.plabel.arity > 0:
-            self.plabel = choose_operator(self.plabel.coolxtype, choose_oparray3)  # Function is same type, same arity
+        if self.arity > 0:
+            self.label = tb.choose_op(self.coolxtype)  # Function is same type, same arity
         else:
-            print('hhhhh', self.plabel)
-            self.plabel = choose_term(self.plabel.coolxtype[1], choose_obs, choose_distributions, float_decimals)  # 3 -> '2f' -> 5
+            print('hhhhh', self.label)
+            self.label = tb.choose_term(self.label.coolxtype[1])  # 3 -> '2f' -> 5
 
     def evolve_start(self):
         """
+        todo
         Before evolving, delete all tree information
         so the tree is not holding "wrong" information about fitness, etc.
         - (append last meta value to history)
@@ -271,10 +223,10 @@ class Node:
             print_e(f'FFS Trees just become larger? {self.get_expr()}')
         # self.meta.clear()
 
-    def evolve_mutate_filter_random(self, call_params, choose_oparray3, choose_obs, choose_distributions, float_decimals):
+    def evolve_mutate_filter_random(self, call_params, tb):
         """
         Mutates a number of float terminal of a tree
-        todo
+        todo ROOT
         """
         mode = call_params['mode']  # point/branch/all
         yes_observations = call_params.get('yes_observations')  # point/branch/all
@@ -284,29 +236,28 @@ class Node:
         node_id = random.choice(node_ids)  # sfeh should this be completely random?
 
         if mode == 'branch':
-            node_id.evolve_mutate_filter(choose_oparray3, choose_obs, choose_distributions, float_decimals)
+            node_id.evolve_mutate_filter(tb)
         else:
             pass
             # mode == 'point'
             # sfeh delete this? point can always hapen
-            # node_id.evolve_mutate_point(choose_oparray3, choose_obs, choose_distributions, float_decimals)
+            # node_id.evolve_mutate_point(tb)
 
-    def evolve_mutate_point_random(self, choose_oparray3, choose_obs, choose_distributions, float_decimals):
-        """
-        Mutate a single mutatable point in any Tree.
-        """
-        # 1. choose a node
-        node_list = self.get_mutatable_nodes()
-        node = random.choice(node_list)
-        node.evolve_mutate_point(choose_oparray3, choose_obs, choose_distributions, float_decimals)
-
-    def evolve_mutate_branch_random(self, cool_build_size, size_mode='depth', full_or_grow='full'):
+    def evolve_mutate_branch(self, cool_build_size, tb, size_mode='depth', full_or_grow='full'):
         """
 
         """
         node_list = self.get_mutatable_nodes()
         node = random.choice(node_list)
-        node.evolve_mutate_branch_depth(3)  # todo
+        node.evolve_mutate_branch_depth(3, tb)  # todo
+
+    def workaround_remove_tilde(self):
+        if isinstance(self.label, Usub):  # tilde '~'
+            new_core = self.childs[0]
+            self.new_core(new_core)
+
+        for cc in self.childs:
+            cc.workaround_remove_tilde()
 
     def finalize(self):
         """
@@ -361,29 +312,9 @@ class Node:
         """
 
         """
-        if self.plabel.arity != len(self.childs):
+        if self.label.arity != len(self.childs):
             raise
         return True
-
-    def eval_parsimony(self, parsimony_distance, origin_cooltree=None, weights=None):
-        """
-        parsimony_distance: compute the chosen distance by the user.
-        #     'tree_node_count': tree_get_size,
-        #     'tree_depth': tree_get_depth,
-        #     'tree_edit_distance': tree_parsimony_ted,
-        """
-        if parsimony_distance == 'tree_node_count':  # number of nodes
-            return len(self)  # returns the number of nodes  # sfeh weights
-        elif parsimony_distance == 'tree_edit_distance':  # tree_edit_distance, tree-edit-distance
-            apted1 = self.get_apted_notation()
-            apted2 = origin_cooltree.get_apted_notation()
-            distance, mapping = apted_distance(apted1, apted2)  # sfeh the mapping could be handy somewhere
-            if weights is None:
-                return distance
-            else:
-                raise
-        else:
-            raise Exception(f'Complexity measurement not available: {parsimony_distance}')
 
     def get_nodes_to_depth(self, goal_depth, only_mutable=False, get_closest_depth=False):
         """
@@ -402,17 +333,6 @@ class Node:
             my_result = [self]
 
         return my_result + child_results
-
-    # def get_node_from_nodepath(self, target_nodepath):
-    #     """
-    #     example coordinates: [0, 2, 1] -> node is at depth 2, accessable by going to childs 0 -> 2 -> 1.
-    #     (root is always 0)
-    #     """
-    #     if len(target_nodepath) > len(self.nodepath):
-    #         next_child = target_nodepath[len(self.nodepath)]
-    #         return self.childs[next_child].get_from_path(target_nodepath)
-    #     else:
-    #         return self
 
     def get_labellist_breath(self):
         """
@@ -435,12 +355,12 @@ class Node:
             nodepath_child = nodepath + [ii]
             child.finalize_set_nodepath(nodepath_child)
 
-    def __init__(self, plabel: Plabel):
-        super().__init__(plabel)
-        # self.core = coolcore  # todo sfeh
-        self.meta = self.PtreeMeta()
-        self.history = deque([], maxlen=10)  # sfeh arbitrary value of 10 historic metainfo of this tree
-        self.finalize_structure()
+    # def __init__(self, plabel: LabelNode):
+    #     super().__init__(plabel)
+    #     # self.core = coolcore  # todo sfeh
+    #     self.meta = self.PtreeMeta()
+    #     self.history = deque([], maxlen=10)  # sfeh arbitrary value of 10 historic metainfo of this tree
+    #     self.finalize_structure()
 
     # def workaround_normalize_exponentiation(self):
     #     self.core.workaround_normalize_exponentiation()
@@ -452,384 +372,78 @@ class Node:
 
         """
         self.finalize_set_depth(depth=self.depth or 0)  # sfeh the starting depth? hmm, why set it none anyways. aye. rewrite
-        self.finalize_structure()
         # self.finalize_meta()  # todo
         # sfeh asd does this work?
-        self.meta.expr_raw = self.get_expr()
-        self.meta.expr_sym = 'self.get_expr_sym()'  # todo
+        # self.meta.expr_raw = self.get_expr()
+        # self.meta.expr_sym = 'self.get_expr_sym()'  # todo
 
-    def eval_parsimony(self, parsimony_distance, origin_cooltree=None, weights=None):
+    def get_expr(self, reducible=None, obs_names=None):
         """
-
+        accumulate and return the complete expression the tree holds recursively
         """
-        parsimony = super().eval_parsimony(parsimony_distance, origin_cooltree=origin_cooltree, weights=weights)
-        self.meta.parsimony = parsimony
-        return parsimony
-
-
-class Selectable:
-    """
-
-    """
-    pass
-
-
-class ChooseOperators(Selectable):
-    """
-
-    """
-
-    def select(self, xtype):
-        """
-        # def selecting_slower(self, coolxtype):
-        #     oplist = self.slowertodo[coolxtype]
-        #     return random.choices(oplist[0], weights=oplist[1])[0]
-        """
-        return self.choose_oparray[xtype]()
-
-    def __init__(self, operator_pool=None):
-        """
-
-        """
-
-        def check_operator_pool(operator_pool):
-            """
-            Check if the user-specified loaded operators allow closure
-            operator_pool: list with operators and their weight of being selected
-            """
-            # sfeh dunno if that works... 2f not in x
-            opxtypes = [oper.coolxtype for oper in operator_pool.keys()]
-            has_2f = any([float == x[1] for x in opxtypes])
-            has_2b = any([bool == x[1] for x in opxtypes])
-            has_f2b = any([float in x[0] and bool == x[1] for x in opxtypes])
-            has_b2f = any([bool in x[0] and float == x[1] for x in opxtypes])
-            if not all([has_2f, has_2b, has_f2b, has_b2f]):
-                logging.warning(f'Loaded operators do not feature both numeric (float) and Boolean type.')
-            if all([has_2f, has_2b]) and not all([has_f2b or has_b2f]):
-                raise Exception(f'Loaded operators do not allow closure!')
-
-        if operator_pool is None:  # quick developer adjustments
-            operator_pool = [['+', 2],
-                             ['-', 1], ['Usub', 1],
-                             ['*', 2], ['/', 1],
-                             ['Square', 0.75], ['**', 0.25],
-                             ['Abs', 0.5], ['sign', 0.5], ['Round', 0.5],  # sfeh stop chain of arity-1 op in buid method?
-                             ['sqrt', 0.25],
-                             # ['log', 0.1], ['log1p', 0.1],  # sfeh
-                             ['sin', 0.5],  # ['tan', 0.1], ['cos', 0.33], ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
-                             ['tanh', 0.2],
-                             ['Andb', 1], ['Orb', 1], ['Notb', 0.5], ['Xor', 1],
-                             ['==', 1], ['!=', 0.5],
-                             ['<', 0.5], ['<=', 0.5], ['>', 0.1], ['>=', 0.1],
-                             ['Ifte', 2],
-                             ['Mini', 1], ['Maxi', 1]]
-            operator_pool = {op[x[0]]: x[1] for x in operator_pool}  # sfeh this maps the actual class to the label
-
-        # if sfeh_no_crazyops:
-        #     del operator_pool['**']
-        #     # workaround sfeh (delete this)
-
-        check_operator_pool(operator_pool)
-
-        choose_oparray = {
-            # # all operator_pool (not needed)
-            # None: {0: [], 1: [], 2: [], 3: [], None: []},
-
-            # all operator_pool with a certain xtype-result
-            None: [[], []],
-            float: [[], []],  # 2f
-            bool: [[], []],  # 2b
-            (tuple([float]), float): [[], []],  # x**2, sqrt, log, sin, ...
-            (tuple([float, float]), float): [[], []],  # +, -, *, /, **, ...
-            (tuple([bool, float, float]), float): [[], []],  # Ifte
-            (tuple([float, float]), bool): [[], []],  # <, >, =, >=
-            (tuple([bool]), bool): [[], []],  # not
-            (tuple([float]), bool): [[], []],  # dummy, currently no such operator
-            (tuple([bool, bool]), bool): [[], []],  # and, or, xor, ...
-        }
-        for xlabel, probability in operator_pool.items():
-            choose_oparray[None][0].append(xlabel)  # all operators #todo delete this? none required?
-            choose_oparray[None][1].append(probability)
-            choose_oparray[xlabel.coolxtype][0].append(xlabel)  # point mutations
-            choose_oparray[xlabel.coolxtype][1].append(probability)
-            choose_oparray[xlabel.coolxtype[1]][0].append(xlabel)  # construction of trees
-            choose_oparray[xlabel.coolxtype[1]][1].append(probability)
-
-        for o, p in choose_oparray.items():
-            # normalizing the probabilities in every case to a sum of 1 (100%)
-            # (saving some very little time...)
-            choose_oparray[o][1] = [x / sum(p[1]) for x in p[1]]
-
-        self.choose_oparray = {coolxtype: lambda: np.random.choice(x[0], p=x[1]) for coolxtype, x in choose_oparray.items()}
-
-
-class ChooseConstants(Selectable):
-    """
-
-    """
-    # todo random with numpy?
-    distributions = {float: [lambda: random.normalvariate(0, 1),
-                             lambda: random.normalvariate(1, 1),
-                             lambda: random.normalvariate(10, 5),
-                             lambda: random.randint(1, 20)],  # 0 has actually no purpose (except as being an action)
-                     bool: [lambda: random.choice([True, False])]}
-
-    def selecting(self, xtype):
-        """
-
-        """
-        value = random.choice(self.distributions[xtype])()
-        if xtype == float:  # sfeh int aswell?
-            value = float(round(value, self.float_decimals))
-            return FloatConstant(value)
-        elif xtype == bool:
-            return BoolConstant(value)
-
-    def __init__(self, float_decimals=6, path_distrib=None, data_train=None, n_samples=100):
-        """
-
-        """
-        self.float_decimals = float_decimals
-        if Path.is_file(path_distrib):
-            lambdadist_as_string = yaml_load(path_distrib)
-
-            # todo how should distributions be loaded?
-            # e.g. sample_amount = lambdadist_as_string.get('observed_floats')
-            self.terminal_distributions = {float: [], bool: []}
-            self.terminal_distributions[float].extend([eval(x) for x in lambdadist_as_string[float]]),
-            self.terminal_distributions[bool].extend([eval(x) for x in lambdadist_as_string[bool]])
-
-            # self.sample_floats_from_data(env_vars_obs_infos, data_train, n_samples=n_samples)  # todo
+        if self.arity > 0:
+            child_expr_list = [cc.get_expr(reducible=reducible, obs_names=obs_names) for cc in self.childs]
+            # if reducible:
+            #     # my_expr = op[self.label]['sym_reduce'] or my_expr
+            #     # symloc = sympy_symbol_defaults(obs_names)  # todo solve the problem... new version of sympy?
+            #     xxx = plagih_sympify(my_expr.format(*child_expr_list), eval_locals=symloc)  # sfeh the xxx variable
+            #     return xxx
+            return self.sym_expr.format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
         else:
-            logging.info('Opt-in not specified: Distributions-file (for random leaf-node constants) does not exist. Using default set.')
+            return self.sym_expr
 
-    def sample_floats_from_data(self, env_vars_obs_infos, data_train, n_samples=100):
-        """
-        ONLY floats, because ...do you really want to load Boolean True/False samples??
-        (okay, it might make sense as it better represents the actual distribution- NO FUCK IT.)
-        """
-        if env_vars_obs_infos is not None:
-            obsnames = env_vars_obs_infos.observables[float].keys()
-            obs_samples = data_train[obsnames].to_numpy().flatten()
-            obs_samples = np.random.choice(obs_samples, size=n_samples)
-            self.terminal_distributions[float].extend([lambda: random.choice(obs_samples)]),  # take one
-
-
-class ChooseObservation(Selectable):
-    """
-    func_list, probability_list = self.operators[coolxtype]
-    return np.random.choice(func_list, p=probability_list)
-    """
-
-    def selecting(self, xtype):
-        """
-        Randomly choosing an operator-label for a given xtype.
-        choose_oparray3 must be given, as they are different between runs.
-        arity can also be set optionally, e.g. for point mutation
-        todo DOUBLE-check if this coolxtype is chosen correctly... better: replace it
-        """
-        return self.observables[xtype]()
-
-    def __init__(self, observations_list):
-        """
-        :param observations_list: list of all observation names (e.g. ['cartVel', 'cartPos'])
-        """
-
-        def observation_select_index(obs_list, max_hist=10):
-            """
-            chooses variables but weighting how old they are.
-            obs_list = ['gain_0', 'gain_1', 'gain_2', 'gain_3', 'gain_4'] -> [0.28, 0.23, 0.19, 0.16, 0.13]
-            sfeh: what about larger steps?
-            e.g. [0, 1, 2, 3] is good, but [0, 5, 10, 15] is baaaad
-            what if variables are not all of same diff?
-            """
-            obs_list = np.delete(obs_list, np.s_[max_hist:])
-            x = len(obs_list)
-            fairness_bonus = np.log(x) + 1  # raising the opportunity of historic data just a little...
-            p = np.geomspace(1 + fairness_bonus, x + fairness_bonus, num=x)[::-1]  # reverse the geometric series
-            p = p / np.sum(p)  # the sum must be equal to 1  # not required with choices
-            return np.random.choice(obs_list, p=p)  # returning a function this time
-
-        obs_prop = []
-        obs_info = {}
-
-        families = list(set(x.fam for x in observations_list))
-        for fam in families:
-            fam_members = sorted([x for x in observations_list if x.fam == fam], key=lambda o: o.obs_index)
-            if len(fam_members) > 1:
-                observations_list.extend([x for x in fam_members])
-                obs_prop.extend(list(observation_select_index(fam_members)))
-                index_minmax = (fam_members[0].obs_index, fam_members[-1].obs_index)
-                for obs in fam_members:
-                    obs.index_minmax = index_minmax
-                    # environment.obs_infos[obs.name] = obs  # todo okay do we need this? :s guess we will find out x.D haha
-                    obs_info[obs.name] = obs
-            else:
-                obs = fam_members[0]
-                obs_info[obs.name] = obs
-                observations_list.append(obs)
-                obs_prop.append(1)  # just one value
-                # todotodo todo
-
-        self.observables = {float: lambda: np.random.choice(observations_list, p=obs_prop),
-                            bool: None}  # sfeh None? no  lambda? yeah, not important but still...
-
-
-class TreeBuilder:
-    # class Choosing(Selectable):  # sfeh was
-    """
-    todo delete?
-    """
-
-    """
-    Just a class to prevent referencing all the separate shizzle everytime
-    todo float_decimals?
-
-    ===
-    this was:
-    def choose_op():
-    choose_oparray3 -> operator
-    env_vars.choose_obs -> observation
-    choose_distributions -> constant
-    """
-
-    def __init__(self, operators: ChooseOperators, observations: ChooseObservation, constants: ChooseConstants, root_xtype):
-        self.operators = operators
-        self.observations = observations
-        self.constants = constants
-
-        self.root_xtype = root_xtype
-
-    def choose_any(self, xtype, p_op):
+    def get_pycode(self):
         """
 
         """
-        if random.random() < p_op:
-            return self.operators.select(xtype)
+        if self.arity == 0:
+            return f'{self.label}'
         else:
-            # sfeh add p_term? 0.5?
-            return self.choose_term(xtype)
-
-    def choose_term(self, xtype, p_observation=0.5):
-        """
-        sfeh: float_decimals not required?
-        """
-        # sfeh 50% chance observatio    n/value
-        if random.random() < p_observation:
-            try:
-                return self.observations.selecting(xtype)
-            except Exception:
-                pass
-
-        return self.constants.selecting(xtype)
-
-    def choose_op(self, xtype):
-        """
-        sfeh this is doppelt gemoppelt
-        """
-        return self.operators.select(xtype)
-
-    def invent_core_depth(self, xtype, depth_max, id=None, depth=0, p_op=1):  # todo grow method
-        """
-
-        """
-        if depth < depth_max:
-            label = self.choose_any(xtype, p_op)
-            # set path? todo
-            # set depth?
-            depth += 1
-            childs = [self.invent_core_depth(xt, depth_max, depth=depth, p_op=p_op) for xt in label.coolxtype[0]]
-            return Node(label, is_fix=False, childs=childs)
-        else:
-            label = self.choose_term(xtype)
-            return Node(label)
-
-    def pop_random(self, call_params, from_origin=False):  # todo float is wrongg
-        """
-        Creates random trees for the population
-        """
-        build_spec, size_mode, mean_min_max_var, full_or_grow = helper_evolve_params_branch(call_params)
-
-        if from_origin:
-            """
-            insert a (random) number of branches at the first possible "layer"
-            (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
-            - get these nodes, randomly choose a subset of those
-            - get the amount of nodes we are allowed to add. (max nodes without the core-tree and the nodes we are about to delete)
-            - split the amount of nodes up (randomly) and add these new branches to the tree
-            """
-
-            # layer0_ids = tree_get_mutatable_layer(from_origin, 0)
-            layer0_ids = [1, 2, 3]
-
-            # build_split = []
-            # if 'depth' in size_mode:
-            #     for ii in range(len(layer0_ids)):
-            #         build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
-            #         build_split.append(build_size)
-            #
-            # elif 'nodes' in size_mode:
-            #     build_nodes = choose_build_size(size_mode, mean_min_max_var, force='branch')
-            #     build_split = randomly_split_range(build_nodes, len(layer0_ids))
-            # else:
-            #     raise
-            #
-            # cooltree = copy.deepcopy(from_origin)
-            # for i in range(len(layer0_ids)):  # insert branches! get layer every time (node ids might have changed)
-            #     layer0_ids = tree_get_mutatable_layer_lv0(cooltree)
-            #     node_id = layer0_ids[i]
-            #     first_xtype = float  # tree_node_get_xtype(tree, node_id)  # todo
-            #     old_branch = tree_node_get_branch(tree, node_id, karoo=True)
-            #     build_size = build_split[i]
-            #
-            #     # cooltree = CoolTree(BuildDummy(float))   # todo deprecated
-            #     core = cooltree.invent_core(size_mode, first_xtype, build_size, full_or_grow)
-            #     tree = tree_insert_subtree(tree, core, old_branch, karoo=True)
-        else:
-            build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')  # depth, in this case
-            # todo
-            # coolcore.evolve_mutate_branch_random(build_size, choose_oparray3, env_vars.choose_obs,
-            #                                      choose_distributions, float_decimals, size_mode=size_mode, full_or_grow=full_or_grow)
-            # coolcore.evolve_random_tree_depth(size_mode, coolxtype_root, build_size, full_or_grow)
-            coolcore.evolve_random_tree_depth(4)  # todo
-
-        return coolcore
-
-    def workaround_remove_tilde(self):
-        if isinstance(self.plabel, Usub):  # tilde '~'
-            new_core = self.childs[0]
-            self.new_core(new_core)
-
-        for cc in self.childs:
-            cc.workaround_remove_tilde()
-
-
-class Plabel(Node):  # todo
-    label = 'None'
-    arity = 0
-    coolxtype = (tuple([None]), None)
-    tf = None
-    sym_str = 'None'
-    pycode = 'None'
-    latex = ('None', 'None')
-
-    def get_expr(self):
-        return self.sym_str
+            results = [cc.get_pycode() for cc in self.childs]
+            return self.pycode.format(*results)  # abs -> lambda a: 'abs({})'.formadt(a) (result1)
 
     def get_apted_notation(self):
         """
         Calculating the TED requires this (weird) representation
         e.g. {+{Ifte{True}{1}{2}}{3}}
         """
-        # todo check if this still works as one-liner
+        # sfEh check if this still works as one-liner
         return f"{{{self.label}{''.join([cc.get_apted_notation() for cc in self.childs])}}}"
 
+    def reduce_me(self, obs_infos):
+        # sfeh asdasdasd reduce me is obviously bullshit crapshit.
+        #  sympify works with this combination only very few times
+        #  lets have a new idea.
+        expr_raw = self.get_expr(reducible=True, obs_names=obs_infos.keys())
+        try:
+            expr_sym = expr_sympify(expr_raw)
+        except:
+            raise Exception(f'Sympify failed. {expr_raw}')
 
-class Operator(Plabel):
+        new_core = [1, 2, 3]  # todo coolcore_from_expr(expr_sym, obs_infos)
+        if len(new_core) < len(self):
+            self.new_core(new_core)
+        elif len(new_core) > len(self):
+            raise Exception(
+                f'Reduced core is even more complex than before  ({len(new_core)}, {len(self)}). expr_raw: {expr_raw}')  # \nold_core:{self}\nnew_core: {new_core} May happen with sympification and Usub.
+            # example: Tree sympification did not work: Reduced core is even more complex than before. expr_raw: sign(Mini(((Velocity_2 * -0.790706) - sqrt(Gain_0)), (-0.569271 - Velocity_9)))
+            # old_core:[sign, [Mini, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
+            # new_core: [sign, [Mini, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.569271]]]
+        return
+
+
+class LabelNode(Node):  # todo
+    """
+    Kind of abstract class; Dummy-node that holds a label
+    """
     pass
 
 
-class Terminal(Plabel):
+class Operator(LabelNode):
+    pass
+
+
+class Terminal(LabelNode):
 
     def mutate_filter(self):
         # todo? ...only for terminal nodes
@@ -884,8 +498,6 @@ class ObservationIndex(Observation):
         self.name = f'{self.fam}_{new_index}'
 
 
-
-
 def observation_get_family_and_time(name, re_pattern='_\\d+$', none_return=None):
     """
     When an observation is known, return the family, the time and the SIGN!!
@@ -909,26 +521,25 @@ def observation_get_family_and_time(name, re_pattern='_\\d+$', none_return=None)
 
 class FloatConstant(Constant):
     """
-
+    discuss: how to deal with sign of observations?
     """
     arity = 0
     otype = float
     coolxtype = (tuple([]), float)
 
-    def __init__(self, value):
-        self.label = value
-        self.latex = (f'{value:.3f}',        f'{value:.3f}')
-        self.sym_str = value
-        self.pycode = value
-        # self.name = value if value[0] != '-' else value[1:]  # sfeh delete todo
+    def __init__(self, label):
+        self.label = label
+        self.latex = (f'{label:.3f}', f'{label:.3f}')
+        self.sym_str = label
+        self.pycode = label
 
-    def mutate_filter(self, filter_type='gaussian_filter', float_decimals=6):  # todo
+    def mutate_filter(self, filter_type='gaussian_filter', precision=6):  # todo
         if filter_type == 'gaussian_filter':
             if random.choice(['v1', 'v2']) == 'v1' or self.label == 0:
                 self.label += np.random.normal(0, 0.1)  # sfeh better adjustments?
             else:
                 constant = np.random.normal(self.label, 0.1)  # sfeh better adjustments?
-                self.label = round(constant, float_decimals)  # sfeh be careful, might create zero sometimes
+                self.label = round(constant, precision)  # sfeh be careful, might create zero sometimes
 
 
 class BoolConstant(Constant):
@@ -939,14 +550,15 @@ class BoolConstant(Constant):
     coolxtype = (tuple([]), bool)
     tf_type = tf.bool
 
-    def __init__(self, value):
-        self.latex = (f'{value}', f'{value}')
-        self.sym_str = value
-        self.pycode = value
+    def __init__(self, label):
+        self.latex = (f'{label}', f'{label}')
+        self.sym_str = label
+        self.pycode = label
 
 
-class EvalAction(Plabel):
+class EvalAction:
     """
+    todo plabel/labelNode? daut it.
     - minmax for histograms
     - minmax for regression-bounded
     """
@@ -1027,7 +639,7 @@ class Abs(Operator):
     arity = 1
     tf = tf.abs
     latex = ('abs', '|{}|')
-    sym_str = 'abs({})'
+    sym_expr = 'abs({})'
     pycode = 'abs({})'
     coolxtype = (tuple([float]), float)
 
@@ -1358,46 +970,6 @@ op = {  # 'f2f': Classical mathematical operators, evaluate from float to float
 # print(', '.join(['[\'{}\', {:.2f}]'.format(v['label'], 1/v['coolxtype': ([], []), 'c-weight']) for k, v in op_what.items()]))  # retreive a list with all non-ast ops:
 
 
-def data_from_csv(df, action):
-    """
-    Loads .csv data files.
-    - Reading the .csv-file (with pandas)
-    - renaming column headers
-    - saving header info for later use
-
-    Information that we need to extract for each column:
-    - choose_xtype choosing a random observation for leaf nodes
-    - filtering observation index
-        is there an index (past values, e.g. velocity_0, velocity_1) -> performing filter-evolve on the variables index (velocity_2 -> velocity_3)
-    - evalaction data_train, data_test, is the action for the regression? -> more than one action might be required (IB has three action dimensions)
-        - action min max -> for kernel regression bounded. occuring min and max values might not be the theoretical min/max values
-
-
-    deprecated:
-
-    """
-
-    """
-    1. split col name
-    - check whether its an observation
-    --> check whether there are indizes
-    - check whether its an action
-    --> check unique valuea, min, max
-    - check if it should be ignored (deprecated action, irrelevant column)
-    2. 
-    """
-    # todo remove dat shit
-
-    return
-
-
-def xtype_equi_outcome(a_xtype, b_xtype):
-    """
-    Dummy. Returns, whether two xtypes have the same outcome
-    """
-    return a_xtype[-2:] == b_xtype[-2:]
-
-
 def choose_term(coolxtype_out, choose_obs, choose_distributions, float_decimals):
     """
 
@@ -1419,84 +991,6 @@ def choose_term(coolxtype_out, choose_obs, choose_distributions, float_decimals)
         else:
             raise Exception('ASDASD NOOO WHYY')
         return const
-
-
-def choose_operator(coolxtype_key, choose_oparray3):
-    """
-    Randomly choosing an operator-label for a given xtype.
-    choose_oparray3 must be given, as they are different between runs.
-    arity can also be set optionally, e.g. for point mutation
-    todoo DOUBLE-check if this coolxtype is chosen correcrtly... better: replace it
-    """
-    func_list, probability_list = choose_oparray3[coolxtype_key]
-    ops = np.random.choice(func_list, p=probability_list)  # [0] as this function can only return lists...
-    return ops
-
-
-def xtypes_from_labels(label_list, obs_infos=None):
-    xtype_list = [xtype_get_from_label(label, obs_infos) for label in label_list]
-    return xtype_list
-
-
-def xtype_get_from_label(label, obs_infos=None):
-    """
-    returns xtype for a label
-    if you are not 100% sure that it is a function.
-    """
-
-    if label in ['True', 'False']:
-        xtype = '2b'
-    elif label in op:
-        xtype = op[label]['xtype']
-    else:
-        try:
-            label = label[1:] if label[0] == '-' else label
-            xtype = obs_infos[label]['xtype']
-        except:
-            xtype = '2f'
-
-    return xtype
-
-
-# # todo delete this
-# #
-# def coolcore_from_oldtree(tree, node_id=root_id):
-#     """
-#     utility function
-#     karoo_tree to cooltree version
-#     """
-#     label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
-#     is_fix = False if tree_node_is_modifiable(tree, node_id) else True
-#     coolcore = CoolCore(plabel=plabel, arity=arity, xtype=xtype, is_fix=is_fix)
-#
-#     childs = tree_node_get_childs(tree, node_id)  # [7, 8, 9]
-#     for child_id in childs:
-#         pchild = coolcore_from_oldtree(tree, node_id=child_id)
-#         coolcore.child_append(pchild)
-#
-#     if node_id == root_id:
-#         coolcore.finalize()
-#
-#     return coolcore
-
-
-# def cooltree_from_oldtree(tree, node_id=root_id):
-#     """
-#     fitness, complexity, last_evolution, xtypes, modifys, labels
-#     """
-#     try:
-#         coolcore = coolcore_from_oldtree(tree, node_id=node_id)
-#         parsimony = tree_get_parsimony(tree)
-#         fitness = tree_get_fitness(tree)
-#         last_evolution = tree_get_last_evolution(tree)
-#         cooltree = CoolTree(coolcore)
-#         cooltree.meta.fitness_train = fitness
-#         cooltree.meta.parsimony = parsimony
-#         cooltree.meta.last_evolution = last_evolution
-#     except Exception as ex:
-#         print(f'cooltree_from_oldtree failed: {ex}')
-#         cooltree = None
-#     return cooltree
 
 
 def helper_evolve_params_branch(call_params, tree_depth_max=10, parsimony_max=30):
@@ -1528,42 +1022,9 @@ def helper_evolve_params_branch(call_params, tree_depth_max=10, parsimony_max=30
     return build_spec, size_mode, mean_min_max_var, full_or_grow
 
 
-if __name__ == '__main__':
-
-    for k, v in op.items():
-        print(f'{k}\t: {v}')
-
-    tree = ['Ifte',
-            ['Orb',
-             ['<', ['cartPos', -1]],
-             ['Andb',
-              ['<', ['cartPos', 0.1]],
-              ['<', ['cartVel', -0.05]]]], 2,
-            ['Ifte',
-             ['Andb',
-              ['Andb',
-               ['>', ['cartPos', -0.45]],
-               ['<', ['cartPos', -0.05]]],
-              ['<', ['cartVel', -0.5]]], 0,
-             ['Ifte',
-              ['<', ['cartVel', 0]], 0, 2]]]
-
-    trexpr1 = '(Ifte, (Orb, (cartPos < -1), (Andb, (cartPos < 0.1), (cartVel < -0.05))), 2, (Ifte, (Andb, (Andb, (cartPos > -0.45), (cartPos < -0.05)), (cartVel < -0.5)), 0, (Ifte, (cartVel < 0), 0, 2)))'
-    trexpr2 = '(Ifte, (cartVel < 0), 0, 2)'
-    # trexpr = plagih_sympify(trexpr)
-
-    ops = ChooseOperators()
-    inputs = ChooseObservation(['a', 'b'])
-    consts = ChooseConstants()
-
-    builder = TreeBuilder(ops, inputs, consts, float)
-    tree = builder.invent_core_depth(float, 4)  # todo
-    print(tree)
-
-
 def randomly_split_range(range_max, num_splits):
     """
-    delete this?
+    todo reuse this
     split a integer range randomly into parts
     [1..100] -> [33, 15, 52] (0 is allowed)
     """
@@ -1592,7 +1053,7 @@ def randomly_split_range(range_max, num_splits):
 
 def shuffle_tree_construction(size):
     """
-    delete this?
+    todo reuse this
     """
     terms = random.randint(0, size - 1)  # -1 because at least one 'func'
     cons_buf = ['term'] * terms + ['func'] * (size - terms)
@@ -1600,7 +1061,7 @@ def shuffle_tree_construction(size):
     return cons_buf
 
 
-def choose_build_size(size_mode, mean_min_max_var, cooltree=None, nodepath=None, force=None):
+def choose_build_size(size_mode, mean_min_max_var, tree=None, nodepath=None, force=None):
     """
     delete this?
     Very unified utility function that returns the required tree size from the following parameters
@@ -1612,22 +1073,22 @@ def choose_build_size(size_mode, mean_min_max_var, cooltree=None, nodepath=None,
     if size_mode == 'branch_nodes' or size_mode == 'branch_depth' or force == 'branch':
         relative_size = 0
     else:
-        if cooltree and nodepath:
+        if tree and nodepath:
             pass
         else:
             raise Exception('No tree or node is given for computing the relative size')
 
         if size_mode == 'tree_depth':
-            tree_size = cooltree.core.childs_depth_max
-            print('tree_size = cooltree.core.childs_depth_max:', tree_size)
+            tree_size = tree.core.childs_depth_max
+            print('tree_size = tree.core.childs_depth_max:', tree_size)
             if tree_size is None and 'delete_this':
                 raise Exception('ASDASDASD')
             node_size = len(nodepath)
         elif size_mode == 'tree_nodes':
-            tree_size = len(cooltree)
-            print('len(cooltree)?:', len(cooltree))
-            node_size = len(cooltree.get_nodepath(nodepath))
-            print('cooltree.get_nodepath(nodepath)?:', cooltree.get_nodepath(nodepath))
+            tree_size = len(tree)
+            print('len(tree)?:', len(tree))
+            node_size = len(tree.get_nodepath(nodepath))
+            print('tree.get_nodepath(nodepath)?:', tree.get_nodepath(nodepath))
         else:
             raise Exception('Sizemode not known?')
 
@@ -1653,3 +1114,36 @@ def tree_check_rebuild(tree):
     - do the values in c1, c2, c3 link to its parent?
     """
     return True
+
+
+if __name__ == '__main__':
+
+    for k, v in op.items():
+        print(f'{k}\t: {v}')
+
+    hugo = ['Ifte',
+            ['Orb',
+             ['<', ['cartPos', -1]],
+             ['Andb',
+              ['<', ['cartPos', 0.1]],
+              ['<', ['cartVel', -0.05]]]], 2,
+            ['Ifte',
+             ['Andb',
+              ['Andb',
+               ['>', ['cartPos', -0.45]],
+               ['<', ['cartPos', -0.05]]],
+              ['<', ['cartVel', -0.5]]], 0,
+             ['Ifte',
+              ['<', ['cartVel', 0]], 0, 2]]]
+
+    trexpr1 = '(Ifte, (Orb, (cartPos < -1), (Andb, (cartPos < 0.1), (cartVel < -0.05))), 2, (Ifte, (Andb, (Andb, (cartPos > -0.45), (cartPos < -0.05)), (cartVel < -0.5)), 0, (Ifte, (cartVel < 0), 0, 2)))'
+    trexpr2 = '(Ifte, (cartVel < 0), 0, 2)'
+    # trexpr = plagih_sympify(trexpr)
+
+    ops = ChooseOperators()
+    inputs = ChooseObservation(['a', 'b'])
+    consts = ChooseConstants()
+
+    builder = TreeBuilder(ops, inputs, consts, float)
+    tree = builder.invent_core_depth(float, 3)  # todo
+    print(tree)

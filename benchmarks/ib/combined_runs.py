@@ -282,7 +282,7 @@ def merge_paretos(path_main):
 
             gen_id, pareto, pop_base, monitor_pd, a_helping_dict = gp_backup_data
 
-            tuples = [[parsim, fitness] for (parsim, fitness, cooltree) in pareto]
+            tuples = [[parsim, fitness] for (parsim, fitness, tree) in pareto]
             xx, yy = np.array(tuples).T
             ax.step(xx, yy, linestyle='dotted', marker='.', label=f'action {ii}', where='post')
 

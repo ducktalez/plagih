@@ -340,10 +340,10 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
 
     agent_performance = {}
 
-    for (parsim, fitness, cooltree) in pareto:
+    for (parsim, fitness, tree) in pareto:
         agent_name = f'{parsim:.0f}'
         print(f'Evaluating MC Agent: {parsim:.0f}')
-        pycode = cooltree.get_pycode()
+        pycode = tree.get_pycode()
         mc_gent = DummyMcAgent(pycode)
         try:
             # bur1, bur2, avg_reward, fails = bur_lut.get(parsim, (None, None, None, None))
@@ -368,7 +368,7 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
         agentperflist = list(zip(*agent_performance.values()))
         x = agentperflist[0]
         y = agentperflist[2]
-        tuples = [[parsim, fitness] for (parsim, fitness, cooltree) in pareto]
+        tuples = [[parsim, fitness] for (parsim, fitness, tree) in pareto]
         xx, yy = np.array(tuples).T
 
         ax.step(xx, yy, linestyle='dotted', marker='.', where='post', label='regression error')

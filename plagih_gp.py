@@ -114,7 +114,7 @@ def load_prepared_run(conf, prepared_run, slurm_runs_folder):
     print(f'AUTOLOAD: path_origin_tree {path_origin_tree}')
     print(f'AUTOLOAD: kernel_name {kernel_name}')
     conf.kernel_name = kernel_name
-    conf.action = action
+    conf.action = action_name
     conf.name = prepared_run
 
     return conf, root_dir, path_data_csv, path_origin_tree

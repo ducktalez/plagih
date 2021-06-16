@@ -1,0 +1,339 @@
+"""
+The factory to create trees
+"""
+import numpy as np
+import logging
+from pathlib import Path
+
+from plagih.file_interaction import yaml_load
+from plagih.plagih_tree import *
+from plagih.plagih_tree import Node
+
+
+class Selectable:
+    """
+
+    """
+    def select(self, xtype):
+        return
+
+
+class ChooseOperators(Selectable):
+    """
+
+    """
+
+    def __init__(self, operator_pool=None):
+        """
+
+        """
+
+        def check_operator_pool(operator_pool):
+            """
+            Check if the user-specified loaded operators allow closure
+            operator_pool: list with operators and their weight of being selected
+            """
+            # sfeh dunno if that works... 2f not in x
+            opxtypes = [oper.coolxtype for oper in operator_pool.keys()]
+            has_2f = any([float == x[1] for x in opxtypes])
+            has_2b = any([bool == x[1] for x in opxtypes])
+            has_f2b = any([float in x[0] and bool == x[1] for x in opxtypes])
+            has_b2f = any([bool in x[0] and float == x[1] for x in opxtypes])
+            if not all([has_2f, has_2b, has_f2b, has_b2f]):
+                logging.warning(f'Loaded operators do not feature both numeric (float) and Boolean type.')
+            if all([has_2f, has_2b]) and not all([has_f2b or has_b2f]):
+                raise Exception(f'Loaded operators do not allow closure!')
+
+        if operator_pool is None:  # quick developer adjustments
+            operator_pool = [['+', 2],
+                             ['-', 1], ['Usub', 1],
+                             ['*', 2], ['/', 1],
+                             ['Square', 0.75], ['**', 0.25],
+                             ['Abs', 0.5], ['sign', 0.5], ['Round', 0.5],  # sfeh stop chain of arity-1 op in buid method?
+                             ['sqrt', 0.25],
+                             # ['log', 0.1], ['log1p', 0.1],  # sfeh
+                             ['sin', 0.5],  # ['tan', 0.1], ['cos', 0.33], ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
+                             ['tanh', 0.2],
+                             ['Andb', 1], ['Orb', 1], ['Notb', 0.5], ['Xor', 1],
+                             ['==', 1], ['!=', 0.5],
+                             ['<', 0.5], ['<=', 0.5], ['>', 0.1], ['>=', 0.1],
+                             ['Ifte', 2],
+                             ['Mini', 1], ['Maxi', 1]]
+            operator_pool = {op[x[0]]: x[1] for x in operator_pool}  # sfeh this maps the actual class to the label
+
+        # if sfeh_no_crazyops:
+        #     del operator_pool['**']
+        #     # workaround sfeh (delete this)
+
+        check_operator_pool(operator_pool)
+
+        choose_oparray = {
+            # all operator_pool with a certain xtype-result
+            # None: [[], []],
+            float: [[], []],  # 2f
+            bool: [[], []],  # 2b
+            (tuple([float]), float): [[], []],  # x**2, sqrt, log, sin, ...
+            (tuple([float, float]), float): [[], []],  # +, -, *, /, **, ...
+            (tuple([bool, float, float]), float): [[], []],  # Ifte
+            (tuple([float, float]), bool): [[], []],  # <, >, =, >=
+            (tuple([bool]), bool): [[], []],  # not
+            (tuple([float]), bool): [[], []],  # dummy, currently no such operator
+            (tuple([bool, bool]), bool): [[], []],  # and, or, xor, ...
+        }
+        for xlabel, prob in operator_pool.items():
+            # choose_oparray[None][0].append(xlabel)  # all operators # delete this? none required?
+            # choose_oparray[None][1].append(prob)
+            choose_oparray[xlabel.coolxtype][0].append(xlabel)  # point mutations
+            choose_oparray[xlabel.coolxtype][1].append(prob)
+            choose_oparray[xlabel.coolxtype[1]][0].append(xlabel)  # construction of trees
+            choose_oparray[xlabel.coolxtype[1]][1].append(prob)
+
+        for o, p in choose_oparray.items():
+            # normalizing the probabilities in every case to a sum of 1 (100%)
+            # (saving some very little time...)
+            choose_oparray[o][1] = [x / sum(p[1]) for x in p[1]]
+
+        self.choose_oparray = {coolxtype: lambda: np.random.choice(x[0], p=x[1]) for coolxtype, x in choose_oparray.items()}
+
+    def select(self, xtype):
+        """
+
+        """
+        return self.choose_oparray[xtype]()
+
+
+class ChooseConstants(Selectable):
+    """
+
+    """
+    # todo random with numpy?
+    distributions = {float: [lambda: random.normalvariate(0, 1),
+                             lambda: random.normalvariate(1, 1),
+                             lambda: random.normalvariate(10, 5),
+                             lambda: random.randint(1, 20)],  # 0 has actually no purpose (except as being an action)
+                     bool: [lambda: random.choice([True, False])]}
+
+    def __init__(self, float_decimals=6, path_distrib=None, data_train=None, n_samples=100):
+        """
+
+        """
+        self.float_decimals = float_decimals
+        if Path.is_file(path_distrib):
+            lambdadist_as_string = yaml_load(path_distrib)
+
+            # todo how should distributions be loaded?
+            # e.g. sample_amount = lambdadist_as_string.get('observed_floats')
+            self.terminal_distributions = {float: [], bool: []}
+            self.terminal_distributions[float].extend([eval(x) for x in lambdadist_as_string[float]]),
+            self.terminal_distributions[bool].extend([eval(x) for x in lambdadist_as_string[bool]])
+
+            # self.sample_floats_from_data(env_vars_obs_infos, data_train, n_samples=n_samples)  # todo
+        else:
+            logging.info('Opt-in not specified: Distributions-file (for random leaf-node constants) does not exist. Using default set.')
+
+    def sample_floats_from_data(self, env_vars_obs_infos, data_train, n_samples=100):
+        """
+        ONLY floats, because ...do you really want to load Boolean True/False samples??
+        (okay, it might make sense as it better represents the actual distribution- NO FUCK IT.)
+        """
+        if env_vars_obs_infos is not None:
+            obsnames = env_vars_obs_infos.observables[float].keys()
+            obs_samples = data_train[obsnames].to_numpy().flatten()
+            obs_samples = np.random.choice(obs_samples, size=n_samples)
+            self.terminal_distributions[float].extend([lambda: random.choice(obs_samples)]),  # take one
+
+    def select(self, xtype):
+        """
+
+        """
+        value = random.choice(self.distributions[xtype])()
+        if xtype == float:  # sfeh int aswell?
+            value = float(round(value, self.float_decimals))
+            return FloatConstant(value)
+        elif xtype == bool:
+            return BoolConstant(value)
+
+
+class ChooseObservation(Selectable):
+    """
+    func_list, probability_list = self.operators[coolxtype]
+    return np.random.choice(func_list, p=probability_list)
+    """
+
+    def select(self, xtype):
+        """
+        Randomly choosing an operator-label for a given xtype.
+        choose_oparray3 must be given, as they are different between runs.
+        arity can also be set optionally, e.g. for point mutation
+        todo DOUBLE-check if this coolxtype is chosen correctly... better: replace it
+        """
+        return self.observables[xtype]()
+
+    def __init__(self, observations_list):
+        """
+        :param observations_list: list of all observation names (e.g. ['cartVel', 'cartPos'])
+        """
+
+        def observation_select_index(obs_list, max_hist=10):
+            """
+            chooses variables but weighting how old they are.
+            obs_list = ['gain_0', 'gain_1', 'gain_2', 'gain_3', 'gain_4'] -> [0.28, 0.23, 0.19, 0.16, 0.13]
+            sfeh: what about larger steps?
+            e.g. [0, 1, 2, 3] is good, but [0, 5, 10, 15] is baaaad
+            what if variables are not all of same diff?
+            """
+            obs_list = np.delete(obs_list, np.s_[max_hist:])
+            x = len(obs_list)
+            fairness_bonus = np.log(x) + 1  # raising the opportunity of historic data just a little...
+            p = np.geomspace(1 + fairness_bonus, x + fairness_bonus, num=x)[::-1]  # reverse the geometric series
+            p = p / np.sum(p)  # the sum must be equal to 1  # not required with choices
+            return np.random.choice(obs_list, p=p)  # returning a function this time
+
+        obs_prop = []
+        obs_info = {}
+
+        # todo todotodo
+        fams = list(set(observation_get_family_and_time(x)[0] for x in observations_list))
+        for fam in fams:
+            fam_members = sorted([x for x in observations_list if x.fam == fam], key=lambda o: o.obs_index)
+            if len(fam_members) > 1:
+                observations_list.extend([x for x in fam_members])
+                obs_prop.extend(list(observation_select_index(fam_members)))
+                index_minmax = (fam_members[0].obs_index, fam_members[-1].obs_index)
+                for obs in fam_members:
+                    obs.index_minmax = index_minmax
+                    # environment.obs_infos[obs.name] = obs  # todo okay do we need this? :s guess we will find out x.D haha
+                    obs_info[obs.name] = obs
+            else:
+                obs = fam_members[0]
+                obs_info[obs.name] = obs
+                observations_list.append(obs)
+                obs_prop.append(1)  # just one value
+                # todo
+
+        self.observables = {float: lambda: np.random.choice(observations_list, p=obs_prop),
+                            bool: None}  # sfeh None? no  lambda? yeah, not important but still...
+
+
+class TreeBuilder:
+    # class Choosing(Selectable):  # sfeh was
+    """
+    todo delete?
+    """
+
+    """
+    Just a class to prevent referencing all the separate shizzle everytime
+    todo float_decimals?
+
+    ===
+    this was:
+    def choose_op():
+    choose_oparray3 -> operator
+    env_vars.choose_obs -> observation
+    choose_distributions -> constant
+    """
+
+    def __init__(self, operators: ChooseOperators, observations: ChooseObservation, constants: ChooseConstants, root_xtype):
+        self.operators = operators
+        self.observations = observations
+        self.constants = constants
+
+        self.root_xtype = root_xtype
+
+    def choose_any(self, xtype, p_op):
+        """
+
+        """
+        if random.random() < p_op:
+            return self.operators.select(xtype)
+        else:
+            # sfeh add p_term? 0.5?
+            return self.choose_term(xtype)
+
+    def choose_term(self, xtype, p_observation=0.5):
+        """
+        sfeh: float_decimals not required?
+        """
+        # sfeh 50% chance observatio    n/value
+        if random.random() < p_observation:
+            try:
+                return self.observations.select(xtype)
+            except Exception:
+                pass
+
+        return self.constants.select(xtype)
+
+    def choose_op(self, any_xtype):
+        """
+        any_xtype can be a tuple, single type or even None
+        """
+        return self.operators.select(any_xtype)
+
+    def invent_core_depth(self, xtype, depth_max, depth=0, p_op=1):  # todo grow method
+        """
+
+        """
+        if depth < depth_max:
+            label = self.choose_any(xtype, p_op)
+            # set path/id? todo
+            # set depth? todo
+            depth += 1
+            childs = [self.invent_core_depth(xt, depth_max, depth=depth, p_op=p_op) for xt in label.coolxtype[0]]
+            return Node(label, is_fix=False, childs=childs)
+        else:
+            label = self.choose_term(xtype)
+            return Node(label)
+
+    def pop_random(self, call_params, from_origin=False):
+        """
+        Creates random trees for the population
+        """
+        build_spec, size_mode, mean_min_max_var, full_or_grow = helper_evolve_params_branch(call_params)
+
+        if from_origin:
+            """
+            insert a (random) number of branches at the first possible "layer"
+            (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
+            - get these nodes, randomly choose a subset of those
+            - get the amount of nodes we are allowed to add. (max nodes without the core-tree and the nodes we are about to delete)
+            - split the amount of nodes up (randomly) and add these new branches to the tree
+            """
+
+            # layer0_ids = tree_get_mutatable_layer(from_origin, 0)
+            layer0_ids = [1, 2, 3]
+
+            # build_split = []
+            # if 'depth' in size_mode:
+            #     for ii in range(len(layer0_ids)):
+            #         build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
+            #         build_split.append(build_size)
+            #
+            # elif 'nodes' in size_mode:
+            #     build_nodes = choose_build_size(size_mode, mean_min_max_var, force='branch')
+            #     build_split = randomly_split_range(build_nodes, len(layer0_ids))
+            # else:
+            #     raise
+            #
+            # tree = copy.deepcopy(from_origin)
+            # for i in range(len(layer0_ids)):  # insert branches! get layer every time (node ids might have changed)
+            #     layer0_ids = tree_get_mutatable_layer_lv0(tree)
+            #     node_id = layer0_ids[i]
+            #     first_xtype = float  # tree_node_get_xtype(tree, node_id)  # todo
+            #     old_branch = tree_node_get_branch(tree, node_id, karoo=True)
+            #     build_size = build_split[i]
+            #
+            #     # tree = tree(BuildDummy(float))   # todo deprecated
+            #     core = tree.invent_core(size_mode, first_xtype, build_size, full_or_grow)
+            #     tree = tree_insert_subtree(tree, core, old_branch, karoo=True)
+        else:
+            build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')  # depth, in this case
+            # todo
+            # coolcore.evolve_mutate_branch(build_size, choose_oparray3, env_vars.choose_obs,
+            #                                      choose_distributions, float_decimals, size_mode=size_mode, full_or_grow=full_or_grow)
+            # coolcore.evolve_random_tree_depth(size_mode, coolxtype_root, build_size, full_or_grow)
+
+        # return coolcore
+
+
+if __name__ == '__main__':
+    print('Hiho')

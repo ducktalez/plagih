@@ -1,6 +1,8 @@
 """
 sfeh: I think we should get rid of sympy in the long term. A lot of problems are related to sympy.
 
+todo this is probably the reason for the capitalized class names in sympy: return eval(self, a)
+
 This class enrichens the python-core 'sympy'.
 Sympy is used to reduce the functions to their most basic form.
 E. g., it reduces '1+1+a' to 'a+2' and thus saves much computation power.
@@ -255,9 +257,12 @@ class SignX(Function):
 
 def sympy_symbol_defaults(name_list):
     """
-    workaround.
+    sfeh workaround.
     sympy expressions like 'sign(((cartPos * cartVel) ** 151))' take forever.
     ignoring complex numbers with this trick (use this as locals)
+    todo what about those two? still relevant?
+    todo 'sym_reduce': '({} ** {})'
+    todo 'sym_reduce': 'sign(re({}))'
     """
     symloc = {str(x): symbols(str(x), real=True, imaginary=False) for x in name_list}
     return symloc

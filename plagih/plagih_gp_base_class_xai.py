@@ -2,6 +2,7 @@
 
 Functions, that might be addable in the future:
 """
+import copy
 import time
 
 import math
@@ -1176,7 +1177,7 @@ class ExplainableGP(object):
         with Path.open(path_origin_tree, newline='') as file:
             file.read()
         try:
-            origin_cooltree = cooltree_from_labellist(label_list, modify_list=modify_list)
+            origin_cooltree = tree_from_labellist(label_list, modify_list=modify_list)
             expr_sym = origin_cooltree.get_expr_sym()
         except Exception as sympex:
             raise Exception(f'Loaded origin_tree already failed because of: {sympex}')
@@ -1200,7 +1201,7 @@ class ExplainableGP(object):
 
         return origin_cooltree  # self.origin_cooltree = copy.deepcopy(origin_cooltree)
 
-    def tree_eval_fitness_offline_train(self, cooltree: FinalizedNode):
+    def tree_eval_fitness_offline_train(self, cooltree):
         """
         Very fast eval-version that only computes fitness of the train data.
         tree_eval_complete gives more options

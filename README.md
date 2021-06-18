@@ -1,7 +1,10 @@
-# PLAGIH Genetic Programming (Name will change (soon?))
+# Familiar Genetic Programming with TensorFlow
 
 TODO. This read-me is outdated.
 
+## name ideas
+- plagih: plausible genetic improvements
+- 
 ...is a genetic programming framework.
 
 compared to other gp frameworks, this one provides the opportunity to use human written code as basis for the gp-process.

@@ -9,6 +9,14 @@ Example core: [+, 1, [*, [-, 2, 3], 2]] = 1 + ((2-3) * 2)
 
 sfeh: write test that checks all operators for sympificytion (...+branch-combinations, and more?)
 sfeh: use function-types (-> 'kommuttative'?)
+
+    sfeh
+    Check if a valid tree can be rebuilt from its expression
+    sfeh: the expression must currently not be equal.
+    sfeh: The expression can include separate '~' (Usub) nodes, which makes expressions not completely equal
+    A method to check if a tree is type consistant:
+    - do the values in c1, c2, c3 link to correct types?
+    - do the values in c1, c2, c3 link to its parent?
 """
 
 import ast
@@ -18,6 +26,8 @@ import re
 
 import numpy as np
 import tensorflow as tf
+
+from dataclasses import dataclass
 
 from plagih.fitness_kernel import *
 from plagih.sympy_extras import expr_sympify
@@ -32,6 +42,7 @@ tf.compat.v1.disable_eager_execution()  # sfeh damn what was this line good for?
 latex_inline = ['+', '-', '*', '**', '==', '!=', '<', '<=', '>', '>=', 'Andb', 'Orb', 'Xor']
 
 
+@dataclass
 class Node:
     """
     The core is the structure of a plagih gp-tree.
@@ -44,7 +55,13 @@ class Node:
     [1]:    structurally complete/finalized (node_depths correct, node_id set, ...)
     [2]:    including meta-data (fitness, complexity)
     """
+    # todo
+    # arity: int
+    # sym_expr: str
+    # pycode: str
+
     state = None
+
     arity = 0
     coolxtype = (tuple([None]), None)
     tf = None
@@ -53,10 +70,10 @@ class Node:
     latex = ('None', 'None')
 
     def __init__(self, label=None, is_fix=False, childs=None):
-        self.label = label  # todo
+        self.label = label
         self.is_fix = is_fix
         self.childs = childs or []
-        self.state = 0
+        # self.state = 0
 
     def __hash__(self):
         """
@@ -72,7 +89,7 @@ class Node:
         Printing the nodes as nested array structure.
         sfeh: make this statement loadable!
         """
-        print_label = self.label.label
+        print_label = self.label
         if self.is_fix:
             print_label = f'({print_label})'
 
@@ -87,6 +104,12 @@ class Node:
         counting the amount of nodes recursively
         """
         return 1 + sum([len(cc) for cc in self.childs])
+
+    def get_arity(self):
+        return self.label.arity
+
+    def get_xtype(self):
+        return self.label.xtype
 
     def eval_parsimony(self, parsimony_distance, origin_tree=None, weights=None):
         """
@@ -142,7 +165,7 @@ class Node:
         """
         coolnode_list = []
         if not self.is_fix:
-            if coolxtype_out is None or coolxtype_out == self.label.coolxtype[1] and (allow_root or not self.is_root()):
+            if coolxtype_out is None or coolxtype_out == self.coolxtype[1] and (allow_root or not self.is_root()):
                 # crossover requires excluding types that are not matching, and excludes the root node
                 coolnode_list.append(self)
 
@@ -156,20 +179,21 @@ class Node:
         """
         # sfeh: making the root node (todo?)
         if depths == 1:
-            self.label = builder.choose_term(self.label.coolxtype[1])  # sfeh update node plabel
+            self.label = builder.choose_term(self.coolxtype[1])  # sfeh update node plabel
         else:
             depths -= 1
-            self.childs = [Node(builder.choose_any(xt, p_op=1)) for xt in self.label.coolxtype[0]]
+            self.childs = [Node(builder.choose_any(xt, p_op=1)) for xt in self.coolxtype[0]]
 
     def evolve_mutate_filter(self, tb):
         """
         filtger the nodes in a single tree
         """
-        if self.label.arity > 0:
+        if self.arity > 0:
             for cc in self.childs:
                 cc.evolve_mutate_filter(tb)
         else:
-            self.label.mutate_filter()
+            raise  # todo
+            # self.mutate_filter()
 
     def evolve_mutate_point_ROOTNODE(self, tb):
         """
@@ -189,7 +213,7 @@ class Node:
             self.label = tb.choose_op(self.coolxtype)  # Function is same type, same arity
         else:
             print('hhhhh', self.label)
-            self.label = tb.choose_term(self.label.coolxtype[1])  # 3 -> '2f' -> 5
+            self.label = tb.choose_term(self.coolxtype[1])  # 3 -> '2f' -> 5
 
     def evolve_start(self):
         """
@@ -312,7 +336,7 @@ class Node:
         """
 
         """
-        if self.label.arity != len(self.childs):
+        if self.arity != len(self.childs):
             raise
         return True
 
@@ -432,18 +456,30 @@ class Node:
         return
 
 
-class LabelNode(Node):  # todo
+class NodeLabel:  # todo
     """
     Kind of abstract class; Dummy-node that holds a label
     """
-    pass
+
+    expr_sym = None
+
+    def __init__(self, label='None', arity=0, xtype=None):
+        self.label = label
+        self.arity = arity
+        self.xtype = xtype
 
 
-class Operator(LabelNode):
-    pass
+class Operator(NodeLabel):
+    """
+    operator nodes (+, +, *, /, sin(), sign(), ...)
+    inner nodes of a tree
+    """
+
+    def __init__(self):
+        super().__init__()
 
 
-class Terminal(LabelNode):
+class Terminal(NodeLabel):
 
     def mutate_filter(self):
         # todo? ...only for terminal nodes
@@ -451,7 +487,7 @@ class Terminal(LabelNode):
 
 
 class Constant(Terminal):
-    pass
+    arity = 0
 
 
 class Observation(Terminal):
@@ -464,6 +500,7 @@ class Observation(Terminal):
 
     def __init__(self, label, xtype=float):
         # todo coolxtype_out=float
+        super().__init__(label)
         self.label = label
         self.fam, self.obs_index, _ = observation_get_family_and_time(label, none_return=None)  # remove this self.prelabel
         self.xtype = xtype
@@ -486,10 +523,11 @@ class ObservationIndex(Observation):
     """
 
     """
+
     def __init__(self, label, xtype=float, obs_indizes=None):
         super().__init__(label, xtype)
         self.obs_indizes = obs_indizes
-        latex = f'\\text{{{self.fam}}}_{{{self.obs_index}}}'   # remove this {self.prelabel}
+        latex = f'\\text{{{self.fam}}}_{{{self.obs_index}}}'  # remove this {self.prelabel}
         self.latex = (latex, latex)  # remove this {self.prelabel}
 
     def mutate_filter(self):
@@ -528,7 +566,7 @@ class FloatConstant(Constant):
     coolxtype = (tuple([]), float)
 
     def __init__(self, label):
-        self.label = label
+        super().__init__(label)
         self.latex = (f'{label:.3f}', f'{label:.3f}')
         self.sym_str = label
         self.pycode = label
@@ -546,11 +584,12 @@ class BoolConstant(Constant):
     """
 
     """
-    arity = 0
     coolxtype = (tuple([]), bool)
     tf_type = tf.bool
 
     def __init__(self, label):
+        super().__init__(label)
+        self.label = label
         self.latex = (f'{label}', f'{label}')
         self.sym_str = label
         self.pycode = label
@@ -579,6 +618,9 @@ class Add(Operator):
     sym_str = '({} + {})'
     pycode = '({}+{})'
     coolxtype = (tuple([float, float]), float)
+
+    def __init__(self):
+        super().__init__()
 
 
 class Subtract(Operator):
@@ -964,163 +1006,8 @@ op = {  # 'f2f': Classical mathematical operators, evaluate from float to float
     'Maxi': Max,  # with forced arity-2
 }
 
-# sfeh https://docs.sympy.org/latest/tutorial/manipulation.html
-
-# import tensorflow as tf; import ast; import textwrap
-# print(', '.join(['[\'{}\', {:.2f}]'.format(v['label'], 1/v['coolxtype': ([], []), 'c-weight']) for k, v in op_what.items()]))  # retreive a list with all non-ast ops:
-
-
-def choose_term(coolxtype_out, choose_obs, choose_distributions, float_decimals):
-    """
-
-    """
-
-    # sfeh 50% chance observation/value
-    if random.choice(['obs', 'distrib']) == 'obs' and choose_obs[coolxtype_out]:
-        obs = choose_obs[coolxtype_out]()
-        # print('SAME???', obs.name, obs.label)  # sfeh
-        return obs
-    else:
-        dist_fun = random.choice(choose_distributions[coolxtype_out])
-        value = dist_fun()
-        if coolxtype_out == float:  # sfeh int aswell?
-            value = float(round(value, float_decimals))
-            const = FloatConstant(value)
-        elif coolxtype_out == bool:
-            const = BoolConstant(value)
-        else:
-            raise Exception('ASDASD NOOO WHYY')
-        return const
-
-
-def helper_evolve_params_branch(call_params, tree_depth_max=10, parsimony_max=30):
-    """
-    The call parameters in the evolution file need to be adjusted
-    delete if possible
-    """
-    build_spec = call_params.get('build_spec')
-
-    size_mode = build_spec['size_mode']
-
-    mean_min_max_var = build_spec.get('mean_min_max_var')  # (base, min, max, normal_distrib)
-    mean_min_max_var = list(mean_min_max_var)
-    if 'depth' in size_mode:
-        max_dummy = tree_depth_max
-    elif 'nodes' in size_mode:
-        max_dummy = parsimony_max
-    else:
-        raise
-
-    if mean_min_max_var[2] is None:
-        mean_min_max_var[2] = max_dummy
-    else:
-        mean_min_max_var[2] = min(mean_min_max_var[2], parsimony_max)
-    mean_min_max_var = tuple(mean_min_max_var)
-
-    full_or_grow = build_spec['full_or_grow']
-
-    return build_spec, size_mode, mean_min_max_var, full_or_grow
-
-
-def randomly_split_range(range_max, num_splits):
-    """
-    todo reuse this
-    split a integer range randomly into parts
-    [1..100] -> [33, 15, 52] (0 is allowed)
-    """
-
-    # tmp_distributions = random.sample(range(1, range_max), num_splits)
-    # d_sum = sum(tmp_distributions)
-    # d_list = [int(round(range_max*(x/d_sum), 0)) for x in tmp_distributions]
-    sample_dist = np.random.rand(num_splits)  # [0.2, 0.8, 0.5] -> random samples
-    d_sum = sum(sample_dist)  # 1.5
-    sample_dist = [x / d_sum for x in sample_dist]  # [0.12, 0.6, 0.28] -> fittet to sum of 1
-    sample_dist = [x * range_max for x in sample_dist]  # [12, 60, 28] -> for 100 nodes
-    sample_dist = [int(round(x, 0)) for x in sample_dist]  # make them useable ints
-
-    # sfeh workaround, this makes exactly the correct range by changing the most extreme entry
-    helper_diff = range_max - sum(sample_dist)
-    if sum(sample_dist) < range_max:
-        smallest = sample_dist.index(min(sample_dist))
-        sample_dist[smallest] += helper_diff
-
-    if sum(sample_dist) > range_max:
-        greatest = sample_dist.index(max(sample_dist))
-        sample_dist[greatest] += helper_diff
-
-    return sample_dist
-
-
-def shuffle_tree_construction(size):
-    """
-    todo reuse this
-    """
-    terms = random.randint(0, size - 1)  # -1 because at least one 'func'
-    cons_buf = ['term'] * terms + ['func'] * (size - terms)
-    np.random.shuffle(cons_buf)
-    return cons_buf
-
-
-def choose_build_size(size_mode, mean_min_max_var, tree=None, nodepath=None, force=None):
-    """
-    delete this?
-    Very unified utility function that returns the required tree size from the following parameters
-    # branch_nodes, branch_depth, tree_depth, tree_nodes
-
-    It can either return a tree depth or an amount of tree nodes
-    """
-    mean, size_min, size_max, size_variance = mean_min_max_var
-    if size_mode == 'branch_nodes' or size_mode == 'branch_depth' or force == 'branch':
-        relative_size = 0
-    else:
-        if tree and nodepath:
-            pass
-        else:
-            raise Exception('No tree or node is given for computing the relative size')
-
-        if size_mode == 'tree_depth':
-            tree_size = tree.core.childs_depth_max
-            print('tree_size = tree.core.childs_depth_max:', tree_size)
-            if tree_size is None and 'delete_this':
-                raise Exception('ASDASDASD')
-            node_size = len(nodepath)
-        elif size_mode == 'tree_nodes':
-            tree_size = len(tree)
-            print('len(tree)?:', len(tree))
-            node_size = len(tree.get_nodepath(nodepath))
-            print('tree.get_nodepath(nodepath)?:', tree.get_nodepath(nodepath))
-        else:
-            raise Exception('Sizemode not known?')
-
-        relative_size = tree_size - node_size
-        print('asdasd', relative_size)
-
-    build_size = int(random.normalvariate(mean, size_variance))
-    if size_max is not None:
-        build_size = min(size_max - relative_size, build_size)
-    build_size = max(size_min, build_size)
-
-    return int(build_size)
-
-
-def tree_check_rebuild(tree):
-    """
-    sfeh
-    Check if a valid tree can be rebuilt from its expression
-    sfeh: the expression must currently not be equal.
-    sfeh: The expression can include separate '~' (Usub) nodes, which makes expressions not completely equal
-    A method to check if a tree is type consistant:
-    - do the values in c1, c2, c3 link to correct types?
-    - do the values in c1, c2, c3 link to its parent?
-    """
-    return True
-
 
 if __name__ == '__main__':
-
-    for k, v in op.items():
-        print(f'{k}\t: {v}')
-
     hugo = ['Ifte',
             ['Orb',
              ['<', ['cartPos', -1]],
@@ -1140,10 +1027,13 @@ if __name__ == '__main__':
     trexpr2 = '(Ifte, (cartVel < 0), 0, 2)'
     # trexpr = plagih_sympify(trexpr)
 
-    ops = ChooseOperators()
-    inputs = ChooseObservation(['a', 'b'])
-    consts = ChooseConstants()
+    # ops = ChooseOperators()
+    # inputs = ChooseObservation(['a', 'b'])
+    # consts = ChooseConstants()
+    #
+    # builder = TreeBuilder(ops, inputs, consts, float)
+    # tree = builder.invent_core_depth(float, 2)  # todo
 
-    builder = TreeBuilder(ops, inputs, consts, float)
-    tree = builder.invent_core_depth(float, 3)  # todo
-    print(tree)
+    x = Max()
+    print(x)
+

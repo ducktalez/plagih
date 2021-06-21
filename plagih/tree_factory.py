@@ -1,19 +1,21 @@
 """
 The factory to create trees
 """
+import random
+
 import numpy as np
 import logging
 from pathlib import Path
 
 from plagih.file_interaction import yaml_load
 from plagih.plagih_tree import *
-from plagih.plagih_tree import Node
 
 
 class Selectable:
     """
 
     """
+
     def select(self, xtype):
         return
 
@@ -31,7 +33,8 @@ class ChooseOperators(Selectable):
         def check_operator_pool(operator_pool):
             """
             Check if the user-specified loaded operators allow closure
-            operator_pool: list with operators and their weight of being selected
+            (either float-only/bool only or all 4 types of operators)
+            @:param operator_pool: list with operators and their weight of being selected
             """
             # sfeh dunno if that works... 2f not in x
             opxtypes = [oper.coolxtype for oper in operator_pool.keys()]
@@ -51,7 +54,7 @@ class ChooseOperators(Selectable):
                              ['Square', 0.75], ['**', 0.25],
                              ['Abs', 0.5], ['sign', 0.5], ['Round', 0.5],  # sfeh stop chain of arity-1 op in buid method?
                              ['sqrt', 0.25],
-                             # ['log', 0.1], ['log1p', 0.1],  # sfeh
+                             # ['log', 0.1], ['log1p', 0.1],
                              ['sin', 0.5],  # ['tan', 0.1], ['cos', 0.33], ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
                              ['tanh', 0.2],
                              ['Andb', 1], ['Orb', 1], ['Notb', 0.5], ['Xor', 1],
@@ -113,14 +116,13 @@ class ChooseConstants(Selectable):
                              lambda: random.randint(1, 20)],  # 0 has actually no purpose (except as being an action)
                      bool: [lambda: random.choice([True, False])]}
 
-    def __init__(self, float_decimals=6, path_distrib=None, data_train=None, n_samples=100):
+    def __init__(self, float_decimals=6, path_distrib=Path.cwd(), data_train=None, n_samples=100):
         """
-
+        todo path.cwd() is no good input
         """
         self.float_decimals = float_decimals
-        if Path.is_file(path_distrib):
+        try:
             lambdadist_as_string = yaml_load(path_distrib)
-
             # todo how should distributions be loaded?
             # e.g. sample_amount = lambdadist_as_string.get('observed_floats')
             self.terminal_distributions = {float: [], bool: []}
@@ -128,7 +130,7 @@ class ChooseConstants(Selectable):
             self.terminal_distributions[bool].extend([eval(x) for x in lambdadist_as_string[bool]])
 
             # self.sample_floats_from_data(env_vars_obs_infos, data_train, n_samples=n_samples)  # todo
-        else:
+        except Exception:
             logging.info('Opt-in not specified: Distributions-file (for random leaf-node constants) does not exist. Using default set.')
 
     def sample_floats_from_data(self, env_vars_obs_infos, data_train, n_samples=100):
@@ -169,7 +171,7 @@ class ChooseObservation(Selectable):
         """
         return self.observables[xtype]()
 
-    def __init__(self, observations_list):
+    def __init__(self, observations_list, todo=False):
         """
         :param observations_list: list of all observation names (e.g. ['cartVel', 'cartPos'])
         """
@@ -192,24 +194,23 @@ class ChooseObservation(Selectable):
         obs_prop = []
         obs_info = {}
 
-        # todo todotodo
-        fams = list(set(observation_get_family_and_time(x)[0] for x in observations_list))
-        for fam in fams:
-            fam_members = sorted([x for x in observations_list if x.fam == fam], key=lambda o: o.obs_index)
-            if len(fam_members) > 1:
-                observations_list.extend([x for x in fam_members])
-                obs_prop.extend(list(observation_select_index(fam_members)))
-                index_minmax = (fam_members[0].obs_index, fam_members[-1].obs_index)
-                for obs in fam_members:
-                    obs.index_minmax = index_minmax
-                    # environment.obs_infos[obs.name] = obs  # todo okay do we need this? :s guess we will find out x.D haha
+        if todo:
+            for fam in list(set(observation_get_family_and_time(x)[0] for x in observations_list)):
+                fam_members = sorted([x for x in observations_list if x.fam == fam], key=lambda o: o.obs_index)
+                if len(fam_members) > 1:
+                    observations_list.extend([x for x in fam_members])
+                    obs_prop.extend(list(observation_select_index(fam_members)))
+                    index_minmax = (fam_members[0].obs_index, fam_members[-1].obs_index)
+                    for obs in fam_members:
+                        obs.index_minmax = index_minmax
+                        # environment.obs_infos[obs.name] = obs  # todo okay do we need this? :s guess we will find out x.D haha
+                        obs_info[obs.name] = obs
+                else:
+                    obs = fam_members[0]
                     obs_info[obs.name] = obs
-            else:
-                obs = fam_members[0]
-                obs_info[obs.name] = obs
-                observations_list.append(obs)
-                obs_prop.append(1)  # just one value
-                # todo
+                    observations_list.append(obs)
+                    obs_prop.append(1)  # just one value
+                    # todo
 
         self.observables = {float: lambda: np.random.choice(observations_list, p=obs_prop),
                             bool: None}  # sfeh None? no  lambda? yeah, not important but still...
@@ -217,10 +218,6 @@ class ChooseObservation(Selectable):
 
 class TreeBuilder:
     # class Choosing(Selectable):  # sfeh was
-    """
-    todo delete?
-    """
-
     """
     Just a class to prevent referencing all the separate shizzle everytime
     todo float_decimals?
@@ -279,10 +276,10 @@ class TreeBuilder:
             # set depth? todo
             depth += 1
             childs = [self.invent_core_depth(xt, depth_max, depth=depth, p_op=p_op) for xt in label.coolxtype[0]]
-            return Node(label, is_fix=False, childs=childs)
+            return Node(label=label, is_fix=False, childs=childs)
         else:
             label = self.choose_term(xtype)
-            return Node(label)
+            return Node(label=label)
 
     def pop_random(self, call_params, from_origin=False):
         """
@@ -333,6 +330,145 @@ class TreeBuilder:
             # coolcore.evolve_random_tree_depth(size_mode, coolxtype_root, build_size, full_or_grow)
 
         # return coolcore
+
+
+# sfeh https://docs.sympy.org/latest/tutorial/manipulation.html
+
+# import tensorflow as tf; import ast; import textwrap
+# print(', '.join(['[\'{}\', {:.2f}]'.format(v['label'], 1/v['coolxtype': ([], []), 'c-weight']) for k, v in op_what.items()]))  # retreive a list with all non-ast ops:
+
+
+# def choose_term(coolxtype_out, choose_obs, choose_distributions, float_decimals):
+#     """
+#
+#     """
+#
+#     # sfeh 50% chance observation/value
+#     if random.choice(['obs', 'distrib']) == 'obs' and choose_obs[coolxtype_out]:
+#         obs = choose_obs[coolxtype_out]()
+#         # print('SAME???', obs.name, obs.label)  # sfeh
+#         return obs
+#     else:
+#         dist_fun = random.choice(choose_distributions[coolxtype_out])
+#         value = dist_fun()
+#         if coolxtype_out == float:  # sfeh int aswell?
+#             value = float(round(value, float_decimals))
+#             const = FloatConstant(value)
+#         elif coolxtype_out == bool:
+#             const = BoolConstant(value)
+#         else:
+#             raise Exception('ASDASD NOOO WHYY')
+#         return const
+
+
+def helper_evolve_params_branch(call_params, tree_depth_max=10, parsimony_max=30):
+    """
+    The call parameters in the evolution file need to be adjusted
+    delete if possible
+    """
+    build_spec = call_params.get('build_spec')
+
+    size_mode = build_spec['size_mode']
+
+    mean_min_max_var = build_spec.get('mean_min_max_var')  # (base, min, max, normal_distrib)
+    mean_min_max_var = list(mean_min_max_var)
+    if 'depth' in size_mode:
+        max_dummy = tree_depth_max
+    elif 'nodes' in size_mode:
+        max_dummy = parsimony_max
+    else:
+        raise
+
+    if mean_min_max_var[2] is None:
+        mean_min_max_var[2] = max_dummy
+    else:
+        mean_min_max_var[2] = min(mean_min_max_var[2], parsimony_max)
+    mean_min_max_var = tuple(mean_min_max_var)
+
+    full_or_grow = build_spec['full_or_grow']
+
+    return build_spec, size_mode, mean_min_max_var, full_or_grow
+
+
+def randomly_split_range(range_max, num_splits):
+    """
+    todo reuse this
+    split a integer range randomly into parts
+    [1..100] -> [33, 15, 52] (0 is allowed)
+    """
+
+    # tmp_distributions = random.sample(range(1, range_max), num_splits)
+    # d_sum = sum(tmp_distributions)
+    # d_list = [int(round(range_max*(x/d_sum), 0)) for x in tmp_distributions]
+    sample_dist = np.random.rand(num_splits)  # [0.2, 0.8, 0.5] -> random samples
+    d_sum = sum(sample_dist)  # 1.5
+    sample_dist = [x / d_sum for x in sample_dist]  # [0.12, 0.6, 0.28] -> fittet to sum of 1
+    sample_dist = [x * range_max for x in sample_dist]  # [12, 60, 28] -> for 100 nodes
+    sample_dist = [int(round(x, 0)) for x in sample_dist]  # make them useable ints
+
+    # sfeh workaround, this makes exactly the correct range by changing the most extreme entry
+    helper_diff = range_max - sum(sample_dist)
+    if sum(sample_dist) < range_max:
+        smallest = sample_dist.index(min(sample_dist))
+        sample_dist[smallest] += helper_diff
+
+    if sum(sample_dist) > range_max:
+        greatest = sample_dist.index(max(sample_dist))
+        sample_dist[greatest] += helper_diff
+
+    return sample_dist
+
+
+def shuffle_tree_construction(size):
+    """
+    todo reuse this
+    """
+    terms = random.randint(0, size - 1)  # -1 because at least one 'func'
+    cons_buf = ['term'] * terms + ['func'] * (size - terms)
+    np.random.shuffle(cons_buf)
+    return cons_buf
+
+
+def choose_build_size(size_mode, mean_min_max_var, tree=None, nodepath=None, force=None):
+    """
+    delete this?
+    Very unified utility function that returns the required tree size from the following parameters
+    # branch_nodes, branch_depth, tree_depth, tree_nodes
+
+    It can either return a tree depth or an amount of tree nodes
+    """
+    mean, size_min, size_max, size_variance = mean_min_max_var
+    if size_mode == 'branch_nodes' or size_mode == 'branch_depth' or force == 'branch':
+        relative_size = 0
+    else:
+        if tree and nodepath:
+            pass
+        else:
+            raise Exception('No tree or node is given for computing the relative size')
+
+        if size_mode == 'tree_depth':
+            tree_size = tree.core.childs_depth_max
+            print('tree_size = tree.core.childs_depth_max:', tree_size)
+            if tree_size is None and 'delete_this':
+                raise Exception('ASDASDASD')
+            node_size = len(nodepath)
+        elif size_mode == 'tree_nodes':
+            tree_size = len(tree)
+            print('len(tree)?:', len(tree))
+            node_size = len(tree.get_nodepath(nodepath))
+            print('tree.get_nodepath(nodepath)?:', tree.get_nodepath(nodepath))
+        else:
+            raise Exception('Sizemode not known?')
+
+        relative_size = tree_size - node_size
+        print('asdasd', relative_size)
+
+    build_size = int(random.normalvariate(mean, size_variance))
+    if size_max is not None:
+        build_size = min(size_max - relative_size, build_size)
+    build_size = max(size_min, build_size)
+
+    return int(build_size)
 
 
 if __name__ == '__main__':

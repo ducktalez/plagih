@@ -343,7 +343,7 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
     for (parsim, fitness, tree) in pareto:
         agent_name = f'{parsim:.0f}'
         print(f'Evaluating MC Agent: {parsim:.0f}')
-        pycode = tree.get_pycode()
+        pycode = tree.eval_pycode()
         mc_gent = DummyMcAgent(pycode)
         try:
             # bur1, bur2, avg_reward, fails = bur_lut.get(parsim, (None, None, None, None))

@@ -2,8 +2,6 @@
 
 """
 
-from plagih.fitness_kernel import *
-
 import random
 import tensorflow
 import ast
@@ -48,6 +46,10 @@ class NodeLabel:  # todo
     #     self.sym_expr = kwargs.get('expr_sym', None)
     #     self.pycode = kwargs.get('pycode', (tuple([None]), None))
     #     self.latex = kwargs.get('latex', None)
+
+    # def __str__(self):
+    # # sfeh currently not (really) working. returns the subclass.
+    #     return self.expr
 
     def mutate_filter(self):
         """
@@ -100,7 +102,7 @@ class Observation(Terminal):
     todo discuss: labels should not have a sign (-pos); just pos
     # self.name = expr if expr[0] != '-' else expr[1:]  # sfeh delete?
     """
-    tf_type = tensorflow.float32  # todo yeah...
+    # tf_type = tensorflow.float32  # todo yeah...
 
     def __init__(self, expr, *args, **kwargs):
         # todo xtype_out=float
@@ -609,4 +611,4 @@ if __name__ == '__main__':
         print('operators:', oo, ocls.expr, ocls.xtype)
 
     for x in [FloatConstant(0.44), BoolConstant(True)]:
-        print(f'x: {x}: {x.expr}, {x.xtype}')
+        print(f'x: {x.expr}, {x.xtype}')

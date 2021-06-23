@@ -10,18 +10,13 @@ import time
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from benchmarks.ib.combined_runs import *
 from benchmarks.mc.agents.quick_eval import auto_evaluate_run_end
+from benchmarks.ib.combined_runs import *
 from plagih.file_interaction import *
 from plagih.plagih_config import *
-from plagih.tree_factory import ChooseConstants
 from plagih.viz_with_latex import *
 
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
-
-
-# def mp_dummy(arg, **kwarg):
-#     return Nu.e2(arg, **kwarg)
 
 
 class FileLocations:
@@ -105,8 +100,8 @@ class ExplainableGP(object):
         self.tb = TreeBuilder(choose_ops, choose_observations, choose_distributions, self.conf.float_decimals)
 
         # Evaluating kernel (that uses tensorflow)
-        self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=self.conf.tf_device_log,
-                                                  allow_soft_placement=True)  # TF device usage logging (for debugging) (default false. I lately used it to check if the GPU is used)
+        self.tf_config = tensorflow.compat.v1.ConfigProto(log_device_placement=self.conf.tf_device_log,
+                                                          allow_soft_placement=True)  # TF device usage logging (for debugging) (default false. I lately used it to check if the GPU is used)
         self.tf_config.gpu_options.allow_growth = True
         self.print_type = self.conf.print_type  # sfeh hmmm remove
 
@@ -159,7 +154,7 @@ class ExplainableGP(object):
 
             Example entry of the list could be:
             {'tag': 'BranchDF', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-            'custom_params': {'build_spec': {'size_ref': 'branch_depth', 'mean': 3, 'min': 1, 'max': 5, 'gauss_var': 0.8, 'method': 'full'}}},
+            'custom_params': {'build_max': {'size_ref': 'branch_depth', 'mean': 3, 'min': 1, 'max': 5, 'gauss_var': 0.8, 'method': 'full'}}},
             """
 
             for tag, evolve_spec in evolve_dict.items():
@@ -187,15 +182,15 @@ class ExplainableGP(object):
                 'Point': {'evolve_name': 'mutate point', 'evolve_rate': 0.05, 'custom_params': {}},
 
                 'BranchDF': {'evolve_name': 'mutate branch', 'evolve_rate': 0.00,
-                             'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 4, 0.8), 'full_or_grow': 'full'}}},
+                             'custom_params': {'build_max': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 4, 0.8), 'full_or_grow': 'full'}}},
                 'BranchDG': {'evolve_name': 'mutate branch', 'evolve_rate': 0.00,
-                             'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 5, 1), 'full_or_grow': 'grow'}}},
+                             'custom_params': {'build_max': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 5, 1), 'full_or_grow': 'grow'}}},
                 'BranchNF': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                             'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 12, 3), 'full_or_grow': 'full'}}},
+                             'custom_params': {'build_max': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 12, 3), 'full_or_grow': 'full'}}},
                 'BranchNG': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                             'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 12, 3), 'full_or_grow': 'grow'}}},
+                             'custom_params': {'build_max': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 12, 3), 'full_or_grow': 'grow'}}},
                 'BranchShrink': {'evolve_name': 'mutate branch', 'evolve_rate': 0.0,
-                                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (1, 1, 1, 0), 'full_or_grow': 'grow'}}},
+                                 'custom_params': {'build_max': {'size_mode': 'branch_nodes', 'mean_min_max_var': (1, 1, 1, 0), 'full_or_grow': 'grow'}}},
 
                 'FilterBO': {'evolve_name': 'filter optimize', 'evolve_rate': 0.05, 'tourn_size': 5,
                              'custom_params': {'mode': 'branch', 'filter_observations': True}},
@@ -211,13 +206,13 @@ class ExplainableGP(object):
 
                 # Random (25%)
                 'Rand1': {'evolve_name': 'random trees', 'evolve_rate': 0.05,
-                          'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 5, 1), 'full_or_grow': 'full'}}},
+                          'custom_params': {'build_max': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 5, 1), 'full_or_grow': 'full'}}},
                 'Rand2': {'evolve_name': 'random trees', 'evolve_rate': 0.00,
-                          'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1), 'full_or_grow': 'grow'}}},
+                          'custom_params': {'build_max': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1), 'full_or_grow': 'grow'}}},
                 'Rand3': {'evolve_name': 'random trees', 'evolve_rate': 0.15,
-                          'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (10, 1, None, 5), 'full_or_grow': 'grow'}}},
+                          'custom_params': {'build_max': {'size_mode': 'tree_nodes', 'mean_min_max_var': (10, 1, None, 5), 'full_or_grow': 'grow'}}},
                 'Rand4': {'evolve_name': 'random trees', 'evolve_rate': 0.15,
-                          'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (10, 1, None, 5), 'full_or_grow': 'full'}}},  # param 'max' can be None
+                          'custom_params': {'build_max': {'size_mode': 'tree_nodes', 'mean_min_max_var': (10, 1, None, 5), 'full_or_grow': 'full'}}},  # param 'max' can be None
             }
 
         evolve_loop = evolve_safety_update(evolve_loop)
@@ -227,17 +222,17 @@ class ExplainableGP(object):
                 evolve_random = self.evolve_list_random['from_origin']
             except:
                 evolve_random = {'Rand3o': {'evolve_name': 'random trees', 'evolve_rate': 1.00,
-                                            'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 3, None, 4), 'full_or_grow': 'full'}}}}
+                                            'custom_params': {'build_max': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 3, None, 4), 'full_or_grow': 'full'}}}}
         else:
             try:
                 evolve_random = self.evolve_list_random['from_scratch']
             except:
                 evolve_random = {'Rand1': {'evolve_name': 'random trees', 'evolve_rate': 0.30,
-                                           'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (3.5, 2, 5, 1), 'full_or_grow': 'full'}}},
+                                           'custom_params': {'build_max': {'size_mode': 'tree_depth', 'mean_min_max_var': (3.5, 2, 5, 1), 'full_or_grow': 'full'}}},
                                  'Rand2': {'evolve_name': 'random trees', 'evolve_rate': 0.30,
-                                           'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 2, 6, 1), 'full_or_grow': 'grow'}}},
+                                           'custom_params': {'build_max': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 2, 6, 1), 'full_or_grow': 'grow'}}},
                                  'Rand3': {'evolve_name': 'random trees', 'evolve_rate': 0.40,
-                                           'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (10, 3, None, 4), 'full_or_grow': 'full'}}}
+                                           'custom_params': {'build_max': {'size_mode': 'tree_nodes', 'mean_min_max_var': (10, 3, None, 4), 'full_or_grow': 'full'}}}
                                  }
         evolve_random = evolve_safety_update(evolve_random)
 
@@ -510,7 +505,7 @@ class ExplainableGP(object):
                     full_or_grow = build_spec.get('full_or_grow') or random.choice(['full', 'grow'])
                     tree = self.pop_selection_tournament(tourn_size)
                     cool_build_size = choose_build_size(size_mode, mean_min_max_var, tree=tree)
-                    tree.evolve_mutate_branch(cool_build_size, self.tb, size_mode=size_mode, full_or_grow=full_or_grow)
+                    tree.evolve_mutate_branch_depth(cool_build_size, self.tb, size_mode=size_mode, full_or_grow=full_or_grow)
                     # sfeh delete this?
                     # new_tree = tree_prune_depth(new_tree, self.conf.tree_depth_max, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
                     # new_tree.meta.last_evolution = tag
@@ -532,23 +527,23 @@ class ExplainableGP(object):
                     # 1. two parents
                     # 2. search nodes for left and right that can be exchanged. convert_needed
                     try:
-                        left_parent_nodes = left_parent.get_mutatable_nodes(allow_root=False)
+                        left_parent_nodes = left_parent.eval_mutatable_nodes(allow_root=False)
                         left_rnd = random.choice(left_parent_nodes)
                         swap_xtype_out = left_rnd.label.xtype[1]
-                        right_parent_nodes = right_parent.get_mutatable_nodes(xtype_out=swap_xtype_out)
+                        right_parent_nodes = right_parent.eval_mutatable_nodes(xtype_out=swap_xtype_out)
                         if right_parent_nodes:
                             right_rnd = random.choice(right_parent_nodes)
                         else:
                             swap_xtype_out = float if swap_xtype_out == bool else bool  # the other swap type now
-                            right_parent_nodes = right_parent.get_mutatable_nodes(allow_root=False, xtype_out=swap_xtype_out)
+                            right_parent_nodes = right_parent.eval_mutatable_nodes(allow_root=False, xtype_out=swap_xtype_out)
                             right_rnd = random.choice(right_parent_nodes)
-                            left_rnd = left_parent.get_mutatable_nodes(xtype_out=swap_xtype_out)
+                            left_rnd = left_parent.eval_mutatable_nodes(xtype_out=swap_xtype_out)
                     except:
                         raise Exception
 
                     # todo deepcopy required??
-                    left_parent.new_core(right_rnd)
-                    right_parent.new_core(left_rnd)
+                    left_parent.replace_with_branch(right_rnd)
+                    right_parent.replace_with_branch(left_rnd)
 
                     left_parent.meta.last_evolution = tag
                     right_parent.meta.last_evolution = tag
@@ -822,7 +817,7 @@ class ExplainableGP(object):
         """
 
         action_bins = self.kernel.histogram_bins(self.env_vars.eval_action.minmax)
-        expr_sym = tree.get_expr_sym()
+        expr_sym = tree.eval_expr_sym()
         used_observations = tree.get_observation_list()
         pairwise_diff = self.kernel.eval_tf(expr_sym, used_observations)['pairwise_diff']
 
@@ -901,7 +896,7 @@ class ExplainableGP(object):
     #     # for (parsim, fitness, tree) in self.pareto:
     #     #     agent_name = f'{self.conf.name}_{parsim:.0f}'
     #     #
-    #     #     agent_as_python = tree.get_pycode()
+    #     #     agent_as_python = tree.eval_pycode()
     #     #     all_agents.append(f"class {agent_name}:\n{complete_function.format(agent_as_python)}")
     #     #     all_agent_names.append(agent_name)
     #     #     all_more_info.append(f"('{agent_name}', {agent_name}(), {parsim}, {fitness})")
@@ -961,7 +956,7 @@ class ExplainableGP(object):
         for (parsim, fitness, tree) in self.pareto:
             # agent_name = f'{self.conf.name}_{parsim:.0f}'
             agent_name = f'{self.conf.name}_{self.env_vars.eval_action.name}_{parsim:.0f}'
-            agent_as_python = tree.get_pycode()
+            agent_as_python = tree.eval_pycode()
             pygents_list.append([parsim, float(fitness), agent_name, agent_as_python])
 
         yaml_dump(self.root_dir / 'pycode_list.yaml', pygents_list, print_type=self.print_type)
@@ -993,7 +988,7 @@ class ExplainableGP(object):
         The call parameters in the evolution file need to be adjusted
         delete if possible
         """
-        build_spec = call_params.get('build_spec')
+        build_spec = call_params.get('build_max')
 
         size_mode = build_spec['size_mode']
 
@@ -1169,7 +1164,7 @@ class ExplainableGP(object):
             file.read()
         try:
             origin_tree = tree_from_labellist(label_list, modify_list=modify_list)
-            expr_sym = origin_tree.get_expr_sym()
+            expr_sym = origin_tree.eval_expr_sym()
         except Exception as sympex:
             raise Exception(f'Loaded origin_tree already failed because of: {sympex}')
 
@@ -1471,6 +1466,7 @@ class ExplainableGP(object):
             time_now = time.strftime("%d.%m %H:%M", time.localtime())
             print(f'[{time_now}] {text}')
         return
+
 
 # def activate_dataset(path_data, action_name):
 #     """

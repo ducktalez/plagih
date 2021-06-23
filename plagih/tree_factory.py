@@ -1,6 +1,7 @@
 """
 The factory to create trees
 """
+import copy
 import random
 
 import numpy as np
@@ -75,6 +76,8 @@ class ChooseOperators(Selectable):
             # None: [[], []],
             float: [[], []],  # 2f
             bool: [[], []],  # 2b
+            (tuple([]), float): [[], []],  # todo?  replacing float
+            (tuple([]), float): [[], []],  # todo?
             (tuple([float]), float): [[], []],  # x**2, sqrt, log, sin, ...
             (tuple([float, float]), float): [[], []],  # +, -, *, /, **, ...
             (tuple([bool, float, float]), float): [[], []],  # Ifte
@@ -83,33 +86,40 @@ class ChooseOperators(Selectable):
             (tuple([float]), bool): [[], []],  # dummy, currently no such operator
             (tuple([bool, bool]), bool): [[], []],  # and, or, xor, ...
         }
-        for xlabel, prob in operator_pool.items():
-            # choose_oparray[None][0].append(xlabel)  # all operators # delete this? none required?
-            # choose_oparray[None][1].append(prob)
-            choose_oparray[xlabel.xtype][0].append(xlabel)  # point mutations
-            choose_oparray[xlabel.xtype][1].append(prob)
-            choose_oparray[xlabel.xtype[1]][0].append(xlabel)  # construction of trees
-            choose_oparray[xlabel.xtype[1]][1].append(prob)
+        for label, prob in operator_pool.items():
+            # tuple-xtype (point mutations)
+            choose_oparray[label.xtype][0].append(label)
+            choose_oparray[label.xtype][1].append(prob)
+            # float/bool (construction of trees)
+            choose_oparray[label.xtype[1]][0].append(label)
+            choose_oparray[label.xtype[1]][1].append(prob)
 
         for o, p in choose_oparray.items():
             # normalizing the probabilities in every case to a sum of 1 (100%)
             # (saving some very little time...)
-            choose_oparray[o][1] = [x / sum(p[1]) for x in p[1]]
+            if p[0]:
+                choose_oparray[o][1] = [x / sum(p[1]) for x in p[1]]
+            else:
+                pass  # todo delete line?
 
-        self.choose_oparray = {xtype: lambda: np.random.choice(x[0], p=x[1]) for xtype, x in choose_oparray.items()}
+        self.choose_oparray = {}
+        for xtype, x in choose_oparray.items():
+            # self.choose_oparray[xtype] = lambda: np.random.choice(x[0], p=x[1])  # "seloplam" faster, but less readable version
+            self.choose_oparray[xtype] = (x[0], x[1])
 
     def select(self, xtype):
         """
 
         """
-        return self.choose_oparray[xtype]()
+        return np.random.choice(self.choose_oparray[xtype][0], p=self.choose_oparray[xtype][1])
+        # return self.choose_oparray[xtype]()  # "seloplam"
 
 
 class ChooseConstants(Selectable):
     """
 
     """
-    # todo random with numpy?
+    # sfeh random with numpy?
     distributions = {float: [lambda: random.normalvariate(0, 1),
                              lambda: random.normalvariate(1, 1),
                              lambda: random.normalvariate(10, 5),
@@ -129,17 +139,17 @@ class ChooseConstants(Selectable):
             self.terminal_distributions[float].extend([eval(x) for x in lambdadist_as_string[float]]),
             self.terminal_distributions[bool].extend([eval(x) for x in lambdadist_as_string[bool]])
 
-            # self.sample_floats_from_data(env_vars_obs_infos, data_train, n_samples=n_samples)  # todo
+            # self.sample_floats_from_data(obs_infos, data_train, n_samples=n_samples)  # todo
         except Exception:
             logging.info('Opt-in not specified: Distributions-file (for random leaf-node constants) does not exist. Using default set.')
 
-    def sample_floats_from_data(self, env_vars_obs_infos, data_train, n_samples=100):
+    def sample_floats_from_data(self, obs_infos, data_train, n_samples=100):
         """
         ONLY floats, because ...do you really want to load Boolean True/False samples??
         (okay, it might make sense as it better represents the actual distribution- NO FUCK IT.)
         """
-        if env_vars_obs_infos is not None:
-            obsnames = env_vars_obs_infos.observables[float].keys()
+        if obs_infos is not None:
+            obsnames = obs_infos.observables[float].keys()
             obs_samples = data_train[obsnames].to_numpy().flatten()
             obs_samples = np.random.choice(obs_samples, size=n_samples)
             self.terminal_distributions[float].extend([lambda: random.choice(obs_samples)]),  # take one
@@ -159,7 +169,7 @@ class ChooseConstants(Selectable):
 class ChooseObservation(Selectable):
     """
     func_list, probability_list = self.operators[xtype]
-    return np.random.choice(func_list, p=probability_list)
+    return np.random.choice(func_list, p_op=probability_list)
     """
 
     def select(self, xtype):
@@ -250,8 +260,8 @@ class TreeBuilder:
     def choose_term(self, xtype, p_observation=0.5):
         """
         sfeh: float_decimals not required?
-        """
         # sfeh 50% chance observatio    n/value
+        """
         if random.random() < p_observation:
             try:
                 return self.observations.select(xtype)
@@ -268,18 +278,92 @@ class TreeBuilder:
 
     def invent_core_depth(self, xtype, depth_max, depth=0, p_op=1):  # todo grow method
         """
-
+        # set path/id? todo
+        # set depth? todo
         """
         if depth < depth_max:
             label = self.choose_any(xtype, p_op)
-            # set path/id? todo
-            # set depth? todo
-            depth += 1
-            childs = [self.invent_core_depth(xt, depth_max, depth=depth, p_op=p_op) for xt in label.xtype[0]]
-            return Node(label=label, is_fix=False, childs=childs)
+            childs = [self.invent_core_depth(xt, depth_max, depth=depth+1, p_op=p_op) for xt in label.xtype[0]]
+            node = Node(label=label, childs=childs)  # , depth=depth sfeh no depth?
         else:
             label = self.choose_term(xtype)
-            return Node(label=label)
+            node = Node(label=label)
+        return node
+
+    def evolve_mutate_point(self, tree: Node):
+        """
+        Mutate a single mutatable point in any Tree.
+        sfeh is the tree a tree copy or the same tree?
+        """
+        etree = copy.deepcopy(tree)  # todo ==>state
+
+        node = np.random.choice(etree.eval_mutatable_nodes())
+        xtype = node.get_xtype()
+
+        if node.get_arity() > 0:
+            node.set_label(tb.choose_op(xtype))  # Function is same type, same arity
+        else:
+            node.set_label(tb.choose_term(xtype[1]))  # 3 -> '2f' -> 5
+
+        etree.finalize()  # todo ==>state
+        return etree
+
+    def evolve_mutate_branch_depth(self, tree, depth_max):
+        """
+        todo ==>depth only
+        currently only one branch
+        """
+        etree = copy.deepcopy(tree)  # todo ==>state
+
+        node = np.random.choice(etree.eval_mutatable_nodes())
+        xtype = node.get_xtype()[1]  # todo todotodo
+
+        branch = self.invent_core_depth(xtype, 3, depth=0, p_op=1)  # todo ==>dummies
+        node.replace_with_branch(branch)
+        # if node.depth == depth_max:
+        #     node.set_label(tb.choose_term(xtype[1]))  # sfeh update node plabel
+        # else:
+        #     node.childs = [Node(tb.choose_any(xt, p=1)) for xt in node.get_xtype()[0]]  # todo ==>
+
+        etree.finalize()  # todo ==>state
+        return etree
+
+    def evolve_crossover(self, tree1: Node, tree2: Node):
+        """
+        todo ==>depth only
+        currently only one branch
+        """
+        atree = copy.deepcopy(tree1)  # todo ==>state
+        btree = copy.deepcopy(tree2)  # todo ==>state
+
+        try:
+            anodes = atree.eval_mutatable_nodes(allow_root=False)
+            anode = np.random.choice(anodes)
+            xtype = anode.get_xtype_out()
+            bnodes = btree.eval_mutatable_nodes(xtype_out=xtype)
+            if bnodes:
+                bnode = np.random.choice(bnodes)
+            else:
+                xtype = float if xtype == bool else bool  # the other swap type now
+                bnodes = btree.eval_mutatable_nodes(allow_root=False, xtype_out=xtype)
+                bnode = np.random.choice(bnodes)
+                anode = atree.eval_mutatable_nodes(xtype_out=xtype)
+        except:
+            raise Exception
+
+        # todo deepcopy required??
+        anode_copy = copy.deepcopy(anode)  # todo ==>state
+        # bnode = copy.deepcopy(bnode)  # todo ==>state
+
+        anode.replace_with_branch(bnode)
+        bnode.replace_with_branch(anode_copy)
+
+        # atree.meta.last_evolution = tag  # todo ==>tree tag
+        # btree.meta.last_evolution = tag
+        # self.pop_append(left_parent)
+        # self.pop_append(right_parent)
+
+        return atree, btree
 
     def pop_random(self, call_params, from_origin=False):
         """
@@ -325,7 +409,7 @@ class TreeBuilder:
         else:
             build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')  # depth, in this case
             # todo
-            # coolcore.evolve_mutate_branch(build_size, choose_oparray3, env_vars.choose_obs,
+            # coolcore.evolve_mutate_branch_depth(build_size, choose_oparray3, env_vars.choose_obs,
             #                                      choose_distributions, float_decimals, size_mode=size_mode, full_or_grow=full_or_grow)
             # coolcore.evolve_random_tree_depth(size_mode, xtype_root, build_size, full_or_grow)
 
@@ -366,7 +450,7 @@ def helper_evolve_params_branch(call_params, tree_depth_max=10, parsimony_max=30
     The call parameters in the evolution file need to be adjusted
     delete if possible
     """
-    build_spec = call_params.get('build_spec')
+    build_spec = call_params.get('build_max')
 
     size_mode = build_spec['size_mode']
 
@@ -472,4 +556,22 @@ def choose_build_size(size_mode, mean_min_max_var, tree=None, nodepath=None, for
 
 
 if __name__ == '__main__':
-    print('Hiho')
+    """
+    Alpha tests
+    """
+    ops = ChooseOperators()
+    inputs = ChooseObservation(['a', 'b'])
+    consts = ChooseConstants()
+    tb = TreeBuilder(ops, inputs, consts, float)
+    t1 = tb.invent_core_depth(float, 3, p_op=0.5)
+    tree2 = tb.evolve_mutate_point(t1)
+    tree3 = tb.evolve_mutate_branch_depth(tree2, depth_max=4)
+    tree4 = tb.evolve_mutate_branch_depth(tree3, depth_max=4)
+    tree5, tree6 = tb.evolve_crossover(tree3, tree4)
+    print('crossover')
+    t3 = tb.invent_core_depth(float, 4, p_op=0.5)
+    t4 = tb.invent_core_depth(float, 3, p_op=0.6)
+    print('tree3', tree3)
+    print('tree4', tree4)
+    print('tree5', tree5)
+    print('tree6', tree6)

@@ -19,25 +19,15 @@ sfeh: use function-types (-> 'kommuttative'?)
     - do the values in c1, c2, c3 link to its parent?
 """
 
-import ast
-import itertools
-import random
-import re
-
-import numpy as np
-import tensorflow as tf
-
-from dataclasses import dataclass
-
 from plagih.fitness_kernel import *
+from plagih.node_labels import *
 from plagih.sympy_extras import expr_sympify
 from plagih.tree_distances.tree_edit_distance import apted_distance
 
-tf.compat.v1.disable_eager_execution()  # sfeh damn what was this line good for?
+from dataclasses import dataclass
+import itertools
 
 # lol, lol. https://github.com/tensorflow/tensorflow/issues/27023 these messages are tingeling
-# import tensorflow.python.util.deprecation as deprecation  # not possible on python 3.6
-# deprecation._PRINT_DEPRECATION_WARNINGS = False
 
 latex_inline = ['+', '-', '*', '**', '==', '!=', '<', '<=', '>', '>=', 'Andb', 'Orb', 'Xor']
 
@@ -62,18 +52,12 @@ class Node:
 
     state = None
 
-    arity = 0
-    coolxtype = (tuple([None]), None)
-    tf = None
-    sym_expr = 'None'
-    pycode = 'None'
-    latex = ('None', 'None')
-
-    def __init__(self, label=None, is_fix=False, childs=None):
+    def __init__(self, label: 'NodeLabel' = None, is_fix=False, childs=None):
         self.label = label
         self.is_fix = is_fix
         self.childs = childs or []
-        # self.state = 0
+
+        self.state = 0
 
     def __hash__(self):
         """
@@ -89,7 +73,7 @@ class Node:
         Printing the nodes as nested array structure.
         sfeh: make this statement loadable!
         """
-        print_label = self.label
+        print_label = self.get_label()
         if self.is_fix:
             print_label = f'({print_label})'
 
@@ -105,11 +89,26 @@ class Node:
         """
         return 1 + sum([len(cc) for cc in self.childs])
 
+    def get_label(self):
+        return self.label
+
+    def get_expr(self):
+        return self.label.expr
+
+    def get_expr_sym(self):
+        return self.label.expr_sym
+
     def get_arity(self):
         return self.label.arity
 
     def get_xtype(self):
         return self.label.xtype
+
+    def set_label(self, label: NodeLabel):
+        """
+        all other values are automatically set by assigning the respected node
+        """
+        self.label = label
 
     def eval_parsimony(self, parsimony_distance, origin_tree=None, weights=None):
         """
@@ -148,28 +147,28 @@ class Node:
 
         return max_depth
 
-    def new_core(self, new_core: 'Node'):
+    def new_core(self, new_node: 'Node'):
         """
-
+        todo
         """
-        self.label = new_core.label
-        self.childs = new_core.childs if new_core.childs else []  # maybe must be updated recursively
-        # self.is_fix = new_core.is_fix  # debatable
-        # self.complete = new_core.complete  # if the node is correct/done/okay
+        self.set_label(new_node.get_label())
+        self.childs = new_node.childs or []  # maybe must be updated recursively
+        # self.is_fix = new_node.is_fix  # debatable
+        # self.complete = new_node.complete  # if the node is correct/done/okay
         # depth needs to be fixed?
 
-    def get_mutatable_nodes(self, coolxtype_out=None, allow_root=True):
+    def get_mutatable_nodes(self, xtype_out=None, allow_root=True):
         """
         return all nodes that are mutatable (non fixed)
         sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!
         """
         coolnode_list = []
         if not self.is_fix:
-            if coolxtype_out is None or coolxtype_out == self.coolxtype[1] and (allow_root or not self.is_root()):
+            if xtype_out is None or xtype_out == self.get_xtype()[1] and (allow_root or not self.is_root()):
                 # crossover requires excluding types that are not matching, and excludes the root node
                 coolnode_list.append(self)
 
-        coolnode_list.extend(list(itertools.chain(*[cc.get_mutatable_nodes(coolxtype_out=coolxtype_out, allow_root=allow_root) for cc in self.childs])))
+        coolnode_list.extend(list(itertools.chain(*[cc.get_mutatable_nodes(xtype_out=xtype_out, allow_root=allow_root) for cc in self.childs])))
         return coolnode_list
 
     def evolve_mutate_branch_depth(self, depths, tb):
@@ -179,16 +178,16 @@ class Node:
         """
         # sfeh: making the root node (todo?)
         if depths == 1:
-            self.label = builder.choose_term(self.coolxtype[1])  # sfeh update node plabel
+            self.set_label(tb.choose_term(self.get_xtype()[1]))  # sfeh update node plabel
         else:
             depths -= 1
-            self.childs = [Node(builder.choose_any(xt, p_op=1)) for xt in self.coolxtype[0]]
+            self.childs = [Node(tb.choose_any(xt, p_op=1)) for xt in self.get_xtype()[0]]
 
     def evolve_mutate_filter(self, tb):
         """
         filtger the nodes in a single tree
         """
-        if self.arity > 0:
+        if self.get_arity() > 0:
             for cc in self.childs:
                 cc.evolve_mutate_filter(tb)
         else:
@@ -197,7 +196,7 @@ class Node:
 
     def evolve_mutate_point_ROOTNODE(self, tb):
         """
-        todo rootnode
+        ==>todo rootnode
         Mutate a single mutatable point in any Tree.
         """
         # 1. choose a node
@@ -209,11 +208,11 @@ class Node:
         """
         Mutate a single mutatable point in any Tree.
         """
-        if self.arity > 0:
-            self.label = tb.choose_op(self.coolxtype)  # Function is same type, same arity
+        if self.get_arity() > 0:
+            self.set_label(tb.choose_op(self.get_xtype()))  # Function is same type, same arity
         else:
-            print('hhhhh', self.label)
-            self.label = tb.choose_term(self.coolxtype[1])  # 3 -> '2f' -> 5
+            print('hhhhh', self.get_label())
+            self.set_label(tb.choose_term(self.get_xtype()[1]))  # 3 -> '2f' -> 5
 
     def evolve_start(self):
         """
@@ -276,7 +275,7 @@ class Node:
         node.evolve_mutate_branch_depth(3, tb)  # todo
 
     def workaround_remove_tilde(self):
-        if isinstance(self.label, Usub):  # tilde '~'
+        if isinstance(self.get_label(), Usub):  # tilde '~'
             new_core = self.childs[0]
             self.new_core(new_core)
 
@@ -336,7 +335,7 @@ class Node:
         """
 
         """
-        if self.arity != len(self.childs):
+        if self.get_arity() != len(self.childs):
             raise
         return True
 
@@ -405,23 +404,23 @@ class Node:
         """
         accumulate and return the complete expression the tree holds recursively
         """
-        if self.arity > 0:
+        if self.get_arity() > 0:
             child_expr_list = [cc.get_expr(reducible=reducible, obs_names=obs_names) for cc in self.childs]
             # if reducible:
-            #     # my_expr = op[self.label]['sym_reduce'] or my_expr
+            #     # my_expr = op[self.get_label()]['sym_reduce'] or my_expr
             #     # symloc = sympy_symbol_defaults(obs_names)  # todo solve the problem... new version of sympy?
             #     xxx = plagih_sympify(my_expr.format(*child_expr_list), eval_locals=symloc)  # sfeh the xxx variable
             #     return xxx
-            return self.sym_expr.format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
+            return self.get_expr_sym().format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
         else:
-            return self.sym_expr
+            return self.get_expr_sym()
 
     def get_pycode(self):
         """
 
         """
-        if self.arity == 0:
-            return f'{self.label}'
+        if self.get_arity() == 0:
+            return f'{self.get_label()}'
         else:
             results = [cc.get_pycode() for cc in self.childs]
             return self.pycode.format(*results)  # abs -> lambda a: 'abs({})'.formadt(a) (result1)
@@ -432,7 +431,7 @@ class Node:
         e.g. {+{Ifte{True}{1}{2}}{3}}
         """
         # sfEh check if this still works as one-liner
-        return f"{{{self.label}{''.join([cc.get_apted_notation() for cc in self.childs])}}}"
+        return f"{{{self.get_label()}{''.join([cc.get_apted_notation() for cc in self.childs])}}}"
 
     def reduce_me(self, obs_infos):
         # sfeh asdasdasd reduce me is obviously bullshit crapshit.
@@ -449,562 +448,11 @@ class Node:
             self.new_core(new_core)
         elif len(new_core) > len(self):
             raise Exception(
-                f'Reduced core is even more complex than before  ({len(new_core)}, {len(self)}). expr_raw: {expr_raw}')  # \nold_core:{self}\nnew_core: {new_core} May happen with sympification and Usub.
+                f'Reduced core is even more complex than before  ({len(new_core)}, {len(self)}). expr_raw: {expr_raw}')  # \nold_core:{self}\nnew_node: {new_node} May happen with sympification and Usub.
             # example: Tree sympification did not work: Reduced core is even more complex than before. expr_raw: sign(Mini(((Velocity_2 * -0.790706) - sqrt(Gain_0)), (-0.569271 - Velocity_9)))
             # old_core:[sign, [Mini, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
-            # new_core: [sign, [Mini, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.569271]]]
+            # new_node: [sign, [Mini, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.569271]]]
         return
-
-
-class NodeLabel:  # todo
-    """
-    Kind of abstract class; Dummy-node that holds a label
-    """
-
-    expr_sym = None
-
-    def __init__(self, label='None', arity=0, xtype=None):
-        self.label = label
-        self.arity = arity
-        self.xtype = xtype
-
-
-class Operator(NodeLabel):
-    """
-    operator nodes (+, +, *, /, sin(), sign(), ...)
-    inner nodes of a tree
-    """
-
-    def __init__(self):
-        super().__init__()
-
-
-class Terminal(NodeLabel):
-
-    def mutate_filter(self):
-        # todo? ...only for terminal nodes
-        pass
-
-
-class Constant(Terminal):
-    arity = 0
-
-
-class Observation(Terminal):
-    """
-
-    todo discuss: labels should not have a sign (-pos); just pos
-    # self.name = label if label[0] != '-' else label[1:]  # sfeh delete?
-    """
-    tf_type = tf.float32  # todo yeah...
-
-    def __init__(self, label, xtype=float):
-        # todo coolxtype_out=float
-        super().__init__(label)
-        self.label = label
-        self.fam, self.obs_index, _ = observation_get_family_and_time(label, none_return=None)  # remove this self.prelabel
-        self.xtype = xtype
-        self.sym_str = label  # sfeh delete?
-        self.index_minmax = None
-
-        latex = f'\\text{{{self.fam}}}'  # remove this {self.prelabel}
-        self.latex = (latex, latex)
-
-    def mutate_filter(self):
-        """
-        was filter_new_index
-         # as default, return own index
-        """
-        # if self.index_minmax is None:
-        return
-
-
-class ObservationIndex(Observation):
-    """
-
-    """
-
-    def __init__(self, label, xtype=float, obs_indizes=None):
-        super().__init__(label, xtype)
-        self.obs_indizes = obs_indizes
-        latex = f'\\text{{{self.fam}}}_{{{self.obs_index}}}'  # remove this {self.prelabel}
-        self.latex = (latex, latex)  # remove this {self.prelabel}
-
-    def mutate_filter(self):
-        new_index = int(max(min(round(random.gauss(self.obs_index, 1)), self.index_minmax[1]), 0))
-        self.obs_index = new_index
-        self.name = f'{self.fam}_{new_index}'
-
-
-def observation_get_family_and_time(name, re_pattern='_\\d+$', none_return=None):
-    """
-    When an observation is known, return the family, the time and the SIGN!!
-    todo put this function somewhere where it can actually help
-    """
-
-    core_label = re.split(re_pattern, name)[0]
-    if core_label[0] == '-':
-        core_label = core_label[1::]
-        prelabel = '-'
-    else:
-        prelabel = ''
-    try:
-        re_search = re.search(re_pattern, name)  # re_search => ['_12']
-        temp_diff = re_search[0].replace('_', '')  # (only) solution found (at [0]), e.g. '_14'. only keep the digits
-        temp_diff = int(temp_diff)
-    except Exception:
-        temp_diff = none_return
-    return core_label, temp_diff, prelabel
-
-
-class FloatConstant(Constant):
-    """
-    discuss: how to deal with sign of observations?
-    """
-    arity = 0
-    otype = float
-    coolxtype = (tuple([]), float)
-
-    def __init__(self, label):
-        super().__init__(label)
-        self.latex = (f'{label:.3f}', f'{label:.3f}')
-        self.sym_str = label
-        self.pycode = label
-
-    def mutate_filter(self, filter_type='gaussian_filter', precision=6):  # todo
-        if filter_type == 'gaussian_filter':
-            if random.choice(['v1', 'v2']) == 'v1' or self.label == 0:
-                self.label += np.random.normal(0, 0.1)  # sfeh better adjustments?
-            else:
-                constant = np.random.normal(self.label, 0.1)  # sfeh better adjustments?
-                self.label = round(constant, precision)  # sfeh be careful, might create zero sometimes
-
-
-class BoolConstant(Constant):
-    """
-
-    """
-    coolxtype = (tuple([]), bool)
-    tf_type = tf.bool
-
-    def __init__(self, label):
-        super().__init__(label)
-        self.label = label
-        self.latex = (f'{label}', f'{label}')
-        self.sym_str = label
-        self.pycode = label
-
-
-class EvalAction:
-    """
-    todo plabel/labelNode? daut it.
-    - minmax for histograms
-    - minmax for regression-bounded
-    """
-    tf_type = tf.float32  # sfeh especiall when the type is integer
-    xtype = float  # sfeh todo
-    coolxtype = [None, float]
-
-    def __init__(self, name):
-        self.plabel = name
-        self.name = name  # delete this
-
-
-class Add(Operator):
-    label = '+'
-    arity = 2
-    tf = tf.add
-    latex = ('+', '{}+{}')
-    sym_str = '({} + {})'
-    pycode = '({}+{})'
-    coolxtype = (tuple([float, float]), float)
-
-    def __init__(self):
-        super().__init__()
-
-
-class Subtract(Operator):
-    """
-
-    """
-    label = '-'
-    arity = 2
-    tf = tf.subtract
-    latex = ('-', '{}-{}')
-    sym_str = '({} - {})'
-    pycode = '({}-{})'
-    coolxtype = (tuple([float, float]), float)
-
-
-class Usub(Operator):
-    label = 'Usub'
-    arity = 1
-    tf = tf.negative
-    latex = ('-', '-{}')
-    sym_str = '(-{})'
-    pycode = '(-{})'
-    coolxtype = (tuple([float]), float)
-
-
-class Multiply(Operator):
-    label = '*'
-    arity = 2
-    tf = tf.multiply
-    latex = ('\\cdot ', '{}\\cdot {}')
-    sym_str = '({} * {})'
-    pycode = '({}*{})'
-    coolxtype = (tuple([float, float]), float)
-
-
-class Divide_no_nan(Operator):
-    label = '/'
-    arity = 2
-    tf = tf.math.divide_no_nan
-    latex = ('\\div ', '\\frac{}{}')
-    sym_str = '({} / {})'
-    pycode = '(lambda x, y: x/y if y!=0 else 0)(({}),({}))'
-    coolxtype = (tuple([float, float]), float)
-
-
-class Power(Operator):
-    label = '**'
-    arity = 2
-    tf = tf.pow
-    latex = ('{{x}}^{{y}}', '{}^{}')
-    sym_str = '({}**Round({}))'
-    pycode = '({}**round({}))'
-    coolxtype = (tuple([float, float]), float)
-
-
-class Abs(Operator):
-    label = 'abs'
-    arity = 1
-    tf = tf.abs
-    latex = ('abs', '|{}|')
-    sym_expr = 'abs({})'
-    pycode = 'abs({})'
-    coolxtype = (tuple([float]), float)
-
-
-class Sign(Operator):
-    label = 'sign'
-    arity = 1
-    tf = tf.sign
-    latex = ('sign', 'sign({})')
-    sym_str = 'sign({})'
-    pycode = 'np.sign({})'
-    coolxtype = (tuple([float]), float)
-
-
-class Round(Operator):
-    label = 'Round'
-    arity = 1
-    tf = tf.round
-    latex = ('round', 'round({})')
-    sym_str = 'Round({})'
-    pycode = 'round({})'
-    coolxtype = (tuple([float]), float)
-
-
-class Square(Operator):
-    label = 'Square'
-    arity = 1
-    tf = tf.square
-    latex = ('x^2', '{}^2')
-    sym_str = 'Square({})'
-    pycode = '({})**2'
-    coolxtype = (tuple([float]), float)
-
-
-class Sqrt(Operator):
-    label = 'sqrt'
-    arity = 1
-    tf = tf.sqrt
-    latex = ('\\sqrt{x}', '\\sqrt{}')
-    sym_str = 'sqrt({})'
-    pycode = 'math.sqrt({})'
-    coolxtype = (tuple([float]), float)
-
-
-class Log(Operator):
-    label = 'log'
-    arity = 1
-    tf = tf.math.log
-    latex = ('\\log()', '\\log{}')
-    sym_str = 'log({})'
-    pycode = 'math.log({})'
-    coolxtype = (tuple([float]), float)
-
-
-class Log1p(Operator):
-    label = 'log1p'
-    arity = 1
-    tf = tf.math.log1p
-    latex = ('\\log(1+x)', '\\log(1+{})')
-    sym_str = 'log1p({})'
-    pycode = 'math.log1p({})'
-    coolxtype = (tuple([float]), float)
-
-
-class Cos(Operator):
-    label = 'cos'
-    arity = 1
-    tf = tf.cos
-    latex = ('\\cos ', '\\cos({})')
-    sym_str = 'cos({})'
-    pycode = 'math.cos({})'
-    coolxtype = (tuple([float]), float)
-
-
-class Sin(Operator):
-    label = 'sin'
-    arity = 1
-    tf = tf.sin
-    latex = ('\\sin ', '\\sin({})')
-    sym_str = 'sin({})'
-    pycode = 'math.sin({})'
-    coolxtype = (tuple([float]), float)
-
-
-class Tan(Operator):
-    label = 'tan'
-    arity = 1
-    tf = tf.tan
-    latex = ('\\tan ', '\\tan({})')
-    sym_str = 'tan({})'
-    pycode = 'math.tan({})'
-    coolxtype = (tuple([float]), float)
-
-
-class Acos(Operator):
-    label = 'acos'
-    arity = 1
-    tf = tf.acos
-    latex = ('\\acos ', '\\acos({})')
-    sym_str = 'acos({})'
-    pycode = 'math.acos({})'
-    coolxtype = (tuple([float]), float)
-
-
-class Asin(Operator):
-    label = 'asin'
-    arity = 1
-    tf = tf.asin
-    latex = ('\\asin ', '\\asin({})')
-    sym_str = 'asin({})'
-    pycode = 'math.asin({})'
-    coolxtype = (tuple([float]), float)
-
-
-class Atan(Operator):
-    label = 'atan'
-    arity = 1
-    tf = tf.atan
-    latex = ('\\atan ', '\\atan({})')
-    sym_str = 'atan({})'
-    pycode = 'math.atan({})'
-    coolxtype = (tuple([float]), float)
-
-
-class Tanh(Operator):
-    label = 'tanh'
-    arity = 1
-    tf = tf.tanh
-    latex = ('\\tanh ', '\\tanh({})')
-    sym_str = 'tanh({})'
-    pycode = 'math.tanh({})'
-    coolxtype = (tuple([float]), float)
-
-
-class And(Operator):
-    label = 'Andb'
-    arity = 2
-    tf = tf.logical_and
-    latex = ('and', '({}\\wedge{})')
-    sym_str = 'Andb({}, {})'
-    pycode = '({} and {})'
-    coolxtype = (tuple([bool, bool]), bool)
-
-
-class Or(Operator):
-    label = 'Orb'
-    arity = 2
-    tf = tf.logical_or
-    latex = ('or', '({}\\vee{})')
-    sym_str = 'Orb({}, {})'
-    pycode = '({} or {})'
-    coolxtype = (tuple([bool, bool]), bool)
-
-
-class Xor(Operator):
-    label = 'Xor'
-    arity = 2
-    tf = tf.math.logical_xor
-    latex = ('\\oplus', '({}\\oplus{})')
-    sym_str = 'Xor({}, {})'
-    pycode = '({} ^ {})'
-    coolxtype = (tuple([bool, bool]), bool)
-
-
-class Not(Operator):
-    label = 'Notb'
-    arity = 1
-    tf = tf.logical_not
-    latex = ('\\neg', '\\neg{}')
-    sym_str = 'Notb({})'
-    pycode = 'not({})'
-    coolxtype = (tuple([bool]), bool)
-
-
-class Eq(Operator):
-    label = '=='
-    arity = 2
-    tf = tf.equal
-    latex = ('=', '({}={})')
-    sym_str = '({} == {})'
-    pycode = '({}=={})'
-    coolxtype = (tuple([bool, bool]), bool)
-
-
-class Neq(Operator):
-    label = '!='
-    arity = 2
-    tf = tf.not_equal
-    latex = ('\\neq', '({}\\neq{})')
-    sym_str = '({} != {})'
-    pycode = '({}!={})'
-    coolxtype = (tuple([bool, bool]), bool)
-
-
-class Lt(Operator):
-    label = '<'
-    arity = 2
-    tf = tf.less
-    latex = ('<', '{}<{}')
-    sym_str = '({} < {})'
-    pycode = '({}<{})'
-    coolxtype = (tuple([float, float]), bool)
-
-
-class Le(Operator):
-    label = '<='
-    arity = 2
-    tf = tf.less_equal
-    latex = ('\\leq', '{}\\leq{}')
-    sym_str = '({} <= {})'
-    pycode = '({}<={})'
-    coolxtype = (tuple([float, float]), bool)
-
-
-class Gt(Operator):
-    label = '>'
-    arity = 2
-    tf = tf.greater
-    latex = ('>', '{}>{}')
-    sym_str = '({} > {})'
-    pycode = '({}>{})'
-    coolxtype = (tuple([float, float]), bool)
-
-
-class Ge(Operator):
-    label = '>='
-    arity = 2
-    tf = tf.greater_equal
-    latex = ('\\geq', '{}\\geq {}')  # sfeh check inserted space
-    sym_str = '({} >= {})'
-    pycode = '({}>={})'
-    coolxtype = (tuple([float, float]), bool)
-
-
-class Ifte(Operator):
-    label = 'Ifte'
-    arity = 3
-    tf = tf.where
-    latex = ('\\text{if-then-else}', '\\text{{ if }} ({}) \\text{{ then }} ({}) \\text{{ else }} ({})')  # 'if({} then {} else {})'
-    sym_str = 'Ifte({}, {}, {})'
-    pycode = '({} if {} else {})'
-    coolxtype = (tuple([bool, float, float]), float)
-
-
-class Min(Operator):
-    label = 'Mini'
-    arity = 2
-    tf = tf.minimum
-    latex = ('\\min', '\\min({}, {})')
-    sym_str = 'Mini({}, {})'
-    pycode = 'min({}, {})'
-    coolxtype = (tuple([float, float]), float)
-
-
-class Max(Operator):
-    label = 'Maxi'
-    arity = 2
-    tf = tf.maximum
-    latex = ('\\max', '\\max({}, {})')
-    sym_str = 'Maxi({}, {})'
-    pycode = 'max({}, {})'
-    coolxtype = (tuple([float, float]), float)
-
-
-op = {  # 'f2f': Classical mathematical operators, evaluate from float to float
-    '+': Add,
-    ast.Add: Add,
-    '-': Subtract,
-    ast.Sub: Subtract,
-    'Usub': Usub,
-    ast.USub: Usub,
-    '*': Multiply,
-    ast.Mult: Multiply,
-    # Division: SAFE division by zero! -->tf.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented sfeh: is it okay to display this as '/'?
-    '/': Divide_no_nan,
-    ast.Div: Divide_no_nan,
-    '**': Power,
-    ast.Pow: Power,
-    'Abs': Abs,
-    'sign': Sign,
-    'Round': Round,
-    'Square': Square,
-    'sqrt': Sqrt,
-    'log': Log,  # sfeh log/ln?
-    'log1p': Log1p,
-    'cos': Cos,
-    'sin': Sin,
-    'tan': Tan,
-    'acos': Acos,
-    'asin': Asin,
-    'atan': Atan,
-    'tanh': Tanh,
-
-    # bool->bool
-    # DON'T USE tf.bitwise.bitwise_and
-    # sympify('Or')->'|', sympify('And')->'&', sympify('Not')->'~'
-    'Andb': And,
-    ast.And: And,
-    'Orb': Or,
-    ast.Or: Or,
-    'Xor': Xor,
-    # ast.BitXor: Xor,
-    'Notb': Not,
-    ast.Not: Not,
-
-    # float->bool
-    '==': Eq,
-    ast.Eq: Eq,
-    '!=': Neq,
-    ast.NotEq: Neq,
-    '<': Lt,  # a < b
-    ast.Lt: Lt,
-    '<=': Le,
-    ast.LtE: Le,
-    '>': Gt,  # a > b
-    ast.Gt: Gt,
-    '>=': Ge,  # a >= 1
-    ast.GtE: Ge,
-
-    'Ifte': Ifte,  # sfeh essential for evaluation
-    'Mini': Min,  # with forced arity-2
-    'Maxi': Max,  # with forced arity-2
-}
 
 
 if __name__ == '__main__':
@@ -1034,6 +482,5 @@ if __name__ == '__main__':
     # builder = TreeBuilder(ops, inputs, consts, float)
     # tree = builder.invent_core_depth(float, 2)  # todo
 
-    x = Max()
+    x = Node(label=Max())
     print(x)
-

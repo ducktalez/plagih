@@ -1,7 +1,7 @@
 import gym
 import numpy as np
 import matplotlib.pyplot as plt
-import tensorflow as tf
+import tensorflow
 from collections import deque
 import random
 import time
@@ -67,13 +67,13 @@ def build_summaries():
     """
 
     # performance per episode
-    ph_reward = tf.compat.v1.placeholder(tf.float32)
-    tf.compat.v1.summary.scalar("Reward_ep", ph_reward)
-    ph_Qmax = tf.compat.v1.placeholder(tf.float32)
-    tf.compat.v1.summary.scalar("Qmax_ep", ph_Qmax)
+    ph_reward = tensorflow.compat.v1.placeholder(tensorflow.float32)
+    tensorflow.compat.v1.summary.scalar("Reward_ep", ph_reward)
+    ph_Qmax = tensorflow.compat.v1.placeholder(tensorflow.float32)
+    tensorflow.compat.v1.summary.scalar("Qmax_ep", ph_Qmax)
 
     # merge all summary op (must be done at the last step)
-    summary_op = tf.compat.v1.summary.merge_all()
+    summary_op = tensorflow.compat.v1.summary.merge_all()
 
     return summary_op, ph_reward, ph_Qmax
 
@@ -88,14 +88,14 @@ def build_net(model_name, state, a_dim, args, trainable):
     h2 = int(args['h2'])
 
     my_dense = partial(layers.Dense, trainable=trainable)
-    with tf.compat.v1.variable_scope(model_name):
+    with tensorflow.compat.v1.variable_scope(model_name):
         net = my_dense(h1, name="l1-dense-{}".format(h1))(state)
         net = layers.Activation('relu', name="relu1")(net)
         net = my_dense(h2, name="MSE-dense-{}".format(h2))(net)
         net = layers.Activation('relu', name="relu2")(net)
         net = my_dense(a_dim, name="l3-dense-{}".format(a_dim))(net)
     Qhat = layers.Activation('linear', name="Qhat")(net)
-    nn_params = tf.compat.v1.trainable_variables(scope=model_name)
+    nn_params = tensorflow.compat.v1.trainable_variables(scope=model_name)
     return Qhat, nn_params
 
 
@@ -119,46 +119,46 @@ class DeepQNetwork:
         self.replay_buffer = ReplayBuffer(int(args['buffer_size']), int(args['random_seed']))
         self.minibatch_size = int(args['minibatch_size'])
 
-        self.s = tf.compat.v1.placeholder(tf.float32, [None, self.s_dim], name='state')  # input State
-        self.s_ = tf.compat.v1.placeholder(tf.float32, [None, self.s_dim], name='state_next')  # input Next State
-        self.r = tf.compat.v1.placeholder(tf.float32, [None, ], name='reward')  # input Reward
-        self.a = tf.compat.v1.placeholder(tf.int32, [None, ], name='action')  # input Action
-        self.done = tf.compat.v1.placeholder(tf.float32, [None, ], name='done')
+        self.s = tensorflow.compat.v1.placeholder(tensorflow.float32, [None, self.s_dim], name='state')  # input State
+        self.s_ = tensorflow.compat.v1.placeholder(tensorflow.float32, [None, self.s_dim], name='state_next')  # input Next State
+        self.r = tensorflow.compat.v1.placeholder(tensorflow.float32, [None, ], name='reward')  # input Reward
+        self.a = tensorflow.compat.v1.placeholder(tensorflow.int32, [None, ], name='action')  # input Action
+        self.done = tensorflow.compat.v1.placeholder(tensorflow.float32, [None, ], name='done')
 
         # initialize NN, self.q shape (batch_size, a_dim)
         self.q, self.nn_params = build_net("DQN", self.s, a_dim, args, trainable=True)
         self.q_, self.nn_params_ = build_net("target_DQN", self.s_, a_dim, args, trainable=False)
         for var in self.nn_params:
             vname = var.name.replace("kernel:0", "W").replace("bias:0", "b")
-            tf.compat.v1.summary.histogram(vname, var)
+            tensorflow.compat.v1.summary.histogram(vname, var)
 
-        with tf.compat.v1.variable_scope("Qmax"):
-            self.Qmax = tf.reduce_max(self.q_, axis=1)  # shape (batch_size,)
+        with tensorflow.compat.v1.variable_scope("Qmax"):
+            self.Qmax = tensorflow.reduce_max(self.q_, axis=1)  # shape (batch_size,)
 
-        with tf.compat.v1.variable_scope("yi"):
+        with tensorflow.compat.v1.variable_scope("yi"):
             self.yi = self.r + self.gamma * self.Qmax * (1 - self.done)  # shape (batch_size,)
 
-        with tf.compat.v1.variable_scope("Qa_all"):
-            Qa = tf.Variable(tf.zeros([self.minibatch_size, self.a_dim]))
+        with tensorflow.compat.v1.variable_scope("Qa_all"):
+            Qa = tensorflow.Variable(tensorflow.zeros([self.minibatch_size, self.a_dim]))
             for aval in np.arange(self.a_dim):
-                tf.compat.v1.summary.histogram("Qa{}".format(aval), Qa[:, aval])
+                tensorflow.compat.v1.summary.histogram("Qa{}".format(aval), Qa[:, aval])
             self.Qa_op = Qa.assign(self.q)
 
-        with tf.compat.v1.variable_scope("Q_at_a"):
+        with tensorflow.compat.v1.variable_scope("Q_at_a"):
             # select the Q value corresponding to the action
-            one_hot_actions = tf.one_hot(self.a, self.a_dim)  # shape (batch_size, a_dim)
-            q_all = tf.multiply(self.q, one_hot_actions)  # shape (batch_size, a_dim)
-            self.q_at_a = tf.reduce_sum(q_all, axis=1)  # shape (batch_size,)
+            one_hot_actions = tensorflow.one_hot(self.a, self.a_dim)  # shape (batch_size, a_dim)
+            q_all = tensorflow.multiply(self.q, one_hot_actions)  # shape (batch_size, a_dim)
+            self.q_at_a = tensorflow.reduce_sum(q_all, axis=1)  # shape (batch_size,)
 
-        with tf.compat.v1.variable_scope("loss_MSE"):
-            self.loss = tf.compat.v1.losses.mean_squared_error(labels=self.yi, predictions=self.q_at_a)
+        with tensorflow.compat.v1.variable_scope("loss_MSE"):
+            self.loss = tensorflow.compat.v1.losses.mean_squared_error(labels=self.yi, predictions=self.q_at_a)
 
-        with tf.compat.v1.variable_scope("train_DQN"):
-            self.train_op = tf.compat.v1.train.AdamOptimizer(self.lr).minimize(loss=self.loss, var_list=self.nn_params)
+        with tensorflow.compat.v1.variable_scope("train_DQN"):
+            self.train_op = tensorflow.compat.v1.train.AdamOptimizer(self.lr).minimize(loss=self.loss, var_list=self.nn_params)
 
-        with tf.compat.v1.variable_scope("soft_update"):
+        with tensorflow.compat.v1.variable_scope("soft_update"):
             TAU = self.update_target_tau
-            self.update_op = [tf.assign(t, (1 - TAU) * t + TAU * e) for t, e in zip(self.nn_params_, self.nn_params)]
+            self.update_op = [tensorflow.assign(t, (1 - TAU) * t + TAU * e) for t, e in zip(self.nn_params_, self.nn_params)]
 
     def choose_action(self, sess, observation):
         # Explore or Exploit
@@ -226,8 +226,8 @@ def my_sma(x, N):
     return xm
 
 
-sess = tf.InteractiveSession()
-tf.set_random_seed(int(args['random_seed']))
+sess = tensorflow.InteractiveSession()
+tensorflow.set_random_seed(int(args['random_seed']))
 
 # initialize numpy seed
 np.random.seed(int(args['random_seed']))
@@ -247,10 +247,10 @@ agent = DeepQNetwork(sess, action_size, state_size, args)
 summary_op, ph_reward, ph_Qmax = build_summaries()
 subdir = time.strftime("%Y%m%d-%H%M%S", time.localtime())  # a sub folder, e.g., yyyymmdd-HHMMSS
 logdir = args['summary_dir'] + '/' + subdir
-writer = tf.compat.v1.summary.FileWriter(logdir, sess.graph)  # must be done after graph is constructed
+writer = tensorflow.compat.v1.summary.FileWriter(logdir, sess.graph)  # must be done after graph is constructed
 
 # initialize variables existed in the graph
-sess.run(tf.global_variables_initializer())
+sess.run(tensorflow.global_variables_initializer())
 
 # training DQN agent
 rewards_list = []

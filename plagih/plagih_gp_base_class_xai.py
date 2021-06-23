@@ -534,15 +534,15 @@ class ExplainableGP(object):
                     try:
                         left_parent_nodes = left_parent.get_mutatable_nodes(allow_root=False)
                         left_rnd = random.choice(left_parent_nodes)
-                        swap_coolxtype_out = left_rnd.label.coolxtype[1]
-                        right_parent_nodes = right_parent.get_mutatable_nodes(coolxtype_out=swap_coolxtype_out)
+                        swap_xtype_out = left_rnd.label.xtype[1]
+                        right_parent_nodes = right_parent.get_mutatable_nodes(xtype_out=swap_xtype_out)
                         if right_parent_nodes:
                             right_rnd = random.choice(right_parent_nodes)
                         else:
-                            swap_coolxtype_out = float if swap_coolxtype_out == bool else bool  # the other swap type now
-                            right_parent_nodes = right_parent.get_mutatable_nodes(allow_root=False, coolxtype_out=swap_coolxtype_out)
+                            swap_xtype_out = float if swap_xtype_out == bool else bool  # the other swap type now
+                            right_parent_nodes = right_parent.get_mutatable_nodes(allow_root=False, xtype_out=swap_xtype_out)
                             right_rnd = random.choice(right_parent_nodes)
-                            left_rnd = left_parent.get_mutatable_nodes(coolxtype_out=swap_coolxtype_out)
+                            left_rnd = left_parent.get_mutatable_nodes(xtype_out=swap_xtype_out)
                     except:
                         raise Exception
 

@@ -37,7 +37,7 @@ class ChooseOperators(Selectable):
             @:param operator_pool: list with operators and their weight of being selected
             """
             # sfeh dunno if that works... 2f not in x
-            opxtypes = [oper.coolxtype for oper in operator_pool.keys()]
+            opxtypes = [oper.xtype for oper in operator_pool.keys()]
             has_2f = any([float == x[1] for x in opxtypes])
             has_2b = any([bool == x[1] for x in opxtypes])
             has_f2b = any([float in x[0] and bool == x[1] for x in opxtypes])
@@ -86,17 +86,17 @@ class ChooseOperators(Selectable):
         for xlabel, prob in operator_pool.items():
             # choose_oparray[None][0].append(xlabel)  # all operators # delete this? none required?
             # choose_oparray[None][1].append(prob)
-            choose_oparray[xlabel.coolxtype][0].append(xlabel)  # point mutations
-            choose_oparray[xlabel.coolxtype][1].append(prob)
-            choose_oparray[xlabel.coolxtype[1]][0].append(xlabel)  # construction of trees
-            choose_oparray[xlabel.coolxtype[1]][1].append(prob)
+            choose_oparray[xlabel.xtype][0].append(xlabel)  # point mutations
+            choose_oparray[xlabel.xtype][1].append(prob)
+            choose_oparray[xlabel.xtype[1]][0].append(xlabel)  # construction of trees
+            choose_oparray[xlabel.xtype[1]][1].append(prob)
 
         for o, p in choose_oparray.items():
             # normalizing the probabilities in every case to a sum of 1 (100%)
             # (saving some very little time...)
             choose_oparray[o][1] = [x / sum(p[1]) for x in p[1]]
 
-        self.choose_oparray = {coolxtype: lambda: np.random.choice(x[0], p=x[1]) for coolxtype, x in choose_oparray.items()}
+        self.choose_oparray = {xtype: lambda: np.random.choice(x[0], p=x[1]) for xtype, x in choose_oparray.items()}
 
     def select(self, xtype):
         """
@@ -158,7 +158,7 @@ class ChooseConstants(Selectable):
 
 class ChooseObservation(Selectable):
     """
-    func_list, probability_list = self.operators[coolxtype]
+    func_list, probability_list = self.operators[xtype]
     return np.random.choice(func_list, p=probability_list)
     """
 
@@ -167,7 +167,7 @@ class ChooseObservation(Selectable):
         Randomly choosing an operator-label for a given xtype.
         choose_oparray3 must be given, as they are different between runs.
         arity can also be set optionally, e.g. for point mutation
-        todo DOUBLE-check if this coolxtype is chosen correctly... better: replace it
+        todo DOUBLE-check if this xtype is chosen correctly... better: replace it
         """
         return self.observables[xtype]()
 
@@ -275,7 +275,7 @@ class TreeBuilder:
             # set path/id? todo
             # set depth? todo
             depth += 1
-            childs = [self.invent_core_depth(xt, depth_max, depth=depth, p_op=p_op) for xt in label.coolxtype[0]]
+            childs = [self.invent_core_depth(xt, depth_max, depth=depth, p_op=p_op) for xt in label.xtype[0]]
             return Node(label=label, is_fix=False, childs=childs)
         else:
             label = self.choose_term(xtype)
@@ -327,7 +327,7 @@ class TreeBuilder:
             # todo
             # coolcore.evolve_mutate_branch(build_size, choose_oparray3, env_vars.choose_obs,
             #                                      choose_distributions, float_decimals, size_mode=size_mode, full_or_grow=full_or_grow)
-            # coolcore.evolve_random_tree_depth(size_mode, coolxtype_root, build_size, full_or_grow)
+            # coolcore.evolve_random_tree_depth(size_mode, xtype_root, build_size, full_or_grow)
 
         # return coolcore
 
@@ -335,26 +335,26 @@ class TreeBuilder:
 # sfeh https://docs.sympy.org/latest/tutorial/manipulation.html
 
 # import tensorflow as tf; import ast; import textwrap
-# print(', '.join(['[\'{}\', {:.2f}]'.format(v['label'], 1/v['coolxtype': ([], []), 'c-weight']) for k, v in op_what.items()]))  # retreive a list with all non-ast ops:
+# print(', '.join(['[\'{}\', {:.2f}]'.format(v['label'], 1/v['xtype': ([], []), 'c-weight']) for k, v in op_what.items()]))  # retreive a list with all non-ast ops:
 
 
-# def choose_term(coolxtype_out, choose_obs, choose_distributions, float_decimals):
+# def choose_term(xtype_out, choose_obs, choose_distributions, float_decimals):
 #     """
 #
 #     """
 #
 #     # sfeh 50% chance observation/value
-#     if random.choice(['obs', 'distrib']) == 'obs' and choose_obs[coolxtype_out]:
-#         obs = choose_obs[coolxtype_out]()
+#     if random.choice(['obs', 'distrib']) == 'obs' and choose_obs[xtype_out]:
+#         obs = choose_obs[xtype_out]()
 #         # print('SAME???', obs.name, obs.label)  # sfeh
 #         return obs
 #     else:
-#         dist_fun = random.choice(choose_distributions[coolxtype_out])
+#         dist_fun = random.choice(choose_distributions[xtype_out])
 #         value = dist_fun()
-#         if coolxtype_out == float:  # sfeh int aswell?
+#         if xtype_out == float:  # sfeh int aswell?
 #             value = float(round(value, float_decimals))
 #             const = FloatConstant(value)
-#         elif coolxtype_out == bool:
+#         elif xtype_out == bool:
 #             const = BoolConstant(value)
 #         else:
 #             raise Exception('ASDASD NOOO WHYY')

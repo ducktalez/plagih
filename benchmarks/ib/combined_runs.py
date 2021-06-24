@@ -108,7 +108,7 @@ def eval_and_lut(eval_list, parsim_MAX, parsim_1MAX, lut_file, mp_cpu_MAX):
     return combined_all_cpy
 
 
-def plot_best_prediction(root_dir_eval, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, mp_cpu_MAX):
+def plot_best_prediction(rootdir_eval, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, mp_cpu_MAX):
     """
     plot best guess
     sfeh test RMSE?
@@ -123,13 +123,13 @@ def plot_best_prediction(root_dir_eval, parsims, combined_all_p, lut_file, parsi
     bestregr_data = [[' '.join(f'{xx:0.0f}' for xx in x['parsims']), x['experiment'], x['experiment_safe'], x['experiment_r50'], x['experiment_safe_r50']]
                      for x in best_regrerr_dict]
     try:
-        yaml_dump(root_dir_eval / 'best_regrerr.yaml', bestregr_data)  # sfeh delete this?
+        yaml_dump(rootdir_eval / 'best_regrerr.yaml', bestregr_data)  # sfeh delete this?
     except:
         # sfeh FFS this FUCKING includes
 
-        with Path.open(root_dir_eval / 'best_regrerr.yaml', 'w') as file:
+        with Path.open(rootdir_eval / 'best_regrerr.yaml', 'w') as file:
             _ = yaml.dump(bestregr_data, file, default_flow_style=False, sort_keys=False)
-    # yaml_dump(root_dir_eval / 'best_regrerr.yaml', [' '.join(str(xx) for xx in x['parsims']) for x in best_regrerr_dict])  # sfeh delete this?
+    # yaml_dump(rootdir_eval / 'best_regrerr.yaml', [' '.join(str(xx) for xx in x['parsims']) for x in best_regrerr_dict])  # sfeh delete this?
 
     """
     okay
@@ -188,7 +188,7 @@ def plot_best_prediction(root_dir_eval, parsims, combined_all_p, lut_file, parsi
     #     ax.legend(loc='lower right')
     #     ax2.legend(loc='lower left')
     #
-    #     path_regrallplot = root_dir_eval / f'regression_all.pdf'
+    #     path_regrallplot = rootdir_eval / f'regression_all.pdf'
     #     fig.savefig(path_regrallplot)
     #     plt.close('all')
 
@@ -293,7 +293,7 @@ def merge_paretos(path_main):
         fig.savefig(path_paretocombined)
         plt.close('all')
 
-    print('IB combined runs: merged pareto entries into one plot!')
+    print('IB combined runs: merged pareto pareto into one plot!')
     return
 
 
@@ -305,7 +305,7 @@ def main():
     parser.add_argument('-mainpath', type=str, help='lol does not work sf', default='IB_MSE_sim2')
     parser.add_argument('-auto', action='store_true')
     parser.add_argument('-locallut', action='store_true')
-    parser.add_argument('-mp_cpu_cores_max', type=int,  default=8)
+    parser.add_argument('-mp_cores', type=int,  default=8)
     parser.add_argument('-parsim_max_sum', type=int, default=40)
     parser.add_argument('-parsim_max_single', type=int, default=40)
     args = parser.parse_args()
@@ -324,7 +324,7 @@ def main():
                 if runfolders.name[:2] == 'IB':
                     print(f'\nEvaluating {runfolders.name}')
                     try:
-                        combined_lists(runfolders, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, cpu_cores=args.mp_cpu_cores_max)
+                        combined_lists(runfolders, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, cpu_cores=args.mp_cores)
                     except Exception as ex:
                         print(f'Failed evaluation for {runfolders.name}. ignoring. Reason: {ex}')
                         # sfeh except only the one fail that is required?
@@ -332,7 +332,7 @@ def main():
                     print(f'\nSkipping {runfolders.name}')
 
     else:
-        combined_lists(mainpath, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, cpu_cores=args.mp_cpu_cores_max)
+        combined_lists(mainpath, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, cpu_cores=args.mp_cores)
     return
 
 

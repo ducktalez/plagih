@@ -341,8 +341,8 @@ if __name__ == "__main__":
     expr = 'Mini(-1 - 1 + sqrt(1)'
     expr = 'tanh(1.556)'
     expr = 'Maxi(2.202197, (Abs(cartVel) - sqrt(cartVel)))'
-    # expr = 'sign(((a * b) ** 10))'  # takes too long
-    # expr = '0.307785*Consumption_2 - 0.779543*Gain_3 + 0.779543*Gain_9 - Shift_9 + 0.779543*Ifte(-Shift_8 < Consumption_5, Shift_7, Shift_4)'
+    # nlabel = 'sign(((a * b) ** 10))'  # takes too long
+    # nlabel = '0.307785*Consumption_2 - 0.779543*Gain_3 + 0.779543*Gain_9 - Shift_9 + 0.779543*Ifte(-Shift_8 < Consumption_5, Shift_7, Shift_4)'
     obs = {'cartVel': 0.5, 'cartPos': -0.8}
     # obs = ['cartPos', 'cartVel']
     # symloc = {x: sympy.symbols(x, real=True, imaginary=False) for x in obs}
@@ -352,7 +352,7 @@ if __name__ == "__main__":
 
     sympex = plagih_sympify(expr, eval_locals=obs)
 
-    # print(plagih_sympify(expr))
+    # print(plagih_sympify(nlabel))
     print(sympex)
 
 """

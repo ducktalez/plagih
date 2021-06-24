@@ -79,7 +79,7 @@ def tree_graph(expr):
         import matplotlib.pyplot as plt
         import networkx as nx
         # [...] Execution of code that produce a tree expression
-        nodes, edges, labels = graph(expr)
+        nodes, edges, labels = graph(nlabel)
         g = nx.Graph()
         g.add_nodes_from(nodes)
         g.add_edges_from(edges)

@@ -36,25 +36,10 @@ def load_prepared_run(conf, prepared_run, slurm_runs_folder):
     conf.gen_max = 6000   # sfeh this is not used if >100 generations are without a new pareto entry
 
     if 'IB' == prepared_run[:2]:
-        root_dir = pathify(f'{slurm_runs_folder}/{prepared_run[:-2]}/{prepared_run}')
+        rootdir = pathify(f'{slurm_runs_folder}/{prepared_run[:-2]}/{prepared_run}')
         path_data_csv = pathify('ib/gp_files/samples_prepared.csv')
         kernel_name = 'regression bounded'
-        ori_trs = {'50_0': 'ib/gp_files/ib_tree_50s_0.csv',
-                   '50_1': 'ib/gp_files/ib_tree_50s_1.csv',
-                   '50_2': 'ib/gp_files/ib_tree_50s_2.csv',
-                   'udluft_0': 'ib/gp_files/ib_tree_udluft_0.csv',
-                   'udluft_1': 'ib/gp_files/ib_tree_udluft_1.csv',
-                   'udluft_2': 'ib/gp_files/ib_tree_udluft_2.csv',
-                   'mean_0': 'ib/gp_files/ib_tree_mean_0.csv',
-                   'mean_1': 'ib/gp_files/ib_tree_mean_1.csv',
-                   'mean_2': 'ib/gp_files/ib_tree_mean_2.csv',
-                   'sim1_0': 'ib/gp_files/ib_sim1_0.csv',
-                   'sim1_1': 'ib/gp_files/ib_sim1_1.csv',
-                   'sim1_2': 'ib/gp_files/ib_sim1_2.csv',
-                   'sim2_0': 'ib/gp_files/ib_sim2_0.csv',
-                   'sim2_1': 'ib/gp_files/ib_sim2_1.csv',
-                   'sim2_2': 'ib/gp_files/ib_sim2_2.csv',
-                   's3m_0': 'ib/gp_files/ib_s3m_0.csv',
+        ori_trs = {'s3m_0': 'ib/gp_files/ib_s3m_0.csv',
                    's3m_1': 'ib/gp_files/ib_s3m_1.csv',
                    's3m_2': 'ib/gp_files/ib_s3m_2.csv',
                    'scratch': None}
@@ -74,7 +59,7 @@ def load_prepared_run(conf, prepared_run, slurm_runs_folder):
     elif 'MTC' in prepared_run:
         kernel_name = 'regression bounded discrete'
 
-        root_dir = pathify(f'{slurm_runs_folder}/{prepared_run}')
+        rootdir = pathify(f'{slurm_runs_folder}/{prepared_run}')
         num_samples = '200' if 'MTC200' in prepared_run else '75'
         path_data_csv = pathify(f'mc/gp_files/samples{num_samples}.csv')
 
@@ -117,7 +102,7 @@ def load_prepared_run(conf, prepared_run, slurm_runs_folder):
     conf.action = action_name
     conf.name = prepared_run
 
-    return conf, root_dir, path_data_csv, path_origin_tree
+    return conf, rootdir, path_data_csv, path_origin_tree
 
 
 def main():  # argv sys.argv[1:]
@@ -137,8 +122,8 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-name', type=str, help='If the run has a name')
     parser.add_argument('-load_backup', '-backup', type=Path,
                         help='Starting a run from a backup file (backup.p).')
-    parser.add_argument('-root_dir', '-out_dir', type=Path,
-                        help='A custom output folder (root_dir). Not stable yet.')  # sfeh
+    parser.add_argument('-rootdir', '-out_dir', type=Path,
+                        help='A custom output folder (rootdir). Not stable yet.')  # sfeh
     parser.add_argument('-action', type=str, default=None,
                         help='(If there is more than one action) the .csv column holding the action. If empty, the last column is taken.')
     parser.add_argument('-data_csv', '-samples_csv', '-data_prepared', '-samples_ready', '-samples', type=Path)
@@ -147,10 +132,10 @@ def main():  # argv sys.argv[1:]
                         help='Kernel-name that will be analyzed to load the kernel. Currently only regression-versions.')
     parser.add_argument('-dc', type=str, action='append', default=[],
                         help='Drop columns from the loaded data-.csv file. Probably unused actions in the IB).')
-    parser.add_argument('-pop_max', '-pop_size', type=int, help='Set maximum pop for this run (updates the config)')
+    parser.add_argument('-pop_max', '-pop_size', type=int, help='Set maximum poplike for this run (updates the config)')
     parser.add_argument('-gen_max', '-gen_size', type=int)
     parser.add_argument('-gen_additionally', '-gen_add', type=int)
-    parser.add_argument('-mp_cpu_cores_max', type=int, default=4,
+    parser.add_argument('-mp_cores', type=int, default=4,
                         help='Maximum amount of cores for parallelisation. Sfeh: set default to max cores? 4 is for my old ass pc. Sorry^^')
     parser.add_argument('-prepared_run', '-config_lookup', '-run_prepared', '-lookup', type=str,
                         help='Handy lookup for quick access to runs that (at least I) currently use a lot')
@@ -169,8 +154,6 @@ def main():  # argv sys.argv[1:]
                              " Like a reboot, keeps local optima.")
     parser.add_argument('-testrun', action='store_true',
                         help='SFEH (not used yet): Start a large test run. no origin (scratch) -> restart -> paretoentry as origin, new run -> restart -> analyse')
-    parser.add_argument('-developer_fix', action='store_true',
-                        help='(Developer only) Flag that can be activated if certain code should be executed. Now used to fix Linux/Windows paths-bug.')
     parser.add_argument('-slurm_runs_folder', type=str, default='slurm_runs',
                         help='sfeh for fore than one version of the same run')
     # parser.add_argument('-sfeh_no_crazyops', action='store_true')
@@ -180,25 +163,25 @@ def main():  # argv sys.argv[1:]
     conf = GpConfig(args)  # Update the config with the possibly loaded input args
 
     prepared_run = args.prepared_run
-    # self.name = args.name or self.root_dir.resolve().name  # sfeh name? probably there are better names
+    # self.name = args.name or self.rootdir.resolve().name  # sfeh name? probably there are better names
 
     if prepared_run:
-        conf, root_dir, path_data_csv, path_origin_tree = load_prepared_run(conf, prepared_run, args.slurm_runs_folder)
+        conf, rootdir, path_data_csv, path_origin_tree = load_prepared_run(conf, prepared_run, args.slurm_runs_folder)
     else:
         path_data_csv = args.data_csv
         path_origin_tree = args.origin_tree
         try:
-            root_dir = args.load_config.parent
+            rootdir = args.load_config.parent
         except:
-            root_dir = None
+            rootdir = None
 
-    root_dir = args.root_dir or root_dir
-    path_make_dir(root_dir)
+    rootdir = args.rootdir or rootdir
+    path_make_dir(rootdir)
 
     """
     Starting the actual run
     """
-    gp = ExplainableGP(conf, root_dir, path_data_csv, path_origin_tree, args.mp_cpu_cores_max, developer_fix=args.developer_fix)
+    gp = ExplainableGP(conf, rootdir, path_data_csv, path_origin_tree, args.mp_cores)
 
     if args.analyse:
         if args.force_new_run:
@@ -229,7 +212,7 @@ def main():  # argv sys.argv[1:]
         conf.gen_max = args.gen_max  # workaroung for prepared run
 
     if args.analyse or not args.less_files:
-        gp.analyse_pareto(cpu_cores=args.mp_cpu_cores_max)
+        gp.analyse_pareto(cpu_cores=args.mp_cores)
     else:
         print_blue('You actively decided not to use analyse out run.\n'
                    'This option was created for distributed cluster evaluation on slurm. The files\n'

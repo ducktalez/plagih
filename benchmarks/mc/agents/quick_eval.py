@@ -309,7 +309,7 @@ def eval_agent_list(agent_list, goal_agent, n=100, dir_save=Path('img/')):
         file.write(summary_text)
 
 
-def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
+def auto_evaluate_run_end(rootdir, sarsa_agent, n=100):
     """
     asd
     """
@@ -328,14 +328,14 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
             return int(round(max(0, min(2, mc_actn))))
 
     try:
-        sarsa_dummy, bur_lut = pickle_load(root_dir / 'backup/mcevalbackup.p')  # sarsa_dummy  (results, result_dummy)   (result, dummy)
+        sarsa_dummy, bur_lut = pickle_load(rootdir / 'backup/mcevalbackup.p')  # sarsa_dummy  (results, result_dummy)   (result, dummy)
     except Exception:
         bur_lut = {}
         _, _, sarsa_dummy = mtc_heatmap_helper(sarsa_agent, 256, n, dummy=1)
 
-    dir_save = path_make_dir(root_dir / 'sfehs_eval')
+    dir_save = path_make_dir(rootdir / 'sfehs_eval')
 
-    gp_backup_data = pickle_load(root_dir / 'backup/backup.p')
+    gp_backup_data = pickle_load(rootdir / 'backup/backup.p')
     gen_id, pareto, pop_base, monitor_pd, a_helping_dict = gp_backup_data
 
     agent_performance = {}
@@ -361,7 +361,7 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
             print(f'MTC eval failed because of: {ex}')
             agent_performance[parsim] = [parsim, fitness, np.nan, np.nan, None, None]
 
-    # pickle_dump(root_dir / 'backup/mcevalbackup.p', (sarsa_dummy, bur_lut))
+    # pickle_dump(rootdir / 'backup/mcevalbackup.p', (sarsa_dummy, bur_lut))
 
     with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots()

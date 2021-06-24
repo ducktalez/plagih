@@ -104,7 +104,7 @@ class AgentMerger(Ib_Agent):
         self.state_history.appendleft(env_state)
 
 #        if len(self.state_history) > 10:
-#            self.state_history.pop()
+#            self.state_history.poplike()
 
         at = np.array([0, 0, 0], dtype=np.float32)
         SetPoint = self.get_h('p', 0)

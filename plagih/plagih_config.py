@@ -9,7 +9,7 @@ class GpConfig:
 
     def __init__(self, args):
         """
-        SFEH NEVER try to save paths here. switching between systems is worse than HitlerAIDS
+        SFEH NEVER try to save io here. switching between systems is worse than HitlerAIDS
         """
         self.pl_version = 1.1  # must only update if vital changes were made, version important when loading old run
         self.name = args.prepared_run or None  # sfeh
@@ -40,7 +40,7 @@ class GpConfig:
 
         self.period = conf.get('period', {'gen_plots': 50, 'gen_save': 25})  # sfeh 10 or 5 for debugging, something higher for actual runs
 
-        self.float_decimals = conf.get('float_decimals', 6)  # makes the lut more practical - more hits are achieved. be careful with rounding to zero.  # sfeh check this
+        self.precision = conf.get('precision', 6)  # makes the lut more practical - more hits are achieved. be careful with rounding to zero.  # sfeh check this
 
         # sfeh not here?
         self.evolve_list_random = conf.get('evolve_list_random', None)  # sfeh
@@ -52,8 +52,8 @@ class GpConfig:
         Not used
         """
         # self.restart_count
-        # self.fitness_decimals = int(conf.get('fitness_decimals', 6))  # rounding the fitness
-        # self.float_decimals = int(conf.get('float_decimals', 6))  # None or 1-30 decimals
+        # self.fitness_decimals = int(conf.get('fitness_decimals', 6))  # rounding the fitness_train
+        # self.precision = int(conf.get('precision', 6))  # None or 1-30 decimals
         # self.parsimony_mean = conf.get('parsimony_mean', 15)  #: 20,  # If you wnt your population to be a certain size
         # self.tree_depth_min = conf.get('tree_depth_min', 1)  #: 2,
         # self.swim = 'p'  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool

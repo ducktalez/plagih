@@ -72,7 +72,7 @@ def mp_dummy(arg):
     return Nu.e2(arg)
 
 
-class Huehue(object):
+class Ahgdfgh(object):
 
     def __init__(self):
 
@@ -127,7 +127,7 @@ def lululu():
     manager = Manager()
     # l = manager.list([i*i for i in range(n)])
     for v in [2, 3, 4, 5]:
-        hue = Huehue()
+        hue = Ahgdfgh()
         t0 = time.perf_counter()
         hue.new_p(n=1000, v=v)
         t1 = time.perf_counter()

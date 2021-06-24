@@ -1264,7 +1264,6 @@ class Node:
         """
         these are required for the evaluation (are loaded by Tensorflow)
         """
-        print('sd', self.get_nlabel())
         obslist = []
         if self.get_arity() > 0:
             obslist.extend(list(itertools.chain(*[cc.get_observation_list() for cc in self.childs])))
@@ -4021,10 +4020,8 @@ if __name__ == '__main__':
     tree3 = tb.evolve_mutate_branch_depth(tree2, depth_max=4)
     tree4 = tb.evolve_mutate_branch_depth(tree3, depth_max=4)
     tree5, tree6 = tb.evolve_crossover(tree3, tree4)
-    print('crossover')
     t3 = tb.invent_core_depth(float, 4, p_op=0.5)
     t4 = tb.invent_core_depth(float, 4, p_op=0.8)
     t5 = tb.evolve_mutate_filter_random(t3)
-    print('tree3', t3)
     print('huehue', t4, t4.get_observation_list())
     print(inputs.select(float).nlabel)

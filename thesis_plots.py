@@ -11,7 +11,7 @@ import gym
 import math
 import pickle
 # import multiprocessing as mp
-from plagih.file_interaction import *
+from plagih.util import *
 from benchmarks.ib.ib_eval_agents import eval_combined_agents
 from benchmarks.mc.agents.try_agents import *
 

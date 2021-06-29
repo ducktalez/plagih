@@ -15,7 +15,7 @@ import gym
 import math
 import pickle
 # import multiprocessing as mp
-from plagih.file_interaction import *
+from plagih.util import *
 
 
 def mtc_plot_decisions_space(agent, folder, name, cmap='bwr', dummy=False, n=100, nan_style=None, no_colorbar=False, backup_results1=None):

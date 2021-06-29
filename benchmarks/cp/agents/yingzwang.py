@@ -72,7 +72,7 @@ def build_summaries():
     ph_Qmax = tensorflow.compat.v1.placeholder(tensorflow.float32)
     tensorflow.compat.v1.summary.scalar("Qmax_ep", ph_Qmax)
 
-    # merge all summary op (must be done at the last step)
+    # merge all summary ops (must be done at the last step)
     summary_op = tensorflow.compat.v1.summary.merge_all()
 
     return summary_op, ph_reward, ph_Qmax

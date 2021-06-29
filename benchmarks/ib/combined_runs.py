@@ -15,7 +15,7 @@ import multiprocessing as mp
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
-from plagih.file_interaction import *
+from plagih.util import *
 
 
 # def get_combined_runs(agents, parsim_max_sum, parsim_max_single):

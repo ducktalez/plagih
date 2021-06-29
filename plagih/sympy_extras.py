@@ -49,6 +49,8 @@ Useful information:
     is_Point = False
     is_MatAdd = False
     is_MatMul = False
+
+    #todo combine the nodes with the sympy shizzle
 """
 import re
 
@@ -161,6 +163,12 @@ class Orb(Function):
 
     def _sympy_(self, a, b):
         return eval(self, a, b)
+
+    # def _sympy_(self, a, b):
+    #     """
+    #     todo
+    #     """
+    #     return eval(a or b)
 
 
 class Notb(Function):
@@ -355,6 +363,11 @@ if __name__ == "__main__":
     # print(plagih_sympify(nlabel))
     print(sympex)
 
+# import sympy
+# x = '["+",["-",["Ifte",["True"],[2],[2.043]],["cartVel"]],[-1.3]]'
+# x = '["+",["-",["Ifte","True",2,2.043],"cartVel"],-1.3]'
+# print(x)
+# x = sympy.sympify(x)  # [+, ###]
 """
 sfeh
 Lastly, it is recommended that you not use I, E, S, N, C, O, or Q 

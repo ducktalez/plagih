@@ -3,7 +3,7 @@ def pause(menu_dict):
     todo
     """
 
-    options = ['', '?', 'help', 'i', 'm', 'g', 's', 'db', 'ts', 'min', 'bal', 'l', 'poplike', 'e', 'p', 'id', 'dir', 'load', 'w', 'add', 'q']
+    options = ['', '?', 'help', 'i', 'm', 'g', 's', 'db', 'ts', 'min', 'bal', 'l', 'pop_list', 'e', 'p', 'id', 'dir', 'load', 'w', 'add', 'q']
 
     while True:
         try:
@@ -34,7 +34,7 @@ def pause(menu_dict):
         print('\t\033[36m\033[1m bal \t\033[0;0m adjust balance of genetic operators')
         print('')
         print('\t\033[36m\033[1m l \t\033[0;0m list Trees with leading fitness_train scores')
-        print('\t\033[36m\033[1m poplike \t\033[0;0m list Trees in current population')
+        print('\t\033[36m\033[1m pop_list \t\033[0;0m list Trees in current population')
         print('\t\033[36m\033[1m e \t\033[0;0m evaluate a single Tree against the test data_csv_path')
         print('\t\033[36m\033[1m p \t\033[0;0m print a single Tree to screen')
         print('')
@@ -201,7 +201,7 @@ def pause(menu_dict):
         for n in sorted(menu_dict['fittest_dict']):
             print('\t ', n, ':', menu_dict['fittest_dict'][n])
 
-    elif menu == 'poplike':  # list Trees in the current population
+    elif menu == 'pop_list':  # list Trees in the current population
         if menu_dict['gen_id'] == 1:
             menu_dict['input_a'] = 'pop_a'
         else:

@@ -9,7 +9,7 @@ class GpConfig:
 
     def __init__(self, args):
         """
-        SFEH NEVER try to save io here. switching between systems is worse than HitlerAIDS
+        SFEH NEVER try to save ui here. switching between systems is worse than HitlerAIDS
         """
         self.pl_version = 1.1  # must only update if vital changes were made, version important when loading old run
         self.name = args.prepared_run or None  # sfeh
@@ -25,7 +25,7 @@ class GpConfig:
         # can be updated from everywhere
         self.pop_max = args.pop_max or int(conf.get('pop_max', 1000))  #: 1000,  # amount is never tested
         self.gen_max = args.gen_max or int(conf.get('gen_max', 1000))  # : 1000,  # Maximum amount of generations
-        self.action_name = args.action_name or conf.get('action', None)
+        self.action_name = args.action_name or conf.get('action_name', None)
         self.kernel_name = args.kernel_name or conf.get('kernel_name', 'regression')
 
         # only from command line
@@ -47,6 +47,7 @@ class GpConfig:
         self.complexity_measure = conf.get('complexity_measure', 'tree_edit_distance')  # sfeh check used origin here? backup loaded origin?
 
         self.action_type_sfeh = float  # todo
+        self.action_name = conf.get('action', None)
 
         """
         Not used

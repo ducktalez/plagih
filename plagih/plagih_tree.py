@@ -20,6 +20,7 @@ from plagih.tree_distances.tree_edit_distance import apted_distance
 from dataclasses import dataclass
 import itertools
 import logging
+logging.basicConfig(filename='example.log', filemode='a', level=logging.DEBUG)  # todo encoding='utf-8', ??
 
 # lol, lol. https://github.com/tensorflow/tensorflow/issues/27023 these messages are tingeling
 

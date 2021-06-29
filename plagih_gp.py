@@ -33,8 +33,9 @@ def load_prepared_run(conf, prepared_run, slurm_runs_folder):
     ['IB', 'RMSE', 'explun01', 'tanh', 's3m', '1']
     ['MTC75', 'MSE', 'simple']
     """
-    conf.gen_max = 6000   # sfeh this is not used if >100 generations are without a new pareto entry
+    conf.gen_max = 6000   # sfeh this is not used if >100 generations are without a new paretos entry
 
+    # todo: load a file that does approximately the same as this hard coded stuff
     if 'IB' == prepared_run[:2]:
         rootdir = pathify(f'{slurm_runs_folder}/{prepared_run[:-2]}/{prepared_run}')
         path_data_csv = pathify('ib/gp_files/samples_prepared.csv')
@@ -124,8 +125,8 @@ def main():  # argv sys.argv[1:]
                         help='Starting a run from a backup file (backup.p).')
     parser.add_argument('-rootdir', '-out_dir', type=Path,
                         help='A custom output folder (rootdir). Not stable yet.')  # sfeh
-    parser.add_argument('-action', type=str, default=None,
-                        help='(If there is more than one action) the .csv column holding the action. If empty, the last column is taken.')
+    parser.add_argument('-action_name', '-action', type=str, default=None,
+                        help='Specify the .csv column holding the action (output) in the data (if not clear or more than one action). If empty, the last column is taken.')  # todo tae last one
     parser.add_argument('-data_csv', '-samples_csv', '-data_prepared', '-samples_ready', '-samples', type=Path)
     parser.add_argument('-origin_tree', type=Path)
     parser.add_argument('-kernel_name', type=str,
@@ -142,7 +143,7 @@ def main():  # argv sys.argv[1:]
 
     parser.add_argument('-analyse', '-analyze', '-analysis', action='store_true', default=None)
     parser.add_argument('-less_files', action='store_true',
-                        help='Creates less files by not analysing pareto candidates at the end. -analysis trumps this! (option to save disk space)')
+                        help='Creates less files by not analysing paretos candidates at the end. -analysis trumps this! (option to save disk space)')
     parser.add_argument('-no_files', action='store_true',
                         help='Not used yet. Create no files. a sfeh wasd-dummy, that stops the program from writing any files whatsoever. Just to be sure.')
     parser.add_argument('-tf_device_log', '-tf_log', action='store_true',
@@ -156,7 +157,6 @@ def main():  # argv sys.argv[1:]
                         help='SFEH (not used yet): Start a large test run. no origin (scratch) -> restart -> paretoentry as origin, new run -> restart -> analyse')
     parser.add_argument('-slurm_runs_folder', type=str, default='slurm_runs',
                         help='sfeh for fore than one version of the same run')
-    # parser.add_argument('-sfeh_no_crazyops', action='store_true')
 
     args = parser.parse_args()
 
@@ -190,7 +190,7 @@ def main():  # argv sys.argv[1:]
             gp.backup_load(args.load_backup)
         except FileNotFoundError as no_file_ex:
             raise FileNotFoundError(f'You need to load a backup file to analyse! {no_file_ex}')
-        # sfeh idea: track amount of created trees per parsimony? relevant for the pareto front
+        # sfeh idea: track amount of created trees per parsimony? relevant for the paretos front
 
     else:
         if not args.force_new_run:

@@ -2,6 +2,9 @@
 
 Functions, that might be addable in the future:
 """
+import dataclasses
+from collections import deque
+
 from plagih.node_labels import *
 
 import math
@@ -34,6 +37,7 @@ import ast
 import pickle
 from pathlib import Path
 from plagih.paretofront import *
+import matplotlib.pyplot as plt
 import yaml
 # no imports here
 import pickle
@@ -46,6 +50,10 @@ import re
 import numpy as np
 
 tensorflow.compat.v1.disable_eager_execution()  # sfeh damn what was this line good for?
+
+STATE_BUILDING = 0
+STATE_COMPLETE = 1
+STATE_EVALUATED = 2
 
 
 class BColors:  # sfeh can be deleted
@@ -95,7 +103,7 @@ def yaml_dump(path, data, print_type=None, default_flow_style=True):
         return
 
 
-def print_warning(self, message_type, text, print_type=None):
+def print_warning(message_type, text, print_type=None):
     """
     Printing warnings
     """
@@ -352,11 +360,11 @@ def data_from_csv(df, action):
 
 
 class UserInteraction:
-    backup_p = 'backup/backup.p'
-    folder_pycode = ''
+    dir_pycode = ''
+    file_backup = 'backup/backup.p'
+    file_distributions = 'run_files/distributions_file.yaml'
 
     # Files that can can (in theory) be used to prepare a runable folder. maybe deprecated now, sfeh.
-    use_distributions_file = 'run_files/distributions_file.yaml'
 
     def absolute(self, path, make_dirs=False):
         p = self.rootdir / path
@@ -378,7 +386,7 @@ class UserInteraction:
 
     # def plot_agent_histogram(self, parsim, tree, path_hist):
     #     """
-    #     Make histograms for all pareto-efficient candidates
+    #     Make histograms for all paretos-efficient candidates
     #     sfeh: based on training data- maybe use test data...
     # 
     #     useful code?
@@ -388,7 +396,7 @@ class UserInteraction:
     #     # hist, bins = np.histogram(histogram_data, bins=bins, weights=pairwise_fitness)
     #     """
     # 
-    #     action_bins = self.kernel.histogram_bins(self.env_vars.eval_action.minmax)
+    #     action_bins = self.kernel.histogram_bins(self.env_vars.action.minmax)
     #     expr_sym = tree.eval_expr_sym()
     #     used_observations = tree.get_observation_list()
     #     pairwise_diff = self.kernel.eval_tf(expr_sym, used_observations)['pairwise_diff']
@@ -406,83 +414,58 @@ class UserInteraction:
     def backup_save(self):
         """
         automatically saves everything important after a certain amount of time
-        - save the pareto front (custom_done)
+        - save the paretos front (custom_done)
         - save the last generation (custom_done)
         - Save valuable meta-data_csv_path: current generation (custom_done)
         """
 
         # help_dict = {'self.monitor_evol': self.monitor_evol,
         #              'gens_since_last_pareto': self.gens_since_last_pareto}  # sfeh save complete config?    # sfeh i dont think we need the config
-        # run_backup_data = self.gen_id, self.pareto, self.pop_base, self.monitor_df, help_dict  # sfeh use this later, help_dict
-        # pickle_dump(self.rootdir / self.backup_p, run_backup_data)
+        # run_backup_data = self.gen_id, self.paretos, self.pop_base, self.monitor_df, help_dict  # sfeh use this later, help_dict
+        # pickle_dump(self.rootdir / self.file_backup, run_backup_data)
 
         # run_backup_dict = {'self.gen_id': self.gen_id,
-        #                    'self.pareto': self.pareto,
+        #                    'self.paretos': self.paretos,
         #                    'self.pop_base': self.pop_base,
         #                    'self.monitor_df': self.monitor_df,
         #                    'help_dict': help_dict}
         #
         # path_backupyyy = path_make_dir(self.rootdir / 'backup/backup.yaml')
-        # yaml_dump(path_backupyyy, run_backup_dict, self.print_type=self.print_type)
+        # yaml_dump(path_backupyyy, run_backup_dict, self.ui.print_type=self.ui.print_type)
 
         return
 
-    def gp_load_oparray(self, path_operators=None, print_type=None):
-        """
-        Offers the possibility for the user to load a .yaml-file of operators for the gp-process.
-        operator_pool is used otherwise.
-        The Operator must match its version in the 'op'-Array (alternatively search for op_what)
-        The second value in the tuple denotes the probability of choosing an operator
-
-        @:param sfeh_no_crazyops: sfeh's workaround for being too lazy to load a file with the actual operators
-
-        Load all operator_pool ready-to-use from a file
-        """
-
-        try:
-            operator_pool = yaml_load(Path(path_operators))
-        except:
-            printez('i', 'Opt-in not specified: Operators-file does not exist.\n'
-                         'Creating one with a default list of mathematical operator_pool.', print_type=print_type)
-            operator_pool = None
-        choose_operators = ChooseOperators(operator_pool=operator_pool)
-
-        yaml_dump(self.rootdir / 'backup/operators_used.yaml', operator_pool, default_flow_style=True)  # delete this??
-
-        return choose_operators
-
     def check_update(self):
         """
-        Update pareto front
+        Update paretos front
         update population (fitness_train, parsimony, etc)
         also, raise if fitness_train problem
         """
-        # oldsize = len(self.pareto)
-        # pareto_list = self.pareto[:]
-        # self.pareto = []
+        # oldsize = len(self.paretos)
+        # pareto_list = self.paretos[:]
+        # self.paretos = []
         # for (parsimony, fitness_train, tree) in pareto_list:
         #     fitness_train = round(fitness_train, self.conf.precision)
         #     tree.meta.fitness_train = round(fitness_train, self.conf.precision)
         #     entry = [parsimony, fitness_train, tree]
-        #     self.pareto_append(entry)
-        # self.printpl('i', f'Updating pareto front from old run. length: {oldsize}, new pareto length: {len(self.pareto)}')
+        #     self.insert(entry)
+        # self.printpl('i', f'Updating paretos front from old run. length: {oldsize}, new paretos length: {len(self.paretos)}')
 
         # sfeh recompute parsimony and fitness_train for every tree (optional?)
         # also rebuild trees?
 
-        poplen = len(self.pop_base)
         pop_base_copy = self.pop_base[:]
         self.pop_base = []
         for tree in pop_base_copy:
             tree.meta.fitness_train = round(tree.meta.fitness_train, self.conf.precision)
             self.pop_base.append(tree)
-        self.printpl('i', f'Updating population from old run. length: {poplen}, new population length: {len(self.pop_base)}')
+        self.printpl('i', f'Updating population from old run. length: {len(self.pop_base)}, new population length: {len(self.pop_base)}')
 
     def backup_load(self, path_load_backup=None):
         """
         If a backup-file is found...
         """
-        path_backup = path_load_backup or self.rootdir / self.io.backup_p  # sfeh file-load
+        path_backup = path_load_backup or self.rootdir / self.file_backup  # sfeh file-load
 
         if Path.is_file(path_backup):
             self.print_g('g', f'Loading data from backup-file {path_backup}')
@@ -531,26 +514,6 @@ class UserInteraction:
             time_now = time.strftime("%d.%m %H:%M", time.localtime())
             print(f'[{time_now}] {text}')
         return
-
-
-class PtreeMeta:
-    """
-    sfeh: fitness_train vs. fitness_train
-    """
-
-    def __init__(self, fitness_train=None):
-        self.hash = None
-        self.fitness_train = fitness_train
-        self.parsimony = None
-        self.expr_raw = None
-        self.expr_sym = None
-
-        self.depth = None
-        self.complete = None
-        self.last_evolution = None
-
-    def __str__(self):
-        return f"hash: {self.hash}, fitness_train: {self.fitness_train}, parsimony: {self.parsimony}, {self.depth}, {self.last_evolution}, {self.expr_raw}, {self.expr_sym}"
 
 
 # @dataclass  # sfeh maybe
@@ -644,7 +607,6 @@ class Constant(Terminal):
 
 class Observation(Terminal):
     """
-
     todo discuss: labels should not have a sign (-pos); just pos
     # self.name = nlabel if nlabel[0] != '-' else nlabel[1:]  # sfeh delete?
     """
@@ -656,7 +618,7 @@ class Observation(Terminal):
         self.nlabel = nlabel
         self.fam, self.timeindex, _ = observation_get_family_and_time(self.nlabel, none_return=None)  # remove this self.preexpr
         self.xtype = (tuple([]), float)  # todo
-        self.sym_str = self.nlabel  # sfeh delete?
+        self.expr_sym = self.nlabel  # sfeh delete?
         self.index_minmax = None
 
         latex = f'\\text{{{self.fam}}}'  # remove this {self.preexpr}
@@ -713,7 +675,7 @@ class FloatConstant(Constant):
         # super().__init__(nlabel)
         self.nlabel = nlabel
         self.latex = (f'{self.nlabel:.3f}', f'{self.nlabel:.3f}')
-        self.sym_str = self.nlabel
+        self.expr_sym = self.nlabel
         self.pycode = self.nlabel
 
     def mutate_filter(self, filter_type='gaussian_filter', precision=6, *args, **kwargs):  # todo
@@ -739,7 +701,7 @@ class BoolConstant(Constant):
         # super().__init__(nlabel)
         self.nlabel = expr
         self.latex = (f'{self.nlabel}', f'{self.nlabel}')
-        self.sym_str = str(self.nlabel)
+        self.expr_sym = str(self.nlabel)
         self.pycode = str(self.nlabel)
 
     def mutate_filter(self, *args, **kwargs):
@@ -760,7 +722,8 @@ class EvalAction:
 
     def __init__(self, name):
         self.nlabel = name
-        self.name = name  # delete this
+        self.minmax = (0, 2)  # todo
+        self.tf_name = name
 
 
 class Add(Operator):
@@ -768,7 +731,7 @@ class Add(Operator):
     arity = 2
     tflow = tensorflow.add
     latex = ('+', '{}+{}')
-    sym_str = '({} + {})'
+    expr_sym = '({} + {})'
     pycode = '({}+{})'
     xtype = (tuple([float, float]), float)
     #
@@ -785,7 +748,7 @@ class Subtract(Operator):
     arity = 2
     tflow = tensorflow.subtract
     latex = ('-', '{}-{}')
-    sym_str = '({} - {})'
+    expr_sym = '({} - {})'
     pycode = '({}-{})'
     xtype = (tuple([float, float]), float)
 
@@ -795,7 +758,7 @@ class Usub(Operator):
     arity = 1
     tflow = tensorflow.negative
     latex = ('-', '-{}')
-    sym_str = '(-{})'
+    expr_sym = '(-{})'
     pycode = '(-{})'
     xtype = (tuple([float]), float)
 
@@ -805,7 +768,7 @@ class Multiply(Operator):
     arity = 2
     tflow = tensorflow.multiply
     latex = ('\\cdot ', '{}\\cdot {}')
-    sym_str = '({} * {})'
+    expr_sym = '({} * {})'
     pycode = '({}*{})'
     xtype = (tuple([float, float]), float)
 
@@ -815,7 +778,7 @@ class Divide_no_nan(Operator):
     arity = 2
     tflow = tensorflow.math.divide_no_nan
     latex = ('\\div ', '\\frac{}{}')
-    sym_str = '({} / {})'
+    expr_sym = '({} / {})'
     pycode = '(lambda x, y: x/y if y!=0 else 0)(({}),({}))'
     xtype = (tuple([float, float]), float)
 
@@ -825,7 +788,7 @@ class Power(Operator):
     arity = 2
     tflow = tensorflow.pow
     latex = ('{{x}}^{{y}}', '{}^{}')
-    sym_str = '({}**Round({}))'
+    expr_sym = '({}**Round({}))'
     pycode = '({}**round({}))'
     xtype = (tuple([float, float]), float)
 
@@ -835,7 +798,7 @@ class Abs(Operator):
     arity = 1
     tflow = tensorflow.abs
     latex = ('abs', '|{}|')
-    expr = 'abs({})'
+    expr_sym = 'abs({})'
     pycode = 'abs({})'
     xtype = (tuple([float]), float)
 
@@ -845,7 +808,7 @@ class Sign(Operator):
     arity = 1
     tflow = tensorflow.sign
     latex = ('sign', 'sign({})')
-    sym_str = 'sign({})'
+    expr_sym = 'sign({})'
     pycode = 'np.sign({})'
     xtype = (tuple([float]), float)
 
@@ -855,7 +818,7 @@ class Round(Operator):
     arity = 1
     tflow = tensorflow.round
     latex = ('round', 'round({})')
-    sym_str = 'Round({})'
+    expr_sym = 'Round({})'
     pycode = 'round({})'
     xtype = (tuple([float]), float)
 
@@ -865,7 +828,7 @@ class Square(Operator):
     arity = 1
     tflow = tensorflow.square
     latex = ('x^2', '{}^2')
-    sym_str = 'Square({})'
+    expr_sym = 'Square({})'
     pycode = '({})**2'
     xtype = (tuple([float]), float)
 
@@ -875,7 +838,7 @@ class Sqrt(Operator):
     arity = 1
     tflow = tensorflow.sqrt
     latex = ('\\sqrt{x}', '\\sqrt{}')
-    sym_str = 'sqrt({})'
+    expr_sym = 'sqrt({})'
     pycode = 'math.sqrt({})'
     xtype = (tuple([float]), float)
 
@@ -885,7 +848,7 @@ class Log(Operator):
     arity = 1
     tflow = tensorflow.math.log
     latex = ('\\log()', '\\log{}')
-    sym_str = 'log({})'
+    expr_sym = 'log({})'
     pycode = 'math.log({})'
     xtype = (tuple([float]), float)
 
@@ -895,7 +858,7 @@ class Log1p(Operator):
     arity = 1
     tflow = tensorflow.math.log1p
     latex = ('\\log(1+x)', '\\log(1+{})')
-    sym_str = 'log1p({})'
+    expr_sym = 'log1p({})'
     pycode = 'math.log1p({})'
     xtype = (tuple([float]), float)
 
@@ -905,7 +868,7 @@ class Cos(Operator):
     arity = 1
     tflow = tensorflow.cos
     latex = ('\\cos ', '\\cos({})')
-    sym_str = 'cos({})'
+    expr_sym = 'cos({})'
     pycode = 'math.cos({})'
     xtype = (tuple([float]), float)
 
@@ -915,7 +878,7 @@ class Sin(Operator):
     arity = 1
     tflow = tensorflow.sin
     latex = ('\\sin ', '\\sin({})')
-    sym_str = 'sin({})'
+    expr_sym = 'sin({})'
     pycode = 'math.sin({})'
     xtype = (tuple([float]), float)
 
@@ -925,7 +888,7 @@ class Tan(Operator):
     arity = 1
     tflow = tensorflow.tan
     latex = ('\\tan ', '\\tan({})')
-    sym_str = 'tan({})'
+    expr_sym = 'tan({})'
     pycode = 'math.tan({})'
     xtype = (tuple([float]), float)
 
@@ -935,7 +898,7 @@ class Acos(Operator):
     arity = 1
     tflow = tensorflow.acos
     latex = ('\\acos ', '\\acos({})')
-    sym_str = 'acos({})'
+    expr_sym = 'acos({})'
     pycode = 'math.acos({})'
     xtype = (tuple([float]), float)
 
@@ -945,7 +908,7 @@ class Asin(Operator):
     arity = 1
     tflow = tensorflow.asin
     latex = ('\\asin ', '\\asin({})')
-    sym_str = 'asin({})'
+    expr_sym = 'asin({})'
     pycode = 'math.asin({})'
     xtype = (tuple([float]), float)
 
@@ -955,7 +918,7 @@ class Atan(Operator):
     arity = 1
     tflow = tensorflow.atan
     latex = ('\\atan ', '\\atan({})')
-    sym_str = 'atan({})'
+    expr_sym = 'atan({})'
     pycode = 'math.atan({})'
     xtype = (tuple([float]), float)
 
@@ -965,7 +928,7 @@ class Tanh(Operator):
     arity = 1
     tflow = tensorflow.tanh
     latex = ('\\tanh ', '\\tanh({})')
-    sym_str = 'tanh({})'
+    expr_sym = 'tanh({})'
     pycode = 'math.tanh({})'
     xtype = (tuple([float]), float)
 
@@ -975,7 +938,7 @@ class And(Operator):
     arity = 2
     tflow = tensorflow.logical_and
     latex = ('and', '({}\\wedge{})')
-    sym_str = 'Andb({}, {})'
+    expr_sym = 'Andb({}, {})'
     pycode = '({} and {})'
     xtype = (tuple([bool, bool]), bool)
 
@@ -985,7 +948,7 @@ class Or(Operator):
     arity = 2
     tflow = tensorflow.logical_or
     latex = ('or', '({}\\vee{})')
-    sym_str = 'Orb({}, {})'
+    expr_sym = 'Orb({}, {})'
     pycode = '({} or {})'
     xtype = (tuple([bool, bool]), bool)
 
@@ -995,7 +958,7 @@ class Xor(Operator):
     arity = 2
     tflow = tensorflow.math.logical_xor
     latex = ('\\oplus', '({}\\oplus{})')
-    sym_str = 'Xor({}, {})'
+    expr_sym = 'Xor({}, {})'
     pycode = '({} ^ {})'
     xtype = (tuple([bool, bool]), bool)
 
@@ -1005,7 +968,7 @@ class Not(Operator):
     arity = 1
     tflow = tensorflow.logical_not
     latex = ('\\neg', '\\neg{}')
-    sym_str = 'Notb({})'
+    expr_sym = 'Notb({})'
     pycode = 'not({})'
     xtype = (tuple([bool]), bool)
 
@@ -1015,7 +978,7 @@ class Eq(Operator):
     arity = 2
     tflow = tensorflow.equal
     latex = ('=', '({}={})')
-    sym_str = '({} == {})'
+    expr_sym = '({} == {})'
     pycode = '({}=={})'
     xtype = (tuple([bool, bool]), bool)
 
@@ -1025,7 +988,7 @@ class Neq(Operator):
     arity = 2
     tflow = tensorflow.not_equal
     latex = ('\\neq', '({}\\neq{})')
-    sym_str = '({} != {})'
+    expr_sym = '({} != {})'
     pycode = '({}!={})'
     xtype = (tuple([bool, bool]), bool)
 
@@ -1035,7 +998,7 @@ class Lt(Operator):
     arity = 2
     tflow = tensorflow.less
     latex = ('<', '{}<{}')
-    sym_str = '({} < {})'
+    expr_sym = '({} < {})'
     pycode = '({}<{})'
     xtype = (tuple([float, float]), bool)
 
@@ -1045,7 +1008,7 @@ class Le(Operator):
     arity = 2
     tflow = tensorflow.less_equal
     latex = ('\\leq', '{}\\leq{}')
-    sym_str = '({} <= {})'
+    expr_sym = '({} <= {})'
     pycode = '({}<={})'
     xtype = (tuple([float, float]), bool)
 
@@ -1055,7 +1018,7 @@ class Gt(Operator):
     arity = 2
     tflow = tensorflow.greater
     latex = ('>', '{}>{}')
-    sym_str = '({} > {})'
+    expr_sym = '({} > {})'
     pycode = '({}>{})'
     xtype = (tuple([float, float]), bool)
 
@@ -1065,7 +1028,7 @@ class Ge(Operator):
     arity = 2
     tflow = tensorflow.greater_equal
     latex = ('\\geq', '{}\\geq {}')  # sfeh check inserted space
-    sym_str = '({} >= {})'
+    expr_sym = '({} >= {})'
     pycode = '({}>={})'
     xtype = (tuple([float, float]), bool)
 
@@ -1075,7 +1038,7 @@ class Ifte(Operator):
     arity = 3
     tflow = tensorflow.where
     latex = ('\\text{if-then-else}', '\\text{{ if }} ({}) \\text{{ then }} ({}) \\text{{ else }} ({})')  # 'if({} then {} else {})'
-    sym_str = 'Ifte({}, {}, {})'
+    expr_sym = 'Ifte({}, {}, {})'
     pycode = '({} if {} else {})'
     xtype = (tuple([bool, float, float]), float)
 
@@ -1085,7 +1048,7 @@ class Min(Operator):
     arity = 2
     tflow = tensorflow.minimum
     latex = ('\\min', '\\min({}, {})')
-    sym_str = 'Mini({}, {})'
+    expr_sym = 'Mini({}, {})'
     pycode = 'min({}, {})'
     xtype = (tuple([float, float]), float)
 
@@ -1095,7 +1058,7 @@ class Max(Operator):
     arity = 2
     tflow = tensorflow.maximum
     latex = ('\\max', '\\max({}, {})')
-    sym_str = 'Maxi({}, {})'
+    expr_sym = 'Maxi({}, {})'
     pycode = 'max({}, {})'
     xtype = (tuple([float, float]), float)
 
@@ -1115,6 +1078,7 @@ op = {  # 'f2f': Classical mathematical operators, evaluate from float to float
     '**': Power,
     ast.Pow: Power,
     'Abs': Abs,
+    'abs': Abs,  # sfeh: required... y though?
     'sign': Sign,
     'Round': Round,
     'Square': Square,
@@ -1181,6 +1145,7 @@ class Node:
     # pycode: str
 
     state = None
+    meta = None
 
     def __init__(self, label: 'NodeLabel' = None, is_fix=False, childs=None, state=0):
         self.label = label
@@ -1203,13 +1168,15 @@ class Node:
         Printing the nodes as nested array structure.
         sfeh: make this statement loadable!
         """
-        print_label = self.get_nlabel()  # sfeh or: return the label __str__
-        # print_label = str(self.label)  # returns the class, not a string
+        label_str = self.get_nlabel()  # sfeh or: return the label __str__
 
         if self.childs:
             childstr = ', '.join([str(x) for x in self.childs])
-            print_label = f"{print_label}, {childstr}"
-        return f"[{print_label}]"
+            label_str = f"{label_str}, {childstr}"
+        # elif self.is_root():
+        #         label_str = f"[{label_str}]"  # another version
+
+        return f"[{label_str}]"
 
     def loadable_string(self):
         """
@@ -1254,11 +1221,12 @@ class Node:
     def get_xtype_out(self):
         return self.label.xtype[1]
 
-    def is_root(self):
-        """
-        ==<ROOT
-        """
-        return self.id == 0
+    # def is_root(self):
+    #     """
+    #     todo does this work while building a tree?
+    #     ==>ROOT
+    #     """
+    #     return self.depth == 0
 
     def get_observation_list(self):
         """
@@ -1340,15 +1308,19 @@ class Node:
         accumulate and return the complete expression the tree holds recursively
         """
         if self.get_arity() > 0:
-            child_expr_list = [cc.get_nlabel(reducible=reducible, obs_names=obs_names) for cc in self.childs]
+            child_expr_list = [cc.eval_expr_sym() for cc in self.childs]  # sfeh what was that again?: reducible=reducible, obs_names=obs_names
             # if reducible:
             #     # my_expr = op[self.get_label()]['sym_reduce'] or my_expr
             #     # symloc = sympy_symbol_defaults(obs_names)  # todo solve the problem... new version of sympy?
             #     xxx = plagih_sympify(my_expr.format(*child_expr_list), eval_locals=symloc)  # sfeh the xxx variable
             #     return xxx
-            return self.eval_expr_sym().format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
+            try:
+                return self.label.expr_sym.format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
+            except:
+                # todo delete this try
+                return self.label.expr_sym.format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
         else:
-            return self.eval_expr_sym()
+            return self.label.expr_sym
 
     def eval_pycode(self):
         """
@@ -1368,18 +1340,18 @@ class Node:
         # sfEh check if this still works as one-liner
         return f"{{{self.get_nlabel()}{''.join([cc.eval_apted_notation() for cc in self.childs])}}}"
 
-    def eval_parsimony(self, parsimony_distance, origin_tree=None, weights=None):
+    def eval_parsimony(self, complexity_measure, origin_tree=None, weights=None):
         """
-        parsimony_distance: compute the chosen distance by the user.
+        complexity_measure: compute the chosen distance by the user.
         #     'tree_node_count': tree_get_size,
         #     'tree_depth': tree_get_depth,
         #     'tree_edit_distance': tree_parsimony_ted,
 
         # self.meta.parsimony = parsimony  # todo okay where meta? at root node...
         """
-        if parsimony_distance == 'tree_node_count':  # number of nodes
+        if complexity_measure == 'tree_node_count':  # number of nodes
             return len(self)  # returns the number of nodes  # sfeh weights
-        elif parsimony_distance == 'tree_edit_distance':  # tree_edit_distance, tree-edit-distance
+        elif complexity_measure == 'tree_edit_distance':  # tree_edit_distance, tree-edit-distance
             apted1 = self.eval_apted_notation()
             apted2 = origin_tree.eval_apted_notation()
             distance, mapping = apted_distance(apted1, apted2)  # sfeh the mapping could be handy somewhere
@@ -1388,16 +1360,16 @@ class Node:
             else:
                 raise
         else:
-            raise Exception(f'Complexity measurement not available: {parsimony_distance}')
+            raise Exception(f'Complexity measurement not available: {complexity_measure}')
 
     def replace_with_branch(self, new_node: 'Node'):
         """
         todo
         was: new_core
         """
+        self.state = STATE_BUILDING  # todo ==>state
         self.set_label(new_node.get_label())
         self.childs = new_node.childs or []  # maybe must be updated recursively
-        self.state = 1  # todo ==>state
         # self.is_fix = new_node.is_fix  # debatable
 
     def eval_mutatable_nodes(self, xtype_out=None, allow_root=True):
@@ -1423,6 +1395,7 @@ class Node:
                 random nodes in a branch /
                 intelligent filtering
         """
+        self.state = STATE_BUILDING  # todo ==>state
         if self.get_arity() > 0:
             for cc in self.childs:
                 cc.evolve_mutate_filter_branch(precision=precision)
@@ -1444,6 +1417,7 @@ class Node:
         Reducing a tree to its most basic form with sympify.
         (completely = False: reduce just one branch. if you wanted to have more complexity)
         """
+        self.state = STATE_BUILDING  # todo ==>state
         length_before = len(self)
         if completely:  # reduce the complete tree
             cores_lv0 = self.get_nodes_at_depth(0, only_mutable=True)
@@ -1461,6 +1435,12 @@ class Node:
         # self.meta.clear()
 
     def workaround_remove_tilde(self):
+        """
+        sfeh
+        What is the role of the tilde in a label?
+        I think it came from sympy... or i introduced it to trick sympy in some way
+        I guess it is something like -
+        """
         if isinstance(self.get_label(), Usub):  # tilde '~'
             new_core = self.childs[0]
             self.replace_with_branch(new_core)
@@ -1531,9 +1511,16 @@ class Kernel:
     optional: creating another
     """
 
-    # def __init__(self, *args):
-    #     self.eval_action = None
-    #     pass
+    def __init__(self, tf_device_log=False, *args):
+        """
+        sfeh: tf_device_log is set automatically to false
+        """
+        # Evaluating kernel (that uses tensorflow)
+        self.tf_config = tensorflow.compat.v1.ConfigProto(log_device_placement=tf_device_log,
+                                                          allow_soft_placement=True)  # TF device usage logging (for debugging) (default false. I lately used it to check if the GPU is used)
+        self.tf_config.gpu_options.allow_growth = True
+        self.tf_device = "/gpu:0"  # sfeh
+        self.np_best_fitness = np.min  # todo what why
 
     def fitness_compare(self, fitness1, fitness2):
         """
@@ -1544,10 +1531,17 @@ class Kernel:
         """
         pass
 
+    def eval_tf(self, *args):
+        pass
+
     def relation(self, x, y):
         pass
 
     def best_fitness_function(self, *args, **kwargs):
+        """
+        probably return min(*args, **kwargs)
+        e.g. the regression kernel
+        """
         pass
 
     def tf_get_pairwise_fitness(self, *arg):
@@ -1559,27 +1553,8 @@ class Kernel:
 
 class RegressionKernel(Kernel):
 
-    def fitness_compare(self, fitness, fitness_compared):
-        """
-        """
-        if fitness_compared is None:
-            return True
-        else:
-            return fitness < fitness_compared
-
-    def best_fitness_function(self, *args, **kwargs):
-        return min(*args, **kwargs)
-
-    def relation(self, x, y):
-        return lambda x, y: x < y
-
-    def __gt__(self, other):
-        """
-        gt means better?
-        """
-        pass  # no, greater=better is ambiguous
-
-    def __init__(self, kernel_name, data_train, tf_config, tf_device, eval_action):
+    def __init__(self, kernel_name, data_train, action: EvalAction, *args, **kwargs):
+        super().__init__(*args)
         self.np_best_fitness = np.min
 
         # self.kernel_version_plot_yaxis = f"regression error"
@@ -1588,9 +1563,7 @@ class RegressionKernel(Kernel):
         #         self.kernel_version_plot_yaxis += plot_axis_string
 
         self.kname = kernel_name
-        self.tf_config = tf_config
-        self.tf_device = tf_device
-        self.eval_action = eval_action
+        self.action = action
         self.origin_results = None
         self.data_train = data_train  # sfeh where is the best?
 
@@ -1612,6 +1585,26 @@ class RegressionKernel(Kernel):
             if k in kernel_name:
                 self.pen_explorate = v
         return
+
+    def fitness_compare(self, fitness, fitness_compared):
+        """
+        """
+        if fitness_compared is None:
+            return True
+        else:
+            return fitness < fitness_compared
+
+    def best_fitness_function(self, *args, **kwargs):
+        return min(*args, **kwargs)
+
+    def relation(self, x, y):
+        return lambda x, y: x < y
+
+    def __gt__(self, other):
+        """
+        gt means better?
+        """
+        pass  # no, greater=better is ambiguous
 
     def pycode_wrap_result(self, action_min_max):
         wrap = '{}'
@@ -1637,7 +1630,7 @@ class RegressionKernel(Kernel):
             action_bins = np.linspace(-(breite + act_range), + (breite + act_range), num_bins + 1)  # sfeh 10 bins?
         return action_bins
 
-    def eval_tf(self, expr_sym, used_observations, only_fitness=False):
+    def eval_tf(self, expr, used_observations, only_fitness=False):
         """
         Evaluates an expression using TensorFlow (TF)
         - receives a (string) expression in numpy-style that was reduced with pythons "sympy" (for simplification)
@@ -1645,10 +1638,10 @@ class RegressionKernel(Kernel):
         - creating a tensorflow graph that is evaluated in an isolated TF session
         """
         tensorflow.compat.v1.reset_default_graph()
-        solution = tensorflow.constant(self.data_train[self.eval_action.name])  # tensors[self.eval_action.name]
+        solution = tensorflow.constant(self.data_train[self.action.tf_name])  # tensors[self.action.name]
         tensors = {obs_name: tensorflow.constant(self.data_train[obs_name]) for obs_name in used_observations}  # do not assign dtype here, do this in the pandas df aka data
 
-        results_agent = ast_convert_from_expr(expr_sym, tensors=tensors)  # the actual result from the expression in the agent
+        results_agent = ast_convert_from_expr(expr, tensors=tensors)  # the actual result from the expression in the agent
 
         # fit the agents to the possible outcome
         results_kernel = results_agent
@@ -1656,8 +1649,8 @@ class RegressionKernel(Kernel):
         if self.discrete:
             results_kernel = tensorflow.math.round(results_kernel)
         if self.bounded:
-            act_min = tensorflow.constant(self.eval_action.minmax[0], dtype=tensorflow.float32)
-            act_max = tensorflow.constant(self.eval_action.minmax[1], dtype=tensorflow.float32)
+            act_min = tensorflow.constant(self.action.minmax[0], dtype=tensorflow.float32)
+            act_max = tensorflow.constant(self.action.minmax[1], dtype=tensorflow.float32)
             results_kernel = tensorflow.math.minimum(tensorflow.math.maximum(results_kernel, act_min), act_max)
 
         # pairwise_fitness = self.tf_get_pairwise_fitness(solution, kernel_result, results_agent)
@@ -1765,9 +1758,12 @@ class RegressionKernel(Kernel):
 class ClassificationKernel(Kernel):
 
     def __init__(self, *args):
+        super().__init__(*args)
+
+    def eval_tf(self):
         pass
 
-    def tf_classify_labels_map(self, result, env_vars):
+    def tf_classify_labels_map(self, result, action):
 
         """
         For the CLASSIFY kernel, creates a TensorFlow (TF) sub-graph defined as a sequence of boolean conditions based upon
@@ -1784,7 +1780,7 @@ class ClassificationKernel(Kernel):
         sfeh remove
 
         """
-        uniques_num = env_vars.eval_action.uniques
+        uniques_num = action.uniques
         skew = (uniques_num / 2) - 1
         label_rules = {uniques_num - 1: (
             tensorflow.constant(uniques_num - 1), tensorflow.constant(f' > {uniques_num - 2 - skew}'))}
@@ -1841,6 +1837,9 @@ class MatchKernel(Kernel):
 
     def __init__(self, *args):
         super().__init__(*args)
+
+    def eval_tf(self):
+        pass
 
     def fitness_compare(self, fitness1, fitness2):
         """
@@ -1904,6 +1903,73 @@ class MatchKernel(Kernel):
     #         result_str = 'No summary provided for this kernel'
     #
     #     return result_str
+
+
+class TreeMeta:
+    # fitness: float = None
+    # parsimony: float = None
+    # expr_raw: str = None
+    # expr_sym: str = None
+    # state: int = None
+    # last_evolution: list[str] = dataclasses.field(default_factory=list)
+    def __init__(self, fitness=None, parsimony=None, expr_raw=None, expr_sym=None, state=0):
+        # def __init__(self, fitness, parsimony, expr_raw, expr_sym, state):
+        self.fitness = fitness
+        self.parsimony = parsimony
+        self.expr_raw = expr_raw
+        self.expr_sym = expr_sym
+        self.state = state  # todo
+        self.last_evolution = deque([], maxlen=10)  # todo
+
+    def reset(self):
+        self.fitness = None
+        self.parsimony = None
+        self.expr_raw = None
+        self.expr_sym = None
+        self.state = None
+        # self.last_evolution = deque([], maxlen=10)
+
+
+class NodeEvaluated:
+    # class NodeEvaluated(Node):
+    # ==>tree status sfeh to evaluated...
+    # ->rootnode
+
+    statue = STATE_EVALUATED
+
+    def __init__(self, tree: Node, meta: TreeMeta):
+        super().__init__()
+        self.tree = tree
+        self.meta = meta
+
+    def get_evotree(self):
+        return self.tree
+
+    def get_fitness(self):
+        return self.meta.fitness
+
+    def get_parsimony(self):
+        return self.meta.parsimony
+        # sfeh hmmm
+        # if self.meta.state == STATE_EVALUATED:
+        #     pass
+        # else:
+        #     raise Exception('This tree was not yet evaluated!')
+
+    def set_fitness(self, fitness):
+        self.meta.fitness = fitness
+
+    def set_parsimony(self, parsimony):
+        self.meta.parsimony = parsimony
+
+    def get_last_evolution(self):
+        return self.meta.last_evolution[-1]  # sfeh not even sure
+
+    def remember_evolution(self, tag):
+        """
+        todo... not here
+        """
+        self.meta.last_evolution.append(tag)
 
 
 def ast_convert_from_expr(expr, tensors=None, build=None):
@@ -1987,27 +2053,27 @@ def ast_expr_to(node, tensors=None, build=None):
                     return [f'-{ast_expr_to(node.operand, build=True)[0]}']
                 else:
                     return ['Usub', [ast_expr_to(node.operand, build=True)]]
-            return [op[type(node.op)]['fun_label'], [ast_expr_to(node.operand, build=True)]]
+            return [op[type(node.op)].nlabel, [ast_expr_to(node.operand, build=True)]]
+            # was: return [op[type(node.op)].nlabel, [ast_expr_to(node.operand, build=True)]]
         else:
-            return op[type(node.op)]['tf'](
-                ast_expr_to(node.operand, tensors=tensors))
+            return op[type(node.op)].tflow(ast_expr_to(node.operand, tensors=tensors))
 
     # Arity 2
     elif isinstance(node, ast.BinOp) or isinstance(node, ast.BitAnd):  # <left> <operator> <right>, e.g., (x + y), (a & True)
         if build:
-            return [op[type(node.op)]['fun_label'],
+            return [op[type(node.op)].nlabel,
                     [ast_expr_to(node.left, build=True),
                      ast_expr_to(node.right, build=True)]]
         else:
-            return op[type(node.op)]['tf'](
+            return op[type(node.op)].tflow(
                 ast_expr_to(node.left, tensors=tensors),
                 ast_expr_to(node.right, tensors=tensors))
 
     elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
         if build:
-            return ast_chain_bool(node.values, op[type(node.op)]['fun_label'], build=True)
+            return ast_chain_bool(node.values, op[type(node.op)].nlabel, build=True)
         else:
-            return ast_chain_bool(node.values, op[type(node.op)]['tf'], tensors=tensors)
+            return ast_chain_bool(node.values, op[type(node.op)].tflow, tensors=tensors)
 
     elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
         if build:
@@ -2025,7 +2091,7 @@ def ast_expr_to(node, tensors=None, build=None):
                          ast_expr_to(node.args[1], build=True),
                          ast_expr_to(node.args[2], build=True)]]
             else:
-                return op[node.func.id]['tf'](tensorflow.dtypes.cast(
+                return op[node.func.id].tflow(tensorflow.dtypes.cast(
                     ast_expr_to(node.args[0], tensors=tensors), tensorflow.bool),
                     ast_expr_to(node.args[1], tensors=tensors),
                     ast_expr_to(node.args[2], tensors=tensors))
@@ -2033,16 +2099,16 @@ def ast_expr_to(node, tensors=None, build=None):
         elif len(node.args) <= 2:
             if build:
                 if len(node.args) == 1:
-                    return [op[node.func.id]['fun_label'],
+                    return [op[node.func.id].nlabel,
                             [ast_expr_to(node.args[0], build=True)]]
                 elif len(node.args) == 2:
-                    return [op[node.func.id]['fun_label'],
+                    return [op[node.func.id].nlabel,
                             [ast_expr_to(node.args[0], build=True),
                              ast_expr_to(node.args[1], build=True)]]
                 else:
                     raise Exception('This arity is not supported')
             else:
-                return op[node.func.id]['tf'](*[ast_expr_to(arg, tensors=tensors) for arg in node.args])
+                return op[node.func.id].tflow(*[ast_expr_to(arg, tensors=tensors) for arg in node.args])
 
         else:
             raise Exception('Failed to identify the function. {}'.format(type(node)))
@@ -2083,12 +2149,275 @@ def ast_chain_compare(comparators, ops, tensors=None, build=False):
 
     if len(comparators) > 2:
         print_e('This is usually not used, and-concatenation of multiple chain compares')
-        return tensorflow.logical_and(op[type(ops[0])]['tf'](x, y), ast_chain_compare(comparators[1:], ops[1:], tensors=tensors))
+        return tensorflow.logical_and(op[type(ops[0])].tflow(x, y), ast_chain_compare(comparators[1:], ops[1:], tensors=tensors))
     else:
         if build:
-            return [op[type(ops[0])]['fun_label'], [x, y]]
+            return [op[type(ops[0])].nlabel, [x, y]]
         else:
-            return op[type(ops[0])]['tf'](x, y)
+            return op[type(ops[0])].tflow(x, y)
+
+
+class Population:
+
+    def __init__(self, kernel: Kernel, conf, ui, origin=None):
+        self.kernel = kernel
+        self.size = 1000
+        self.gen_id = 0
+        self.pop_next = []
+        self.pop_base = []  # sfeh maybe better names
+
+        self.precision = conf.precision
+
+        self.conf = conf  # todo
+
+        self.lut = {}
+        self.origin = origin
+        self.time_genstart = time.perf_counter()
+        self.gens_since_last_pareto = 0
+
+        self.monitor_df = pd.DataFrame(columns=['pop_len', 'pop_unique', 'time',
+                                                'fit_avg', 'fit_var', 'fit_best',
+                                                'complexity_avg', 'complexity_var', 'complexity_stderr',
+                                                'gens_since_last_pareto'])
+        self.ui = ui  # todo
+
+    def __len__(self):
+        return len(self.pop_next)  # todo hmmm
+
+    def pass_population(self):
+        """
+
+        """
+        self.pop_base = self.pop_next[:]  # otherwise: deepcopy
+        self.pop_next = []
+
+    def pop_analyse(self):
+        """
+        Analysing this generation
+        - amount of trees
+        - fittest tree
+        - average fitness_train
+        - average tree parsimony
+        """
+        popul = self.pop_next
+
+        if len(popul) == 0:
+            raise Exception('Your population isded, its empty. RIP all the computation power used to get here.')
+
+        pop_fitness = [tree.get_fitness() for tree in popul]
+
+        # tmp_evol_performance = dict.fromkeys(self.monitor_evol.keys(), pd.DataFrame(columns=['fitness_train', 'parsimony', 'lentree']))
+        # for tree in popul:
+        #     last_evol = tree.meta.last_evolution
+        #     if last_evol in self.evolve_tags:
+        #         row = {'fitness_train': tree.meta.fitness_train,
+        #                'parsimony': tree.meta.parsimony,
+        #                'lentree': len(tree)}
+        #         tmp_evol_performance[last_evol].loc[self.gen_id] = row
+        #
+        # for last_evol, evodata in tmp_evol_performance.items():
+        #     if last_evol in self.evolve_loop:
+        #         try:
+        #             row = {'fitness_avg': evodata['fitness_train'].mean(),
+        #                    'parsimony_avg': evodata['parsimony'].mean(),
+        #                    'lentree_avg': evodata['lentree'].mean(),
+        #                    'evolve_num': self.evolve_loop[last_evol]['evolve_num'],
+        #                    'count': len(tmp_evol_performance[last_evol])}
+        #             self.monitor_evol[last_evol].append_tree(row, ignore_index=True)  #
+        #             # sfeh fitness_train - last fitness_train?
+        #         except Exception as ex:
+        #             print_e(f'Could not save evol_performance analysis. {ex}')
+        #     else:
+        #         if last_evol != 'origin' and last_evol != 'Rand3o':
+        #             print_warning('w', f'delete_this, sfeh, okay when the following is origin: {last_evol}')
+
+        pop_parsim = [tree.get_parsimony() for tree in popul]
+        pop_treelen = [len(tree.tree) for tree in popul]
+
+        pop_fitness_best = self.kernel.np_best_fitness(pop_fitness)
+        try:
+            self.best_fitness = self.kernel.best_fitness_function(pop_fitness_best, self.best_fitness)
+        except:
+            self.best_fitness = pop_fitness_best
+
+        unique_tree_count = len(set([hash(x) for x in popul]))  # sfeh analyze this?
+
+        gen_time = time.perf_counter() - self.time_genstart
+
+        self.monitor_df.loc[self.gen_id] = {'pop_len': len(popul),
+                                            'pop_unique': unique_tree_count,
+                                            'fit_avg': np.average(pop_fitness),
+                                            'fit_std': np.std(pop_fitness),
+                                            'fit_best': self.best_fitness,
+                                            'parsim_avg': np.average(pop_parsim),
+                                            'parsim_std': np.std(pop_parsim),
+                                            'complexity_avg': np.var(pop_treelen),
+                                            'time': gen_time,
+                                            'gens_since_last_pareto': self.gens_since_last_pareto}  # sfeh version1 delete this shit
+
+        self.ui.print_g('gg', f'Created {len(popul)}/{self.conf.pop_max} ({unique_tree_count} unique) in generation {self.gen_id}. Gen took {gen_time:4.2f}s')
+        return
+
+    def selection_tournament(self, tourn_size=3):
+        """
+
+        """
+        tournament_list = [np.random.choice(self.pop_base) for _ in range(tourn_size)]
+        fintree = self.kernel.best_fitness_function(tournament_list, key=lambda tree: tree.get_fitness())
+        evotree = fintree.get_evotree()
+        return copy.deepcopy(evotree)  # sfeh deepcopy not required if it is copied later
+
+    def finalize_tree(self, tree):
+        """
+        tree->fintree!
+        """
+        try:
+
+            # sfeh was "TreeEvaluater"-class...
+            # def __init__(self, kernel: Kernel, precision=6):  # sfeh precision
+            #     self.kernel = kernel
+            #     self.precision = precision
+
+            # # def finalize_tree(self, tree: Node):
+            # """
+            # was def finalize(self, tree: Node):
+            # ==>ROOT (only in root node)
+            # finalizing the structure
+            # """
+
+            # try:
+            #     self.check_all()
+
+            # todo todotodo NOT HRE
+            expr_raw = tree.eval_expr_sym()
+            parsimony = tree.eval_parsimony(self.conf.complexity_measure, origin_tree=self.origin)
+            expr_sym = expr_sympify(expr_raw)
+            treeobs = tree.get_observation_list()
+            tf_results = self.kernel.eval_tf(expr_sym, treeobs)
+            fitness = round(tf_results['mean_error'], self.precision)  # fitness_train currently IS the mean error
+
+            meta = TreeMeta(fitness, parsimony, expr_raw, expr_sym, STATE_EVALUATED)
+            fintree = NodeEvaluated(tree, meta)
+            return copy.deepcopy(fintree)  # sfeh guess no deepcopy is required
+        except Exception as ex:
+            logging.warning(f'Could not append tree to population because: {ex}\ntree: {tree}')
+            raise  # print_warning('w', f'tree failed the quick check. last-mod: {self.meta.last_evolution}. Reason:\n{ex}', print_type=self.ui.print_type)
+
+    def append_tree(self, tree: Node):
+        """
+        was: def pop_append(self, tree: Node):
+            # sfeh this check might be important...
+        Safely append a tree to the population.
+        Even though the raw trees should have everything to display their expression,
+        they have gone through a process of changes. Here, the tree is refurbished.
+        sfeh: if trees are 100% safely created, tree_check_deep() must not be used. Useful when trying out new gp-operators.
+        - Enrich the raw tree for the next generation
+        - check if the tree is actually valid
+        ->
+        """
+
+        # todo oldschool. remove? maybe useful
+        # meta = self.lut.get(hash(tree), None)  # sfeh str() might even maje more sense? maybe not? idk
+        # if meta is not None:
+        #     parsimony = meta['parsimony']
+        #     fitness = round(meta['fitness_train'], self.conf.precision)  # sfeh just for now
+        # else:
+        #     parsimony = tree.eval_parsimony(self.conf.complexity_measure, origin_tree=self.origin)
+        #     if parsimony > self.conf.parsimony_max:
+        #         print_warning('wwww', f'Parsimony too high, last evolution: {tree.meta.last_evolution}', print_type=self.print_type)  # sfeh care about wwww. should not
+        #         return
+        #     try:
+        #         fitness = self.tree_eval_fitness_offline_train(tree)
+        #     except Exception as evalex:
+        #         print_warning('wwww', f'Exception while evaluating: {evalex}, tree: {tree}.', print_type=self.print_type)
+        #         return
+
+        # expr_raw = tree.get_nlabel()
+        # expr_sym = expr_sympify(expr_raw)
+        # # set fixed nodes
+        #
+        # tree.meta.fitness_train = fitness
+        # tree.meta.parsimony = parsimony
+        # tree.meta.expr_raw = expr_raw
+        # tree.meta.expr_sym = expr_sym
+        # # tree.set_meta(fitness_train, parsimony, last_evolution, expr_raw, expr_sym)
+
+        # self.treelut_tree_add(tree)  # todo
+        # if tree is None:
+        #     pass   # todo remove
+        try:
+            fintree = self.finalize_tree(tree)
+            self.pop_next.append(fintree)
+        except:
+            pass  # todo
+
+    def plot_gen_performance(self):
+        """
+        All monitoring infos
+        sfeh den shit in Funktionen aufteilen
+        """
+        with plt.rc_context(rc={'axes.grid': True}):
+            fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]}, sharex='all')  # , figsize=(9, 9)
+            plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
+            xx = list(self.monitor_df.index)
+
+            axs0 = axs[0]
+            axs0.plot(self.monitor_df['fit_avg'], marker='', label='Regression error (average)')
+            try:
+                avg = self.monitor_df['fit_avg']
+                std = self.monitor_df['fit_std']
+                axs0.fill_between(xx, avg - std, avg + std, alpha=0.2)  # axs0.set_title('Regression Error (average)')  # sfeh not stderr... upper/lower bound?
+            except Exception as ex:
+                raise Exception(f'Delete this. were there any problems? {ex}')
+            axs0.step(x=xx, y=self.monitor_df['fit_best'], linestyle='dashed', marker='', where='post', color='g', label='Best candidate')  # , label=ax_label
+            axs0.set_ylim(ymin=0), axs0.legend(loc='lower left')  # , shadow=True
+
+            axs0_twin = axs0.twinx()
+            axs0_twin.plot(xx, self.monitor_df['gens_since_last_pareto'], color='tab:gray', label='Generations since last paretos entry', linestyle='dashed', marker='')  # linestyle='None'
+            axs0_twin.tick_params(axis='y', labelcolor='tab:gray')
+            try:
+                axs0_twin.set_ylim(ymin=0, ymax=max(self.monitor_df['gens_since_last_pareto'].max() or 1, 50))
+            except Exception as ex:
+                try:
+                    print_e(f'damn setting ylim not working sfeh :s {ex}')
+                    axs0_twin.set_ylim(ymin=0, ymax=max(self.monitor_df['gens_since_last_pareto'].notnull().max() or 1, 50))
+                    # print(self.monitor_df['gens_since_last_pareto'].notnull().max())
+                except Exception as ex2:
+                    print_e(f'damn setting ylim not working, version 2! {ex2}')
+                    axs0_twin.set_ylim(ymin=0, ymax=50)
+
+            axs0_twin.legend(loc='lower right')
+
+            axs1 = axs[1]
+            axs1.plot(self.monitor_df['parsim_avg'], label='Complexity (average)')
+            # self.conf.complexity_measure
+
+            try:
+                p_avg = self.monitor_df['parsim_avg']
+                p_std = self.monitor_df['parsim_std']
+                axs1.fill_between(xx, p_avg - p_std, p_avg + p_std, alpha=0.2)  # axs1.set_title('TED (average)')
+            except Exception as ex:
+                raise Exception(f'Delete this if no raise since some time. {ex}')
+            axs1.set_ylim(ymin=0), axs1.legend(loc='lower left')
+
+            axs2 = axs[2]
+            axs2.plot(self.monitor_df['pop_len'], label='poplike size')
+            axs2.plot(self.monitor_df['pop_unique'], label='unique')
+            axs2.margins(y=0.25), axs2.set_ylim(ymin=0), axs2.legend(loc='lower left')
+
+            axs3 = axs[3]
+            between_outliers = self.monitor_df['time'].between(0, 2 * self.monitor_df['time'].mean())
+            axs3.plot(self.monitor_df['time'][between_outliers], label='time (s)')  # sfeh could be a better rule...
+            axs3.set_ylim(ymin=0), axs3.legend(loc='lower left')
+
+            # Top level style
+            axs3.set_xlim(xmin=0, xmax=max(xx)), axs3.set_xlabel('generations')
+            axs0.set_title(f'monitoring gp generations {self.conf.name}')  # sfeh
+            fig.tight_layout()
+            path = self.ui.rootdir / f'monitoring.png'  # -{self.conf.name}
+            fig.savefig(path)
+            printez('f', f"monitoring: {path.as_posix()}", print_type=self.ui.print_type)
+            # plt.close('all')
 
 
 class ParetoFront:
@@ -2096,37 +2425,48 @@ class ParetoFront:
     sfeh
     """
 
-    def __init__(self, kernel, origin=None):
-        self.pareto = []
-        self.kernel = kernel
-        self.origin = origin
-
-    def pareto_append(self, tree: Node, msg=None, print_type=None):
+    def __init__(self, fitness_compare, conf, origin=None):
         """
+        sfeh conf? meh...
+        """
+        self.paretos = []
+        self.fitness_compare = fitness_compare
+        self.origin = origin
+        self.conf = conf
+
+    def fitness_compare(self, a, b):
+        """
+        todo this is the kernel function...
+        """
+        return a < b
+
+    def insert(self, tree: NodeEvaluated, msg=None, print_type=None):
+        """
+        was pareto_append
         Appending a candidate to the paretofront.
-        - append the entry to the paretofront
+        - append_tree the entry to the paretofront
         - reset gens_since_last_pareto
         - try to add the tree in its sympified version
         """
         if msg:
             printez('a', f"New entry found! ({msg}): {BColors.RESET}{tree.get_parsimony()}, {tree.get_fitness()}:{BColors.RESET} {tree.get_expr_raw()}", print_type=print_type)
-        self.pareto.append(tree)
+        self.paretos.append(tree)
         self.gens_since_last_pareto = 0
 
-        par = tree.get_parsimon()
+        par = tree.get_parsimony()
         fit = tree.get_fitness()
 
-        self.pareto = [x for x in self.pareto[:] if x.get_parsimony() < par or x.get_fitness() < fit or (par == par and x[1] == par)]
+        self.paretos = [x for x in self.paretos[:] if x.get_parsimony() < par or x.get_fitness() < fit or (par == par and x[1] == par)]
         self.pareto_sort()  # as far as I can tell, not really necessary without using iter()
 
         # tree_sym = copy.deepcopy(tree)
         # # todo
         # try:
-        #     # printez('aaa', 'Trying to simplify for pareto entry.')  # simplify the tree and save in pareto once again
+        #     # printez('aaa', 'Trying to simplify for paretos entry.')  # simplify the tree and save in paretos once again
         #     tree_sym.evolve_reduce(obs_infos=obs_infos, completely=True)
         #     parsimony = tree_sym.eval_parsimony(self.conf.complexity_measure, origin_tree=self.origin)
         #     if parsimony < tree.meta.parsimony:
-        #         # self.printpl('aa', 'Successfully reduced pareto tree!')
+        #         # self.printpl('aa', 'Successfully reduced paretos tree!')
         #         sym_fitness = self.tree_eval_fitness_offline_train(tree_sym)  # sfeh actually not required, delete this
         #         tree_sym.meta.fitness_train = sym_fitness
         #         tree_sym.meta.parsimony = parsimony
@@ -2137,54 +2477,95 @@ class ParetoFront:
         # else:
         #     printez('aaa', 'Pareto entry was already simplified', print_type=print_type)
 
-    def append_repair(self, tree: Node):
+    def plot_paretofront(self):
+        """
+        Write pyplot with paretos candidates
+        """
+        tuples = [[tree.get_parsimony(), tree.get_fitness()] for tree in self.pareto.paretos]
+        xx, yy = np.array(tuples).T
+
+        if len(xx) == 0:
+            print_e(f'Plotting empty array is not possible! Data={xx, yy}')
+            return
+
+        run_name = self.conf.name
+        run_name = str(run_name).replace('_', '-')  # sfeh asd workaround for latex version
+
+        with plt.rc_context(rc=pyplot_rc_tex):
+            fig, ax = plt.subplots()
+            right = max(max(xx), self.conf.parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
+
+            # beyond_lines:  # adding a point to the edges to imply that there are no more values (paretos-plot)
+            xx = np.concatenate([[xx[0]], xx, [right + 1]])
+            yy = np.concatenate([[max(yy) + 1], yy, [yy[-1]]])
+
+            ax.step(xx, yy, linestyle='dashed', marker='.', label=f'{run_name}', where='post')
+            ax.set(xlabel='complexity', ylabel='regression error',
+                   xlim=(0, right),
+                   ylim=(0, (max(yy) - min(min(yy), 0)) * 1.05))
+
+            try:
+                fig.savefig(self.rootdir / f'paretofront.pdf')
+                # self.ui.printpl('f', f"paretofront (pdf): {self.ui.rootdir / f'paretofront.pdf'}")  # todo
+            except PermissionError as perm_error:
+                print_e(f'Could not save plot: {perm_error}')  # sfeh for everything?
+
+        return
+
+    def append_repair(self, tree: NodeEvaluated):
         self.gens_since_last_pareto = 0
-        self.pareto.append(tree)
-        self.pareto = self.pop_to_pareto(self.pareto)
+        self.paretos.append(tree)
+        self.paretos = self.poplike_to_pareto(self.paretos)
 
     def random_choice(self):
-        return np.random.choice(self.pareto)
+        return np.random.choice(self.paretos)
 
     def pareto_sort(self):
         """
-        sorting the pareto pareto in list for parsimony
+        sorting the paretos paretos in list for parsimony
         """
-        self.pareto.sort(key=lambda x: x[0])
+        self.paretos.sort(key=lambda x: x.get_parsimony())
 
     def pareto_txt(self):
         """
-        Save all the pareto candidates to a file.
+        Save all the paretos candidates to a file.
         (Quick feedback that requires little overhead)
         """
-        return [f'Parsimony: \t{parsim} MeanError: \t{fitness} Expr: \t{tree.meta.expr_raw}' for (parsim, fitness, tree) in self.pareto]
+        return [f'Parsimony: \t{parsim} MeanError: \t{fitness} Expr: \t{tree.meta.expr_raw}' for (parsim, fitness, tree) in self.paretos]
 
-    def update_pareto_with_tree(self, tree: Node):
+    def update_pareto_with_tree(self, tree: NodeEvaluated):
         """
-        inserts a tree into the pareto front
+        inserts a tree into the paretos front
         """
         parsim = tree.get_parsimony()
         fit = tree.get_fitness()
 
-        p_simpler = [p for p in self.pareto if p.get_parsimony() <= parsim]  # all pareto pareto that are less complex
+        p_simpler = [p for p in self.paretos if p.get_parsimony() <= parsim]  # all paretos paretos that are less complex
 
-        if len(p_simpler) == 0:  # all other pareto pareto are more complex
-            self.pareto_append(tree, msg=f'new simplest entry')
+        if len(p_simpler) == 0:  # all other paretos paretos are more complex
+            self.insert(tree, msg=f'new simplest entry')
         else:
             best = min(p_simpler, key=lambda p: p[1])  # the fittest of the less complex ones
             if tree.get_fitness() < best.get_fitness():
-                self.kernel.fitness_compare(tree.get_fitness(), best.get_fitness())  # if true, at least one insertion
-                self.pareto_append(tree, msg=f'old fitness: {best[1]}')
+                self.fitness_compare(tree.get_fitness(), best.get_fitness())  # if true, at least one insertion
+                self.insert(tree, msg=f'old fitness: {best[1]}')
 
         self.pareto_sort()  # sfeh check if required
         return
 
-    def pop_to_pareto(self, poplike):
-        """
-        inserts a tree into the pareto front
+    def poplike_to_pareto(self, poplike):
         """
 
-        poplike = sorted(poplike, key=lambda x: (x.get_parsimony(), x.get_fitness()))  # todo -minus fitness
-        best = poplike[0]
+        """
+        try:
+            poplike = sorted(poplike, key=lambda x: (x.get_parsimony(), x.get_fitness()))  # todo -minus fitness
+        except:
+            poplike = sorted(poplike, key=lambda x: (x.get_parsimony(), x.get_fitness()))  # todo remove
+        try:
+            best = poplike[0]
+        except Exception:
+            print(f'the pop is empty, i guess: {poplike}')
+            best = poplike[0]  # todo
         best_par = best.get_parsimony()
         best_fit = best.get_fitness()
         pop_pareto = [best]
@@ -2195,24 +2576,24 @@ class ParetoFront:
                 continue
             else:
                 fitness = tree.get_fitness()
-                if self.kernel.fitness_compare(fitness, best_fit):
+                if self.fitness_compare(fitness, best_fit):
                     pop_pareto.append(tree)
                     best_par = parsim
                     best_fit = fitness
 
-        print(f'The pareto-efficient candidates of the population are: {pop_pareto}')
+        # print(f'The paretos-efficient candidates of the population are: {pop_pareto}')
 
         return pop_pareto
 
-    def pareto_from_population(self, pop):
+    def pareto_from_population(self, pop_next):
         """
 
         """
-        pop_pareto = self.pop_to_pareto(pop)
+        pop_pareto = self.poplike_to_pareto(pop_next)
 
-        if len(self.pareto) == 0:
+        if len(self.paretos) == 0:
             print('ASD Paretofrunt wird angefangen!!')  # todo debug paretofront wurde erstellt
-            self.pareto.append(pop[0])
+            self.paretos.append(pop_next[0])
 
         cmp = lambda a, b: a < b  # todo
 
@@ -2220,18 +2601,18 @@ class ParetoFront:
             success = False
             fit = tree.get_fitness()
             par = tree.get_parsimony()
-            if all([par < p.get_parsimony() for p in self.pareto]):
+            if all([par < p.get_parsimony() for p in self.paretos]):
                 print('Oye found a new, simpler entry')
-                self.pareto.append(tree)
-            for p in self.pareto:
+                self.paretos.append(tree)
+            for p in self.paretos:
                 if cmp(fit, p.get_fitness()) and par <= p.get_parsimony():
-                    self.pareto.remove(p)
+                    self.paretos.remove(p)
                     success = True
             if success:
                 self.append_repair(tree)
 
         # pop_iter = iter(pop_pareto)
-        # pareto_iter = iter(self.pareto)
+        # pareto_iter = iter(self.paretos)
         #
         # p = next(pareto_iter)
         # p_par = p.get_parsimony()
@@ -2242,13 +2623,13 @@ class ParetoFront:
         #     # lets try the next (or first) tree out!
         #     while t.get_parsimony() < p_par:
         #         print('Found a NEW, simpler entry!')
-        #         self.pareto.append(t)  # todo (every entry in this list is already paretoefficient)
+        #         self.paretos.append_tree(t)  # todo (every entry in this list is already paretoefficient)
         #         t = next(pop_iter)
         #
         #     t_fit = t.get_fitness()
         #     while not cmp(t_fit, p.get_fitness()):
         #         print(f'removing the deprecated entries: Fitness: {p.get_fitness()}')
-        #         self.pareto.remove(p)
+        #         self.paretos.remove(p)
         #         p = next(pareto_iter)
         #
         #     while cmp(t.get_fitness(), p.get_fitness()):
@@ -2259,9 +2640,9 @@ class ParetoFront:
         #
         #     while cmp(t_fit, p_fit) and t_par < p_par:
         #         # find a potential entry with at least the parsimony
-        #         print(f'SHEESH! We kicked out another pareto entry! old: {p_fit}, new fitness: {t_fit}.')
-        #         self.pareto.remove(p)
-        #         self.pareto.append(t)
+        #         print(f'SHEESH! We kicked out another paretos entry! old: {p_fit}, new fitness: {t_fit}.')
+        #         self.paretos.remove(p)
+        #         self.paretos.append_tree(t)
         #         p = next(pareto_iter)
         #         p_par = p.get_parsimony()
         #         p_fit = p.get_fitness()
@@ -2298,7 +2679,7 @@ class ParetoFront:
         # #         else:
         # #             fitness = tree.get_fitness()
         # #             if self.kernel.fitness_compare(fitness, best_fit):
-        # #                 pop_pareto.append(tree)
+        # #                 pop_pareto.append_tree(tree)
         # #                 best_par = parsim
         # #                 best_fit = fitness
         # #     except StopIteration:
@@ -2313,21 +2694,21 @@ class ParetoFront:
     #     delete sometime
     #     """
     #
-    #     # pycode_agent = self.kernel.pycode_wrap_result(self.env_vars.eval_action.minmax).format('action')
+    #     # pycode_agent = self.kernel.pycode_wrap_result(self.env_vars.action.minmax).format('action')
     #
     #     pygents_list = []
     #
-    #     for (parsim, fitness_train, tree) in self.pareto:
+    #     for (parsim, fitness_train, tree) in self.paretos:
     #         # agent_name = f'{self.conf.name}_{parsim:.0f}'
-    #         agent_name = f'{self.conf.name}_{self.env_vars.eval_action.name}_{parsim:.0f}'
+    #         agent_name = f'{self.conf.name}_{self.env_vars.action.name}_{parsim:.0f}'
     #         agent_as_python = tree.eval_pycode()
-    #         pygents_list.append([parsim, float(fitness_train), agent_name, agent_as_python])
+    #         pygents_list.append_tree([parsim, float(fitness_train), agent_name, agent_as_python])
     #
-    #     yaml_dump(self.rootdir / 'pycode_list.yaml', pygents_list, print_type=self.print_type)
+    #     yaml_dump(self.rootdir / 'pycode_list.yaml', pygents_list, print_type=self.ui.print_type)
     #     path = path_make_dir(self.rootdir / 'pycode_list.yaml')
     #     with Path.open(path, 'w') as file:
     #         _ = yaml.dump(pygents_list, file)  # , default_flow_style=False, sort_keys=False)
-    #         printez('ff', f'IB pycode-list: {path.as_posix()}', print_type=self.print_type)  # sfeh always the same print structure... just pass the path?
+    #         printez('ff', f'IB pycode-list: {path.as_posix()}', print_type=self.ui.print_type)  # sfeh always the same print structure... just pass the path?
     #
     #     return
     #
@@ -2336,13 +2717,13 @@ class ParetoFront:
     #     Writing all analysis files after evaluating the paretofront.
     #     (Currently strongly customized by sfeh for the mountaincar and industrial benchmark)
     #     """
-    #     self.printpl('i', f'Analysing the pareto candidates of the run.')
+    #     self.printpl('i', f'Analysing the paretos candidates of the run.')
     #
     #     dir_benchmarks = Path(__file__).parent.parent.absolute() / 'benchmarks/'
     #     path_hist = path_make_dir(self.rootdir / 'histograms/')
     #     pareto_agents = {}
     #
-    #     for (parsim, fitness_train, tree) in self.pareto:
+    #     for (parsim, fitness_train, tree) in self.paretos:
     #         histograms_path = self.plot_agent_histogram(parsim, tree, path_hist)  # sfeh todo
     #
     #         forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest = self.file_pareto_latex(parsim, tree)
@@ -2374,7 +2755,7 @@ class ParetoFront:
     #         for pp, x in agent_performance.items():
     #             pp, fitness_train, avg_reward, fails, path_mcmeshplot, path_mcmeshplot_diff = x
     #
-    #             tex_lines.append([f"{int(pp)}",
+    #             tex_lines.append_tree([f"{int(pp)}",
     #                               f"{pareto_agents[pp]['fitness_train']:.2f}",
     #                               f"{avg_reward:0.1f}",
     #                               f"{pareto_agents[pp]['tex_expr_raw']}",
@@ -2391,8 +2772,8 @@ class ParetoFront:
     #                 "dist & error & reward  & expression \\tabularnewline \\hline\n" \
     #                 f"{paste}" \
     #                 "\\hline\n\\end{longtable}\n"
-    #         file_dump(self.rootdir / f'analysis_input.tex', paste, print_type=self.print_type)
-    #         file_dump(self.rootdir / f'analysis_overview.tex', latex_treeviz_full_document(paste), print_type=self.print_type)
+    #         file_dump(self.rootdir / f'analysis_input.tex', paste, print_type=self.ui.print_type)
+    #         file_dump(self.rootdir / f'analysis_overview.tex', latex_treeviz_full_document(paste), print_type=self.ui.print_type)
     #
     #         paste_full = ''.join([tex_tabuline(x[:]) for x in tex_lines])
     #         paste_full = f"{str(self.conf.name).replace('_', '-')}  {tex_include_pdf('monitoring.png')}  {tex_include_pdf('sfehs_eval/evaled_overview.pdf')}\n\n" \
@@ -2400,7 +2781,7 @@ class ParetoFront:
     #                      "dist & error & reward & parsimony & expression \\tabularnewline \\hline\n" \
     #                      f"{paste_full}" \
     #                      "\\hline\n\\end{tabular}\n\n"
-    #         file_dump(self.rootdir / f'analysis_overview_plus.tex', latex_treeviz_full_document(paste_full), print_type=self.print_type)
+    #         file_dump(self.rootdir / f'analysis_overview_plus.tex', latex_treeviz_full_document(paste_full), print_type=self.ui.print_type)
     #
     #     elif 'IB' in self.conf.name:
     #
@@ -2409,7 +2790,7 @@ class ParetoFront:
     #         if self.conf.name[-2:] == '_0':
     #             """
     #             - complexity_sum, [complexities], regression_sum, [regression_errors], real_sum, [formulas]
-    #             - plot with pareto candidates
+    #             - plot with paretos candidates
     #             """
     #             # "\\multicolumn{2}{c}{complexity} & \\multicolumn{2}{c}{regression error} & \\multicolumn{4}{c}{IB reward} & combinations & expression \\tabularnewline\n" \
     #             tex_line_input, tex_line_overview = '', ''
@@ -2497,7 +2878,7 @@ class ParetoFront:
     #
     # def file_pareto_latex(self, parsim, tree):
     #     """
-    #     Generates latex-file with the computational tree structure of all pareto agents
+    #     Generates latex-file with the computational tree structure of all paretos agents
     #     - build tree from expression
     #     - fill tree meta-data, just in case we want to visualise anything of it
     #     - create latex-forest representation
@@ -2528,103 +2909,13 @@ class ParetoFront:
     #     The following lines delete this
     #     """
     #     # sfeh
-    #     file_dump(path_subfolder_tex / f'full_{parsim:02d}.tex', forest_tree_full, verbose='ff', print_type=self.print_type)
-    #     file_dump(path_subfolder_tex / f'full_{parsim:02d}_tight.tex', forest_tree_tight, verbose='ff', print_type=self.print_type)
-    #     file_dump(path_subfolder_tex / f'{parsim:02d}_input.tex', tex_expr_raw, print_type=self.print_type)
-    #     file_dump(path_subfolder_tex / f'{parsim:02d}_input_forest.tex', tex_expr_forest, verbose='ff', print_type=self.print_type)
-    #     file_dump(path_subfolder_tex / f'{parsim:02d}_doc.tex', latex_treeviz_full_document(forest_tree_full), verbose='ff', print_type=self.print_type)  # delete this
+    #     file_dump(path_subfolder_tex / f'full_{parsim:02d}.tex', forest_tree_full, verbose='ff', print_type=self.ui.print_type)
+    #     file_dump(path_subfolder_tex / f'full_{parsim:02d}_tight.tex', forest_tree_tight, verbose='ff', print_type=self.ui.print_type)
+    #     file_dump(path_subfolder_tex / f'{parsim:02d}_input.tex', tex_expr_raw, print_type=self.ui.print_type)
+    #     file_dump(path_subfolder_tex / f'{parsim:02d}_input_forest.tex', tex_expr_forest, verbose='ff', print_type=self.ui.print_type)
+    #     file_dump(path_subfolder_tex / f'{parsim:02d}_doc.tex', latex_treeviz_full_document(forest_tree_full), verbose='ff', print_type=self.ui.print_type)  # delete this
     #
     #     return forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest
-
-
-class Population:
-
-    def __init__(self, kernel: Kernel, origin=None, conf=None):
-        self.kernel = kernel
-        self.size = 1000
-        self.pop_next = []
-        self.pop_base = []  # sfeh maybe better names
-
-        self.conf = conf  # todo
-
-        self.lut = {}
-        self.origin = origin
-
-    def selection_tournament(self, tourn_size=3):
-        """
-
-        """
-        tournament_list = [np.random.choice(self.pop_base) for _ in range(tourn_size)]
-        tourn_winner = self.kernel.best_fitness_function(tournament_list, key=lambda tree: tree.meta.fitness_train)
-        tourn_winner = copy.deepcopy(tourn_winner)
-        return tourn_winner
-
-    def finalize(self, tree: Node):
-        """
-        ==>ROOT (only in root node)
-        finalizing the structure
-        """
-
-        # try:
-        #     self.check_all()
-        # except Exception as ex:
-        #     logging.warning(f'tree failed the quick check. last-mod: {self.meta.last_evolution}. Reason:\n{ex}')
-        #     # print_warning('w', f'tree failed the quick check. last-mod: {self.meta.last_evolution}. Reason:\n{ex}', print_type=self.print_type)
-
-        parsimony = None
-
-        expr_raw = tree.eval_expr_sym()
-        expr_sym = expr_sympify(expr_raw)
-
-        # self.meta.expr_raw = self.get_nlabel()  # todo debug
-        # self.meta.expr_sym = 'self.eval_expr_sym()'  # todo debug
-
-        # todo evaluate parsimony
-        # todo evaluate fitness_train
-
-        # todo: set meta data
-        pass
-
-    def append(self, tree: Node):
-        """
-        was: def pop_append(self, tree: Node):
-            # sfeh this check might be important...
-        Safely append a tree to the population.
-        Even though the raw trees should have everything to display their expression,
-        they have gone through a process of changes. Here, the tree is refurbished.
-        sfeh: if trees are 100% safely created, tree_check_deep() must not be used. Useful when trying out new gp-operators.
-        - Enrich the raw tree for the next generation
-        - check if the tree is actually valid
-        ->
-        """
-
-        meta = self.lut.get(hash(tree), None)  # sfeh str() might even maje more sense? maybe not? idk
-        if meta is not None:
-            parsimony = meta['parsimony']
-            fitness = round(meta['fitness_train'], self.conf.precision)  # sfeh just for now
-        else:
-            parsimony = tree.eval_parsimony(self.conf.complexity_measure, origin_tree=self.origin)
-            if parsimony > self.conf.parsimony_max:
-                print_warning('wwww', f'Parsimony too high, last evolution: {tree.meta.last_evolution}', print_type=self.print_type)  # sfeh care about wwww. should not
-                return
-            try:
-                fitness = self.tree_eval_fitness_offline_train(tree)
-            except Exception as evalex:
-                print_warning('wwww', f'Exception while evaluating: {evalex}, tree: {tree}.', print_type=self.print_type)
-                return
-
-        expr_raw = tree.get_nlabel()
-        expr_sym = expr_sympify(expr_raw)
-        # set fixed nodes
-
-        tree.meta.fitness_train = fitness
-        tree.meta.parsimony = parsimony
-        tree.meta.expr_raw = expr_raw
-        tree.meta.expr_sym = expr_sym
-        # tree.set_meta(fitness_train, parsimony, last_evolution, expr_raw, expr_sym)
-
-        self.treelut_tree_add(tree)
-        self.pop_next.append(tree)
 
 
 class ExplainableGP(object):
@@ -2637,11 +2928,11 @@ class ExplainableGP(object):
         self.mp_cores = mp_cores  # sfeh
         self.time_start = time.perf_counter()
 
-        self.io = UserInteraction(Path(rootdir), self.conf.print_type)
-        self.io.print_initializing()
+        self.ui = UserInteraction(Path(rootdir), self.conf.print_type)
+        self.ui.print_initializing()
 
         with Path.open(path_data) as file:
-            # self.env_vars, choose_observations = data_from_csv(df, action_name=self.conf.action_name)
+            # self.env_vars, choose_observations = data_from_csv(df, action=self.conf.action)
             df = pd.read_csv(file, delimiter=',')
             df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
             # todo it is float64, float64, int64 with MTC.. does it work with Tensorflow?
@@ -2651,7 +2942,7 @@ class ExplainableGP(object):
                     raise Exception(f'Your samples hold a column that matches the potential tree operator {header}.\n'
                                     f'That might end up in confusion, please rename the column.')
 
-            self.conf.action_name = self.conf.action_name or df[len(df.columns) - 1]
+            self.conf.action_name = self.conf.action_name or df.columns[len(df.columns) - 1]
 
             df = df.drop(self.conf.dc, axis=1)  # no need to keep other actions
             printez('i', f'Ignoring columns: {self.conf.dc}')  # , print_type=print_type print_type does not exist yet sfeh
@@ -2660,20 +2951,18 @@ class ExplainableGP(object):
             choose_observations = ChooseObservation(csv_observations)
 
             self.data_train, self.data_control = train_test_split(df, test_size=0.2, random_state=0)  # discussion: random state 0 okay? test_size 0.2?
-            kernel = RegressionKernel(self.conf.kernel_name, self.data_train, self.tf_config, "/gpu:0",
-                                      self.conf.action_name)  # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
+            todoaction = EvalAction(self.conf.action_name)
+        kernel = RegressionKernel(self.conf.kernel_name, self.data_train,
+                                  todoaction)  # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
+
+        self.kernel = kernel  # sfeh remove
 
         choose_distributions = self.activate_distributions(path_distrib=None)  # asd sfeh path_distrib not None
         choose_ops = self.gp_load_oparray(path_operators=None)  # path_operators sfeh this file from config version1
 
         self.tb = TreeBuilder(choose_ops, choose_observations, choose_distributions, self.conf.precision)
 
-        # Evaluating kernel (that uses tensorflow)
-        self.tf_config = tensorflow.compat.v1.ConfigProto(log_device_placement=self.conf.tf_device_log,
-                                                          allow_soft_placement=True)  # TF device usage logging (for debugging) (default false. I lately used it to check if the GPU is used)
-        self.tf_config.gpu_options.allow_growth = True
-
-        self.pareto = ParetoFront()  # todo  a list with all pareto candidates. key is complexity, value is tree meta. [[1,344, meta], ...]
+        self.pareto = ParetoFront(kernel.fitness_compare, self.conf)  # todo  a list with all paretos candidates. key is complexity, value is tree meta. [[1,344, meta], ...]
 
         if path_origin_tree:
             # todo make origin class
@@ -2686,32 +2975,49 @@ class ExplainableGP(object):
 
             if self.conf.complexity_measure in ['tree_edit_distance']:
                 self.conf.complexity_measure = 'tree_node_count'  # sfeh idea
-                self.io.print_warning('w', "Complexity measurement 'tree_edit_distance' is not possible without origin!\n"
-                                           "Using 'tree_node_count' instead.", print_type=self.print_type)
+                print_warning('w', "Complexity measurement 'tree_edit_distance' is not possible without origin!\n"
+                                   "Using 'tree_node_count' instead.", print_type=self.ui.print_type)
 
         # init values with dummies (just to have all self values here for overview)
         self.tree_lut = {}  # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
-        self.population = []
-        self.pop_base = []  # population that is taken to the next generation
+
         self.best_fitness = None  # keeps track of the current best fitness_train
         self.gen_id = 0
-
-        self.monitor_df = pd.DataFrame(columns=['pop_len', 'pop_unique', 'time',
-                                                'fit_avg', 'fit_var', 'fit_best',
-                                                'complexity_avg', 'complexity_var', 'complexity_stderr',
-                                                'gens_since_last_pareto'])
 
         self.evolve_loop, self.evolve_random = self.make_evolve_rates()
         self.evolve_tags = list(self.evolve_loop.keys()) + list(self.evolve_random.keys())
 
         # self.monitor_evol = dict.fromkeys(self.evolve_tags, pd.DataFrame(columns=['fitness_train', 'parsimony', 'lentree', 'evolve_num', 'count']))
 
-        self.pop = Population(kernel, origin=self.origin)
-        self.kernel = kernel  # sfeh remove
+        self.pop = Population(kernel, self.conf, self.ui, origin=self.origin)
 
-        self.io.print_g('gg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
+        self.ui.print_g('gg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
         return
+
+    def gp_load_oparray(self, path_operators=None, print_type=None):
+        """
+        Offers the possibility for the user to load a .yaml-file of operators for the gp-process.
+        operator_pool is used otherwise.
+        The Operator must match its version in the 'op'-Array (alternatively search for op_what)
+        The second value in the tuple denotes the probability of choosing an operator
+
+        @:param sfeh_no_crazyops: sfeh's workaround for being too lazy to load a file with the actual operators
+
+        Load all operator_pool ready-to-use from a file
+        """
+
+        try:
+            operator_pool = yaml_load(Path(path_operators))
+        except:
+            printez('i', 'Opt-in not specified: Operators-file does not exist.\n'
+                         'Creating one with a default list of mathematical operator_pool.', print_type=print_type)
+            operator_pool = None
+        choose_operators = ChooseOperators(operator_pool=operator_pool)
+
+        # yaml_dump(self.rootdir / 'backup/operators_used.yaml', operator_pool, default_flow_style=True)  # sfeh delete this??
+
+        return choose_operators
 
     def gen_create_initial(self):
         """
@@ -2724,7 +3030,7 @@ class ExplainableGP(object):
         """
 
         if self.origin is not None:
-            self.pop.append(self.origin)  # sfeh why not :P
+            self.pop.append_tree(self.origin)  # sfeh why not :P
         else:
             total_rate = sum([x['evolve_rate'] for x in self.evolve_random.values()])
 
@@ -2738,7 +3044,7 @@ class ExplainableGP(object):
                     else:
                         tree = self.tb.pop_random(call_params)
                     # tree.meta.last_evolution = tag  # todo
-                    self.pop.append(tree)
+                    self.pop.append_tree(tree)
         return
 
     def gen_next_population(self):
@@ -2759,49 +3065,45 @@ class ExplainableGP(object):
             tourn_size = evolve_specs['tourn_size']
             call_params = evolve_specs.get('custom_params')
 
-            self.io.print_g('gggg', f'->Evolving \'{tag}\' {evolve_num}x starting...')
+            self.ui.print_g('gggg', f'->Evolving \'{tag}\' {evolve_num}x starting...')
             if evolve_name == 'reproduce':
                 """
                 
                 """
                 for nn in range(evolve_num):
-                    tree = self.pop.selection_tournament(tourn_size=tourn_size)
-                    if call_params.get('simplify'):
+                    evotree = self.pop.selection_tournament(tourn_size=tourn_size)
+                    if call_params.get('simplify'):  # todo debug
                         try:
-                            pass
-                            # self.tb.evolve_reduce(obs_infos=self.env_vars.obs_infos, completely=False)
+                            evotree.evolve_reduce(completely=False)
                             # tree.meta.last_evolution = tag
                         except Exception as ex:
-                            self.io.print_warning('www', f'Evolve reproduce failed: {ex}', print_type=self.print_type)
+                            print_warning('www', f'Evolve reproduce failed: {ex}', print_type=self.ui.print_type)
 
-                    self.pop.append(tree)  # append anyways... it was worth a try :P
+                    self.pop.append_tree(evotree)  # append_tree anyways... it was worth a try :P
 
             elif evolve_name == 'mutate point':
                 """
                 Point mutation, One point (terminal or function) gets mutated.
                 """
                 for nn in range(evolve_num):
-                    tree = self.pop.selection_tournament(tourn_size=tourn_size)
-                    tree = self.tb.evolve_mutate_point(tree)
+                    evotree = self.pop.selection_tournament(tourn_size=tourn_size)
+                    evotree = self.tb.evolve_mutate_point(evotree)
                     # tree.meta.last_evolution = tag
-                    self.pop.append(tree)
+                    self.pop.append_tree(evotree)
 
             elif evolve_name == 'mutate branch':
                 # todo question: tree.copy() or .deepcopy necessary??
                 for nn in range(evolve_num):
                     build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
                     full_or_grow = build_spec.get('p_op') or random.choice(['full', 'grow'])
-                    tree = self.pop.selection_tournament(tourn_size=tourn_size)
-                    cool_build_size = choose_build_size(size_mode, mean_min_max_var, tree=tree)
-                    tree.evolve_mutate_branch_depth(cool_build_size, self.tb, size_mode=size_mode, full_or_grow=full_or_grow)
+                    evotree = self.pop.selection_tournament(tourn_size=tourn_size)
+                    cool_build_size = choose_build_size(size_mode, mean_min_max_var, tree=evotree)
+                    evotree = self.tb.evolve_mutate_branch_depth(evotree, cool_build_size)  # sfeh , full_or_grow=full_or_grow), size_mode=size_mode
                     # new_tree.meta.last_evolution = tag
-                    self.pop.append(tree)
+                    self.pop.append_tree(evotree)
 
             elif evolve_name == 'crossover branch':
                 for nn in range(int(evolve_num / 2)):  # two childs
-                    atree = self.pop.selection_tournament(tourn_size=tourn_size)
-                    btree = self.pop.selection_tournament(tourn_size=tourn_size)
-
                     """
                     swap branches of two trees
                     - select parent a and b
@@ -2810,50 +3112,53 @@ class ExplainableGP(object):
                     - delete a_parent branch and insert b_parent branch (which tactic?)
                     todo into main tree?
                     """
+                    atree = self.pop.selection_tournament(tourn_size=tourn_size)
+                    btree = self.pop.selection_tournament(tourn_size=tourn_size)
+
                     # 1. two parents
                     # 2. search nodes for left and right that can be exchanged. convert_needed
                     atree, btree = self.tb.evolve_crossover(atree, btree)
                     # tree = self.tb.finalize(etree)  # todo ==>state
-                    self.pop.append(atree)
-                    self.pop.append(btree)
+                    self.pop.append_tree(atree)
+                    self.pop.append_tree(btree)
 
             elif evolve_name == 'filter optimize':
 
                 for nn in range(evolve_num):
-                    tree = self.pop.selection_tournament(tourn_size=tourn_size)
-                    tree.evolve_mutate_filter_random(call_params, self.tb)
-                    tree.meta.last_evolution = tag
-                    self.pop.append(tree)
+                    evotree = self.pop.selection_tournament(tourn_size=tourn_size)
+                    evotree = self.tb.evolve_mutate_filter_random(evotree)  # todo , call_params
+                    # tree.remember_evolution(tag)
+                    self.pop.append_tree(evotree)
 
-            elif evolve_name == 'revive pareto':
+            elif evolve_name == 'revive paretos':
 
                 for nn in range(evolve_num):
-                    fitness_train, parsim, tree = self.pareto.random_choice()
-                    tree.meta.last_evolution = tag
-                    self.pop.append(tree)
+                    evotree = self.pareto.random_choice()
+                    # evotree.remember_evolution(tag)
+                    self.pop.append_tree(evotree)
 
             elif evolve_name == 'random trees':
 
                 if self.origin_is_fix:
                     for nn in range(evolve_num):
-                        tree = self.tb.pop_random(call_params, from_origin=True)
-                        tree.meta.last_evolution = tag
-                        self.pop.append(tree)
+                        evotree = self.tb.pop_random(call_params, from_origin=True)
+                        # tree.meta.last_evolution = tag
+                        self.pop.append_tree(evotree)
                 else:
                     for nn in range(evolve_num):
-                        tree = self.tb.pop_random(call_params)
-                        tree.meta.last_evolution = tag
-                        self.pop.append(tree)
+                        evotree = self.tb.pop_random(call_params)
+                        # tree.meta.last_evolution = tag
+                        self.pop.append_tree(evotree)
             else:
                 print_e(f"Evolution not known: '{evolve_name}'")
 
-        missing_trees = self.conf.pop_max - len(self.population)
+        missing_trees = self.conf.pop_max - len(self.pop.pop_next)
         if missing_trees > 0:
             if missing_trees > 0.05 * self.conf.pop_max:
                 self.printpl('ii', f'{missing_trees}/{self.conf.pop_max} trees are missing in this population!')
             else:
                 self.printpl('iii', f'{missing_trees}/{self.conf.pop_max} trees are missing in this population!')
-            while len(self.population) < self.conf.pop_max:
+            while len(self.pop) < self.conf.pop_max:
                 return  # sfeh aka create trees here if desired
 
         # sfeh automatically fill with random trees (check this at the initiation)
@@ -2867,8 +3172,8 @@ class ExplainableGP(object):
         """
         Optional custom distributions specified by the user.
         """
-        path_distrib = path_distrib or self.rootdir / self.io.use_distributions_file
-        choose_distributions = ChooseConstants(path_distrib, data_train=self.data_train, n_samples=100)
+        path_distrib = path_distrib or self.ui.rootdir / self.ui.file_distributions
+        choose_distributions = ChooseConstants(path_distrib=path_distrib, data_train=self.data_train, n_samples=100)
         return choose_distributions
 
     def make_evolve_rates(self):
@@ -2908,7 +3213,7 @@ class ExplainableGP(object):
             # Reproduction (10%)
             'Repro': {'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.06, 'custom_params': {}},
             'Rsympy': {'evolve_name': 'reproduce', 'evolve_rate': 0.03, 'custom_params': {'simplify': True}},
-            'Pareto': {'evolve_name': 'revive pareto', 'evolve_rate': 0.01, 'custom_params': {}},
+            'Pareto': {'evolve_name': 'revive paretos', 'evolve_rate': 0.01, 'custom_params': {}},
 
             # Mutation (25%)
             'Point': {'evolve_name': 'mutate point', 'evolve_rate': 0.05, 'custom_params': {}},
@@ -2973,7 +3278,7 @@ class ExplainableGP(object):
     def custom_exit_condition(self):
         """
         Special condition to exit the evolve-loop
-        1. when >100 generations, no new pareto pareto were found
+        1. when >100 generations, no new paretos paretos were found
         """
         try:
             if self.monitor_df['gens_since_last_pareto'].iloc[-1] > 100:
@@ -2994,15 +3299,15 @@ class ExplainableGP(object):
             self.printpl('i', f'Adding new generations, gen_max was {printdummy}, current gen {self.gen_id}. gen_additionally: {gen_additionally}. New max gen: {self.conf.gen_max}')
 
         # sfeh
-        # yaml_dump(self.rootdir / 'used_config.yaml', self.conf, print_type=self.print_type)
+        # yaml_dump(self.rootdir / 'used_config.yaml', self.conf, print_type=self.ui.print_type)
 
-        self.gens_since_last_pareto = 0
+        # self.pop.gens_since_last_pareto = 0
 
         while self.gen_id <= self.conf.gen_max and not self.custom_exit_condition():  # max generation, max time, done...
-            self.time_genstart = time.perf_counter()
+            self.pop.time_genstart = time.perf_counter()  # sfeh here?
 
             if self.gen_id == 0:
-                self.io.print_g('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')
+                self.ui.print_g('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')
                 self.gen_create_initial()  # sfeh stattdessen einfach checken, ob die letzte population leer ist und info/warnung: neue generation?
             else:
                 # This might be a solution for multiprocessing:
@@ -3023,20 +3328,31 @@ class ExplainableGP(object):
                     # time_evolve = time.perf_counter()
                 else:
                     self.gen_next_population()
-                    pass
 
-            self.update_pareto_from_pop_tmp()
+            self.pareto.pareto_from_population(self.pop.pop_next)
 
-            self.pop_analyse()
+            self.pop.pop_analyse()
+            # sfeh check if there are really unique... doubt it.
 
-            self.pop_base = self.population[:]
-            self.population = []
-            self.io.print_g('ggg', f'Generation {self.gen_id} took a total time of: {time.perf_counter() - self.time_genstart:4.2f}.')
+            """
+            show plots if necessary
+            """
+            save_gen = int(self.conf.period.get('gen_save', 1))
+            plot_gen = int(self.conf.period.get('gen_plots', 1))
+            if self.gen_id >= plot_gen and self.gen_id % plot_gen == 0:
+                self.file_analysis_plots()
+
+            if self.gen_id >= save_gen and self.gen_id % save_gen == 0 or self.gen_id == 10:  # sfeh extra save at 10 for early feedback while testing
+                self.ui.backup_save()
+
+            self.pop.pass_population()
+
+            self.ui.print_g('ggg', f'Generation {self.gen_id} took a total time of: {time.perf_counter() - self.pop.time_genstart:4.2f}.')
             self.gen_id += 1
         else:
-            self.io.print_g('g', f'Done after Generation {self.gen_id}.\nTime since start: {time.perf_counter() - self.time_start:4.2f}s')
+            self.ui.print_g('g', f'Done after Generation {self.gen_id}.\nTime since start: {time.perf_counter() - self.time_start:4.2f}s')
 
-        self.io.backup_save()
+        self.ui.backup_save()
 
         return
 
@@ -3050,7 +3366,7 @@ class ExplainableGP(object):
     #                                         f"{function_body}\n", '    ')  # aka tab (\t)
     #     """
     #     pass
-    #     # py_return = self.kernel.pycode_wrap_result(self.env_vars.eval_action.minmax).format('action')
+    #     # py_return = self.kernel.pycode_wrap_result(self.env_vars.action.minmax).format('action')
     #
     #     # complete_function = f"    def decide(self, input):\n" \
     #     #     f"        cartPos, cartVel = input\n" \
@@ -3061,13 +3377,13 @@ class ExplainableGP(object):
     #     # all_agent_names = []
     #     # all_more_info = []
     #     #
-    #     # for (parsim, fitness_train, tree) in self.pareto:
+    #     # for (parsim, fitness_train, tree) in self.paretos:
     #     #     agent_name = f'{self.conf.name}_{parsim:.0f}'
     #     #
     #     #     agent_as_python = tree.eval_pycode()
-    #     #     all_agents.append(f"class {agent_name}:\n{complete_function.format(agent_as_python)}")
-    #     #     all_agent_names.append(agent_name)
-    #     #     all_more_info.append(f"('{agent_name}', {agent_name}(), {parsim}, {fitness_train})")
+    #     #     all_agents.append_tree(f"class {agent_name}:\n{complete_function.format(agent_as_python)}")
+    #     #     all_agent_names.append_tree(agent_name)
+    #     #     all_more_info.append_tree(f"('{agent_name}', {agent_name}(), {parsim}, {fitness_train})")
     #     #
     #     # all_agents = '\n\n'.join(all_agents)
     #     # agent_tuples = ', '.join([f"('{x}', {x}())" for x in all_agent_names])
@@ -3088,7 +3404,7 @@ class ExplainableGP(object):
     #     # pyc_complete = f"import math; import numpy as np\n" \
     #     #     "import sys\n" \
     #     #     "from pathlib import Path\n" \
-    #     #     "sys.path.append(str(Path(Path.cwd() / '../../../'))\n" \
+    #     #     "sys.path.append_tree(str(Path(Path.cwd() / '../../../'))\n" \
     #     #     "from benchmarks.MC.agents.quick_eval import *\n" \
     #     #     "from pathlib import Path\n" \
     #     #     "folder = Path.cwd() / 'custom_files'\n" \
@@ -3104,7 +3420,7 @@ class ExplainableGP(object):
     #     #     "\tprint('executing!')\n" \
     #     #     "\teval_agent_list(agent_tuples, folder=folder, goal_agent=sarsa_agent)\n"
     #
-    #     # pth = path_make_dir(self.rootdir / self.io.folder_pycode / f"agents.py")
+    #     # pth = path_make_dir(self.rootdir / self.ui.dir_pycode / f"agents.py")
     #     # with Path.open(pth, 'w') as file:
     #     #     file.write(pyc_complete)
     #     #     self.printpl('ff', f'Pycode: {pth.as_posix()}')
@@ -3165,15 +3481,17 @@ class ExplainableGP(object):
 
         with Path.open(path_origin_tree, newline='') as file:
             file.read()
+            origin_tree = Node(label=Observation('Todo'))  # todo
+            origin_meta = TreeMeta()
+            origin_tree = NodeEvaluated(origin_tree, origin_meta)
         try:
-            origin_tree = None  # todo
-            expr_sym = 'todo'  # origin_tree.eval_expr_sym()  # todo
+            expr_sym = origin_tree.eval_expr_sym()  # todo
         except Exception as sympex:
             raise Exception(f'Loaded origin_tree already failed because of: {sympex}')
 
         # sfeh, this does not work
         # if not tree_check_is_sympified(tree):
-        #     self.io.print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}\n'
+        #     print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}\n'
         #                          ''.format(expr_raw, expr_sym))
 
         used_observations = origin_tree.get_observation_list()
@@ -3182,116 +3500,13 @@ class ExplainableGP(object):
         if self.kernel.exploration_risk:
             self.kernel.origin_results = tf_origin_results['results_kernel']  # after getting the origin-results, these informations can be updated
 
-        origin_tree.meta.fitness_train = fitness_train
-        origin_tree.meta.parsimony = 0
+        origin_tree.set_fitness(fitness_train)
+        origin_tree.set_parsimony(0)
 
-        self.pareto.append([0, fitness_train, origin_tree])  # the origin tree is the only candidate for now -> it is in the pareto front
-        self.io.print_g('gg', f'Loading origin tree, regr. error {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')
+        self.pareto.insert(origin_tree)  # the origin tree is the only candidate for now -> it is in the paretos front
+        self.ui.print_g('gg', f'Loading origin tree, regr. error {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
         return origin_tree  # self.origin_tree = copy.deepcopy(origin_tree)
-
-    def plot_gen_performance(self):
-        """
-        All monitoring infos
-        sfeh den shit in Funktionen aufteilen
-        """
-        with plt.rc_context(rc={'axes.grid': True}):
-            fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]}, sharex='all')  # , figsize=(9, 9)
-            plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
-            xx = list(self.monitor_df.index)
-
-            axs0 = axs[0]
-            axs0.plot(self.monitor_df['fit_avg'], marker='', label='Regression error (average)')
-            try:
-                avg = self.monitor_df['fit_avg']
-                std = self.monitor_df['fit_std']
-                axs0.fill_between(xx, avg - std, avg + std, alpha=0.2)  # axs0.set_title('Regression Error (average)')  # sfeh not stderr... upper/lower bound?
-            except Exception as ex:
-                raise Exception(f'Delete this. were there any problems? {ex}')
-            axs0.step(x=xx, y=self.monitor_df['fit_best'], linestyle='dashed', marker='', where='post', color='g', label='Best candidate')  # , label=ax_label
-            axs0.set_ylim(ymin=0), axs0.legend(loc='lower left')  # , shadow=True
-
-            axs0_twin = axs0.twinx()
-            axs0_twin.plot(xx, self.monitor_df['gens_since_last_pareto'], color='tab:gray', label='Generations since last pareto entry', linestyle='dashed', marker='')  # linestyle='None'
-            axs0_twin.tick_params(axis='y', labelcolor='tab:gray')
-            try:
-                axs0_twin.set_ylim(ymin=0, ymax=max(self.monitor_df['gens_since_last_pareto'].max() or 1, 50))
-            except Exception as ex:
-                try:
-                    print_e(f'damn setting ylim not working sfeh :s {ex}')
-                    axs0_twin.set_ylim(ymin=0, ymax=max(self.monitor_df['gens_since_last_pareto'].notnull().max() or 1, 50))
-                    # print(self.monitor_df['gens_since_last_pareto'].notnull().max())
-                except Exception as ex2:
-                    print_e(f'damn setting ylim not working, version 2! {ex2}')
-                    axs0_twin.set_ylim(ymin=0, ymax=50)
-
-            axs0_twin.legend(loc='lower right')
-
-            axs1 = axs[1]
-            axs1.plot(self.monitor_df['parsim_avg'], label='Complexity (average)')
-            # self.conf.complexity_measure
-
-            try:
-                p_avg = self.monitor_df['parsim_avg']
-                p_std = self.monitor_df['parsim_std']
-                axs1.fill_between(xx, p_avg - p_std, p_avg + p_std, alpha=0.2)  # axs1.set_title('TED (average)')
-            except Exception as ex:
-                raise Exception(f'Delete this if no raise since some time. {ex}')
-            axs1.set_ylim(ymin=0), axs1.legend(loc='lower left')
-
-            axs2 = axs[2]
-            axs2.plot(self.monitor_df['pop_len'], label='poplike size')
-            axs2.plot(self.monitor_df['pop_unique'], label='unique')
-            axs2.margins(y=0.25), axs2.set_ylim(ymin=0), axs2.legend(loc='lower left')
-
-            axs3 = axs[3]
-            between_outliers = self.monitor_df['time'].between(0, 2 * self.monitor_df['time'].mean())
-            axs3.plot(self.monitor_df['time'][between_outliers], label='time (s)')  # sfeh could be a better rule...
-            axs3.set_ylim(ymin=0), axs3.legend(loc='lower left')
-
-            # Top level style
-            axs3.set_xlim(xmin=0, xmax=max(xx)), axs3.set_xlabel('generations')
-            axs0.set_title(f'monitoring gp generations {self.conf.name}')  # sfeh
-            fig.tight_layout()
-            path = self.rootdir / f'monitoring.png'  # -{self.conf.name}
-            fig.savefig(path)
-            self.printpl('f', f"monitoring: {path.as_posix()}")
-            plt.close('all')
-
-    def plot_paretofront(self):
-        """
-        Write pyplot with pareto candidates
-        """
-        tuples = [[parsim, fitness] for (parsim, fitness, tree) in self.pareto]
-        xx, yy = np.array(tuples).T
-
-        if len(xx) == 0:
-            print_e(f'Plotting empty array is not possible! Data={xx, yy}')
-            return
-
-        run_name = self.conf.name
-        run_name = str(run_name).replace('_', '-')  # sfeh asd workaround for latex version
-
-        with plt.rc_context(rc=pyplot_rc_tex):
-            fig, ax = plt.subplots()
-            right = max(max(xx), self.conf.parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
-
-            # beyond_lines:  # adding a point to the edges to imply that there are no more values (pareto-plot)
-            xx = np.concatenate([[xx[0]], xx, [right + 1]])
-            yy = np.concatenate([[max(yy) + 1], yy, [yy[-1]]])
-
-            ax.step(xx, yy, linestyle='dashed', marker='.', label=f'{run_name}', where='post')
-            ax.set(xlabel='complexity', ylabel='regression error',
-                   xlim=(0, right),
-                   ylim=(0, (max(yy) - min(min(yy), 0)) * 1.05))
-
-            try:
-                fig.savefig(self.rootdir / f'paretofront.pdf')
-                self.printpl('f', f"paretofront (pdf): {self.rootdir / f'paretofront.pdf'}")
-            except PermissionError as perm_error:
-                print_e(f'Could not save plot: {perm_error}')  # sfeh for everything?
-
-        return
 
     def plot_evolve_performance(self):
         """
@@ -3322,89 +3537,9 @@ class ExplainableGP(object):
         Make all plots
         """
 
-        self.plot_gen_performance()  # largest plot analysing the
+        self.pop.plot_gen_performance()  # largest plot analysing the
         self.plot_paretofront()
         # self.plot_evolve_performance()  # sfeh
-        return
-
-    def pop_analyse(self):
-        """
-        Analysing this generation
-        - amount of trees
-        - fittest tree
-        - average fitness_train
-        - average tree parsimony
-        """
-        gen_id = self.gen_id
-        popul = self.population
-
-        if len(popul) == 0:
-            raise Exception('Your population isded, its empty. RIP all the computation power used to get here.')
-
-        pop_fitness = [tree.meta.fitness_train for tree in popul]
-
-        # tmp_evol_performance = dict.fromkeys(self.monitor_evol.keys(), pd.DataFrame(columns=['fitness_train', 'parsimony', 'lentree']))
-        # for tree in popul:
-        #     last_evol = tree.meta.last_evolution
-        #     if last_evol in self.evolve_tags:
-        #         row = {'fitness_train': tree.meta.fitness_train,
-        #                'parsimony': tree.meta.parsimony,
-        #                'lentree': len(tree)}
-        #         tmp_evol_performance[last_evol].loc[self.gen_id] = row
-        #
-        # for last_evol, evodata in tmp_evol_performance.items():
-        #     if last_evol in self.evolve_loop:
-        #         try:
-        #             row = {'fitness_avg': evodata['fitness_train'].mean(),
-        #                    'parsimony_avg': evodata['parsimony'].mean(),
-        #                    'lentree_avg': evodata['lentree'].mean(),
-        #                    'evolve_num': self.evolve_loop[last_evol]['evolve_num'],
-        #                    'count': len(tmp_evol_performance[last_evol])}
-        #             self.monitor_evol[last_evol].append(row, ignore_index=True)  #
-        #             # sfeh fitness_train - last fitness_train?
-        #         except Exception as ex:
-        #             print_e(f'Could not save evol_performance analysis. {ex}')
-        #     else:
-        #         if last_evol != 'origin' and last_evol != 'Rand3o':
-        #             self.io.print_warning('w', f'delete_this, sfeh, okay when the following is origin: {last_evol}')
-
-        pop_parsim = [tree.meta.parsimony for tree in popul]
-        pop_treelen = [len(tree) for tree in popul]
-
-        pop_fitness_best = self.kernel.np_best_fitness(pop_fitness)
-        try:
-            self.best_fitness = self.kernel.best_fitness_function(pop_fitness_best, self.best_fitness)
-        except:
-            self.best_fitness = pop_fitness_best
-
-        unique_tree_count = len(set([hash(x) for x in popul]))  # sfeh analyze this?
-
-        gen_time = time.perf_counter() - self.time_genstart
-
-        self.monitor_df.loc[gen_id] = {'pop_len': len(popul),
-                                       'pop_unique': unique_tree_count,
-                                       'fit_avg': np.average(pop_fitness),
-                                       'fit_std': np.std(pop_fitness),
-                                       'fit_best': self.best_fitness,
-                                       'parsim_avg': np.average(pop_parsim),
-                                       'parsim_std': np.std(pop_parsim),
-                                       'complexity_avg': np.var(pop_treelen),
-                                       'time': gen_time,
-                                       'gens_since_last_pareto': self.gens_since_last_pareto}  # sfeh version1 delete this shit
-
-        self.io.print_g('gg', f'Created {len(popul)}/{self.conf.pop_max} ({unique_tree_count} unique) in generation {gen_id}. Gen took {gen_time:4.2f}s')
-        # sfeh check if there are really unique... doubt it.
-
-        """
-        show plots if necessary
-        """
-        save_gen = int(self.conf.period.get('gen_save', 1))
-        plot_gen = int(self.conf.period.get('gen_plots', 1))
-        if self.gen_id >= plot_gen and self.gen_id % plot_gen == 0:
-            self.file_analysis_plots()
-
-        if self.gen_id >= save_gen and self.gen_id % save_gen == 0 or self.gen_id == 10:  # sfeh extra save at 10 for early feedback while testing
-            self.run_backup_save()
         return
 
     def printpl(self, message_type, message_str):
@@ -3413,11 +3548,11 @@ class ExplainableGP(object):
         Instead of checking if you should print every time, this is done here.
         message_type options can be found in config
         """
-        printez(message_type, message_str, print_type=self.print_type)
+        printez(message_type, message_str, print_type=self.ui.print_type)
         return
 
 
-# def activate_dataset(path_data, action_name):
+# def activate_dataset(path_data, action):
 #     """
 #     loading the data which the GP will be working on.
 #     The .csv-file is prepared (loading correct data-type, splitting data, ...)
@@ -3434,7 +3569,7 @@ class ExplainableGP(object):
 #     if path_data.suffix == '.p':
 #         data_prepared = pickle_load(path_data)
 #     elif path_data.suffix == '.csv':
-#         data_prepared = data_from_csv(path_data, action_name=action_name)
+#         data_prepared = data_from_csv(path_data, action=action)
 #     else:
 #         raise FileNotFoundError(f'No data provided? File must be a pickle (.p) or csv (.csv) file. Loaded file: {path_data}')
 #
@@ -3566,9 +3701,9 @@ class ChooseConstants(Selectable):
             lambdadist_as_string = yaml_load(path_distrib)
             # todo how should distributions be loaded?
             # e.g. sample_amount = lambdadist_as_string.get('observed_floats')
-            self.terminal_distributions = {float: [], bool: []}
-            self.terminal_distributions[float].extend([eval(x) for x in lambdadist_as_string[float]]),
-            self.terminal_distributions[bool].extend([eval(x) for x in lambdadist_as_string[bool]])
+            self.distributions = {float: [], bool: []}
+            self.distributions[float].extend([eval(x) for x in lambdadist_as_string[float]]),
+            self.distributions[bool].extend([eval(x) for x in lambdadist_as_string[bool]])
 
             # self.sample_floats_from_data(obs_infos, data_train, n_samples=n_samples)  # todo
         except Exception:
@@ -3583,7 +3718,7 @@ class ChooseConstants(Selectable):
             obsnames = obs_infos.observables[float].keys()
             obs_samples = data_train[obsnames].to_numpy().flatten()
             obs_samples = np.random.choice(obs_samples, size=n_samples)
-            self.terminal_distributions[float].extend([lambda: random.choice(obs_samples)]),  # take one
+            self.distributions[float].extend([lambda: random.choice(obs_samples)]),  # take one
 
     def select(self, xtype):
         """
@@ -3647,8 +3782,8 @@ class ChooseObservation(Selectable):
         #     else:
         #         obs = fam_members[0]
         #         obs_info[obs.name] = obs
-        #         obs_names.append(obs)
-        #         obs_prop.append(1)  # just one value
+        #         obs_names.append_tree(obs)
+        #         obs_prop.append_tree(1)  # just one value
 
         obs_list = [Observation(x) for x in obs_names]
 
@@ -3723,18 +3858,26 @@ class TreeBuilder:
             node = Node(label=label)
         return node
 
+    def evotree_deepcopy(self, tree: Node):
+        """
+        todo
+        """
+        evotree = copy.deepcopy(tree)  # todo ==>state
+        evotree.state = STATE_BUILDING
+        return evotree
+
     def evolve_mutate_filter_random(self, tree):
         """
         Mutates a number of float terminal of a tree
         todo ROOT
         """
-        etree = copy.deepcopy(tree)  # todo ==>state
+        evotree = self.evotree_deepcopy(tree)  # ==>state
 
         # mode = call_params['mode']  # point/branch/all  # todo
         # yes_observations = call_params.get('yes_observations')  # sfeh point/branch/all todo
         mutate_filter = 'gaussian_filter'  # sfeh change?  todo
 
-        node = np.random.choice(etree.eval_mutatable_nodes())
+        node = np.random.choice(evotree.eval_mutatable_nodes())
 
         node.evolve_mutate_filter_branch(precision=self.precision)
 
@@ -3747,35 +3890,35 @@ class TreeBuilder:
         #     # node_id.evolve_mutate_point(tb)
 
         # todo ==>state
-        return etree
+        return evotree
 
     def evolve_mutate_point(self, tree: Node):
         """
         Mutate a single mutatable point in any Tree.
         sfeh is the tree a tree copy or the same tree?
         """
-        etree = copy.deepcopy(tree)  # todo ==>state
+        evotree = self.evotree_deepcopy(tree)  # ==>state
 
-        node = np.random.choice(etree.eval_mutatable_nodes())
+        node = np.random.choice(evotree.eval_mutatable_nodes())
         xtype = node.get_xtype()
 
         if node.get_arity() > 0:
-            node.set_label(tb.choose_op(xtype))  # Function is same type, same arity
+            node.set_label(self.choose_op(xtype))  # Function is same type, same arity
         else:
-            node.set_label(tb.choose_term(xtype[1]))  # 3 -> '2f' -> 5
+            node.set_label(self.choose_term(xtype[1]))  # 3 -> '2f' -> 5
 
         # todo ==>state
-        return etree
+        return evotree
 
     def evolve_mutate_branch_depth(self, tree, depth_max):
         """
         todo ==>depth only
         currently only one branch
         """
-        etree = copy.deepcopy(tree)  # todo ==>state
+        evotree = self.evotree_deepcopy(tree)  # ==>state
 
-        node = np.random.choice(etree.eval_mutatable_nodes())
-        xtype = node.get_xtype()[1]  # todo todotodo
+        node = np.random.choice(evotree.eval_mutatable_nodes())
+        xtype = node.get_xtype()[1]  # todo
 
         branch = self.invent_core_depth(xtype, 3, depth=0, p_op=1)  # todo ==>dummies
         node.replace_with_branch(branch)
@@ -3785,15 +3928,15 @@ class TreeBuilder:
         #     node.childs = [Node(tb.choose_any(xt, p=1)) for xt in node.get_xtype()[0]]  # todo ==>
 
         # etree.finalize()  # todo ==>state
-        return etree
+        return evotree
 
     def evolve_crossover(self, tree1: Node, tree2: Node):
         """
         todo ==>depth only
         currently only one branch
         """
-        atree = copy.deepcopy(tree1)  # todo ==>state
-        btree = copy.deepcopy(tree2)  # todo ==>state
+        atree = self.evotree_deepcopy(tree1)  # ==>state
+        btree = self.evotree_deepcopy(tree2)  # ==>state, was: btree = copy.deepcopy(tree2)
 
         try:
             anodes = atree.eval_mutatable_nodes(allow_root=False)
@@ -3807,7 +3950,20 @@ class TreeBuilder:
                 bnodes = btree.eval_mutatable_nodes(allow_root=False, xtype_out=xtype)
                 bnode = np.random.choice(bnodes)
                 anode = atree.eval_mutatable_nodes(xtype_out=xtype)
-        except:
+        except Exception as ex:
+            # todo todotodo
+            print(f'ok WTF happened here?: {ex}')
+            anodes = atree.eval_mutatable_nodes(allow_root=False)
+            anode = np.random.choice(anodes)
+            xtype = anode.get_xtype_out()
+            bnodes = btree.eval_mutatable_nodes(xtype_out=xtype)
+            if bnodes:
+                bnode = np.random.choice(bnodes)
+            else:
+                xtype = float if xtype == bool else bool  # the other swap type now
+                bnodes = btree.eval_mutatable_nodes(allow_root=False, xtype_out=xtype)
+                bnode = np.random.choice(bnodes)
+                anode = atree.eval_mutatable_nodes(xtype_out=xtype)
             raise Exception
 
         # todo deepcopy required??
@@ -3819,8 +3975,8 @@ class TreeBuilder:
 
         # atree.meta.last_evolution = tag  # todo ==>tree tag
         # btree.meta.last_evolution = tag
-        # self.poplike.append(left_parent)
-        # self.poplike.append(right_parent)
+        # self.poplike.append_tree(left_parent)
+        # self.poplike.append_tree(right_parent)
 
         return atree, btree
 
@@ -3846,7 +4002,7 @@ class TreeBuilder:
             # if 'depth' in size_mode:
             #     for ii in range(len(layer0_ids)):
             #         build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
-            #         build_split.append(build_size)
+            #         build_split.append_tree(build_size)
             #
             # elif 'nodes' in size_mode:
             #     build_nodes = choose_build_size(size_mode, mean_min_max_var, force='branch')
@@ -3867,12 +4023,11 @@ class TreeBuilder:
             #     tree = tree_insert_subtree(tree, core, old_branch, karoo=True)
         else:
             build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')  # depth, in this case
-            # todo
+            tree = self.invent_core_depth(float, 6, depth=0, p_op=1)  # todo
             # coolcore.evolve_mutate_branch_depth(build_size, choose_oparray3, env_vars.choose_obs,
             #                                      choose_distributions, precision, size_mode=size_mode, full_or_grow=full_or_grow)
             # coolcore.evolve_random_tree_depth(size_mode, xtype_root, build_size, full_or_grow)
-
-        # return coolcore
+            return tree
 
 
 # sfeh https://docs.sympy.org/latest/tutorial/manipulation.html
@@ -4023,5 +4178,5 @@ if __name__ == '__main__':
     t3 = tb.invent_core_depth(float, 4, p_op=0.5)
     t4 = tb.invent_core_depth(float, 4, p_op=0.8)
     t5 = tb.evolve_mutate_filter_random(t3)
-    print('huehue', t4, t4.get_observation_list())
+    print('huehue', '\n', t4, '\n', t4.get_observation_list())
     print(inputs.select(float).nlabel)

@@ -630,6 +630,16 @@ class ExplainableGP(object):
 # import tensorflow as tf; import ast; import textwrap
 # print(', '.join(['[\'{}\', {:.2f}]'.format(v['label'], 1/v['xtype': ([], []), 'c-weight']) for k, v in op_what.items()]))  # retreive a list with all non-ast ops:
 
+def reci(lst, depth=0):
+    node = Node(lst[0])
+    if len(lst[1:]) == node.get_arity():
+        # success
+    else:
+        raise Exception('Tree-building list length does not match the nodes arity.')
+    if len(lst) > 1:
+
+    return
+
 
 if __name__ == '__main__':
     """
@@ -645,10 +655,12 @@ if __name__ == '__main__':
     #     print('x.D', t1, '===', t2)
     #     t1, t2 = tb.evolve_crossover(t1, t2)
     #     print('x~D', t1, '===', t2)
-    from plagih.sympy_extras import *
 
     trexpt = '[+,1,2]'
     # tree = tb.tree_from_nested_trick(trexpt)
     nstr = '["+",["-",["Ifte",["True"],[2],[2.043]],["cartVel"]],[-1.3]]'
     nstr = '["+",["-",["Ifte","True",["sin",2],2.043],"cartVel"],-1.3]'
-    x = eval(x, {'sin': Sin, 'Ifte': Ifte})
+    nstr = '["+",["-",["Ifte","True",["sin",2],["/",2.043,4]],"cartVel"],-1.3]'
+
+    x = eval(nstr, ops)
+

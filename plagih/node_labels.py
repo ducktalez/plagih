@@ -545,8 +545,6 @@ ops = {  # 'f2f': Classical mathematical operators, evaluate from float to float
 
 latex_inline = ['+', '-', '*', '**', '==', '!=', '<', '<=', '>', '>=', 'Andb', 'Orb', 'Xor']
 
-def recursive_bree(nlist):
-     node = Node(nlist[0])
 
 if __name__ == '__main__':
     for oo, ocls in ops.items():
@@ -554,13 +552,4 @@ if __name__ == '__main__':
 
     for x in [FloatConstant(0.44), BoolConstant(True)]:
         print(f'x: {x.nlabel}, {x.xtype}')
-
-    import itertools
-    trexpt = '[+,1,2]'
-    # tree = tb.tree_from_nested_trick(trexpt)
-    nstr = '["+",["-",["Ifte",["True"],[2],[2.043]],["cartVel"]],[-1.3]]'
-    nstr = '["+",["-",["Ifte","True",["sin",2],["/",2.043,4]],"cartVel"],-1.3]'
-    x = eval(nstr, ops)
-
-    x_iter = iter(x)
 

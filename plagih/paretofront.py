@@ -1,7 +1,7 @@
 """
 
 """
-from plagih.tree_factory import TreeFinalized
+from plagih.tree_factory import FinalizedTree
 from plagih.util import *
 
 
@@ -10,17 +10,17 @@ class ParetoFront:
     sfeh
     """
 
-    def __init__(self, fitness_compare, conf, origin=None):
+    def __init__(self, fitness_compare, origin=None):
         """
         sfeh conf? meh...
         """
         self.paretos = []
         self.fitness_compare = fitness_compare
         self.origin = origin
-        self.conf = conf
 
-    def file_pareto(self):
-        yaml_dump(self.conf.rootdir / 'paretofront.yaml', self.paretos)  # sfeh this printing is probably shit
+    def file_pareto(self, path):
+        # sfeh where to use? path-> self.conf.rootdir / 'paretofront.yaml',
+        yaml_dump(path, self.paretos)  # sfeh this printing is probably shit
 
     def fitness_compare(self, a, b):
         """
@@ -28,7 +28,7 @@ class ParetoFront:
         """
         return a < b
 
-    def insert(self, tree: TreeFinalized, msg=None, print_type=None):
+    def insert(self, tree: FinalizedTree, msg=None, print_type=None):
         """
         was pareto_append
         Appending a candidate to the paretofront.
@@ -65,10 +65,13 @@ class ParetoFront:
         # else:
         #     printez('aaa', 'Pareto entry was already simplified', print_type=print_type)
 
-    def plot_paretofront(self):
+    def plot_paretofront(self, path, run_name, parsimony_max):
         """
         Write pyplot with paretos candidates
         """
+
+        run_name = str(run_name).replace('_', '-')  # sfeh asd workaround for latex version
+
         tuples = [[tree.get_parsimony(), tree.get_fitness()] for tree in self.paretos]
         xx, yy = np.array(tuples).T
 
@@ -76,12 +79,9 @@ class ParetoFront:
             print_e(f'Plotting empty array is not possible! Data={xx, yy}')
             return
 
-        run_name = self.conf.name
-        run_name = str(run_name).replace('_', '-')  # sfeh asd workaround for latex version
-
         with plt.rc_context(rc=pyplot_rc_tex):
             fig, ax = plt.subplots()
-            right = max(max(xx), self.conf.parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
+            right = max(max(xx), parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
 
             # beyond_lines:  # adding a point to the edges to imply that there are no more values (paretos-plot)
             xx = np.concatenate([[xx[0]], xx, [right + 1]])
@@ -93,14 +93,14 @@ class ParetoFront:
                    ylim=(0, (max(yy) - min(min(yy), 0)) * 1.05))
 
             try:
-                fig.savefig(self.conf.rootdir / f'paretofront.pdf')
+                fig.savefig(path)
                 # self.ui.printpl('f', f"paretofront (pdf): {self.ui.rootdir / f'paretofront.pdf'}")  # todo
             except PermissionError as perm_error:
                 print_e(f'Could not save plot: {perm_error}')  # sfeh for everything?
 
         return
 
-    def append_clean(self, tree: TreeFinalized):
+    def append_clean(self, tree: FinalizedTree):
         self.gens_since_last_pareto = 0
         self.paretos.append(tree)
         self.paretos = self.poplike_to_pareto(self.paretos)
@@ -121,7 +121,7 @@ class ParetoFront:
         """
         return [f'Parsimony: \t{parsim} MeanError: \t{fitness} Expr: \t{tree.meta.expr_raw}' for (parsim, fitness, tree) in self.paretos]
 
-    def update_pareto_with_tree(self, tree: TreeFinalized):
+    def update_pareto_with_tree(self, tree: FinalizedTree):
         """
         inserts a tree into the paretos front
         """
@@ -134,8 +134,8 @@ class ParetoFront:
             self.insert(tree, msg=f'new simplest entry')
         else:
             best = min(p_simpler, key=lambda p: p[1])  # the fittest of the less complex ones
-            if tree.get_fitness() < best.get_fitness():
-                self.fitness_compare(tree.get_fitness(), best.get_fitness())  # if true, at least one insertion
+            if fit < best.get_fitness():
+                self.fitness_compare(fit, best.get_fitness())  # if true, at least one insertion
                 self.insert(tree, msg=f'old fitness: {best[1]}')
 
         self.pareto_sort()  # sfeh check if required

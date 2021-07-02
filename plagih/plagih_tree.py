@@ -22,7 +22,9 @@ from plagih.tree_distances.tree_edit_distance import apted_distance
 from dataclasses import dataclass
 import itertools
 import logging
-logging.basicConfig(filename='example.log', filemode='a', level=logging.DEBUG)  # encoding='utf-8' maybe in the future
+
+
+# logging.basicConfig(filename='example.log', filemode='a', level=logging.DEBUG)  # sfeh encoding='utf-8' maybe in the future
 
 # lol, lol. https://github.com/tensorflow/tensorflow/issues/27023 these messages are tingeling
 
@@ -49,12 +51,12 @@ class Node:
     state = None
     meta = None
 
-    def __init__(self, label: 'NodeLabel' = None, is_fix=False, childs=None, depth=None, state=0):
+    def __init__(self, label: 'NodeLabel' = None, depth=None, is_fix=False, childs=None, state=0):
         self.label = label
-        self.is_fix = is_fix
+        self.is_fix = is_fix  # todo debug
         self.childs = childs or []
         self.depth = depth
-        self.state = state
+        self.state = state  # todo
 
     def __hash__(self):
         """
@@ -236,12 +238,12 @@ class Node:
 
             return [self]
 
-    def eval_expr_sym(self, reducible=None, obs_names=None):
+    def eval_expr(self, reducible=None, obs_names=None):
         """
         accumulate and return the complete expression the tree holds recursively
         """
         if self.get_arity() > 0:
-            child_expr_list = [cc.eval_expr_sym() for cc in self.childs]  # sfeh what was that again?: reducible=reducible, obs_names=obs_names
+            child_expr_list = [cc.eval_expr() for cc in self.childs]  # sfeh what was that again?: reducible=reducible, obs_names=obs_names
             # if reducible:
             #     # my_expr = ops[self.get_label()]['sym_reduce'] or my_expr
             #     # symloc = sympy_symbol_defaults(obs_names)  # todo solve the problem... new version of sympy?
@@ -305,13 +307,6 @@ class Node:
         self.childs = new_node.childs or []  # maybe must be updated recursively
         # todo set depth!!
         # self.is_fix = new_node.is_fix  # debatable
-
-    def is_root(self):
-        """
-
-        """
-        return self.depth == 0
-        # return True
 
     def eval_mutatable_nodes(self, xtype_out=None, allow_root=True):
         """
@@ -422,75 +417,6 @@ class Node:
     #     return
 
 
-class TreeMeta:
-    # fitness: float = None
-    # parsimony: float = None
-    # expr_raw: str = None
-    # expr_sym: str = None
-    # state: int = None
-    # last_evolution: list[str] = dataclasses.field(default_factory=list)
-    def __init__(self, fitness=None, parsimony=None, expr_raw=None, expr_sym=None, state=0):
-        # def __init__(self, fitness, parsimony, expr_raw, expr_sym, state):
-        self.fitness = fitness
-        self.parsimony = parsimony
-        self.expr_raw = expr_raw
-        self.expr_sym = expr_sym
-        self.state = state  # todo
-        self.last_evolution = deque([], maxlen=10)  # todo
-
-    def append_tag(self, tag):
-        self.last_evolution.append(tag)
-
-    def reset(self):
-        self.fitness = None
-        self.parsimony = None
-        self.expr_raw = None
-        self.expr_sym = None
-        self.state = None
-        # self.last_evolution = deque([], maxlen=10)
-
-
-def observation_get_family_and_time(name, re_pattern='_\\d+$', none_return=None):
-    """
-    When an observation is known, return the family, the time and the SIGN!!
-    todo put this function somewhere where it can actually help
-    """
-
-    core_expr = re.split(re_pattern, name)[0]
-    if core_expr[0] == '-':
-        core_expr = core_expr[1::]
-        preexpr = '-'
-    else:
-        preexpr = ''
-    try:
-        re_search = re.search(re_pattern, name)  # re_search => ['_12']
-        temp_diff = re_search[0].replace('_', '')  # (only) solution found (at [0]), e.g. '_14'. only keep the digits
-        temp_diff = int(temp_diff)
-    except Exception:
-        temp_diff = none_return
-    return core_expr, temp_diff, preexpr
-
-
-class Observation(Terminal):
-    """
-    todo discuss: labels should not have a sign (-pos); just pos
-    # self.name = nlabel if nlabel[0] != '-' else nlabel[1:]  # sfeh delete?
-    """
-
-    # tf_type = tensorflow.float32  # todo yeah...
-
-    def __init__(self, nlabel):
-        # todo xtype_out=float
-        self.nlabel = nlabel
-        self.fam, self.timeindex, _ = observation_get_family_and_time(self.nlabel, none_return=None)  # remove this self.preexpr
-        self.xtype = (tuple([]), float)  # todo
-        self.expr_sym = self.nlabel  # sfeh delete?
-        self.index_minmax = None
-
-        latex = f'\\text{{{self.fam}}}'  # remove this {self.preexpr}
-        self.latex = (latex, latex)
-
-
 # class ObservationIndex(Observation):
 #     """
 #     todo
@@ -509,20 +435,6 @@ class Observation(Terminal):
 
 
 if __name__ == '__main__':
-    hugo = ['Ifte',
-            ['Orb',
-             ['<', ['cartPos', -1]],
-             ['Andb',
-              ['<', ['cartPos', 0.1]],
-              ['<', ['cartVel', -0.05]]]], 2,
-            ['Ifte',
-             ['Andb',
-              ['Andb',
-               ['>', ['cartPos', -0.45]],
-               ['<', ['cartPos', -0.05]]],
-              ['<', ['cartVel', -0.5]]], 0,
-             ['Ifte',
-              ['<', ['cartVel', 0]], 0, 2]]]
 
     trexpr1 = '(Ifte, (Orb, (cartPos < -1), (Andb, (cartPos < 0.1), (cartVel < -0.05))), 2, (Ifte, (Andb, (Andb, (cartPos > -0.45), (cartPos < -0.05)), (cartVel < -0.5)), 0, (Ifte, (cartVel < 0), 0, 2)))'
     trexpr2 = '(Ifte, (cartVel < 0), 0, 2)'

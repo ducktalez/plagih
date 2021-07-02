@@ -1,6 +1,8 @@
 """
 
 """
+import re
+
 import plagih.util
 import tensorflow
 import ast
@@ -85,6 +87,47 @@ class Constant(Terminal):
 
     def mutate_filter(self, *args, **kwargs):
         pass
+
+
+def observation_get_family_and_time(name, re_pattern='_\\d+$', none_return=None):
+    """
+    When an observation is known, return the family, the time and the SIGN!!
+    todo put this function somewhere where it can actually help
+    """
+
+    core_expr = re.split(re_pattern, name)[0]
+    if core_expr[0] == '-':
+        core_expr = core_expr[1::]
+        preexpr = '-'
+    else:
+        preexpr = ''
+    try:
+        re_search = re.search(re_pattern, name)  # re_search => ['_12']
+        temp_diff = re_search[0].replace('_', '')  # (only) solution found (at [0]), e.g. '_14'. only keep the digits
+        temp_diff = int(temp_diff)
+    except Exception:
+        temp_diff = none_return
+    return core_expr, temp_diff, preexpr
+
+
+class Observation(Terminal):
+    """
+    todo discuss: labels should not have a sign (-pos); just pos
+    # self.name = nlabel if nlabel[0] != '-' else nlabel[1:]  # sfeh delete?
+    """
+
+    # tf_type = tensorflow.float32  # todo yeah...
+
+    def __init__(self, nlabel):
+        # todo xtype_out=float
+        self.nlabel = nlabel
+        self.fam, self.timeindex, _ = observation_get_family_and_time(self.nlabel, none_return=None)  # remove this self.preexpr
+        self.xtype = (tuple([]), float)  # todo
+        self.expr_sym = self.nlabel  # sfeh delete?
+        self.index_minmax = None
+
+        latex = f'\\text{{{self.fam}}}'  # remove this {self.preexpr}
+        self.latex = (latex, latex)
 
 
 class FloatConstant(Constant):

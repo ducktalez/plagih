@@ -2,6 +2,8 @@
 """
 The factory to create trees
 """
+from plagih.plagih_tree import *
+
 import ast
 import copy
 import random
@@ -12,7 +14,7 @@ import numpy as np
 import logging
 from pathlib import Path
 
-from plagih.node_labels import ops
+from plagih.node_labels import ops, Observation, FloatConstant, BoolConstant, Usub
 
 
 def randomly_split_range(range_max, num_splits):
@@ -207,19 +209,21 @@ class TreeBuilder:
                              lambda: random.randint(1, 20)],  # 0 has actually no purpose (except as being an action)
                      bool: [lambda: random.choice([True, False])]}
 
-    def workaround_remove_tilde(self):
+    def workaround_remove_tilde(self, tree):
         """
         sfeh
         What is the role of the tilde in a label?
         I think it came from sympy... or i introduced it to trick sympy in some way
         I guess it is something like -
         """
-        if isinstance(self.get_label(), Usub):  # tilde '~'
-            new_core = self.childs[0]
-            self.replace_with_branch(new_core)
+        if isinstance(tree.get_label(), Usub):  # tilde '~'
+            new_core = tree.childs[0]
+            tree.replace_with_branch(new_core)
 
-        for cc in self.childs:
+        for cc in tree.childs:
             cc.workaround_remove_tilde()
+
+        return tree  # todo debug/check if tis changes the og tree check
 
     def constants_add(self, path_distrib=Path.cwd(), data_train=None, n_samples=100):
         """
@@ -532,14 +536,52 @@ def helper_evolve_params_branch(call_params, tree_depth_max=10, parsimony_max=30
     return build_spec, size_mode, mean_min_max_var, p_op
 
 
-class TreeFinalized:
-    # class TreeFinalized(Node):
+class TreeMeta:
+    # fitness: float = None
+    # parsimony: float = None
+    # expr_raw: str = None
+    # expr_sym: str = None
+    # state: int = None
+    # last_evolution: list[str] = dataclasses.field(default_factory=list)
+    def __init__(self, fitness=None, parsimony=None, expr_raw=None, expr_sym=None):
+        # def __init__(self, fitness, parsimony, expr_raw, expr_sym, state):
+        self.fitness = fitness
+        self.parsimony = parsimony
+        self.expr_raw = expr_raw
+        self.expr_sym = expr_sym
+        self.last_evolution = deque([], maxlen=10)  # todo
+
+    def append_tag(self, tag):
+        self.last_evolution.append(tag)
+
+    def reset(self):
+        self.fitness = None
+        self.parsimony = None
+        self.expr_raw = None
+        self.expr_sym = None
+        self.state = None
+        # self.last_evolution = deque([], maxlen=10)
+
+
+class Tree:
+    # todo this tree has a history only.
+    # tree initialized with
+    #   no past
+    #   missing meta
+    #   building todo
+    #   isroot
+    def __init__(self, tree, meta):
+        self.tree=tree
+        self.meta=meta
+
+
+class FinalizedTree(Tree):
+    # class FinalizedTree(Node):
     # ==>tree status sfeh to evaluated...
     # ->rootnode
 
-    statue = STATE_EVALUATED
-
     def __init__(self, tree: Node, meta: TreeMeta):
+        super().__init__(tree, meta)
         self.tree = tree
         self.meta = meta
 
@@ -547,6 +589,7 @@ class TreeFinalized:
         return self.tree
 
     def append_tag(self, tag):
+        # todo append tag where?
         self.meta.append_tag(tag)
 
     def get_fitness(self):
@@ -568,17 +611,3 @@ class TreeFinalized:
 
     def get_last_evolution(self):
         return self.meta.last_evolution[-1]  # sfeh not even sure
-
-    def remember_evolution(self, tag):
-        """
-        todo... not here
-        """
-        self.meta.last_evolution.append(tag)
-
-    def tree_from_nested_trick(self, nstr):
-        """
-        nstr 'nested-string' to tree
-        e.g. [+, 1, ad]
-        """
-        # [+, [[[]]] ]
-        pass

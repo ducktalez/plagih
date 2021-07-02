@@ -1,3 +1,4 @@
+from plagih.node_labels import ops
 from plagih.tree_factory import *
 import ast
 from pathlib import Path
@@ -255,7 +256,7 @@ class Kernel:
 
         self.np_best_fitness = np.min  # todo what why
 
-        with Path.open(conf.path_data) as file:
+        with Path.open(conf.path_data_csv) as file:
             df = pd.read_csv(file, delimiter=',')
             # sfeh it is float64, float64, int64 with MTC.. does it work with Tensorflow?
             # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
@@ -267,7 +268,6 @@ class Kernel:
             df = df.drop(conf.dc, axis=1)  # no need to keep other actions
 
             self.obs_names = list(df.columns)
-            self.obs_names.remove(conf.action_name)
             self.obs_names.remove(self.action.nlabel)
 
             df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
@@ -305,7 +305,7 @@ class Kernel:
 class RegressionKernel(Kernel):
 
     def __init__(self, conf, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(conf, *args, **kwargs)
         self.np_best_fitness = np.min
 
         # self.kernel_version_plot_yaxis = f"regression error"
@@ -313,6 +313,7 @@ class RegressionKernel(Kernel):
         #     if option in kernel_name:
         #         self.kernel_version_plot_yaxis += plot_axis_string
         kernel_name = conf.kernel_name
+        self.precision = conf.precision or 6
         self.bounded = 'bounded' in kernel_name
         self.discrete = 'discrete' in kernel_name
         self.tanhpenalize = 'tanhpenalize' in kernel_name  # sfeh only makes sense when bounded
@@ -389,7 +390,7 @@ class RegressionKernel(Kernel):
         """
 
         action_bins = self.histogram_bins(self.action.minmax)
-        expr_sym = tree.eval_expr_sym()
+        expr_sym = tree.eval_expr()
         used_observations = tree.get_observation_list()
         pairwise_diff = self.eval_tf(expr_sym, used_observations)['pairwise_diff']
 
@@ -482,10 +483,15 @@ class RegressionKernel(Kernel):
         with tensorflow.compat.v1.Session(config=self.tf_config) as sess:  # tensorflow evaluation must be done in a "session". funfact: debugging is not ez
             with sess.graph.device(self.tf_device):  # GPU evaluation in tensorflow
                 tf_results = sess.run(
-                    {'pairwise_diff': pairwise_diff, 'results_kernel': results_kernel, 'regression_errors': regression_errors, 'mean_error': mean_error, 'penalize_exploration': penalize_exploration})
+                    {'pairwise_diff': pairwise_diff,
+                     'results_kernel': results_kernel,
+                     'regression_errors': regression_errors,
+                     'mean_error': mean_error,
+                     'penalize_exploration': penalize_exploration})
                 # sfeh attention: the dict above returns np-type results, not real floats
+        tf_results['mean_error'] = round(float(tf_results['mean_error']))
         if only_fitness:  # reduced evaluation, only mean_error is returned... (may save memory as only one value gets returned)
-            return float(tf_results['mean_error'])
+            return tf_results['mean_error']
         else:
             return tf_results
 
@@ -499,8 +505,8 @@ class RegressionKernel(Kernel):
 
 class ClassificationKernel(Kernel):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, conf, *args, **kwargs):
+        super().__init__(conf, *args, **kwargs)
 
     def eval_tf(self):
         pass
@@ -577,8 +583,8 @@ class MatchKernel(Kernel):
     The match kernel does
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, conf, *args, **kwargs):
+        super().__init__(conf, *args, **kwargs)
 
     def eval_tf(self):
         pass

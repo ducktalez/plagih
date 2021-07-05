@@ -332,7 +332,10 @@ def expr_sympify(expr_raw):
     except Exception as ex:
         raise Exception(f'sympify_1: {expr_raw} reason: ({ex})')
 
-    if re.search('(zoo|inf|nan|\*I[^f])', expr_sym):  # ['zoo', 'inf', '*I', 'nan'], ignoring *Ifte though
+    # I[^f] (searching "I", but ignoring "Ifte" though by not-having a "f" as second letter), old version: of \*I[^f]
+    # find 'zoo', 'inf', '*I', 'nan', (I)
+    # ignore: ['Ifte', 'i']  (pycharm also USUALLY does not check capitalized letters; i vs. I)
+    if re.search('(zoo|inf|nan|I[^f])', expr_sym):
         raise Exception(f'Failed for expr: {expr_sym}')
 
     return expr_sym
@@ -347,7 +350,6 @@ if __name__ == "__main__":
     expr = '(((0.326675 * Consumption_2) - Shift_9) + (Ifte((-Shift_9 < Consumption_5), Shift_7, Ifte((Square(Gain_6) < Maxi(Fatigue_2, Ifte((Shift_9 < Shift_4), -Gain_3, Gain_5))), Shift_9, Shift_4))))'
     expr = '-Consumption_0*sign(re(asdW**2)) - 0.004073'
     expr = 'Mini(-1 - 1 + sqrt(1)'
-    expr = 'tanh(1.556)'
     expr = 'Maxi(2.202197, (Abs(cartVel) - sqrt(cartVel)))'
     # nlabel = 'sign(((a * b) ** 10))'  # takes too long
     # nlabel = '0.307785*Consumption_2 - 0.779543*Gain_3 + 0.779543*Gain_9 - Shift_9 + 0.779543*Ifte(-Shift_8 < Consumption_5, Shift_7, Shift_4)'

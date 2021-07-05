@@ -1,27 +1,24 @@
 """
 plagih_tree contain a new implementation of trees that we use in genetic programming to display a program.
-The old karoo "tree" is replaced with, for now, "treer" in the code.
-not all functions can use tree for now and some tree-functions require the old "tree"
-tree splits the karoo tree into the
-- meta-info (fitness_train, parsimony, tree-id, ...) and the
-The core of the tree, which "is" the tree, is stored recursively
+The old karoo "fintree" is replaced with, for now, "treer" in the code.
+not all functions can use fintree for now and some fintree-functions require the old "fintree"
+fintree splits the karoo fintree into the
+- meta-info (fitness_train, parsimony, fintree-id, ...) and the
+The core of the fintree, which "is" the fintree, is stored recursively
 Example core: [+, 1, [*, [-, 2, 3], 2]] = 1 + ((2-3) * 2)
 
 sfeh: write test that checks all operators for sympificytion (...+branch-combinations, and more?)
 sfeh: use function-types (-> 'kommuttative'?)
 
 """
-import re
-from collections import deque
-
-from plagih.util import *
 from plagih.fitness_kernel import *
-from plagih.sympy_extras import expr_sympify
 from plagih.tree_distances.tree_edit_distance import apted_distance
 
 from dataclasses import dataclass
 import itertools
-import logging
+
+from plagih.node_labels import NodeLabel, Observation
+from plagih.util import *
 
 
 # logging.basicConfig(filename='example.log', filemode='a', level=logging.DEBUG)  # sfeh encoding='utf-8' maybe in the future
@@ -32,23 +29,18 @@ import logging
 @dataclass
 class Node:
     """
-    The core is the structure of a plagih gp-tree.
-    It recursively holds the nodes of a tree; every tree has a list of potential children.
+    The core is the structure of a plagih gp-fintree.
+    It recursively holds the nodes of a fintree; every fintree has a list of potential children.
     Example core: [+, 1, [*, [-, 2, 3], 2]] = 1 + ((2-3) * 2)
 
     states?
     [None]: not set
     [0]:    evolution/construction/build mode (potentially missing leaf nodes)
     [1]:    structurally complete/finalized branch (node_depths correct, node_id set, ...)
-    [2]:    root-correct structure (todo not relevant?)
+    [2]:    root-correct structure
     [3]:    including meta-data (fitness_train, complexity)
     """
-    # todo
-    # arity: int
-    # nlabel: str
-    # pycode: str
 
-    state = None
     meta = None
 
     def __init__(self, label: 'NodeLabel' = None, depth=None, is_fix=False, childs=None, state=0):
@@ -61,7 +53,7 @@ class Node:
     def __hash__(self):
         """
         This hash function has currently no use.
-        The hash-value of a tree was used as key for the LUT.
+        The hash-value of a fintree was used as key for the LUT.
         However, the python hash-function has a run-specific salt for security reasons,
         making it impossible to load the LUT table between runs, so just use the str as key.
         """
@@ -92,9 +84,6 @@ class Node:
     #         return self.get_nlabel()
 
     # def choose_term(xtype_out, choose_obs, choose_distributions, precision):
-    #     """
-    #
-    #     """
     #
     #     # sfeh 50% chance observation/value
     #     if random.choice(['obs', 'distrib']) == 'obs' and choose_obs[xtype_out]:
@@ -158,7 +147,7 @@ class Node:
 
     def is_root(self):
         """
-        todo does this work while building a tree?
+        todo does this work while building a fintree?
         ==>ROOT
         """
         return self.depth == 0
@@ -240,12 +229,12 @@ class Node:
 
     def eval_expr(self, reducible=None, obs_names=None):
         """
-        accumulate and return the complete expression the tree holds recursively
+        accumulate and return the complete expression the fintree holds recursively
         """
         if self.get_arity() > 0:
             child_expr_list = [cc.eval_expr() for cc in self.childs]  # sfeh what was that again?: reducible=reducible, obs_names=obs_names
             # if reducible:
-            #     # my_expr = ops[self.get_label()]['sym_reduce'] or my_expr
+            #     # my_expr = op_dict[self.get_label()]['sym_reduce'] or my_expr
             #     # symloc = sympy_symbol_defaults(obs_names)  # todo solve the problem... new version of sympy?
             #     xxx = plagih_sympify(my_expr.format(*child_expr_list), eval_locals=symloc)  # sfeh the xxx variable
             #     return xxx
@@ -286,7 +275,7 @@ class Node:
         """
         if complexity_measure == 'tree_node_count':  # number of nodes
             return len(self)  # returns the number of nodes  # sfeh weights
-        elif complexity_measure == 'tree_edit_distance':  # tree_edit_distance, tree-edit-distance
+        elif complexity_measure == 'tree_edit_distance':  # tree_edit_distance, fintree-edit-distance
             apted1 = self.eval_apted_notation()
             apted2 = origin_tree.eval_apted_notation()
             distance, mapping = apted_distance(apted1, apted2)  # sfeh the mapping could be handy somewhere
@@ -324,7 +313,7 @@ class Node:
 
     def evolve_mutate_filter_branch(self, precision=6):
         """
-        Recursively filter the nodes in the branch of tree
+        Recursively filter the nodes in the branch of fintree
         sfeh:   random filter all terminal nodes /
                 single node /
                 nodes in a branch /
@@ -336,16 +325,16 @@ class Node:
             for cc in self.childs:
                 cc.evolve_mutate_filter_branch(precision=precision)
         else:
-            self.label.mutate_filter(precision=precision)
+            self.label.mutate_self_filter(precision=precision)
 
     def evolve_reduce(self, obs_infos=None, completely=True):
         """
-        Reducing a tree to its most basic form with sympify.
+        Reducing a fintree to its most basic form with sympify.
         (completely = False: reduce just one branch. if you wanted to have more complexity)
         """
         self.state = STATE_BUILDING  # todo ==>state
         length_before = len(self)
-        if completely:  # reduce the complete tree
+        if completely:  # reduce the complete fintree
             cores_lv0 = self.get_nodes_at_depth(0, only_mutable=True)
             for c in cores_lv0:
                 c.evolve_branch_reduce(obs_infos)
@@ -388,7 +377,7 @@ class Node:
     def check_all(self):
         # todo
         #   self.core.workaround_normalize_exponentiation()
-        #   Check if a valid tree can be rebuilt from its expression
+        #   Check if a valid fintree can be rebuilt from its expression
         #   each parameter in each node.
         #   The expression can include separate '~' (Usub) nodes, which makes expressions not completely equal
         #   ->self.workaround_remove_tilde()
@@ -417,6 +406,9 @@ class Node:
     #     return
 
 
+# todo: especially with mc: there can be more than one pareto entry with the same parsimony/fitness!
+
+
 # class ObservationIndex(Observation):
 #     """
 #     todo
@@ -428,7 +420,7 @@ class Node:
 #         latex = f'\\text{{{self.fam}}}_{{{self.timeindex}}}'  # remove this {self.preexpr}
 #         self.latex = (latex, latex)  # remove this {self.preexpr}
 #
-#     def mutate_filter(self):
+#     def mutate_self_filter(self):
 #         new_index = int(max(min(round(random.gauss(self.timeindex, 1)), self.index_minmax[1]), 0))
 #         self.timeindex = new_index
 #         self.name = f'{self.fam}_{new_index}'

@@ -9,9 +9,11 @@ class Config:
 
     def __init__(self, args):
         """
-        SFEH ALERT: NEVER try to save the ui/paths. todo. switching between systems is worse than HitlerAIDS
+        SFEH ALERT: NEVER try to save the ui/paths.
+        !!! switching between systems is worse than HitlerAIDS !!!
         """
         self.pl_version = 1.1  # must only update if vital changes were made, version important when loading old run
+        self.gen_id = 0  # todo
         self.name = args.prepared_run or None  # sfeh
 
         try:
@@ -20,7 +22,7 @@ class Config:
         except:
             conf = {}
         print_everything = 'wwwwaaaggggiiiff'
-        self.print_type = print_everything if args.print_all else conf.get('print_type', print_everything)  # (a)lert, (w)arning, (g)en, (i)nfo, (f)ile written
+        self.print_type = print_everything if args.print_all else conf.get('print_type', print_everything)  # (a)lert~pareto, (w)arning, (g)en, (i)nfo, (f)ile written
 
         # can be updated from everywhere
         self.pop_max = args.pop_max or int(conf.get('pop_max', 1000))  #: 1000,  # amount is never tested
@@ -71,55 +73,29 @@ class Config:
             p.parent.mkdir(parents=True)
         return p
 
-    def check_update(self):
-        """
-        Update paretos front
-        update population (fitness_train, parsimony, etc)
-        also, raise if fitness_train problem
-        """
-        # oldsize = len(self.paretos)
-        # pareto_list = self.paretos[:]
-        # self.paretos = []
-        # for (parsimony, fitness_train, tree) in pareto_list:
-        #     fitness_train = round(fitness_train, self.conf.precision)
-        #     tree.meta.fitness_train = round(fitness_train, self.conf.precision)
-        #     entry = [parsimony, fitness_train, tree]
-        #     self.insert(entry)
-        # self.printpl('i', f'Updating paretos front from old run. length: {oldsize}, new paretos length: {len(self.paretos)}')
-
-        # sfeh recompute parsimony and fitness_train for every tree (optional?)
-        # also rebuild trees?
-
-        pop_base_copy = self.pop_base[:]
-        self.pop_base = []
-        for tree in pop_base_copy:
-            tree.meta.fitness_train = round(tree.meta.fitness_train, self.precision)
-            self.pop_base.append(tree)
-        printez('i', f'Updating population from old run. length: {len(self.pop_base)}, new population length: {len(self.pop_base)}', self.print_type)
-
     def load_prepared_run(self, prepared_run, slurm_runs_folder):
 
         def pathify(x):
             if x is None:
                 return None
             else:
-                return Path(__file__).parent.absolute() / 'benchmarks/' / x
+                return Path(__file__).parent.parent.absolute() / 'benchmarks/' / x
 
         name_splits = prepared_run.split('_')
         path_origin = None  # not yet set
 
-        self.gen_max = 6000  # sfeh this is not used if >100 generations are without a new paretos entry
+        self.gen_max = 6000  # sfeh this is not used if >100 generations are without a new paretofront entry
 
         # sfeh: load a file that does approximately the same as this hard coded stuff
         if 'IB' == prepared_run[:2]:
             rootdir = pathify(f'{slurm_runs_folder}/{prepared_run[:-2]}/{prepared_run}')
-            self.path_data_csv = pathify('ib/gp_files/samples_prepared.csv')
+            path_data_csv = pathify('ib/gp_files/samples_prepared.csv')
             kernel_name = 'regression bounded'
-            ori_trs = {'s3m_0': 'ib/gp_files/ib_s3m_0.csv',
-                       's3m_1': 'ib/gp_files/ib_s3m_1.csv',
-                       's3m_2': 'ib/gp_files/ib_s3m_2.csv',
-                       'scratch': None}
-            for k, v in ori_trs.items():
+            ori_trees = {'s3m_0': 'ib/gp_files/ib_s3m_0.csv',
+                         's3m_1': 'ib/gp_files/ib_s3m_1.csv',
+                         's3m_2': 'ib/gp_files/ib_s3m_2.csv',
+                         'scratch': None}
+            for k, v in ori_trees.items():
                 if k in prepared_run:
                     print(f'AUTOLOAD: Using origin: {v}')
                     path_origin = pathify(v)
@@ -137,29 +113,28 @@ class Config:
 
             rootdir = pathify(f'{slurm_runs_folder}/{prepared_run}')
             num_samples = '200' if 'MTC200' in prepared_run else '75'
-            self.path_data_csv = pathify(f'mc/gp_files/samples{num_samples}.csv')
+            path_data_csv = pathify(f'mc/gp_files/samples{num_samples}.csv')
 
-            ori_trs = {
+            ori_trees = {
                 # sfeh update other trees
                 # 'gpFriendly': 'mc/gp_files/tree_gpFriendly.csv',
                 # 'gpFriendlyFix': 'mc/gp_files/tree_gpFriendly_fix.csv',
-                'preset': 'mc/gp_files/tree_preset.txt',  # todo
-                'presetFix': 'mc/gp_files/tree_preset_fix.txt',  # todo
+                # 'preset': 'mc/gp_files/tree_preset.txt',
+                # 'presetFix': 'mc/gp_files/tree_preset_fix.txt',
                 # 'xiao': 'mc/gp_files/tree_xiao.csv',
                 # 'xiaoFix': 'mc/gp_files/tree_xiaoFix.csv',
                 'simple': 'mc/gp_files/tree_simple.txt',
                 # 'simpleFix': 'mc/gp_files/tree_simple_fix.csv',
                 # 'simplePlus': 'mc/gp_files/tree_simplePlus.csv',
                 # 'simplePlusFix': 'mc/gp_files/tree_simplePlus_fix.csv',
-                # 'simonBest': 'mc/gp_files/tree(simonBest).csv',
-                # 'simonBestFix': 'mc/gp_files/tree(simonBest)Fix.csv',
-                # 'simonBestFix2': 'mc/gp_files/tree(simonBest)Fix2.csv',
+                # 'simonBest': 'mc/gp_files/fintree(simonBest).csv',
+                # 'simonBestFix2': 'mc/gp_files/fintree(simonBest)Fix2.csv',
                 # 'simonOkay': 'mc/gp_files/tree_simonOkay.csv',
                 # 'simonOkayFix': 'mc/gp_files/tree_simonOkayFix.csv',
                 'scratch': None
             }
 
-            path_origin = pathify(ori_trs[name_splits[-1]])
+            path_origin = pathify(ori_trees[name_splits[-1]])
         else:
             raise
 
@@ -181,4 +156,4 @@ class Config:
         self.name = prepared_run
         # choose_distributions = ChooseConstants(path_distrib=path_distrib, csv_data_samples, n_samples=100)
 
-        return rootdir
+        return rootdir, path_origin, path_data_csv

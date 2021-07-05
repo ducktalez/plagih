@@ -1,13 +1,12 @@
 """
-
 Functions, that might be addable in the future:
 """
-from plagih.node_labels import *
-from plagih.paretofront import ParetoFront
+from plagih.sympy_extras import expr_sympify
 from plagih.tree_factory import *
 from plagih.viz_with_latex import *
 
-np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
+from plagih.tree_factory import FinalizedTree
+from plagih.util import *
 
 import copy
 
@@ -16,108 +15,703 @@ from pathlib import Path
 
 import tensorflow
 import numpy as np
+np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
 tensorflow.compat.v1.disable_eager_execution()  # sfeh damn what was this line good for?
+"""
+
+"""
 
 
-class Population:
+class ExplainableGP:
+    """
 
-    def __init__(self, kernel, conf, tb, origin):
+    """
+
+    # def __init__(self, conf, rootdir, args=None):
+
+    def __init__(self, conf, rootdir, path_origin, path_data_csv, args):
+        """
+        sfeh conf? meh...
+        """
+        self.conf = conf
+        self.develop = args.develop  # more testing and stuff during development phase
+        self.time_start = time.perf_counter()
+        kernel = RegressionKernel(path_data_csv, conf)  # sfeh relative to rootdir? -> nah -> some absolute path... discussion
         self.kernel = kernel
-        self.conf = conf  # todo
-        # self.conf.gen_id = 0  # todo?
-        self.size = conf.pop_max
+        tb = TreeBuilder(kernel.obs_names, root_xtype=float)
+        self.origin = OriginTree(kernel, path_origin=path_origin)
+        # self.evolve_loop = EvolutionLoop()
+        self.rootdir = rootdir
+
+        self.printpl('gg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
+
+        # self.conf.set_rootdir()  # sfeh better solution?
+
+        print(f'\n'
+              f'\tInitializing Plagih UI.\n'
+              f'\tName: {BColors.CYAN}{rootdir.name}{BColors.RESET}.\n'
+              f'\tLocated in: \n'
+              f'\t{rootdir}\n')
+
+        # ==================================
+
+        self.paretofront = []
         self.tb = tb
 
         self.pop_next = []
         self.pop_base = []  # sfeh maybe better names
 
         self.lut = {}
-        self.origin = origin
         self.time_genstart = time.perf_counter()
         self.gens_since_last_pareto = 0
-        self.print_type_g = conf.print_type
 
         self.monitor_df = pd.DataFrame(columns=['pop_len', 'pop_unique', 'time',
                                                 'fit_avg', 'fit_var', 'fit_best',
-                                                'complexity_avg', 'complexity_var', 'complexity_stderr',
+                                                'parsim_avg', 'parsim_var', 'parsim_best',
                                                 'gens_since_last_pareto'])
         """
         was Evolution class
         The evolve_dict is converted into a list of the population length.
         The evolve_loop is for the regular evolution, the evolve_random is especially required for the first generation.
         """
-        self.conf = conf
         evolve_loop = {
             # Reproduction (10%)
-            'Repro': {'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.06, 'custom_params': {}},
-            'Rsympy': {'evolve_name': 'reproduce', 'evolve_rate': 0.03, 'custom_params': {'simplify': True}},
-            'Pareto': {'evolve_name': 'revive paretos', 'evolve_rate': 0.01, 'custom_params': {}},
-    
+            'Repro': {'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.09, 'custom_params': {}},
+            'Rsympy': {'evolve_name': 'reproduce', 'evolve_rate': 0.00, 'custom_params': {'simplify': True}},  # sfeh 0.03
+            'Pareto': {'evolve_name': 'revive paretofront', 'evolve_rate': 0.01, 'custom_params': {}},
+
             # Mutation (25%)
             'Point': {'evolve_name': 'mutate point', 'evolve_rate': 0.05, 'custom_params': {}},
-    
+
             'BranchDF': {'evolve_name': 'mutate branch', 'evolve_rate': 0.00,
-                         'custom_params': {'build_max': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 4, 0.8), 'p_op': 1.0}}},
+                         'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 4, 0.8), 'p_full': 1.0}}},
             'BranchDG': {'evolve_name': 'mutate branch', 'evolve_rate': 0.00,
-                         'custom_params': {'build_max': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 5, 1), 'p_op': 0.5}}},
+                         'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 5, 1), 'p_full': 0.5}}},
             'BranchNF': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                         'custom_params': {'build_max': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 12, 3), 'p_op': 1.0}}},
+                         'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 12, 3), 'p_full': 1.0}}},
             'BranchNG': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                         'custom_params': {'build_max': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 12, 3), 'p_op': 0.5}}},
+                         'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 12, 3), 'p_full': 0.5}}},
             'BranchShrink': {'evolve_name': 'mutate branch', 'evolve_rate': 0.0,
-                             'custom_params': {'build_max': {'size_mode': 'branch_nodes', 'mean_min_max_var': (1, 1, 1, 0), 'p_op': 0.5}}},
-    
+                             'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (1, 1, 1, 0), 'p_full': 0.5}}},
+
             'FilterBO': {'evolve_name': 'filter optimize', 'evolve_rate': 0.05, 'tourn_size': 5,
                          'custom_params': {'mode': 'branch', 'filter_observations': True}},
             'FilterB': {'evolve_name': 'filter optimize', 'evolve_rate': 0.05, 'tourn_size': 5,
                         'custom_params': {'mode': 'branch', 'filter_observations': False}},
             'FilterP': {'evolve_name': 'filter optimize', 'evolve_rate': 0.0, 'tourn_size': 5,
                         'custom_params': {'mode': 'point', 'filter_observations': True}},
-    
+
             # Crossover (35%)
             'Xover': {'evolve_name': 'crossover branch', 'evolve_rate': 0.30, 'custom_params': {}},  # sum 0.70
-    
+
             # Leftovers are automatically filled with random trees
-    
+
             # Random (25%)
             'Rand1': {'evolve_name': 'random trees', 'evolve_rate': 0.05,
-                      'custom_params': {'build_max': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 5, 1), 'p_op': 1.0}}},
+                      'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 5, 1), 'p_full': 1.0}}},
             'Rand2': {'evolve_name': 'random trees', 'evolve_rate': 0.00,
-                      'custom_params': {'build_max': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1), 'p_op': 0.5}}},
+                      'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1), 'p_full': 0.5}}},
             'Rand3': {'evolve_name': 'random trees', 'evolve_rate': 0.15,
-                      'custom_params': {'build_max': {'size_mode': 'tree_nodes', 'mean_min_max_var': (10, 1, None, 5), 'p_op': 0.5}}},
+                      'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (10, 1, None, 5), 'p_full': 0.5}}},
             'Rand4': {'evolve_name': 'random trees', 'evolve_rate': 0.15,
-                      'custom_params': {'build_max': {'size_mode': 'tree_nodes', 'mean_min_max_var': (10, 1, None, 5), 'p_op': 1.0}}},  # param 'max' can be None
+                      'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (10, 1, None, 5), 'p_full': 1.0}}},  # param 'max' can be None
         }
         self.evolve_loop = self.evolve_safety_update(evolve_loop)
-    
-        if origin.origin_is_fix:
+
+        if self.origin.origin_is_fix:
             evolve_random = {'Rand3o': {'evolve_name': 'random trees', 'evolve_rate': 1.00,
-                                        'custom_params': {'build_max': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 3, None, 4), 'p_op': 1.0}}}}
+                                        'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 3, None, 4), 'p_full': 1.0}}}}
         else:
             # try:  # sfeh still not sure about this
             #     evolve_random = self.evolve_list_random['from_scratch']
             # except:
             evolve_random = {'Rand1': {'evolve_name': 'random trees', 'evolve_rate': 0.30,
-                                       'custom_params': {'build_max': {'size_mode': 'tree_depth', 'mean_min_max_var': (3.5, 2, 5, 1), 'p_op': 1.0}}},
+                                       'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (3.5, 2, 5, 1), 'p_full': 1.0}}},
                              'Rand2': {'evolve_name': 'random trees', 'evolve_rate': 0.30,
-                                       'custom_params': {'build_max': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 2, 6, 1), 'p_op': 0.5}}},
+                                       'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 2, 6, 1), 'p_full': 0.5}}},
                              'Rand3': {'evolve_name': 'random trees', 'evolve_rate': 0.40,
-                                       'custom_params': {'build_max': {'size_mode': 'tree_nodes', 'mean_min_max_var': (10, 3, None, 4), 'p_op': 1.0}}}
+                                       'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (10, 3, None, 4), 'p_full': 1.0}}}
                              }
         self.evolve_random = self.evolve_safety_update(evolve_random)
-    
+
         self.evolve_tags = list(self.evolve_loop.keys()) + list(self.evolve_random.keys())
         return
-    
+
+    # class Population:
+
+    def file_pareto(self, path):
+        # sfeh where to use? path-> self.conf.rootdir / 'paretofront.yaml',
+        yaml_dump(path, self.paretofront)  # sfeh this printing is probably shit
+
+    def pareto_insert(self, fintree: FinalizedTree, msg=None):
+        """
+        was pareto_append
+        Appending a candidate to the paretofront.
+        - append_evotree the entry to the paretofront
+        - reset gens_since_last_pareto
+        - try to add the fintree in its sympified version
+        """
+        if msg:
+            self.printpl('a', f"New entry found! ({msg}): {BColors.RESET}{fintree.get_parsimony()}, {fintree.get_fitness()}:{BColors.RESET} {fintree.meta.expr_raw}")
+        self.paretofront.append(fintree)
+        self.gens_since_last_pareto = 0
+
+        par = fintree.get_parsimony()
+        fit = fintree.get_fitness()
+
+        self.paretofront = [x for x in self.paretofront[:] if x.get_parsimony() < par or x.get_fitness() < fit or (par == par and x[1] == par)]
+        # self.pareto_clean_sort()  # as far as I can tell, not really necessary without using iter()
+        self.pareto_insert_again_simplified(fintree)
+
+    def pareto_insert_again_simplified(self, fintree):
+        """
+        # todo
+        """
+        # tree_sym = copy.deepcopy(tree)
+        #
+        # try:
+        #     # printez('aaa', 'Trying to simplify for paretofront entry.')  # simplify the fintree and save in paretofront once again
+        #     tree_sym.evolve_reduce(obs_infos=obs_infos, completely=True)
+        #     parsimony = tree_sym.eval_parsimony(self.conf.complexity_measure, origin_tree=self.origin)
+        #     if parsimony < tree.meta.parsimony:
+        #         # self.printpl('aa', 'Successfully reduced paretofront fintree!')
+        #         sym_fitness = self.eval_tf_fitness(tree_sym)  # sfeh actually not required, delete this
+        #         tree_sym.meta.fitness_train = sym_fitness
+        #         tree_sym.meta.parsimony = parsimony
+        #         self.update_pareto_with_tree(tree_sym)
+        # except Exception as ex:
+        #     print_warning('www', f'Tree sympification did not work: {ex}', print_type=self.conf.print_type)
+        #
+        # else:
+        #     self.printpl('aaa', 'Pareto entry was already simplified')
+        pass
+
+    def plot_paretofront(self, path, run_name, parsimony_max):
+        """
+        Write pyplot with paretofront candidates
+        """
+
+        run_name = str(run_name).replace('_', '-')  # sfeh asd workaround for latex version
+
+        tuples = [[tree.get_parsimony(), tree.get_fitness()] for tree in self.paretofront]
+        xx, yy = np.array(tuples).T
+
+        if len(xx) == 0:
+            print_e(f'Plotting empty array is not possible! Data={xx, yy}')
+            return
+
+        with plt.rc_context(rc=pyplot_rc_tex):
+            fig, ax = plt.subplots()
+            right = max(max(xx), parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
+
+            # beyond_lines:  # adding a point to the edges to imply that there are no more values (paretofront-plot)
+            xx = np.concatenate([[xx[0]], xx, [right + 1]])
+            yy = np.concatenate([[max(yy) + 1], yy, [yy[-1]]])
+
+            ax.step(xx, yy, linestyle='dashed', marker='.', label=f'{run_name}', where='post')
+            ax.set(xlabel='complexity', ylabel='regression error',
+                   xlim=(0, right),
+                   ylim=(0, (max(yy) - min(min(yy), 0)) * 1.05))
+
+            try:
+                fig.savefig(path)
+                self.printpl('f', f"paretofront (pdf): {self.rootdir / f'paretofront.pdf'}")
+            except PermissionError as perm_error:
+                print_e(f'Could not save plot: {perm_error}')  # sfeh for everything?
+
+        return
+
+    def pareto_append_clean(self, tree: FinalizedTree):
+        """
+
+        """
+        self.gens_since_last_pareto = 0
+        self.paretofront.append(tree)
+        self.paretofront = self.poplist_paretosort(self.paretofront)
+
+    def pareto_random_choice(self):
+        try:
+            return np.random.choice(self.paretofront)
+        except:
+            raise  # sfeh
+
+    def pareto_clean_sort(self):
+        """
+        sorting the paretofront paretofront in list for parsimony
+        sfeh: alert if old entry is removed?
+        """
+        self.paretofront = self.poplist_paretosort(self.paretofront)
+        # self.paretofront.sort(key=lambda x: x.get_parsimony())
+
+    def pareto_txt(self):
+        """
+        Save all the paretofront candidates to a file.
+        (Quick feedback that requires little overhead)
+        """
+        return [f'Parsimony: \t{parsim} MeanError: \t{fitness} Expr: \t{tree.meta.expr_raw}' for (parsim, fitness, tree) in self.paretofront]
+
+    def update_pareto_with_tree(self, tree: FinalizedTree):
+        """
+        inserts a fintree into the paretofront front
+        """
+        parsim = tree.get_parsimony()
+        fit = tree.get_fitness()
+
+        p_simpler = [p for p in self.paretofront if p.get_parsimony() <= parsim]  # all paretofront paretofront that are less complex
+
+        if len(p_simpler) == 0:  # all other paretofront paretofront are more complex
+            self.pareto_insert(tree, msg=f'new simplest entry')
+        else:
+            best = min(p_simpler, key=lambda p: p[1])  # the fittest of the less complex ones
+            if fit < best.get_fitness():
+                self.kernel.fitness_compare(fit, best.get_fitness())  # if true, at least one insertion
+                self.pareto_insert(tree, msg=f'old fitness: {best[1]}')
+
+        # self.pareto_clean_sort()  # sfeh check if required
+        return
+
+    def poplist_paretosort(self, pop_list):
+        """
+        sfeh check this!! op_next mostly has 2 pareto entries??
+        """
+        # todo sorting with x.get_fitness OnLY when fitness has "<" relation. otherwise: -x.get_fitness
+        pop_list = sorted(pop_list, key=lambda x: (x.get_parsimony(), x.get_fitness()))
+
+        try:
+            best = pop_list[0]
+        except Exception as ex:
+            raise Exception(f'The list is empty, i guess: {pop_list}. {ex}')
+
+        best_par = best.get_parsimony()
+        best_fit = best.get_fitness()
+        pop_pareto = [best]
+
+        for tree in pop_list:
+            parsim = tree.get_parsimony()
+            if parsim == best_par:
+                continue
+            else:
+                fitness = tree.get_fitness()
+                if self.kernel.fitness_compare(fitness, best_fit):
+                    pop_pareto.append(tree)
+                    best_par = parsim
+                    best_fit = fitness
+
+        # print(f'The paretofront-efficient candidates of the population are: {pop_pareto}')
+
+        return pop_pareto
+
+    def pareto_from_population(self):
+        """
+        sfeh: debug, might be faulty
+        """
+        pop_parcandidates = self.poplist_paretosort(self.pop_next)  # pareto-candidates in the pop, renamed to be clear
+
+        if len(self.paretofront) == 0:
+            self.printpl('a', 'Starting a new paretofront.')
+            self.paretofront.append(pop_parcandidates[0])
+
+        for tree in pop_parcandidates:
+            success = False
+            fit = tree.get_fitness()
+            par = tree.get_parsimony()
+            if all([par < p.get_parsimony() for p in self.paretofront]):
+                self.printpl('a', 'Paretofront: New simpler entry was found.')
+                self.paretofront.append(tree)
+            for p in self.paretofront:
+                if self.kernel.fitness_compare(fit, p.get_fitness()) and par <= p.get_parsimony():
+                    self.paretofront.remove(p)
+                    success = True
+            if success:
+                self.pareto_append_clean(tree)
+
+        # pop_iter = iter(pop_sorted)
+        # pareto_iter = iter(self.paretofront)
+        #
+        # p = next(pareto_iter)
+        # p_par = p.get_parsimony()
+        # t = next(pop_iter)
+        #
+        # while True:
+        #
+        #     # lets try the next (or first) fintree out!
+        #     while t.get_parsimony() < p_par:
+        #         print('Found a NEW, simpler entry!')
+        #         self.paretofront.append_evotree(t)  # sfeh (every entry in this list is already paretoefficient)
+        #         t = next(pop_iter)
+        #
+        #     t_fit = t.get_fitness()
+        #     while not cmp(t_fit, p.get_fitness()):
+        #         print(f'removing the deprecated entries: Fitness: {p.get_fitness()}')
+        #         self.paretofront.remove(p)
+        #         p = next(pareto_iter)
+        #
+        #     while cmp(t.get_fitness(), p.get_fitness()):
+        #         t = next(pop_iter)
+        #
+        #     p_fit = p.get_fitness()
+        #     t_fit = t.get_fitness()
+        #
+        #     while cmp(t_fit, p_fit) and t_par < p_par:
+        #         # find a potential entry with at least the parsimony
+        #         print(f'SHEESH! We kicked out another paretofront entry! old: {p_fit}, new fitness: {t_fit}.')
+        #         self.paretofront.remove(p)
+        #         self.paretofront.append_evotree(t)
+        #         p = next(pareto_iter)
+        #         p_par = p.get_parsimony()
+        #         p_fit = p.get_fitness()
+        #
+        #     while t_par < p_par:
+        #         t = next(pop_iter)
+        #         t_par = t.get_parsimony()
+        #
+        #     while p_par > t_par:
+        #         p = next(pareto_iter)
+        #         p_par = p.get_parsimony()
+        #         try:
+        #             t = next(pop_iter)
+        #             t_par = t.get_parsimony()
+        #         except StopIteration:
+        #             print('ASD Pareto feddich :3!!')  # sfeh debug paretofront wurde erstellt
+        #             return
+        #
+        # # sfeh sort everything
+        #
+        # # pop_list = sorted(pop_list, key=lambda x: (x.get_parsimony(), x.get_fitness()))
+        # # pop_iter = iter(pop_list)
+        # # fintree = next(pop_iter)
+        # # pop_sorted = [fintree]
+        # # best_par = fintree.get_parsimony()
+        # # best_fit = fintree.get_fitness()
+        # #
+        # # while True:
+        # #     try:
+        # #         fintree = next(pop_iter)
+        # #         parsim = fintree.get_parsimony()
+        # #         if parsim == best_par:
+        # #             continue
+        # #         else:
+        # #             fitness = fintree.get_fitness()
+        # #             if self.kernel.fitness_compare(fitness, best_fit):
+        # #                 pop_sorted.append_evotree(fintree)
+        # #                 best_par = parsim
+        # #                 best_fit = fitness
+        # #     except StopIteration:
+        # #         break
+
+        self.pareto_clean_sort()  # sfeh check if required
+        return
+
+    # def file_pareto_listcode(self):
+    #     """
+    #     save python code for Industrial Benchmark runs
+    #     delete sometime
+    #     """
+    #
+    #     # pycode_agent = self.kernel.pycode_wrap_result(self.env_vars.action.minmax).format('action')
+    #
+    #     pygents_list = []
+    #
+    #     for (parsim, fitness_train, fintree) in self.paretofront:
+    #         # agent_name = f'{self.conf.name}_{parsim:.0f}'
+    #         agent_name = f'{self.conf.name}_{self.env_vars.action.name}_{parsim:.0f}'
+    #         agent_as_python = fintree.eval_pycode()
+    #         pygents_list.append_evotree([parsim, float(fitness_train), agent_name, agent_as_python])
+    #
+    #     yaml_dump(self.rootdir / 'pycode_list.yaml', pygents_list, print_type=self.print_type)
+    #     path = path_make_dir(self.rootdir / 'pycode_list.yaml')
+    #     with Path.open(path, 'w') as file:
+    #         _ = yaml.dump(pygents_list, file)  # , default_flow_style=False, sort_keys=False)
+    #         printez('ff', f'IB pycode-list: {path.as_posix()}', print_type=self.print_type)  # sfeh always the same print structure... just pass the path?
+    #
+    #     return
+    #
+
+    def analyze_pareto(self, cpu_cores=16):  # sfeh 16 cores? nope
+        """
+        todo
+        Writing all analysis files after evaluating the paretofront.
+        (Currently strongly customized by sfeh for the mountaincar and industrial benchmark)
+        """
+        # self.printpl('i', f'Analysing the paretofront candidates of the run.')
+        #
+        # dir_benchmarks = Path(__file__).parent.parent.absolute() / 'benchmarks/'
+        # path_hist = path_make_dir(self.rootdir / 'histograms/')
+        # pareto_agents = {}
+        #
+        # for (parsim, fitness_train, fintree) in self.paretofront:
+        #     histograms_path = self.plot_agent_histogram(parsim, fintree, path_hist)  # sfeh
+        #
+        #     forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest = self.file_pareto_latex(parsim, fintree)
+        #
+        #     pareto_agents[parsim] = {'parsim': parsim,
+        #                              'fitness_train': fitness_train,
+        #                              'fintree': fintree,
+        #                              'forest_tree_full': forest_tree_full, 'forest_tree_tight': forest_tree_tight, 'tex_expr_raw': tex_expr_raw, 'tex_expr_forest': tex_expr_forest,
+        #                              'histogram': histograms_path,
+        #                              }
+        #
+        # tex_include_pdf = lambda x: f"\\includegraphics{{{str(x).replace('.pdf', '')}}}"
+        # tex_tabuline = lambda x: f"{' & '.join(x)}\\tabularnewline\n"
+        # tex_stacklist = lambda x: "\\shortstack[l]{{{}}}".format('\\\\'.join([str(xx) for xx in x]))
+        #
+        # if 'MTC' in self.conf.name:
+        #     """
+        #     complexity, regr. error, real evaluation, decision plot, spiral plot, diff-plot
+        #     """
+        #     # sfeh i guess not necessary anymore (?)
+        #     # self.file_pareto_pycode()
+        #     sarsa_agent_steps = 200 if 'MTC200' in self.conf.name else 75 if 'MTC75' in self.conf.name else 'NO_MC_AGENT'
+        #     sarsa_agent = pickle_load(dir_benchmarks / f'mc/agents/sarsa_agent_{sarsa_agent_steps}.p')
+        #
+        #     agent_performance = auto_evaluate_run_end(self.rootdir, sarsa_agent, n=100)
+        #     # df_mtc = pd.DataFrame(columns=['complexity', 'regr. error', 'avg. reward', 'fails', 'expression'])
+        #     tex_lines = []
+        #
+        #     for pp, x in agent_performance.items():
+        #         pp, fitness_train, avg_reward, fails, path_mcmeshplot, path_mcmeshplot_diff = x
+        #
+        #         tex_lines.append_evotree([f"{int(pp)}",
+        #                           f"{pareto_agents[pp]['fitness_train']:.2f}",
+        #                           f"{avg_reward:0.1f}",
+        #                           f"{pareto_agents[pp]['tex_expr_raw']}",
+        #                           f"{tex_include_pdf(f'sfehs_eval/{pp}.pdf')}",  # path_mcmeshplot
+        #                           # tex_include_pdf(f'sfehs_eval/diff-{pp}.pdf'),  # path_mcmeshplot_diff),
+        #                           tex_include_pdf(f'sfehs_eval/space-{pp}.pdf'),
+        #                           # tex_include_pdf(f'histograms/acthist_{pp}'),
+        #                           f"{pareto_agents[pp]['forest_tree_full']}",  # forest_tree_full, forest_tree_tight
+        #                           f"{pareto_agents[pp]['forest_tree_tight']}",
+        #                           f'{fails}'])
+        #
+        #     paste = ''.join([tex_tabuline(x[:4]) for x in tex_lines])
+        #     paste = "\\begin{longtable}[c]{>{\\LTleft}p{5mm}>{\\LTleft}p{6mm}>{\\LTleft}p{10mm}>{\\LTleft}p{102mm}}\n\\hline\n" \
+        #             "dist & error & reward  & expression \\tabularnewline \\hline\n" \
+        #             f"{paste}" \
+        #             "\\hline\n\\end{longtable}\n"
+        #     file_dump(self.rootdir / f'analysis_input.tex', paste, print_type=self.print_type)
+        #     file_dump(self.rootdir / f'analysis_overview.tex', latex_treeviz_full_document(paste), print_type=self.print_type)
+        #
+        #     paste_full = ''.join([tex_tabuline(x[:]) for x in tex_lines])
+        #     paste_full = f"{str(self.conf.name).replace('_', '-')}  {tex_include_pdf('monitoring.png')}  {tex_include_pdf('sfehs_eval/evaled_overview.pdf')}\n\n" \
+        #                  "\\begin{tabular}{lllllllllllll}\n \\hline\n" \
+        #                  "dist & error & reward & parsimony & expression \\tabularnewline \\hline\n" \
+        #                  f"{paste_full}" \
+        #                  "\\hline\n\\end{tabular}\n\n"
+        #     file_dump(self.rootdir / f'analysis_overview_plus.tex', latex_treeviz_full_document(paste_full), print_type=self.print_type)
+        #
+        # elif 'IB' in self.conf.name:
+        #
+        #     self.file_pareto_listcode()
+        #
+        #     if self.conf.name[-2:] == '_0':
+        #         """
+        #         - complexity_sum, [complexities], regression_sum, [regression_errors], real_sum, [formulas]
+        #         - plot with paretofront candidates
+        #         """
+        #         # "\\multicolumn{2}{c}{complexity} & \\multicolumn{2}{c}{regression error} & \\multicolumn{4}{c}{IB reward} & combinations & expression \\tabularnewline\n" \
+        #         tex_line_input, tex_line_overview = '', ''
+        #
+        #         res_all = combined_lists(self.rootdir.parent, 40, 40, local_yamls=True, cpu_cores=cpu_cores)  # sfeh use self.conf.mp_cores
+        #
+        #         xx = [x['parsim_sum'] for x in res_all]
+        #         y_all = [y['experiment'] for y in res_all]
+        #         y_safe = [y['experiment_safe'] for y in res_all]
+        #         y_all_r50 = [y['experiment_r50'] for y in res_all]
+        #         y_safe_r50 = [y['experiment_safe_r50'] for y in res_all]
+        #         cnt = [y['cnt'] for y in res_all]
+        #
+        #         for y in res_all:
+        #             parsims = y['parsims']
+        #
+        #             input_agentex = lambda run_ii, prepth: f"\\input{{{prepth}{self.rootdir.parent.name}_{run_ii}/visualisation/{int(parsims[run_ii]):02d}_input.tex}}"  # _forest
+        #
+        #             tex_line_overview += tex_tabuline([f"{int(y['parsim_sum'])}",
+        #                                                f"{y['regress_sum']:0.3f}",
+        #                                                f"{y['experiment']:0.0f}",
+        #                                                tex_stacklist([f'{int(x)}' for x in y['parsims']]),
+        #                                                tex_stacklist([input_agentex(x, '') for x in [0, 1, 2]])])
+        #
+        #             tex_line_input += tex_tabuline([f"{int(y['parsim_sum'])}",
+        #                                             f"{y['regress_sum']:0.3f}",
+        #                                             f"{y['experiment']:0.0f}",
+        #                                             tex_stacklist([f'{int(x)}' for x in y['parsims']]),
+        #                                             tex_stacklist([input_agentex(x, f'../benchmarks/{self.rootdir.parent.parent.name}/{self.rootdir.parent.name}/') for x in [0, 1, 2]])])
+        #
+        #             tex_line_input += tex_tabuline([f"{int(y['parsim_sum'])}",
+        #                                             f"{y['regress_sum']:0.3f}",
+        #                                             f"{y['experiment']:0.0f}",
+        #                                             tex_stacklist([f'{int(x)}' for x in y['parsims']]),
+        #                                             tex_stacklist([input_agentex(x, f'../benchmarks/{self.rootdir.parent.parent.name}/{self.rootdir.parent.name}/') for x in [0, 1, 2]])])
+        #
+        #         combined_overview = "\\begin{tabular}{llllllllll}\n\\hline \n" \
+        #                             f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])} \\hline\n" \
+        #                             f"{tex_line_overview}" \
+        #                             f"\\hline\n\\end{{tabular}}\n\n"
+        #
+        #         combined_input = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
+        #                          f"{tex_tabuline(['dist', 'error', 'reward', 'parsimony', 'expressions'])}" \
+        #                          f"{tex_line_input}" \
+        #                          "\\hline\n\\end{longtable}\n"
+        #
+        #         combined_fulltrees = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
+        #                              f"{tex_tabuline(['dist', 'error', 'reward', 'parsimony', 'expressions'])}" \
+        #                              f"{tex_line_input}" \
+        #                              "\\hline\n\\end{longtable}\n"
+        #
+        #         combined_overview = latex_treeviz_full_document(combined_overview)
+        #         file_dump(self.rootdir.parent / 'combined_overview.tex', combined_overview)
+        #         file_dump(self.rootdir.parent / 'combined_input.tex', combined_input)
+        #
+        #         with plt.rc_context(rc=pyplot_rc_tex):
+        #             fig, ax = plt.subplots()
+        #             ax.set(xlabel='Pareto complexity sum', ylabel='reward [x1000]', ylim=funny_limits)
+        #             ax.plot(xx, y_all, label='average', marker='.', color='r')
+        #             ax.plot(xx, y_safe, marker='None', color='r', linestyle='dotted')  # , label='low risk'
+        #             ax.plot(xx, y_all_r50, label='randomized start', marker='.', color='b')
+        #             ax.plot(xx, y_safe_r50, marker='None', color='b', linestyle='dotted')  # , label='low risk (randomized)'
+        #             ax.legend(loc='lower right')
+        #             plt.yticks(IB_YICKS[0], IB_YICKS[1])
+        #
+        #             # drawing the regression error, but plots seem to be too overloaded
+        #             # axx = ax.twinx()
+        #             # axx.plot(xx, cnt, color='tab:gray', label='regression error', linestyle='dashed', marker='.')  # linestyle='None'  # , legend_loc='best'
+        #             # axx.tick_params(axis='y', labelcolor='tab:gray')
+        #             # # axx.plot(xx, y['regression_sum'])
+        #             #
+        #             # ax2 = ax.twinx()
+        #             # ax2.plot(xx, cnt, color='tab:gray', label='combos', linestyle='dashed', marker='.')  # linestyle='None'  # , legend_loc='best'
+        #             # # ax2.set(ylabel='possible combinations', color='tab:gray')
+        #             # ax2.tick_params(axis='y', labelcolor='tab:gray')
+        #             # ax2.legend(loc='lower left')
+        #
+        #             fig.savefig(self.rootdir.parent / f'regression_all.pdf')
+        #             plt.close('all')
+        #
+        # else:
+        #     raise Exception(f'This should actually never happen right now. name: {self.conf.name}')
+
+        return
+    #
+    # def file_pareto_latex(self, parsim, fintree):
+    #     """
+    #     Generates latex-file with the computational fintree structure of all paretofront agents
+    #     - build fintree from expression
+    #     - fill fintree meta-data, just in case we want to visualise anything of it
+    #     - create latex-forest representation
+    #     """
+    #
+    #     """
+    #     whole procedure from fintree to forest core
+    #     tight_viz:
+    #         0: display every node
+    #         1: clever tight-visualisation where possible
+    #         2: one single mathematical expression
+    #     """
+    #
+    #     fintree.set_fix_nodes(self.origin)
+    #     fintree = fintree.get_oldtree()
+    #
+    #     pl_forest = lambda x: f'\\plforest{{{x}}}\n'
+    #
+    #     forest_tree_full = None  # todo pl_forest(latex_brackettree(fintree))
+    #     forest_tree_tight = None  # todo pl_forest(latex_brackettree_tight(latex_tree_semitight(fintree)))
+    #     # sfeh workaround delete this
+    #     tex_expr_raw = f'${fintree.export_visualization_latex()}$'  # sfeh dollars
+    #     tex_expr_forest = pl_forest(f'[{tex_expr_raw}]')
+    #
+    #     path_subfolder_tex = path_make_dir(self.rootdir / 'visualisation')  # sfeh running this in every fintree seems unneccesary
+    #
+    #     """
+    #     The following lines delete this
+    #     """
+    #     # sfeh
+    #     file_dump(path_subfolder_tex / f'full_{parsim:02d}.tex', forest_tree_full, verbose='ff', print_type=self.print_type)
+    #     file_dump(path_subfolder_tex / f'full_{parsim:02d}_tight.tex', forest_tree_tight, verbose='ff', print_type=self.print_type)
+    #     file_dump(path_subfolder_tex / f'{parsim:02d}_input.tex', tex_expr_raw, print_type=self.print_type)
+    #     file_dump(path_subfolder_tex / f'{parsim:02d}_input_forest.tex', tex_expr_forest, verbose='ff', print_type=self.print_type)
+    #     file_dump(path_subfolder_tex / f'{parsim:02d}_doc.tex', latex_treeviz_full_document(forest_tree_full), verbose='ff', print_type=self.print_type)  # delete this
+    #
+    #     return forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest
+
+    # def file_pareto_pycode(self):
+    #     """
+    #     this auto-generation of real (executable) python files
+    #     is strongly customized for my experiments with Mountaincar and industrial benchmark
+    #
+    #     very useful: textwrap.indent
+    #     example: complete_function = textwrap.indent(f"def decide(self, input):\n"
+    #                                         f"{function_body}\n", '    ')  # aka tab (\t)
+    #     """
+    #     pass
+    #     # py_return = self.kernel.pycode_wrap_result(self.env_vars.action.minmax).format('action')
+    #
+    #     # complete_function = f"    def decide(self, input):\n" \
+    #     #     f"        cartPos, cartVel = input\n" \
+    #     #     f"        action = {{}}\n" \
+    #     #     f"        return {py_return}\n"
+    #     #
+    #     # all_agents = []
+    #     # all_agent_names = []
+    #     # all_more_info = []
+    #     #
+    #     # for (parsim, fitness_train, fintree) in self.paretofront:
+    #     #     agent_name = f'{self.conf.name}_{parsim:.0f}'
+    #     #
+    #     #     agent_as_python = fintree.eval_pycode()
+    #     #     all_agents.append_evotree(f"class {agent_name}:\n{complete_function.format(agent_as_python)}")
+    #     #     all_agent_names.append_evotree(agent_name)
+    #     #     all_more_info.append_evotree(f"('{agent_name}', {agent_name}(), {parsim}, {fitness_train})")
+    #     #
+    #     # all_agents = '\n\n'.join(all_agents)
+    #     # agent_tuples = ', '.join([f"('{x}', {x}())" for x in all_agent_names])
+    #     # all_more_info = ', '.join(all_more_info)
+    #     #
+    #     # """
+    #     # dude sfeh
+    #     # sfeh for fully executable code
+    #     # bad code
+    #     # """
+    #     # if 'MTC75' in self.conf.name:
+    #     #     sarsa_agent = 75
+    #     # elif 'MTC200' in self.conf.name:
+    #     #     sarsa_agent = 200
+    #     # else:
+    #     #     raise
+    #
+    #     # pyc_complete = f"import math; import numpy as np\n" \
+    #     #     "import sys\n" \
+    #     #     "from pathlib import Path\n" \
+    #     #     "sys.path.append_evotree(str(Path(Path.cwd() / '../../../'))\n" \
+    #     #     "from benchmarks.MC.agents.quick_eval import *\n" \
+    #     #     "from pathlib import Path\n" \
+    #     #     "folder = Path.cwd() / 'custom_files'\n" \
+    #     #     "from benchmarks.MC.agents.mtc_agent_sarsa import * \n" \
+    #     #     f"with Path.open(Path(Path.cwd() / '../../../benchmarks/MC/agents/sarsa_agent_{sarsa_agent}.p'), 'rb') as file:\n" \
+    #     #     "\tsarsa_agent = pickle.load(file)\n" \
+    #     #     "\n" \
+    #     #     f"{all_agents}\n" \
+    #     #     f"all_agents_more = [{all_more_info}]\n" \
+    #     #     f"agent_tuples = [{agent_tuples}]\n" \
+    #     #     f"\n\n" \
+    #     #     "if __name__ == '__main__':\n" \
+    #     #     "\tprint('executing!')\n" \
+    #     #     "\teval_agent_list(agent_tuples, folder=folder, goal_agent=sarsa_agent)\n"
+    #
+    #     # pth = path_make_dir(self.rootdir / self.dir_pycode / f"agents.py")
+    #     # with Path.open(pth, 'w') as file:
+    #     #     file.write(pyc_complete)
+    #     #     self.printpl('ff', f'Pycode: {pth.as_posix()}')
+    #
+    #     return
+
     def evolve_safety_update(self, evolve_dict):
         """
         Updates tournament size and evolve rates
     
         Example entry of the list could be:
         {'tag': 'BranchDF', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-        'custom_params': {'build_max': {'size_ref': 'branch_depth', 'mean': 3, 'min': 1, 'max': 5, 'gauss_var': 0.8, 'method': 'full'}}},
+        'custom_params': {'build_spec': {'size_ref': 'branch_depth', 'mean': 3, 'min': 1, 'max': 5, 'gauss_var': 0.8, 'method': 'full'}}},
         """
     
         for tag, evolve_spec in evolve_dict.items():
@@ -126,58 +720,54 @@ class Population:
             evolve_spec['custom_params'] = evolve_spec.get('custom_params', {})
         return evolve_dict
     
-    # evolve_loop = self.evolve_list  # todo
+    # evolve_loop = self.evolve_list
     # self.printpl('i', 'Using evolve rates from config')
     
     # class Evolution:
-    #     # todo rate not in here
+    #     # sfeh rate not in here
     #     # def __init__(self, id=None, evolution=None, rate=None, params=None, custom_params=None):
     #     #     self.id = id
     #     #     self.evolution = evolution
     #     #     self.params = params or {}
     #     #     self.rate = rate
     #     #     self.custom_params = custom_params
-    
-    def print_g(self, message_type, text):
-        """
-        todo
-        print informations about generations (g) progress.
-        Very common print, showing the progress of the generations.
-        always printing the time since start. used to be colored blue.
-        """
-        printez(message_type, text, print_type=self.print_type_g)
-        return
 
-    def __len__(self):
-        return len(self.pop_next)  # todo hmmm
+    def printpl(self, message_type, message_str):
+        """
+        Lightweight print function.
+        Instead of checking if you should print every time, this is done here.
+        message_type options can be found in config
+        """
+        printez(message_type, message_str, print_type=self.conf.print_type)
+        return
 
     def gen_create_initial(self):
         """
         was: gen_create_initial
         Everything that needs to be custom_done for the first generation
         - Extracts "origin_meta Tree" from file
-        - Creates all other trees: origin_meta tree + branch mutation
+        - Creates all other trees: origin_meta fintree + branch mutation
         - Evaluate the first Generation
         - Monitoring initialisation and monitoring
         """
 
         if self.origin.exists():
             self.pop_next.append(self.origin.tree)
-            # self.append_tree(self.origin.tree)  # sfeh why not :P
-            # self.pareto.insert(self.origin)  # the origin tree is the only candidate (automatically added, i hope)
+            # self.append_evotree(self.origin.fintree)  # sfeh why not :P
+            # self.pareto.pareto_insert(self.origin)  # the origin fintree is the only candidate (automatically added, i hope)
         else:
-            total_rate = sum([x['evolve_rate'] for x in self.evolve_loop.evolve_random.values()])
+            total_rate = sum([x['evolve_rate'] for x in self.evolve_random.values()])
 
-            for tag, evolve_specs in self.evolve_loop.evolve_random.items():
+            for tag, evolve_specs in self.evolve_random.items():
                 evolve_num = int(self.conf.pop_max * (evolve_specs['evolve_rate'] / total_rate))
-                call_params = evolve_specs.get('custom_params')
+                custom_params = evolve_specs.get('custom_params')
 
                 for nn in range(evolve_num):
                     if self.origin.origin_is_fix:
-                        evotree = self.tb.pop_random(call_params, from_origin=True)
+                        evotree = self.tb.pop_random(custom_params, from_origin=True)
                     else:
-                        evotree = self.tb.pop_random(call_params)
-                    self.append_tree(evotree, tag=tag)
+                        evotree = self.tb.pop_random(custom_params)
+                    self.append_evotree(evotree, tag)
         return
 
     def gen_next_population(self):
@@ -185,35 +775,35 @@ class Population:
         Creates all new Generations by applying the evolutions in the evolve-loop.
 
         brainstorm:
-        - the tree can be reproduced (selection), random/new, olymp-reproduction
-        - (1 tree) mutations can affect a point, branch, terminal nodes
+        - the fintree can be reproduced (selection), random/new, olymp-reproduction
+        - (1 fintree) mutations can affect a point, branch, terminal nodes
         - (2 trees) can make a crossover
         """
         # All gp creators: name, function, num of trees from tournament selection
 
-        for tag, evolve_specs in self.evolve_loop.evolve_loop.items():  # all selected gp mutations
+        for tag, evolve_specs in self.evolve_loop.items():  # all selected gp mutations
 
             evolve_name = evolve_specs['evolve_name']
             evolve_num = evolve_specs['evolve_num']
             tourn_size = evolve_specs['tourn_size']
-            call_params = evolve_specs.get('custom_params')
+            custom_params = evolve_specs.get('custom_params')
 
-            self.print_g('gggg', f'->Evolving \'{tag}\' {evolve_num}x starting...')
+            self.printpl('gggg', f'->Evolving \'{tag}\' {evolve_num}x starting...')
             if evolve_name == 'reproduce':
                 """
                 
                 """
                 for nn in range(evolve_num):
                     evotree = self.selection_tournament(tourn_size=tourn_size)
-                    if call_params.get('simplify'):  # sfeh==>debug
+                    if custom_params.get('simplify'):  # sfeh==>debug
                         try:
                             evotree.evolve_reduce(completely=False)
-                            # tree.meta.last_evolution = tag
+                            # fintree.meta.last_evolution = tag
                         except Exception as ex:
                             print_warning('www', f'Evolve reproduce failed: {ex}', print_type=self.conf.print_type)
                             # raise ex  # sfeh debug
 
-                    self.append_tree(evotree, tag=tag)  # append_tree anyways... it was worth a try :P
+                    self.append_evotree(evotree, tag)  # append_evotree anyways... it was worth a try :P
 
             elif evolve_name == 'mutate point':
                 """
@@ -222,17 +812,17 @@ class Population:
                 for nn in range(evolve_num):
                     evotree = self.selection_tournament(tourn_size=tourn_size)
                     evotree = self.tb.evolve_mutate_point(evotree)
-                    # tree.meta.last_evolution = tag
-                    self.append_tree(evotree, tag=tag)
+                    # fintree.meta.last_evolution = tag
+                    self.append_evotree(evotree, tag)
 
             elif evolve_name == 'mutate branch':
                 for nn in range(evolve_num):
-                    build_spec, size_mode, mean_min_max_var, p_op = helper_evolve_params_branch(call_params)
+                    _, size_mode, mean_min_max_var, p_full = helper_evolve_params_branch(custom_params)
                     evotree = self.selection_tournament(tourn_size=tourn_size)
                     cool_build_size = choose_build_size(size_mode, mean_min_max_var, tree=evotree)
-                    evotree = self.tb.evolve_mutate_branch_depth(evotree, cool_build_size)  # sfeh , full_or_grow=full_or_grow), size_mode=size_mode
+                    evotree = self.tb.evolve_mutate_branch_depth(evotree, cool_build_size, p_full=p_full)  # sfeh , full_or_grow=full_or_grow), size_mode=size_mode
                     # new_tree.meta.last_evolution = tag
-                    self.append_tree(evotree, tag=tag)
+                    self.append_evotree(evotree, tag)
 
             elif evolve_name == 'crossover branch':
                 for nn in range(int(evolve_num / 2)):  # two childs
@@ -241,51 +831,55 @@ class Population:
                     - select parent a and b
                     - select swappable branche for a_parent from b_parent
                         - select a node in a (and crossover here, no matter what)
-                    - delete a_parent branch and insert b_parent branch (which tactic?)
-                    todo into main tree?
+                    - delete a_parent branch and pareto_insert b_parent branch (which tactic?)
+                    todo into main fintree?
                     """
                     atree = self.selection_tournament(tourn_size=tourn_size)
                     btree = self.selection_tournament(tourn_size=tourn_size)
 
                     # 1. two parents
                     # 2. search nodes for left and right that can be exchanged. convert_needed
-                    atree, btree = self.tb.evolve_crossover(atree, btree)
-                    # tree = self.tb.finalize(etree)  # ==>state
-                    self.append_tree(atree, tag=tag)
-                    self.append_tree(btree, tag=tag)
+                    try:
+                        atree, btree = self.tb.evolve_crossover(atree, btree)
+                        # fintree = self.tb.finalize(etree)  # ==>state
+                        self.append_evotree(atree, tag=tag)
+                        self.append_evotree(btree, tag=tag)
+                    except Exception as ex:
+                        print_warning('www', f'SFEH: Root only a root node? {ex}, atree: {atree}')  # sfeh
 
             elif evolve_name == 'filter optimize':
 
                 for nn in range(evolve_num):
                     evotree = self.selection_tournament(tourn_size=tourn_size)
-                    evotree = self.tb.evolve_mutate_filter_random(evotree)  # todo , call_params
-                    self.append_tree(evotree, tag=tag)
+                    evotree = self.tb.evolve_mutate_filter_random(evotree)  # todo , custom_params
+                    self.append_evotree(evotree, tag)
 
-            elif evolve_name == 'revive paretos':
+            elif evolve_name == 'revive paretofront':
 
                 for nn in range(evolve_num):
-                    evotree = self.pareto.random_choice()
-                    self.append_tree(evotree, tag=tag)
+                    fintree = self.pareto_random_choice()
+                    # fintree.append_tag(tag)  # sfeh
+                    self.pop_next.append(fintree)
 
             elif evolve_name == 'random trees':
 
                 if self.origin.origin_is_fix:
                     for nn in range(evolve_num):
-                        evotree = self.tb.pop_random(call_params, from_origin=True)
-                        self.append_tree(evotree, tag=tag)
+                        evotree = self.tb.pop_random(custom_params, from_origin=True)
+                        self.append_evotree(evotree, tag=tag)
                 else:
                     for nn in range(evolve_num):
-                        evotree = self.tb.pop_random(call_params)
-                        self.append_tree(evotree, tag=tag)
+                        evotree = self.tb.pop_random(custom_params)
+                        self.append_evotree(evotree, tag=tag)
             else:
                 print_e(f"Evolution not known: '{evolve_name}'")
 
         missing_trees = self.conf.pop_max - len(self.pop_next)
         if missing_trees > 0:
             if missing_trees > 0.05 * self.conf.pop_max:
-                self.print_g('ii', f'{missing_trees}/{self.conf.pop_max} trees are missing in this population!')
+                self.printpl('ii', f'{missing_trees}/{self.conf.pop_max} trees are missing in this population!')
             else:
-                self.print_g('iii', f'{missing_trees}/{self.conf.pop_max} trees are missing in this population!')
+                self.printpl('iii', f'{missing_trees}/{self.conf.pop_max} trees are missing in this population!')
 
             while len(self.pop_next) < self.conf.pop_max:
                 return  # sfeh aka create trees here if desired
@@ -297,6 +891,7 @@ class Population:
 
         return
 
+    # # sfeh open
     # def plot_evolve_performance(self):
     #     """
     #     Plots for each tag in the evolution list
@@ -314,7 +909,7 @@ class Population:
     #                 axs[2].plot((self.monitor_evol[tag]['lentree'] / self.monitor_evol[tag]['evolve_num']), label=f'{tag}')
     #
     #             plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
-    #             path = self.ui.rootdir / f'monitoring_evolutions.pdf'
+    #             path = self.rootdir / f'monitoring_evolutions.pdf'
     #             fig.savefig(path)
     #             self.printpl('f', f"monitoring_evolutions (pdf): {path.as_posix()}")
     #
@@ -332,9 +927,9 @@ class Population:
         """
         Analysing this generation
         - amount of trees
-        - fittest tree
+        - fittest fintree
         - average fitness_train
-        - average tree parsimony
+        - average fintree parsimony
         """
         popul = self.pop_next
 
@@ -344,12 +939,12 @@ class Population:
         pop_fitness = [tree.get_fitness() for tree in popul]
 
         # tmp_evol_performance = dict.fromkeys(self.monitor_evol.keys(), pd.DataFrame(columns=['fitness_train', 'parsimony', 'lentree']))
-        # for tree in popul:
-        #     last_evol = tree.meta.last_evolution
+        # for fintree in popul:
+        #     last_evol = fintree.meta.last_evolution
         #     if last_evol in self.evolve_tags:
-        #         row = {'fitness_train': tree.meta.fitness_train,
-        #                'parsimony': tree.meta.parsimony,
-        #                'lentree': len(tree)}
+        #         row = {'fitness_train': fintree.meta.fitness_train,
+        #                'parsimony': fintree.meta.parsimony,
+        #                'lentree': len(fintree)}
         #         tmp_evol_performance[last_evol].loc[self.conf.gen_id] = row
         #
         # for last_evol, evodata in tmp_evol_performance.items():
@@ -360,7 +955,7 @@ class Population:
         #                    'lentree_avg': evodata['lentree'].mean(),
         #                    'evolve_num': self.evolve_loop[last_evol]['evolve_num'],
         #                    'count': len(tmp_evol_performance[last_evol])}
-        #             self.monitor_evol[last_evol].append_tree(row, ignore_index=True)  #
+        #             self.monitor_evol[last_evol].append_evotree(row, ignore_index=True)  #
         #             # sfeh fitness_train - last fitness_train?
         #         except Exception as ex:
         #             print_e(f'Could not save evol_performance analysis. {ex}')
@@ -376,23 +971,20 @@ class Population:
             self.best_fitness = self.kernel.get_fitness_extreme_function(pop_fitness_best, self.best_fitness)
         except:
             self.best_fitness = pop_fitness_best
-
         unique_tree_count = len(set([hash(x) for x in popul]))  # sfeh analyze this?
-
         gen_time = time.perf_counter() - self.time_genstart
-
         self.monitor_df.loc[self.conf.gen_id] = {'pop_len': len(popul),
                                                  'pop_unique': unique_tree_count,
                                                  'fit_avg': np.average(pop_fitness),
-                                                 'fit_std': np.std(pop_fitness),
-                                                 'fit_best': self.best_fitness,
+                                                 'fit_var': np.std(pop_fitness),
+                                                 'fit_best': pop_fitness_best,
                                                  'parsim_avg': np.average(pop_parsim),
-                                                 'parsim_std': np.std(pop_parsim),
-                                                 'complexity_avg': np.var(pop_treelen),
+                                                 'parsim_var': np.std(pop_parsim),
+                                                 'parsim_best': np.min(pop_treelen),
                                                  'time': gen_time,
                                                  'gens_since_last_pareto': self.gens_since_last_pareto}  # sfeh version1 delete this shit
 
-        self.print_g('gg', f'Created {len(popul)}/{self.conf.pop_max} ({unique_tree_count} unique) in generation {self.conf.gen_id}. Gen took {gen_time:4.2f}s')
+        self.printpl('gg', f'Created {len(popul)}/{self.conf.pop_max} ({unique_tree_count} unique) in generation {self.conf.gen_id}. Gen took {gen_time:4.2f}s')
         return
 
     def selection_tournament(self, tourn_size=3):
@@ -404,26 +996,34 @@ class Population:
         evotree = fintree.get_evotree()
         return copy.deepcopy(evotree)  # sfeh deepcopy not required if it is copied later
 
-    def append_tree(self, tree: Node, tag=None):
+    def append_evotree(self, evotree: Node, tag):  # todo isnt fintree
         """
-        was: def pop_append(self, tree: Node):
+        was: def pop_append(self, fintree: Node):
             # sfeh this check might be important...
-        Safely append a tree to the population.
+        Safely append a fintree to the population.
         Even though the raw trees should have everything to display their expression,
-        they have gone through a process of changes. Here, the tree is refurbished.
+        they have gone through a process of changes. Here, the fintree is refurbished.
         sfeh: if trees are 100% safely created, tree_check_deep() must not be used. Useful when trying out new gp-operators.
-        - Enrich the raw tree for the next generation
-        - check if the tree is actually valid
+        - Enrich the raw fintree for the next generation
+        - check if the fintree is actually valid
         ->
         """
         try:
-            fintree = self.finalize_tree(tree)
-            fintree.append_tag(tag)
-            self.pop_next.append(fintree)
-        except Exception as ex:
-            logging.warning(f'Could not append tree to population because: {ex} =>tree: {tree}')
-            # print_warning('w', f'tree failed the quick check. last-mod: {self.meta.last_evolution}. Reason:\n{ex}', print_type=self.ui.print_type)
-            return
+            meta = self.lut[hash(evotree)]
+        except KeyError as ex:
+            try:
+                meta = self.finalize_tree_get_meta(evotree)
+            except ValueError as ex:
+                return  # todo
+            except Exception as ex:
+                logging.warning(f'Could not append fintree to population because: {ex}\n=>fintree: {evotree}')
+                # print_warning('w', f'fintree failed the quick check. last-mod: {self.meta.last_evolution}. Reason:\n{ex}', print_type=self.print_type)
+                return
+
+        fintree = FinalizedTree(evotree, meta)
+        fintree.append_tag(tag)
+        # fintree = copy.deepcopy(fintree)  # sfeh guess no deepcopy is required
+        self.pop_next.append(fintree)
 
     def plot_gen_performance(self, path_monitoring: Path):
         """
@@ -448,7 +1048,7 @@ class Population:
             axs0.set_ylim(ymin=0), axs0.legend(loc='lower left')  # , shadow=True
 
             axs0_twin = axs0.twinx()
-            axs0_twin.plot(xx, self.monitor_df['gens_since_last_pareto'], color='tab:gray', label='Generations since last paretos entry', linestyle='dashed', marker='')  # linestyle='None'
+            axs0_twin.plot(xx, self.monitor_df['gens_since_last_pareto'], color='tab:gray', label='Generations since last paretofront entry', linestyle='dashed', marker='')  # linestyle='None'
             axs0_twin.tick_params(axis='y', labelcolor='tab:gray')
             try:
                 axs0_twin.set_ylim(ymin=0, ymax=max(self.monitor_df['gens_since_last_pareto'].max() or 1, 50))
@@ -469,8 +1069,8 @@ class Population:
 
             try:
                 p_avg = self.monitor_df['parsim_avg']
-                p_std = self.monitor_df['parsim_std']
-                axs1.fill_between(xx, p_avg - p_std, p_avg + p_std, alpha=0.2)  # axs1.set_title('TED (average)')
+                p_var = self.monitor_df['parsim_var']
+                axs1.fill_between(xx, p_avg - p_var, p_avg + p_var, alpha=0.2)  # axs1.set_title('TED (average)')
             except Exception as ex:
                 raise Exception(f'Delete this if no raise since some time. {ex}')
             axs1.set_ylim(ymin=0), axs1.legend(loc='lower left')
@@ -490,156 +1090,67 @@ class Population:
             axs0.set_title(f'monitoring gp generations {self.conf.name}')  # sfeh
             fig.tight_layout()
             fig.savefig(path_monitoring)
-            printez('f', f"monitoring: {path_monitoring.as_posix()}", print_type=self.print_type_g)
+            self.printpl('f', f"monitoring: {path_monitoring.as_posix()}")
             # plt.close('all')
-
-
-class OriginTree:
-    """
-    The origin tree (which was already loaded) gets activated for its use in the GP-process
-    """
-
-    def __init__(self, kernel, path_origin=None):
-        if path_origin:
-
-            with Path.open(path_origin, newline='') as file:
-                nested_expr = file.read()
-
-            tree = tree_from_nested_string(nested_expr)
-            expr_raw = tree.eval_expr()
-            try:
-                expr_sym = expr_sympify(expr_raw)
-            except Exception as sympex:
-                raise Exception(f'Loaded origin_tree expression could not be mathematically simplified: {sympex}')
-
-            # sfeh, this does not work
-            # if not tree_check_is_sympified(tree):
-            #     print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}\n'
-            #                          ''.format(expr_raw, expr_sym))
-
-            used_observations = tree.get_observation_list()
-            tf_origin_results = kernel.eval_tf(expr_sym, used_observations)
-            fitness_train = round(tf_origin_results['mean_error'], kernel.precision)  # todo do in line above
-            if kernel.exploration_risk:
-                kernel.origin_results = tf_origin_results['results_kernel']  # after getting the origin-results, these informations can be updated
-
-            meta = TreeMeta(fitness=fitness_train, parsimony=0, expr_raw=expr_raw, expr_sym=expr_sym)
-            meta.append_tag('origin')
-            self.tree = FinalizedTree(tree, meta)
-            self.origin_is_fix = False  # TODO self.tree.is_fix  # sfeh the root node!?!
-            self.existing = True
-
-            # origin_tree.set_fitness(fitness_train)
-            # origin_tree.set_parsimony(0)
-            # self.printpl('gg', f'Loading origin tree, regr. error {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')
-        else:
-            self.existing = False
-            self.tree = None  # sfeh probably the 'existing' above is deprecated
-            self.origin_is_fix = False  # ...if non-existent, it is also not fix
-
-    def exists(self):
-        return self.exists
-
-
-class ExplainableGP:
-    """
-
-    """
-
-    def __init__(self, conf, rootdir, args=None):
-        self.conf = conf
-        self.develop = args.develop  # more testing and stuff during development phase
-        self.time_start = time.perf_counter()
-        kernel = RegressionKernel(conf)
-        self.kernel = kernel
-        tb = TreeBuilder(kernel.obs_names, root_xtype=float)
-        origin = OriginTree(kernel, path_origin=self.conf.path_origin)
-        self.origin = origin
-        # self.evolve_loop = EvolutionLoop()
-        self.pareto = ParetoFront(kernel.fitness_compare, origin=origin)
-        self.pop = Population(kernel, conf, tb, origin)
-        self.rootdir = rootdir
-
-        self.printpl('gg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
-
-        # self.conf.set_rootdir()  # sfeh better solution?
-
-        print(f'\n'
-              f'\tInitializing Plagih UI.\n'
-              f'\tName: {BColors.CYAN}{rootdir.name}{BColors.RESET}.\n'
-              f'\tLocated in: \n'
-              f'\t{rootdir}\n')
-
-        self.lut = {}
-        return
 
     def backup_save(self):
         """
         automatically saves everything important after a certain amount of time
-        - save the paretos front (custom_done)
+        - save the paretofront front (custom_done)
         - save the last generation (custom_done)
         - Save valuable meta-data_csv_path: current generation (custom_done)
         """
 
-        # help_dict = {'self.monitor_evol': self.monitor_evol,
-        #              'gens_since_last_pareto': self.gens_since_last_pareto}  # sfeh save complete config?    # sfeh i dont think we need the config
-        # run_backup_data = self.gen_id, self.paretos, self.pop_base, self.monitor_df, help_dict  # sfeh use this later, help_dict
-        # pickle_dump(self.rootdir / self.file_backup, run_backup_data)
+        help_dict = {}  # include this, even if empty, to store/load successfully after future updates
+        run_backup_data = help_dict, self.pop_base, self.paretofront, self.monitor_df  # sfeh use this later, help_dict
+        pickle_dump(self.rootdir / 'backup/backup.yaml', run_backup_data)  # was file_backup
 
-        # run_backup_dict = {'self.gen_id': self.gen_id,
-        #                    'self.paretos': self.paretos,
-        #                    'self.pop_base': self.pop_base,
-        #                    'self.monitor_df': self.monitor_df,
-        #                    'help_dict': help_dict}
-        #
-        # path_backupyyy = path_make_dir(self.rootdir / 'backup/backup.yaml')
-        # yaml_dump(path_backupyyy, run_backup_dict, self.ui.print_type=self.ui.print_type)
+        run_backup_dict = {'gen_id': self.conf.gen_id,
+                           'paretofront': self.paretofront,
+                           'pop_base': self.pop_base,
+                           'monitor_df': self.monitor_df,
+                           'help_dict': help_dict}
+
+        path_backup = path_make_dir(self.rootdir / 'backup/backup.pkl')
+        yaml_dump(path_backup, run_backup_dict, print_type=self.conf.print_type)
 
         return
 
-    def backup_load(self, path_load_backup=None):
+    def backup_load(self):
         """
         If a backup-file is found...
         """
-        # path_backup = path_load_backup or self.rootdir / self.file_backup  # sfeh file-load
-        #
-        # if Path.is_file(path_backup):
-        #     self.print_ui('g', f'Loading data from backup-file {path_backup}')
-        #     """
-        #     Loading the state of the run from the pickle file
-        #     """
-        #     try:
-        #         with Path.open(path_backup, 'rb') as file:
-        #             run_data = pickle.load(file)
-        #
-        #     except NotImplementedError as nimp:
-        #         raise Exception(f'NotImplementedError: {nimp}')
-        #     except EOFError as eoferr:
-        #         raise Exception(f'EOFError: \n{eoferr}')
-        #
-        #     try:
-        #         self.gen_id, self.pareto, self.pop_base, monitor_pd, a_helping_dict = run_data  # sfeh use a helping dictt a_helping_dict is used for a useable sldifjsdfsdfg , a_helping_dict
-        #         self.monitor_df = monitor_pd  # sfeh
-        #         if 'gens_since_last_pareto' not in self.monitor_df.columns:
-        #             self.monitor_df['gens_since_last_pareto'] = np.nan
-        #         # self.monitor_evol = a_helping_dict.get('self.monitor_evol') or self.monitor_evol
-        #         self.gens_since_last_pareto = a_helping_dict.get('gens_since_last_pareto') or 0  # sfeh
-        #     except:
-        #         self.gen_id, self.pareto, self.pop_base, m = run_data
-        #
-        #     self.check_update()
-        #     self.print_ui('g', f'Successfully loaded backup file. Generation: {self.gen_id}')
-        #
-        #     # except Exception as ex:
-        #     #     raise Exception(f'Even though a backup exists for this run, it could not be loaded, because of\n{ex}')
-        # else:
-        #     raise FileNotFoundError(f'No backup-file found at {path_backup}.')
+        path_backup = self.rootdir / 'backup/backup.pkl'  # sfeh file-load/save is the same...
+
+        if Path.is_file(path_backup):
+            self.printpl('g', f'Loading data from backup-file {path_backup}')
+            """
+            Loading the state of the run from the pickle file
+            """
+            try:
+                with Path.open(path_backup, 'rb') as file:
+                    run_data = pickle.load(file)
+
+            except NotImplementedError as ex:
+                raise Exception(f'NotImplementedError: {ex}')
+            except EOFError as ex:
+                raise Exception(f'EOFError: \n{ex}')
+
+            help_dict, self.pop_base, self.paretofront, self.monitor_df = run_data  # sfeh use a helping dictt a_helping_dict is used for a useable sldifjsdfsdfg , a_helping_dict
+
+            # self.check_update()  # sfeh check all trees in a loaded population?
+            self.printpl('g', f'Successfully loaded backup file. Generation: {self.conf.gen_id}')
+
+            # except Exception as ex:
+            #     raise Exception(f'Even though a backup exists for this run, it could not be loaded, because of\n{ex}')
+        else:
+            raise FileNotFoundError(f'No backup-file found at {path_backup}.')
         return
 
     def custom_exit_condition(self):
         """
         Special condition to exit the evolve-loop
-        1. when >100 generations, no new paretos paretos were found
+        1. when >100 generations, no new paretofront paretofront were found
         """
         try:
             if self.gens_since_last_pareto > 100:  # .iloc[-1] > 100:  # sfeh discussion
@@ -650,9 +1161,9 @@ class ExplainableGP:
         except Exception:
             return False
 
-    def finalize_tree(self, tree):
+    def finalize_tree_get_meta(self, tree):
         """
-        tree->fintree!
+        fintree->fintree!
         ===
         # try:
         #     self.check_all()
@@ -661,8 +1172,8 @@ class ExplainableGP:
         ===
         Very fast eval-version that only computes fitness_train of the train data.
         tree_eval_complete gives more options
-        Evaluating the fitness_train of a tree.
-        - extract the expression the tree is holding
+        Evaluating the fitness_train of a fintree.
+        - extract the expression the fintree is holding
         - sympify the expression
         - (if sympify fails, evaluating does not make sense! Check sympify errors)
         - (sfeh: if sympify fails because of inf or zoo, tf could maybe still work due to save-tf-division)
@@ -673,29 +1184,31 @@ class ExplainableGP:
         nan: fitness_train == fitness_train -> False
         inf: fitness_train is not float('inf') -> False
         """
-        try:
-            meta = self.lut[hash(tree)]
-        except KeyError:
-            parsimony = tree.eval_parsimony(self.conf.complexity_measure, origin_tree=self.origin.tree)
-            if parsimony > self.conf.parsimony_max:
-                # sfeh last_evolution leads to error atm
-                # print_warning('wwww', f'Parsimony too high, last evolution: {tree.meta.last_evolution}', print_type=self.print_type_g)  # sfeh care about wwww. should not
-                raise Exception('Tree too complex')
-            try:
-                expr_raw = tree.eval_expr()
-                expr_sym = expr_sympify(expr_raw)
-                treeobs = tree.get_observation_list()
-                fitness = round(self.kernel.eval_tf(expr_sym, treeobs, only_fitness=True), self.conf.precision)
-                if fitness != fitness or fitness == float('inf'):
-                    raise Exception(f"fitness_train is: '{fitness}'")  # happens, eg when values are soo wrong that it leaves the float-range
-                meta = TreeMeta(fitness, parsimony, expr_raw, expr_sym)
-                self.lut[hash(tree)] = meta
-            except Exception as ex:
-                # print_warning('wwww', f'Exception while evaluating: {ex}, tree: {tree}.', print_type=self.print_type_g)
-                raise Exception(f'eval-ex: {ex}')
+        parsimony = tree.eval_parsimony(self.conf.complexity_measure, origin_tree=self.origin.tree)
+        if parsimony > self.conf.parsimony_max:
+            # sfeh last_evolution leads to error atm
+            # print_warning('wwww', f'Parsimony too high, last evolution: {fintree.meta.last_evolution}', print_type=self.print_type)  # sfeh care about wwww. should not
+            raise ValueError(f'Tree too complex')
 
-        fintree = FinalizedTree(tree, meta)
-        return copy.deepcopy(fintree)  # sfeh guess no deepcopy is required
+        expr_raw = tree.eval_expr()
+
+        try:
+            expr_sym = expr_sympify(expr_raw)
+        except ValueError as ex:
+            print_warning('wwww', f'Exception while evaluating: {ex}, fintree: {tree}.', print_type=self.conf.print_type)
+            raise ValueError(ex)
+
+        treeobs = tree.get_observation_list()
+        try:
+            fitness = self.kernel.eval_tf(expr_sym, treeobs, only_fitness=True)
+            # if fitness != fitness or fitness == float('inf'):
+            #     raise Exception(f"fitness_train is: '{fitness}'")  # happens, eg when values are soo wrong that it leaves the float-range
+        except Exception as ex:
+            raise Exception(f'eval-ex: {ex}')
+
+        meta = TreeMeta(fitness, parsimony, expr_raw, expr_sym)
+        self.lut[hash(tree)] = meta
+        return meta
 
     def plagih_gp_run(self, gen_additionally):
         """
@@ -712,11 +1225,11 @@ class ExplainableGP:
         # self.pop.gens_since_last_pareto = 0
 
         while self.conf.gen_id <= self.conf.gen_max and not self.custom_exit_condition():  # max generation, max time, done...
-            self.pop.time_genstart = time.perf_counter()  # sfeh here?
+            self.time_genstart = time.perf_counter()  # sfeh here?
 
             if self.conf.gen_id == 0:
                 self.printpl('gg', f'Preparing to create first Generation. Gen {self.conf.gen_id}.')  # sfeh debug
-                self.pop.gen_create_initial()  # sfeh stattdessen einfach checken, ob die letzte population leer ist und info/warnung: neue generation?
+                self.gen_create_initial()  # sfeh stattdessen einfach checken, ob die letzte population leer ist und info/warnung: neue generation?
             else:
                 # This might be a solution for multiprocessing:
                 # You can avoid this situation by calling multiprocessing.Process before you load your huge data.
@@ -735,32 +1248,22 @@ class ExplainableGP:
                     #     results = p.map(fun, evolve_list)
                     # time_evolve = time.perf_counter()
                 else:
-                    self.pop.gen_next_population()
+                    self.gen_next_population()
+                    # sfeh check if there are really unique... doubt it.
 
-            self.pareto.pareto_from_population(self.pop.pop_next)
+            self.pareto_from_population()
+            self.pop_analyze()
 
-            self.pop.pop_analyze()
-            # sfeh check if there are really unique... doubt it.
+            # ================= #
 
-            """
-            show plots if necessary
-            """
-            save_gen = int(self.conf.period.get('gen_save', 1))
-            plot_gen = int(self.conf.period.get('gen_plots', 1))
-            if self.conf.gen_id >= plot_gen and self.conf.gen_id % plot_gen == 0:
-                self.file_analysis_plots()
-
-            if self.conf.gen_id >= save_gen and self.conf.gen_id % save_gen == 0 or self.conf.gen_id == 10:  # sfeh extra save at 10 for early feedback while testing
-                self.conf.backup_save()
-
-            self.pop.pass_population()
-
-            self.printpl('ggg', f'Generation {self.conf.gen_id} took a total time of: {time.perf_counter() - self.pop.time_genstart:4.2f}.')
+            self.pass_population()
+            self.printpl('ggg', f'Generation {self.conf.gen_id} took a total time of: {time.perf_counter() - self.time_genstart:4.2f}.')
+            self.scheduled_io()
             self.conf.gen_id += 1
         else:
             self.printpl('g', f'Done after Generation {self.conf.gen_id}.\nTime since start: {time.perf_counter() - self.time_start:4.2f}s')
 
-        self.conf.backup_save()
+        self.backup_save()
 
         return
 
@@ -768,26 +1271,75 @@ class ExplainableGP:
         """
         Make all plots
         """
-
-        self.pop.plot_gen_performance(self.rootdir / 'monitoring.png')  # largest plot analysing the
-        self.pareto.plot_paretofront(self.rootdir / f'paretofront.pdf', self.conf.name, self.conf.parsimony_max)
+        self.plot_gen_performance(self.rootdir / 'monitoring.png')  # largest plot analysing the
+        self.plot_paretofront(self.rootdir / f'paretofront.pdf', self.conf.name, self.conf.parsimony_max)
         # self.plot_evolve_performance()  # sfeh
         return
 
-    def printpl(self, message_type, message_str):
+    def scheduled_io(self):
         """
-        Lightweight print function.
-        Instead of checking if you should print every time, this is done here.
-        message_type options can be found in config
+        show plots if necessary
         """
-        printez(message_type, message_str, print_type=self.conf.print_type)
-        return
+        save_gen = int(self.conf.period.get('gen_save', 10))
+        plot_gen = int(self.conf.period.get('gen_plots', 10))
+        if self.conf.gen_id >= plot_gen and self.conf.gen_id % plot_gen == 0:
+            self.file_analysis_plots()
+
+        if self.conf.gen_id >= save_gen and self.conf.gen_id % save_gen == 0 or self.conf.gen_id == 10:  # sfeh extra save at 10 for early feedback while testing
+            self.backup_save()
+
+
+class OriginTree:
+    """
+    The origin fintree (which was already loaded) gets activated for its use in the GP-process
+    """
+
+    def __init__(self, kernel, path_origin=None):
+        if path_origin:
+
+            with Path.open(path_origin, newline='') as file:
+                nested_expr = file.read()
+
+            tree = tree_from_nested_string(nested_expr)
+            expr_raw = tree.eval_expr()
+            try:
+                expr_sym = expr_sympify(expr_raw)
+            except Exception as sympex:
+                raise Exception(f'Loaded origin_tree expression could not be mathematically simplified: {sympex}')
+
+            # sfeh, this does not work
+            # if not tree_check_is_sympified(fintree):
+            #     print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}\n'
+            #                          ''.format(expr_raw, expr_sym))
+
+            used_observations = tree.get_observation_list()
+            tf_origin_results = kernel.eval_tf(expr_sym, used_observations)
+            fitness_train = tf_origin_results['mean_error']
+            if kernel.exploration_risk:
+                kernel.origin_results = tf_origin_results['results_kernel']  # after getting the origin-results, these informations can be updated
+
+            meta = TreeMeta(fitness=fitness_train, parsimony=0, expr_raw=expr_raw, expr_sym=expr_sym)
+            meta.append_tag('origin')
+            self.tree = FinalizedTree(tree, meta)
+            self.origin_is_fix = False  # TODO self.fintree.is_fix  # sfeh the root node!?!
+            self.existing = True
+
+            # origin_tree.set_fitness(fitness_train)
+            # origin_tree.set_parsimony(0)
+            # self.printpl('gg', f'Loading origin fintree, regr. error {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')
+        else:
+            self.existing = False
+            self.tree = None  # sfeh probably the 'existing' above is deprecated
+            self.origin_is_fix = False  # ...if non-existent, it is also not fix
+
+    def exists(self):
+        return self.existing
 
 
 # sfeh https://docs.sympy.org/latest/tutorial/manipulation.html
 
 # import tensorflow as tf; import ast; import textwrap
-# print(', '.join(['[\'{}\', {:.2f}]'.format(v['label'], 1/v['xtype': ([], []), 'c-weight']) for k, v in op_what.items()]))  # retreive a list with all non-ast ops:
+# print(', '.join(['[\'{}\', {:.2f}]'.format(v['label'], 1/v['xtype': ([], []), 'c-weight']) for k, v in op_what.items()]))  # retreive a list with all non-ast op_dict:
 
 
 def reci(lst, depth=0, obs_list=None):
@@ -806,9 +1358,9 @@ def reci(lst, depth=0, obs_list=None):
         except:
             pass
 
-            if strlabel in ops:
+            if strlabel in op_dict:
                 print(f'Label {strlabel} is an operator.')
-                label = ops[strlabel]
+                label = op_dict[strlabel]
             else:
                 if obs_list:
                     if strlabel in obs_list:
@@ -838,7 +1390,7 @@ def tree_from_nested_string(nested_str):
     nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
     """
 
-    evaled_expr = eval(nested_str, ops)
+    evaled_expr = eval(nested_str, op_dict)
 
     tree = reci(evaled_expr, 0)
     print('debugsfeh', tree)
@@ -849,11 +1401,11 @@ if __name__ == '__main__':
     """
     Alpha tests
     """
-    tb = TreeBuilder(obs_names=['aaa', 'bbb'])
-    # t1 = tb.invent_core_depth(float, 3, p_op=0.5)
+    tb = TreeBuilder(obs_names=['cartPos', 'cartVel'])
+    # t1 = tb.invent_core_depth(float, 3, p_full=0.5)
     # tree2 = tb.evolve_mutate_point(t1)
-    # t1 = tb.invent_core_depth(float, 3, p_op=0.9)
-    # t2 = tb.invent_core_depth(float, 3, p_op=0.9)
+    # t1 = tb.invent_core_depth(float, 3, p_full=0.9)
+    # t2 = tb.invent_core_depth(float, 3, p_full=0.9)
     # t1, t2 = tb.evolve_crossover(t1, t2)
     # for _ in range(5):
     #     print('x.D', t1, '===', t2)
@@ -861,5 +1413,6 @@ if __name__ == '__main__':
     #     print('x~D', t1, '===', t2)
 
     nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
-
+    # nstr = "['Ifte', ['<', ['*', [2.85], ['cartVel']], ['Square', ['cartVel']]], ['*', ['cartPos'], ['*', ['cartPos'], [0.014]]], ['/', [2.0], ['cartPos']]]"
     tree = tree_from_nested_string(nstr)
+

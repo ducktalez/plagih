@@ -266,7 +266,7 @@ def combined_lists(path_main, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_co
 
 def merge_paretos(path_main):
     """
-    load each IB run and add its paretos front to a merged plot
+    load each IB run and add its paretofront front to a merged plot
     """
     with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots()
@@ -292,7 +292,7 @@ def merge_paretos(path_main):
         fig.savefig(path_paretocombined)
         plt.close('all')
 
-    print('IB combined runs: merged paretos paretos into one plot!')
+    print('IB combined runs: merged paretofront paretofront into one plot!')
     return
 
 

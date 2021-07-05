@@ -8,7 +8,7 @@ class CustomConfig(Config):
         return 1 if node1.value != node2.value else 0
 
     def children(self, node):
-        """Get left and right children of binary tree"""
+        """Get left and right children of binary fintree"""
         return [x for x in (node.left, node.right) if x]
 
 
@@ -78,13 +78,13 @@ def is_bool(x):
 #         a, b = map_i[0], map_i[1]
 #         if a is None:
 #             b_name = b.name
-#             if b_name not in ops:  # weight can be 0, so check for None
+#             if b_name not in op_dict:  # weight can be 0, so check for None
 #                 weighted_distance += 1  # all inserted constants
-#                 print('Inserted', b_name, 'weight 1 (non-ops dummy)')
+#                 print('Inserted', b_name, 'weight 1 (non-op_dict dummy)')
 #             else:
-#                 b_weight = ops.get(b_name).get('weight')
+#                 b_weight = op_dict.get(b_name).get('weight')
 #                 weighted_distance += b_weight
-#                 print('Inserted', b_name, 'weight', b_weight, '(ops)')
+#                 print('Inserted', b_name, 'weight', b_weight, '(op_dict)')
 #             continue
 #         elif b is None:
 #             print('Deleted, weight 0 (no penalty)')
@@ -96,14 +96,14 @@ def is_bool(x):
 #                 print('No change, no weight.')
 #             else:
 #
-#                 a_weight = ops[a_name]['weight'] if a_name in ops else None
-#                 b_weight = ops[b_name]['weight'] if b_name in ops else None
+#                 a_weight = op_dict[a_name]['weight'] if a_name in op_dict else None
+#                 b_weight = op_dict[b_name]['weight'] if b_name in op_dict else None
 #
 #                 if a_weight is None:  # a_name is either env-variable, float, bool
 #
 #                     if b_weight:
 #                         weighted_distance += b_weight
-#                         print('Substituted non-ops with ops, weight', b_weight)
+#                         print('Substituted non-op_dict with op_dict, weight', b_weight)
 #                     # elif True:  # sfeh
 #                     #     weighted_distance += 0
 #                     #     print('dummy exir with weight=0 for constants')
@@ -121,7 +121,7 @@ def is_bool(x):
 #                 else:
 #                     if b_weight is not None:
 #                         weighted_distance += b_weight
-#                         print('Substituted non-ops with ops, weight', b_weight)
+#                         print('Substituted non-op_dict with op_dict, weight', b_weight)
 #                     # elif True:  # sfeh
 #                     #     weighted_distance += max(0.5, b_weight-(0.5*a_weight))
 #                     #     print('dummy exit with weight=0 for constants')

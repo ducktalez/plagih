@@ -1,4 +1,4 @@
-from plagih.node_labels import ops
+from plagih.node_labels import op_dict
 from plagih.tree_factory import *
 import ast
 from pathlib import Path
@@ -47,7 +47,7 @@ def ast_expr_to(node, tensors=None, build=None):
 
     One of [tensors, prnt, build] must be set
     -> tensors: Creates a tensorflow graph for evaluation
-    -> prnt: creates a string expression of the tree (I think I tried this before 'build' worked)
+    -> prnt: creates a string expression of the fintree (I think I tried this before 'build' worked)
     -> build: creates a nested nlabel-list, e.g. a+(b/c) -> [+, [a], [/, [b, c]]]] (at least I think so)
     """
 
@@ -79,27 +79,27 @@ def ast_expr_to(node, tensors=None, build=None):
                     return [f'-{ast_expr_to(node.operand, build=True)[0]}']
                 else:
                     return ['Usub', [ast_expr_to(node.operand, build=True)]]
-            return [ops[type(node.op)].nlabel, [ast_expr_to(node.operand, build=True)]]
-            # was: return [ops[type(node.ops)].nlabel, [ast_expr_to(node.operand, build=True)]]
+            return [op_dict[type(node.op)].nlabel, [ast_expr_to(node.operand, build=True)]]
+            # was: return [op_dict[type(node.op_dict)].nlabel, [ast_expr_to(node.operand, build=True)]]
         else:
-            return ops[type(node.op)].tflow(ast_expr_to(node.operand, tensors=tensors))
+            return op_dict[type(node.op)].tflow(ast_expr_to(node.operand, tensors=tensors))
 
     # Arity 2
     elif isinstance(node, ast.BinOp) or isinstance(node, ast.BitAnd):  # <left> <operator> <right>, e.g., (x + y), (a & True)
         if build:
-            return [ops[type(node.op)].nlabel,
+            return [op_dict[type(node.op)].nlabel,
                     [ast_expr_to(node.left, build=True),
                      ast_expr_to(node.right, build=True)]]
         else:
-            return ops[type(node.op)].tflow(
+            return op_dict[type(node.op)].tflow(
                 ast_expr_to(node.left, tensors=tensors),
                 ast_expr_to(node.right, tensors=tensors))
 
     elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
         if build:
-            return ast_chain_bool(node.values, ops[type(node.op)].nlabel, build=True)
+            return ast_chain_bool(node.values, op_dict[type(node.op)].nlabel, build=True)
         else:
-            return ast_chain_bool(node.values, ops[type(node.op)].tflow, tensors=tensors)
+            return ast_chain_bool(node.values, op_dict[type(node.op)].tflow, tensors=tensors)
 
     elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
         if build:
@@ -117,7 +117,7 @@ def ast_expr_to(node, tensors=None, build=None):
                          ast_expr_to(node.args[1], build=True),
                          ast_expr_to(node.args[2], build=True)]]
             else:
-                return ops[node.func.id].tflow(tensorflow.dtypes.cast(
+                return op_dict[node.func.id].tflow(tensorflow.dtypes.cast(
                     ast_expr_to(node.args[0], tensors=tensors), tensorflow.bool),
                     ast_expr_to(node.args[1], tensors=tensors),
                     ast_expr_to(node.args[2], tensors=tensors))
@@ -125,16 +125,18 @@ def ast_expr_to(node, tensors=None, build=None):
         elif len(node.args) <= 2:
             if build:
                 if len(node.args) == 1:
-                    return [ops[node.func.id].nlabel,
+                    return [op_dict[node.func.id].nlabel,
                             [ast_expr_to(node.args[0], build=True)]]
+                    # return [op_dict[node.func.id],  # todo check: remove .nlabel?
+                    #         [ast_expr_to(node.args[0], build=True)]]
                 elif len(node.args) == 2:
-                    return [ops[node.func.id].nlabel,
+                    return [op_dict[node.func.id].nlabel,
                             [ast_expr_to(node.args[0], build=True),
                              ast_expr_to(node.args[1], build=True)]]
                 else:
                     raise Exception('This arity is not supported')
             else:
-                return ops[node.func.id].tflow(*[ast_expr_to(arg, tensors=tensors) for arg in node.args])
+                return op_dict[node.func.id].tflow(*[ast_expr_to(arg, tensors=tensors) for arg in node.args])
 
         else:
             raise Exception('Failed to identify the function. {}'.format(type(node)))
@@ -164,23 +166,22 @@ def ast_chain_bool(values, operation, tensors=None, build=False):
             return x
 
 
-def ast_chain_compare(comparators, ops, tensors=None, build=False):
+def ast_chain_compare(comparators, node_ops, tensors=None, build=False):
     """
     Chains a sequence of comparison operations (e.g. 'a > b < c') into a single TensorFlow (TF) sub graph.
 
     """
-
     x = ast_expr_to(comparators[0], tensors=tensors, build=build)
     y = ast_expr_to(comparators[1], tensors=tensors, build=build)
 
     if len(comparators) > 2:
-        print_e('This is usually not used, and-concatenation of multiple chain compares')
-        return tensorflow.logical_and(ops[type(ops[0])].tflow(x, y), ast_chain_compare(comparators[1:], ops[1:], tensors=tensors))
+        print_e('This is usually not used, and-concatenation of multiple chain compares. sfeh, bring this back?')
+        return tensorflow.logical_and(op_dict[type(node_ops[0])].tflow(x, y), ast_chain_compare(comparators[1:], node_ops[1:], tensors=tensors))
     else:
         if build:
-            return [ops[type(ops[0])].nlabel, [x, y]]
+            return [op_dict[type(node_ops[0])].nlabel, [x, y]]
         else:
-            return ops[type(ops[0])].tflow(x, y)
+            return op_dict[type(node_ops[0])].tflow(x, y)
 
 
 def labels_from_nestedexpr(labels_nested_list, result_accum):
@@ -207,16 +208,20 @@ def ast_convert_from_expr(expr, tensors=None, build=None):
     """
     Starts the recursive ast-analysis of the expression
 
-    Extract expression tree from the string algo_sym.
+    Extract expression fintree from the string algo_sym.
     Please provide ONE of the following if you want to get...
     - tensorflow-graph: All variables (observation0, ...) as tensors.
     - build: True
     More information in ast_expr_to()
 
     """
-    ast_tree = ast.parse(expr, mode='eval').body
-    graph = ast_expr_to(ast_tree, tensors=tensors, build=build)
-
+    try:
+        ast_tree = ast.parse(expr, mode='eval').body
+        graph = ast_expr_to(ast_tree, tensors=tensors, build=build)
+    except:
+        # todo debug/remove
+        ast_tree = ast.parse(expr, mode='eval').body
+        graph = ast_expr_to(ast_tree, tensors=tensors, build=build)
     if build:
         graph = labels_from_nestedexpr(graph, [])
 
@@ -233,9 +238,9 @@ class EvalAction:
     xtype = (None, float)
 
     def __init__(self, name, minmax=None):
-        self.nlabel = name
-        self.minmax = minmax or (0, 2) # todo
-        self.tf_name = name
+        # self.nlabel = name
+        self.minmax = minmax
+        self.data_column_name = name
 
 
 class Kernel:
@@ -244,7 +249,7 @@ class Kernel:
     optional: creating another
     """
 
-    def __init__(self, conf, *args, **kwargs):
+    def __init__(self, path_data_csv, conf, *args, **kwargs):
         """
         sfeh: tf_device_log is set automatically to false
         """
@@ -254,24 +259,22 @@ class Kernel:
         self.tf_config.gpu_options.allow_growth = conf.tf_gpu_allow_growth
         self.tf_device = conf.tf_device
 
-        self.np_best_fitness = np.min  # todo what why
+        # with Path.open(path_data_csv, 'r') as file:
+        df = pd.read_csv(path_data_csv)
+        # sfeh it is float64, float64, int64 with MTC.. does it work with Tensorflow?
+        # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
 
-        with Path.open(conf.path_data_csv) as file:
-            df = pd.read_csv(file, delimiter=',')
-            # sfeh it is float64, float64, int64 with MTC.. does it work with Tensorflow?
-            # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
+        action_name = conf.action_name or df.columns[len(df.columns) - 1]  # sfeh conf & kernel
+        self.action = EvalAction(action_name, minmax=(0, 2))  # todo conf.action_minmax
 
-            action_name = conf.action_name or df.columns[len(df.columns) - 1]  # sfeh conf & kernel
-            self.action = EvalAction(action_name, minmax=(0, 2))  # todo
+        printez('i', f'Ignoring columns: {conf.dc}')  # , print_type=print_type print_type sfeh
+        df = df.drop(conf.dc, axis=1)  # no need to keep other actions
 
-            printez('i', f'Ignoring columns: {conf.dc}')  # , print_type=print_type print_type sfeh
-            df = df.drop(conf.dc, axis=1)  # no need to keep other actions
+        self.obs_names = list(df.columns)
+        self.obs_names.remove(action_name)
 
-            self.obs_names = list(df.columns)
-            self.obs_names.remove(self.action.nlabel)
-
-            df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
-            self.data_train, self.data_control = train_test_split(df, test_size=0.2, random_state=0)  # discussion: random state 0 okay? test_size 0.2?
+        df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
+        self.data_train, self.data_control = train_test_split(df, test_size=0.2, random_state=0)  # discussion: random state 0 okay? test_size 0.2?
 
     def fitness_compare(self, fitness1, fitness2):
         """
@@ -279,6 +282,7 @@ class Kernel:
             return True
         else:
             return True/False, DEPEND
+        sfeh: replace with pythonic way (__gt__ function above)
         """
         pass
 
@@ -304,8 +308,8 @@ class Kernel:
 
 class RegressionKernel(Kernel):
 
-    def __init__(self, conf, *args, **kwargs):
-        super().__init__(conf, *args, **kwargs)
+    def __init__(self, path_data_csv, conf, *args, **kwargs):
+        super().__init__(path_data_csv, conf, *args, **kwargs)
         self.np_best_fitness = np.min
 
         # self.kernel_version_plot_yaxis = f"regression error"
@@ -379,7 +383,7 @@ class RegressionKernel(Kernel):
 
     def plot_agent_histogram(self, parsim, tree, path_hist):
         """
-        Make histograms for all paretos-efficient candidates
+        Make histograms for all paretofront-efficient candidates
         sfeh: based on training data- maybe use test data...
 
         useful code?
@@ -408,18 +412,17 @@ class RegressionKernel(Kernel):
         """
         Evaluates an expression using TensorFlow (TF)
         - receives a (string) expression in numpy-style that was reduced with pythons "sympy" (for simplification)
-        - uses "ast" to generate a, kind of, python-intern-executable-tree
+        - uses "ast" to generate a, kind of, python-intern-executable-fintree
         - creating a tensorflow graph that is evaluated in an isolated TF session
         """
         tensorflow.compat.v1.reset_default_graph()
-        solution = tensorflow.constant(self.data_train[self.action.tf_name])  # tensors[self.action.name]
+        solution = tensorflow.constant(self.data_train[self.action.data_column_name])  # tensors[self.action.name]
         tensors = {obs_name: tensorflow.constant(self.data_train[obs_name]) for obs_name in used_observations}  # do not assign dtype here, do this in the pandas df aka data
 
         results_agent = ast_convert_from_expr(expr, tensors=tensors)  # the actual result from the expression in the agent
 
         # fit the agents to the possible outcome
-        results_kernel = results_agent
-
+        results_kernel = results_agent  # The ids change in the next lines! {id(results_kernel)} vs. {id(results_agent)}
         if self.discrete:
             results_kernel = tensorflow.math.round(results_kernel)
         if self.bounded:
@@ -489,7 +492,14 @@ class RegressionKernel(Kernel):
                      'mean_error': mean_error,
                      'penalize_exploration': penalize_exploration})
                 # sfeh attention: the dict above returns np-type results, not real floats
-        tf_results['mean_error'] = round(float(tf_results['mean_error']))
+
+        fitness = tf_results['mean_error']
+
+        if fitness != fitness or fitness == float('inf'):
+            raise ValueError(f"fitness is: '{fitness}'")  # sfeh or Exception happens, eg when values are soo wrong that it leaves the float-range
+
+        tf_results['mean_error'] = round(float(tf_results['mean_error']), self.precision)  # sfeh option: round directly in tensorflow
+
         if only_fitness:  # reduced evaluation, only mean_error is returned... (may save memory as only one value gets returned)
             return tf_results['mean_error']
         else:
@@ -505,8 +515,8 @@ class RegressionKernel(Kernel):
 
 class ClassificationKernel(Kernel):
 
-    def __init__(self, conf, *args, **kwargs):
-        super().__init__(conf, *args, **kwargs)
+    def __init__(self, path_data_csv, conf, *args, **kwargs):
+        super().__init__(path_data_csv, conf, *args, **kwargs)
 
     def eval_tf(self):
         pass
@@ -544,7 +554,7 @@ class ClassificationKernel(Kernel):
 
     def fitness_compare(self, fitness1, fitness2):
         """
-        todo: replace with pythonic way (__gt__ function above)
+
         """
         if fitness2 is None:
             return True
@@ -583,8 +593,8 @@ class MatchKernel(Kernel):
     The match kernel does
     """
 
-    def __init__(self, conf, *args, **kwargs):
-        super().__init__(conf, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def eval_tf(self):
         pass
@@ -618,13 +628,13 @@ class MatchKernel(Kernel):
 
         return pairwise_fitness
 
-    # def eval_tf(self, *args, **kwargs):
-    #     raise
-    #     # if self.get_predicted_labels:
-    #     #     predicted_labels = tensorflow.map_fn(self.tf_classify_labels_map, kernel_result, dtype=(tensorflow.int32, tensorflow.string), swap_memory=True)
-    #     # else:
-    #     #     predicted_labels = tensorflow.no_op()  # a placeholder, applies only to CLASSIFY kernel
-    #     #  # , 'predicted_labels': predicted_labels    # predicted_labels
+    def eval_tf(self, *args, **kwargs):
+        # if self.get_predicted_labels:
+        #     predicted_labels = tensorflow.map_fn(self.tf_classify_labels_map, kernel_result, dtype=(tensorflow.int32, tensorflow.string), swap_memory=True)
+        # else:
+        #     predicted_labels = tensorflow.no_op()  # a placeholder, applies only to CLASSIFY kernel
+        #  # , 'predicted_labels': predicted_labels    # predicted_labels
+        pass
 
     # def conclusion_text(self, result, fitness_control_best):
     #     """

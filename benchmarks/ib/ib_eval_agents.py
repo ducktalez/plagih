@@ -189,7 +189,7 @@ def agent_create_samples_csv(t=10000):
                 if t + ii < t:
                     csv_data[t+ii][enum_x * history_t + ii] = state_x
 
-        # state_debug.append_tree(list(env_state.values()))
+        # state_debug.append_evotree(list(env_state.values()))
         at = agent.decide(env_state)
         # at = at * np.array([1, 10, 5.75])
         # at = np.array([50-env.state['v'], 50-env.state['g'], 50-env.state['h']])

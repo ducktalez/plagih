@@ -30,7 +30,7 @@ def main():  # argv sys.argv[1:]
                         help='Starting a run from a backup file (backup.p).')
     parser.add_argument('-action_name', '-action', type=str, help='Specify the .csv column holding the action (output) in the data. '
                                                                   '(if not clear or more than one action). If empty, the last column is taken.')
-    # parser.add_argument('-origin_expr', type=str, default='', help='sfeh: open; string version, (expr or nested) directly loading the tree')
+    # parser.add_argument('-origin_expr', type=str, default='', help='sfeh: open; string version, (expr or nested) directly loading the fintree')
     parser.add_argument('-kernel_name', type=str, help='Kernel-name that will be analyzed to load the kernel. Currently only regression-versions.')
     parser.add_argument('-dc', type=str, action='append', default=[], help='Drop columns from the loaded data-.csv file. Probably unused actions in the IB).')
     parser.add_argument('-pop_max', '-pop_size', type=int, help='Set maximum pop_list for this run (updates the config)')
@@ -46,8 +46,8 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-slurm_runs_folder', type=str, default='slurm_runs', help='sfeh for fore than one version of the same run')
     parser.add_argument('-tf_gpu_allow_growth', type=bool, help='I dont know how a GPU can grow, but here you have the option.')
     parser.add_argument('-tf_device', default="/gpu:0", help='I hope your GPU nas Nvidia Cuda cores')
-    parser.add_argument('-develop', '-dev', action='store_true', help='Extensive debugging and tree testing during the developing process.')
-    # parser.add_argument('-file_distrib', type=str, help='File with distributions for creating a tree (maybe use the loaded config file aswell)')
+    parser.add_argument('-develop', '-dev', action='store_true', help='Extensive debugging and fintree testing during the developing process.')
+    # parser.add_argument('-file_distrib', type=str, help='File with distributions for creating a fintree (maybe use the loaded config file aswell)')
 
     parser.add_argument('-rootdir', type=Path, help='A custom output folder (rootdir). Not stable yet.')  # sfeh
     parser.add_argument('-tf_device_log', type=Path, help='Logging (A LOT of) tensorflow evaluation feedback. '
@@ -65,7 +65,7 @@ def main():  # argv sys.argv[1:]
     conf = Config(args)  # Update the config with the possibly loaded input args
 
     if args.prepared_run:
-        rootdir = conf.load_prepared_run(args.prepared_run, args.slurm_runs_folder)
+        rootdir, path_origin, path_data_csv = conf.load_prepared_run(args.prepared_run, args.slurm_runs_folder)
     else:
         try:
             rootdir = args.load_config.parent
@@ -73,7 +73,7 @@ def main():  # argv sys.argv[1:]
             rootdir = None
     rootdir = path_make_dir(args.rootdir or rootdir)
 
-    gp = ExplainableGP(conf, rootdir, args=args)
+    gp = ExplainableGP(conf, rootdir, path_origin, path_data_csv, args)
     time_start2 = time.perf_counter()
     gp.printpl('gg', f'Init. Time: {time.perf_counter() - time_start2:4.2f}s')
 
@@ -84,7 +84,7 @@ def main():  # argv sys.argv[1:]
             gp.backup_load(args.load_backup)
         except FileNotFoundError as no_file_ex:
             raise FileNotFoundError(f'You need to load a backup file to analyze! {no_file_ex}')
-        # sfeh idea: track amount of created trees per parsimony? relevant for the paretos front
+        # sfeh idea: track amount of created trees per parsimony? relevant for the paretofront front
 
     else:
         if not args.force_new_run:
@@ -106,7 +106,7 @@ def main():  # argv sys.argv[1:]
         conf.gen_max = args.gen_max  # workaroung for prepared run
 
     if args.analyze or not args.less_files:
-        gp.pareto.analyze_pareto(cpu_cores=args.mp_cores)
+        gp.paretofront.analyze_pareto(cpu_cores=args.mp_cores)
     else:
         print_blue('You actively decided not to use analyze out run.\n'
                    'This option was created for distributed cluster evaluation on slurm. The files\n'

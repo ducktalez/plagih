@@ -286,40 +286,6 @@ def yaml_load(path: Path):
     return loaded_yaml
 
 
-def data_from_csv(df, action):
-    """
-    todo
-    Loads .csv data files.
-    - Reading the .csv-file (with pandas)
-    - renaming column headers
-    - saving header info for later use
-
-    Information that we need to extract for each column:
-    - choose_xtype choosing a random observation for leaf nodes
-    - filtering observation index
-        is there an index (past values, e.g. velocity_0, velocity_1) -> performing filter-evolve on the variables index (velocity_2 -> velocity_3)
-    - evalaction data_train, data_test, is the action for the regression? -> more than one action might be required (IB has three action dimensions)
-        - action min max -> for kernel regression bounded. occuring min and max values might not be the theoretical min/max values
-
-
-    deprecated:
-
-    """
-
-    """
-    1. split col name
-    - check whether its an observation
-    --> check whether there are indizes
-    - check whether its an action
-    --> check unique valuea, min, max
-    - check if it should be ignored (deprecated action, irrelevant column)
-    2. 
-    """
-    # sfeh remove dat shit
-
-    return
-
-
 if __name__ == '__main__':
     print(f'Testing the plot style')
     import matplotlib.pyplot as plt

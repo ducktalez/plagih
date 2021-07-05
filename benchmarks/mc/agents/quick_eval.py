@@ -336,14 +336,14 @@ def eval_agent_list(agent_list, goal_agent, n=100, dir_save=Path('img/')):
 #     dir_save = path_make_dir(rootdir / 'sfehs_eval')
 #
 #     gp_backup_data = pickle_load(rootdir / 'backup/backup.p')
-#     gen_id, paretos, pop_base, monitor_pd, a_helping_dict = gp_backup_data
+#     gen_id, paretofront, pop_base, monitor_pd, a_helping_dict = gp_backup_data
 #
 #     agent_performance = {}
 #
-#     for (parsim, fitness, tree) in paretos:
+#     for (parsim, fitness, fintree) in paretofront:
 #         agent_name = f'{parsim:.0f}'
 #         print(f'Evaluating MC Agent: {parsim:.0f}')
-#         pycode = tree.eval_pycode()
+#         pycode = fintree.eval_pycode()
 #         mc_gent = DummyMcAgent(pycode)
 #         try:
 #             # bur1, bur2, avg_reward, fails = bur_lut.get(parsim, (None, None, None, None))
@@ -368,7 +368,7 @@ def eval_agent_list(agent_list, goal_agent, n=100, dir_save=Path('img/')):
 #         agentperflist = list(zip(*agent_performance.values()))
 #         x = agentperflist[0]
 #         y = agentperflist[2]
-#         tuples = [[parsim, fitness] for (parsim, fitness, tree) in paretos]
+#         tuples = [[parsim, fitness] for (parsim, fitness, fintree) in paretofront]
 #         xx, yy = np.array(tuples).T
 #
 #         ax.step(xx, yy, linestyle='dotted', marker='.', where='post', label='regression error')

@@ -44,7 +44,7 @@ class NodeLabel:  # todo
     #     self.pycode = kwargs.get('pycode', (tuple([None]), None))
     #     self.latex = kwargs.get('latex', None)
 
-    def mutate_filter(self, *args, **kwargs):
+    def mutate_self_filter(self, *args, **kwargs):
         """
         was filter_new_index
          # as default, return own index
@@ -63,7 +63,7 @@ class NodeLabel:  # todo
 class Operator(NodeLabel):
     """
     operator nodes (+, +, *, /, sin(), sign(), ...)
-    inner nodes of a tree
+    inner nodes of a fintree
     """
     pass
 
@@ -74,7 +74,7 @@ class Operator(NodeLabel):
 class Terminal(NodeLabel):
     arity = 0
 
-    def mutate_filter(self, *args, **kwargs):
+    def mutate_self_filter(self, *args, **kwargs):
         # todo? ...only for terminal nodes
         pass
 
@@ -85,7 +85,7 @@ class Constant(Terminal):
     # def __init__(self, *args, **kwargs):
     #     super().__init__(*args, **kwargs)
 
-    def mutate_filter(self, *args, **kwargs):
+    def mutate_self_filter(self, *args, **kwargs):
         pass
 
 
@@ -112,7 +112,7 @@ def observation_get_family_and_time(name, re_pattern='_\\d+$', none_return=None)
 
 class Observation(Terminal):
     """
-    todo discuss: labels should not have a sign (-pos); just pos
+    sfeh discuss: labels should not have a sign (-pos); just pos
     # self.name = nlabel if nlabel[0] != '-' else nlabel[1:]  # sfeh delete?
     """
 
@@ -145,7 +145,7 @@ class FloatConstant(Constant):
         self.expr_sym = self.nlabel
         self.pycode = self.nlabel
 
-    def mutate_filter(self, filter_type='gaussian_filter', precision=6, *args, **kwargs):  # todo
+    def mutate_self_filter(self, filter_type='gaussian_filter', precision=6, *args, **kwargs):  # todo
         """
 
         """
@@ -172,7 +172,7 @@ class BoolConstant(Constant):
         self.pycode = str(self.nlabel)
         self.regex = self.nlabel
 
-    def mutate_filter(self, *args, **kwargs):
+    def mutate_self_filter(self, *args, **kwargs):
         """
         sfeh: filtering these is kind of nonsense
         """
@@ -230,7 +230,13 @@ class Multiply(Operator):
 
 
 class Divide_no_nan(Operator):
+    """
+    # Division: SAFE division by zero!
+    -->tensorflow.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented
+    sfeh: is it okay to display this as '/'?
+    """
     nlabel = '/'
+    # classname = 'Divide_no_nan'  # sfeh??
     arity = 2
     tflow = tensorflow.math.divide_no_nan
     latex = ('\\div ', '\\frac{}{}')
@@ -256,7 +262,7 @@ class Power(Operator):
 
 
 class Abs(Operator):
-    nlabel = 'abs'
+    nlabel = 'Abs'
     arity = 1
     tflow = tensorflow.abs
     latex = ('abs', '|{}|')
@@ -266,7 +272,11 @@ class Abs(Operator):
 
 
 class Sign(Operator):
-    nlabel = 'sign'
+    """
+    classname: Sign, sympy-sign=sign, label=Sign, ... (confusing)
+    """
+    nlabel = 'Sign'
+    # nlabel = 'Sign'
     arity = 1
     tflow = tensorflow.sign
     latex = ('sign', 'sign({})')
@@ -278,7 +288,7 @@ class Sign(Operator):
 class Round(Operator):
     nlabel = 'Round'
     arity = 1
-    tflow = tensorflow.round
+    tflow = tensorflow.math.round
     latex = ('round', 'round({})')
     expr_sym = 'Round({})'
     pycode = 'round({})'
@@ -296,7 +306,7 @@ class Square(Operator):
 
 
 class Sqrt(Operator):
-    nlabel = 'sqrt'
+    nlabel = 'Sqrt'
     arity = 1
     tflow = tensorflow.sqrt
     latex = ('\\sqrt{x}', '\\sqrt{}')
@@ -306,7 +316,7 @@ class Sqrt(Operator):
 
 
 class Log(Operator):
-    nlabel = 'log'
+    nlabel = 'Log'
     arity = 1
     tflow = tensorflow.math.log
     latex = ('\\log()', '\\log{}')
@@ -316,7 +326,7 @@ class Log(Operator):
 
 
 class Log1p(Operator):
-    nlabel = 'log1p'
+    nlabel = 'Log1p'
     arity = 1
     tflow = tensorflow.math.log1p
     latex = ('\\log(1+x)', '\\log(1+{})')
@@ -326,7 +336,7 @@ class Log1p(Operator):
 
 
 class Cos(Operator):
-    nlabel = 'cos'
+    nlabel = 'Cos'
     arity = 1
     tflow = tensorflow.cos
     latex = ('\\cos ', '\\cos({})')
@@ -336,7 +346,7 @@ class Cos(Operator):
 
 
 class Sin(Operator):
-    nlabel = 'sin'
+    nlabel = 'Sin'
     arity = 1
     tflow = tensorflow.sin
     latex = ('\\sin ', '\\sin({})')
@@ -346,7 +356,8 @@ class Sin(Operator):
 
 
 class Tan(Operator):
-    nlabel = 'tan'
+    nlabel = 'Tan'
+    # nlabel = 'tan'
     arity = 1
     tflow = tensorflow.tan
     latex = ('\\tan ', '\\tan({})')
@@ -356,7 +367,8 @@ class Tan(Operator):
 
 
 class Acos(Operator):
-    nlabel = 'acos'
+    # nlabel = 'acos'
+    nlabel = 'Acos'
     arity = 1
     tflow = tensorflow.acos
     latex = ('\\acos ', '\\acos({})')
@@ -366,7 +378,8 @@ class Acos(Operator):
 
 
 class Asin(Operator):
-    nlabel = 'asin'
+    nlabel = 'Asin'
+    # nlabel = 'asin'
     arity = 1
     tflow = tensorflow.asin
     latex = ('\\asin ', '\\asin({})')
@@ -376,7 +389,8 @@ class Asin(Operator):
 
 
 class Atan(Operator):
-    nlabel = 'atan'
+    nlabel = 'Atan'
+    # nlabel = 'atan'
     arity = 1
     tflow = tensorflow.atan
     latex = ('\\atan ', '\\atan({})')
@@ -386,7 +400,8 @@ class Atan(Operator):
 
 
 class Tanh(Operator):
-    nlabel = 'tanh'
+    nlabel = 'Tanh'
+    # nlabel = 'tanh'  # sfeh check for all
     arity = 1
     tflow = tensorflow.tanh
     latex = ('\\tanh ', '\\tanh({})')
@@ -525,25 +540,34 @@ class Max(Operator):
     xtype = (tuple([float, float]), float)
 
 
-ops = {  # 'f2f': Classical mathematical operators, evaluate from float to float
-    '+': Add,
+op_dict = {
+    # ast.BitXor: Xor,
+    # DON'T USE tensorflow.bitwise.bitwise_and
+    # sympify('Or')->'|', sympify('And')->'&', sympify('Not')->'~'
+
+    # matching the AST expression
     ast.Add: Add,
-    '-': Subtract,
     ast.Sub: Subtract,
-    'Usub': Usub,
     ast.USub: Usub,
-    '*': Multiply,
     ast.Mult: Multiply,
-    # Division: SAFE division by zero! -->tensorflow.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented sfeh: is it okay to display this as '/'?
-    '/': Divide_no_nan,
     ast.Div: Divide_no_nan,
-    '**': Power,
     ast.Pow: Power,
-    'Abs': Abs,
-    'abs': Abs,  # sfeh: required... y though?
-    'sign': Sign,
-    'Round': Round,
-    'Square': Square,
+    ast.And: And,
+    ast.Or: Or,
+    ast.Not: Not,
+    ast.Eq: Eq,
+    ast.NotEq: Neq,
+    ast.Lt: Lt,
+    ast.LtE: Le,
+    ast.Gt: Gt,
+    ast.GtE: Ge,
+
+    # matching sympy/expression (e.g. the node-label/plabel)
+    '+': Add,
+    '-': Subtract,
+    '*': Multiply,
+    '/': Divide_no_nan,
+    '**': Power,
     'sqrt': Sqrt,
     'log': Log,  # sfeh log/ln?
     'log1p': Log1p,
@@ -554,33 +578,48 @@ ops = {  # 'f2f': Classical mathematical operators, evaluate from float to float
     'asin': Asin,
     'atan': Atan,
     'tanh': Tanh,
-
-    # bool->bool
-    # DON'T USE tensorflow.bitwise.bitwise_and
-    # sympify('Or')->'|', sympify('And')->'&', sympify('Not')->'~'
-    'Andb': And,
-    ast.And: And,
-    'Orb': Or,
-    ast.Or: Or,
-    'Xor': Xor,
-    # ast.BitXor: Xor,
-    'Notb': Not,
-    ast.Not: Not,
-
     # float->bool
     '==': Eq,
-    ast.Eq: Eq,
     '!=': Neq,
-    ast.NotEq: Neq,
     '<': Lt,  # a < b
-    ast.Lt: Lt,
     '<=': Le,
-    ast.LtE: Le,
     '>': Gt,  # a > b
-    ast.Gt: Gt,
     '>=': Ge,  # a >= 1
-    ast.GtE: Ge,
+    # bool
+    'Xor': Xor,
 
+    # matching Capitalized expressions (e.g. the node-label/plabel) sfeh does not know why
+    'Sqrt': Sqrt,
+    'Log': Log,  # sfeh log/ln?
+    'Log1p': Log1p,
+    'Cos': Cos,
+    'Sin': Sin,
+    'Tan': Tan,
+    'Acos': Acos,
+    'Asin': Asin,
+    'Atan': Atan,
+    'Tanh': Tanh,
+    'Abs': Abs, 'abs': Abs,  # sfeh: required... y though?
+    'sign': Sign,  # 'sign': Sign,
+
+    # sympy extra
+    # local_sympy_dict = {'Ifte': Ifte,
+    #                     'Mini': Mini,
+    #                     'Maxi': Maxi,
+    #                     'Andb': Andb,
+    #                     'Orb': Orb,
+    #                     'Notb': Notb,
+    #                     'Square': Square,
+    #                     'Usub': Usub,  # otherwise, ~? may be problematic
+    #                     # 'usub': Usub,  # sfeh delete this
+    #                     'Round': Round}
+    'Usub': Usub,
+    'Round': Round,
+    'Square': Square,
+    'Andb': And,
+    'Orb': Or,
+    'Notb': Not,
+    # forcing the arity
     'Ifte': Ifte,  # sfeh essential for evaluation
     'Mini': Min,  # with forced arity-2
     'Maxi': Max,  # with forced arity-2
@@ -590,7 +629,7 @@ latex_inline = ['+', '-', '*', '**', '==', '!=', '<', '<=', '>', '>=', 'Andb', '
 
 
 if __name__ == '__main__':
-    for oo, ocls in ops.items():
+    for oo, ocls in op_dict.items():
         print('operators:', oo, ocls.nlabel, ocls.xtype)
 
     for x in [FloatConstant(0.44), BoolConstant(True)]:

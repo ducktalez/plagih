@@ -1314,7 +1314,7 @@ class OriginTree:
 
             used_observations = tree.get_observation_list()
             tf_origin_results = kernel.eval_tf(expr_sym, used_observations)
-            fitness_train = tf_origin_results['mean_error']
+            fitness_train = round(float(tf_origin_results['mean_error']), kernel.precision)
             if kernel.exploration_risk:
                 kernel.origin_results = tf_origin_results['results_kernel']  # after getting the origin-results, these informations can be updated
 

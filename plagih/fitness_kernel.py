@@ -1,7 +1,5 @@
-from plagih.node_labels import op_dict
-from plagih.tree_factory import *
 import ast
-from pathlib import Path
+from plagih.node_labels import op_dict
 
 import tensorflow
 import numpy as np
@@ -9,7 +7,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from plagih.util import printez
+from plagih.util import *
+from pathlib import Path
 
 
 # def activate_dataset(path_data, action):
@@ -230,7 +229,7 @@ def ast_convert_from_expr(expr, tensors=None, build=None):
 
 class EvalAction:
     """
-    todo nlabel/labelNode? daut it.
+    no nlabel; the action is not part of the evotree
     - minmax for histograms
     - minmax for regression-bounded
     """
@@ -330,6 +329,8 @@ class RegressionKernel(Kernel):
         self.origin_results = None  # can only be set after the evaluation of the origin...
         sfeh_help = {'explorate01': 0.1,
                      'explorate05': 0.5}
+
+        self.fitness_sign = -1
 
         self.pen_explorate = 0.1
         for k, v in sfeh_help.items():
@@ -518,6 +519,8 @@ class ClassificationKernel(Kernel):
     def __init__(self, path_data_csv, conf, *args, **kwargs):
         super().__init__(path_data_csv, conf, *args, **kwargs)
 
+        self.fitness_sign = +1
+
     def eval_tf(self):
         pass
 
@@ -595,6 +598,8 @@ class MatchKernel(Kernel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.fitness_sign = +1
 
     def eval_tf(self):
         pass

@@ -333,10 +333,10 @@ def expr_sympify(expr_raw):
         raise Exception(f'sympify_1: {expr_raw} reason: ({ex})')
 
     # I[^f] (searching "I", but ignoring "Ifte" though by not-having a "f" as second letter), old version: of \*I[^f]
-    # find 'zoo', 'inf', '*I', 'nan', (I)
-    # ignore: ['Ifte', 'i']  (pycharm also USUALLY does not check capitalized letters; i vs. I)
+    #  (pycharm also USUALLY does not check capitalized letters; i vs. I)
+    # find: zoo, inf, *I, nan, (I)   ignore: Ifte, i
     if re.search('(zoo|inf|nan|I[^f])', expr_sym):
-        raise Exception(f'Failed for expr: {expr_sym}')
+        raise Exception(f'Simplification failed for expression: {expr_sym}')
 
     return expr_sym
 

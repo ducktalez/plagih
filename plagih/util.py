@@ -265,7 +265,9 @@ def printez(message_type, text, print_type=None):
     elif 'f' in message_type:
         print(f'{BColors.MAGENTA}Writing File: {text}{BColors.RESET}{BColors.RESET}')
     elif 'a' in message_type:
-        print(f'{BColors.GREEN}Paretofront: {text}{BColors.RESET}')
+        print(f'{BColors.GREEN}{text}{BColors.RESET}')  # Paretofront:
+    elif 'w' in message_type:
+        print_warning(message_type, text, print_type=print_type)
     elif 'g' in message_type:
         time_now = time.strftime("%d.%m %H:%M", time.localtime())
         print(f'[{time_now}] {text}')

@@ -1,5 +1,8 @@
-from pathlib import Path
+"""
+
+"""
 from plagih.util import *
+from pathlib import Path
 
 
 class Config:
@@ -22,7 +25,7 @@ class Config:
         except:
             conf = {}
         print_everything = 'wwwwaaaggggiiiff'
-        self.print_type = print_everything if args.print_all else conf.get('print_type', print_everything)  # (a)lert~pareto, (w)arning, (g)en, (i)nfo, (f)ile written
+        self.print_type = print_everything if args.print_all else conf.get('print_type', 'wwaaggiiff')  # (a)lert~pareto, (w)arning, (g)en, (i)nfo, (f)ile written
 
         # can be updated from everywhere
         self.pop_max = args.pop_max or int(conf.get('pop_max', 1000))  #: 1000,  # amount is never tested
@@ -30,10 +33,10 @@ class Config:
         self.action_name = args.action_name or conf.get('action_name', None)
         self.kernel_name = args.kernel_name or conf.get('kernel_name', 'regression')
         self.tree_depth_max = int(conf.get('tree_depth_max', 10))  #: 10,  # maximum Tree depth for entire run
-        self.parsimony_max = conf.get('parsimony_max', 35)
+        self.parsimony_max = conf.get('parsimony_max', 50)
         self.tourn_size = int(conf.get('tourn_size', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
         self.dc = conf.get('dc', [])
-        self.period = conf.get('period', {'gen_plots': 50, 'gen_save': 25})  # sfeh 10 or 5 for debugging, something higher for actual runs
+        self.period = conf.get('period', {'gen_plots': 25, 'gen_save': 25})  # sfeh 10 or 5 for debugging, something higher for actual runs
 
         self.precision = args.pop_max or conf.get('precision', 6)  # makes the lut more practical - more hits are achieved. be careful with rounding to zero.  # sfeh check this
 
@@ -124,7 +127,7 @@ class Config:
                 # 'xiao': 'mc/gp_files/tree_xiao.csv',
                 # 'xiaoFix': 'mc/gp_files/tree_xiaoFix.csv',
                 'simple': 'mc/gp_files/tree_simple.txt',
-                # 'simpleFix': 'mc/gp_files/tree_simple_fix.csv',
+                'simpleFix': 'mc/gp_files/tree_simple_fix.txt',
                 # 'simplePlus': 'mc/gp_files/tree_simplePlus.csv',
                 # 'simplePlusFix': 'mc/gp_files/tree_simplePlus_fix.csv',
                 # 'simonBest': 'mc/gp_files/fintree(simonBest).csv',

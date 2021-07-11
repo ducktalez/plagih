@@ -1,17 +1,17 @@
 """
 The factory to create trees
 """
+
 from plagih.plagih_tree import *
+from plagih.node_labels import *
+from plagih.util import *
 
 import copy
 import random
 from collections import deque
-
 import numpy as np
 import logging
 from pathlib import Path
-
-from plagih.node_labels import op_dict, Observation, FloatConstant, BoolConstant, Usub
 
 
 def randomly_split_range(range_max, num_splits):
@@ -25,24 +25,31 @@ def randomly_split_range(range_max, num_splits):
     # tmp_distributions = random.sample(range(1, range_max), num_splits)
     # d_sum = sum(tmp_distributions)
     # d_list = [int(round(range_max*(x/d_sum), 0)) for x in tmp_distributions]
-    sample_dist = np.random.rand(num_splits)  # [0.2, 0.8, 0.5] -> random samples
-    d_sum = sum(sample_dist)  # 1.5
-    sample_dist = [x / d_sum for x in sample_dist]  # [0.12, 0.6, 0.28] -> fittet to sum of 1
-    sample_dist = [x * range_max for x in sample_dist]  # [12, 60, 28] -> for 100 nodes
-    sample_dist = [int(round(x, 0)) for x in sample_dist]  # make them useable ints
+    # if num_splits == 0:
+    try:
+        sample_dist = np.random.rand(num_splits)  # [0.2, 0.8, 0.5] -> random samples
+        d_sum = sum(sample_dist)  # 1.5
+        sample_dist = [x / d_sum for x in sample_dist]  # [0.12, 0.6, 0.28] -> fittet to sum of 1
+        sample_dist = [x * range_max for x in sample_dist]  # [12, 60, 28] -> for 100 nodes
+        sample_dist = [int(round(x, 0)) for x in sample_dist]  # make them useable ints
 
-    # sfeh workaround, this makes exactly the correct range by changing the most extreme entry
-    imprecise_diff = range_max - sum(sample_dist)  # todo: this was [0, 0, 0]... where is your god now
-    if imprecise_diff != 0:
-        if sum(sample_dist) < range_max:
-            extreme_bin = sample_dist.index(min(sample_dist))  # extreme_bin = smallest
-        elif sum(sample_dist) > range_max:
-            extreme_bin = sample_dist.index(max(sample_dist))  # extreme_bin = greatest
-        else:
-            raise
-        sample_dist[extreme_bin] += imprecise_diff
+        # sfeh workaround, this makes exactly the correct range by changing the most extreme entry
+        imprecise_diff = range_max - sum(sample_dist)  # todo: this was [0, 0, 0]... where is your god now
+        # sfeh:discussion: maybe this difference is 2 or larger more often than 1 (->rounding), so maybe while-loop (just check if it happens?)
+        if imprecise_diff != 0:
+            if sum(sample_dist) < range_max:
+                # sfeh:minor mistake: if relatively empty, this appends to the first bin
+                sample_dist[sample_dist.index(min(sample_dist))] += imprecise_diff  # extreme_bin = smallest
+            elif sum(sample_dist) > range_max:
+                sample_dist[sample_dist.index(max(sample_dist))] += imprecise_diff  # extreme_bin = greatest
+            else:
+                raise
+    except:
+        sample_dist = [range_max]
 
     return sample_dist
+    # else:
+    #     return [range_max]
 
 
 def choose_build_size(size_mode, mean_min_max_var, tree=None, nodepath=None, force=None):
@@ -91,7 +98,7 @@ class TreeBuilder:
     """
     Just a class to prevent referencing all the separate shizzle everytime
 
-    func_list, probability_list = self.operators[xtype]
+    func_list, probability_list = self.operators[xtype_out]
     return np.random.choice(func_list, p_full=probability_list)
     """
 
@@ -102,14 +109,23 @@ class TreeBuilder:
                              lambda: random.randint(1, 20)],  # 0 has actually no purpose (except as being an action)
                      bool: [lambda: random.choice([True, False])]}  # todo
 
-    def __init__(self, obs_names, operator_pool=None, root_xtype=float, csv_data_samples=None, precision=6):
+    def __init__(self, obs_names, conf=None, operator_pool=None, root_xtype=float, csv_data_samples=None, precision=6):
         self.operators_add(operator_pool)
         self.constants_add()
         self.observations_add(obs_names)
         self.root_xtype = root_xtype
         self.precision = precision
+        if conf:
+            self.tree_depth_max = conf.tree_depth_max
+            self.parsimony_max = conf.parsimony_max
+            self.print_type = conf.print_type
+        else:
+            self.tree_depth_max = 10
+            self.parsimony_max = 50
+            self.print_type = None
 
-    # class ChooseOperators(Selectable):
+            # class ChooseOperators(Selectable):
+
     def operators_add(self, operator_pool=None):
         """
 
@@ -161,7 +177,7 @@ class TreeBuilder:
         operator_pool_check(operator_pool)
 
         choose_oparray = {
-            # all operator_pool with a certain xtype-result
+            # all operator_pool with a certain xtype_out-result
             # None: [[], []],
             float: [[], []],  # 2f
             bool: [[], []],  # 2b
@@ -176,7 +192,7 @@ class TreeBuilder:
             (tuple([bool, bool]), bool): [[], []],  # and, or, xor, ...
         }
         for label, prob in operator_pool.items():
-            # tuple-xtype (point mutations)
+            # tuple-xtype_out (point mutations)
             choose_oparray[label.xtype][0].append(label)
             choose_oparray[label.xtype][1].append(prob)
             # float/bool (construction of trees)
@@ -193,15 +209,15 @@ class TreeBuilder:
 
         self.operators = {}
         for xtype, x in choose_oparray.items():
-            # self.operators[xtype] = lambda: np.random.choice(x[0], p=x[1])  # "seloplam" faster, but less readable version
+            # self.operators[xtype_out] = lambda: np.random.choice(x[0], p=x[1])  # "seloplam" faster, but less readable version
             self.operators[xtype] = (x[0], x[1])
 
-    def choose_op(self, xtype):
+    def choose_op(self, any_xtype):
         """
         any_xtype can be a tuple, single type or even None
         """
-        # return self.operators[xtype]()  # "seloplam"
-        return np.random.choice(self.operators[xtype][0], p=self.operators[xtype][1])
+        # return self.operators[xtype_out]()  # "seloplam"
+        return np.random.choice(self.operators[any_xtype][0], p=self.operators[any_xtype][1])
 
     def workaround_remove_tilde(self, tree):
         """
@@ -255,7 +271,7 @@ class TreeBuilder:
         #     chooses variables but weighting how old they are.
         #     observations = ['gain_0', 'gain_1', 'gain_2', 'gain_3', 'gain_4'] -> [0.28, 0.23, 0.19, 0.16, 0.13]
         #     sfeh: what about larger steps?
-        #     e.g. [0, 1, 2, 3] is good, but [0, 5, 10, 15] is baaaad
+        #     e.g. [0, 1, 2, 3] is good, but [0, 5, 10, 15] is baad
         #     what if variables are not all of same diff?
         #     """
         #     observations = np.delete(observations, np.s_[max_hist:])
@@ -281,8 +297,8 @@ class TreeBuilder:
         #     else:
         #         obs = fam_members[0]
         #         obs_info[obs.name] = obs
-        #         obs_names.append_evotree(obs)
-        #         obs_prop.append_evotree(1)  # just one value
+        #         obs_names.pop_append_evotree(obs)
+        #         obs_prop.pop_append_evotree(1)  # just one value
 
         obs_list = [Observation(x) for x in obs_names]
 
@@ -291,10 +307,10 @@ class TreeBuilder:
 
     def choose_obs(self, xtype):
         """
-        Randomly choosing an operator-label for a given xtype.
+        Randomly choosing an operator-label for a given xtype_out.
         choose_oparray3 must be given, as they are different between runs.
         arity can also be set optionally, e.g. for point mutation
-        todo DOUBLE-check if this xtype is chosen correctly... better: replace it
+        todo DOUBLE-check if this xtype_out is chosen correctly... better: replace it
         """
         return self.observables[xtype]()
 
@@ -332,27 +348,29 @@ class TreeBuilder:
             # sfeh add p_term? 0.5?
             return self.choose_term(xtype)
 
-    def invent_core_nodeops(self, xtype, nodeops_max, p_full, depth):
+    def invent_core_nodeops(self, xtype_out, nodeops_max, p_full, depth):
         """
         todo todos according to the _depth version
         todo nodes are now about being operators...
         """
-        if nodeops_max > 1:
-            label = self.choose_op(xtype)
+        childs = []
+        label = self.choose_op(xtype_out)
+
+        if nodeops_max > 0:
             nodeops_max -= 1
+
             nodeops_split = randomly_split_range(nodeops_max, label.arity)  # todo check this?
 
             if 'delete_this' and len(nodeops_split) != len(label.xtype[0]):
-                print(f'OHNONONONONO debug delete this: f{nodeops_split} and {label.xtype[0]}')
+                print(f'OHNONONONONO debug delete this: {label} {nodeops_split} and {label.xtype[0]}')  # todo
 
-            childs = []
-            for ii, xt in enumerate(label.xtype[0]):
-                childs.append(self.invent_core_nodeops(xt, nodeops_split[ii], p_full, depth + 1))
+            childs = [self.invent_core_nodeops(xt_out, nodeops_split[ii], p_full, depth + 1) for ii, xt_out in enumerate(label.xtype[0])]
 
-            node = Node(label=label, childs=childs, depth=depth)  # , depth=depth sfeh no depth?
         else:
-            label = self.choose_term(xtype)
-            node = Node(label=label, depth=depth)
+            label = self.choose_term(xtype_out)
+
+        node = Node(label=label, childs=childs, depth=depth)  # , depth=depth sfeh no depth?
+
         return node
 
     def invent_core_depth(self, xtype, depth_max, p_full=1.0, depth=0):  # todo grow method
@@ -362,7 +380,7 @@ class TreeBuilder:
         """
         if depth < depth_max:
             label = self.choose_any(xtype, p_full)
-            childs = [self.invent_core_depth(xt, depth_max, depth=depth + 1, p_full=p_full) for xt in label.xtype[0]]
+            childs = [self.invent_core_depth(xt, depth_max, p_full, depth=depth + 1) for xt in label.xtype[0]]
             node = Node(label=label, childs=childs, depth=depth)  # , depth=depth sfeh no depth?
         else:
             label = self.choose_term(xtype)
@@ -371,34 +389,28 @@ class TreeBuilder:
 
     def evotree_deepcopy(self, tree: Node):
         """
-        todo ==> stuff
+        sfeh:==>stuff
         """
         evotree = copy.deepcopy(tree)  # sfeh ==>state
-        evotree.state = STATE_BUILDING
+        # evotree.state = STATE_BUILDING
         return evotree
 
-    def evolve_mutate_filter_random(self, tree):
+    def evolve_mutate_filter_random(self, evotree, custom_params):
         """
         Mutates a number of float terminal of a fintree
-        todo ROOT
+        - sfeh:==>ROOT
+        - filter point/branch/all, branch can also affect a point only aswell as all nodes
+        - filter observations?
+        - filter terminals
+        - filter with which filter?
         """
-        evotree = self.evotree_deepcopy(tree)  # ==>state
 
-        # mode = custom_params['mode']  # point/branch/all  # todo
-        # yes_observations = custom_params.get('yes_observations')  # sfeh point/branch/all todo
-        mutate_filter = 'gaussian_filter'  # sfeh change?  todo
+        filter_mode = custom_params['filter_mode']
+        filter_observations = custom_params['filter_observations']
+        mutate_filter = 'gaussian_filter'  # sfeh:future
 
         node = np.random.choice(evotree.eval_mutatable_nodes())
-
         node.evolve_mutate_filter_branch(precision=self.precision)
-
-        # if mode == 'branch':
-        #     pass
-        # else:
-        #     pass
-        #     # mode == 'point'
-        #     # sfeh delete this? point can always hapen
-        #     # node_id.evolve_mutate_point(tb)
 
         # sfeh ==>state
         return evotree
@@ -421,24 +433,37 @@ class TreeBuilder:
         # sfeh ==>state
         return evotree
 
-    def evolve_mutate_branch_depth(self, tree, depth_goal, p_full=1.0):
+    def evolve_mutate_branch_depth(self, evotree, depth_goal, p_full=1.0):
         """
+        evotree, cool_build_size, p_full=p_full
+
         sfeh ==>depth only
         currently only one branch
         """
-        evotree = self.evotree_deepcopy(tree)  # ==>state
-
         node = np.random.choice(evotree.eval_mutatable_nodes())
-        xtype = node.get_xtype()[1]  # todo
+        xtype_out = node.get_xtype_out()  # todo
 
-        branch = self.invent_core_depth(xtype, depth_goal, depth=0, p_full=p_full)  # sfeh ==>dummies
+        branch = self.invent_core_depth(xtype_out, depth_goal, p_full, depth=0)  # sfeh ==>dummies
         node.replace_with_branch(branch)
         # if node.depth == depth_goal:
-        #     node.set_label(tb.choose_term(xtype[1]))  # sfeh update node nlabel
+        #     node.set_label(tb.choose_term(xtype_out))  # sfeh update node nlabel
         # else:
         #     node.childs = [Node(tb.choose_any(xt, p=1)) for xt in node.get_xtype()[0]]  # sfeh ==>
 
         # etree.finalize()  # sfeh ==>state
+        return evotree
+
+    def evolve_mutate_branch_nodes(self, evotree, nodes_goal, p_full=1.0):
+        """
+        evotree, cool_build_size, p_full=p_full
+
+        sfeh ==>depth only
+        currently only one branch
+        """
+        node = np.random.choice(evotree.eval_mutatable_nodes())
+        xtype_out = node.get_xtype_out()
+        branch = self.invent_core_nodeops(xtype_out, nodes_goal, p_full, depth=0)  # sfeh ==>dummies
+        node.replace_with_branch(branch)
         return evotree
 
     def evolve_crossover(self, tree1: Node, tree2: Node):
@@ -452,15 +477,15 @@ class TreeBuilder:
         anodes = atree.eval_mutatable_nodes(allow_root=False)
         anode = np.random.choice(anodes)
 
-        xtype = anode.get_xtype_out()
-        bnodes = btree.eval_mutatable_nodes(xtype_out=xtype)
+        xtype_out = anode.get_xtype_out()
+        bnodes = btree.eval_mutatable_nodes(xtype_out=xtype_out)
         if len(bnodes) > 0:
             bnode = np.random.choice(bnodes)
         else:
-            xtype = float if xtype == bool else bool  # the other swap type now
-            bnodes = btree.eval_mutatable_nodes(xtype_out=xtype)
+            xtype_out = float if xtype_out == bool else bool  # the other swap type now
+            bnodes = btree.eval_mutatable_nodes(xtype_out=xtype_out)
             bnode = np.random.choice(bnodes)
-            anodes = atree.eval_mutatable_nodes(allow_root=False, xtype_out=xtype)
+            anodes = atree.eval_mutatable_nodes(allow_root=False, xtype_out=xtype_out)
             anode = np.random.choice(anodes)
 
         # sfeh deepcopy required??
@@ -469,72 +494,124 @@ class TreeBuilder:
         anode.replace_with_branch(bnode)
         bnode.replace_with_branch(anode_copy)
 
+        # todo prune evotree (trim branches only? trim the whole evotree?)
+        atree = self.evolve_prune(evotree=atree)
+        btree = self.evolve_prune(evotree=btree)
+
         # atree.meta.last_evolution = tag  # sfeh ==>fintree tag
         # btree.meta.last_evolution = tag
 
         return atree, btree
 
-    def pop_random(self, custom_params, from_origin=False):
+    def printpl(self, message_type, message_str):
+        """
+        clone of the popular function
+        """
+        printez(message_type, message_str, print_type=self.print_type)
+        return
+
+    def evolve_prune(self, evotree: Node):
+        """
+        sfeh:discuss analyze the amount of trees that have to be pruned?
+        """
+        # prune depth
+        # -> prune everything below a certain level... (should not happen in the first place)
+        # prune nodes
+        # -> get node difference, get nodelist, untill small enough: split the difference, prune nodes until
+        # sfeh:discussion there is a difference between parsimony and complexity...
+
+        nodelist = evotree.eval_mutatable_nodes()
+        for dnode in nodelist:
+            if dnode.depth == self.parsimony_max and dnode.get_arity() > 0:
+                print_warning('wwww', f'Node in fintree is too deep: {dnode.depth}', print_type=self.print_type)
+                new_node = Node(label=self.choose_term(dnode.get_xtype_out()), depth=dnode.depth)
+                dnode.replace_with_branch(new_node)
+                # sfeh:debug did this work?
+
+        prune_amount = len(evotree) - self.parsimony_max
+        while prune_amount > 0:
+            print_warning('wwww', f'Tree is too complex: {len(evotree)} > {self.parsimony_max}, pruning {prune_amount} nodes.', print_type=self.print_type)
+            nodelist = evotree.eval_mutatable_nodes()
+            prune_now = 1 + np.random.randint(prune_amount)  # 19 -> prune branch with 1-19 nodes
+
+            nodelist = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
+            node = np.random.choice(nodelist)
+            new_node = Node(label=self.choose_term(node.get_xtype_out()), depth=node.depth)
+            node.replace_with_branch(new_node)
+            prune_amount = len(evotree) - self.parsimony_max
+        return evotree
+
+    def pop_random(self, custom_params, origin: 'OriginTree' = None):
         """
         Creates random trees for the population
         """
-        _, size_mode, mean_min_max_var, p_full = helper_evolve_params_branch(custom_params)
+        _, size_mode, mean_min_max_var, p_full = helper_evolve_params_branch(custom_params,
+                                                                                      tree_depth_max=self.tree_depth_max,
+                                                                                      parsimony_max=self.parsimony_max)
 
-        if from_origin:
+        if origin:  # .exists():
             """
             pareto_insert a (random) number of branches at the first possible "layer"
             (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
             - get these nodes, randomly choose a subset of those
             - get the amount of nodes we are allowed to add. (max nodes without the core-fintree and the nodes we are about to delete)
             - split the amount of nodes up (randomly) and add these new branches to the fintree
+            todo ...and if origin is fix?
+            sfeh:idea mutate only the childs of a node! The label stays the same
             """
+            # todo todotodo this is the main source for faulty runs
+            evotree = origin.origin_tree_copy()
+            todotree = copy.deepcopy(evotree)
 
-            # layer0_ids = tree_get_mutatable_layer(from_origin, 0)
-            layer0_ids = [1, 2, 3]
+            layer0_nodes = evotree.get_nodes_at_depth(0, allow_fixed=False, expand_depth=True)  # todo:debug
+            print('DDD', [l.get_label() for l in layer0_nodes])
+            # layer0_nodes = evotree.eval_mutatable_nodes(...)  # delete this
 
-            # build_split = []
-            # if 'depth' in size_mode:
-            #     for ii in range(len(layer0_ids)):
-            #         build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
-            #         build_split.append_evotree(build_size)
-            #
-            # elif 'nodes' in size_mode:
-            #     build_nodes = choose_build_size(size_mode, mean_min_max_var, force='branch')
-            #     build_split = randomly_split_range(build_nodes, len(layer0_ids))
-            # else:
-            #     raise
-            #
-            # fintree = copy.deepcopy(from_origin)
-            # for i in range(len(layer0_ids)):  # pareto_insert branches! get layer every time (node ids might have changed)
-            #     layer0_ids = tree_get_mutatable_layer_lv0(fintree)
-            #     node_id = layer0_ids[i]
-            #     first_xtype = float  # tree_node_get_xtype(fintree, node_id)  # todo
-            #     old_branch = tree_node_get_branch(fintree, node_id, karoo=True)
-            #     build_size = build_split[i]
-            #
-            #     # fintree = fintree(BuildDummy(float))   # todo deprecated
-            #     core = fintree.invent_core(size_mode, first_xtype, build_size, full_or_grow)
-            #     fintree = tree_insert_subtree(fintree, core, old_branch, karoo=True)
+            if '_depth' in size_mode:
+                # todo the depth is annoying in fixed trees
+                build_depth = choose_build_size(size_mode, mean_min_max_var, force='branch')
+                for ii, node0 in enumerate(layer0_nodes):  # pareto_insert branches! get layer every time (node ids might have changed)
+                    todo = node0.eval_mutatable_nodes()
+                    lvl0_node = np.random.choice(todo)  # layer0_branch =
+                    # branch_size = layer0_nodes[ii]  # sfeh:idea + len(lvl0_node)
+                    new_subbranch = self.invent_core_depth(node0.get_xtype_out(), build_depth, p_full, depth=lvl0_node.depth)
+                    lvl0_node.replace_with_branch(new_subbranch)
+
+            elif '_nodes' in size_mode:
+                # todo:debug
+                build_amount = choose_build_size(size_mode, mean_min_max_var, force='branch')
+                layer0_splits = randomly_split_range(build_amount, len(layer0_nodes))
+
+                for ii, node0 in enumerate(layer0_nodes):  # pareto_insert branches! get layer every time (node ids might have changed)
+                    lvl0_node = np.random.choice(node0.eval_mutatable_nodes())  # layer0_branch =
+                    # branch_size = layer0_nodes[ii]  # sfeh:idea + len(lvl0_node)
+                    new_subbranch = self.invent_core_nodeops(node0.get_xtype_out(), layer0_splits[ii], p_full, depth=lvl0_node.depth)
+                    lvl0_node.replace_with_branch(new_subbranch)
+            else:
+                raise
+
+            print('ASDAdasfsdfgdrfSD', len(todotree), len(evotree), todotree, evotree)
+
         else:
             build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')  # depth, in this case
             if size_mode == 'tree_depth':
-                tree = self.invent_core_depth(float, build_size, depth=0, p_full=p_full)  # todo
-            # coolcore.evolve_mutate_branch_depth(build_size, choose_oparray3, env_vars.choose_obs,
+                evotree = self.invent_core_depth(self.root_xtype, build_size, p_full, depth=0)  # todo
             elif size_mode == 'tree_nodes':
-                # nodeops_max=build_size
-                tree = self.invent_core_nodeops(float, build_size, p_full, depth=0)  # more debugging?
+                evotree = self.invent_core_nodeops(self.root_xtype, build_size, p_full, depth=0)  # more debugging?
             else:
                 raise
-            return tree
+
+        return evotree
 
 
-def helper_evolve_params_branch(call_params, tree_depth_max=10, parsimony_max=30):
+def helper_evolve_params_branch(custom_params, tree_depth_max=10, parsimony_max=50):
     """
     todo tree_depth_max=10, parsimony_max=30, build_spec has no real function?
+    todo difference between parsimony and complexity or tree_size/nodecount
     The call parameters in the evolution file need to be adjusted
     delete if possible
     """
-    build_spec = call_params.get('build_spec')
+    build_spec = custom_params.get('build_spec')
 
     size_mode = build_spec['size_mode']
 
@@ -635,3 +712,117 @@ class FinalizedTree(Tree):
 
     def get_last_evolution(self):
         return self.meta.last_evolution[-1]  # sfeh not even sure
+
+
+class OriginTree:
+    """
+    The origin fintree (which was already loaded) gets activated for its use in the GP-process
+    """
+
+    def __init__(self, kernel, path_origin=None):
+        if path_origin:
+
+            with Path.open(path_origin, newline='') as file:
+                nested_expr = file.read()
+
+            tree = tree_from_nested_string(nested_expr)
+            expr_raw = tree.eval_expr()
+            try:
+                expr_sym = expr_sympify(expr_raw)
+            except Exception as sympex:
+                raise Exception(f'Loaded origin_tree expression could not be mathematically simplified: {sympex}')
+
+            # sfeh, this does not work
+            # if not tree_check_is_sympified(fintree):
+            #     print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}\n'
+            #                          ''.format(expr_raw, expr_sym))
+
+            used_observations = tree.get_observation_list()
+            tf_origin_results = kernel.eval_tf(expr_sym, used_observations)
+            fitness_train = round(float(tf_origin_results['mean_error']), kernel.precision)
+            if kernel.exploration_risk:
+                kernel.origin_results = tf_origin_results['results_kernel']  # after getting the origin-results, these informations can be updated
+
+            meta = TreeMeta(fitness=fitness_train, parsimony=0, expr_raw=expr_raw, expr_sym=expr_sym)
+            meta.append_tag('origin')
+            self.fintree = FinalizedTree(tree, meta)
+            self.origin_is_fix = self.fintree.tree.is_fix
+            self.existing = True
+            # self.printpl('gg', f'Loading origin fintree, regr. error {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')
+        else:
+            self.existing = False
+            self.fintree = None  # sfeh probably the 'existing' above is deprecated
+            self.origin_is_fix = False  # ...if non-existent, it is also not fix
+
+    def origin_fintree_copy(self):
+        return copy.deepcopy(self.fintree)
+
+    def origin_tree_copy(self):
+        return copy.deepcopy(self.fintree.tree)
+
+    def exists(self):
+        return self.existing
+
+
+def rec_build_tree(lst, depth=0, obs_list=None):
+    """
+    [rec]ursive [i]dk what the second thing was :D
+    recursively loads a nested list into a evotree structure
+    nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
+    nstr = '[+,[-,[Ifte,[True],[sin,[2]],[/,[2.043],[4]]],[cartVel]],[-1.3]]'
+    """
+    strlabel = str(lst[0])
+    if ':fix' in strlabel:
+        strlabel = strlabel.replace(':fix', '')
+        print(f'Label {strlabel} is fixed!')
+        is_fix = True
+    else:
+        is_fix = False
+
+    if strlabel in ['True', 'False']:
+        print(f'Label {strlabel} is boolean.')
+        label = BoolConstant(strlabel)
+    else:
+        try:
+            strlabel = float(strlabel)
+            label = FloatConstant(strlabel)
+            print(f'Label {strlabel} is float.')
+        except Exception:
+
+            if strlabel in op_dict:
+                print(f'Label {strlabel} is an operator.')
+                label = op_dict[strlabel]
+            else:
+                if obs_list:
+                    if strlabel in obs_list:
+                        print(f'Label {strlabel} is an observation.')
+                        label = Observation(strlabel)
+                    else:
+                        raise Exception(f'Label "{strlabel}" can not be assigned to a node-label!')
+                else:
+                    print(f'Label {strlabel} is assumed to be an observation.')
+                    label = Observation(strlabel)
+
+    node = Node(label=label, depth=depth, is_fix=is_fix)
+
+    if len(lst[1:]) == node.get_arity():
+        childs = [rec_build_tree(x, depth=depth + 1) for x in lst[1:]]
+        node.set_childs(childs)
+
+    else:
+        raise Exception(f'Tree-building list length {len(lst[1:])} does not match the nodes arity {node.get_arity()}.')
+
+    return node
+
+
+def tree_from_nested_string(nested_str):
+    """
+    optional: op_dict + labels not in '' can be used to load the operators directly
+    all_input_options = ['1', '0', '-1.132', 'True', 'False', 'vel', 'Ifte', 'max', 'Maxi', '-vel']
+    nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
+    """
+
+    evaled_expr = eval(nested_str)  # , op_dict)
+
+    tree = rec_build_tree(evaled_expr, 0)
+    return tree

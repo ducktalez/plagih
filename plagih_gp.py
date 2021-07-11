@@ -2,14 +2,12 @@
 This starts the whole genetic programming.
 This extra file was added to have a file in the root directory that can be started.
 """
+import argparse
+import sys
+
 from plagih.plagih_config import Config
 from plagih.plagih_gp_base_class_xai import *
-import sys
 from plagih.util import *
-
-import argparse
-from pathlib import Path
-import yaml
 
 
 def main():  # argv sys.argv[1:]
@@ -63,6 +61,8 @@ def main():  # argv sys.argv[1:]
 
     args = parser.parse_args()
     conf = Config(args)  # Update the config with the possibly loaded input args
+
+    path_origin, path_data_csv = None, None  # todo
 
     if args.prepared_run:
         rootdir, path_origin, path_data_csv = conf.load_prepared_run(args.prepared_run, args.slurm_runs_folder)

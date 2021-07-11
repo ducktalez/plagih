@@ -11,13 +11,16 @@ sfeh: write test that checks all operators for sympificytion (...+branch-combina
 sfeh: use function-types (-> 'kommuttative'?)
 
 """
+
 from plagih.fitness_kernel import *
+from plagih.tree_factory import *
+from plagih.node_labels import *
+from plagih.sympy_extras import expr_sympify
 from plagih.tree_distances.tree_edit_distance import apted_distance
 
 from dataclasses import dataclass
 import itertools
 
-from plagih.node_labels import NodeLabel, Observation
 from plagih.util import *
 
 
@@ -208,24 +211,21 @@ class Node:
             label_list.extend(labels_at_depth)
         return label_list
 
-    def get_nodes_at_depth(self, goal_depth, only_mutable=False, get_closest_depth=False):
+    def get_nodes_at_depth(self, goal_depth, allow_fixed=False, expand_depth=False):
         """
         Returns a list with mutatable ids which are *goal_depth* layers away from non modifiable nodes
         last_leaves: if you want so save all leave nodes aswell
 
         sum_layers=False, get_closest=True, return_all_layers=False
         """
-        if self.depth < goal_depth:
-            return sum(
-                [child.get_nodes_at_depth(goal_depth, only_mutable=only_mutable, get_closest_depth=get_closest_depth)
-                 for child in self.childs], [])
-        else:
-            if only_mutable and self.is_fix:
-                return []
-            if get_closest_depth and self.depth != goal_depth:
-                return []
-
+        nodes = []
+        if (not self.is_fix or allow_fixed) and (self.depth == goal_depth or (self.depth > goal_depth and expand_depth)):
             return [self]
+        elif self.depth <= goal_depth or expand_depth:
+            nodes.extend(list(itertools.chain(*[cc.get_nodes_at_depth(goal_depth, allow_fixed=allow_fixed, expand_depth=expand_depth) for cc in self.childs])))
+            return nodes
+        else:
+            return []
 
     def eval_expr(self, reducible=None, obs_names=None):
         """
@@ -238,11 +238,12 @@ class Node:
             #     # symloc = sympy_symbol_defaults(obs_names)  # todo solve the problem... new version of sympy?
             #     xxx = plagih_sympify(my_expr.format(*child_expr_list), eval_locals=symloc)  # sfeh the xxx variable
             #     return xxx
-            try:
-                return self.label.expr_sym.format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
-            except:
-                # todo delete this try
-                return self.label.expr_sym.format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
+            return self.label.expr_sym.format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
+            # try:
+            #     return self.label.expr_sym.format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
+            # except:
+            #     # todo delete this try
+            #     return self.label.expr_sym.format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
         else:
             return self.label.expr_sym
 
@@ -270,8 +271,6 @@ class Node:
         #     'tree_node_count': tree_get_size,
         #     'tree_depth': tree_get_depth,
         #     'tree_edit_distance': tree_parsimony_ted,
-
-        # self.meta.parsimony = parsimony  # todo okay where meta? at root node...
         """
         if complexity_measure == 'tree_node_count':  # number of nodes
             return len(self)  # returns the number of nodes  # sfeh weights
@@ -291,7 +290,7 @@ class Node:
         todo
         was: new_core
         """
-        self.state = STATE_BUILDING  # todo ==>state
+        self.state = STATE_BUILDING  # sfeh:==>state
         self.set_label(new_node.get_label())
         self.childs = new_node.childs or []  # maybe must be updated recursively
         # todo set depth!!
@@ -320,22 +319,22 @@ class Node:
                 random nodes in a branch /
                 intelligent filtering
         """
-        self.state = STATE_BUILDING  # todo ==>state
+        # self.state = STATE_BUILDING  #  ==>state
         if self.get_arity() > 0:
             for cc in self.childs:
                 cc.evolve_mutate_filter_branch(precision=precision)
         else:
-            self.label.mutate_self_filter(precision=precision)
+            self.label.mutate_self_filter(filter_type='gaussian_filter', precision=precision)
 
     def evolve_reduce(self, obs_infos=None, completely=True):
         """
         Reducing a fintree to its most basic form with sympify.
         (completely = False: reduce just one branch. if you wanted to have more complexity)
         """
-        self.state = STATE_BUILDING  # todo ==>state
+        # self.state = STATE_BUILDING  #  ==>state
         length_before = len(self)
         if completely:  # reduce the complete fintree
-            cores_lv0 = self.get_nodes_at_depth(0, only_mutable=True)
+            cores_lv0 = self.get_nodes_at_depth(0, allow_fixed=False)
             for c in cores_lv0:
                 c.evolve_branch_reduce(obs_infos)
         else:
@@ -414,8 +413,8 @@ class Node:
 #     todo
 #     """
 #
-#     def __init__(self, nlabel, xtype=float, obs_indizes=None):
-#         # super().__init__(nlabel, xtype)
+#     def __init__(self, nlabel, xtype_out=float, obs_indizes=None):
+#         # super().__init__(nlabel, xtype_out)
 #         self.obs_indizes = obs_indizes
 #         latex = f'\\text{{{self.fam}}}_{{{self.timeindex}}}'  # remove this {self.preexpr}
 #         self.latex = (latex, latex)  # remove this {self.preexpr}

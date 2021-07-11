@@ -1,9 +1,9 @@
 """
 
 """
+import plagih.util
 import re
 
-import plagih.util
 import tensorflow
 import ast
 import numpy as np
@@ -24,10 +24,10 @@ class NodeLabel:  # todo
     expr_sym = None
 
     # def __init__(self, *args, **kwargs):
-    #     # nlabel=None, arity=0, xtype=(tuple([None]), None), tflow=None, expr_sym=None, pycode=None, latex=None
+    #     # nlabel=None, arity=0, xtype_out=(tuple([None]), None), tflow=None, expr_sym=None, pycode=None, latex=None
     #     # self.nlabel = nlabel
     #     # self.arity = arity
-    #     # self.xtype = xtype
+    #     # self.xtype_out = xtype_out
     #     #
     #     # self.tflow = tflow  # not tf, might be confusing
     #     # self.nlabel = expr_sym
@@ -37,7 +37,7 @@ class NodeLabel:  # todo
     #     # new version?
     #     self.nlabel = kwargs.get('nlabel', None)
     #     self.arity = kwargs.get('arity', None)
-    #     self.xtype = kwargs.get('xtype', None)
+    #     self.xtype_out = kwargs.get('xtype_out', None)
     #
     #     self.tflow = kwargs.get('tflow', None)  # not tf, might be confusing']
     #     self.nlabel = kwargs.get('expr_sym', None)
@@ -46,17 +46,8 @@ class NodeLabel:  # todo
 
     def mutate_self_filter(self, *args, **kwargs):
         """
-        was filter_new_index
-         # as default, return own index
+         as default, return own index
         """
-        # if self.index_minmax is None:
-        pass
-
-    def mutate_point(self):
-        """
-
-        """
-        # if self.index_minmax is None:
         pass
 
 
@@ -139,7 +130,6 @@ class FloatConstant(Constant):
     xtype = (tuple([]), float)
 
     def __init__(self, nlabel):
-        # super().__init__(nlabel)
         self.nlabel = nlabel
         self.latex = (f'{self.nlabel:.3f}', f'{self.nlabel:.3f}')
         self.expr_sym = self.nlabel

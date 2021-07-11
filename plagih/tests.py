@@ -34,9 +34,9 @@ class TestHelpers:
     #     print(tree_pretty_print(self.tree1))
 
     # def reduce_any_tree(self):
-    #     tree = self.karoo_tree_from_only_labellist(self.tree_MTC_simon_labels)
-    #     tree_sym = tree_evolve_reduce(tree, self.env_bundle)
-    #     print(tree_get_labellist(tree))
+    #     fintree = self.karoo_tree_from_only_labellist(self.tree_MTC_simon_labels)
+    #     tree_sym = tree_evolve_reduce(fintree, self.env_bundle)
+    #     print(tree_get_labellist(fintree))
     #     print(tree_get_labellist(tree_sym))
     #     return
 
@@ -59,10 +59,10 @@ class TestHelpers:
         #                'cartPos', '~', '2.0', '<=', 'Andb',
         #                '0.1', '22.5', '~', '<', 'False',
         #                'cartVel', 'cartVel', '~', '0.0374348335']
-        # tree = self.karoo_tree_from_only_labellist(tree_labels)
-        # forest_viz = latex_tree_get_forest(tree, tight_viz=False)
+        # fintree = self.karoo_tree_from_only_labellist(tree_labels)
+        # forest_viz = latex_tree_get_forest(fintree, tight_viz=False)
         # print(forest_viz)
-        # tight_viz = latex_tree_get_forest(tree)
+        # tight_viz = latex_tree_get_forest(fintree)
         # print(tight_viz)
 
     def ptree_vs_karoo(self):

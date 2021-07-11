@@ -21,7 +21,7 @@ def latex_treeviz_full_document(tex_input, doc_border=',border=5pt'):
         tex_body = tex_input
 
     latex_newcommand_forest = '\\newcommand{\\plforest}[1]{{\\begin{forest}   ' \
-                       'for tree={child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20},   ' \
+                       'for fintree={child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20},   ' \
                        'terminal/.style={rectangle,},   ' \
                        'fixnode/.style={fill=blue!60,},   ' \
                        'observation/.style={rectangle,},   ' \

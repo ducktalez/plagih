@@ -109,20 +109,20 @@ class TreeBuilder:
                              lambda: random.randint(1, 20)],  # 0 has actually no purpose (except as being an action)
                      bool: [lambda: random.choice([True, False])]}  # todo
 
-    def __init__(self, obs_names, conf=None, operator_pool=None, root_xtype=float, csv_data_samples=None, precision=6):
+    def __init__(self, obs_names, conf, operator_pool=None, root_xtype=float, csv_data_samples=None, precision=6):
         self.operators_add(operator_pool)
         self.constants_add()
         self.observations_add(obs_names)
         self.root_xtype = root_xtype
         self.precision = precision
-        if conf:
-            self.tree_depth_max = conf.tree_depth_max
-            self.parsimony_max = conf.parsimony_max
-            self.print_type = conf.print_type
-        else:
-            self.tree_depth_max = 10
-            self.parsimony_max = 50
-            self.print_type = None
+        # if conf:
+        self.tree_depth_max = conf.tree_depth_max
+        self.parsimony_max = conf.parsimony_max
+        self.print_type = conf.print_type
+        # else:
+        #     self.tree_depth_max = 10
+        #     self.parsimony_max = 50
+        #     self.print_type = None
 
             # class ChooseOperators(Selectable):
 

@@ -37,7 +37,7 @@ class ExplainableGP:
         kernel = RegressionKernel(path_data_csv,
                                   conf)  # sfeh relative to rootdir? -> nah -> some absolute path... discussion
         self.kernel = kernel
-        tb = TreeBuilder(kernel.obs_names, root_xtype=float)
+        tb = TreeBuilder(kernel.obs_names, self.conf, root_xtype=float)
         self.origin = OriginTree(kernel, path_origin=path_origin)
         # self.evolve_loop = EvolutionLoop()
         self.rootdir = rootdir
@@ -1052,7 +1052,7 @@ class ExplainableGP:
                               print_type=self.conf.print_type)
                 return  # sfeh:print
             except Exception as ex:
-                print_warning('ww', f'Could not append fintree to population because: {ex}\n'
+                print_warning('www', f'Could not append fintree to population because: {ex}\n'
                                      f'=>fintree: {evotree}', print_type=self.conf.print_type)
                 # print_warning('w', f'fintree failed the quick check. last-mod: {self.meta.last_evolution}. Reason:\n{ex}', print_type=self.print_type)
                 return
@@ -1350,5 +1350,5 @@ if __name__ == '__main__':
 
     # nstr = "['Ifte', ['<', ['*', [2.85], ['cartVel']], ['Square', ['cartVel']]], ['*', ['cartPos'], ['*', ['cartPos'], [0.014]]], ['/', [2.0], ['cartPos']]]"
     # nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
-    nstr = '["+:fix",["-:fix",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
+    nstr = '["+:fix",["-:fix",["Ifte",["True"],["sin",["2"]],["/",["2.043"],["4"]]],["cartVel"]],["-1.3"]]'
     tree = tree_from_nested_string(nstr)

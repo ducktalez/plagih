@@ -62,12 +62,12 @@ def ast_expr_to(node, tensors=None, build=None):
             return [node.n]
         else:
             try:
-                shape = tensors[list(tensors.keys())[0]].get_shape()  # todo todotodo
+                shape = tensors[list(tensors.keys())[0]].get_shape()  # todo
                 return tensorflow.constant(node.n, dtype=tensorflow.float32, shape=shape)  # , shape=shape
                 # ^ValueError: Shapes must be equal rank, but are 0 and 1 for 'Select_1' (op: 'Select') with input shapes
                 # => sfeh: in some tf-versions, the constants have to match their shape. data has shape [3423, 0]
                 # constants have shape []
-            except:
+            except Exception as ex:
                 return tensorflow.constant(node.n, dtype=tensorflow.float32)  # , shape=shape
                 # # ^Problem occurs, when no real constants/variables are in the tree
                 # # Could not append fintree to population because: eval-ex: list index out of range

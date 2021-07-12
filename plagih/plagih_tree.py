@@ -145,6 +145,9 @@ class Node:
     def get_xtype(self):
         return self.label.xtype
 
+    def get_xtype_in(self):
+        return self.label.xtype[0]
+
     def get_xtype_out(self):
         return self.label.xtype[1]
 

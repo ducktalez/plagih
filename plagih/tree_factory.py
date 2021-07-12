@@ -559,38 +559,33 @@ class TreeBuilder:
             todo ...and if origin is fix?
             sfeh:idea mutate only the childs of a node! The label stays the same
             """
-            # todo todotodo this is the main source for faulty runs
             evotree = origin.origin_tree_copy()
             todotree = copy.deepcopy(evotree)
 
-            layer0_nodes = evotree.get_nodes_at_depth(0, allow_fixed=False, expand_depth=True)  # todo:debug
-            print('DDD', [l.get_label() for l in layer0_nodes])
+            layer0_nodes = evotree.get_nodes_at_depth(0, allow_fixed=False, expand_depth=True)
             # layer0_nodes = evotree.eval_mutatable_nodes(...)  # delete this
 
-            if '_depth' in size_mode:
-                # todo the depth is annoying in fixed trees
+            if '_depth' in size_mode:  # "tree_depth"
+                # todo:debug
                 build_depth = choose_build_size(size_mode, mean_min_max_var, force='branch')
                 for ii, node0 in enumerate(layer0_nodes):  # pareto_insert branches! get layer every time (node ids might have changed)
                     todo = node0.eval_mutatable_nodes()
                     lvl0_node = np.random.choice(todo)  # layer0_branch =
                     # branch_size = layer0_nodes[ii]  # sfeh:idea + len(lvl0_node)
-                    new_subbranch = self.invent_core_depth(node0.get_xtype_out(), build_depth, p_full, depth=lvl0_node.depth)
+                    new_subbranch = self.invent_core_depth(lvl0_node.get_xtype_out(), build_depth, p_full, depth=lvl0_node.depth)
                     lvl0_node.replace_with_branch(new_subbranch)
 
-            elif '_nodes' in size_mode:
-                # todo:debug
+            elif '_nodes' in size_mode:  # "tree_nodes"
                 build_amount = choose_build_size(size_mode, mean_min_max_var, force='branch')
                 layer0_splits = randomly_split_range(build_amount, len(layer0_nodes))
 
                 for ii, node0 in enumerate(layer0_nodes):  # pareto_insert branches! get layer every time (node ids might have changed)
                     lvl0_node = np.random.choice(node0.eval_mutatable_nodes())  # layer0_branch =
                     # branch_size = layer0_nodes[ii]  # sfeh:idea + len(lvl0_node)
-                    new_subbranch = self.invent_core_nodeops(node0.get_xtype_out(), layer0_splits[ii], p_full, depth=lvl0_node.depth)
+                    new_subbranch = self.invent_core_nodeops(lvl0_node.get_xtype_out(), layer0_splits[ii], p_full, depth=lvl0_node.depth)
                     lvl0_node.replace_with_branch(new_subbranch)
             else:
                 raise
-
-            print('ASDAdasfsdfgdrfSD', len(todotree), len(evotree), todotree, evotree)
 
         else:
             build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')  # depth, in this case

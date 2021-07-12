@@ -72,7 +72,7 @@ def print_warning(message_type, text, print_type=None):
         else:
             print(f'{BColors.WARNING}Warning ({message_type}): {text}{BColors.RESET}')  # only "Warning" yellow
     except Exception as ex:
-        print_warning('w', f'Could not print warning: {ex}')
+        print_warning('w', f'Could not print warning: {ex}', print_type=print_type)
     return
 
 

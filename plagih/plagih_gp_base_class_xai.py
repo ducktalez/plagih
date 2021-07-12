@@ -34,7 +34,8 @@ class ExplainableGP:
         self.conf = conf
         self.develop = args.develop  # more testing and stuff during development phase
         self.time_start = time.perf_counter()
-        kernel = RegressionKernel(path_data_csv, conf)  # sfeh relative to rootdir? -> nah -> some absolute path... discussion
+        kernel = RegressionKernel(path_data_csv,
+                                  conf)  # sfeh relative to rootdir? -> nah -> some absolute path... discussion
         self.kernel = kernel
         tb = TreeBuilder(kernel.obs_names, root_xtype=float)
         self.origin = OriginTree(kernel, path_origin=path_origin)
@@ -75,22 +76,33 @@ class ExplainableGP:
         evolve_loop = {
             # Reproduction (10%)
             'Repro': {'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.09, 'custom_params': {}},
-            'Rsympy': {'evolve_name': 'reproduce', 'evolve_rate': 0.00, 'custom_params': {'simplify': True}},  # sfeh 0.03
+            'Rsympy': {'evolve_name': 'reproduce', 'evolve_rate': 0.00, 'custom_params': {'simplify': True}},
+            # sfeh 0.03
             'Pareto': {'evolve_name': 'revive paretofront', 'evolve_rate': 0.01, 'custom_params': {}},
 
             # Mutation (25%)
             'Point': {'evolve_name': 'mutate point', 'evolve_rate': 0.05, 'custom_params': {}},
 
             'BranchDF': {'evolve_name': 'mutate branch', 'evolve_rate': 0.00,
-                         'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 4, 0.8), 'p_full': 1.0}}},
+                         'custom_params': {
+                             'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 4, 0.8),
+                                            'p_full': 1.0}}},
             'BranchDG': {'evolve_name': 'mutate branch', 'evolve_rate': 0.00,
-                         'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 5, 1), 'p_full': 0.5}}},
+                         'custom_params': {
+                             'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 5, 1),
+                                            'p_full': 0.5}}},
             'BranchNF': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                         'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 12, 3), 'p_full': 1.0}}},
+                         'custom_params': {
+                             'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 12, 3),
+                                            'p_full': 1.0}}},
             'BranchNG': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                         'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 12, 3), 'p_full': 0.5}}},
+                         'custom_params': {
+                             'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 12, 3),
+                                            'p_full': 0.5}}},
             'BranchShrink': {'evolve_name': 'mutate branch', 'evolve_rate': 0.0,
-                             'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (1, 1, 1, 0), 'p_full': 0.5}}},
+                             'custom_params': {
+                                 'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (1, 1, 1, 0),
+                                                'p_full': 0.5}}},
 
             'FilterBO': {'evolve_name': 'filter optimize', 'evolve_rate': 0.05, 'tourn_size': 5,
                          'custom_params': {'filter_mode': 'branch', 'filter_observations': True}},
@@ -106,29 +118,41 @@ class ExplainableGP:
 
             # Random (25%)
             'Rand1': {'evolve_name': 'random trees', 'evolve_rate': 0.05,
-                      'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 3, 4, 1), 'p_full': 1.0}}},
+                      'custom_params': {
+                          'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 3, 4, 1), 'p_full': 1.0}}},
             'Rand2': {'evolve_name': 'random trees', 'evolve_rate': 0.00,
-                      'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1), 'p_full': 0.5}}},
+                      'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1),
+                                                       'p_full': 0.5}}},
             'Rand3': {'evolve_name': 'random trees', 'evolve_rate': 0.15,
-                      'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 3, None, 5), 'p_full': 0.5}}},
+                      'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 3, None, 5),
+                                                       'p_full': 0.5}}},
             'Rand4': {'evolve_name': 'random trees', 'evolve_rate': 0.15,
-                      'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 3, None, 5), 'p_full': 1.0}}},  # param 'max' can be None
+                      'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 3, None, 5),
+                                                       'p_full': 1.0}}},  # param 'max' can be None
         }
         self.evolve_loop = self.evolve_safety_update(evolve_loop)
 
         if self.origin.origin_is_fix:
             evolve_random = {'Rand3o': {'evolve_name': 'random trees', 'evolve_rate': 1.00,
-                                        'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 3, None, 4), 'p_full': 1.0}}}}
+                                        'custom_params': {'build_spec': {'size_mode': 'branch_nodes',
+                                                                         'mean_min_max_var': (10, 3, None, 4),
+                                                                         'p_full': 1.0}}}}
         else:
             # try:  # sfeh still not sure about this
             #     evolve_random = self.evolve_list_random['from_scratch']
             # except:
             evolve_random = {'Rand1': {'evolve_name': 'random trees', 'evolve_rate': 0.30,
-                                       'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (3.5, 2, 5, 1), 'p_full': 1.0}}},
+                                       'custom_params': {
+                                           'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (3.5, 2, 5, 1),
+                                                          'p_full': 1.0}}},
                              'Rand2': {'evolve_name': 'random trees', 'evolve_rate': 0.30,
-                                       'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 2, 6, 1), 'p_full': 0.5}}},
+                                       'custom_params': {
+                                           'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 2, 6, 1),
+                                                          'p_full': 0.5}}},
                              'Rand3': {'evolve_name': 'random trees', 'evolve_rate': 0.40,
-                                       'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 3, None, 5), 'p_full': 1.0}}}
+                                       'custom_params': {'build_spec': {'size_mode': 'tree_nodes',
+                                                                        'mean_min_max_var': (12, 3, None, 5),
+                                                                        'p_full': 1.0}}}
                              }
         self.evolve_random = self.evolve_safety_update(evolve_random)
 
@@ -220,7 +244,8 @@ class ExplainableGP:
         Save all the paretofront candidates to a file.
         (Quick feedback that requires little overhead)
         """
-        return [f'Parsimony: \t{parsim} MeanError: \t{fitness} Expr: \t{tree.meta.expr_raw}' for (parsim, fitness, tree) in self.paretofront]
+        return [f'Parsimony: \t{parsim} MeanError: \t{fitness} Expr: \t{tree.meta.expr_raw}' for (parsim, fitness, tree)
+                in self.paretofront]
 
     # def update_pareto_with_tree(self, fintree: FinalizedTree):
     #     """
@@ -248,7 +273,7 @@ class ExplainableGP:
         """
         # todo sorting with x.get_fitness OnLY when fitness has "<" relation. otherwise: -x.get_fitness
         fitness_sign = self.kernel.fitness_sign
-        pop_list = sorted(pop_list, key=lambda x: (x.get_parsimony(), fitness_sign*x.get_fitness()))
+        pop_list = sorted(pop_list, key=lambda x: (x.get_parsimony(), fitness_sign * x.get_fitness()))
 
         try:
             best = pop_list[0]
@@ -283,7 +308,8 @@ class ExplainableGP:
 
         if len(self.paretofront) == 0:
             firstpareto = pop_parcandidates[0]
-            self.printpl('a', f'Starting a new paretofront with parsimony: {firstpareto.get_parsimony()} fitness: {firstpareto.get_fitness():6.4f}')
+            self.printpl('a',
+                         f'Starting a new paretofront with parsimony: {firstpareto.get_parsimony()} fitness: {firstpareto.get_fitness():6.4f}')
             self.paretofront.append(firstpareto)
 
         for fintree in pop_parcandidates:
@@ -812,14 +838,17 @@ class ExplainableGP:
                                                                                          tree_depth_max=self.conf.tree_depth_max,
                                                                                          parsimony_max=self.conf.parsimony_max)
                     evotree = self.selection_tournament(tourn_size=tourn_size)
-                    build_size = choose_build_size(size_mode, mean_min_max_var, tree=evotree, force='branch')  # sfeh:test options, depth, in this case
+                    build_size = choose_build_size(size_mode, mean_min_max_var, tree=evotree,
+                                                   force='branch')  # sfeh:test options, depth, in this case
 
                     if size_mode == 'branch_depth':
                         raise  # todo
-                        evotree = self.tb.evolve_mutate_branch_depth(evotree, build_size, p_full=p_full)  # sfeh , full_or_grow=full_or_grow), size_mode=size_mode
+                        evotree = self.tb.evolve_mutate_branch_depth(evotree, build_size,
+                                                                     p_full=p_full)  # sfeh , full_or_grow=full_or_grow), size_mode=size_mode
 
                     elif size_mode == 'branch_nodes':
-                        evotree = self.tb.evolve_mutate_branch_nodes(evotree, build_size, p_full=p_full)  # sfeh , full_or_grow=full_or_grow), size_mode=size_mode
+                        evotree = self.tb.evolve_mutate_branch_nodes(evotree, build_size,
+                                                                     p_full=p_full)  # sfeh , full_or_grow=full_or_grow), size_mode=size_mode
                     else:
                         raise
 
@@ -846,7 +875,8 @@ class ExplainableGP:
                         self.pop_append_evotree(atree, tag=tag)
                         self.pop_append_evotree(btree, tag=tag)
                     except Exception as ex:
-                        print_warning('www', f'SFEH: Root only a root node? {ex}, atree: {atree}')  # sfeh
+                        print_warning('www', f'SFEH: Root only a root node? {ex}, atree: {atree}',
+                                      print_type=print_type)  # sfeh
 
             elif evolve_name == 'filter optimize':
 
@@ -985,7 +1015,8 @@ class ExplainableGP:
                                                  'time': gen_time,
                                                  'gens_since_last_pareto': self.gens_since_last_pareto}  # sfeh version1 delete this shit
 
-        self.printpl('gg', f'Created {len(popul)}/{self.conf.pop_max} ({unique_tree_count} unique) in generation {self.conf.gen_id}. Gen took {gen_time:4.2f}s')
+        self.printpl('gg',
+                     f'Created {len(popul)}/{self.conf.pop_max} ({unique_tree_count} unique) in generation {self.conf.gen_id}. Gen took {gen_time:4.2f}s')
         return
 
     def selection_tournament(self, tourn_size=3):
@@ -993,7 +1024,8 @@ class ExplainableGP:
 
         """
         tree_list = [np.random.choice(self.pop_base) for _ in range(tourn_size)]
-        fintree: 'FinalizedTree' = self.kernel.get_fitness_extreme_function(tree_list, key=lambda tree: tree.get_fitness())
+        fintree: 'FinalizedTree' = self.kernel.get_fitness_extreme_function(tree_list,
+                                                                            key=lambda tree: tree.get_fitness())
         evotree = fintree.get_evotree()
         return copy.deepcopy(evotree)  # sfeh deepcopy not required if it is copied later
 
@@ -1016,10 +1048,12 @@ class ExplainableGP:
             try:
                 meta = self.finalize_tree_get_meta(evotree)
             except ValueError as ex:
-                logging.warning(f'Could not append fintree to population because: {ex}')
+                print_warning('wwww', f'Could not append fintree to population because: {ex}',
+                              print_type=self.conf.print_type)
                 return  # sfeh:print
             except Exception as ex:
-                logging.warning(f'Could not append fintree to population because: {ex}\n=>fintree: {evotree}')
+                print_warning('ww', f'Could not append fintree to population because: {ex}\n'
+                                     f'=>fintree: {evotree}', print_type=self.conf.print_type)
                 # print_warning('w', f'fintree failed the quick check. last-mod: {self.meta.last_evolution}. Reason:\n{ex}', print_type=self.print_type)
                 return
 
@@ -1033,7 +1067,8 @@ class ExplainableGP:
         sfeh den shit in Funktionen aufteilen
         """
         with plt.rc_context(rc={'axes.grid': True}):
-            fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]}, sharex='all')  # , figsize=(9, 9)
+            fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]},
+                                    sharex='all')  # , figsize=(9, 9)
             plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
             xx = list(self.monitor_df.index)
 
@@ -1043,22 +1078,27 @@ class ExplainableGP:
             try:
                 avg = self.monitor_df['fit_avg']
                 std = self.monitor_df['fit_var']
-                axs0.fill_between(xx, avg - std, avg + std, alpha=0.2)  # axs0.set_title('Regression Error (average)')  # sfeh not stderr... upper/lower bound?
+                axs0.fill_between(xx, avg - std, avg + std,
+                                  alpha=0.2)  # axs0.set_title('Regression Error (average)')  # sfeh not stderr... upper/lower bound?
             except Exception as ex:
                 raise Exception(f'Delete this. were there any problems? {ex}')
             # sfeh: the best candidate is the best one in the current population. discussion: best overall?
-            axs0.step(x=xx, y=self.monitor_df['fit_best'], linestyle='dashed', marker='', where='post', color='g', label='Best candidate')  # , label=ax_label
+            axs0.step(x=xx, y=self.monitor_df['fit_best'], linestyle='dashed', marker='', where='post', color='g',
+                      label='Best candidate')  # , label=ax_label
             axs0.set_ylim(ymin=0), axs0.legend(loc='lower left')  # , shadow=True
 
             axs0_twin = axs0.twinx()
-            axs0_twin.plot(xx, self.monitor_df['gens_since_last_pareto'], color='tab:gray', label='Generations since last paretofront entry', linestyle='dashed', marker='')  # linestyle='None'
+            axs0_twin.plot(xx, self.monitor_df['gens_since_last_pareto'], color='tab:gray',
+                           label='Generations since last paretofront entry', linestyle='dashed',
+                           marker='')  # linestyle='None'
             axs0_twin.tick_params(axis='y', labelcolor='tab:gray')
             try:
                 axs0_twin.set_ylim(ymin=0, ymax=max(self.monitor_df['gens_since_last_pareto'].max() or 1, 50))
             except Exception as ex:
                 try:
                     print_e(f'damn setting ylim not working sfeh :s {ex}')
-                    axs0_twin.set_ylim(ymin=0, ymax=max(self.monitor_df['gens_since_last_pareto'].notnull().max() or 1, 50))
+                    axs0_twin.set_ylim(ymin=0,
+                                       ymax=max(self.monitor_df['gens_since_last_pareto'].notnull().max() or 1, 50))
                     # print(self.monitor_df['gens_since_last_pareto'].notnull().max())
                 except Exception as ex2:
                     print_e(f'damn setting ylim not working, version 2! {ex2}')
@@ -1189,7 +1229,8 @@ class ExplainableGP:
         try:
             expr_sym = expr_sympify(expr_raw)
         except ValueError as ex:
-            print_warning('wwww', f'Exception while evaluating: {ex}, fintree: {evotree}.', print_type=self.conf.print_type)
+            print_warning('wwww', f'Exception while evaluating: {ex}, fintree: {evotree}.',
+                          print_type=self.conf.print_type)
             raise ValueError(ex)
 
         treeobs = evotree.get_observation_list()
@@ -1211,7 +1252,8 @@ class ExplainableGP:
         if gen_additionally:
             printdummy = copy.deepcopy(self.conf.gen_max)
             self.conf.gen_max = max(self.conf.gen_max, self.conf.gen_id + gen_additionally)
-            self.printpl('i', f'Adding {gen_additionally} more generations in gen {self.conf.gen_id}, increasing gen_max from {printdummy} to {self.conf.gen_max}.')
+            self.printpl('i',
+                         f'Adding {gen_additionally} more generations in gen {self.conf.gen_id}, increasing gen_max from {printdummy} to {self.conf.gen_max}.')
 
         # sfeh check if any roots
         # yaml_dump(self.rootdir / 'used_config.yaml', self.conf, print_type=self.print_type)
@@ -1251,11 +1293,13 @@ class ExplainableGP:
             # ================= #
 
             self.pass_population()
-            self.printpl('ggg', f'Generation {self.conf.gen_id} took a total time of: {time.perf_counter() - self.time_genstart:4.2f}.')
+            self.printpl('ggg',
+                         f'Generation {self.conf.gen_id} took a total time of: {time.perf_counter() - self.time_genstart:4.2f}.')
             self.scheduled_io()
             self.conf.gen_id += 1
         else:
-            self.printpl('g', f'Done after Generation {self.conf.gen_id}.\nTime since start: {time.perf_counter() - self.time_start:4.2f}s')
+            self.printpl('g',
+                         f'Done after Generation {self.conf.gen_id}.\nTime since start: {time.perf_counter() - self.time_start:4.2f}s')
 
         self.backup_save()
 

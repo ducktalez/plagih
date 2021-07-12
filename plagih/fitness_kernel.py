@@ -61,8 +61,17 @@ def ast_expr_to(node, tensors=None, build=None):
         if build:
             return [node.n]
         else:
-            # shape = tensors[list(tensors.keys())[0]].get_shape()
-            return tensorflow.constant(node.n, dtype=tensorflow.float32)  # , shape=shape
+            try:
+                shape = tensors[list(tensors.keys())[0]].get_shape()  # todo todotodo
+                return tensorflow.constant(node.n, dtype=tensorflow.float32, shape=shape)  # , shape=shape
+                # ^ValueError: Shapes must be equal rank, but are 0 and 1 for 'Select_1' (op: 'Select') with input shapes
+                # => sfeh: in some tf-versions, the constants have to match their shape. data has shape [3423, 0]
+                # constants have shape []
+            except:
+                return tensorflow.constant(node.n, dtype=tensorflow.float32)  # , shape=shape
+                # # ^Problem occurs, when no real constants/variables are in the tree
+                # # Could not append fintree to population because: eval-ex: list index out of range
+                # #   =>fintree: [Ifte, [<, [0.0], [0.0]], [0.0], [2.0]]
 
     elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
         if build:
@@ -165,7 +174,7 @@ def ast_chain_bool(values, operation, tensors=None, build=False):
             return x
 
 
-def ast_chain_compare(comparators, node_ops, tensors=None, build=False):
+def ast_chain_compare(comparators, ops, tensors=None, build=False):
     """
     Chains a sequence of comparison operations (e.g. 'a > b < c') into a single TensorFlow (TF) sub graph.
 
@@ -175,12 +184,12 @@ def ast_chain_compare(comparators, node_ops, tensors=None, build=False):
 
     if len(comparators) > 2:
         print_e('This is usually not used, and-concatenation of multiple chain compares. sfeh, bring this back?')
-        return tensorflow.logical_and(op_dict[type(node_ops[0])].tflow(x, y), ast_chain_compare(comparators[1:], node_ops[1:], tensors=tensors))
+        return tensorflow.logical_and(op_dict[type(ops[0])].tflow(x, y), ast_chain_compare(comparators[1:], ops[1:], tensors=tensors))
     else:
         if build:
-            return [op_dict[type(node_ops[0])].nlabel, [x, y]]
+            return [op_dict[type(ops[0])].nlabel, [x, y]]
         else:
-            return op_dict[type(node_ops[0])].tflow(x, y)
+            return op_dict[type(ops[0])].tflow(x, y)
 
 
 def labels_from_nestedexpr(labels_nested_list, result_accum):
@@ -217,7 +226,7 @@ def ast_convert_from_expr(expr, tensors=None, build=None):
     try:
         ast_tree = ast.parse(expr, mode='eval').body
         graph = ast_expr_to(ast_tree, tensors=tensors, build=build)
-    except:
+    except Exception as ex:
         # todo debug/remove
         ast_tree = ast.parse(expr, mode='eval').body
         graph = ast_expr_to(ast_tree, tensors=tensors, build=build)

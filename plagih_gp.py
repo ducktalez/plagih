@@ -39,6 +39,7 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-analyze', '-analyse', '-analysis', action='store_true', default=None, help='Analyze a loaded run.')
     parser.add_argument('-force_new_run', action='store_true', help='Shortcut for forcing a new run (->developing)')
     parser.add_argument('-print_all', '-debug', '-verbose', action='store_true', help='Print all debug prints (very verbose and helps debugging)')
+    parser.add_argument('-print_type', type=str, help='Specifying the print type verbosity')
     parser.add_argument('-pop_kill', action='store_true', help="Kills/deletes the current population, but keeps the paretofront")
     parser.add_argument('-testrun', action='store_true', help='SFEH (not used yet): Start a large test run. no origin (scratch) -> restart -> paretoentry as origin, new run -> restart -> analyze')
     parser.add_argument('-slurm_runs_folder', type=str, default='slurm_runs', help='sfeh for fore than one version of the same run')

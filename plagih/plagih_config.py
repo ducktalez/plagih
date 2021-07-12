@@ -16,13 +16,13 @@ class Config:
         !!! switching between systems is worse than HitlerAIDS !!!
         """
         self.pl_version = 1.1  # must only update if vital changes were made, version important when loading old run
-        self.gen_id = 0  # sfeh:discussion
+        self.gen_id = 0
         self.name = args.prepared_run or None  # sfeh
 
         try:
             with Path.open(args.load_config, 'r') as file:
                 conf = yaml.load(file, Loader=yaml.FullLoader)
-        except:
+        except Exception as ex:
             conf = {}
         print_everything = 'wwwwaaaggggiiiff'
         self.print_type = print_everything if args.print_all else conf.get('print_type', 'wwaaggiiff')  # (a)lert~pareto, (w)arning, (g)en, (i)nfo, (f)ile written

@@ -12,10 +12,7 @@ sfeh: use function-types (-> 'kommuttative'?)
 
 """
 
-from plagih.fitness_kernel import *
-from plagih.tree_factory import *
 from plagih.node_labels import *
-from plagih.sympy_extras import expr_sympify
 from plagih.tree_distances.tree_edit_distance import apted_distance
 
 from dataclasses import dataclass
@@ -282,13 +279,23 @@ class Node:
         else:
             raise Exception(f'Complexity measurement not available: {complexity_measure}')
 
+    def repair_depth(self, depth=0):
+        """
+        aka set_depth recursively for all nodes in a branch
+        """
+        self.depth = depth
+        for cc in self.childs:
+            cc.repair_depth(depth=depth+1)
+
     def replace_with_branch(self, new_node: 'Node'):
         """
         was: new_core
         """
         self.set_label(new_node.get_label())
         self.childs = new_node.childs or []  # maybe must be updated recursively
-        # todo:check if depth is set. especially with crossover! problems between different systems...
+
+        # todo:debug if depth is set. especially with crossover! problems between different systems...
+        self.repair_depth(self.depth)
         # self.is_fix = new_node.is_fix  # debatable
 
     def eval_mutatable_nodes(self, xtype_out=None, allow_root=True):
@@ -298,7 +305,7 @@ class Node:
         """
         node_list = []
         if not self.is_fix:
-            if (xtype_out is None or xtype_out == self.get_xtype()[1]) and (allow_root or not self.is_root()):
+            if (xtype_out is None or xtype_out == self.get_xtype_out()) and (allow_root or not self.is_root()):
                 # crossover requires excluding types that are not matching, and excludes the root node
                 node_list.append(self)
 
@@ -343,15 +350,15 @@ class Node:
             print_e(f'FFS Trees just become larger? {self.get_nlabel()}')
         # self.meta.clear()
 
-    def finalize_set_nodepath(self, nodepath):
-        """
-        [0,2,1,0,0]
-        ==>ROOT
-        """
-        self.nodepath = nodepath
-        for ii, child in enumerate(self.childs):
-            nodepath_child = nodepath + [ii]
-            child.finalize_set_nodepath(nodepath_child)
+    # def finalize_set_nodepath(self, nodepath):
+    #     """
+    #     [0,2,1,0,0]
+    #     ==>ROOT
+    #     """
+    #     self.nodepath = nodepath
+    #     for ii, child in enumerate(self.childs):
+    #         nodepath_child = nodepath + [ii]
+    #         child.finalize_set_nodepath(nodepath_child)
 
     def finalize_set_depth(self, depth=0, recursive=True):
         """

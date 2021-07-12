@@ -2,9 +2,10 @@
 Functions, that might be addable in the future:
 """
 from plagih.util import *
+from plagih.fitness_kernel import *
+from plagih.sympy_extras import expr_sympify
 
 from plagih.tree_factory import *
-from plagih.viz_with_latex import *
 import copy
 from pathlib import Path
 
@@ -328,12 +329,13 @@ class ExplainableGP:
                 # optional: print now deprecated entries in the paretofront
 
             for p in self.paretofront:
+                # better fitness at a comparatively good
                 if self.kernel.fitness_compare(fit, p.get_fitness()) and par <= p.get_parsimony():
-                    self.printpl('a', f'Paretofront: New entry. parsimony: {par} fitness: {fit:6.4f}')
                     # self.paretofront.remove(p)  # sfeh: remove in the other cases aswell or not at all
                     success = True
 
             if success:
+                self.printpl('a', f'Paretofront: New entry. parsimony: {par} fitness: {fit:6.4f}')
                 self.pareto_append_clean(fintree)
                 # self.printpl('a', f"New entry found! {BColors.RESET}{fintree.get_parsimony()}, {fintree.get_fitness()}:{BColors.RESET} {fintree.meta.expr_raw}")
 
@@ -838,16 +840,13 @@ class ExplainableGP:
                                                                                          tree_depth_max=self.conf.tree_depth_max,
                                                                                          parsimony_max=self.conf.parsimony_max)
                     evotree = self.selection_tournament(tourn_size=tourn_size)
-                    build_size = choose_build_size(size_mode, mean_min_max_var, tree=evotree,
-                                                   force='branch')  # sfeh:test options, depth, in this case
+                    build_size = choose_build_size(size_mode, mean_min_max_var, tree=evotree, force='branch')  # sfeh:test options, depth, in this case
 
                     if size_mode == 'branch_depth':
-                        evotree = self.tb.evolve_mutate_branch_depth(evotree, build_size,
-                                                                     p_full=p_full)
+                        evotree = self.tb.evolve_mutate_branch_depth(evotree, build_size, p_full=p_full)
 
                     elif size_mode == 'branch_nodes':
-                        evotree = self.tb.evolve_mutate_branch_nodes(evotree, build_size,
-                                                                     p_full=p_full)
+                        evotree = self.tb.evolve_mutate_branch_nodes(evotree, build_size, p_full=p_full)
                     else:
                         raise
 
@@ -874,8 +873,7 @@ class ExplainableGP:
                         self.pop_append_evotree(atree, tag=tag)
                         self.pop_append_evotree(btree, tag=tag)
                     except Exception as ex:
-                        print_warning('www', f'SFEH: Root only a root node? {ex}, atree: {atree}',
-                                      print_type='SFEHwww')  # sfeh
+                        pass
 
             elif evolve_name == 'filter optimize':
 
@@ -1147,10 +1145,10 @@ class ExplainableGP:
         yaml_dump(path_backup_yaml, self.conf, print_type=self.conf.print_type)
 
         # {} is the help_dict; include this, even if empty, to store/load successfully after future updates
-        run_backup_data = {}, self.pop_base, self.paretofront, self.monitor_df  # sfeh use this later, help_dict
+        run_backup_data = {}, self.conf.gen_id, self.pop_base, self.paretofront, self.monitor_df  # sfeh use this later, help_dict
         path_backup = path_make_dir(self.rootdir / 'backup/backup.pkl')
         pickle_dump(path_backup, run_backup_data)
-
+        # todo debug
         return
 
     def backup_load(self, argpath_backup):
@@ -1165,13 +1163,12 @@ class ExplainableGP:
             try:
                 with Path.open(path_backup, 'rb') as file:
                     run_data = pickle.load(file)
-
             except NotImplementedError as ex:
                 raise Exception(f'NotImplementedError: {ex}')
             except EOFError as ex:
                 raise Exception(f'EOFError: \n{ex}')
 
-            help_dict, self.pop_base, self.paretofront, self.monitor_df = run_data  # sfeh use a helping dictt a_helping_dict is used for a useable sldifjsdfsdfg , a_helping_dict
+            help_dict, self.conf.gen_id, self.pop_base, self.paretofront, self.monitor_df = run_data  # sfeh use a helping dictt a_helping_dict is used for a useable sldifjsdfsdfg , a_helping_dict
             self.printpl('g', f'Successfully loaded backup file. Generation: {self.conf.gen_id}')
 
             # except Exception as ex:

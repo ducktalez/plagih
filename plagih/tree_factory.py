@@ -4,6 +4,7 @@ The factory to create trees
 
 from plagih.plagih_tree import *
 from plagih.node_labels import *
+from plagih.plagih_tree import Node
 from plagih.util import *
 
 import copy
@@ -47,8 +48,6 @@ def randomly_split_range(range_max, num_splits):
         sample_dist = [range_max]
 
     return sample_dist
-    # else:
-    #     return [range_max]
 
 
 def choose_build_size(size_mode, mean_min_max_var, tree=None, nodepath=None, force=None):
@@ -490,6 +489,10 @@ class TreeBuilder:
 
         anode.replace_with_branch(bnode)
         bnode.replace_with_branch(anode_copy)
+
+        # todo set depth correctly!
+        atree.repair_depth(depth=0)
+        btree.repair_depth(depth=0)
 
         atree = self.evolve_prune(evotree=atree)
         btree = self.evolve_prune(evotree=btree)

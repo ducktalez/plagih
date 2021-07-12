@@ -16,7 +16,7 @@ class Config:
         !!! switching between systems is worse than HitlerAIDS !!!
         """
         self.pl_version = 1.1  # must only update if vital changes were made, version important when loading old run
-        self.gen_id = 0  # todo
+        self.gen_id = 0  # sfeh:discussion
         self.name = args.prepared_run or None  # sfeh
 
         try:
@@ -36,7 +36,7 @@ class Config:
         self.parsimony_max = conf.get('parsimony_max', 50)
         self.tourn_size = int(conf.get('tourn_size', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
         self.dc = conf.get('dc', [])
-        self.period = conf.get('period', {'gen_plots': 25, 'gen_save': 25})  # sfeh 10 or 5 for debugging, something higher for actual runs
+        self.period = conf.get('period', {'gen_plots': 5, 'gen_save': 5})  # sfeh 10 or 5 for debugging, something higher for actual runs
 
         self.precision = args.pop_max or conf.get('precision', 6)  # makes the lut more practical - more hits are achieved. be careful with rounding to zero.  # sfeh check this
 
@@ -67,15 +67,6 @@ class Config:
         self.path_data_csv = args.path_data_csv or conf.get('path_data_csv', None)
         self.path_origin = args.path_origin or conf.get('path_origin', None)
 
-    def set_rootdir(self, rootdir: Path):
-        self.rootdir = rootdir
-
-    def absolute(self, path, make_dirs=False):
-        p = self.rootdir / path
-        if make_dirs and not p.parent.is_dir():
-            p.parent.mkdir(parents=True)
-        return p
-
     def load_prepared_run(self, prepared_run, slurm_runs_folder):
 
         def pathify(x):
@@ -94,9 +85,9 @@ class Config:
             rootdir = pathify(f'{slurm_runs_folder}/{prepared_run[:-2]}/{prepared_run}')
             path_data_csv = pathify('ib/gp_files/samples_prepared.csv')
             kernel_name = 'regression bounded'
-            ori_trees = {'s3m_0': 'ib/gp_files/ib_s3m_0.csv',
-                         's3m_1': 'ib/gp_files/ib_s3m_1.csv',
-                         's3m_2': 'ib/gp_files/ib_s3m_2.csv',
+            ori_trees = {'s3m_0': 'ib/gp_files/ib_s3m_0.txt',
+                         's3m_1': 'ib/gp_files/ib_s3m_1.txt',
+                         's3m_2': 'ib/gp_files/ib_s3m_2.txt',
                          'scratch': None}
             for k, v in ori_trees.items():
                 if k in prepared_run:

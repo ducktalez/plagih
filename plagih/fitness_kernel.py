@@ -1,14 +1,14 @@
-import ast
 from plagih.node_labels import op_dict
 
 import tensorflow
-import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
 from plagih.util import *
+import numpy as np
+import matplotlib.pyplot as plt
 from pathlib import Path
+import ast
 
 
 # def activate_dataset(path_data, action):
@@ -135,7 +135,7 @@ def ast_expr_to(node, tensors=None, build=None):
                 if len(node.args) == 1:
                     return [op_dict[node.func.id].nlabel,
                             [ast_expr_to(node.args[0], build=True)]]
-                    # return [op_dict[node.func.id],  # todo check: remove .nlabel?
+                    # return [op_dict[node.func.id],  # sfeh:check: remove .nlabel?
                     #         [ast_expr_to(node.args[0], build=True)]]
                 elif len(node.args) == 2:
                     return [op_dict[node.func.id].nlabel,

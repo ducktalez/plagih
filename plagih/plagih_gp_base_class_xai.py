@@ -97,7 +97,7 @@ class ExplainableGP:
                                             'p_full': 1.0}}},
             'BranchNG': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
                          'custom_params': {
-                             'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 12, 3),
+                             'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 15, 3),
                                             'p_full': 0.5}}},
             'BranchShrink': {'evolve_name': 'mutate branch', 'evolve_rate': 0.0,
                              'custom_params': {
@@ -271,7 +271,7 @@ class ExplainableGP:
         """
         sfeh check this!! op_next mostly has 2 pareto entries??
         """
-        # todo sorting with x.get_fitness OnLY when fitness has "<" relation. otherwise: -x.get_fitness
+        # sfeh:open:kernel sorting with x.get_fitness OnLY when fitness has "<" relation. (otherwise: -x.get_fitness)
         fitness_sign = self.kernel.fitness_sign
         pop_list = sorted(pop_list, key=lambda x: (x.get_parsimony(), fitness_sign * x.get_fitness()))
 
@@ -443,7 +443,7 @@ class ExplainableGP:
 
     def analyze_pareto(self, cpu_cores=16):  # sfeh 16 cores? nope
         """
-        todo
+        sfeh:open
         Writing all analysis files after evaluating the paretofront.
         (Currently strongly customized by sfeh for the mountaincar and industrial benchmark)
         """
@@ -628,8 +628,8 @@ class ExplainableGP:
     #
     #     pl_forest = lambda x: f'\\plforest{{{x}}}\n'
     #
-    #     forest_tree_full = None  # todo pl_forest(latex_brackettree(fintree))
-    #     forest_tree_tight = None  # todo pl_forest(latex_brackettree_tight(latex_tree_semitight(fintree)))
+    #     forest_tree_full = None  # pl_forest(latex_brackettree(fintree))
+    #     forest_tree_tight = None  # pl_forest(latex_brackettree_tight(latex_tree_semitight(fintree)))
     #     # sfeh workaround delete this
     #     tex_expr_raw = f'${fintree.export_visualization_latex()}$'  # sfeh dollars
     #     tex_expr_forest = pl_forest(f'[{tex_expr_raw}]')
@@ -842,13 +842,13 @@ class ExplainableGP:
                                                    force='branch')  # sfeh:test options, depth, in this case
 
                     if size_mode == 'branch_depth':
-                        raise  # todo
+                        # raise  # todo
                         evotree = self.tb.evolve_mutate_branch_depth(evotree, build_size,
-                                                                     p_full=p_full)  # sfeh , full_or_grow=full_or_grow), size_mode=size_mode
+                                                                     p_full=p_full)
 
                     elif size_mode == 'branch_nodes':
                         evotree = self.tb.evolve_mutate_branch_nodes(evotree, build_size,
-                                                                     p_full=p_full)  # sfeh , full_or_grow=full_or_grow), size_mode=size_mode
+                                                                     p_full=p_full)
                     else:
                         raise
 
@@ -876,13 +876,13 @@ class ExplainableGP:
                         self.pop_append_evotree(btree, tag=tag)
                     except Exception as ex:
                         print_warning('www', f'SFEH: Root only a root node? {ex}, atree: {atree}',
-                                      print_type=print_type)  # sfeh
+                                      print_type='SFEHwww')  # sfeh
 
             elif evolve_name == 'filter optimize':
 
                 for nn in range(evolve_num):
                     evotree = self.selection_tournament(tourn_size=tourn_size)
-                    evotree = self.tb.evolve_mutate_filter_random(evotree, custom_params)  # todo , custom_params
+                    evotree = self.tb.evolve_mutate_filter_random(evotree, custom_params)
                     self.pop_append_evotree(evotree, tag)
 
             elif evolve_name == 'revive paretofront':
@@ -1134,7 +1134,7 @@ class ExplainableGP:
             fig.tight_layout()
             fig.savefig(path_monitoring)
             self.printpl('f', f"monitoring: {path_monitoring.as_posix()}")
-            # plt.close('all')
+            plt.close('all')
 
     def backup_save(self):
         """
@@ -1337,7 +1337,7 @@ if __name__ == '__main__':
     """
     Alpha tests
     """
-    tb = TreeBuilder(obs_names=['cartPos', 'cartVel'])
+    tb = TreeBuilder(obs_names=['cartPos', 'cartVel'], conf=None)
     # t1 = tb.invent_core_depth(float, 3, p_full=0.5)
     # tree2 = tb.evolve_mutate_point(t1)
     # t1 = tb.invent_core_depth(float, 3, p_full=0.9)

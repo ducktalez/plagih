@@ -55,7 +55,7 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-path_data_csv', '-samples_csv', '-data_csv', type=str, help='rootdir->path of the data (.csv-file)')
     parser.add_argument('-path_origin', type=str)
     # paths: check if absolute path exists? separate absolute paths?
-    # todo take last column as action instead
+    # sfeh:open take last column as action instead
     # todo path/str contradiction... do not save real paths in config
     parser.add_argument('-less_files', action='store_true', help='Creating less files (e.g. no pareto analysis), "-analysis" trumps this command')
     parser.add_argument('-no_files', action='store_true', help='SFEH, unused. Create no files. dummy.')
@@ -63,7 +63,7 @@ def main():  # argv sys.argv[1:]
     args = parser.parse_args()
     conf = Config(args)  # Update the config with the possibly loaded input args
 
-    path_origin, path_data_csv = None, None  # todo
+    path_origin, path_data_csv = None, None  # sfeh:open
 
     if args.prepared_run:
         rootdir, path_origin, path_data_csv = conf.load_prepared_run(args.prepared_run, args.slurm_runs_folder)
@@ -123,8 +123,8 @@ def main():  # argv sys.argv[1:]
 
 if __name__ == "__main__":
     """
-    todo Ablauf:
-    1. Datensatz laden. (gefundene Observationen präsentieren, Aktion präsentieren)
+    GP Workflow:
+    1. Load (.csv) data. (gefundene Observationen präsentieren, Aktion präsentieren)
     2. Persönliche Anpassung des Entwicklers (z.B. andere Aktion, Verteilung, print verbosity, ...)
     3. Lauf starten
     """

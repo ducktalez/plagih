@@ -1,6 +1,6 @@
 def pause(menu_dict):
     """
-    todo
+    sfeh:open
     """
 
     options = ['', '?', 'help', 'i', 'm', 'g', 's', 'db', 'ts', 'min', 'bal', 'l', 'pop_list', 'e', 'p', 'id', 'dir', 'load', 'w', 'add', 'q']

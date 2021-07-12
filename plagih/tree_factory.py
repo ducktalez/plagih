@@ -403,9 +403,9 @@ class TreeBuilder:
         - filter with which filter?
         """
 
-        filter_mode = custom_params['filter_mode']
-        filter_observations = custom_params['filter_observations']
-        mutate_filter = 'gaussian_filter'  # sfeh:future
+        # filter_mode = custom_params['filter_mode']
+        # filter_observations = custom_params['filter_observations']
+        # mutate_filter = 'gaussian_filter'  # sfeh:future
 
         node = np.random.choice(evotree.eval_mutatable_nodes())
         node.evolve_mutate_filter_branch(precision=self.precision)

@@ -4,7 +4,8 @@ TODO. This read-me is outdated.
 
 ## name ideas
 - plagih: plausible genetic improvements
-- 
+- FamGP (Familiar GP)
+- AliciaGP
 ...is a genetic programming framework.
 
 compared to other gp frameworks, this one provides the opportunity to use human written code as basis for the gp-process.
@@ -19,10 +20,10 @@ Main features:
 - (example available)
 
 
-## Python 3.7 packages
+## Python 3.8 packages
 
-Anaconda 3.7 (2020.2) with conda packages. Some packages are only available in pip though.
-todo: save this as requirements
+I am using Anaconda. Some packages are only available in pip though.
+save this as requirements
 
 Conda packages:
 pathlib
@@ -45,7 +46,7 @@ pip install -U PyYaml
 
 
 ### Example run
-Run `start.py`
+Run `plagih_gp.py`
  
 This will automatically start the run in `/runs/example1_cartpole/`.
 

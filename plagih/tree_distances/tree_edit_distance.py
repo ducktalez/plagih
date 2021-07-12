@@ -70,8 +70,7 @@ def is_bool(x):
 
 # def weight_ted_mapping(mapping):
 #     """
-#     todo
-#     sfeh asd: make clear how this distance is meant to be used...
+#     sfeh:enhancement asd: make clear how this distance is meant to be used...
 #     """
 #     weighted_distance = 0
 #     for map_i in mapping:

@@ -1,7 +1,6 @@
 """
 sfeh: I think we should get rid of sympy in the long term. A lot of problems are related to sympy.
-
-todo this is probably the reason for the capitalized class names in sympy: return eval(self, a)
+sfeh:open this is probably the reason for the capitalized class names in sympy: return eval(self, a)
 
 This class enrichens the python-core 'sympy'.
 Sympy is used to reduce the functions to their most basic form.
@@ -50,7 +49,7 @@ Useful information:
     is_MatAdd = False
     is_MatMul = False
 
-    #todo combine the nodes with the sympy shizzle
+    #sfeh:open combine the nodes with the sympy shizzle
 """
 import re
 
@@ -166,7 +165,7 @@ class Orb(Function):
 
     # def _sympy_(self, a, b):
     #     """
-    #     todo
+    # sfeh:idea
     #     """
     #     return eval(a or b)
 
@@ -268,9 +267,9 @@ def sympy_symbol_defaults(name_list):
     sfeh workaround.
     sympy expressions like 'sign(((cartPos * cartVel) ** 151))' take forever.
     ignoring complex numbers with this trick (use this as locals)
-    todo what about those two? still relevant?
-    todo 'sym_reduce': '({} ** {})'
-    todo 'sym_reduce': 'sign(re({}))'
+
+    'sym_reduce': '({} ** {})'
+    'sym_reduce': 'sign(re({}))'
     """
     symloc = {str(x): symbols(str(x), real=True, imaginary=False) for x in name_list}
     return symloc
@@ -305,7 +304,6 @@ def plagih_sympify(function_string, eval_locals=None):
         # return sympify(sympify(function_string, locals=local_sympy_dict))
         return sympify(sympify(function_string, locals=local_sympy_dict))
     except Exception as ex:
-        # raise
         # print(f'debugging further {ex}')
         return 'nan'  # 'nan' always evaluates to nan. ALl nan bugs should be solved.
 
@@ -348,11 +346,10 @@ if __name__ == "__main__":
              '1 < Maxi(2, Ifte(1 < a, 1, 1))']
 
     expr = '(((0.326675 * Consumption_2) - Shift_9) + (Ifte((-Shift_9 < Consumption_5), Shift_7, Ifte((Square(Gain_6) < Maxi(Fatigue_2, Ifte((Shift_9 < Shift_4), -Gain_3, Gain_5))), Shift_9, Shift_4))))'
-    expr = '-Consumption_0*sign(re(asdW**2)) - 0.004073'
-    expr = 'Mini(-1 - 1 + sqrt(1)'
-    expr = 'Maxi(2.202197, (Abs(cartVel) - sqrt(cartVel)))'
-    # nlabel = 'sign(((a * b) ** 10))'  # takes too long
-    # nlabel = '0.307785*Consumption_2 - 0.779543*Gain_3 + 0.779543*Gain_9 - Shift_9 + 0.779543*Ifte(-Shift_8 < Consumption_5, Shift_7, Shift_4)'
+    # expr = '-Consumption_0*sign(re(asdW**2)) - 0.004073'
+    # expr = 'Mini(-1 - 1 + sqrt(1)'
+    # expr = 'Maxi(2.202197, (Abs(cartVel) - sqrt(cartVel)))'
+
     obs = {'cartVel': 0.5, 'cartPos': -0.8}
     # obs = ['cartPos', 'cartVel']
     # symloc = {x: sympy.symbols(x, real=True, imaginary=False) for x in obs}
@@ -362,14 +359,7 @@ if __name__ == "__main__":
 
     sympex = plagih_sympify(expr, eval_locals=obs)
 
-    # print(plagih_sympify(nlabel))
     print(sympex)
-
-# import sympy
-# x = '["+",["-",["Ifte",["True"],[2],[2.043]],["cartVel"]],[-1.3]]'
-# x = '["+",["-",["Ifte","True",2,2.043],"cartVel"],-1.3]'
-# print(x)
-# x = sympy.sympify(x)  # [+, ###]
 """
 sfeh
 Lastly, it is recommended that you not use I, E, S, N, C, O, or Q 

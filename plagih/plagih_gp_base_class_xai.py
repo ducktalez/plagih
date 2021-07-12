@@ -169,7 +169,7 @@ class ExplainableGP:
 
     # def pareto_insert_again_simplified(self, fintree):
     #     """
-    #     # todo
+    #     # sfeh:open
     #     """
     #     # tree_sym = copy.deepcopy(evotree)
     #     #
@@ -842,7 +842,6 @@ class ExplainableGP:
                                                    force='branch')  # sfeh:test options, depth, in this case
 
                     if size_mode == 'branch_depth':
-                        # raise  # todo
                         evotree = self.tb.evolve_mutate_branch_depth(evotree, build_size,
                                                                      p_full=p_full)
 
@@ -1041,7 +1040,7 @@ class ExplainableGP:
         - check if the fintree is actually valid
         ->
         """
-        evotree = self.tb.evolve_prune(evotree)  # todo runtime-wise, do this somewhere else
+        evotree = self.tb.evolve_prune(evotree)  # sfeh:performance runtime-wise, do this somewhere else
         try:
             meta = self.lut[hash(evotree)]
         except KeyError as ex:

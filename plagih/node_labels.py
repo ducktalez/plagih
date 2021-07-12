@@ -9,7 +9,7 @@ import ast
 import numpy as np
 
 
-class NodeLabel:  # todo
+class NodeLabel:
     """
     Kind of abstract class; Dummy-node that holds a nlabel
     """
@@ -66,7 +66,7 @@ class Terminal(NodeLabel):
     arity = 0
 
     def mutate_self_filter(self, *args, **kwargs):
-        # todo? ...only for terminal nodes
+        # sfeh:? ...only for terminal nodes
         pass
 
 
@@ -83,7 +83,6 @@ class Constant(Terminal):
 def observation_get_family_and_time(name, re_pattern='_\\d+$', none_return=None):
     """
     When an observation is known, return the family, the time and the SIGN!!
-    todo put this function somewhere where it can actually help
     """
 
     core_expr = re.split(re_pattern, name)[0]
@@ -96,7 +95,7 @@ def observation_get_family_and_time(name, re_pattern='_\\d+$', none_return=None)
         re_search = re.search(re_pattern, name)  # re_search => ['_12']
         temp_diff = re_search[0].replace('_', '')  # (only) solution found (at [0]), e.g. '_14'. only keep the digits
         temp_diff = int(temp_diff)
-    except Exception:
+    except Exception as ex:
         temp_diff = none_return
     return core_expr, temp_diff, preexpr
 
@@ -107,13 +106,10 @@ class Observation(Terminal):
     # self.name = nlabel if nlabel[0] != '-' else nlabel[1:]  # sfeh delete?
     """
 
-    # tf_type = tensorflow.float32  # todo yeah...
-
     def __init__(self, nlabel):
-        # todo xtype_out=float
         self.nlabel = nlabel
         self.fam, self.timeindex, _ = observation_get_family_and_time(self.nlabel, none_return=None)  # remove this self.preexpr
-        self.xtype = (tuple([]), float)  # todo
+        self.xtype = (tuple([]), float)  # sfeh:workaround
         self.expr_sym = self.nlabel  # sfeh delete?
         self.index_minmax = None
 
@@ -135,7 +131,7 @@ class FloatConstant(Constant):
         self.expr_sym = self.nlabel
         self.pycode = self.nlabel
 
-    def mutate_self_filter(self, filter_type='gaussian_filter', precision=6, *args, **kwargs):  # todo
+    def mutate_self_filter(self, filter_type='gaussian_filter', precision=6, *args, **kwargs):  # sfeh:open
         """
 
         """
@@ -144,7 +140,7 @@ class FloatConstant(Constant):
                 constant = self.nlabel + np.random.normal(0, 0.1)  # sfeh better adjustments?
             else:
                 constant = np.random.normal(self.nlabel, 0.1)  # sfeh better adjustments?
-            self.nlabel = round(constant, precision)  # todo sfeh be careful, might create zero sometimes
+            self.nlabel = round(constant, precision)  # sfeh:discussion be careful, might create zero sometimes
 
 
 class BoolConstant(Constant):

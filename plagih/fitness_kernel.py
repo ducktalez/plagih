@@ -62,7 +62,7 @@ def ast_expr_to(node, tensors=None, build=None):
             return [node.n]
         else:
             try:
-                shape = tensors[list(tensors.keys())[0]].get_shape()  # todo
+                shape = tensors[list(tensors.keys())[0]].get_shape()  # sfeh:workaround
                 return tensorflow.constant(node.n, dtype=tensorflow.float32, shape=shape)  # , shape=shape
                 # ^ValueError: Shapes must be equal rank, but are 0 and 1 for 'Select_1' (op: 'Select') with input shapes
                 # => sfeh: in some tf-versions, the constants have to match their shape. data has shape [3423, 0]
@@ -223,13 +223,13 @@ def ast_convert_from_expr(expr, tensors=None, build=None):
     More information in ast_expr_to()
 
     """
-    try:
-        ast_tree = ast.parse(expr, mode='eval').body
-        graph = ast_expr_to(ast_tree, tensors=tensors, build=build)
-    except Exception as ex:
-        # todo debug/remove
-        ast_tree = ast.parse(expr, mode='eval').body
-        graph = ast_expr_to(ast_tree, tensors=tensors, build=build)
+
+    ast_tree = ast.parse(expr, mode='eval').body
+    graph = ast_expr_to(ast_tree, tensors=tensors, build=build)
+    # except Exception as ex:
+    #     # sfeh:delete_this debugging code
+    #     ast_tree = ast.parse(expr, mode='eval').body
+    #     graph = ast_expr_to(ast_tree, tensors=tensors, build=build)
     if build:
         graph = labels_from_nestedexpr(graph, [])
 
@@ -273,7 +273,7 @@ class Kernel:
         # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
 
         action_name = conf.action_name or df.columns[len(df.columns) - 1]  # sfeh conf & kernel
-        self.action = EvalAction(action_name, minmax=(0, 2))  # todo conf.action_minmax
+        self.action = EvalAction(action_name, minmax=(0, 2))  # sfeh:workaround conf.action_minmax
 
         printez('i', f'Ignoring columns: {conf.dc}')  # , print_type=print_type print_type sfeh
         df = df.drop(conf.dc, axis=1)  # no need to keep other actions

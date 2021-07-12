@@ -46,12 +46,11 @@ class Node:
 
     meta = None
 
-    def __init__(self, label: 'NodeLabel' = None, depth=None, is_fix=False, childs=None, state=0):
+    def __init__(self, label: 'NodeLabel' = None, depth=None, is_fix=False, childs=None):
         self.label = label
-        self.is_fix = is_fix  # todo debug
+        self.is_fix = is_fix  #
         self.childs = childs or []
         self.depth = depth
-        self.state = state  # todo
 
     def __hash__(self):
         """
@@ -107,14 +106,15 @@ class Node:
 
     def loadable_string(self):
         """
-        todo
+        Returns a string-statement that is also loadable
+        sfeh:test
         """
         print_label = self.get_label().nlabel
         if self.is_fix:
-            print_label = f'({print_label})'
+            print_label = f'{print_label}:fix'
 
         if self.childs:
-            childstr = ', '.join([str(x) for x in self.childs])
+            childstr = ', '.join([f'{x}' for x in self.childs])
             print_label = f"{print_label}, {childstr}"
         return f"[{print_label}]"
 
@@ -128,8 +128,8 @@ class Node:
         return self.label
 
     def get_nlabel(self):
-        """:param
-        todo rename nlabel?
+        """
+
         """
         return self.label.nlabel
 
@@ -153,8 +153,7 @@ class Node:
 
     def is_root(self):
         """
-        todo does this work while building a fintree?
-        ==>ROOT
+        does this work while building a fintree?
         """
         return self.depth == 0
 
@@ -238,15 +237,10 @@ class Node:
             child_expr_list = [cc.eval_expr() for cc in self.childs]  # sfeh what was that again?: reducible=reducible, obs_names=obs_names
             # if reducible:
             #     # my_expr = op_dict[self.get_label()]['sym_reduce'] or my_expr
-            #     # symloc = sympy_symbol_defaults(obs_names)  # todo solve the problem... new version of sympy?
+            #     # symloc = sympy_symbol_defaults(obs_names)  # sfeh solve the problem... new version of sympy?
             #     xxx = plagih_sympify(my_expr.format(*child_expr_list), eval_locals=symloc)  # sfeh the xxx variable
             #     return xxx
             return self.label.expr_sym.format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
-            # try:
-            #     return self.label.expr_sym.format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
-            # except:
-            #     # todo delete this try
-            #     return self.label.expr_sym.format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
         else:
             return self.label.expr_sym
 
@@ -290,13 +284,11 @@ class Node:
 
     def replace_with_branch(self, new_node: 'Node'):
         """
-        todo
         was: new_core
         """
-        self.state = STATE_BUILDING  # sfeh:==>state
         self.set_label(new_node.get_label())
         self.childs = new_node.childs or []  # maybe must be updated recursively
-        # todo set depth!!
+        # todo:check if depth is set. especially with crossover! problems between different systems...
         # self.is_fix = new_node.is_fix  # debatable
 
     def eval_mutatable_nodes(self, xtype_out=None, allow_root=True):
@@ -408,12 +400,12 @@ class Node:
     #     return
 
 
-# todo: especially with mc: there can be more than one pareto entry with the same parsimony/fitness!
+# sfeh:discussion especially with mc: there can be more than one pareto entry with the same parsimony/fitness!
 
 
 # class ObservationIndex(Observation):
 #     """
-#     todo
+#       sfeh:open
 #     """
 #
 #     def __init__(self, nlabel, xtype_out=float, obs_indizes=None):

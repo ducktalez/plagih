@@ -7,11 +7,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 
-STATE_BUILDING = 0
-STATE_COMPLETE = 1
-STATE_EVALUATED = 2
-
-
 class BColors:  # sfeh can be deleted
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'

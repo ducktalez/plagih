@@ -16,9 +16,6 @@ import tensorflow
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
 tensorflow.compat.v1.disable_eager_execution()  # sfeh damn what was this line good for?
-"""
-
-"""
 
 
 class ExplainableGP:
@@ -860,7 +857,7 @@ class ExplainableGP:
                     - select swappable branche for a_parent from b_parent
                         - select a node in a (and crossover here, no matter what)
                     - delete a_parent branch and pareto_insert b_parent branch (which tactic?)
-                    todo into main fintree?
+                    sfeh:idea into main fintree?
                     """
                     atree = self.selection_tournament(tourn_size=tourn_size)
                     btree = self.selection_tournament(tourn_size=tourn_size)
@@ -886,7 +883,6 @@ class ExplainableGP:
 
                 for nn in range(evolve_num):
                     fintree = self.pareto_random_choice()
-                    # fintree.append_tag(tag)  # sfeh
                     self.pop_next.append(fintree)
 
             elif evolve_name == 'random trees':
@@ -1148,7 +1144,7 @@ class ExplainableGP:
         run_backup_data = {}, self.conf.gen_id, self.pop_base, self.paretofront, self.monitor_df  # sfeh use this later, help_dict
         path_backup = path_make_dir(self.rootdir / 'backup/backup.pkl')
         pickle_dump(path_backup, run_backup_data)
-        # todo debug
+        # sfeh:debug
         return
 
     def backup_load(self, argpath_backup):

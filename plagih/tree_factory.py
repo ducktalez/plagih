@@ -5,6 +5,7 @@ The factory to create trees
 from plagih.plagih_tree import *
 from plagih.node_labels import *
 from plagih.plagih_tree import Node
+from plagih.sympy_extras import expr_sympify
 from plagih.util import *
 
 import copy

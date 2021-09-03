@@ -2,10 +2,11 @@
 
 TODO. This read-me is outdated.
 
+Attention: If you want to write your own code, look for important developer informations in the section below!
+
 ## name ideas
 - plagih: plausible genetic improvements
 - FamGP (Familiar GP)
-- AliciaGP
 ...is a genetic programming framework.
 
 compared to other gp frameworks, this one provides the opportunity to use human written code as basis for the gp-process.
@@ -171,3 +172,6 @@ Required packages: `tensorflow` `numpy` `sympy` `Apted` `pickle`
 Optional: `tikzplotlib` (For additional Latex-graph)
 
 
+## Developer information
+- Do not save paths in pickle between runs; if required, only save strings. 
+- Otherwise, pickle files between systems may not work.

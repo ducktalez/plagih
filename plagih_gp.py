@@ -56,7 +56,7 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-path_origin', type=str)
     # paths: check if absolute path exists? separate absolute paths?
     # sfeh:open take last column as action instead
-    # todo path/str contradiction... do not save real paths in config
+
     parser.add_argument('-less_files', action='store_true', help='Creating less files (e.g. no pareto analysis), "-analysis" trumps this command')
     parser.add_argument('-no_files', action='store_true', help='SFEH, unused. Create no files. dummy.')
 

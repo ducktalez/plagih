@@ -2,7 +2,6 @@
 
 """
 from plagih.util import *
-from pathlib import Path
 
 
 class Config:

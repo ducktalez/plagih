@@ -171,7 +171,7 @@ class TreeBuilder:
                              ['Mini', 1], ['Maxi', 1]]
             operator_pool = {op_dict[x[0]]: x[1] for x in operator_pool}  # sfeh this maps the actual class to the label
 
-        # if sfeh_no_crazyops:
+        # if no_crazyops:
         #     del operator_pool['**']
         #     # workaround sfeh (delete this)
 
@@ -491,7 +491,7 @@ class TreeBuilder:
         anode.replace_with_branch(bnode)
         bnode.replace_with_branch(anode_copy)
 
-        # todo set depth correctly!
+        # todo set depth correctly instead of repair!
         atree.repair_depth(depth=0)
         btree.repair_depth(depth=0)
 
@@ -563,7 +563,6 @@ class TreeBuilder:
             sfeh:idea mutate only the childs of a node! The label stays the same
             """
             evotree = origin.origin_tree_copy()
-            todotree = copy.deepcopy(evotree)
 
             layer0_nodes = evotree.get_nodes_at_depth(0, allow_fixed=False, expand_depth=True)
 
@@ -748,9 +747,6 @@ class OriginTree:
             self.existing = False
             self.fintree = None  # sfeh probably the 'existing' above is deprecated
             self.origin_is_fix = False  # ...if non-existent, it is also not fix
-
-    def origin_fintree_copy(self):
-        return copy.deepcopy(self.fintree)
 
     def origin_tree_copy(self):
         return copy.deepcopy(self.fintree.tree)

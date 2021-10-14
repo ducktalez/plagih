@@ -7,7 +7,10 @@ Attention: If you want to write your own code, look for important developer info
 ## name ideas
 - plagih: plausible genetic improvements
 - FamGP (Familiar GP)
-...is a genetic programming framework.
+- PartnachGP
+- SendlingGP
+...is a genetic programming framework. 
+- It is specialized on fast and efficient evaluation (faster than KarooGP) and especially introduces the concept of familiarity.
 
 compared to other gp frameworks, this one provides the opportunity to use human written code as basis for the gp-process.
 
@@ -27,6 +30,7 @@ I am using Anaconda. Some packages are only available in pip though.
 save this as requirements
 
 Conda packages:
+matplotlib
 pathlib
 sympy
 apted
@@ -45,11 +49,14 @@ conda install -U PyYaml
 or
 pip install -U PyYaml
 
+Also, plotting with latex might require texlife:
+
+`sudo apt-get install texlive-latex-extra texlive-fonts-recommended dvipng cm-super`
 
 ### Example run
-Run `plagih_gp.py`
+`python plagih_gp.py`
  
-This will automatically start the run in `/runs/example1_cartpole/`.
+This will automatically start a run (probably Mountaincar).
 
 ### Starting your own run
 

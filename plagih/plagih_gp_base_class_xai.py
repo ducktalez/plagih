@@ -4,11 +4,9 @@ Functions, that might be addable in the future:
 from plagih.util import *
 from plagih.fitness_kernel import *
 from plagih.sympy_extras import expr_sympify
-
 from plagih.tree_factory import *
 import copy
 from pathlib import Path
-
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow
@@ -23,8 +21,6 @@ class ExplainableGP:
 
     """
 
-    # def __init__(self, conf, rootdir, args=None):
-
     def __init__(self, conf, rootdir, path_origin, path_data_csv, args):
         """
         sfeh conf? meh...
@@ -35,7 +31,7 @@ class ExplainableGP:
         kernel = RegressionKernel(path_data_csv,
                                   conf)  # sfeh relative to rootdir? -> nah -> some absolute path... discussion
         self.kernel = kernel
-        tb = TreeBuilder(kernel.obs_names, self.conf, root_xtype=float)
+        self.tb = TreeBuilder(kernel.obs_names, self.conf, root_xtype=float)
         self.origin = OriginTree(kernel, path_origin=path_origin)
         # self.evolve_loop = EvolutionLoop()
         self.rootdir = rootdir
@@ -50,18 +46,16 @@ class ExplainableGP:
               f'\tLocated in: \n'
               f'\t{rootdir}\n')
 
-        # ==================================
-
-        self.paretofront = []
-        self.tb = tb
-
+        self.paretofront = []  # not a separate class as requires too many information
         self.pop_next = []
         self.pop_base = []  # sfeh maybe better names
 
+        # improving runtime
         self.lut = {}
+
+        # monitoring
         self.time_genstart = time.perf_counter()
         self.gens_since_last_pareto = 0
-
         self.monitor_df = pd.DataFrame(columns=['pop_len', 'pop_unique', 'time',
                                                 'fit_avg', 'fit_var', 'fit_best',
                                                 'parsim_avg', 'parsim_var', 'parsim_best',
@@ -230,12 +224,6 @@ class ExplainableGP:
         self.gens_since_last_pareto = 0
         self.paretofront.append(tree)
         self.paretofront = self.poplist_paretosort(self.paretofront)
-
-    def pareto_random_choice(self):
-        try:
-            return np.random.choice(self.paretofront)
-        except:
-            raise  # sfeh
 
     def pareto_txt(self):
         """
@@ -882,7 +870,7 @@ class ExplainableGP:
             elif evolve_name == 'revive paretofront':
 
                 for nn in range(evolve_num):
-                    fintree = self.pareto_random_choice()
+                    fintree = np.random.choice(self.paretofront)
                     self.pop_next.append(fintree)
 
             elif evolve_name == 'random trees':
@@ -1071,8 +1059,8 @@ class ExplainableGP:
             try:
                 avg = self.monitor_df['fit_avg']
                 std = self.monitor_df['fit_var']
-                axs0.fill_between(xx, avg - std, avg + std,
-                                  alpha=0.2)  # axs0.set_title('Regression Error (average)')  # sfeh not stderr... upper/lower bound?
+                axs0.fill_between(xx, avg - std, avg + std, alpha=0.2)
+                # axs0.set_title('Regression Error (average)')  # sfeh not stderr... upper/lower bound?
             except Exception as ex:
                 raise Exception(f'Delete this. were there any problems? {ex}')
             # sfeh: the best candidate is the best one in the current population. discussion: best overall?
@@ -1229,7 +1217,7 @@ class ExplainableGP:
         try:
             fitness = self.kernel.eval_tf(expr_sym, treeobs, only_fitness=True)
             # if fitness != fitness or fitness == float('inf'):
-            #     raise Exception(f"fitness_train is: '{fitness}'")  # happens, eg when values are soo wrong that it leaves the float-range
+            #     raise Exception(f"fitness_train is: '{fitness}'")  # eg very wrong values that exceed the float-range
         except Exception as ex:
             raise Exception(f'eval-ex: {ex}')
 
@@ -1245,14 +1233,15 @@ class ExplainableGP:
             printdummy = copy.deepcopy(self.conf.gen_max)
             self.conf.gen_max = max(self.conf.gen_max, self.conf.gen_id + gen_additionally)
             self.printpl('i',
-                         f'Adding {gen_additionally} more generations in gen {self.conf.gen_id}, increasing gen_max from {printdummy} to {self.conf.gen_max}.')
+                         f'Adding {gen_additionally} more generations in gen {self.conf.gen_id}, '
+                         f'increasing gen_max from {printdummy} to {self.conf.gen_max}.')
 
         # sfeh check if any roots
         # yaml_dump(self.rootdir / 'used_config.yaml', self.conf, print_type=self.print_type)
 
         # self.pop.gens_since_last_pareto = 0
 
-        while self.conf.gen_id <= self.conf.gen_max and not self.custom_exit_condition():  # max generation, max time, done...
+        while self.conf.gen_id <= self.conf.gen_max and not self.custom_exit_condition():
             self.time_genstart = time.perf_counter()  # sfeh here?
 
             if self.conf.gen_id == 0:
@@ -1282,8 +1271,6 @@ class ExplainableGP:
             self.pareto_from_population()
             self.pop_analyze()
 
-            # ================= #
-
             self.pass_population()
             self.printpl('ggg',
                          f'Generation {self.conf.gen_id} took a total time of: {time.perf_counter() - self.time_genstart:4.2f}.')
@@ -1303,19 +1290,18 @@ class ExplainableGP:
         """
         self.plot_gen_performance(self.rootdir / 'monitoring.png')  # largest plot analysing the
         self.pareto_plot(self.rootdir / f'paretofront.pdf', self.conf.name, self.conf.parsimony_max)
-        # self.plot_evolve_performance()  # sfeh
         return
 
     def scheduled_io(self):
         """
-        show plots if necessary
+        every x generations, save a backup and/or save plots
         """
-        save_gen = int(self.conf.period.get('gen_save', 10))
         plot_gen = int(self.conf.period.get('gen_plots', 10))
         if self.conf.gen_id >= plot_gen and self.conf.gen_id % plot_gen == 0:
             self.file_analysis_plots()
 
-        if self.conf.gen_id >= save_gen and self.conf.gen_id % save_gen == 0 or self.conf.gen_id == 10:  # sfeh extra save at 10 for early feedback while testing
+        save_gen = int(self.conf.period.get('gen_save', 10))
+        if self.conf.gen_id >= save_gen and self.conf.gen_id % save_gen == 0 or self.conf.gen_id == 10:
             self.backup_save()
 
 

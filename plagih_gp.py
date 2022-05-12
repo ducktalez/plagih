@@ -17,54 +17,58 @@ def main():  # argv sys.argv[1:]
     # sfeh: options for other functions? run, visualise_tree, analyze_run, check_files, tests
    """
 
-    parser = argparse.ArgumentParser(description='Plagih genetic programming (name changes!)')
-    # parser.add_argument('integers', metavar='N', type=int, nargs='+', help='an integer for the accumulator')
-    # parser.add_argument('--sum', dest='accumulate', action='store_const', const=sum, default=max, help='sum the integers (default: find the max)')
-    # parser.add_argument("--data_dir", type=Path, default=Path(__file__).absolute().parent / "data", help="Path to the data directory",)
-    # sfeh what is meta-var?
-    parser.add_argument('-load_config', '-config', type=Path, metavar='CONFIG_YAML', default=None, help='The config file in the run directory.')
+    parser = argparse.ArgumentParser(description='Plagih genetic programming (PLAusible Genetic Improvements to Heuristics, name changes!)')
+
+    # Loading files, starting a regular run
     parser.add_argument('-name', type=str, help='If the run has a name')
-    parser.add_argument('-load_backup', '-backup', type=str,
-                        help='Starting a run from a backup file (backup.p).')
-    parser.add_argument('-action_name', '-action', type=str, help='Specify the .csv column holding the action (output) in the data. '
-                                                                  '(if not clear or more than one action). If empty, the last column is taken.')
-    # parser.add_argument('-origin_expr', type=str, default='', help='sfeh: open; string version, (expr or nested) directly loading the fintree')
+    parser.add_argument('-rootdir', type=Path, help='A custom output folder (rootdir). Not stable yet.')  # sfeh
+    parser.add_argument('-file_backup', type=str, help='rootdir->where the backup file is located')
+    parser.add_argument('-path_data_csv', '-samples_csv', '-data_csv', type=str, help='rootdir->path of the data (.csv-file)')
+    parser.add_argument('-path_origin', type=str)
+    parser.add_argument('-load_config', type=Path, metavar='CONFIG_YAML', default=None, help='The config file in the run directory.')
+    parser.add_argument('-load_backup', '-backup', type=str, help='Starting a run from a backup file (backup.p).')
+    # parser.add_argument('-file_distrib', type=str, help='File with distributions for creating a fintree (maybe use the loaded config file aswell)')
+    parser.add_argument('-prepared_run', '-lookup', type=str, help='Handy lookup for quick access to runs that (at least I) currently use a lot')
+    parser.add_argument('-force_new_run', action='store_true', help='Shortcut for forcing a new run (->developing)')
+
+    # Parameters for a run which are not in files ;) (Parameters override loaded parameters AFAIK)
     parser.add_argument('-kernel_name', type=str, help='Kernel-name that will be analyzed to load the kernel. Currently only regression-versions.')
     parser.add_argument('-dc', type=str, action='append', default=[], help='Drop columns from the loaded data-.csv file. Probably unused actions in the IB).')
     parser.add_argument('-pop_max', '-pop_size', type=int, help='Set maximum pop_list for this run (updates the config)')
     parser.add_argument('-gen_max', '-gen_size', type=int)
+    parser.add_argument('-action_name', '-action', type=str, help='Specify the .csv column holding the action (output) in the data. '
+                                                                  '(if not clear or more than one action). If empty, the last column is taken.')
+    # parser.add_argument('-origin_expr', type=str, default='', help='sfeh: open; string version, (expr or nested) directly loading the fintree')
+
+    # Restartng a run
+    parser.add_argument('-pop_kill', action='store_true', help="Kills/deletes the current population, but keeps the paretofront")
     parser.add_argument('-gen_additionally', '-gen_add', type=int)
-    parser.add_argument('-mp_cores', type=int, default=4, help='Maximum amount of cores for parallelisation. Sfeh: set default to max cores? 4 is for my old ass pc. Sorry^^')
-    parser.add_argument('-prepared_run', '-lookup', type=str, help='Handy lookup for quick access to runs that (at least I) currently use a lot')
+
     parser.add_argument('-analyze', '-analyse', '-analysis', action='store_true', default=None, help='Analyze a loaded run.')
-    parser.add_argument('-force_new_run', action='store_true', help='Shortcut for forcing a new run (->developing)')
     parser.add_argument('-print_all', '-debug', '-verbose', action='store_true', help='Print all debug prints (very verbose and helps debugging)')
     parser.add_argument('-print_type', type=str, help='Specifying the print type verbosity')
-    parser.add_argument('-pop_kill', action='store_true', help="Kills/deletes the current population, but keeps the paretofront")
-    parser.add_argument('-testrun', action='store_true', help='SFEH (not used yet): Start a large test run. no origin (scratch) -> restart -> paretoentry as origin, new run -> restart -> analyze')
+
+    # computation/runtime: Multicore processing, runtime performance, tensorflow feedback
     parser.add_argument('-slurm_runs_folder', type=str, default='slurm_runs', help='sfeh for fore than one version of the same run')
     parser.add_argument('-tf_gpu_allow_growth', type=bool, help='I dont know how a GPU can grow, but here you have the option.')
     parser.add_argument('-tf_device', default="/gpu:0", help='I hope your GPU nas Nvidia Cuda cores')
+    parser.add_argument('-tf_device_log', type=Path, help='Logging tensorflow evaluation feedback. (recently: checked if GPU actually used)')
+    parser.add_argument('-mp_cores', type=int, default=4, help='Maximum amount of cores for parallelisation.')
+
+    # For developers only, halting at some code
+    parser.add_argument('-testrun', action='store_true',
+                        help='SFEH (not used yet): Start a large test run. no origin (scratch) -> restart -> paretoentry as origin, new run -> restart -> analyze')
     parser.add_argument('-develop', '-dev', action='store_true', help='Extensive debugging and fintree testing during the developing process.')
-    # parser.add_argument('-file_distrib', type=str, help='File with distributions for creating a fintree (maybe use the loaded config file aswell)')
-
-    parser.add_argument('-rootdir', type=Path, help='A custom output folder (rootdir). Not stable yet.')  # sfeh
-    parser.add_argument('-tf_device_log', type=Path, help='Logging (A LOT of) tensorflow evaluation feedback. '
-                                                          '(I recently used this to check if the GPU is actually used)')
-    parser.add_argument('-file_backup', type=str, help='rootdir->where the backup file is located')
-    parser.add_argument('-path_data_csv', '-samples_csv', '-data_csv', type=str, help='rootdir->path of the data (.csv-file)')
-    parser.add_argument('-path_origin', type=str)
-    # paths: check if absolute path exists? separate absolute paths?
-    # sfeh:open take last column as action instead
-
     parser.add_argument('-less_files', action='store_true', help='Creating less files (e.g. no pareto analysis), "-analysis" trumps this command')
     parser.add_argument('-no_files', action='store_true', help='SFEH, unused. Create no files. dummy.')
 
+    # paths: check if absolute path exists? separate absolute paths?
+    # sfeh:open take last column as action instead
+
     args = parser.parse_args()
-    conf = Config(args)  # Update the config with the possibly loaded input args
+    conf = Config(args)  # hyperparameters are in config
 
     path_origin, path_data_csv = None, None  # sfeh:open
-
     if args.prepared_run:
         rootdir, path_origin, path_data_csv = conf.load_prepared_run(args.prepared_run, args.slurm_runs_folder)
     else:
@@ -85,7 +89,6 @@ def main():  # argv sys.argv[1:]
             gp.backup_load(args.load_backup)
         except FileNotFoundError as no_file_ex:
             raise FileNotFoundError(f'You need to load a backup file to analyze! {no_file_ex}')
-        # sfeh idea: track amount of created trees per parsimony? relevant for the paretofront front
 
     else:
         if not args.force_new_run:

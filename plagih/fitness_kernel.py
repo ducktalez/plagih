@@ -4,6 +4,7 @@ import tensorflow
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
+from plagih.tree_factory import FinalizedTree
 from plagih.util import *
 import numpy as np
 import matplotlib.pyplot as plt
@@ -281,8 +282,101 @@ class Kernel:
         self.obs_names = list(df.columns)
         self.obs_names.remove(action_name)
 
+        self.fitness_sign = -1
+
         df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
         self.data_train, self.data_control = train_test_split(df, test_size=0.2, random_state=0)  # discussion: random state 0 okay? test_size 0.2?
+
+    def poplist_paretosort(self, pop_list):
+        """
+        sfeh check this!! op_next mostly has 2 pareto entries??
+        """
+        # sfeh:open:kernel sorting with x.get_fitness OnLY when fitness has "<" relation. (otherwise: -x.get_fitness)
+        pop_list = sorted(pop_list, key=lambda x: (x.get_parsimony(), self.fitness_sign * x.get_fitness()))
+
+        try:
+            best = pop_list[0]
+        except Exception as ex:
+            raise Exception(f'The list is empty, i guess: {pop_list}. {ex}')
+
+        best_par = best.get_parsimony()
+        best_fit = best.get_fitness()
+        pop_pareto = [best]
+
+        for tree in pop_list:
+            parsim = tree.get_parsimony()
+            if parsim == best_par:
+                continue  # sfeh:discuss does sorted keep the order?
+            else:
+                fitness = tree.get_fitness()
+                if self.fitness_compare(fitness, best_fit):
+                    pop_pareto.append(tree)
+                    best_par = parsim
+                    best_fit = fitness
+
+        return pop_pareto
+
+    def pareto_from_population(self, paretofront, pop_next, conf):
+        """
+        sfeh:debug, might be faulty
+        sfeh:discuss pareto-efficient, but different pareto entries?
+        """
+        pop_parcandidates = self.poplist_paretosort(pop_next)  # pareto-candidates in the pop, renamed to be clear
+
+        if len(paretofront) == 0:
+            firstpareto = pop_parcandidates[0]
+            printez('a',
+                    f'Starting a new paretofront with parsimony: {firstpareto.get_parsimony()} fitness: {firstpareto.get_fitness():6.4f}',
+                    conf.print_type)
+            paretofront.append(firstpareto)
+
+        for fintree in pop_parcandidates:
+            success = False
+            fit = fintree.get_fitness()
+            par = fintree.get_parsimony()
+
+            if all([par < p.get_parsimony() for p in paretofront]):
+                printez('a', f'Paretofront: New simplest entry. parsimony: {par} fitness: {fit:6.4f}', conf.print_type)
+                success = True
+                # optional: print now deprecated entries in the paretofront
+
+            if all([self.fitness_compare(fit, p.get_fitness()) for p in paretofront]):
+                printez('a', f'Paretofront: New best-fitness entry. parsimony: {par} fitness: {fit:6.4f}',
+                        conf.print_type)
+                success = True
+                # optional: print now deprecated entries in the paretofront
+
+            for p in paretofront:
+                # better fitness at a comparatively good
+                if self.fitness_compare(fit, p.get_fitness()) and par <= p.get_parsimony():
+                    # paretofront.remove(p)  # sfeh: remove in the other cases aswell or not at all
+                    success = True
+
+            if success:
+                printez('a', f'Paretofront: New entry. parsimony: {par} fitness: {fit:6.4f}', conf.print_type)
+                self.pareto_append_clean(paretofront, fintree)
+                gens_since_last_pareto = 0
+                # self.printpl('a', f"New entry found! {BColors.RESET}{fintree.get_parsimony()}, {fintree.get_fitness()}:{BColors.RESET} {fintree.meta.expr_raw}")
+
+        paretofront = self.poplist_paretosort(paretofront)
+
+        return paretofront
+
+    def pareto_txt(self, paretofront):
+        """
+        Save all the paretofront candidates to a file.
+        (Quick feedback that requires little overhead)
+        """
+        return [f'Parsimony: \t{parsim} MeanError: \t{fitness} Expr: \t{tree.meta.expr_raw}' for (parsim, fitness, tree)
+                in paretofront]
+
+    def pareto_append_clean(self, paretofront, tree: FinalizedTree):
+        """
+
+        """
+        paretofront.append(tree)
+        paretofront = self.poplist_paretosort(paretofront)
+        return paretofront
 
     def fitness_compare(self, fitness1, fitness2):
         """

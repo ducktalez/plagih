@@ -1,13 +1,16 @@
 """
+The configuration for a GP run; holds the "DNA" of a run.
+How the values are made up:
+1. Default values                   (e.g. in this file: "pop_max=1000")
+2. values in loaded config-file     (e.g. config.yaml file with new values)
+3. Values given through argparser   (e.g. python plagih_gp ... -pop_max 1000)
 
+    (just to find this with quick search) self.conf self.config
 """
 from plagih.util import *
 
 
 class Config:
-    """
-    (just to find this with quick search) self.conf self.config
-    """
 
     def __init__(self, args):
         """
@@ -63,8 +66,8 @@ class Config:
         # self.file_distrib = (args.file_distrib or 'run_files/distributions_file.yaml')
         # self.file_backup = args.file_backup or conf.get('file_backup', 'backup/backup.p')
 
-        self.path_data_csv = args.path_data_csv or conf.get('path_data_csv', None)
-        self.path_origin = args.path_origin or conf.get('path_origin', None)
+        self.path_data_csv = args.path_data_csv or conf.get('path_data_csv', None)  # MUST BE STRING
+        self.path_origin = args.path_origin or conf.get('path_origin', None)  # MUST BE STRING
 
     def load_prepared_run(self, prepared_run, slurm_runs_folder):
 
@@ -110,20 +113,8 @@ class Config:
 
             ori_trees = {
                 # sfeh update other trees
-                # 'gpFriendly': 'mc/gp_files/tree_gpFriendly.csv',
-                # 'gpFriendlyFix': 'mc/gp_files/tree_gpFriendly_fix.csv',
-                # 'preset': 'mc/gp_files/tree_preset.txt',
-                # 'presetFix': 'mc/gp_files/tree_preset_fix.txt',
-                # 'xiao': 'mc/gp_files/tree_xiao.csv',
-                # 'xiaoFix': 'mc/gp_files/tree_xiaoFix.csv',
                 'simple': 'mc/gp_files/tree_simple.txt',
                 'simpleFix': 'mc/gp_files/tree_simple_fix.txt',
-                # 'simplePlus': 'mc/gp_files/tree_simplePlus.csv',
-                # 'simplePlusFix': 'mc/gp_files/tree_simplePlus_fix.csv',
-                # 'simonBest': 'mc/gp_files/fintree(simonBest).csv',
-                # 'simonBestFix2': 'mc/gp_files/fintree(simonBest)Fix2.csv',
-                # 'simonOkay': 'mc/gp_files/tree_simonOkay.csv',
-                # 'simonOkayFix': 'mc/gp_files/tree_simonOkayFix.csv',
                 'scratch': None
             }
 

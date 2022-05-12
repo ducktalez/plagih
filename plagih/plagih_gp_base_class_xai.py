@@ -1,6 +1,7 @@
 """
 Functions, that might be addable in the future:
 """
+from plagih.paretofront import *
 from plagih.util import *
 from plagih.fitness_kernel import *
 from plagih.sympy_extras import expr_sympify
@@ -22,14 +23,10 @@ class ExplainableGP:
     """
 
     def __init__(self, conf, rootdir, path_origin, path_data_csv, args):
-        """
-        sfeh conf? meh...
-        """
         self.conf = conf
         self.develop = args.develop  # more testing and stuff during development phase
         self.time_start = time.perf_counter()
-        kernel = RegressionKernel(path_data_csv,
-                                  conf)  # sfeh relative to rootdir? -> nah -> some absolute path... discussion
+        kernel = RegressionKernel(path_data_csv, conf)  # sfeh relative to rootdir? -> nah -> absolute path... discuss
         self.kernel = kernel
         self.tb = TreeBuilder(kernel.obs_names, self.conf, root_xtype=float)
         self.origin = OriginTree(kernel, path_origin=path_origin)
@@ -38,19 +35,17 @@ class ExplainableGP:
 
         self.printpl('gg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
-        # self.conf.set_rootdir()  # sfeh better solution?
-
         print(f'\n'
               f'\tInitializing Plagih UI.\n'
               f'\tName: {BColors.CYAN}{rootdir.name}{BColors.RESET}.\n'
               f'\tLocated in: \n'
               f'\t{rootdir}\n')
 
-        self.paretofront = []  # not a separate class as requires too many information
+        self.paretofront = []  # not a separate class as requires too much information
         self.pop_next = []
         self.pop_base = []  # sfeh maybe better names
 
-        # improving runtime
+        # Lookup-table for tree(-expressions) and tits fitness/parsimony. Improving runtime a lot!
         self.lut = {}
 
         # monitoring
@@ -151,14 +146,6 @@ class ExplainableGP:
         self.evolve_tags = list(self.evolve_loop.keys()) + list(self.evolve_random.keys())
         return
 
-    # class Population:
-
-    def file_pareto(self, path):
-        # sfeh where to use? path-> self.conf.rootdir / 'paretofront.yaml',
-        yaml_dump(path, self.paretofront)  # sfeh this printing is probably shit
-
-    #     self.pareto_insert_again_simplified(fintree)
-
     # def pareto_insert_again_simplified(self, fintree):
     #     """
     #     # sfeh:open
@@ -181,417 +168,6 @@ class ExplainableGP:
     #     # else:
     #     #     self.printpl('aaa', 'Pareto entry was already simplified')
     #     pass
-
-    def pareto_plot(self, path, run_name, parsimony_max):
-        """
-        Write pyplot with paretofront candidates
-        """
-
-        run_name = str(run_name).replace('_', '-')  # sfeh asd workaround for latex version
-
-        tuples = [[tree.get_parsimony(), tree.get_fitness()] for tree in self.paretofront]
-        xx, yy = np.array(tuples).T
-
-        if len(xx) == 0:
-            print_e(f'Plotting empty array is not possible! Data={xx, yy}')
-            return
-
-        with plt.rc_context(rc=pyplot_rc_tex):
-            fig, ax = plt.subplots()
-            right = max(max(xx), parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
-
-            # beyond_lines:  # adding a point to the edges to imply that there are no more values (paretofront-plot)
-            xx = np.concatenate([[xx[0]], xx, [right + 1]])
-            yy = np.concatenate([[max(yy) + 1], yy, [yy[-1]]])
-
-            ax.step(xx, yy, linestyle='dashed', marker='.', label=f'{run_name}', where='post')
-            ax.set(xlabel='complexity', ylabel='regression error',
-                   xlim=(0, right),
-                   ylim=(0, (max(yy) - min(min(yy), 0)) * 1.05))
-
-            try:
-                fig.savefig(path)
-                self.printpl('f', f"paretofront (pdf): {self.rootdir / f'paretofront.pdf'}")
-            except PermissionError as perm_error:
-                print_e(f'Could not save plot: {perm_error}')  # sfeh for everything?
-
-        return
-
-    def pareto_append_clean(self, tree: FinalizedTree):
-        """
-
-        """
-        self.gens_since_last_pareto = 0
-        self.paretofront.append(tree)
-        self.paretofront = self.poplist_paretosort(self.paretofront)
-
-    def pareto_txt(self):
-        """
-        Save all the paretofront candidates to a file.
-        (Quick feedback that requires little overhead)
-        """
-        return [f'Parsimony: \t{parsim} MeanError: \t{fitness} Expr: \t{tree.meta.expr_raw}' for (parsim, fitness, tree)
-                in self.paretofront]
-
-    # def update_pareto_with_tree(self, fintree: FinalizedTree):
-    #     """
-    #     inserts a fintree into the paretofront front
-    #     """
-    #     parsim = fintree.get_parsimony()
-    #     fit = fintree.get_fitness()
-    #
-    #     p_simpler = [p for p in self.paretofront if p.get_parsimony() <= parsim]  # all paretofront paretofront that are less complex
-    #
-    #     if len(p_simpler) == 0:  # all other paretofront paretofront are more complex
-    #         self.pareto_insert(fintree, msg=f'new simplest entry')
-    #     else:
-    #         best = min(p_simpler, key=lambda p: p[1])  # the fittest of the less complex ones
-    #         if fit < best.get_fitness():
-    #             self.kernel.fitness_compare(fit, best.get_fitness())  # if true, at least one insertion
-    #             self.pareto_insert(fintree, msg=f'old fitness: {best[1]}')
-    #
-    #     # self.pareto_clean_sort()  # sfeh check if required
-    #     return
-
-    def poplist_paretosort(self, pop_list):
-        """
-        sfeh check this!! op_next mostly has 2 pareto entries??
-        """
-        # sfeh:open:kernel sorting with x.get_fitness OnLY when fitness has "<" relation. (otherwise: -x.get_fitness)
-        fitness_sign = self.kernel.fitness_sign
-        pop_list = sorted(pop_list, key=lambda x: (x.get_parsimony(), fitness_sign * x.get_fitness()))
-
-        try:
-            best = pop_list[0]
-        except Exception as ex:
-            raise Exception(f'The list is empty, i guess: {pop_list}. {ex}')
-
-        best_par = best.get_parsimony()
-        best_fit = best.get_fitness()
-        pop_pareto = [best]
-
-        for tree in pop_list:
-            parsim = tree.get_parsimony()
-            if parsim == best_par:
-                continue  # sfeh:discuss does sorted keep the order?
-            else:
-                fitness = tree.get_fitness()
-                if self.kernel.fitness_compare(fitness, best_fit):
-                    pop_pareto.append(tree)
-                    best_par = parsim
-                    best_fit = fitness
-
-        # print(f'The paretofront-efficient candidates of the population are: {pop_pareto}')
-
-        return pop_pareto
-
-    def pareto_from_population(self):
-        """
-        sfeh:debug, might be faulty
-        sfeh:discuss pareto-efficient, but different pareto entries?
-        """
-        pop_parcandidates = self.poplist_paretosort(self.pop_next)  # pareto-candidates in the pop, renamed to be clear
-
-        if len(self.paretofront) == 0:
-            firstpareto = pop_parcandidates[0]
-            self.printpl('a',
-                         f'Starting a new paretofront with parsimony: {firstpareto.get_parsimony()} fitness: {firstpareto.get_fitness():6.4f}')
-            self.paretofront.append(firstpareto)
-
-        for fintree in pop_parcandidates:
-            success = False
-            fit = fintree.get_fitness()
-            par = fintree.get_parsimony()
-
-            if all([par < p.get_parsimony() for p in self.paretofront]):
-                self.printpl('a', f'Paretofront: New simplest entry. parsimony: {par} fitness: {fit:6.4f}')
-                success = True
-                # optional: print now deprecated entries in the paretofront
-
-            if all([self.kernel.fitness_compare(fit, p.get_fitness()) for p in self.paretofront]):
-                self.printpl('a', f'Paretofront: New best-fitness entry. parsimony: {par} fitness: {fit:6.4f}')
-                success = True
-                # optional: print now deprecated entries in the paretofront
-
-            for p in self.paretofront:
-                # better fitness at a comparatively good
-                if self.kernel.fitness_compare(fit, p.get_fitness()) and par <= p.get_parsimony():
-                    # self.paretofront.remove(p)  # sfeh: remove in the other cases aswell or not at all
-                    success = True
-
-            if success:
-                self.printpl('a', f'Paretofront: New entry. parsimony: {par} fitness: {fit:6.4f}')
-                self.pareto_append_clean(fintree)
-                # self.printpl('a', f"New entry found! {BColors.RESET}{fintree.get_parsimony()}, {fintree.get_fitness()}:{BColors.RESET} {fintree.meta.expr_raw}")
-
-        self.paretofront = self.poplist_paretosort(self.paretofront)
-
-        return
-
-    # # V0 (never used)
-    # pop_iter = iter(pop_sorted)
-    # pareto_iter = iter(self.paretofront)
-    #
-    # p = next(pareto_iter)
-    # p_par = p.get_parsimony()
-    # t = next(pop_iter)
-    #
-    # while True:
-    #
-    #     # lets try the next (or first) fintree out!
-    #     while t.get_parsimony() < p_par:
-    #         print('Found a NEW, simpler entry!')
-    #         self.paretofront.pop_append_evotree(t)  # sfeh (every entry in this list is already paretoefficient)
-    #         t = next(pop_iter)
-    #
-    #     t_fit = t.get_fitness()
-    #     while not cmp(t_fit, p.get_fitness()):
-    #         print(f'removing the deprecated entries: Fitness: {p.get_fitness()}')
-    #         self.paretofront.remove(p)
-    #         p = next(pareto_iter)
-    #
-    #     while cmp(t.get_fitness(), p.get_fitness()):
-    #         t = next(pop_iter)
-    #
-    #     p_fit = p.get_fitness()
-    #     t_fit = t.get_fitness()
-    #
-    #     while cmp(t_fit, p_fit) and t_par < p_par:
-    #         # find a potential entry with at least the parsimony
-    #         print(f'SHEESH! We kicked out another paretofront entry! old: {p_fit}, new fitness: {t_fit}.')
-    #         self.paretofront.remove(p)
-    #         self.paretofront.pop_append_evotree(t)
-    #         p = next(pareto_iter)
-    #         p_par = p.get_parsimony()
-    #         p_fit = p.get_fitness()
-    #
-    #     while t_par < p_par:
-    #         t = next(pop_iter)
-    #         t_par = t.get_parsimony()
-    #
-    #     while p_par > t_par:
-    #         p = next(pareto_iter)
-    #         p_par = p.get_parsimony()
-    #         try:
-    #             t = next(pop_iter)
-    #             t_par = t.get_parsimony()
-    #         except StopIteration:
-    #             print('ASD Pareto feddich :3!!')  # sfeh debug paretofront wurde erstellt
-    #             return
-    #
-    # # sfeh sort everything
-    #
-    # # pop_list = sorted(pop_list, key=lambda x: (x.get_parsimony(), x.get_fitness()))
-    # # pop_iter = iter(pop_list)
-    # # fintree = next(pop_iter)
-    # # pop_sorted = [fintree]
-    # # best_par = fintree.get_parsimony()
-    # # best_fit = fintree.get_fitness()
-    # #
-    # # while True:
-    # #     try:
-    # #         fintree = next(pop_iter)
-    # #         parsim = fintree.get_parsimony()
-    # #         if parsim == best_par:
-    # #             continue
-    # #         else:
-    # #             fitness = fintree.get_fitness()
-    # #             if self.kernel.fitness_compare(fitness, best_fit):
-    # #                 pop_sorted.pop_append_evotree(fintree)
-    # #                 best_par = parsim
-    # #                 best_fit = fitness
-    # #     except StopIteration:
-    # #         break
-
-    # def file_pareto_listcode(self):
-    #     """
-    #     save python code for Industrial Benchmark runs
-    #     delete sometime
-    #     """
-    #
-    #     # pycode_agent = self.kernel.pycode_wrap_result(self.env_vars.action.minmax).format('action')
-    #
-    #     pygents_list = []
-    #
-    #     for (parsim, fitness_train, fintree) in self.paretofront:
-    #         # agent_name = f'{self.conf.name}_{parsim:.0f}'
-    #         agent_name = f'{self.conf.name}_{self.env_vars.action.name}_{parsim:.0f}'
-    #         agent_as_python = fintree.eval_pycode()
-    #         pygents_list.pop_append_evotree([parsim, float(fitness_train), agent_name, agent_as_python])
-    #
-    #     yaml_dump(self.rootdir / 'pycode_list.yaml', pygents_list, print_type=self.print_type)
-    #     path = path_make_dir(self.rootdir / 'pycode_list.yaml')
-    #     with Path.open(path, 'w') as file:
-    #         _ = yaml.dump(pygents_list, file)  # , default_flow_style=False, sort_keys=False)
-    #         printez('ff', f'IB pycode-list: {path.as_posix()}', print_type=self.print_type)  # sfeh always the same print structure... just pass the path?
-    #
-    #     return
-    #
-
-    def analyze_pareto(self, cpu_cores=16):  # sfeh 16 cores? nope
-        """
-        sfeh:open
-        Writing all analysis files after evaluating the paretofront.
-        (Currently strongly customized by sfeh for the mountaincar and industrial benchmark)
-        """
-        # self.printpl('i', f'Analysing the paretofront candidates of the run.')
-        #
-        # dir_benchmarks = Path(__file__).parent.parent.absolute() / 'benchmarks/'
-        # path_hist = path_make_dir(self.rootdir / 'histograms/')
-        # pareto_agents = {}
-        #
-        # for (parsim, fitness_train, fintree) in self.paretofront:
-        #     histograms_path = self.plot_agent_histogram(parsim, fintree, path_hist)  # sfeh
-        #
-        #     forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest = self.file_pareto_latex(parsim, fintree)
-        #
-        #     pareto_agents[parsim] = {'parsim': parsim,
-        #                              'fitness_train': fitness_train,
-        #                              'fintree': fintree,
-        #                              'forest_tree_full': forest_tree_full, 'forest_tree_tight': forest_tree_tight, 'tex_expr_raw': tex_expr_raw, 'tex_expr_forest': tex_expr_forest,
-        #                              'histogram': histograms_path,
-        #                              }
-        #
-        # tex_include_pdf = lambda x: f"\\includegraphics{{{str(x).replace('.pdf', '')}}}"
-        # tex_tabuline = lambda x: f"{' & '.join(x)}\\tabularnewline\n"
-        # tex_stacklist = lambda x: "\\shortstack[l]{{{}}}".format('\\\\'.join([str(xx) for xx in x]))
-        #
-        # if 'MTC' in self.conf.name:
-        #     """
-        #     complexity, regr. error, real evaluation, decision plot, spiral plot, diff-plot
-        #     """
-        #     # sfeh i guess not necessary anymore (?)
-        #     # self.file_pareto_pycode()
-        #     sarsa_agent_steps = 200 if 'MTC200' in self.conf.name else 75 if 'MTC75' in self.conf.name else 'NO_MC_AGENT'
-        #     sarsa_agent = pickle_load(dir_benchmarks / f'mc/agents/sarsa_agent_{sarsa_agent_steps}.p')
-        #
-        #     agent_performance = auto_evaluate_run_end(self.rootdir, sarsa_agent, n=100)
-        #     # df_mtc = pd.DataFrame(columns=['complexity', 'regr. error', 'avg. reward', 'fails', 'expression'])
-        #     tex_lines = []
-        #
-        #     for pp, x in agent_performance.items():
-        #         pp, fitness_train, avg_reward, fails, path_mcmeshplot, path_mcmeshplot_diff = x
-        #
-        #         tex_lines.pop_append_evotree([f"{int(pp)}",
-        #                           f"{pareto_agents[pp]['fitness_train']:.2f}",
-        #                           f"{avg_reward:0.1f}",
-        #                           f"{pareto_agents[pp]['tex_expr_raw']}",
-        #                           f"{tex_include_pdf(f'sfehs_eval/{pp}.pdf')}",  # path_mcmeshplot
-        #                           # tex_include_pdf(f'sfehs_eval/diff-{pp}.pdf'),  # path_mcmeshplot_diff),
-        #                           tex_include_pdf(f'sfehs_eval/space-{pp}.pdf'),
-        #                           # tex_include_pdf(f'histograms/acthist_{pp}'),
-        #                           f"{pareto_agents[pp]['forest_tree_full']}",  # forest_tree_full, forest_tree_tight
-        #                           f"{pareto_agents[pp]['forest_tree_tight']}",
-        #                           f'{fails}'])
-        #
-        #     paste = ''.join([tex_tabuline(x[:4]) for x in tex_lines])
-        #     paste = "\\begin{longtable}[c]{>{\\LTleft}p{5mm}>{\\LTleft}p{6mm}>{\\LTleft}p{10mm}>{\\LTleft}p{102mm}}\n\\hline\n" \
-        #             "dist & error & reward  & expression \\tabularnewline \\hline\n" \
-        #             f"{paste}" \
-        #             "\\hline\n\\end{longtable}\n"
-        #     file_dump(self.rootdir / f'analysis_input.tex', paste, print_type=self.print_type)
-        #     file_dump(self.rootdir / f'analysis_overview.tex', latex_treeviz_full_document(paste), print_type=self.print_type)
-        #
-        #     paste_full = ''.join([tex_tabuline(x[:]) for x in tex_lines])
-        #     paste_full = f"{str(self.conf.name).replace('_', '-')}  {tex_include_pdf('monitoring.png')}  {tex_include_pdf('sfehs_eval/evaled_overview.pdf')}\n\n" \
-        #                  "\\begin{tabular}{lllllllllllll}\n \\hline\n" \
-        #                  "dist & error & reward & parsimony & expression \\tabularnewline \\hline\n" \
-        #                  f"{paste_full}" \
-        #                  "\\hline\n\\end{tabular}\n\n"
-        #     file_dump(self.rootdir / f'analysis_overview_plus.tex', latex_treeviz_full_document(paste_full), print_type=self.print_type)
-        #
-        # elif 'IB' in self.conf.name:
-        #
-        #     self.file_pareto_listcode()
-        #
-        #     if self.conf.name[-2:] == '_0':
-        #         """
-        #         - complexity_sum, [complexities], regression_sum, [regression_errors], real_sum, [formulas]
-        #         - plot with paretofront candidates
-        #         """
-        #         # "\\multicolumn{2}{c}{complexity} & \\multicolumn{2}{c}{regression error} & \\multicolumn{4}{c}{IB reward} & combinations & expression \\tabularnewline\n" \
-        #         tex_line_input, tex_line_overview = '', ''
-        #
-        #         res_all = combined_lists(self.rootdir.parent, 40, 40, local_yamls=True, cpu_cores=cpu_cores)  # sfeh use self.conf.mp_cores
-        #
-        #         xx = [x['parsim_sum'] for x in res_all]
-        #         y_all = [y['experiment'] for y in res_all]
-        #         y_safe = [y['experiment_safe'] for y in res_all]
-        #         y_all_r50 = [y['experiment_r50'] for y in res_all]
-        #         y_safe_r50 = [y['experiment_safe_r50'] for y in res_all]
-        #         cnt = [y['cnt'] for y in res_all]
-        #
-        #         for y in res_all:
-        #             parsims = y['parsims']
-        #
-        #             input_agentex = lambda run_ii, prepth: f"\\input{{{prepth}{self.rootdir.parent.name}_{run_ii}/visualisation/{int(parsims[run_ii]):02d}_input.tex}}"  # _forest
-        #
-        #             tex_line_overview += tex_tabuline([f"{int(y['parsim_sum'])}",
-        #                                                f"{y['regress_sum']:0.3f}",
-        #                                                f"{y['experiment']:0.0f}",
-        #                                                tex_stacklist([f'{int(x)}' for x in y['parsims']]),
-        #                                                tex_stacklist([input_agentex(x, '') for x in [0, 1, 2]])])
-        #
-        #             tex_line_input += tex_tabuline([f"{int(y['parsim_sum'])}",
-        #                                             f"{y['regress_sum']:0.3f}",
-        #                                             f"{y['experiment']:0.0f}",
-        #                                             tex_stacklist([f'{int(x)}' for x in y['parsims']]),
-        #                                             tex_stacklist([input_agentex(x, f'../benchmarks/{self.rootdir.parent.parent.name}/{self.rootdir.parent.name}/') for x in [0, 1, 2]])])
-        #
-        #             tex_line_input += tex_tabuline([f"{int(y['parsim_sum'])}",
-        #                                             f"{y['regress_sum']:0.3f}",
-        #                                             f"{y['experiment']:0.0f}",
-        #                                             tex_stacklist([f'{int(x)}' for x in y['parsims']]),
-        #                                             tex_stacklist([input_agentex(x, f'../benchmarks/{self.rootdir.parent.parent.name}/{self.rootdir.parent.name}/') for x in [0, 1, 2]])])
-        #
-        #         combined_overview = "\\begin{tabular}{llllllllll}\n\\hline \n" \
-        #                             f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])} \\hline\n" \
-        #                             f"{tex_line_overview}" \
-        #                             f"\\hline\n\\end{{tabular}}\n\n"
-        #
-        #         combined_input = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
-        #                          f"{tex_tabuline(['dist', 'error', 'reward', 'parsimony', 'expressions'])}" \
-        #                          f"{tex_line_input}" \
-        #                          "\\hline\n\\end{longtable}\n"
-        #
-        #         combined_fulltrees = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
-        #                              f"{tex_tabuline(['dist', 'error', 'reward', 'parsimony', 'expressions'])}" \
-        #                              f"{tex_line_input}" \
-        #                              "\\hline\n\\end{longtable}\n"
-        #
-        #         combined_overview = latex_treeviz_full_document(combined_overview)
-        #         file_dump(self.rootdir.parent / 'combined_overview.tex', combined_overview)
-        #         file_dump(self.rootdir.parent / 'combined_input.tex', combined_input)
-        #
-        #         with plt.rc_context(rc=pyplot_rc_tex):
-        #             fig, ax = plt.subplots()
-        #             ax.set(xlabel='Pareto complexity sum', ylabel='reward [x1000]', ylim=funny_limits)
-        #             ax.plot(xx, y_all, label='average', marker='.', color='r')
-        #             ax.plot(xx, y_safe, marker='None', color='r', linestyle='dotted')  # , label='low risk'
-        #             ax.plot(xx, y_all_r50, label='randomized start', marker='.', color='b')
-        #             ax.plot(xx, y_safe_r50, marker='None', color='b', linestyle='dotted')  # , label='low risk (randomized)'
-        #             ax.legend(loc='lower right')
-        #             plt.yticks(IB_YICKS[0], IB_YICKS[1])
-        #
-        #             # drawing the regression error, but plots seem to be too overloaded
-        #             # axx = ax.twinx()
-        #             # axx.plot(xx, cnt, color='tab:gray', label='regression error', linestyle='dashed', marker='.')  # linestyle='None'  # , legend_loc='best'
-        #             # axx.tick_params(axis='y', labelcolor='tab:gray')
-        #             # # axx.plot(xx, y['regression_sum'])
-        #             #
-        #             # ax2 = ax.twinx()
-        #             # ax2.plot(xx, cnt, color='tab:gray', label='combos', linestyle='dashed', marker='.')  # linestyle='None'  # , legend_loc='best'
-        #             # # ax2.set(ylabel='possible combinations', color='tab:gray')
-        #             # ax2.tick_params(axis='y', labelcolor='tab:gray')
-        #             # ax2.legend(loc='lower left')
-        #
-        #             fig.savefig(self.rootdir.parent / f'regression_all.pdf')
-        #             plt.close('all')
-        #
-        # else:
-        #     raise Exception(f'This should actually never happen right now. name: {self.conf.name}')
-
-        return
 
     #
     # def file_pareto_latex(self, parsim, fintree):
@@ -721,17 +297,7 @@ class ExplainableGP:
             evolve_spec['custom_params'] = evolve_spec.get('custom_params', {})
         return evolve_dict
 
-    # evolve_loop = self.evolve_list
     # self.printpl('i', 'Using evolve rates from config')
-
-    # class Evolution:
-    #     # sfeh rate not in here
-    #     # def __init__(self, id=None, evolution=None, rate=None, params=None, custom_params=None):
-    #     #     self.id = id
-    #     #     self.evolution = evolution
-    #     #     self.params = params or {}
-    #     #     self.rate = rate
-    #     #     self.custom_params = custom_params
 
     def printpl(self, message_type, message_str):
         """
@@ -928,16 +494,9 @@ class ExplainableGP:
     #     except Exception as ex:
     #         print_e(f'plot_evolution_analysis failed because of: {ex}')
 
-    def pass_population(self):
-        """
-
-        """
-        self.pop_base = self.pop_next[:]  # otherwise: deepcopy
-        self.pop_next = []
-
     def pop_analyze(self):
         """
-        Analysing this generation
+        Analysing the population (done in each generation)
         - amount of trees
         - fittest fintree
         - average fitness_train
@@ -977,12 +536,7 @@ class ExplainableGP:
 
         pop_parsim = [tree.get_parsimony() for tree in popul]
         pop_treelen = [len(fintree.tree) for fintree in popul]
-
         pop_fitness_best = self.kernel.np_best_fitness(pop_fitness)
-        try:
-            self.best_fitness = self.kernel.get_fitness_extreme_function(pop_fitness_best, self.best_fitness)
-        except:
-            self.best_fitness = pop_fitness_best
         unique_tree_count = len(set([hash(x) for x in popul]))  # sfeh analyze this?
         gen_time = time.perf_counter() - self.time_genstart
         self.monitor_df.loc[self.conf.gen_id] = {'pop_len': len(popul),
@@ -1266,14 +820,13 @@ class ExplainableGP:
                     # time_evolve = time.perf_counter()
                 else:
                     self.gen_next_population()
-                    # sfeh check if there are really unique... doubt it.
-
-            self.pareto_from_population()
+            self.paretofront = self.kernel.pareto_from_population(self.paretofront, self.pop_next, self.conf)
             self.pop_analyze()
 
-            self.pass_population()
-            self.printpl('ggg',
-                         f'Generation {self.conf.gen_id} took a total time of: {time.perf_counter() - self.time_genstart:4.2f}.')
+            self.pop_base = self.pop_next[:]  # otherwise: deepcopy
+            self.pop_next = []
+
+            self.printpl('ggg', f'Generation {self.conf.gen_id} took a total time of: {time.perf_counter() - self.time_genstart:4.2f}.')
             self.scheduled_io()
             self.conf.gen_id += 1
         else:
@@ -1289,7 +842,7 @@ class ExplainableGP:
         Make all plots
         """
         self.plot_gen_performance(self.rootdir / 'monitoring.png')  # largest plot analysing the
-        self.pareto_plot(self.rootdir / f'paretofront.pdf', self.conf.name, self.conf.parsimony_max)
+        pareto_plot(self.paretofront, self.rootdir / f'paretofront.pdf', self.conf)
         return
 
     def scheduled_io(self):
@@ -1303,6 +856,42 @@ class ExplainableGP:
         save_gen = int(self.conf.period.get('gen_save', 10))
         if self.conf.gen_id >= save_gen and self.conf.gen_id % save_gen == 0 or self.conf.gen_id == 10:
             self.backup_save()
+
+
+def pareto_plot(paretofront, path, conf):
+    """
+    Write pyplot with paretofront candidates
+    """
+
+    run_name_latex = str(conf.name).replace('_', '-')  # sfeh asd workaround for latex version
+
+    tuples = [[tree.get_parsimony(), tree.get_fitness()] for tree in paretofront]
+    xx, yy = np.array(tuples).T
+
+    if len(xx) == 0:
+        print_e(f'Plotting empty array is not possible! Data={xx, yy}')
+        return
+
+    with plt.rc_context(rc=pyplot_rc_tex):
+        fig, ax = plt.subplots()
+        right = max(max(xx), conf.parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
+
+        # beyond_lines:  # adding a point to the edges to imply that there are no more values (paretofront-plot)
+        xx = np.concatenate([[xx[0]], xx, [right + 1]])
+        yy = np.concatenate([[max(yy) + 1], yy, [yy[-1]]])
+
+        ax.step(xx, yy, linestyle='dashed', marker='.', label=f'{run_name_latex}', where='post')
+        ax.set(xlabel='complexity', ylabel='regression error',
+               xlim=(0, right),
+               ylim=(0, (max(yy) - min(min(yy), 0)) * 1.05))
+
+        try:
+            fig.savefig(path)
+            printez('f', f"paretofront (pdf): {conf.rootdir / f'paretofront.pdf'}", conf.print_type)
+        except PermissionError as perm_error:
+            print_e(f'Could not save plot: {perm_error}')  # sfeh for everything?
+
+    return
 
 
 # sfeh https://docs.sympy.org/latest/tutorial/manipulation.html

@@ -7,6 +7,16 @@ a*b * Ifte ** a*b*c *I *Ifte
 """
 
 
+def printchecker(input):
+    print('ASD')
+    return input
+
+
+@printchecker
+def mainy(txt='YOYO', print_type='ii'):
+    return 'WWW'
+
+
 if __name__ == '__main__':
     # import requests
     # import json
@@ -30,3 +40,5 @@ if __name__ == '__main__':
     # with Path('C:/Users/Rapid/Desktop/bru-projekte/pytest.org').open('w') as file:
     #     file.write(txt_result)
     pass
+
+    mainy()

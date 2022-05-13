@@ -763,9 +763,11 @@ class ExplainableGP:
         """
         Create all run-related analysis plots in the root directory
         """
-        self.plot_gen_performance(self.rootdir / 'monitoring.png')  # largest plot analysing the
-        pareto_plot(self.paretofront, self.rootdir / f'paretofront.pdf', self.conf)
-        return
+        try:
+            self.plot_gen_performance(self.rootdir / 'monitoring.png')  # largest plot analysing the
+            pareto_plot(self.paretofront, self.rootdir / f'paretofront.pdf', self.conf)
+        except:
+            self.printpl("e", 'DAAAMN YO sfeh, could not plot under windows 11')
 
     def scheduled_io(self):
         """

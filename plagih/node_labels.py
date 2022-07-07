@@ -4,7 +4,7 @@
 import plagih.util
 import re
 
-import tensorflow
+import tensorflow as tf
 import ast
 import numpy as np
 
@@ -148,7 +148,7 @@ class BoolConstant(Constant):
     True/False
     """
     xtype = (tuple([]), bool)
-    tf_type = tensorflow.bool
+    tf_type = tf.bool
 
     def __init__(self, expr):
         # super().__init__(nlabel)
@@ -168,7 +168,7 @@ class BoolConstant(Constant):
 class Add(Operator):
     nlabel = '+'
     arity = 2
-    tflow = tensorflow.add
+    tflow = tf.add
     latex = ('+', '{}+{}')
     expr_sym = '({} + {})'
     pycode = '({}+{})'
@@ -186,7 +186,7 @@ class Subtract(Operator):
     """
     nlabel = '-'
     arity = 2
-    tflow = tensorflow.subtract
+    tflow = tf.subtract
     latex = ('-', '{}-{}')
     expr_sym = '({} - {})'
     regex = ''
@@ -197,7 +197,7 @@ class Subtract(Operator):
 class Usub(Operator):
     nlabel = 'Usub'
     arity = 1
-    tflow = tensorflow.negative
+    tflow = tf.negative
     latex = ('-', '-{}')
     expr_sym = '(-{})'
     regex = ''
@@ -208,7 +208,7 @@ class Usub(Operator):
 class Multiply(Operator):
     nlabel = '*'
     arity = 2
-    tflow = tensorflow.multiply
+    tflow = tf.multiply
     latex = ('\\cdot ', '{}\\cdot {}')
     expr_sym = '({} * {})'
     pycode = '({}*{})'
@@ -218,13 +218,13 @@ class Multiply(Operator):
 class Divide_no_nan(Operator):
     """
     # Division: SAFE division by zero!
-    -->tensorflow.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented
+    -->tf.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented
     sfeh: is it okay to display this as '/'?
     """
     nlabel = '/'
     # classname = 'Divide_no_nan'  # sfeh??
     arity = 2
-    tflow = tensorflow.math.divide_no_nan
+    tflow = tf.math.divide_no_nan
     latex = ('\\div ', '\\frac{}{}')
     expr_sym = '({} / {})'
     pycode = '(lambda x, y: x/y if y!=0 else 0)(({}),({}))'
@@ -237,7 +237,7 @@ class Divide_no_nan(Operator):
 class Power(Operator):
     nlabel = '**'
     arity = 2
-    tflow = tensorflow.pow
+    tflow = tf.pow
     latex = ('{{x}}^{{y}}', '{}^{}')
     expr_sym = '({}**Round({}))'
     pycode = '({}**round({}))'
@@ -250,7 +250,7 @@ class Power(Operator):
 class Abs(Operator):
     nlabel = 'Abs'
     arity = 1
-    tflow = tensorflow.abs
+    tflow = tf.abs
     latex = ('abs', '|{}|')
     expr_sym = 'abs({})'
     pycode = 'abs({})'
@@ -264,7 +264,7 @@ class Sign(Operator):
     nlabel = 'Sign'
     # nlabel = 'Sign'
     arity = 1
-    tflow = tensorflow.sign
+    tflow = tf.sign
     latex = ('sign', 'sign({})')
     expr_sym = 'sign({})'
     pycode = 'np.sign({})'
@@ -274,7 +274,7 @@ class Sign(Operator):
 class Round(Operator):
     nlabel = 'Round'
     arity = 1
-    tflow = tensorflow.math.round
+    tflow = tf.math.round
     latex = ('round', 'round({})')
     expr_sym = 'Round({})'
     pycode = 'round({})'
@@ -284,7 +284,7 @@ class Round(Operator):
 class Square(Operator):
     nlabel = 'Square'
     arity = 1
-    tflow = tensorflow.square
+    tflow = tf.square
     latex = ('x^2', '{}^2')
     expr_sym = 'Square({})'
     pycode = '({})**2'
@@ -294,7 +294,7 @@ class Square(Operator):
 class Sqrt(Operator):
     nlabel = 'Sqrt'
     arity = 1
-    tflow = tensorflow.sqrt
+    tflow = tf.sqrt
     latex = ('\\sqrt{x}', '\\sqrt{}')
     expr_sym = 'sqrt({})'
     pycode = 'math.sqrt({})'
@@ -304,7 +304,7 @@ class Sqrt(Operator):
 class Log(Operator):
     nlabel = 'Log'
     arity = 1
-    tflow = tensorflow.math.log
+    tflow = tf.math.log
     latex = ('\\log()', '\\log{}')
     expr_sym = 'log({})'
     pycode = 'math.log({})'
@@ -314,7 +314,7 @@ class Log(Operator):
 class Log1p(Operator):
     nlabel = 'Log1p'
     arity = 1
-    tflow = tensorflow.math.log1p
+    tflow = tf.math.log1p
     latex = ('\\log(1+x)', '\\log(1+{})')
     expr_sym = 'log1p({})'
     pycode = 'math.log1p({})'
@@ -324,7 +324,7 @@ class Log1p(Operator):
 class Cos(Operator):
     nlabel = 'Cos'
     arity = 1
-    tflow = tensorflow.cos
+    tflow = tf.cos
     latex = ('\\cos ', '\\cos({})')
     expr_sym = 'cos({})'
     pycode = 'math.cos({})'
@@ -334,7 +334,7 @@ class Cos(Operator):
 class Sin(Operator):
     nlabel = 'Sin'
     arity = 1
-    tflow = tensorflow.sin
+    tflow = tf.sin
     latex = ('\\sin ', '\\sin({})')
     expr_sym = 'sin({})'
     pycode = 'math.sin({})'
@@ -345,7 +345,7 @@ class Tan(Operator):
     nlabel = 'Tan'
     # nlabel = 'tan'
     arity = 1
-    tflow = tensorflow.tan
+    tflow = tf.tan
     latex = ('\\tan ', '\\tan({})')
     expr_sym = 'tan({})'
     pycode = 'math.tan({})'
@@ -356,7 +356,7 @@ class Acos(Operator):
     # nlabel = 'acos'
     nlabel = 'Acos'
     arity = 1
-    tflow = tensorflow.acos
+    tflow = tf.acos
     latex = ('\\acos ', '\\acos({})')
     expr_sym = 'acos({})'
     pycode = 'math.acos({})'
@@ -367,7 +367,7 @@ class Asin(Operator):
     nlabel = 'Asin'
     # nlabel = 'asin'
     arity = 1
-    tflow = tensorflow.asin
+    tflow = tf.asin
     latex = ('\\asin ', '\\asin({})')
     expr_sym = 'asin({})'
     pycode = 'math.asin({})'
@@ -378,7 +378,7 @@ class Atan(Operator):
     nlabel = 'Atan'
     # nlabel = 'atan'
     arity = 1
-    tflow = tensorflow.atan
+    tflow = tf.atan
     latex = ('\\atan ', '\\atan({})')
     expr_sym = 'atan({})'
     pycode = 'math.atan({})'
@@ -389,7 +389,7 @@ class Tanh(Operator):
     nlabel = 'Tanh'
     # nlabel = 'tanh'  # sfeh check for all
     arity = 1
-    tflow = tensorflow.tanh
+    tflow = tf.tanh
     latex = ('\\tanh ', '\\tanh({})')
     expr_sym = 'tanh({})'
     pycode = 'math.tanh({})'
@@ -399,7 +399,7 @@ class Tanh(Operator):
 class And(Operator):
     nlabel = 'Andb'
     arity = 2
-    tflow = tensorflow.logical_and
+    tflow = tf.logical_and
     latex = ('and', '({}\\wedge{})')
     expr_sym = 'Andb({}, {})'
     pycode = '({} and {})'
@@ -409,7 +409,7 @@ class And(Operator):
 class Or(Operator):
     nlabel = 'Orb'
     arity = 2
-    tflow = tensorflow.logical_or
+    tflow = tf.logical_or
     latex = ('or', '({}\\vee{})')
     expr_sym = 'Orb({}, {})'
     pycode = '({} or {})'
@@ -419,7 +419,7 @@ class Or(Operator):
 class Xor(Operator):
     nlabel = 'Xor'
     arity = 2
-    tflow = tensorflow.math.logical_xor
+    tflow = tf.math.logical_xor
     latex = ('\\oplus', '({}\\oplus{})')
     expr_sym = 'Xor({}, {})'
     pycode = '({} ^ {})'
@@ -429,7 +429,7 @@ class Xor(Operator):
 class Not(Operator):
     nlabel = 'Notb'
     arity = 1
-    tflow = tensorflow.logical_not
+    tflow = tf.logical_not
     latex = ('\\neg', '\\neg{}')
     expr_sym = 'Notb({})'
     pycode = 'not({})'
@@ -439,7 +439,7 @@ class Not(Operator):
 class Eq(Operator):
     nlabel = '=='
     arity = 2
-    tflow = tensorflow.equal
+    tflow = tf.equal
     latex = ('=', '({}={})')
     expr_sym = '({} == {})'
     pycode = '({}=={})'
@@ -449,7 +449,7 @@ class Eq(Operator):
 class Neq(Operator):
     nlabel = '!='
     arity = 2
-    tflow = tensorflow.not_equal
+    tflow = tf.not_equal
     latex = ('\\neq', '({}\\neq{})')
     expr_sym = '({} != {})'
     pycode = '({}!={})'
@@ -459,7 +459,7 @@ class Neq(Operator):
 class Lt(Operator):
     nlabel = '<'
     arity = 2
-    tflow = tensorflow.less
+    tflow = tf.less
     latex = ('<', '{}<{}')
     expr_sym = '({} < {})'
     pycode = '({}<{})'
@@ -469,7 +469,7 @@ class Lt(Operator):
 class Le(Operator):
     nlabel = '<='
     arity = 2
-    tflow = tensorflow.less_equal
+    tflow = tf.less_equal
     latex = ('\\leq', '{}\\leq{}')
     expr_sym = '({} <= {})'
     pycode = '({}<={})'
@@ -479,7 +479,7 @@ class Le(Operator):
 class Gt(Operator):
     nlabel = '>'
     arity = 2
-    tflow = tensorflow.greater
+    tflow = tf.greater
     latex = ('>', '{}>{}')
     expr_sym = '({} > {})'
     pycode = '({}>{})'
@@ -489,7 +489,7 @@ class Gt(Operator):
 class Ge(Operator):
     nlabel = '>='
     arity = 2
-    tflow = tensorflow.greater_equal
+    tflow = tf.greater_equal
     latex = ('\\geq', '{}\\geq {}')  # sfeh check inserted space
     expr_sym = '({} >= {})'
     pycode = '({}>={})'
@@ -499,7 +499,7 @@ class Ge(Operator):
 class Ifte(Operator):
     nlabel = 'Ifte'
     arity = 3
-    tflow = tensorflow.where
+    tflow = tf.where
     latex = ('\\text{if-then-else}', '\\text{{ if }} ({}) \\text{{ then }} ({}) \\text{{ else }} ({})')  # 'if({} then {} else {})'
     expr_sym = 'Ifte({}, {}, {})'
     pycode = '({} if {} else {})'
@@ -509,7 +509,7 @@ class Ifte(Operator):
 class Min(Operator):
     nlabel = 'Mini'
     arity = 2
-    tflow = tensorflow.minimum
+    tflow = tf.minimum
     latex = ('\\min', '\\min({}, {})')
     expr_sym = 'Mini({}, {})'
     pycode = 'min({}, {})'
@@ -519,7 +519,7 @@ class Min(Operator):
 class Max(Operator):
     nlabel = 'Maxi'
     arity = 2
-    tflow = tensorflow.maximum
+    tflow = tf.maximum
     latex = ('\\max', '\\max({}, {})')
     expr_sym = 'Maxi({}, {})'
     pycode = 'max({}, {})'
@@ -528,7 +528,7 @@ class Max(Operator):
 
 op_dict = {
     # ast.BitXor: Xor,
-    # DON'T USE tensorflow.bitwise.bitwise_and
+    # DON'T USE tf.bitwise.bitwise_and
     # sympify('Or')->'|', sympify('And')->'&', sympify('Not')->'~'
 
     # matching the AST expression

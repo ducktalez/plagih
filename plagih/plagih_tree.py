@@ -57,13 +57,12 @@ class Node:
         However, the python hash-function has a run-specific salt for security reasons,
         making it impossible to load the LUT table between runs, so just use the str as key.
         """
-        return hash(str(self))  # sfeh
+        return hash(repr(self))  # sfeh
 
     def __str__(self):
         """
         Printing the nodes as nested array structure, easy to read.
-        discussed: Should all node information be printed?
-            print_exportable_str(self) prints further information, but str() is reserved for better debug readability.
+        Also, have a look at __repr__(self) for a more detailed result
         """
         label_str = self.get_nlabel()  # sfeh or: return the label __str__
 
@@ -73,7 +72,7 @@ class Node:
 
         return f"[{label_str}]"
 
-    def print_exportable_str(self):
+    def __repr__(self):
         """
         Printing the nodes as nested array structure such that it can be saved/loaded
         very closely related to __str__(), but adds the following information:
@@ -86,22 +85,11 @@ class Node:
             label_str += ':fix'
 
         if self.childs:
-            childstr = ', '.join([x.print_exportable_str() for x in self.childs])
+            childstr = ', '.join([repr(x) for x in self.childs])
             label_str = f"{label_str}, {childstr}"
         # elif self.is_root():
         #         label_str = f"[{label_str}]"  # another version
         return f"[{label_str}]"
-
-    # def __repr__(self):
-    #     """
-    #     sfeh not sure if this is good
-
-    #     """
-    #     print(self.get_nlabel())
-    #     try:
-    #         return self.get_nlabel()
-    #     except:
-    #         return self.get_nlabel()
 
     # def choose_term(xtype_out, choose_obs, choose_distributions, precision):
     #
@@ -125,7 +113,6 @@ class Node:
     def loadable_string(self):
         """
         Returns a string-statement that is also loadable
-        sfeh:test
         """
         print_label = self.get_label().nlabel
         if self.is_fix:

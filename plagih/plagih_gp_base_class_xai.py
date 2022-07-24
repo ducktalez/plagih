@@ -45,7 +45,7 @@ class ExplainableGP:
         self.pop_base = []  # sfeh maybe better names
 
         # Lookup-table for tree(-expressions) and tits fitness/parsimony. Improving runtime a lot!
-        self.lut = {}
+        self.lut = {}  # using str(), hash() is only temporary, repr() currently not required for LUT info
 
         # monitoring
         self.time_genstart = time.perf_counter()
@@ -499,7 +499,7 @@ class ExplainableGP:
         # evotree = self.tb.evolve_prune(evotree)  # sfeh:performance runtime-wise, do this somewhere else
         self.tb.check_all(evotree, fatal=True)
         try:
-            meta = self.lut[hash(evotree)]
+            meta = self.lut[str(evotree)]
         except KeyError as ex:
             try:
                 meta = self.finalize_tree_get_meta(evotree)
@@ -697,7 +697,7 @@ class ExplainableGP:
             raise Exception(f'eval-ex: {ex}')
 
         meta = TreeMeta(fitness, parsimony, expr_raw, expr_sym)
-        self.lut[hash(evotree)] = meta
+        self.lut[str(evotree)] = meta
         return meta
 
     def plagih_gp_run(self, gen_additionally):
@@ -761,7 +761,7 @@ class ExplainableGP:
 
     def file_analysis_plots(self):
         """
-        Make all plots
+        Create all run-related analysis plots in the root directory
         """
         self.plot_gen_performance(self.rootdir / 'monitoring.png')  # largest plot analysing the
         pareto_plot(self.paretofront, self.rootdir / f'paretofront.pdf', self.conf)

@@ -864,8 +864,8 @@ def check_expression_reconstruction(tree: Node):
     tree_1 = tree_from_nested_string(nested_labels)
     tree_1.update_fixed_nodes(tree_0)
 
-    a = tree_0.print_exportable_str()
-    b = tree_1.print_exportable_str()
+    a = repr(tree_0)
+    b = repr(tree_1)
 
     return a == b
 

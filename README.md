@@ -11,6 +11,7 @@
   - TF-evaluation equals python-evaluation equals sympy evaluation
 - BackPropagation through nodes, rank value for whole tree 
 - gens_since_last_pareto
+- separate monitoring class
 
 Always check
 - xxxxx

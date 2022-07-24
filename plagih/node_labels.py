@@ -291,6 +291,9 @@ class Powrounded(Operator):
 
 
 class Abs(Operator):
+    """
+    Represents "Abs" AND "abs"
+    """
     nlabel = 'Abs'
     arity = 1
     tflow = tf.abs

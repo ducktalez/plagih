@@ -222,6 +222,24 @@ class Divide_no_nan(Operator):
     # Division: SAFE division by zero!
     -->tf.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented
     sfeh: is it okay to display this as '/'?
+    xxxx optional to use high value instead of tf-eval to 1
+    """
+    nlabel = '/'
+    # classname = 'Divide_no_nan'  # sfeh??
+    arity = 2
+    tflow = tf.math.divide_no_nan
+    latex = ('\\div ', '\\frac{}{}')
+    expr_sym = '({} / {})'
+    pycode = '(lambda x, y: x/y if y!=0 else 0)(({}),({}))'
+    xtype = (tuple([float, float]), float)
+
+    def eval(self, a, b):
+        return a/b
+
+
+class Div(Operator):
+    """
+    xxx make this available, make a correct version of "Divide_no_nan"
     """
     nlabel = '/'
     # classname = 'Divide_no_nan'  # sfeh??
@@ -237,10 +255,33 @@ class Divide_no_nan(Operator):
 
 
 class Power(Operator):
+    """
+    AKA Power
+    ALERT: Power can create complex numbers, maybe you should use Powerounded
+    inline-available
+    """
     nlabel = '**'
     arity = 2
     tflow = tf.pow
     latex = ('{{x}}^{{y}}', '{}^{}')
+    expr_sym = '({}**Round({}))'
+    pycode = '({}**round({}))'
+    xtype = (tuple([float, float]), float)
+
+    def eval(self, a, b):
+        return a**b
+
+
+class Powrounded(Operator):
+    """
+    ALERT: This Power Version does not round the results
+    inline-available
+    xxx not yet used, make this available and rewrite Power above
+    """
+    nlabel = '**'
+    arity = 2
+    tflow = tf.pow
+    latex = ('{{x}}^{{y}}', '{}^{}')  #
     expr_sym = '({}**Round({}))'
     pycode = '({}**round({}))'
     xtype = (tuple([float, float]), float)

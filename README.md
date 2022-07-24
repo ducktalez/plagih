@@ -1,27 +1,44 @@
 # Familiar Genetic Programming with TensorFlow
 
 ## Ablage/Todos
-Make regular Functions Sympy Functions
-introduce integer
-replace x**2 with Squared(x)
-test-cases
 
+- Make regular Functions Sympy Functions
+- ASTify all functions
+- introduce integer
+- replace x**2 with Squared(x)
+- Tests for:
+  - Auto-testruns: loop/reload through [random, origin, origin_fixed] [MC, IB]
+  - TF-evaluation equals python-evaluation equals sympy evaluation
+- BackPropagation through nodes, rank value for whole tree 
+- gens_since_last_pareto
+
+Always check
+- xxxxx
+- sfeh
+- asd
+
+## crazy ideas
+- evolution+ranking of node evolutions
+
+## Checks for when you have altered code
+- Functions need to be in ops_dict
 
 Attention: If you want to write your own code, look for important developer informations in the section below!
 
 ## name ideas
-- plagih: plausible genetic improvements
+- AnnaGP
 - FamGP (Familiar GP)
-- PartnachGP
-- SendlingGP
-...is a genetic programming framework. 
+- plagih: plausible genetic improvements
+  ...is a genetic programming framework. 
 - It is specialized on fast and efficient evaluation (faster than KarooGP) and especially introduces the concept of familiarity.
 
 ## Paper ideas
 - unified mathematics as performance improvement for gp
 - cluster-based evolution of subpopulations
-- Recombining if cases in
+- Recombining if cases in 
+- BackPropagation through nodes, rank value for whole tree
 - Genetic Backpropagation
+- 
 
 
 ## Intro

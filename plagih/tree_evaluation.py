@@ -68,7 +68,6 @@ def ast_expr_to(node, tensors=None, build=None):
 
     # Arity 2
     elif isinstance(node, ast.BinOp):  # <left> <operator> <right>, e.g., (x + y)
-        # sfeh... bitAnd Go away?
         if build:
             return [op_dict[type(node.op)].nlabel,
                     ast_expr_to(node.left, build=True), ast_expr_to(node.right, build=True)]  # e. g. ['+', a, b]

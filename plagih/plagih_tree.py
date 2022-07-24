@@ -51,6 +51,7 @@ class Node:
 
     def __hash__(self):
         """
+        CAUTION: Do not use this function and do not delete this function
         CAUTION: This hash function has currently no use.
         The hash-value of a fintree was used as key for the LUT.
         However, the python hash-function has a run-specific salt for security reasons,
@@ -60,25 +61,36 @@ class Node:
 
     def __str__(self):
         """
-        Printing the nodes as nested array structure.
-        sfeh: make this statement loadable!
+        Printing the nodes as nested array structure, easy to read.
+        discussed: Should all node information be printed?
+            print_exportable_str(self) prints further information, but str() is reserved for better debug readability.
         """
         label_str = self.get_nlabel()  # sfeh or: return the label __str__
 
         if self.childs:
             childstr = ', '.join([str(x) for x in self.childs])
             label_str = f"{label_str}, {childstr}"
+
+        return f"[{label_str}]"
+
+    def print_exportable_str(self):
+        """
+        Printing the nodes as nested array structure such that it can be saved/loaded
+        very closely related to __str__(), but adds the following information:
+        - ":fix", when nodes are fixed
+        """
+        label_str = self.get_nlabel()
+        label_str = str(label_str)
+
+        if self.is_fix:
+            label_str += ':fix'
+
+        if self.childs:
+            childstr = ', '.join([x.print_exportable_str() for x in self.childs])
+            label_str = f"{label_str}, {childstr}"
         # elif self.is_root():
         #         label_str = f"[{label_str}]"  # another version
         return f"[{label_str}]"
-
-    def __eq__(self, other):
-        """
-        to check if tree1 == tree2
-        :param other:
-        :return:
-        """
-        return self.childs == other.childs
 
     # def __repr__(self):
     #     """
@@ -192,11 +204,12 @@ class Node:
         This should never be the case! But it happened during development of recreating a tree from expression.
         This might also be useful in tree checks
         """
-        if self.label != origin.label:
-            raise
         if origin.is_fix:
+            if self.label.nlabel != origin.label.nlabel:
+                raise
             self.is_fix = True
-        self.childs = [cc.update_fixed_nodes(origin.childs[ii]) for ii, cc in enumerate(self.childs)]  # TESTODO
+            for ii, cc in enumerate(self.childs):
+                cc.update_fixed_nodes(origin.childs[ii])
 
     def get_nodes_to_depth(self, goal_depth, only_mutable=False, get_closest_depth=False):
         """
@@ -350,7 +363,7 @@ class Node:
 
         for cc in self.childs:
             node_list.extend(cc.eval_mutable_nodes(xtype_out=xtype_out, allow_root=allow_root))
-            # todo does this work? replaces next lines
+        # deprecated:
         # node_list.extend(list(itertools.chain(
         #     *[cc.eval_mutable_nodes(xtype_out=xtype_out, allow_root=allow_root) for cc in self.childs])))
         return node_list

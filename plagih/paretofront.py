@@ -98,7 +98,7 @@ def pareto_from_population(paretofront, pop_next, conf):
         if success:
             printez('a', f'Paretofront: New entry. parsimony: {par} fitness: {fit:6.4f}', conf.print_type)
             pareto_append_clean(paretofront, fintree)
-            gens_since_last_pareto = 0  # todo
+            gens_since_last_pareto = 0
         else:
             gens_since_last_pareto = None
 

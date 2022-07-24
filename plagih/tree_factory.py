@@ -597,7 +597,6 @@ class TreeBuilder:
             - get these nodes, randomly choose a subset of those
             - get the amount of nodes we are allowed to add. (max nodes without the core-fintree and the nodes we are about to delete)
             - split the amount of nodes up (randomly) and add these new branches to the fintree
-            todo ...and if origin is fix?
             sfeh:idea mutate only the childs of a node! The label stays the same
             """
             evotree = origin.origin_tree_copy()
@@ -606,11 +605,9 @@ class TreeBuilder:
 
             if '_depth' in size_mode:  # "tree_depth"
                 build_depth = choose_build_size(size_mode, mean_min_max_var, force='branch')
-                for ii, node0 in enumerate(
-                        layer0_nodes):  # pareto_insert branches! get layer every time (node ids might have changed)
-                    todo = node0.eval_mutable_nodes()
-                    lvl0_node = np.random.choice(todo)  # layer0_branch =
-                    # branch_size = layer0_nodes[ii]  # sfeh:idea + len(lvl0_node)
+                for ii, node0 in enumerate(layer0_nodes):  # -> get layer every time (node ids might have changed)
+                    nd_list = node0.eval_mutable_nodes()
+                    lvl0_node = np.random.choice(nd_list)  # layer0_branch
                     new_subbranch = self.invent_core_depth(lvl0_node.get_xtype_out(), build_depth, p_full,
                                                            depth=lvl0_node.depth)
                     lvl0_node.set_new_node(new_subbranch)
@@ -645,11 +642,6 @@ class TreeBuilder:
         :param fatal: if True, raise Exception
         :return:
         """
-        # todo
-        #   self.core.workaround_normalize_exponentiation()
-        #   Check if a valid fintree can be rebuilt from its expression
-        #   The expression can include separate '~' (Usub) nodes, which makes expressions not completely equal
-        #   ->self.workaround_remove_tilde()
 
         # checks will raise an Exception if they fail
         checks = [
@@ -657,7 +649,6 @@ class TreeBuilder:
             tree.is_root(),
             tree.check_typing(self.root_xtype, fatal=fatal),
             tree.selfcheck(fatal=fatal),
-            # len(tree.get_labellist_breath()) < self.parsimony_max,  # is checked alredy
         ]
         if extre_tests:
             #
@@ -666,8 +657,6 @@ class TreeBuilder:
         if faults > 0:
             raise
         return faults  # returns true if all checks are true
-
-    # todo PowRounded
 
 
 def helper_evolve_params_branch(custom_params, tree_depth_max=10, parsimony_max=50):
@@ -867,18 +856,18 @@ def check_expression_reconstruction(tree: Node):
     """
     Extracts a tree expression and rebuilds the tree
     The trees must be identical, as it only rebuilt itself
-    CAUTION:
     :return:
     """
     tree_0 = copy.deepcopy(tree)
     expr_raw = tree.eval_expr()
     nested_labels = ast_convert_from_expr(expr_raw, build=True)
     tree_1 = tree_from_nested_string(nested_labels)
-    tree_1.update_fixed_nodes(tree)
-    # todo currently no fixed nodes
-    # TODO write ":fixed" to nested nodes!
+    tree_1.update_fixed_nodes(tree_0)
 
-    return tree_0.get_labellist_breath() == tree_1.get_labellist_breath()
+    a = tree_0.print_exportable_str()
+    b = tree_1.print_exportable_str()
+
+    return a == b
 
 
 def tree_from_nested_string(nested_str):
@@ -888,18 +877,18 @@ def tree_from_nested_string(nested_str):
     nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
     """
 
-    evaled_expr = eval(nested_str)  # delete this , op_dict
-
+    evaled_expr = eval(nested_str)
     tree = rec_build_tree(evaled_expr, 0)
     tree.finalize_set_depth()
+
     return tree
 
 
 if __name__ == '__main__':
     trexpr1 = '(Ifte, (Orb, (cartPos < -1), (Andb, (cartPos < 0.1), (cartVel < -0.05))), 2, (Ifte, (Andb, (Andb, (cartPos > -0.45), (cartPos < -0.05)), (cartVel < -0.5)), 0, (Ifte, (cartVel < 0), 0, 2)))'
-    nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"],[-1.3]]'
-    nstr = '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]'
-    # trexpr = plagih_sympify(trexpr)
+    nstr = "['+',['-',['Ifte',['True'],['sin',[2]],['/',[2.043],['4']]],['cartVel']],[-1.3]]"
+    # nstr = '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]'
+
     tr = tree_from_nested_string(nstr)
-    result = check_expression_reconstruction(tr)
-    print(result)
+    res = check_expression_reconstruction(tr)
+    print(res)

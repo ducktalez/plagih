@@ -1,3 +1,4 @@
+*.pyc
 run_examples/
 /kessi_deletable.py
 /benchmarks/slurm_runs/

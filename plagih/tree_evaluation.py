@@ -42,14 +42,13 @@ def ast_expr_to(node, tensors=None, build=None):
                 # => sfeh: in some tf-versions, the constants have to match their shape. data has shape [3423, 0]
                 # constants have shape []
             except Exception as ex:
-                return tensorflow.constant(node.n, dtype=tensorflow.float32)  # , shape=shape
+                # Error: # Could not append fintree to population because: eval-ex: list index out of range
                 # # ^Problem occurs, when no real constants/variables are in the tree
-                # # Could not append fintree to population because: eval-ex: list index out of range
                 # #   =>fintree: [Ifte, [<, [0.0], [0.0]], [0.0], [2.0]]
+                return tensorflow.constant(node.n, dtype=tensorflow.float32)  # , shape=shape
 
     elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
         if build:
-            # return node.value
             return [node.value]
         else:
             return tensorflow.constant(node.value)
@@ -59,15 +58,11 @@ def ast_expr_to(node, tensors=None, build=None):
         if build:
             if type(node.op) == ast.USub:  # workaround for ~-problem, sfeh
                 if isinstance(node.operand, (ast.Name, ast.Num, ast.NameConstant)):  # 'cartVel', 5, e
-                    # return f'-{ast_expr_to(node.operand, build=True)[0]}'
                     return [f'-{ast_expr_to(node.operand, build=True)[0]}']  # (!! "un-listed") ['-cartVel'], [-5], [-e]
                 else:
                     return ['Usub', ast_expr_to(node.operand, build=True)]  # -> ['Usub', ast()]
-                    # return ['Usub', [ast_expr_to(node.operand, build=True)]]
 
             return [op_dict[type(node.op)].nlabel, ast_expr_to(node.operand, build=True)]  # -> ['sin', ast()]
-            # return [op_dict[type(node.op)].nlabel, [ast_expr_to(node.operand, build=True)]]
-            # was: return [op_dict[type(node.op_dict)].nlabel, [ast_expr_to(node.operand, build=True)]]
         else:
             return op_dict[type(node.op)].tflow(ast_expr_to(node.operand, tensors=tensors))
 
@@ -77,8 +72,6 @@ def ast_expr_to(node, tensors=None, build=None):
         if build:
             return [op_dict[type(node.op)].nlabel,
                     ast_expr_to(node.left, build=True), ast_expr_to(node.right, build=True)]  # e. g. ['+', a, b]
-            # return [op_dict[type(node.op)].nlabel,
-            #         [ast_expr_to(node.left, build=True), ast_expr_to(node.right, build=True)]]  # e. g. ['+', [a, b]]
         else:
             return op_dict[type(node.op)].tflow(
                 ast_expr_to(node.left, tensors=tensors),
@@ -92,10 +85,9 @@ def ast_expr_to(node, tensors=None, build=None):
                         ast_expr_to(values[0], build=True),
                         ast_expr_to(values[0], build=True)]  # -> ['and', ast(), ast()]
             elif len(values) == 1:
-                # return [x]
-                # raise  # TODO debug
-                return [op_dict[type(node.op)].nlabel,
-                        ast_expr_to(values[0], build=True)]  # -> ['not', ast()]
+                raise  # sfeh:
+                # return [op_dict[type(node.op)].nlabel,
+                #         ast_expr_to(values[0], build=True)]  # -> ['not', ast()]
             else:
                 raise
                 # return ast_expr_to(values[0], build=True)
@@ -231,13 +223,8 @@ def ast_convert_from_expr(expr, tensors=None, build=None):
 
     ast_tree = ast.parse(expr, mode='eval').body
     graph = ast_expr_to(ast_tree, tensors=tensors, build=build)
-    # except Exception as ex:
-    #     # sfeh:delete_this debugging code
-    #     ast_tree = ast.parse(expr, mode='eval').body
-    #     graph = ast_expr_to(ast_tree, tensors=tensors, build=build)
 
     if build:
-        # graph = labels_from_nestedexpr(graph, [])  # sfeh hmmm del?
         graph = str(graph)  # sfeh... necessary to make string?
 
     return graph

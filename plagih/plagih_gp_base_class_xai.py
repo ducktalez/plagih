@@ -61,19 +61,23 @@ class ExplainableGP:
         """
         evolve_loop = {
             # Reproduction (10%)
-            'Repro': {'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.09, 'custom_params': {}},
-            'Rsympy': {'evolve_name': 'reproduce', 'evolve_rate': 0.00, 'custom_params': {'simplify': True}},
+            'Repro': {'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.09,
+                      'custom_params': {}},
+            'Rsympy': {'evolve_name': 'reproduce', 'evolve_rate': 0.05,
+                       'custom_params': {'simplify': True}},
             # sfeh 0.03
-            'Pareto': {'evolve_name': 'revive paretofront', 'evolve_rate': 0.01, 'custom_params': {}},
+            'Pareto': {'evolve_name': 'revive paretofront', 'evolve_rate': 0.01,
+                       'custom_params': {}},
 
             # Mutation (25%)
-            'Point': {'evolve_name': 'mutate point', 'evolve_rate': 0.05, 'custom_params': {}},
+            'Point': {'evolve_name': 'mutate point', 'evolve_rate': 0.05,
+                      'custom_params': {}},
 
-            'BranchDF': {'evolve_name': 'mutate branch', 'evolve_rate': 0.00,
+            'BranchDF': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
                          'custom_params': {
                              'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 4, 0.8),
                                             'p_full': 1.0}}},
-            'BranchDG': {'evolve_name': 'mutate branch', 'evolve_rate': 0.00,
+            'BranchDG': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
                          'custom_params': {
                              'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 5, 1),
                                             'p_full': 0.5}}},
@@ -85,20 +89,20 @@ class ExplainableGP:
                          'custom_params': {
                              'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 15, 3),
                                             'p_full': 0.5}}},
-            'BranchShrink': {'evolve_name': 'mutate branch', 'evolve_rate': 0.0,
+            'BranchShrink': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
                              'custom_params': {
                                  'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (1, 1, 1, 0),
                                                 'p_full': 0.5}}},
 
-            'FilterBO': {'evolve_name': 'filter optimize', 'evolve_rate': 0.05, 'tourn_size': 5,
+            'FilterBO': {'evolve_name': 'filter optimize', 'evolve_rate': 0.03, 'tourn_size': 5,
                          'custom_params': {'filter_mode': 'branch', 'filter_observations': True}},
-            'FilterB': {'evolve_name': 'filter optimize', 'evolve_rate': 0.05, 'tourn_size': 5,
+            'FilterB': {'evolve_name': 'filter optimize', 'evolve_rate': 0.02, 'tourn_size': 5,
                         'custom_params': {'filter_mode': 'branch', 'filter_observations': False}},
-            'FilterP': {'evolve_name': 'filter optimize', 'evolve_rate': 0.0, 'tourn_size': 5,
+            'FilterP': {'evolve_name': 'filter optimize', 'evolve_rate': 0.03, 'tourn_size': 5,
                         'custom_params': {'filter_mode': 'point', 'filter_observations': True}},
 
             # Crossover (35%)
-            'Xover': {'evolve_name': 'crossover branch', 'evolve_rate': 0.30, 'custom_params': {}},  # sum 0.70
+            'Xover': {'evolve_name': 'crossover branch', 'evolve_rate': 0.20, 'custom_params': {}},
 
             # Leftovers are automatically filled with random trees
 
@@ -106,16 +110,20 @@ class ExplainableGP:
             'Rand1': {'evolve_name': 'random trees', 'evolve_rate': 0.05,
                       'custom_params': {
                           'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 3, 4, 1), 'p_full': 1.0}}},
-            'Rand2': {'evolve_name': 'random trees', 'evolve_rate': 0.00,
+            'Rand2': {'evolve_name': 'random trees', 'evolve_rate': 0.02,
                       'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1),
                                                        'p_full': 0.5}}},
-            'Rand3': {'evolve_name': 'random trees', 'evolve_rate': 0.15,
+            'Rand3': {'evolve_name': 'random trees', 'evolve_rate': 0.10,
                       'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 3, None, 5),
                                                        'p_full': 0.5}}},
-            'Rand4': {'evolve_name': 'random trees', 'evolve_rate': 0.15,
+            'Rand4': {'evolve_name': 'random trees', 'evolve_rate': 0.10,
                       'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 3, None, 5),
                                                        'p_full': 1.0}}},  # param 'max' can be None
         }
+        sum_rates = sum(x['evolve_rate'] for x in evolve_loop.values())
+        if sum_rates != 1:
+            print_warning('w', f'Evolution rates do not add up to 1: {sum_rates}', print_type=self.conf.print_type)
+
         self.evolve_loop = self.evolve_safety_update(evolve_loop)
 
         if self.origin.origin_is_fix:
@@ -144,29 +152,6 @@ class ExplainableGP:
 
         self.evolve_tags = list(self.evolve_loop.keys()) + list(self.evolve_random.keys())
         return
-
-    # def pareto_insert_again_simplified(self, fintree):
-    #     """
-    #     # sfeh:open
-    #     """
-    #     # tree_sym = copy.deepcopy(evotree)
-    #     #
-    #     # try:
-    #     #     # printez('aaa', 'Trying to simplify for paretofront entry.')  # simplify the fintree and save in paretofront once again
-    #     #     tree_sym.evolve_reduce(obs_infos=obs_infos, completely=True)
-    #     #     parsimony = tree_sym.eval_parsimony(self.conf.complexity_measure, origin_tree=self.origin)
-    #     #     if parsimony < evotree.meta.parsimony:
-    #     #         # self.printpl('aa', 'Successfully reduced paretofront fintree!')
-    #     #         sym_fitness = self.eval_tf_fitness(tree_sym)  # sfeh actually not required, delete this
-    #     #         tree_sym.meta.fitness_train = sym_fitness
-    #     #         tree_sym.meta.parsimony = parsimony
-    #     #         self.update_pareto_with_tree(tree_sym)
-    #     # except Exception as ex:
-    #     #     print_warning('www', f'Tree sympification did not work: {ex}', print_type=self.conf.print_type)
-    #     #
-    #     # else:
-    #     #     self.printpl('aaa', 'Pareto entry was already simplified')
-    #     pass
 
     #
     # def file_pareto_latex(self, parsim, fintree):
@@ -210,51 +195,6 @@ class ExplainableGP:
     #
     #     return forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest
 
-    # def file_pareto_pycode(self):
-    #     """
-    #     this auto-generation of real (executable) python files
-    #     is strongly customized for my experiments with Mountaincar and industrial benchmark
-    #
-    #     very useful: textwrap.indent
-    #     example: complete_function = textwrap.indent(f"def decide(self, input):\n"
-    #                                         f"{function_body}\n", '    ')  # aka tab (\t)
-    #     """
-    #     pass
-    #     # py_return = self.kernel.pycode_wrap_result(self.env_vars.action.minmax).format('action')
-    #
-    #     # complete_function = f"    def decide(self, input):\n" \
-    #     #     f"        cartPos, cartVel = input\n" \
-    #     #     f"        action = {{}}\n" \
-    #     #     f"        return {py_return}\n"
-    #     #
-    #     # all_agents = []
-    #     # all_agent_names = []
-    #     # all_more_info = []
-    #     #
-    #     # for (parsim, fitness_train, fintree) in self.paretofront:
-    #     #     agent_name = f'{self.conf.name}_{parsim:.0f}'
-    #     #
-    #     #     agent_as_python = fintree.eval_pycode()
-    #     #     all_agents.pop_append_evotree(f"class {agent_name}:\n{complete_function.format(agent_as_python)}")
-    #     #     all_agent_names.pop_append_evotree(agent_name)
-    #     #     all_more_info.pop_append_evotree(f"('{agent_name}', {agent_name}(), {parsim}, {fitness_train})")
-    #     #
-    #     # all_agents = '\n\n'.join(all_agents)
-    #     # agent_tuples = ', '.join([f"('{x}', {x}())" for x in all_agent_names])
-    #     # all_more_info = ', '.join(all_more_info)
-    #     #
-    #     # """
-    #     # dude sfeh
-    #     # sfeh for fully executable code
-    #     # bad code
-    #     # """
-    #     # if 'MTC75' in self.conf.name:
-    #     #     sarsa_agent = 75
-    #     # elif 'MTC200' in self.conf.name:
-    #     #     sarsa_agent = 200
-    #     # else:
-    #     #     raise
-    #
     #     # pyc_complete = f"import math; import numpy as np\n" \
     #     #     "import sys\n" \
     #     #     "from pathlib import Path\n" \
@@ -290,10 +230,10 @@ class ExplainableGP:
         'custom_params': {'build_spec': {'size_ref': 'branch_depth', 'mean': 3, 'min': 1, 'max': 5, 'gauss_var': 0.8, 'method': 'full'}}},
         """
 
-        for tag, evolve_spec in evolve_dict.items():
-            evolve_dict[tag]['tourn_size'] = evolve_spec.get('tourn_size', self.conf.tourn_size)
-            evolve_dict[tag]['evolve_num'] = int(evolve_spec.get('evolve_rate') * self.conf.pop_max)
-            evolve_spec['custom_params'] = evolve_spec.get('custom_params', {})
+        for k, v in evolve_dict.items():
+            evolve_dict[k]['tourn_size'] = v.get('tourn_size', self.conf.tourn_size)
+            evolve_dict[k]['evolve_num'] = int(v.get('evolve_rate') * self.conf.pop_max)
+            v['custom_params'] = v.get('custom_params', {})
         return evolve_dict
 
     # self.printpl('i', 'Using evolve rates from config')
@@ -344,6 +284,7 @@ class ExplainableGP:
         """
         # All gp creators: name, function, num of trees from tournament selection
 
+        global custom_params
         for tag, evolve_specs in self.evolve_loop.items():  # all selected gp mutations
 
             evolve_name = evolve_specs['evolve_name']
@@ -360,7 +301,7 @@ class ExplainableGP:
                     evotree = self.selection_tournament(tourn_size=tourn_size)
                     if custom_params.get('simplify'):  # sfeh==>debug
                         try:
-                            evotree.evolve_reduce(completely=False)
+                            evotree = evolve_reduce(evotree, completely=False)
                             # fintree.meta.last_evolution = tag
                         except Exception as ex:
                             print_warning('www', f'Evolve reproduce failed: {ex}', print_type=self.conf.print_type)
@@ -513,31 +454,6 @@ class ExplainableGP:
 
         pop_fitness = [tree.get_fitness() for tree in popul]
 
-        # tmp_evol_performance = dict.fromkeys(self.monitor_evol.keys(), pd.DataFrame(columns=['fitness_train', 'parsimony', 'lentree']))
-        # for fintree in popul:
-        #     last_evol = fintree.meta.last_evolution
-        #     if last_evol in self.evolve_tags:
-        #         row = {'fitness_train': fintree.meta.fitness_train,
-        #                'parsimony': fintree.meta.parsimony,
-        #                'lentree': len(fintree)}
-        #         tmp_evol_performance[last_evol].loc[self.conf.gen_id] = row
-        #
-        # for last_evol, evodata in tmp_evol_performance.items():
-        #     if last_evol in self.evolve_loop:
-        #         try:
-        #             row = {'fitness_avg': evodata['fitness_train'].mean(),
-        #                    'parsimony_avg': evodata['parsimony'].mean(),
-        #                    'lentree_avg': evodata['lentree'].mean(),
-        #                    'evolve_num': self.evolve_loop[last_evol]['evolve_num'],
-        #                    'count': len(tmp_evol_performance[last_evol])}
-        #             self.monitor_evol[last_evol].pop_append_evotree(row, ignore_index=True)  #
-        #             # sfeh fitness_train - last fitness_train?
-        #         except Exception as ex:
-        #             print_e(f'Could not save evol_performance analysis. {ex}')
-        #     else:
-        #         if last_evol != 'origin' and last_evol != 'Rand3o':
-        #             print_warning('w', f'delete_this, sfeh, okay when the following is origin: {last_evol}')
-
         pop_parsim = [tree.get_parsimony() for tree in popul]
         pop_treelen = [len(fintree.tree) for fintree in popul]
         pop_fitness_best = self.kernel.np_best_fitness(pop_fitness)
@@ -552,10 +468,10 @@ class ExplainableGP:
                                                  'parsim_var': np.std(pop_parsim),
                                                  'parsim_best': np.min(pop_treelen),
                                                  'time': gen_time,
-                                                 'gens_since_last_pareto': self.gens_since_last_pareto}  # sfeh version1 delete this shit
+                                                 'gens_since_last_pareto': self.gens_since_last_pareto}  # sfeh delete?
 
-        self.printpl('gg',
-                     f'Created {len(popul)}/{self.conf.pop_max} ({unique_tree_count} unique) in generation {self.conf.gen_id}. Gen took {gen_time:4.2f}s')
+        self.printpl('gg', f'Created {len(popul)}/{self.conf.pop_max} ({unique_tree_count} unique) '
+                           f'in generation {self.conf.gen_id}. Gen took {gen_time:4.2f}s')
         return
 
     def selection_tournament(self, tourn_size=3):
@@ -825,7 +741,8 @@ class ExplainableGP:
                     # time_evolve = time.perf_counter()
                 else:
                     self.gen_next_population()
-            self.paretofront = pareto_from_population(self.paretofront, self.pop_next, self.conf)
+
+            self.paretofront = pareto_from_population(self.paretofront, self.pop_next, self.conf)  # sfeh gens_since_last_pareto was here
             self.pop_analyze()
 
             self.pop_base = self.pop_next[:]  # otherwise: deepcopy
@@ -923,5 +840,5 @@ if __name__ == '__main__':
     # nstr = "['Ifte', ['<', ['*', [2.85], ['cartVel']], ['Square', ['cartVel']]], ['*', ['cartPos'], ['*', ['cartPos'], [0.014]]], ['/', [2.0], ['cartPos']]]"
     # nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
     nstr = '["+:fix",["-:fix",["Ifte",["True"],["sin",["2"]],["/",["2.043"],["4"]]],["cartVel"]],["-1.3"]]'
-    tree = tree_from_nested_string(nstr)
-    check_expression_reconstruction(tree)
+    tr = tree_from_nested_string(nstr)
+    check_expression_reconstruction(tr)

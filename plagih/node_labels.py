@@ -103,15 +103,16 @@ def observation_get_family_and_time(name, re_pattern='_\\d+$', none_return=None)
 
 class Observation(Terminal):
     """
-    sfeh discuss: labels should not have a sign (-pos); just pos
-    # self.name = nlabel if nlabel[0] != '-' else nlabel[1:]  # sfeh delete?
+    sfeh discuss: labels should not have a sign (-pos);
+    This was used to deal with negative labels
+        self.name = nlabel if nlabel[0] != '-' else nlabel[1:]
     """
 
     def __init__(self, nlabel):
         self.nlabel = nlabel
         self.fam, self.timeindex, _ = observation_get_family_and_time(self.nlabel, none_return=None)  # remove this self.preexpr
         self.xtype = (tuple([]), float)  # sfeh:workaround
-        self.expr_sym = self.nlabel  # sfeh delete?
+        self.expr_sym = self.nlabel
         self.index_minmax = None
 
         latex = f'\\text{{{self.fam}}}'  # remove this {self.preexpr}
@@ -427,7 +428,7 @@ class Xor(Operator):
     xtype = (tuple([bool, bool]), bool)
 
 
-class Not(Operator):
+class Notb(Operator):
     nlabel = 'Notb'
     arity = 1
     tflow = tf.logical_not
@@ -527,6 +528,17 @@ class Max(Operator):
     xtype = (tuple([float, float]), float)
 
 
+# class PowRounded(Operator):
+# sfeh open
+#     nlabel = 'Pown'
+#     arity = 2
+#     tflow = tf.pow
+#     latex = ('\\max', '\\max({}, {})')
+#     expr_sym = 'Maxi({}, {})'
+#     pycode = 'max({}, {})'
+#     xtype = (tuple([float, float]), float)
+
+
 op_dict = {
     # ast.BitXor: Xor,
     # DON'T USE tf.bitwise.bitwise_and
@@ -541,7 +553,7 @@ op_dict = {
     ast.Pow: Power,
     ast.And: And,
     ast.Or: Or,
-    ast.Not: Not,
+    ast.Not: Notb,
     ast.Eq: Eq,
     ast.NotEq: Neq,
     ast.Lt: Lt,
@@ -598,14 +610,13 @@ op_dict = {
     #                     'Notb': Notb,
     #                     'Square': Square,
     #                     'Usub': Usub,  # otherwise, ~? may be problematic
-    #                     # 'usub': Usub,  # sfeh delete this
     #                     'Round': Round}
     'Usub': Usub,
     'Round': Round,
     'Square': Square,
     'Andb': And,
     'Orb': Or,
-    'Notb': Not,
+    'Notb': Notb,
     # forcing the arity
     'Ifte': Ifte,  # sfeh essential for evaluation
     'Mini': Min,  # with forced arity-2

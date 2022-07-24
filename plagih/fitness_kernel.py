@@ -57,22 +57,8 @@ class Kernel:
         df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
         self.data_train, self.data_control = train_test_split(df, test_size=0.2, random_state=0)  # discussion: random state 0 okay? test_size 0.2?
 
-    # # delete_this
-    # def fitness_compare(self, fitness1, fitness2):
-    #     """
-    #     if fitness_compared is None:
-    #         return True
-    #     else:
-    #         return True/False, DEPEND
-    #     sfeh: replace with pythonic way (__gt__ function above)
-    #     """
-    #     pass
-
     def eval_tf(self, *args, **kwargs):
         return float('nan')
-
-    # def relation(self, x, y): delete_this
-    #     pass
 
     def get_fitness_extreme_function(self, *args, **kwargs):
         """

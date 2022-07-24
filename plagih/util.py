@@ -5,7 +5,11 @@ import yaml
 from pathlib import Path
 
 
-class BColors:  # sfeh can be deleted
+DEBUG_DUMMY = True  # Use this to find codeblocks that are just interesting during development
+TEST_DUMMY = True  # sfeh: actually use this later! check trees, check if all ops are usable,
+
+
+class BColors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKGREEN = '\033[92m'

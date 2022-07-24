@@ -99,10 +99,36 @@ def pareto_from_population(paretofront, pop_next, conf):
             printez('a', f'Paretofront: New entry. parsimony: {par} fitness: {fit:6.4f}', conf.print_type)
             pareto_append_clean(paretofront, fintree)
             gens_since_last_pareto = 0  # todo
+        else:
+            gens_since_last_pareto = None
 
     paretofront = poplist_paretosort(paretofront)
 
     return paretofront
+
+
+def pareto_insert_again_simplified(self, fintree):
+    """
+    # sfeh:open
+    """
+    # tree_sym = copy.deepcopy(evotree)
+    #
+    # try:
+    #     # printez('aaa', 'Trying to simplify for paretofront entry.')  # simplify the fintree and save in paretofront once again
+    #     tree_sym.evolve_reduce(obs_infos=obs_infos, completely=True)
+    #     parsimony = tree_sym.eval_parsimony(self.conf.complexity_measure, origin_tree=self.origin)
+    #     if parsimony < evotree.meta.parsimony:
+    #         # self.printpl('aa', 'Successfully reduced paretofront fintree!')
+    #         sym_fitness = self.eval_tf_fitness(tree_sym)  # sfeh actually not required, delete this
+    #         tree_sym.meta.fitness_train = sym_fitness
+    #         tree_sym.meta.parsimony = parsimony
+    #         self.update_pareto_with_tree(tree_sym)
+    # except Exception as ex:
+    #     print_warning('www', f'Tree sympification did not work: {ex}', print_type=self.conf.print_type)
+    #
+    # else:
+    #     self.printpl('aaa', 'Pareto entry was already simplified')
+    pass
 
 
 def analyze_pareto(cpu_cores=16):  # sfeh 16 cores? nope

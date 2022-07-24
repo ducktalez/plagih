@@ -83,6 +83,7 @@ class Node:
     # def __repr__(self):
     #     """
     #     sfeh not sure if this is good
+
     #     """
     #     print(self.get_nlabel())
     #     try:
@@ -95,7 +96,7 @@ class Node:
     #     # sfeh 50% chance observation/value
     #     if random.choice(['obs', 'distrib']) == 'obs' and choose_obs[xtype_out]:
     #         obs = choose_obs[xtype_out]()
-    #         # print('SAME???', obs.name, obs.label)  # sfeh
+    #         # prsint('SAME???', obs.name, obs.label)  # sfeh
     #         return obs
     #     else:
     #         dist_fun = random.choice(choose_distributions[xtype_out])
@@ -137,9 +138,6 @@ class Node:
 
         """
         return self.label.nlabel
-
-    def get_expr_sym(self):
-        return self.label.expr_sym
 
     def get_pycode(self):
         return self.label.pycode
@@ -239,7 +237,7 @@ class Node:
 
     def get_nodes_at_depth(self, goal_depth, allow_fixed=False, expand_depth=False):
         """
-        Returns a list with mutatable ids which are *goal_depth* layers away from non modifiable nodes
+        Returns a list with mutable ids which are *goal_depth* layers away from non modifiable nodes
         last_leaves: if you want so save all leave nodes aswell
 
         sum_layers=False, get_closest=True, return_all_layers=False
@@ -261,15 +259,13 @@ class Node:
         accumulate and return the complete expression the fintree holds recursively
         """
         if self.get_arity() > 0:
-            child_expr_list = [cc.eval_expr() for cc in
-                               self.childs]  # sfeh what was that again?: reducible=reducible, obs_names=obs_names
+            child_expr_list = [cc.eval_expr() for cc in self.childs]  # sfeh what was that again?
             # if reducible:
             #     # my_expr = op_dict[self.get_label()]['sym_reduce'] or my_expr
             #     # symloc = sympy_symbol_defaults(obs_names)  # sfeh solve the problem... new version of sympy?
             #     xxx = plagih_sympify(my_expr.format(*child_expr_list), eval_locals=symloc)  # sfeh the xxx variable
             #     return xxx
-            return self.label.expr_sym.format(
-                *child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
+            return self.label.expr_sym.format(*child_expr_list)  # *list makes the list args :D f'cos({})'([33]) does not work.
         else:
             return self.label.expr_sym
 
@@ -323,35 +319,40 @@ class Node:
     def repair_depth(self, depth=0):
         """
         aka set_depth recursively for all nodes in a branch
+        mainly used in branch
+
+        The depth is written inevery node (for whatever reason), and instead of having to propagate
+        the depth through every crossover/branch mutation function, instead, we call it when replacing nodes
         """
         self.depth = depth
         for cc in self.childs:
             cc.repair_depth(depth=depth + 1)
 
-    def replace_with_branch(self, new_node: 'Node'):
+    def set_new_node(self, new_node: 'Node'):
         """
         was: new_core
         """
         self.set_label(new_node.get_label())
         self.childs = new_node.childs or []  # maybe must be updated recursively
 
-        # todo:debug if depth is set. especially with crossover! problems between different systems...
-        self.repair_depth(self.depth)
-        # self.is_fix = new_node.is_fix  # debatable
+        self.repair_depth(self.depth)  # Especially required for crossover or branches
 
-    def eval_mutatable_nodes(self, xtype_out=None, allow_root=True):
+    def eval_mutable_nodes(self, xtype_out=None, allow_root=True):
         """
-        return all nodes that are mutatable (non fixed)
+        return all nodes that are mutable (non fixed)
         sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!
         """
         node_list = []
-        if not self.is_fix:
+        if not self.is_fix:  # requirement for mutability
+            # crossover requires excluding types that are not matching, and excludes the root node
             if (xtype_out is None or xtype_out == self.get_xtype_out()) and (allow_root or not self.is_root()):
-                # crossover requires excluding types that are not matching, and excludes the root node
                 node_list.append(self)
 
-        node_list.extend(list(itertools.chain(
-            *[cc.eval_mutatable_nodes(xtype_out=xtype_out, allow_root=allow_root) for cc in self.childs])))
+        for cc in self.childs:
+            node_list.extend(cc.eval_mutable_nodes(xtype_out=xtype_out, allow_root=allow_root))
+            # todo does this work? replaces next lines
+        # node_list.extend(list(itertools.chain(
+        #     *[cc.eval_mutable_nodes(xtype_out=xtype_out, allow_root=allow_root) for cc in self.childs])))
         return node_list
 
     def evolve_mutate_filter_branch(self, precision=6):
@@ -369,28 +370,6 @@ class Node:
                 cc.evolve_mutate_filter_branch(precision=precision)
         else:
             self.label.mutate_self_filter(filter_type='gaussian_filter', precision=precision)
-
-    def evolve_reduce(self, obs_infos=None, completely=True):
-        """
-        Reducing a fintree to its most basic form with sympify.
-        (completely = False: reduce just one branch. if you wanted to have more complexity)
-        """
-        # self.state = STATE_BUILDING  #  ==>state
-        length_before = len(self)
-        if completely:  # reduce the complete fintree
-            cores_lv0 = self.get_nodes_at_depth(0, allow_fixed=False)
-            for c in cores_lv0:
-                c.evolve_branch_reduce(obs_infos)
-        else:
-            nodes = self.eval_mutatable_nodes()
-            functions = [x for x in nodes if x.get_arity() > 0]
-            if functions:
-                chosen = np.random.choice(functions)
-                chosen.evolve_branch_reduce(
-                    obs_infos)  # sfeh chosen must be set again? or not? test it at least. probably working.
-        if length_before < len(self):
-            print_e(f'FFS Trees just become larger? {self.get_nlabel()}')
-        # self.meta.clear()
 
     # def finalize_set_nodepath(self, nodepath):
     #     """

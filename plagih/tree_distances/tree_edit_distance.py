@@ -212,7 +212,7 @@ def tree_nodeid_ted_mapping(mapping):
     for ii, map_i in enumerate(mapping):
         a, b = map_i[0], map_i[1]
         if a is None:
-            print(f'{ii} Inserted {b.name}')
+            print(f'{ii} inserted {b.name}')
             pass
         elif b is None:
             print(f'{ii} deleted {a.name}')

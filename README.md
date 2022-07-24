@@ -1,5 +1,12 @@
 # Familiar Genetic Programming with TensorFlow
 
+## Ablage/Todos
+Make regular Functions Sympy Functions
+introduce integer
+replace x**2 with Squared(x)
+test-cases
+
+
 Attention: If you want to write your own code, look for important developer informations in the section below!
 
 ## name ideas
@@ -9,6 +16,15 @@ Attention: If you want to write your own code, look for important developer info
 - SendlingGP
 ...is a genetic programming framework. 
 - It is specialized on fast and efficient evaluation (faster than KarooGP) and especially introduces the concept of familiarity.
+
+## Paper ideas
+- unified mathematics as performance improvement for gp
+- cluster-based evolution of subpopulations
+- Recombining if cases in
+- Genetic Backpropagation
+
+
+## Intro
 
 compared to other gp frameworks, this one provides the opportunity to use human written code as basis for the gp-process.
 

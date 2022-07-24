@@ -55,7 +55,7 @@ def randomly_split_range(range_max, num_splits):
 
 def choose_build_size(size_mode, mean_min_max_var, tree=None, nodepath=None, force=None):
     """
-    delete this?
+    sfeh:xxx remove this?
     Very unified utility function that returns the required fintree size from the following parameters
     # branch_nodes, branch_depth, tree_depth, tree_nodes
 
@@ -72,19 +72,15 @@ def choose_build_size(size_mode, mean_min_max_var, tree=None, nodepath=None, for
 
         if size_mode == 'tree_depth':
             tree_size = tree.core.childs_depth_max
-            print('tree_size = fintree.core.childs_depth_max:', tree_size)
 
             node_size = len(nodepath)
         elif size_mode == 'tree_nodes':
             tree_size = len(tree)
-            print('len(fintree)?:', len(tree))
             node_size = len(tree.get_nodepath(nodepath))
-            print('fintree.get_nodepath(nodepath)?:', tree.get_nodepath(nodepath))
         else:
             raise Exception('Sizemode not known?')
 
         relative_size = tree_size - node_size
-        print('scheduled_io', relative_size)
 
     build_size = int(random.normalvariate(mean, size_variance))
     if size_max is not None:
@@ -94,8 +90,59 @@ def choose_build_size(size_mode, mean_min_max_var, tree=None, nodepath=None, for
     return int(build_size)
 
 
+def node_simplification(node: Node):
+    """
+    (Tries to) simplify a tree. It is quite experimental
+
+    SFEH Discussion
+        # example: Tree sympification did not work: Reduced core is even more complex than before.
+        # expr_raw: sign(Mini(((Velocity_2 * -0.790706) - sqrt(Gain_0)), (-0.569271 - Velocity_9)))
+        # old_core:[sign, [Mini, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
+        # new_node: [sign, [Mini, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.569271]]]
+    """
+    expr_raw = node.eval_expr()
+    expr_sym = expr_sympify(expr_raw)
+    nested_labels = ast_convert_from_expr(expr_sym, build=True)
+    node_rebuilt = tree_from_nested_string(nested_labels)
+    # node_rebuilt = node_rebuilt.update_fixed_nodes(node)  # this is not our problem
+    if DEBUG_DUMMY:
+        if len(node) < len(node_rebuilt):
+            raise Exception(f'Simplified node has become more complex??\n'
+                            f'{node}\n'
+                            f'{node_rebuilt}')
+    return node_rebuilt
+
+
+def evolve_reduce(tree: Node, completely=True):
+    """
+    Reducing a fintree to its most basic form with sympify.
+    (completely = False: reduce just one branch. if you wanted to have more complexity)
+
+    """
+    # self.state = STATE_BUILDING  #  ==>state
+    tree_copy = copy.deepcopy(tree)
+    if completely:  # reduce the complete fintree
+        nodes_lv0 = tree.get_nodes_at_depth(0, allow_fixed=False)  # only required for fixed-core trees
+        for cc in nodes_lv0:
+            cc.set_new_node(node_simplification(cc))
+    else:
+        # # this was implemented for runtime, to prevent simplifing leaf nodes
+        # functions = [x for x in nodes if x.get_arity() > 0]
+        # if functions:
+        # nd = np.random.choice(functions)
+        #   ...
+        nd_list = tree.eval_mutable_nodes()
+        nd_list = [x for x in nd_list if x.label.arity > 0]  # ignoring leaf nodes
+        nd = np.random.choice(nd_list)
+        nd.set_new_node(node_simplification(nd))  # sfeh chosen must be set again? or not? test it at least.
+    if len(tree_copy) < len(tree):
+        print_e(f'FFS Trees just become larger? {tree.get_nlabel()}')
+        return tree_copy
+    else:
+        return tree
+
+
 class TreeBuilder:
-    # class Choosing(Selectable):  # sfeh was
     """
     Just a class to prevent referencing all the separate shizzle everytime
 
@@ -225,22 +272,6 @@ class TreeBuilder:
         except:
             # delete this
             return np.random.choice(self.operators[any_xtype][0], p=self.operators[any_xtype][1])
-
-    # def workaround_remove_tilde(self, tree):
-    #     """
-    #     sfeh
-    #     What is the role of the tilde in a label?
-    #     I think it came from sympy... or i introduced it to trick sympy in some way
-    #     I guess it is something like -
-    #     """
-    #     if isinstance(tree.get_label(), Usub):  # tilde '~'
-    #         new_core = tree.childs[0]
-    #         tree.replace_with_branch(new_core)
-    #
-    #     for cc in tree.childs:
-    #         cc.workaround_remove_tilde()
-    #
-    #     return tree  # sfeh:delete_this debug/check if this changes the og fintree check
 
     def constants_add(self, path_distrib=Path.cwd(), data_train=None, n_samples=100):
         """
@@ -414,7 +445,7 @@ class TreeBuilder:
         # filter_observations = custom_params['filter_observations']
         # mutate_filter = 'gaussian_filter'  # sfeh:future
 
-        node = np.random.choice(evotree.eval_mutatable_nodes())
+        node = np.random.choice(evotree.eval_mutable_nodes())
         node.evolve_mutate_filter_branch(precision=self.precision)
 
         # sfeh ==>state
@@ -422,12 +453,12 @@ class TreeBuilder:
 
     def evolve_mutate_point(self, tree: Node):
         """
-        Mutate a single mutatable point in any Tree.
+        Mutate a single mutable point in any Tree.
         sfeh is the fintree a fintree copy or the same fintree?
         """
         evotree = self.evotree_deepcopy(tree)  # ==>state
 
-        node = np.random.choice(evotree.eval_mutatable_nodes())
+        node = np.random.choice(evotree.eval_mutable_nodes())
         xtype = node.get_xtype()
 
         tree.status = 0  # Building=0, structure-complete=1, evaluated=2
@@ -447,11 +478,11 @@ class TreeBuilder:
         sfeh ==>depth only
         currently only one branch
         """
-        node = np.random.choice(evotree.eval_mutatable_nodes())
+        node = np.random.choice(evotree.eval_mutable_nodes())
         xtype_out = node.get_xtype_out()
 
         branch = self.invent_core_depth(xtype_out, depth_goal, p_full, depth=0)  # sfeh ==>dummies
-        node.replace_with_branch(branch)
+        node.set_new_node(branch)
         # if node.depth == depth_goal:
         #     node.set_label(tb.choose_term(xtype_out))  # sfeh update node nlabel
         # else:
@@ -467,10 +498,10 @@ class TreeBuilder:
         sfeh ==>depth only
         currently only one branch
         """
-        node = np.random.choice(evotree.eval_mutatable_nodes())
+        node = np.random.choice(evotree.eval_mutable_nodes())
         xtype_out = node.get_xtype_out()
         branch = self.invent_core_nodeops(xtype_out, nodes_goal, p_full, depth=node.depth)  # sfeh ==>dummies
-        node.replace_with_branch(branch)
+        node.set_new_node(branch)
         return evotree
 
     def evolve_crossover(self, tree1: Node, tree2: Node):
@@ -481,31 +512,25 @@ class TreeBuilder:
         atree = self.evotree_deepcopy(tree1)  # ==>state
         btree = self.evotree_deepcopy(tree2)  # ==>state, was: btree = copy.deepcopy(tree2)
 
-        anodes = atree.eval_mutatable_nodes(allow_root=False)
+        anodes = atree.eval_mutable_nodes(allow_root=False)
         anode = np.random.choice(anodes)
 
         xtype_out = anode.get_xtype_out()
-        bnodes = btree.eval_mutatable_nodes(xtype_out=xtype_out)
+        bnodes = btree.eval_mutable_nodes(xtype_out=xtype_out)
         if len(bnodes) > 0:
             bnode = np.random.choice(bnodes)
         else:
             xtype_out = float if xtype_out == bool else bool  # the other swap type now
-            bnodes = btree.eval_mutatable_nodes(xtype_out=xtype_out)
+            bnodes = btree.eval_mutable_nodes(xtype_out=xtype_out)
             bnode = np.random.choice(bnodes)
-            anodes = atree.eval_mutatable_nodes(allow_root=False, xtype_out=xtype_out)
+            anodes = atree.eval_mutable_nodes(allow_root=False, xtype_out=xtype_out)
             anode = np.random.choice(anodes)
 
         # sfeh deepcopy required??
         anode_copy = copy.deepcopy(anode)  # sfeh ==>state
 
-        anode.replace_with_branch(bnode)
-        bnode.replace_with_branch(anode_copy)
-
-        self.check_all(atree, fatal=True)  # DELETE THIS
-        self.check_all(btree, fatal=True)  # DELETE THIS
-        # # these lines SHOULD not be necessary
-        # atree.repair_depth(depth=0)
-        # btree.repair_depth(depth=0)
+        anode.set_new_node(bnode)
+        bnode.set_new_node(anode_copy)
 
         atree = self.evolve_prune(evotree=atree)
         btree = self.evolve_prune(evotree=btree)
@@ -533,12 +558,12 @@ class TreeBuilder:
         sfeh:discuss analyze the amount of trees that have to be pruned?
         """
 
-        nodelist = evotree.eval_mutatable_nodes()
+        nodelist = evotree.eval_mutable_nodes()
         for dnode in nodelist:
             if dnode.depth == self.parsimony_max and dnode.get_arity() > 0:
                 print_warning('wwww', f'Node in fintree is too deep: {dnode.depth}', print_type=self.print_type)
                 new_node = Node(label=self.choose_term(dnode.get_xtype_out()), depth=dnode.depth)
-                dnode.replace_with_branch(new_node)
+                dnode.set_new_node(new_node)
                 # sfeh:debug did this work?
 
         prune_amount = len(evotree) - self.parsimony_max
@@ -546,17 +571,17 @@ class TreeBuilder:
             print_warning('wwww',
                           f'Tree is too complex: {len(evotree)} > {self.parsimony_max}, pruning {prune_amount} nodes.',
                           print_type=self.print_type)
-            nodelist = evotree.eval_mutatable_nodes()
+            nodelist = evotree.eval_mutable_nodes()
             prune_now = 1 + np.random.randint(prune_amount)  # 19 -> prune branch with 1 to max. 19 nodes
 
             nodelist = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
             node = np.random.choice(nodelist)
             new_node = Node(label=self.choose_term(node.get_xtype_out()), depth=node.depth)
-            node.replace_with_branch(new_node)
+            node.set_new_node(new_node)
             prune_amount = len(evotree) - self.parsimony_max
         return evotree
 
-    def pop_random(self, custom_params, origin: 'OriginTree' = None):  #'OriginTree' = None):
+    def pop_random(self, custom_params, origin: 'OriginTree' = None):  # 'OriginTree' = None):
         """
         Creates random trees for the population
         sfeh: Origin tree
@@ -581,13 +606,14 @@ class TreeBuilder:
 
             if '_depth' in size_mode:  # "tree_depth"
                 build_depth = choose_build_size(size_mode, mean_min_max_var, force='branch')
-                for ii, node0 in enumerate(layer0_nodes):  # pareto_insert branches! get layer every time (node ids might have changed)
-                    todo = node0.eval_mutatable_nodes()
+                for ii, node0 in enumerate(
+                        layer0_nodes):  # pareto_insert branches! get layer every time (node ids might have changed)
+                    todo = node0.eval_mutable_nodes()
                     lvl0_node = np.random.choice(todo)  # layer0_branch =
                     # branch_size = layer0_nodes[ii]  # sfeh:idea + len(lvl0_node)
                     new_subbranch = self.invent_core_depth(lvl0_node.get_xtype_out(), build_depth, p_full,
                                                            depth=lvl0_node.depth)
-                    lvl0_node.replace_with_branch(new_subbranch)
+                    lvl0_node.set_new_node(new_subbranch)
 
             elif '_nodes' in size_mode:  # "tree_nodes"
                 build_amount = choose_build_size(size_mode, mean_min_max_var, force='branch')
@@ -595,11 +621,11 @@ class TreeBuilder:
 
                 for ii, node0 in enumerate(
                         layer0_nodes):  # pareto_insert branches! get layer every time (node ids might have changed)
-                    lvl0_node = np.random.choice(node0.eval_mutatable_nodes())  # layer0_branch =
+                    lvl0_node = np.random.choice(node0.eval_mutable_nodes())  # layer0_branch =
                     # branch_size = layer0_nodes[ii]  # sfeh:idea + len(lvl0_node)
                     new_subbranch = self.invent_core_nodeops(lvl0_node.get_xtype_out(), layer0_splits[ii], p_full,
                                                              depth=lvl0_node.depth)
-                    lvl0_node.replace_with_branch(new_subbranch)
+                    lvl0_node.set_new_node(new_subbranch)
             else:
                 raise
 
@@ -641,26 +667,7 @@ class TreeBuilder:
             raise
         return faults  # returns true if all checks are true
 
-    # def evolve_branch_reduce(self, obs_infos):
-    #     # sfeh asdasdasd reduce me is obviously bullshit crapshit.
-    #     #  sympify works with this combination only very few times
-    #     #  lets have a new idea.
-    #     expr_raw = self.get_nlabel(reducible=True, obs_names=obs_infos.keys())
-    #     try:
-    #         expr_sym = expr_sympify(expr_raw)
-    #     except:
-    #         raise Exception(f'Sympify failed. {expr_raw}')
-    #
-    #     replace_with_branch = [1, 2, 3]  # todo coolcore_from_expr(expr_sym, obs_infos)
-    #     if len(replace_with_branch) < len(self):
-    #         self.replace_with_branch(replace_with_branch)
-    #     elif len(replace_with_branch) > len(self):
-    #         raise Exception(
-    #             f'Reduced core is even more complex than before  ({len(replace_with_branch)}, {len(self)}). expr_raw: {expr_raw}')  # \nold_core:{self}\nnew_node: {new_node} May happen with sympification and Usub.
-    #         # example: Tree sympification did not work: Reduced core is even more complex than before. expr_raw: sign(Mini(((Velocity_2 * -0.790706) - sqrt(Gain_0)), (-0.569271 - Velocity_9)))
-    #         # old_core:[sign, [Mini, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
-    #         # new_node: [sign, [Mini, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.569271]]]
-    #     return
+    # todo PowRounded
 
 
 def helper_evolve_params_branch(custom_params, tree_depth_max=10, parsimony_max=50):
@@ -822,33 +829,26 @@ def rec_build_tree(lst, depth=0, obs_list=None):
     strlabel = str(lst[0])
     if ':fix' in strlabel:
         strlabel = strlabel.replace(':fix', '')
-        print(f'Label {strlabel} is fixed!')  # delete_this
         is_fix = True
     else:
         is_fix = False
 
     if strlabel in ['True', 'False']:
-        print(f'Label {strlabel} is boolean.')
         label = BoolConstant(strlabel)
     else:
         try:
             strlabel = float(strlabel)
             label = FloatConstant(strlabel)
-            print(f'Label {strlabel} is float.')
         except Exception as ex:
-
             if strlabel in op_dict:
-                print(f'Label {strlabel} is an operator.')
                 label = op_dict[strlabel]
             else:
                 if obs_list:
                     if strlabel in obs_list:
-                        print(f'Label {strlabel} is an observation.')
                         label = Observation(strlabel)
                     else:
                         raise Exception(f'Label "{strlabel}" can not be assigned to a node-label!')
                 else:
-                    print(f'Label {strlabel} is assumed to be an observation.')
                     label = Observation(strlabel)
 
     node = Node(label=label, depth=depth, is_fix=is_fix)
@@ -878,8 +878,6 @@ def check_expression_reconstruction(tree: Node):
     # todo currently no fixed nodes
     # TODO write ":fixed" to nested nodes!
 
-    print(tree_0.get_labellist_breath(), '\n\n', tree_1.get_labellist_breath())
-
     return tree_0.get_labellist_breath() == tree_1.get_labellist_breath()
 
 
@@ -898,11 +896,10 @@ def tree_from_nested_string(nested_str):
 
 
 if __name__ == '__main__':
-
     trexpr1 = '(Ifte, (Orb, (cartPos < -1), (Andb, (cartPos < 0.1), (cartVel < -0.05))), 2, (Ifte, (Andb, (Andb, (cartPos > -0.45), (cartPos < -0.05)), (cartVel < -0.5)), 0, (Ifte, (cartVel < 0), 0, 2)))'
-    nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
+    nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"],[-1.3]]'
     nstr = '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]'
     # trexpr = plagih_sympify(trexpr)
-    tree = tree_from_nested_string(nstr)
-    result = check_expression_reconstruction(tree)
+    tr = tree_from_nested_string(nstr)
+    result = check_expression_reconstruction(tr)
     print(result)

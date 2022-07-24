@@ -14,11 +14,10 @@ sfeh: use function-types (-> 'kommuttative'?)
 
 from plagih.node_labels import *
 from plagih.tree_distances.tree_edit_distance import apted_distance
+from plagih.util import *
 
 from dataclasses import dataclass
 import itertools
-
-from plagih.util import *
 
 
 # logging.basicConfig(filename='example.log', filemode='a', level=logging.DEBUG)  # sfeh encoding='utf-8' maybe in the future
@@ -43,15 +42,16 @@ class Node:
 
     meta = None
 
-    def __init__(self, label: 'NodeLabel' = None, depth=None, is_fix=False, childs=None):
+    def __init__(self, label: 'NodeLabel' = None, depth=None, is_fix=False, childs=None, status=0):
         self.label = label
-        self.is_fix = is_fix  #
+        self.is_fix = is_fix
         self.childs = childs or []
         self.depth = depth
+        self.status = status  # 0 =
 
     def __hash__(self):
         """
-        This hash function has currently no use.
+        CAUTION: This hash function has currently no use.
         The hash-value of a fintree was used as key for the LUT.
         However, the python hash-function has a run-specific salt for security reasons,
         making it impossible to load the LUT table between runs, so just use the str as key.
@@ -71,6 +71,14 @@ class Node:
         # elif self.is_root():
         #         label_str = f"[{label_str}]"  # another version
         return f"[{label_str}]"
+
+    def __eq__(self, other):
+        """
+        to check if tree1 == tree2
+        :param other:
+        :return:
+        """
+        return self.childs == other.childs
 
     # def __repr__(self):
     #     """
@@ -174,11 +182,23 @@ class Node:
 
     def set_childs(self, childs):
         """
-
+        Sets the self.childs variable, which must be nodes or None
         """
         if len(childs) == self.get_arity():
             self.childs = childs
         return  # ==>STATE?
+
+    def update_fixed_nodes(self, origin: 'Node'):
+        """
+        Updating the fixed nodes in a tree where they were lost for some reason.
+        This should never be the case! But it happened during development of recreating a tree from expression.
+        This might also be useful in tree checks
+        """
+        if self.label != origin.label:
+            raise
+        if origin.is_fix:
+            self.is_fix = True
+        self.childs = [cc.update_fixed_nodes(origin.childs[ii]) for ii, cc in enumerate(self.childs)]  # TESTODO
 
     def get_nodes_to_depth(self, goal_depth, only_mutable=False, get_closest_depth=False):
         """
@@ -208,7 +228,14 @@ class Node:
         for depth in range(0, max_depth + 1):
             labels_at_depth = [x.label for x in self.get_nodes_at_depth(depth)]
             label_list.extend(labels_at_depth)
+
         return label_list
+
+    def get_all_nodes(self):
+        if len(self.childs) == 0:
+            return [self]
+        else:
+            return [self] + [cc.get_all_nodes() for cc in self.childs]
 
     def get_nodes_at_depth(self, goal_depth, allow_fixed=False, expand_depth=False):
         """
@@ -218,10 +245,13 @@ class Node:
         sum_layers=False, get_closest=True, return_all_layers=False
         """
         nodes = []
-        if (not self.is_fix or allow_fixed) and (self.depth == goal_depth or (self.depth > goal_depth and expand_depth)):
+        if (not self.is_fix or allow_fixed) and (
+                self.depth == goal_depth or (self.depth > goal_depth and expand_depth)):
             return [self]
         elif self.depth <= goal_depth or expand_depth:
-            nodes.extend(list(itertools.chain(*[cc.get_nodes_at_depth(goal_depth, allow_fixed=allow_fixed, expand_depth=expand_depth) for cc in self.childs])))
+            nodes.extend(list(itertools.chain(
+                *[cc.get_nodes_at_depth(goal_depth, allow_fixed=allow_fixed, expand_depth=expand_depth) for cc in
+                  self.childs])))
             return nodes
         else:
             return []
@@ -231,13 +261,15 @@ class Node:
         accumulate and return the complete expression the fintree holds recursively
         """
         if self.get_arity() > 0:
-            child_expr_list = [cc.eval_expr() for cc in self.childs]  # sfeh what was that again?: reducible=reducible, obs_names=obs_names
+            child_expr_list = [cc.eval_expr() for cc in
+                               self.childs]  # sfeh what was that again?: reducible=reducible, obs_names=obs_names
             # if reducible:
             #     # my_expr = op_dict[self.get_label()]['sym_reduce'] or my_expr
             #     # symloc = sympy_symbol_defaults(obs_names)  # sfeh solve the problem... new version of sympy?
             #     xxx = plagih_sympify(my_expr.format(*child_expr_list), eval_locals=symloc)  # sfeh the xxx variable
             #     return xxx
-            return self.label.expr_sym.format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
+            return self.label.expr_sym.format(
+                *child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
         else:
             return self.label.expr_sym
 
@@ -258,6 +290,15 @@ class Node:
         """
         # sfEh check if this still works as one-liner
         return f"{{{self.get_nlabel()}{''.join([cc.eval_apted_notation() for cc in self.childs])}}}"
+
+    def get_max_depth(self, depth=0):
+        """
+        Go through all nodes, save depth
+        """
+        if len(self.childs) == 0:
+            return depth
+        else:
+            return max(cc.get_max_depth(depth=depth + 1) for cc in self.childs)
 
     def eval_parsimony(self, complexity_measure, origin_tree=None, weights=None):
         """
@@ -285,7 +326,7 @@ class Node:
         """
         self.depth = depth
         for cc in self.childs:
-            cc.repair_depth(depth=depth+1)
+            cc.repair_depth(depth=depth + 1)
 
     def replace_with_branch(self, new_node: 'Node'):
         """
@@ -309,7 +350,8 @@ class Node:
                 # crossover requires excluding types that are not matching, and excludes the root node
                 node_list.append(self)
 
-        node_list.extend(list(itertools.chain(*[cc.eval_mutatable_nodes(xtype_out=xtype_out, allow_root=allow_root) for cc in self.childs])))
+        node_list.extend(list(itertools.chain(
+            *[cc.eval_mutatable_nodes(xtype_out=xtype_out, allow_root=allow_root) for cc in self.childs])))
         return node_list
 
     def evolve_mutate_filter_branch(self, precision=6):
@@ -375,37 +417,43 @@ class Node:
 
         return max_depth
 
-    def check_all(self):
-        # todo
-        #   self.core.workaround_normalize_exponentiation()
-        #   Check if a valid fintree can be rebuilt from its expression
-        #   each parameter in each node.
-        #   The expression can include separate '~' (Usub) nodes, which makes expressions not completely equal
-        #   ->self.workaround_remove_tilde()
-        #   are we in the root_node?
-        pass
+    def check_typing(self, xtype_parent, fatal=True):  # sfeh
+        """
+        Überprüft, ob die Informationen zu
+        :return:
+        """
+        result = [self.get_xtype_out() == xtype_parent,
+                  self.get_xtype_in() == tuple([cc.get_xtype_out() for cc in self.childs]),
+                  len(self.childs) == self.get_arity()]
 
-    # def evolve_branch_reduce(self, obs_infos):
-    #     # sfeh asdasdasd reduce me is obviously bullshit crapshit.
-    #     #  sympify works with this combination only very few times
-    #     #  lets have a new idea.
-    #     expr_raw = self.get_nlabel(reducible=True, obs_names=obs_infos.keys())
-    #     try:
-    #         expr_sym = expr_sympify(expr_raw)
-    #     except:
-    #         raise Exception(f'Sympify failed. {expr_raw}')
-    #
-    #     replace_with_branch = [1, 2, 3]  # todo coolcore_from_expr(expr_sym, obs_infos)
-    #     if len(replace_with_branch) < len(self):
-    #         self.replace_with_branch(replace_with_branch)
-    #     elif len(replace_with_branch) > len(self):
-    #         raise Exception(
-    #             f'Reduced core is even more complex than before  ({len(replace_with_branch)}, {len(self)}). expr_raw: {expr_raw}')  # \nold_core:{self}\nnew_node: {new_node} May happen with sympification and Usub.
-    #         # example: Tree sympification did not work: Reduced core is even more complex than before. expr_raw: sign(Mini(((Velocity_2 * -0.790706) - sqrt(Gain_0)), (-0.569271 - Velocity_9)))
-    #         # old_core:[sign, [Mini, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
-    #         # new_node: [sign, [Mini, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.569271]]]
-    #     return
+        if sum(result) < len(result) and fatal:
+            raise  # sfeh
 
+        for ii, cc in enumerate(self.childs):
+            cc.check_typing(self.get_xtype_in()[ii])
+
+        return True
+
+    def check_depth_infos(self, depth=0, fatal=None):
+        """
+        Checks, whether the depth of all nodes in the tree are set correctly.
+        Should not be necessary if all evolutions (branch-mutation, crossover) work fine
+        - starts at depth 0, increase at every level
+        - compare with the written value
+        :return: boolean
+        """
+        if depth != self.depth:
+            if fatal:
+                raise
+            return False
+        return all([cc.check_depth_infos(depth=depth + 1, fatal=fatal) for cc in self.childs])
+
+    def selfcheck(self, check_depth=True, fatal=None):
+        """
+        Tree Self-check for its structure
+        """
+        results = [self.check_depth_infos(fatal=fatal) if check_depth else 0]
+        return sum(results)
 
 # sfeh:discussion especially with mc: there can be more than one pareto entry with the same parsimony/fitness!
 
@@ -425,10 +473,3 @@ class Node:
 #         new_index = int(max(min(round(random.gauss(self.timeindex, 1)), self.index_minmax[1]), 0))
 #         self.timeindex = new_index
 #         self.name = f'{self.fam}_{new_index}'
-
-
-if __name__ == '__main__':
-
-    trexpr1 = '(Ifte, (Orb, (cartPos < -1), (Andb, (cartPos < 0.1), (cartVel < -0.05))), 2, (Ifte, (Andb, (Andb, (cartPos > -0.45), (cartPos < -0.05)), (cartVel < -0.5)), 0, (Ifte, (cartVel < 0), 0, 2)))'
-    trexpr2 = '(Ifte, (cartVel < 0), 0, 2)'
-    # trexpr = plagih_sympify(trexpr)

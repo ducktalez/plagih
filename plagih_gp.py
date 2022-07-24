@@ -1,6 +1,6 @@
 """
 This starts the whole genetic programming.
-This extra file was added to have a file in the root directory that can be started.
+This (extra) file was added to have a file in the root directory that can be started.
 """
 import argparse
 import sys

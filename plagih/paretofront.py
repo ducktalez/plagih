@@ -1,13 +1,111 @@
 """
 All paretoefficient GP-candidates, aka the "best" entries for each complexity.
-
 -> updated after each generation
 
-separate class
 """
+from plagih.util import printez
 
 
-def analyze_pareto(self, cpu_cores=16):  # sfeh 16 cores? nope
+def poplist_paretosort(pop_list):
+    """
+    sfeh check this!! op_next mostly has 2 pareto entries??
+    """
+    # sfeh:open:kernel sorting with x.get_fitness OnLY when fitness has "<" relation. (otherwise: -x.get_fitness)
+    fitness_sign = -1  # sfeh-kernel/remove: this was loaded from self.fitness_sign. Now, every Fitness is better the smaller
+    pop_list = sorted(pop_list, key=lambda x: (x.get_parsimony(), fitness_sign * x.get_fitness()))
+
+    try:
+        best = pop_list[0]
+    except Exception as ex:
+        raise Exception(f'The list is empty, i guess: {pop_list}. {ex}')
+
+    best_par = best.get_parsimony()
+    best_fit = best.get_fitness()
+    pop_pareto = [best]
+
+    for tree in pop_list:
+        parsim = tree.get_parsimony()
+        if parsim == best_par:
+            continue  # sfeh:discuss does sorted keep the order?
+        else:
+            fitness = tree.get_fitness()
+            # if self.fitness_compare(fitness, best_fit): sfeh-kernel
+            if fitness < best_fit:
+                pop_pareto.append(tree)
+                best_par = parsim
+                best_fit = fitness
+
+    return pop_pareto
+
+
+# def pareto_append_clean(paretofront, tree: FinalizedTree):
+def pareto_append_clean(paretofront, tree):
+    """
+
+    """
+    paretofront.append(tree)
+    paretofront = poplist_paretosort(paretofront)
+    return paretofront
+
+
+def pareto_export(paretofront):
+    """
+    Save all the paretofront candidates to a file.
+    (Quick feedback that requires little overhead)
+    """
+    return [f'Parsimony: \t{parsim} MeanError: \t{fitness} Expr: \t{tree.meta.expr_raw}' for (parsim, fitness, tree)
+            in paretofront]
+
+
+def pareto_from_population(paretofront, pop_next, conf):
+    """
+    sfeh:debug, might be faulty
+    sfeh:discuss pareto-efficient, but different pareto entries?
+    """
+    pop_parcandidates = poplist_paretosort(pop_next)  # pareto-candidates in the pop, renamed to be clear
+
+    if len(paretofront) == 0:
+        firstpareto = pop_parcandidates[0]
+        printez('a',
+                f'Starting a new paretofront with parsimony: {firstpareto.get_parsimony()} fitness: {firstpareto.get_fitness():6.4f}',
+                conf.print_type)
+        paretofront.append(firstpareto)
+
+    for fintree in pop_parcandidates:
+        success = False
+        fit = fintree.get_fitness()
+        par = fintree.get_parsimony()
+
+        if all([par < p.get_parsimony() for p in paretofront]):
+            printez('a', f'Paretofront: New simplest entry. parsimony: {par} fitness: {fit:6.4f}', conf.print_type)
+            success = True
+            # optional: print now deprecated entries in the paretofront
+
+        # if all([self.fitness_compare(fit, p.get_fitness()) for p in paretofront]):  # sfeh-kernel
+        if all([fit < p.get_fitness() for p in paretofront]):
+            printez('a', f'Paretofront: New best-fitness entry. parsimony: {par} fitness: {fit:6.4f}',
+                    conf.print_type)
+            success = True
+            # optional: print now deprecated entries in the paretofront
+
+        for p in paretofront:
+            # better fitness at a comparatively good
+            # if self.fitness_compare(fit, p.get_fitness()) and par <= p.get_parsimony():  #sfeh-kernel
+            if fit < p.get_fitness() and par <= p.get_parsimony():
+                # paretofront.remove(p)  # sfeh: remove in the other cases aswell or not at all
+                success = True
+
+        if success:
+            printez('a', f'Paretofront: New entry. parsimony: {par} fitness: {fit:6.4f}', conf.print_type)
+            pareto_append_clean(paretofront, fintree)
+            gens_since_last_pareto = 0  # todo
+
+    paretofront = poplist_paretosort(paretofront)
+
+    return paretofront
+
+
+def analyze_pareto(cpu_cores=16):  # sfeh 16 cores? nope
     """
     sfeh:open
     Writing all analysis files after evaluating the paretofront.

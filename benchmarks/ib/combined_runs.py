@@ -198,7 +198,7 @@ def combined_lists(path_main, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_co
     """
     Make the combined evaluation of industrial benchmark runs.
     Three runs have to be combined from their raw code.
-    (I now found a much better way by loading from the backup file, but I am lazy x~~~D)
+    (I now found a much better way by loading from the backup file, but SFEH is lazy x.D)
     """
     main_name = path_main.name
     merge_paretos(path_main)

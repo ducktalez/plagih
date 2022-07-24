@@ -1,12 +1,14 @@
 """
 The factory to create trees
+trees are the structure, which can be filled
 """
 
-from plagih.plagih_tree import *
 from plagih.node_labels import *
 from plagih.plagih_tree import Node
 from plagih.sympy_extras import expr_sympify
+from plagih.tree_evaluation import ast_convert_from_expr
 from plagih.util import *
+from plagih.node_labels import op_dict  # ...loaded in this class
 
 import copy
 import random
@@ -218,7 +220,11 @@ class TreeBuilder:
         any_xtype can be a tuple, single type or even None
         """
         # return self.operators[xtype_out]()  # "seloplam"
-        return np.random.choice(self.operators[any_xtype][0], p=self.operators[any_xtype][1])
+        try:
+            return np.random.choice(self.operators[any_xtype][0], p=self.operators[any_xtype][1])
+        except:
+            # delete this
+            return np.random.choice(self.operators[any_xtype][0], p=self.operators[any_xtype][1])
 
     # def workaround_remove_tilde(self, tree):
     #     """
@@ -350,24 +356,25 @@ class TreeBuilder:
             # sfeh add p_term? 0.5?
             return self.choose_term(xtype)
 
-    def invent_core_nodeops(self, xtype_out, nodeops_max, p_full, depth):
+    def invent_core_nodeops(self, xt, nodeops_max, p_full, depth):
         """
         This version counts the amount of operators as construction limit!
         sfeh:idea nodes are now about being operators...
+        '+' = xtype = (tuple([float, float]), float)
         """
         childs = []
-        label = self.choose_op(xtype_out)
+        label = self.choose_op(xt)
 
         if nodeops_max > 0:
             nodeops_max -= 1
-
             nodeops_split = randomly_split_range(nodeops_max, label.arity)
 
-            childs = [self.invent_core_nodeops(xt_out, nodeops_split[ii], p_full, depth + 1) for ii, xt_out in
-                      enumerate(label.xtype[0])]
+            childs = []
+            for ii, xt_child in enumerate(label.xtype[0]):
+                childs.append(self.invent_core_nodeops(xt_child, nodeops_split[ii], p_full, depth + 1))
 
         else:
-            label = self.choose_term(xtype_out)
+            label = self.choose_term(xt)
 
         node = Node(label=label, childs=childs, depth=depth)  # , depth=depth sfeh no depth?
 
@@ -423,12 +430,14 @@ class TreeBuilder:
         node = np.random.choice(evotree.eval_mutatable_nodes())
         xtype = node.get_xtype()
 
+        tree.status = 0  # Building=0, structure-complete=1, evaluated=2
+
         if node.get_arity() > 0:
             node.set_label(self.choose_op(xtype))  # Function is same type, same arity
         else:
             node.set_label(self.choose_term(xtype[1]))  # 3 -> '2f' -> 5
 
-        # sfeh==>state
+        tree.status = 1  # sfeh==>state
         return evotree
 
     def evolve_mutate_branch_depth(self, evotree, depth_goal, p_full=1.0):
@@ -460,12 +469,13 @@ class TreeBuilder:
         """
         node = np.random.choice(evotree.eval_mutatable_nodes())
         xtype_out = node.get_xtype_out()
-        branch = self.invent_core_nodeops(xtype_out, nodes_goal, p_full, depth=0)  # sfeh ==>dummies
+        branch = self.invent_core_nodeops(xtype_out, nodes_goal, p_full, depth=node.depth)  # sfeh ==>dummies
         node.replace_with_branch(branch)
         return evotree
 
     def evolve_crossover(self, tree1: Node, tree2: Node):
         """
+        Evolution with crossover of branches with two trees
         currently only one branch
         """
         atree = self.evotree_deepcopy(tree1)  # ==>state
@@ -491,9 +501,11 @@ class TreeBuilder:
         anode.replace_with_branch(bnode)
         bnode.replace_with_branch(anode_copy)
 
-        # todo set depth correctly instead of repair!
-        atree.repair_depth(depth=0)
-        btree.repair_depth(depth=0)
+        self.check_all(atree, fatal=True)  # DELETE THIS
+        self.check_all(btree, fatal=True)  # DELETE THIS
+        # # these lines SHOULD not be necessary
+        # atree.repair_depth(depth=0)
+        # btree.repair_depth(depth=0)
 
         atree = self.evolve_prune(evotree=atree)
         btree = self.evolve_prune(evotree=btree)
@@ -544,15 +556,16 @@ class TreeBuilder:
             prune_amount = len(evotree) - self.parsimony_max
         return evotree
 
-    def pop_random(self, custom_params, origin: 'OriginTree' = None):
+    def pop_random(self, custom_params, origin: 'OriginTree' = None):  #'OriginTree' = None):
         """
         Creates random trees for the population
+        sfeh: Origin tree
         """
         _, size_mode, mean_min_max_var, p_full = helper_evolve_params_branch(custom_params,
                                                                              tree_depth_max=self.tree_depth_max,
                                                                              parsimony_max=self.parsimony_max)
 
-        if origin:  # .exists():
+        if origin.existing:
             """
             pareto_insert a (random) number of branches at the first possible "layer"
             (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
@@ -568,8 +581,7 @@ class TreeBuilder:
 
             if '_depth' in size_mode:  # "tree_depth"
                 build_depth = choose_build_size(size_mode, mean_min_max_var, force='branch')
-                for ii, node0 in enumerate(
-                        layer0_nodes):  # pareto_insert branches! get layer every time (node ids might have changed)
+                for ii, node0 in enumerate(layer0_nodes):  # pareto_insert branches! get layer every time (node ids might have changed)
                     todo = node0.eval_mutatable_nodes()
                     lvl0_node = np.random.choice(todo)  # layer0_branch =
                     # branch_size = layer0_nodes[ii]  # sfeh:idea + len(lvl0_node)
@@ -601,6 +613,54 @@ class TreeBuilder:
                 raise
 
         return evotree
+
+    def check_all(self, tree: Node, fatal=False, extre_tests=False):
+        """
+        :param fatal: if True, raise Exception
+        :return:
+        """
+        # todo
+        #   self.core.workaround_normalize_exponentiation()
+        #   Check if a valid fintree can be rebuilt from its expression
+        #   The expression can include separate '~' (Usub) nodes, which makes expressions not completely equal
+        #   ->self.workaround_remove_tilde()
+
+        # checks will raise an Exception if they fail
+        checks = [
+            self.root_xtype == tree.get_xtype_out(),
+            tree.is_root(),
+            tree.check_typing(self.root_xtype, fatal=fatal),
+            tree.selfcheck(fatal=fatal),
+            # len(tree.get_labellist_breath()) < self.parsimony_max,  # is checked alredy
+        ]
+        if extre_tests:
+            #
+            checks.extend([tree.get_max_depth() <= self.tree_depth_max])
+        faults = len(checks) - sum(checks)
+        if faults > 0:
+            raise
+        return faults  # returns true if all checks are true
+
+    # def evolve_branch_reduce(self, obs_infos):
+    #     # sfeh asdasdasd reduce me is obviously bullshit crapshit.
+    #     #  sympify works with this combination only very few times
+    #     #  lets have a new idea.
+    #     expr_raw = self.get_nlabel(reducible=True, obs_names=obs_infos.keys())
+    #     try:
+    #         expr_sym = expr_sympify(expr_raw)
+    #     except:
+    #         raise Exception(f'Sympify failed. {expr_raw}')
+    #
+    #     replace_with_branch = [1, 2, 3]  # todo coolcore_from_expr(expr_sym, obs_infos)
+    #     if len(replace_with_branch) < len(self):
+    #         self.replace_with_branch(replace_with_branch)
+    #     elif len(replace_with_branch) > len(self):
+    #         raise Exception(
+    #             f'Reduced core is even more complex than before  ({len(replace_with_branch)}, {len(self)}). expr_raw: {expr_raw}')  # \nold_core:{self}\nnew_node: {new_node} May happen with sympification and Usub.
+    #         # example: Tree sympification did not work: Reduced core is even more complex than before. expr_raw: sign(Mini(((Velocity_2 * -0.790706) - sqrt(Gain_0)), (-0.569271 - Velocity_9)))
+    #         # old_core:[sign, [Mini, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
+    #         # new_node: [sign, [Mini, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.569271]]]
+    #     return
 
 
 def helper_evolve_params_branch(custom_params, tree_depth_max=10, parsimony_max=50):
@@ -751,9 +811,6 @@ class OriginTree:
     def origin_tree_copy(self):
         return copy.deepcopy(self.fintree.tree)
 
-    def exists(self):
-        return self.existing
-
 
 def rec_build_tree(lst, depth=0, obs_list=None):
     """
@@ -765,7 +822,7 @@ def rec_build_tree(lst, depth=0, obs_list=None):
     strlabel = str(lst[0])
     if ':fix' in strlabel:
         strlabel = strlabel.replace(':fix', '')
-        print(f'Label {strlabel} is fixed!')
+        print(f'Label {strlabel} is fixed!')  # delete_this
         is_fix = True
     else:
         is_fix = False
@@ -797,13 +854,33 @@ def rec_build_tree(lst, depth=0, obs_list=None):
     node = Node(label=label, depth=depth, is_fix=is_fix)
 
     if len(lst[1:]) == node.get_arity():
-        childs = [rec_build_tree(x, depth=depth + 1) for x in lst[1:]]
+        childs = [rec_build_tree(x, depth=depth + 1, obs_list=obs_list) for x in lst[1:]]
         node.set_childs(childs)
 
     else:
         raise Exception(f'Tree-building list length {len(lst[1:])} does not match the nodes arity {node.get_arity()}.')
 
     return node
+
+
+def check_expression_reconstruction(tree: Node):
+    """
+    Extracts a tree expression and rebuilds the tree
+    The trees must be identical, as it only rebuilt itself
+    CAUTION:
+    :return:
+    """
+    tree_0 = copy.deepcopy(tree)
+    expr_raw = tree.eval_expr()
+    nested_labels = ast_convert_from_expr(expr_raw, build=True)
+    tree_1 = tree_from_nested_string(nested_labels)
+    tree_1.update_fixed_nodes(tree)
+    # todo currently no fixed nodes
+    # TODO write ":fixed" to nested nodes!
+
+    print(tree_0.get_labellist_breath(), '\n\n', tree_1.get_labellist_breath())
+
+    return tree_0.get_labellist_breath() == tree_1.get_labellist_breath()
 
 
 def tree_from_nested_string(nested_str):
@@ -813,7 +890,19 @@ def tree_from_nested_string(nested_str):
     nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
     """
 
-    evaled_expr = eval(nested_str)  # , op_dict)
+    evaled_expr = eval(nested_str)  # delete this , op_dict
 
     tree = rec_build_tree(evaled_expr, 0)
+    tree.finalize_set_depth()
     return tree
+
+
+if __name__ == '__main__':
+
+    trexpr1 = '(Ifte, (Orb, (cartPos < -1), (Andb, (cartPos < 0.1), (cartVel < -0.05))), 2, (Ifte, (Andb, (Andb, (cartPos > -0.45), (cartPos < -0.05)), (cartVel < -0.5)), 0, (Ifte, (cartVel < 0), 0, 2)))'
+    nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
+    nstr = '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]'
+    # trexpr = plagih_sympify(trexpr)
+    tree = tree_from_nested_string(nstr)
+    result = check_expression_reconstruction(tree)
+    print(result)

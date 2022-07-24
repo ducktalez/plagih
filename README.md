@@ -1,7 +1,5 @@
 # Familiar Genetic Programming with TensorFlow
 
-TODO. This read-me is outdated.
-
 Attention: If you want to write your own code, look for important developer informations in the section below!
 
 ## name ideas
@@ -182,3 +180,10 @@ Optional: `tikzplotlib` (For additional Latex-graph)
 ## Developer information
 - Do not save paths in pickle between runs; if required, only save strings. 
 - Otherwise, pickle files between systems may not work.
+
+### The structure of the code
+
+The plagih_gp run depends on the following modules:
+- a loop, in which new generations of evolved trees are created
+- trees, which are a recursive node-structure, that allow evolution
+- 

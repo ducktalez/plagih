@@ -1,9 +1,7 @@
 """
 
 """
-import plagih.util
 import re
-
 import tensorflow as tf
 import ast
 import numpy as np
@@ -22,6 +20,9 @@ class NodeLabel:
     latex = None
 
     expr_sym = None
+
+    def __str__(self):
+        return self.nlabel
 
     # def __init__(self, *args, **kwargs):
     #     # nlabel=None, arity=0, xtype_out=(tuple([None]), None), tflow=None, expr_sym=None, pycode=None, latex=None
@@ -536,7 +537,7 @@ op_dict = {
     ast.Sub: Subtract,
     ast.USub: Usub,
     ast.Mult: Multiply,
-    ast.Div: Divide_no_nan,
+    ast.Div: Divide_no_nan,  # sfeh - actually not correct
     ast.Pow: Power,
     ast.And: And,
     ast.Or: Or,

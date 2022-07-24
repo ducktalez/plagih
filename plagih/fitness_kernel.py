@@ -1,240 +1,11 @@
-from plagih.node_labels import op_dict
-
 import tensorflow
 import pandas as pd
 from sklearn.model_selection import train_test_split
-
-from plagih.tree_factory import FinalizedTree
-from plagih.util import *
 import numpy as np
 import matplotlib.pyplot as plt
-from pathlib import Path
-import ast
 
-
-# def activate_dataset(path_data, action):
-#     """
-#     loading the data which the GP will be working on.
-#     The .csv-file is prepared (loading correct data-type, splitting data, ...)
-#     and saved as pickle-file for reloading runs.
-#     This is especially important, as the split in training and test-data must be the same.
-#
-#     separate loading the prepared data into the main class.
-#     Why like this? I needed to find a bug in the data_from_csv file and
-#     did not want to start the whole stuff everytime
-#
-#         # self.data_train_panda, self.data_control_panda
-#     """
-#
-#     if path_data.suffix == '.p':
-#         data_prepared = pickle_load(path_data)
-#     elif path_data.suffix == '.csv':
-#         data_prepared = data_from_csv(path_data, action=action)
-#     else:
-#         raise FileNotFoundError(f'No data provided? File must be a pickle (.p) or csv (.csv) file. Loaded file: {path_data}')
-#
-#     env_vars, data_train, data_control = data_prepared  # data_control is data_test
-#
-#     return env_vars, data_train, data_control
-
-
-def ast_expr_to(node, tensors=None, build=None):
-    """
-    Returns (recursively) a (tensorflow) graph from a (raw or sympified) math expression.
-    please use by calling labels_from_graphlist()
-
-    Used to be for tensorflow only, but was modified to save 'sympified' trees.
-
-    One of [tensors, prnt, build] must be set
-    -> tensors: Creates a tensorflow graph for evaluation
-    -> prnt: creates a string expression of the fintree (I think I tried this before 'build' worked)
-    -> build: creates a nested nlabel-list, e.g. a+(b/c) -> [+, [a], [/, [b, c]]]] (at least I think so)
-    """
-
-    # Arity 0
-    if isinstance(node, ast.Name):  # <tensor_name>
-        if build:
-            return [node.id]
-        else:
-            return tensors[node.id]
-
-    elif isinstance(node, ast.Num):  # <number>
-        if build:
-            return [node.n]
-        else:
-            try:
-                shape = tensors[list(tensors.keys())[0]].get_shape()  # sfeh:workaround
-                return tensorflow.constant(node.n, dtype=tensorflow.float32, shape=shape)  # , shape=shape
-                # ^ValueError: Shapes must be equal rank, but are 0 and 1 for 'Select_1' (op: 'Select') with input shapes
-                # => sfeh: in some tf-versions, the constants have to match their shape. data has shape [3423, 0]
-                # constants have shape []
-            except Exception as ex:
-                return tensorflow.constant(node.n, dtype=tensorflow.float32)  # , shape=shape
-                # # ^Problem occurs, when no real constants/variables are in the tree
-                # # Could not append fintree to population because: eval-ex: list index out of range
-                # #   =>fintree: [Ifte, [<, [0.0], [0.0]], [0.0], [2.0]]
-
-    elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
-        if build:
-            return [node.value]
-        else:
-            return tensorflow.constant(node.value)
-    #
-    # Arity 1
-    elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., sin(1), -1
-        if build:
-            if type(node.op) == ast.USub:  # workaround for ~-problem
-                if isinstance(node.operand, ast.Name) or isinstance(node.operand, ast.Num) or isinstance(node.operand, ast.NameConstant):
-                    return [f'-{ast_expr_to(node.operand, build=True)[0]}']
-                else:
-                    return ['Usub', [ast_expr_to(node.operand, build=True)]]
-            return [op_dict[type(node.op)].nlabel, [ast_expr_to(node.operand, build=True)]]
-            # was: return [op_dict[type(node.op_dict)].nlabel, [ast_expr_to(node.operand, build=True)]]
-        else:
-            return op_dict[type(node.op)].tflow(ast_expr_to(node.operand, tensors=tensors))
-
-    # Arity 2
-    elif isinstance(node, ast.BinOp) or isinstance(node, ast.BitAnd):  # <left> <operator> <right>, e.g., (x + y), (a & True)
-        if build:
-            return [op_dict[type(node.op)].nlabel,
-                    [ast_expr_to(node.left, build=True),
-                     ast_expr_to(node.right, build=True)]]
-        else:
-            return op_dict[type(node.op)].tflow(
-                ast_expr_to(node.left, tensors=tensors),
-                ast_expr_to(node.right, tensors=tensors))
-
-    elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
-        if build:
-            return ast_chain_bool(node.values, op_dict[type(node.op)].nlabel, build=True)
-        else:
-            return ast_chain_bool(node.values, op_dict[type(node.op)].tflow, tensors=tensors)
-
-    elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
-        if build:
-            return ast_chain_compare([node.left] + node.comparators, node.ops, build=True)
-        else:
-            return ast_chain_compare([node.left] + node.comparators, node.ops, tensors=tensors)
-
-    # Arity x, all custom functions
-    elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
-
-        if node.func.id == 'Ifte':
-            if build:
-                return ['Ifte',
-                        [ast_expr_to(node.args[0], build=True),
-                         ast_expr_to(node.args[1], build=True),
-                         ast_expr_to(node.args[2], build=True)]]
-            else:
-                return op_dict[node.func.id].tflow(tensorflow.dtypes.cast(
-                    ast_expr_to(node.args[0], tensors=tensors), tensorflow.bool),
-                    ast_expr_to(node.args[1], tensors=tensors),
-                    ast_expr_to(node.args[2], tensors=tensors))
-
-        elif len(node.args) <= 2:
-            if build:
-                if len(node.args) == 1:
-                    return [op_dict[node.func.id].nlabel,
-                            [ast_expr_to(node.args[0], build=True)]]
-                    # return [op_dict[node.func.id],  # sfeh:check: remove .nlabel?
-                    #         [ast_expr_to(node.args[0], build=True)]]
-                elif len(node.args) == 2:
-                    return [op_dict[node.func.id].nlabel,
-                            [ast_expr_to(node.args[0], build=True),
-                             ast_expr_to(node.args[1], build=True)]]
-                else:
-                    raise Exception('This arity is not supported')
-            else:
-                return op_dict[node.func.id].tflow(*[ast_expr_to(arg, tensors=tensors) for arg in node.args])
-
-        else:
-            raise Exception('Failed to identify the function. {}'.format(type(node)))
-    else:
-        raise TypeError('Node type could not be handeled in ast-evaluation: {}'.format(node))
-
-
-def ast_chain_bool(values, operation, tensors=None, build=False):
-    """
-    Chains a sequence of boolean operations (e.g. 'a and b and c') into a single TensorFlow (TF) sub graph.
-        a & b
-    --> values[0] operation values[1]
-    """
-    if build:
-        x = ast_expr_to(values[0], build=True)
-        if len(values) == 2:
-            return [operation, [values[0], values[1]]]
-        elif len(values) == 1:
-            return x
-        else:
-            raise
-    elif tensors:
-        x = tensorflow.dtypes.cast(ast_expr_to(values[0], tensors=tensors), tensorflow.bool)
-        if len(values) > 1:
-            return operation(x, ast_chain_bool(values[1:], operation, tensors=tensors))
-        else:
-            return x
-
-
-def ast_chain_compare(comparators, ops, tensors=None, build=False):
-    """
-    Chains a sequence of comparison operations (e.g. 'a > b < c') into a single TensorFlow (TF) sub graph.
-
-    """
-    x = ast_expr_to(comparators[0], tensors=tensors, build=build)
-    y = ast_expr_to(comparators[1], tensors=tensors, build=build)
-
-    if len(comparators) > 2:
-        print_e('This is usually not used, and-concatenation of multiple chain compares. sfeh, bring this back?')
-        return tensorflow.logical_and(op_dict[type(ops[0])].tflow(x, y), ast_chain_compare(comparators[1:], ops[1:], tensors=tensors))
-    else:
-        if build:
-            return [op_dict[type(ops[0])].nlabel, [x, y]]
-        else:
-            return op_dict[type(ops[0])].tflow(x, y)
-
-
-def labels_from_nestedexpr(labels_nested_list, result_accum):
-    """
-    Returns a label list from the nested list which ast_expr_to() created
-    [+, [a], [/, [b, c]]]]  -> [+, a, /, b, c]
-    """
-
-    for x in labels_nested_list:  # all elements, that are not lists themselves
-        if type(x) is not list:
-            x = str(x)  # labels must be string!
-            result_accum.append(x)
-
-    only_lists = [x for x in labels_nested_list if (type(x) == list)]
-    if only_lists:
-        from itertools import chain
-        lists_removed = list(chain(*only_lists))
-        result_accum = labels_from_nestedexpr(lists_removed, result_accum)
-
-    return result_accum
-
-
-def ast_convert_from_expr(expr, tensors=None, build=None):
-    """
-    Starts the recursive ast-analysis of the expression
-
-    Extract expression fintree from the string algo_sym.
-    Please provide ONE of the following if you want to get...
-    - tensorflow-graph: All variables (observation0, ...) as tensors.
-    - build: True
-    More information in ast_expr_to()
-
-    """
-
-    ast_tree = ast.parse(expr, mode='eval').body
-    graph = ast_expr_to(ast_tree, tensors=tensors, build=build)
-    # except Exception as ex:
-    #     # sfeh:delete_this debugging code
-    #     ast_tree = ast.parse(expr, mode='eval').body
-    #     graph = ast_expr_to(ast_tree, tensors=tensors, build=build)
-    if build:
-        graph = labels_from_nestedexpr(graph, [])
-
-    return graph
+from plagih.util import *
+from plagih.tree_evaluation import ast_convert_from_expr
 
 
 class EvalAction:
@@ -255,7 +26,7 @@ class EvalAction:
 class Kernel:
     """
     The "abstract" Kernel class for the GP process.
-    optional: creating another
+    idea: supporting multiple Kernels?
     """
 
     def __init__(self, path_data_csv, conf, *args, **kwargs):
@@ -268,7 +39,6 @@ class Kernel:
         self.tf_config.gpu_options.allow_growth = conf.tf_gpu_allow_growth
         self.tf_device = conf.tf_device
 
-        # with Path.open(path_data_csv, 'r') as file:
         df = pd.read_csv(path_data_csv)
         # sfeh it is float64, float64, int64 with MTC.. does it work with Tensorflow?
         # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
@@ -287,112 +57,22 @@ class Kernel:
         df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
         self.data_train, self.data_control = train_test_split(df, test_size=0.2, random_state=0)  # discussion: random state 0 okay? test_size 0.2?
 
-    def poplist_paretosort(self, pop_list):
-        """
-        sfeh check this!! op_next mostly has 2 pareto entries??
-        """
-        # sfeh:open:kernel sorting with x.get_fitness OnLY when fitness has "<" relation. (otherwise: -x.get_fitness)
-        pop_list = sorted(pop_list, key=lambda x: (x.get_parsimony(), self.fitness_sign * x.get_fitness()))
-
-        try:
-            best = pop_list[0]
-        except Exception as ex:
-            raise Exception(f'The list is empty, i guess: {pop_list}. {ex}')
-
-        best_par = best.get_parsimony()
-        best_fit = best.get_fitness()
-        pop_pareto = [best]
-
-        for tree in pop_list:
-            parsim = tree.get_parsimony()
-            if parsim == best_par:
-                continue  # sfeh:discuss does sorted keep the order?
-            else:
-                fitness = tree.get_fitness()
-                if self.fitness_compare(fitness, best_fit):
-                    pop_pareto.append(tree)
-                    best_par = parsim
-                    best_fit = fitness
-
-        return pop_pareto
-
-    def pareto_from_population(self, paretofront, pop_next, conf):
-        """
-        sfeh:debug, might be faulty
-        sfeh:discuss pareto-efficient, but different pareto entries?
-        """
-        pop_parcandidates = self.poplist_paretosort(pop_next)  # pareto-candidates in the pop, renamed to be clear
-
-        if len(paretofront) == 0:
-            firstpareto = pop_parcandidates[0]
-            printez('a',
-                    f'Starting a new paretofront with parsimony: {firstpareto.get_parsimony()} fitness: {firstpareto.get_fitness():6.4f}',
-                    conf.print_type)
-            paretofront.append(firstpareto)
-
-        for fintree in pop_parcandidates:
-            success = False
-            fit = fintree.get_fitness()
-            par = fintree.get_parsimony()
-
-            if all([par < p.get_parsimony() for p in paretofront]):
-                printez('a', f'Paretofront: New simplest entry. parsimony: {par} fitness: {fit:6.4f}', conf.print_type)
-                success = True
-                # optional: print now deprecated entries in the paretofront
-
-            if all([self.fitness_compare(fit, p.get_fitness()) for p in paretofront]):
-                printez('a', f'Paretofront: New best-fitness entry. parsimony: {par} fitness: {fit:6.4f}',
-                        conf.print_type)
-                success = True
-                # optional: print now deprecated entries in the paretofront
-
-            for p in paretofront:
-                # better fitness at a comparatively good
-                if self.fitness_compare(fit, p.get_fitness()) and par <= p.get_parsimony():
-                    # paretofront.remove(p)  # sfeh: remove in the other cases aswell or not at all
-                    success = True
-
-            if success:
-                printez('a', f'Paretofront: New entry. parsimony: {par} fitness: {fit:6.4f}', conf.print_type)
-                self.pareto_append_clean(paretofront, fintree)
-                gens_since_last_pareto = 0
-                # self.printpl('a', f"New entry found! {BColors.RESET}{fintree.get_parsimony()}, {fintree.get_fitness()}:{BColors.RESET} {fintree.meta.expr_raw}")
-
-        paretofront = self.poplist_paretosort(paretofront)
-
-        return paretofront
-
-    def pareto_txt(self, paretofront):
-        """
-        Save all the paretofront candidates to a file.
-        (Quick feedback that requires little overhead)
-        """
-        return [f'Parsimony: \t{parsim} MeanError: \t{fitness} Expr: \t{tree.meta.expr_raw}' for (parsim, fitness, tree)
-                in paretofront]
-
-    def pareto_append_clean(self, paretofront, tree: FinalizedTree):
-        """
-
-        """
-        paretofront.append(tree)
-        paretofront = self.poplist_paretosort(paretofront)
-        return paretofront
-
-    def fitness_compare(self, fitness1, fitness2):
-        """
-        if fitness_compared is None:
-            return True
-        else:
-            return True/False, DEPEND
-        sfeh: replace with pythonic way (__gt__ function above)
-        """
-        pass
+    # # delete_this
+    # def fitness_compare(self, fitness1, fitness2):
+    #     """
+    #     if fitness_compared is None:
+    #         return True
+    #     else:
+    #         return True/False, DEPEND
+    #     sfeh: replace with pythonic way (__gt__ function above)
+    #     """
+    #     pass
 
     def eval_tf(self, *args, **kwargs):
         return float('nan')
 
-    def relation(self, x, y):
-        pass
+    # def relation(self, x, y): delete_this
+    #     pass
 
     def get_fitness_extreme_function(self, *args, **kwargs):
         """
@@ -443,6 +123,7 @@ class RegressionKernel(Kernel):
 
     def fitness_compare(self, fitness, fitness_compared):
         """
+        ...maybe, the fitness should ALWAYS be better the lower?
         """
         if fitness_compared is None:
             return True
@@ -450,6 +131,11 @@ class RegressionKernel(Kernel):
             return fitness < fitness_compared
 
     def histogram_bins(self, action_minmax):
+        """
+
+        :param action_minmax: action min and max, to display the whole range of actions
+        :return: bins for a beautiful histogram
+        """
         act_min, act_max = action_minmax
         act_range = act_max - act_min
         if self.discrete:  # [0, 1, 2] -> 2
@@ -538,7 +224,7 @@ class RegressionKernel(Kernel):
         pairwise_diff = solution - results_kernel
 
         if self.MSE or self.RMSE:  # sfeh huber loss! mse, mae, rmse, huber, (log)
-            # sfeh remove the fucking RMSE?^^
+            # sfeh remove the fucking RMSE?^^ -> no. only use the RMSE!
             tf_error = tensorflow.square
         else:
             tf_error = tensorflow.abs
@@ -622,8 +308,6 @@ class ClassificationKernel(Kernel):
     def __init__(self, path_data_csv, conf, *args, **kwargs):
         super().__init__(path_data_csv, conf, *args, **kwargs)
 
-        self.fitness_sign = +1
-
     def eval_tf(self):
         pass
 
@@ -665,10 +349,10 @@ class ClassificationKernel(Kernel):
         if fitness2 is None:
             return True
         else:
-            return fitness1 > fitness2
+            return fitness1 < fitness2
 
     def get_fitness_extreme_function(self, *args, **kwargs):
-        return max(*args, **kwargs)
+        return min(*args, **kwargs)
 
     def tf_get_pairwise_fitness(self, solution, kernel_result, eval_action):
         """
@@ -702,25 +386,8 @@ class MatchKernel(Kernel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fitness_sign = +1
-
     def eval_tf(self):
         pass
-
-    def fitness_compare(self, fitness1, fitness2):
-        """
-
-        """
-        if fitness2 is None:
-            return True
-        else:
-            return fitness1 > fitness2
-
-    def get_fitness_extreme_function(self, *args, **kwargs):
-        """
-
-        """
-        return max(*args, **kwargs)
 
     def tf_get_pairwise_fitness(self, solution, kernel_result):
         """

@@ -1,11 +1,10 @@
 """
 Functions, that might be addable in the future:
 """
-from plagih.paretofront import *
-from plagih.util import *
 from plagih.fitness_kernel import *
-from plagih.sympy_extras import expr_sympify
+from plagih.paretofront import pareto_from_population
 from plagih.tree_factory import *
+
 import copy
 from pathlib import Path
 import matplotlib.pyplot as plt
@@ -318,10 +317,10 @@ class ExplainableGP:
         - Monitoring initialisation and monitoring
         """
 
-        if self.origin.exists():
+        if self.origin.existing:
             self.pop_next.append(self.origin.fintree)
             # self.pop_append_evotree(self.origin.fintree)  # sfeh why not :P
-            # self.pareto.pareto_insert(self.origin)  # the origin fintree is the only candidate (automatically added, i hope)
+            # self.pareto.pareto_insert(self.origin)  # the origin fintree is the only candidate (automatically added)
         else:
             total_rate = sum([x['evolve_rate'] for x in self.evolve_random.values()])
 
@@ -330,10 +329,7 @@ class ExplainableGP:
                 custom_params = evolve_specs.get('custom_params')
 
                 for nn in range(evolve_num):
-                    if self.origin.origin_is_fix:
-                        evotree = self.tb.pop_random(custom_params, origin=self.origin)
-                    else:
-                        evotree = self.tb.pop_random(custom_params)
+                    evotree = self.tb.pop_random(custom_params, origin=self.origin)
                     self.pop_append_evotree(evotree, tag)
         return
 
@@ -358,7 +354,7 @@ class ExplainableGP:
             self.printpl('gggg', f'->Evolving \'{tag}\' {evolve_num}x starting...')
             if evolve_name == 'reproduce':
                 """
-                
+                Reproduction
                 """
                 for nn in range(evolve_num):
                     evotree = self.selection_tournament(tourn_size=tourn_size)
@@ -374,7 +370,7 @@ class ExplainableGP:
 
             elif evolve_name == 'mutate point':
                 """
-                Point mutation, One point (terminal or function) gets mutated.
+                Point mutation, one point (terminal or function) gets mutated.
                 """
                 for nn in range(evolve_num):
                     evotree = self.selection_tournament(tourn_size=tourn_size)
@@ -384,7 +380,7 @@ class ExplainableGP:
 
             elif evolve_name == 'mutate branch':
                 """
-                branch_nodes
+                One node is replaced with a random branch
                 """
                 for nn in range(evolve_num):
                     _, size_mode, mean_min_max_var, p_full = helper_evolve_params_branch(custom_params,
@@ -393,14 +389,14 @@ class ExplainableGP:
                     evotree = self.selection_tournament(tourn_size=tourn_size)
                     build_size = choose_build_size(size_mode, mean_min_max_var, tree=evotree, force='branch')  # sfeh:test options, depth, in this case
 
-                    if size_mode == 'branch_depth':
+                    if size_mode == 'branch_depth':  # building a branch to a depth
                         evotree = self.tb.evolve_mutate_branch_depth(evotree, build_size, p_full=p_full)
 
-                    elif size_mode == 'branch_nodes':
+                    elif size_mode == 'branch_nodes':  # building a branch with an amount of nodes
                         evotree = self.tb.evolve_mutate_branch_nodes(evotree, build_size, p_full=p_full)
                     else:
                         raise
-
+                    evotree = self.tb.evolve_prune(evotree)  # sfeh:performance runtime-wise, do this somewhere else
                     self.pop_append_evotree(evotree, tag)
 
             elif evolve_name == 'crossover branch':
@@ -424,7 +420,7 @@ class ExplainableGP:
                         self.pop_append_evotree(atree, tag=tag)
                         self.pop_append_evotree(btree, tag=tag)
                     except Exception as ex:
-                        pass
+                        print_warning("www", f'Crossover failed: {ex}')
 
             elif evolve_name == 'filter optimize':
 
@@ -441,14 +437,20 @@ class ExplainableGP:
 
             elif evolve_name == 'random trees':
 
-                if self.origin.origin_is_fix:
-                    for nn in range(evolve_num):
-                        evotree = self.tb.pop_random(custom_params, origin=self.origin)
-                        self.pop_append_evotree(evotree, tag=tag)
-                else:
-                    for nn in range(evolve_num):
-                        evotree = self.tb.pop_random(custom_params)
-                        self.pop_append_evotree(evotree, tag=tag)
+                for nn in range(evolve_num):
+                    evotree = self.tb.pop_random(custom_params, origin=self.origin)
+                    self.pop_append_evotree(evotree, tag=tag)
+
+                ## DELETE
+                # if self.origin.origin_is_fix:
+                #     for nn in range(evolve_num):
+                #         evotree = self.tb.pop_random(custom_params, origin=self.origin)
+                #         self.pop_append_evotree(evotree, tag=tag)
+                # else:
+                #     for nn in range(evolve_num):
+                #         evotree = self.tb.pop_random(custom_params)
+                #         self.pop_append_evotree(evotree, tag=tag)
+
             else:
                 print_e(f"Evolution not known: '{evolve_name}'")
 
@@ -460,7 +462,9 @@ class ExplainableGP:
                 self.printpl('iii', f'{missing_trees}/{self.conf.pop_max} trees are missing in this population!')
 
             while len(self.pop_next) < self.conf.pop_max:
-                return  # sfeh aka create trees here if desired
+                evotree = self.tb.pop_random(custom_params, origin=self.origin)
+                self.pop_append_evotree(evotree, tag=tag)
+                return  # sfeh aka create trees here if desired. Is this desired?
 
         # sfeh automatically fill with random trees (check this at the initiation)
         # total_rate = sum([x['evolve_rate'] for x in self.evolve_list.values()])
@@ -576,7 +580,8 @@ class ExplainableGP:
         - check if the fintree is actually valid
         ->
         """
-        evotree = self.tb.evolve_prune(evotree)  # sfeh:performance runtime-wise, do this somewhere else
+        # evotree = self.tb.evolve_prune(evotree)  # sfeh:performance runtime-wise, do this somewhere else
+        self.tb.check_all(evotree, fatal=True)
         try:
             meta = self.lut[hash(evotree)]
         except KeyError as ex:
@@ -820,7 +825,7 @@ class ExplainableGP:
                     # time_evolve = time.perf_counter()
                 else:
                     self.gen_next_population()
-            self.paretofront = self.kernel.pareto_from_population(self.paretofront, self.pop_next, self.conf)
+            self.paretofront = pareto_from_population(self.paretofront, self.pop_next, self.conf)
             self.pop_analyze()
 
             self.pop_base = self.pop_next[:]  # otherwise: deepcopy
@@ -887,7 +892,7 @@ def pareto_plot(paretofront, path, conf):
 
         try:
             fig.savefig(path)
-            printez('f', f"paretofront (pdf): {conf.rootdir / f'paretofront.pdf'}", conf.print_type)
+            printez('f', f"paretofront (.pdf): {path}", conf.print_type)
         except PermissionError as perm_error:
             print_e(f'Could not save plot: {perm_error}')  # sfeh for everything?
 
@@ -919,3 +924,4 @@ if __name__ == '__main__':
     # nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
     nstr = '["+:fix",["-:fix",["Ifte",["True"],["sin",["2"]],["/",["2.043"],["4"]]],["cartVel"]],["-1.3"]]'
     tree = tree_from_nested_string(nstr)
+    check_expression_reconstruction(tree)

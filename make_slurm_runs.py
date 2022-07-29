@@ -19,8 +19,6 @@ run_starts = [
     'MTC200_MAE_scratch',
     'MTC200_MAE_simple',
     'MTC200_MAE_simpleFix',
-    # 'MTC200_MAE_simplePlus',
-    # 'MTC200_MAE_simplePlusFix',
     'MTC200_MAE_simonBest',
     'MTC200_MAE_simonBestFix',
     'MTC200_MAE_simonBestFix2',
@@ -33,8 +31,6 @@ run_starts = [
     'MTC200_MSE_scratch',
     'MTC200_MSE_simple',
     'MTC200_MSE_simpleFix',
-    # 'MTC200_MSE_simplePlus',
-    # 'MTC200_MSE_simplePlusFix',
     'MTC200_MSE_simonBest',
     'MTC200_MSE_simonBestFix',
     'MTC200_MSE_simonBestFix2',
@@ -62,38 +58,12 @@ run_starts = [
     # IB
     # """
     'IB_MAE_scratch_0', 'IB_MAE_scratch_1', 'IB_MAE_scratch_2',
-    # 'IB_MAE_tanh_scratch_0', 'IB_MAE_tanh_scratch_1', 'IB_MAE_tanh_scratch_2',
-    # 'IB_MAE_sim2_0', 'IB_MAE_sim2_1', 'IB_MAE_sim2_2',
-    # 'IB_MAE_explun01_sim2_0', 'IB_MAE_explun01_sim2_1', 'IB_MAE_explun01_sim2_2',
-    # 'IB_MAE_tanh_sim2_0', 'IB_MAE_tanh_sim2_1', 'IB_MAE_tanh_sim2_2',
-    # 'IB_MAE_explun01_tanh_sim2_0', 'IB_MAE_explun01_tanh_sim2_1', 'IB_MAE_explun01_tanh_sim2_2',
-    # 'IB_MAE_tanh_udluft_0', 'IB_MAE_tanh_udluft_1', 'IB_MAE_tanh_udluft_2',
 
     'IB_RMSE_scratch_0', 'IB_RMSE_scratch_1', 'IB_RMSE_scratch_2',
-    # 'IB_RMSE_s3m_0', 'IB_RMSE_s3m_1', 'IB_RMSE_s3m_2',
-    # 'IB_RMSE_tanh_s3m_0', 'IB_RMSE_tanh_s3m_1', 'IB_RMSE_tanh_s3m_2',
-    # 'IB_RMSE_explun01_s3m_0', 'IB_RMSE_explun01_s3m_1', 'IB_RMSE_explun01_s3m_2',
-    # # 'IB_RMSE_sim2_0', 'IB_RMSE_sim2_1', 'IB_RMSE_sim2_2',
-    # # 'IB_RMSE_explun01_sim2_0', 'IB_RMSE_explun01_sim2_1', 'IB_RMSE_explun01_sim2_2',
-    # # 'IB_RMSE_tanh_sim2_0', 'IB_RMSE_tanh_sim2_1', 'IB_RMSE_tanh_sim2_2',
-    # # 'IB_RMSE_explun01_tanh_sim2_0', 'IB_RMSE_explun01_tanh_sim2_1', 'IB_RMSE_explun01_tanh_sim2_2',
-    # # 'IB_RMSE_explun01_50_0', 'IB_RMSE_explun01_50_1', 'IB_RMSE_explun01_50_2',
-    # # 'IB_RMSE_tanh_50_0', 'IB_RMSE_tanh_50_1', 'IB_RMSE_tanh_50_2',
-    # # 'IB_RMSE_mean_0', 'IB_RMSE_mean_1', 'IB_RMSE_mean_2',
-    # # 'IB_RMSE_scratch_0', 'IB_RMSE_scratch_1', 'IB_RMSE_scratch_2',
-    # # 'IB_RMSE_udluft_0', 'IB_RMSE_udluft_1', 'IB_RMSE_udluft_2'
 
     'IB_MSE_scratch_0', 'IB_MSE_scratch_1', 'IB_MSE_scratch_2',
     # 'IB_MSE_mean_0', 'IB_MSE_mean_1', 'IB_MSE_mean_2',
     'IB_MSE_s3m_0', 'IB_MSE_s3m_1', 'IB_MSE_s3m_2',
-    'IB_MSE_50_0', 'IB_MSE_50_1', 'IB_MSE_50_2',
-
-    # 'IB_MSE_tanh_s3m_0', 'IB_MSE_tanh_s3m_1', 'IB_MSE_tanh_s3m_2',
-    # 'IB_MSE_explun01_s3m_0', 'IB_MSE_explun01_s3m_1', 'IB_MSE_explun01_s3m_2',
-    # # 'IB_MSE_sim2_0', 'IB_MSE_sim2_1', 'IB_MSE_sim2_2',
-    # # 'IB_MSE_explun01_sim2_0', 'IB_MSE_explun01_sim2_1', 'IB_MSE_explun01_sim2_2',
-    # # 'IB_MSE_tanh_sim2_0', 'IB_MSE_tanh_sim2_1', 'IB_MSE_tanh_sim2_2',
-    # # 'IB_MSE_explun01_tanh_sim2_0', 'IB_MSE_explun01_tanh_sim2_1', 'IB_MSE_explun01_tanh_sim2_2',
 
 ]
 
@@ -106,8 +76,7 @@ complete_params = []
 # --cpus-per-task=8 is better, but everyone uses these engines
 sbatch_sh = "#!/usr/bin/env bash\n" + '\n'.join(
     [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} $1 $2 $3 $4' for run_name in run_starts]
-    + [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} -slurm_runs_folder slurm_runs2 $1 $2 $3 $4' for run_name in run_starts]
-    + [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} -slurm_runs_folder slurm_runs3_easy -sfeh_no_crazyops $1 $2 $3 $4' for run_name in run_starts])
+    + [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} -slurm_runs_folder slurm_runs2 $1 $2 $3 $4' for run_name in run_starts])
 
 with Path.open(Path('start_all_slurm_sbatch_jobs.sh'), 'w') as sh_file:
     sh_file.write(sbatch_sh)

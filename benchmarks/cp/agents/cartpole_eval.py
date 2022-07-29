@@ -13,10 +13,9 @@ def compare_simple(agents):
         np.random.seed(0)
         env = gym.make('CartPole-v0')
         env.seed(0)
-        time_start = time.perf_counter()
         episode_rewards = [play_once(env, agent) for _ in range(100)]
         failcount = sum([1 for x in episode_rewards if x < 195])
-        print('{} \thad average episode rewards = {}. Failed {} times. \tTime needed: {:1.3f}s'.format(name, np.mean(episode_rewards), failcount, time.perf_counter() - time_start))
+        print('{} \thad average episode rewards = {}. Failed {} times. \tTime needed: idk'.format(name, np.mean(episode_rewards), failcount))
         env.close()
 
 

@@ -1,8 +1,48 @@
-# PLAGIH Genetic Programming (Name will change (soon?))
+# Familiar Genetic Programming with TensorFlow
 
-TODO. This read-me is outdated.
+## Ablage/Todos
 
-...is a genetic programming framework.
+- Make regular Functions Sympy Functions
+- ASTify all functions
+- introduce integer
+- replace x**2 with Squared(x)
+- Tests for:
+  - Auto-testruns: loop/reload through [random, origin, origin_fixed] [MC, IB]
+  - TF-evaluation equals python-evaluation equals sympy evaluation
+- BackPropagation through nodes, rank value for whole tree 
+- gens_since_last_pareto
+- separate monitoring class
+
+Always check
+- xxxxx
+- sfeh
+- asd
+
+## crazy ideas
+- evolution+ranking of node evolutions
+
+## Checks for when you have altered code
+- Functions need to be in ops_dict
+
+Attention: If you want to write your own code, look for important developer informations in the section below!
+
+## name ideas
+- AnnaGP
+- FamGP (Familiar GP)
+- plagih: plausible genetic improvements
+  ...is a genetic programming framework. 
+- It is specialized on fast and efficient evaluation (faster than KarooGP) and especially introduces the concept of familiarity.
+
+## Paper ideas
+- unified mathematics as performance improvement for gp
+- cluster-based evolution of subpopulations
+- Recombining if cases in 
+- BackPropagation through nodes, rank value for whole tree
+- Genetic Backpropagation
+- 
+
+
+## Intro
 
 compared to other gp frameworks, this one provides the opportunity to use human written code as basis for the gp-process.
 
@@ -16,16 +56,18 @@ Main features:
 - (example available)
 
 
-## Python 3.7 packages
+## Python 3.8 packages
 
-Anaconda 3.7 (2020.2) with conda packages. Some packages are only available in pip though.
-todo: save this as requirements
+I am using Anaconda. Some packages are only available in pip though.
+save this as requirements
 
 Conda packages:
+matplotlib
 pathlib
 sympy
 apted
 tensorflow
+tensorflow-gpu
 sklearn
 pandas
 sympy
@@ -40,11 +82,14 @@ conda install -U PyYaml
 or
 pip install -U PyYaml
 
+Also, plotting with latex might require texlife:
+
+`sudo apt-get install texlive-latex-extra texlive-fonts-recommended dvipng cm-super`
 
 ### Example run
-Run `start.py`
+`python plagih_gp.py`
  
-This will automatically start the run in `/runs/example1_cartpole/`.
+This will automatically start a run (probably Mountaincar).
 
 ### Starting your own run
 
@@ -105,27 +150,6 @@ Possible operators are:
 2. Display it as computational tree (functions: see below or in `op`-array in `plagih/modules/dicts`)
 3. Breadth-first search the tree, align the labels as list. Types must match.
 
-#### Tree Example
-
-Code:
-```
-if (cartPos < 0):
-    return 1
-else:
-    return 2
-```
-`tree_labels.csv`:
-```
-label_list,Ifte, <, 1, 2, cartPos, 0
-```
-
-`tree_labels.csv` (with `if`,`return 1`,`return 2` as fix nodes):
-```
-label_list,Ifte, <, 1, 2, cartPos, 0
-modify_list,0,1,0,0,1,1
-```
-
-...Breadth-first seems counter-intuitive, but that is what Karoo gave me :P
 
 ### How I analyse results:
 - `plots/average-fitness.png` - to see if there was an improvement
@@ -162,8 +186,18 @@ plausible addition to the original program which the developer does understand.
 ### All included Plagih stuff
 
 ## Run Plagih
-Required packages: `tensorflow` `numpy` `sympy` `Apted` `pickle`
+Required packages: `tensorflow` `tensorflow-gpu` `numpy` `sympy` `Apted` `pickle`
 
 Optional: `tikzplotlib` (For additional Latex-graph)
 
 
+## Developer information
+- Do not save paths in pickle between runs; if required, only save strings. 
+- Otherwise, pickle files between systems may not work.
+
+### The structure of the code
+
+The plagih_gp run depends on the following modules:
+- a loop, in which new generations of evolved trees are created
+- trees, which are a recursive node-structure, that allow evolution
+- 

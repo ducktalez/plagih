@@ -7,7 +7,6 @@ from benchmarks.ib.ib_eval_agents import eval_combined_agents
 import itertools
 
 sys.path.append('../../')
-# sys.path.append('../../plagih/')
 sys.path.insert(1, '../benchnmarks/ib/')
 import os
 from plagih.plagih_gp_base_class_xai import *
@@ -16,7 +15,7 @@ import multiprocessing as mp
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
-from plagih.file_interaction import *
+from plagih.util import *
 
 
 # def get_combined_runs(agents, parsim_max_sum, parsim_max_single):
@@ -108,7 +107,7 @@ def eval_and_lut(eval_list, parsim_MAX, parsim_1MAX, lut_file, mp_cpu_MAX):
     return combined_all_cpy
 
 
-def plot_best_prediction(root_dir_eval, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, mp_cpu_MAX):
+def plot_best_prediction(rootdir_eval, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, mp_cpu_MAX):
     """
     plot best guess
     sfeh test RMSE?
@@ -123,13 +122,13 @@ def plot_best_prediction(root_dir_eval, parsims, combined_all_p, lut_file, parsi
     bestregr_data = [[' '.join(f'{xx:0.0f}' for xx in x['parsims']), x['experiment'], x['experiment_safe'], x['experiment_r50'], x['experiment_safe_r50']]
                      for x in best_regrerr_dict]
     try:
-        yaml_dump(root_dir_eval / 'best_regrerr.yaml', bestregr_data)  # sfeh delete this?
+        yaml_dump(rootdir_eval / 'best_regrerr.yaml', bestregr_data)  # sfeh delete this?
     except:
         # sfeh FFS this FUCKING includes
 
-        with Path.open(root_dir_eval / 'best_regrerr.yaml', 'w') as file:
+        with Path.open(rootdir_eval / 'best_regrerr.yaml', 'w') as file:
             _ = yaml.dump(bestregr_data, file, default_flow_style=False, sort_keys=False)
-    # yaml_dump(root_dir_eval / 'best_regrerr.yaml', [' '.join(str(xx) for xx in x['parsims']) for x in best_regrerr_dict])  # sfeh delete this?
+    # yaml_dump(rootdir_eval / 'best_regrerr.yaml', [' '.join(str(xx) for xx in x['parsims']) for x in best_regrerr_dict])  # sfeh delete this?
 
     """
     okay
@@ -188,7 +187,7 @@ def plot_best_prediction(root_dir_eval, parsims, combined_all_p, lut_file, parsi
     #     ax.legend(loc='lower right')
     #     ax2.legend(loc='lower left')
     #
-    #     path_regrallplot = root_dir_eval / f'regression_all.pdf'
+    #     path_regrallplot = rootdir_eval / f'regression_all.pdf'
     #     fig.savefig(path_regrallplot)
     #     plt.close('all')
 
@@ -199,7 +198,7 @@ def combined_lists(path_main, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_co
     """
     Make the combined evaluation of industrial benchmark runs.
     Three runs have to be combined from their raw code.
-    (I now found a much better way by loading from the backup file, but I am lazy x~~~D)
+    (I now found a much better way by loading from the backup file, but SFEH is lazy x.D)
     """
     main_name = path_main.name
     merge_paretos(path_main)
@@ -267,7 +266,7 @@ def combined_lists(path_main, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_co
 
 def merge_paretos(path_main):
     """
-    load each IB run and add its pareto front to a merged plot
+    load each IB run and add its paretofront front to a merged plot
     """
     with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots()
@@ -282,7 +281,7 @@ def merge_paretos(path_main):
 
             gen_id, pareto, pop_base, monitor_pd, a_helping_dict = gp_backup_data
 
-            tuples = [[parsim, fitness] for (parsim, fitness, cooltree) in pareto]
+            tuples = [[parsim, fitness] for (parsim, fitness, tree) in pareto]
             xx, yy = np.array(tuples).T
             ax.step(xx, yy, linestyle='dotted', marker='.', label=f'action {ii}', where='post')
 
@@ -293,7 +292,7 @@ def merge_paretos(path_main):
         fig.savefig(path_paretocombined)
         plt.close('all')
 
-    print('IB combined runs: merged pareto entries into one plot!')
+    print('IB combined runs: merged paretofront paretofront into one plot!')
     return
 
 
@@ -305,7 +304,7 @@ def main():
     parser.add_argument('-mainpath', type=str, help='lol does not work sf', default='IB_MSE_sim2')
     parser.add_argument('-auto', action='store_true')
     parser.add_argument('-locallut', action='store_true')
-    parser.add_argument('-mp_cpu_cores_max', type=int,  default=8)
+    parser.add_argument('-mp_cores', type=int,  default=8)
     parser.add_argument('-parsim_max_sum', type=int, default=40)
     parser.add_argument('-parsim_max_single', type=int, default=40)
     args = parser.parse_args()
@@ -324,7 +323,7 @@ def main():
                 if runfolders.name[:2] == 'IB':
                     print(f'\nEvaluating {runfolders.name}')
                     try:
-                        combined_lists(runfolders, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, cpu_cores=args.mp_cpu_cores_max)
+                        combined_lists(runfolders, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, cpu_cores=args.mp_cores)
                     except Exception as ex:
                         print(f'Failed evaluation for {runfolders.name}. ignoring. Reason: {ex}')
                         # sfeh except only the one fail that is required?
@@ -332,16 +331,9 @@ def main():
                     print(f'\nSkipping {runfolders.name}')
 
     else:
-        combined_lists(mainpath, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, cpu_cores=args.mp_cpu_cores_max)
+        combined_lists(mainpath, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, cpu_cores=args.mp_cores)
     return
 
 
 if __name__ == '__main__':
-    # #  todo
-    # lulzrow = {'parsim_sum': 27.0, 'parsims': [11.0, 6.0, 10.0], 'experiment': None, 'experiment_safe': None, 'experiment_r50': None, 'experiment_safe_r50': None,
-    #            'codes': ["((self.get_h('g', 8)*max(math.tanh(SetPoint), 0.091879))-max(0.197961, math.sqrt(self.get_h('v', 7))))", "max(math.tanh(-SetPoint), (self.get_h('g', 4)-self.get_h('g', 9)))",
-    #                      "(math.tanh(math.tanh(self.get_h('h', 4)))-((-self.get_h('f', 4)+self.get_h('f', 9))+math.sin(self.get_h('h', 9))))"], 'regress_sum': 2.504287,
-    #            'regress_vals': [0.915394, 0.80149, 0.787403]}
-    #
-    # lulz = mp_evall(lulzrow)
     main()

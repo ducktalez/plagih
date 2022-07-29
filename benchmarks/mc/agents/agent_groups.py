@@ -10,20 +10,6 @@ def safe_division(n, d):
 
 
 class Good_Expert:
-    # x = ['Ifte',
-    #      ['Orb',
-    #       ['<', ['cartPos', -1]],
-    #       ['Andb',
-    #        ['<', ['cartPos', 0.1]],
-    #        ['<', ['cartVel', -0.05]]]], 2,
-    #      ['Ifte',
-    #       ['Andb',
-    #        ['Andb',
-    #         ['>', ['cartPos', -0.45]],
-    #         ['<', ['cartPos', -0.05]]],
-    #        ['<', ['cartVel', -0.5]]], 0,
-    #       ['Ifte',
-    #        ['<', ['cartVel', 0]], 0, 2]]]
 
     def decide(self, observation):
 
@@ -42,27 +28,12 @@ class Good_Expert:
                     yyy = 0
                 else:
                     yyy = 2
-        # todo
+        # deletethis
         if xxx != yyy:
             raise Exception(f'oadsasdasdsad {xxx} {yyy}')
 
         return yyy
 
-class SimonsTesting:
-
-    def decide(self, observation):
-        pos, vel = observation
-
-        # return
-        if pos < -0.88 or (pos < -0.7 and (vel < -0.2 or vel > 0.1)):
-            return 2
-        if (pos > -0.45 and pos < -0.05) and vel < 0.02:
-            return 0
-
-        if vel < 0:
-            return 0
-        else:
-            return 2
 
 
 class SimonsCheckpoints:

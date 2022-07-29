@@ -1,1 +1,1 @@
-label_list, -,  Shift_0, +, Shift_5, Gain_0
+["-", ["Shift_0"], ["*", ["Shift_5"], ["Gain_0"]]]

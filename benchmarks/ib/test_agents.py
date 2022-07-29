@@ -38,7 +38,7 @@ class Agent_nothing(Ib_Agent):
         self.state_history.appendleft(state)
 
 #        if len(self.state_history) > 10:
-#            self.state_history.pop()
+#            self.state_history.pop_list()
 
         at = np.array([0, 0, 0])
         at[0] = 0
@@ -94,7 +94,7 @@ class Agent_daniel_21(Ib_Agent):
         self.state_history.appendleft(env_state)
 
         # if len(self.state_history) > 10:
-        #     self.state_history.pop()
+        #     self.state_history.pop_list()
 
         at = np.array([0, 0, 0], dtype=np.float32)
         at[0] = - self.get_h('v', 5) - 0.91
@@ -113,7 +113,7 @@ class Agent_daniel_27(Ib_Agent):
 
         self.state_history.appendleft(state)
 #        if len(self.state_history) > 10:
-#            self.state_history.pop()
+#            self.state_history.pop_list()
 
         at = np.array([0, 0, 0], dtype=np.float32)
         # # idk why, but these are the best??
@@ -136,7 +136,7 @@ class Agent_Daniel_29_Best(Ib_Agent):
 
         self.state_history.appendleft(state)
 #        if len(self.state_history) > 10:
-#            self.state_history.pop()
+#            self.state_history.pop_list()
 
         at = np.array([0, 0, 0], dtype=np.float32)
         at[0] = -self.get_h('v', 4) - 0.96  # 27
@@ -159,7 +159,7 @@ class Agent_Test(Ib_Agent):
         self.state_history.appendleft(state)
 
 #        if len(self.state_history) > 10:
-#            self.state_history.pop()
+#            self.state_history.pop_list()
 
         at = np.array([0, 0, 0], dtype=np.float32)
         at[0] = 0
@@ -181,7 +181,7 @@ class Agent_Udluft(Ib_Agent):
         self.state_history.appendleft(state)
 
 #        if len(self.state_history) > 10:
-#            self.state_history.pop()
+#            self.state_history.pop_list()
 
         at = np.array([0, 0, 0], dtype=np.float32)
         at[0] = -self.get_h('f', 0) - self.get_h('v', 3)  # 27
@@ -205,7 +205,7 @@ class Agent_sim1(Ib_Agent):
         self.state_history.appendleft(state)
 
 #        if len(self.state_history) > 10:
-#            self.state_history.pop()
+#            self.state_history.pop_list()
 
         SetPoint = self.get_h('p', 0)
 

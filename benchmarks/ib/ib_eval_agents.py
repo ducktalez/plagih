@@ -104,7 +104,7 @@ class AgentMerger(Ib_Agent):
         self.state_history.appendleft(env_state)
 
 #        if len(self.state_history) > 10:
-#            self.state_history.pop()
+#            self.state_history.pop_list()
 
         at = np.array([0, 0, 0], dtype=np.float32)
         SetPoint = self.get_h('p', 0)
@@ -136,8 +136,7 @@ def eval_agent(agent, safe_eval=False, randomize=0, repeat_avg=1):
     Results: Daniel_29 -5270 (5611)
     """
 
-    discount_factor = 0.97
-    # discount_factor = 1  # todo
+    discount_factor = 0.97  # discount_factor = 1?
     t = 100  # time_horizon
     discount_len = -100
     sum_discounted_p = []
@@ -190,7 +189,7 @@ def agent_create_samples_csv(t=10000):
                 if t + ii < t:
                     csv_data[t+ii][enum_x * history_t + ii] = state_x
 
-        # state_debug.append(list(env_state.values()))
+        # state_debug.pop_append_evotree(list(env_state.values()))
         at = agent.decide(env_state)
         # at = at * np.array([1, 10, 5.75])
         # at = np.array([50-env.state['v'], 50-env.state['g'], 50-env.state['h']])

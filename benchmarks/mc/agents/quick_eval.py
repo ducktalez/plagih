@@ -5,7 +5,7 @@ pos = observation0
 velocity = observation1
 pos, vel = observation
 """
-
+from plagih.util import *
 from pathlib import Path
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -15,7 +15,7 @@ import gym
 import math
 import pickle
 # import multiprocessing as mp
-from plagih.file_interaction import *
+from plagih.util import *
 
 
 def mtc_plot_decisions_space(agent, folder, name, cmap='bwr', dummy=False, n=100, nan_style=None, no_colorbar=False, backup_results1=None):
@@ -309,82 +309,82 @@ def eval_agent_list(agent_list, goal_agent, n=100, dir_save=Path('img/')):
         file.write(summary_text)
 
 
-def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
-    """
-    asd
-    """
-
-    class DummyMcAgent:
-
-        def __init__(self, pycode):
-            self.mcAction = pycode
-
-        def decide(self, input):
-            cartPos, cartVel = input
-            try:
-                mc_actn = eval(self.mcAction)
-            except:
-                raise  # sfeh
-            return int(round(max(0, min(2, mc_actn))))
-
-    try:
-        sarsa_dummy, bur_lut = pickle_load(root_dir / 'backup/mcevalbackup.p')  # sarsa_dummy  (results, result_dummy)   (result, dummy)
-    except Exception:
-        bur_lut = {}
-        _, _, sarsa_dummy = mtc_heatmap_helper(sarsa_agent, 256, n, dummy=1)
-
-    dir_save = path_make_dir(root_dir / 'sfehs_eval')
-
-    gp_backup_data = pickle_load(root_dir / 'backup/backup.p')
-    gen_id, pareto, pop_base, monitor_pd, a_helping_dict = gp_backup_data
-
-    agent_performance = {}
-
-    for (parsim, fitness, cooltree) in pareto:
-        agent_name = f'{parsim:.0f}'
-        print(f'Evaluating MC Agent: {parsim:.0f}')
-        pycode = cooltree.get_pycode()
-        mc_gent = DummyMcAgent(pycode)
-        try:
-            # bur1, bur2, avg_reward, fails = bur_lut.get(parsim, (None, None, None, None))
-            # if avg_reward is None:  # or fails is None:
-            bur1 = bur2 = None
-            avg_reward, fails, _ = mtc_play(mc_gent, n=n)
-
-            # sfehsfeh save  time comment this todotodo todo
-            bur1 = mtc_plot_decisions_space(mc_gent, folder=dir_save, name=agent_name, dummy=True, backup_results1=bur1)
-            bur2 = mtc_plot_differences(mc_gent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False, backup_results2=bur2)  # diff at start for diashow
-            mtc_plot_decisions_space(mc_gent, folder=dir_save, name=f'space-{agent_name}', dummy=False)
-            bur_lut[parsim] = (bur1, bur2, avg_reward, fails)
-            agent_performance[parsim] = [parsim, fitness, avg_reward, fails, None, None]
-        except Exception as ex:
-            print(f'MTC eval failed because of: {ex}')
-            agent_performance[parsim] = [parsim, fitness, np.nan, np.nan, None, None]
-
-    # pickle_dump(root_dir / 'backup/mcevalbackup.p', (sarsa_dummy, bur_lut))
-
-    with plt.rc_context(rc=pyplot_rc_tex):
-        fig, ax = plt.subplots()
-        agentperflist = list(zip(*agent_performance.values()))
-        x = agentperflist[0]
-        y = agentperflist[2]
-        tuples = [[parsim, fitness] for (parsim, fitness, cooltree) in pareto]
-        xx, yy = np.array(tuples).T
-
-        ax.step(xx, yy, linestyle='dotted', marker='.', where='post', label='regression error')
-        ax.set(xlabel='complexity', ylabel='regression error', ylim=(0, 1))
-
-        ax2 = ax.twinx()
-        ax2.set(ylim=(-95, -200), xlim=(0, 35))
-        ax2.step(x, y, linestyle='None', marker='x', label='average reward')
-        ax2.set(ylabel='online reward')
-
-        h1, l1 = ax.get_legend_handles_labels()
-        h2, l2 = ax2.get_legend_handles_labels()
-        ax.legend(h1+h2, l1+l2, loc='upper right')
-
-        fig.savefig(dir_save / f'evaled_overview.pdf')
-
-    yaml_dump(dir_save / 'summary.yaml', agent_performance)
-
-    return agent_performance
+# def auto_evaluate_run_end(rootdir, sarsa_agent, n=100):
+#     """
+#     asd
+#     """
+#
+#     class DummyMcAgent:
+#
+#         def __init__(self, pycode):
+#             self.mcAction = pycode
+#
+#         def decide(self, input):
+#             cartPos, cartVel = input
+#             try:
+#                 mc_actn = eval(self.mcAction)
+#             except:
+#                 raise  # sfeh
+#             return int(round(max(0, min(2, mc_actn))))
+#
+#     try:
+#         sarsa_dummy, bur_lut = pickle_load(rootdir / 'backup/mcevalbackup.p')  # sarsa_dummy  (results, result_dummy)   (result, dummy)
+#     except Exception:
+#         bur_lut = {}
+#         _, _, sarsa_dummy = mtc_heatmap_helper(sarsa_agent, 256, n, dummy=1)
+#
+#     dir_save = path_make_dir(rootdir / 'sfehs_eval')
+#
+#     gp_backup_data = pickle_load(rootdir / 'backup/backup.p')
+#     gen_id, paretofront, pop_base, monitor_pd, a_helping_dict = gp_backup_data
+#
+#     agent_performance = {}
+#
+#     for (parsim, fitness, fintree) in paretofront:
+#         agent_name = f'{parsim:.0f}'
+#         print(f'Evaluating MC Agent: {parsim:.0f}')
+#         pycode = fintree.eval_pycode()
+#         mc_gent = DummyMcAgent(pycode)
+#         try:
+#             # bur1, bur2, avg_reward, fails = bur_lut.get(parsim, (None, None, None, None))
+#             # if avg_reward is None:  # or fails is None:
+#             bur1 = bur2 = None
+#             avg_reward, fails, _ = mtc_play(mc_gent, n=n)
+#
+#             # sfehsfeh save  time comment this
+#             bur1 = mtc_plot_decisions_space(mc_gent, folder=dir_save, name=agent_name, dummy=True, backup_results1=bur1)
+#             bur2 = mtc_plot_differences(mc_gent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False, backup_results2=bur2)  # diff at start for diashow
+#             mtc_plot_decisions_space(mc_gent, folder=dir_save, name=f'space-{agent_name}', dummy=False)
+#             bur_lut[parsim] = (bur1, bur2, avg_reward, fails)
+#             agent_performance[parsim] = [parsim, fitness, avg_reward, fails, None, None]
+#         except Exception as ex:
+#             print(f'MTC eval failed because of: {ex}')
+#             agent_performance[parsim] = [parsim, fitness, np.nan, np.nan, None, None]
+#
+#     # pickle_dump(rootdir / 'backup/mcevalbackup.p', (sarsa_dummy, bur_lut))
+#
+#     with plt.rc_context(rc=pyplot_rc_tex):
+#         fig, ax = plt.subplots()
+#         agentperflist = list(zip(*agent_performance.values()))
+#         x = agentperflist[0]
+#         y = agentperflist[2]
+#         tuples = [[parsim, fitness] for (parsim, fitness, fintree) in paretofront]
+#         xx, yy = np.array(tuples).T
+#
+#         ax.step(xx, yy, linestyle='dotted', marker='.', where='post', label='regression error')
+#         ax.set(xlabel='complexity', ylabel='regression error', ylim=(0, 1))
+#
+#         ax2 = ax.twinx()
+#         ax2.set(ylim=(-95, -200), xlim=(0, 35))
+#         ax2.step(x, y, linestyle='None', marker='x', label='average reward')
+#         ax2.set(ylabel='online reward')
+#
+#         h1, l1 = ax.get_legend_handles_labels()
+#         h2, l2 = ax2.get_legend_handles_labels()
+#         ax.legend(h1+h2, l1+l2, loc='upper right')
+#
+#         fig.savefig(dir_save / f'evaled_overview.pdf')
+#
+#     yaml_dump(dir_save / 'summary.yaml', agent_performance)
+#
+#     return agent_performance

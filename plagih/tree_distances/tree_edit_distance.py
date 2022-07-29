@@ -1,6 +1,5 @@
 from apted import APTED, Config
 from apted.helpers import Tree as aptree
-from plagih.operators import *
 
 
 class CustomConfig(Config):
@@ -9,7 +8,7 @@ class CustomConfig(Config):
         return 1 if node1.value != node2.value else 0
 
     def children(self, node):
-        """Get left and right children of binary tree"""
+        """Get left and right children of binary fintree"""
         return [x for x in (node.left, node.right) if x]
 
 
@@ -69,74 +68,74 @@ def is_bool(x):
             return False
 
 
-def weight_ted_mapping(mapping):
-    """
-    sfeh asd: make clear how this distance is meant to be used...
-    """
-    weighted_distance = 0
-    for map_i in mapping:
-        a, b = map_i[0], map_i[1]
-        if a is None:
-            b_name = b.name
-            if b_name not in op:  # weight can be 0, so check for None
-                weighted_distance += 1  # all inserted constants
-                print('Inserted', b_name, 'weight 1 (non-op dummy)')
-            else:
-                b_weight = op.get(b_name).get('weight')
-                weighted_distance += b_weight
-                print('Inserted', b_name, 'weight', b_weight, '(op)')
-            continue
-        elif b is None:
-            print('Deleted, weight 0 (no penalty)')
-            continue
-        else:
-            a_name = a.name
-            b_name = b.name
-            if a_name == b_name:
-                print('No change, no weight.')
-            else:
-
-                a_weight = op[a_name]['weight'] if a_name in op else None
-                b_weight = op[b_name]['weight'] if b_name in op else None
-
-                if a_weight is None:  # a_name is either env-variable, float, bool
-
-                    if b_weight:
-                        weighted_distance += b_weight
-                        print('Substituted non-op with op, weight', b_weight)
-                    # elif True:  # sfeh
-                    #     weighted_distance += 0
-                    #     print('dummy exir with weight=0 for constants')
-                    elif is_float(a_name) and is_float(b_name):
-                        # weight_diff = max(0, min(1, abs(float(a_name) - float(b_name))))
-                        # weighted_distance += weight_diff
-                        print('Substituted float parameters. weight 0.')
-                    elif is_bool(a_name) and is_bool(b_name):
-                        weighted_distance += 1
-                        print('Substituted bool parameters, weight 1.')
-                    else:
-                        weighted_distance += 1
-                        print('Substituted leaves, weight 1.')
-
-                else:
-                    if b_weight is not None:
-                        weighted_distance += b_weight
-                        print('Substituted non-op with op, weight', b_weight)
-                    # elif True:  # sfeh
-                    #     weighted_distance += max(0.5, b_weight-(0.5*a_weight))
-                    #     print('dummy exit with weight=0 for constants')
-                    elif is_float(a_name) and is_float(b_name):
-                        weighted_distance += 0.5
-                        print('Substituted float parameters, weight 0.1.')
-                    elif is_bool(a_name) and is_bool(b_name):
-                        weighted_distance += 0.5
-                        print('Substituted bool parameters, weight 0.1.')
-                    else:
-                        weighted_distance += 1
-                        print('Substituted leaves, weight 0.1.')
-
-                # constant weight for the occurance of an env-variables?
-    return weighted_distance
+# def weight_ted_mapping(mapping):
+#     """
+#     sfeh:enhancement asd: make clear how this distance is meant to be used...
+#     """
+#     weighted_distance = 0
+#     for map_i in mapping:
+#         a, b = map_i[0], map_i[1]
+#         if a is None:
+#             b_name = b.name
+#             if b_name not in op_dict:  # weight can be 0, so check for None
+#                 weighted_distance += 1  # all inserted constants
+#                 print('Inserted', b_name, 'weight 1 (non-op_dict dummy)')
+#             else:
+#                 b_weight = op_dict.get(b_name).get('weight')
+#                 weighted_distance += b_weight
+#                 print('Inserted', b_name, 'weight', b_weight, '(op_dict)')
+#             continue
+#         elif b is None:
+#             print('Deleted, weight 0 (no penalty)')
+#             continue
+#         else:
+#             a_name = a.name
+#             b_name = b.name
+#             if a_name == b_name:
+#                 print('No change, no weight.')
+#             else:
+#
+#                 a_weight = op_dict[a_name]['weight'] if a_name in op_dict else None
+#                 b_weight = op_dict[b_name]['weight'] if b_name in op_dict else None
+#
+#                 if a_weight is None:  # a_name is either env-variable, float, bool
+#
+#                     if b_weight:
+#                         weighted_distance += b_weight
+#                         print('Substituted non-op_dict with op_dict, weight', b_weight)
+#                     # elif True:  # sfeh
+#                     #     weighted_distance += 0
+#                     #     print('dummy exir with weight=0 for constants')
+#                     elif is_float(a_name) and is_float(b_name):
+#                         # weight_diff = max(0, min(1, abs(float(a_name) - float(b_name))))
+#                         # weighted_distance += weight_diff
+#                         print('Substituted float parameters. weight 0.')
+#                     elif is_bool(a_name) and is_bool(b_name):
+#                         weighted_distance += 1
+#                         print('Substituted bool parameters, weight 1.')
+#                     else:
+#                         weighted_distance += 1
+#                         print('Substituted leaves, weight 1.')
+#
+#                 else:
+#                     if b_weight is not None:
+#                         weighted_distance += b_weight
+#                         print('Substituted non-op_dict with op_dict, weight', b_weight)
+#                     # elif True:  # sfeh
+#                     #     weighted_distance += max(0.5, b_weight-(0.5*a_weight))
+#                     #     print('dummy exit with weight=0 for constants')
+#                     elif is_float(a_name) and is_float(b_name):
+#                         weighted_distance += 0.5
+#                         print('Substituted float parameters, weight 0.1.')
+#                     elif is_bool(a_name) and is_bool(b_name):
+#                         weighted_distance += 0.5
+#                         print('Substituted bool parameters, weight 0.1.')
+#                     else:
+#                         weighted_distance += 1
+#                         print('Substituted leaves, weight 0.1.')
+#
+#                 # constant weight for the occurance of an env-variables?
+#     return weighted_distance
 
 
 # tree1 = aptree.from_text('{A{B{X}{Y}{F}}{C}}')
@@ -213,7 +212,7 @@ def tree_nodeid_ted_mapping(mapping):
     for ii, map_i in enumerate(mapping):
         a, b = map_i[0], map_i[1]
         if a is None:
-            print(f'{ii} Inserted {b.name}')
+            print(f'{ii} inserted {b.name}')
             pass
         elif b is None:
             print(f'{ii} deleted {a.name}')

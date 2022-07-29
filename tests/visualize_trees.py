@@ -67,19 +67,19 @@ def auto_enum():
 
 def tree_graph(expr):
     """
-    Construct the graph of a tree expression. The tree expression must be
+    Construct the graph of a fintree expression. The fintree expression must be
     valid. It returns in order a node list, an edge list, and a dictionary of
     the per node labels. The node are represented by numbers, the edges are
     tuples connecting two nodes (number), and the labels are values of a
     dictionary for which keys are the node numbers.
-    :param expr: A tree expression to convert into a graph.
+    :param expr: A fintree expression to convert into a graph.
     :returns: A node list, an edge list, and a dictionary of labels.
     The returned objects can be used directly to populate a
     `NetworX <http://networkx.github.com/>`_ graph::
         import matplotlib.pyplot as plt
         import networkx as nx
-        # [...] Execution of code that produce a tree expression
-        nodes, edges, labels = graph(expr)
+        # [...] Execution of code that produce a fintree expression
+        nodes, edges, labels = graph(nlabel)
         g = nx.Graph()
         g.add_nodes_from(nodes)
         g.add_edges_from(edges)

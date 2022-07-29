@@ -14,7 +14,6 @@ sfeh: use function-types (-> 'kommuttative'?)
 
 from plagih.node_labels import *
 from plagih.tree_distances.tree_edit_distance import apted_distance
-from plagih.util import *
 
 from dataclasses import dataclass
 import itertools

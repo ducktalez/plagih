@@ -1,8 +1,6 @@
 import tensorflow
 import pandas as pd
 from sklearn.model_selection import train_test_split
-import numpy as np
-import matplotlib.pyplot as plt
 
 from plagih.util import *
 from plagih.tree_evaluation import ast_convert_from_expr

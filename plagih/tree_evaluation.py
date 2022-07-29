@@ -112,10 +112,6 @@ def ast_expr_to(node, tensors=None, build=None):
                         ast_expr_to(node.args[0], build=True),
                         ast_expr_to(node.args[1], build=True),
                         ast_expr_to(node.args[2], build=True)]
-                # return ['Ifte',
-                #         [ast_expr_to(node.args[0], build=True),
-                #          ast_expr_to(node.args[1], build=True),
-                #          ast_expr_to(node.args[2], build=True)]]
             else:
                 return op_dict[node.func.id].tflow(tensorflow.dtypes.cast(
                     ast_expr_to(node.args[0], tensors=tensors), tensorflow.bool),
@@ -151,16 +147,7 @@ def ast_chain_bool(values, operation, tensors=None, build=False):
     --> values[0] operation values[1]
     """
     if build:
-        raise
-        # x = ast_expr_to(values[0], build=True)
-        # if len(values) == 2:
-        #     return [operation, values[0], values[1]]  # -> ['and', ast(), ast()]
-        # elif len(values) == 1:
-        #     # return [x]
-        #     # raise  # TODO debug
-        #     return x  # -> ['not', ast()]
-        # else:
-        #     raise
+        raise  # delete 08-2022 +3months
     else:
         x = tensorflow.dtypes.cast(ast_expr_to(values[0], tensors=tensors), tensorflow.bool)
         if len(values) > 1:

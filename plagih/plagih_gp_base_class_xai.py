@@ -9,11 +9,8 @@ import copy
 from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow
 
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
-
-tensorflow.compat.v1.disable_eager_execution()  # sfeh damn what was this line good for?
 
 
 class ExplainableGP:
@@ -328,7 +325,8 @@ class ExplainableGP:
                                                                                          tree_depth_max=self.conf.tree_depth_max,
                                                                                          parsimony_max=self.conf.parsimony_max)
                     evotree = self.selection_tournament(tourn_size=tourn_size)
-                    build_size = choose_build_size(size_mode, mean_min_max_var, tree=evotree, force='branch')  # sfeh:test options, depth, in this case
+                    build_size = choose_build_size(size_mode, mean_min_max_var, tree=evotree, force='branch')
+                    # sfeh:test options, depth, in this case
 
                     if size_mode == 'branch_depth':  # building a branch to a depth
                         evotree = self.tb.evolve_mutate_branch_depth(evotree, build_size, p_full=p_full)
@@ -381,16 +379,6 @@ class ExplainableGP:
                 for nn in range(evolve_num):
                     evotree = self.tb.pop_random(custom_params, origin=self.origin)
                     self.pop_append_evotree(evotree, tag=tag)
-
-                ## DELETE
-                # if self.origin.origin_is_fix:
-                #     for nn in range(evolve_num):
-                #         evotree = self.tb.pop_random(custom_params, origin=self.origin)
-                #         self.pop_append_evotree(evotree, tag=tag)
-                # else:
-                #     for nn in range(evolve_num):
-                #         evotree = self.tb.pop_random(custom_params)
-                #         self.pop_append_evotree(evotree, tag=tag)
 
             else:
                 print_e(f"Evolution not known: '{evolve_name}'")
@@ -723,11 +711,12 @@ class ExplainableGP:
                 self.printpl('gg', f'Preparing to create first Generation. Gen {self.conf.gen_id}.')  # sfeh debug
                 self.gen_create_initial()  # sfeh stattdessen einfach checken, ob die letzte population leer ist und info/warnung: neue generation?
             else:
-                # This might be a solution for multiprocessing:
-                # You can avoid this situation by calling multiprocessing.Process before you load your huge data.
-                # Then the additional memory allocations will not be reflected in the child process when you load the data in the parent.
-                # sfeh: In python 3.8, this might be availably: multiprocessing.shared_memory https://docs.python.org/3/library/multiprocessing.shared_memory.html
-                # sfeh: check memory usage! should not scale with the number of processes, only one pop_base is required, it does not change.
+                # This might be a solution for multiprocessing: You can avoid this situation by calling
+                # multiprocessing.Process before you load your huge data. Then the additional memory allocations will
+                # not be reflected in the child process when you load the data in the parent. sfeh: In python 3.8,
+                # this might be availably: multiprocessing.shared_memory
+                # https://docs.python.org/3/library/multiprocessing.shared_memory.html sfeh: check memory usage!
+                # should not scale with the number of processes, only one pop_base is required, it does not change.
 
                 self.conf.mp_cores = 1  # sfeh wasd
                 if self.conf.mp_cores >= 2:
@@ -742,18 +731,20 @@ class ExplainableGP:
                 else:
                     self.gen_next_population()
 
-            self.paretofront = pareto_from_population(self.paretofront, self.pop_next, self.conf)  # sfeh gens_since_last_pareto was here
+            self.paretofront = pareto_from_population(self.paretofront, self.pop_next, self.conf)
+            # sfeh gens_since_last_pareto was here
             self.pop_analyze()
 
-            self.pop_base = self.pop_next[:]  # otherwise: deepcopy
+            self.pop_base = self.pop_next[:]  # or: deepcopy
             self.pop_next = []
 
-            self.printpl('ggg', f'Generation {self.conf.gen_id} took a total time of: {time.perf_counter() - self.time_genstart:4.2f}.')
+            self.printpl('ggg', f'Gen {self.conf.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}.')
             self.scheduled_io()
             self.conf.gen_id += 1
         else:
             self.printpl('g',
-                         f'Done after Generation {self.conf.gen_id}.\nTime since start: {time.perf_counter() - self.time_start:4.2f}s')
+                         f'Done after Generation {self.conf.gen_id}.\n'
+                         f'Time since start: {time.perf_counter() - self.time_start:4.2f}s')
 
         self.backup_save()
 
@@ -820,7 +811,6 @@ def pareto_plot(paretofront, path, conf):
 
 # sfeh https://docs.sympy.org/latest/tutorial/manipulation.html
 
-# import tensorflow as tf; import ast; import textwrap
 # print(', '.join(['[\'{}\', {:.2f}]'.format(v['label'], 1/v['xtype_out': ([], []), 'c-weight']) for k, v in op_what.items()]))  # retreive a list with all non-ast op_dict:
 
 

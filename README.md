@@ -67,6 +67,7 @@ pathlib
 sympy
 apted
 tensorflow
+tensorflow-gpu
 sklearn
 pandas
 sympy
@@ -149,27 +150,6 @@ Possible operators are:
 2. Display it as computational tree (functions: see below or in `op`-array in `plagih/modules/dicts`)
 3. Breadth-first search the tree, align the labels as list. Types must match.
 
-#### Tree Example
-
-Code:
-```
-if (cartPos < 0):
-    return 1
-else:
-    return 2
-```
-`tree_labels.csv`:
-```
-label_list,Ifte, <, 1, 2, cartPos, 0
-```
-
-`tree_labels.csv` (with `if`,`return 1`,`return 2` as fix nodes):
-```
-label_list,Ifte, <, 1, 2, cartPos, 0
-modify_list,0,1,0,0,1,1
-```
-
-...Breadth-first seems counter-intuitive, but that is what Karoo gave me :P
 
 ### How I analyse results:
 - `plots/average-fitness.png` - to see if there was an improvement
@@ -206,7 +186,7 @@ plausible addition to the original program which the developer does understand.
 ### All included Plagih stuff
 
 ## Run Plagih
-Required packages: `tensorflow` `numpy` `sympy` `Apted` `pickle`
+Required packages: `tensorflow` `tensorflow-gpu` `numpy` `sympy` `Apted` `pickle`
 
 Optional: `tikzplotlib` (For additional Latex-graph)
 

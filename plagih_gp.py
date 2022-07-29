@@ -32,7 +32,7 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-force_new_run', action='store_true', help='Shortcut for forcing a new run (->developing)')
 
     # Parameters for a run which are not in files ;) (Parameters override loaded parameters AFAIK)
-    parser.add_argument('-kernel_name', type=str, help='Kernel-name that will be analyzed to load the kernel. Currently only regression-versions.')
+    parser.add_argument('-kernel_name', type=str, help='Kernel-name loaded in run. Currently only regression-versions.')
     parser.add_argument('-dc', type=str, action='append', default=[], help='Drop columns from the loaded data-.csv file. Probably unused actions in the IB).')
     parser.add_argument('-pop_max', '-pop_size', type=int, help='Set maximum pop_list for this run (updates the config)')
     parser.add_argument('-gen_max', '-gen_size', type=int)
@@ -61,9 +61,6 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-develop', '-dev', action='store_true', help='Extensive debugging and fintree testing during the developing process.')
     parser.add_argument('-less_files', action='store_true', help='Creating less files (e.g. no pareto analysis), "-analysis" trumps this command')
     parser.add_argument('-no_files', action='store_true', help='SFEH, unused. Create no files. dummy.')
-
-    # paths: check if absolute path exists? separate absolute paths?
-    # sfeh:open take last column as action instead
 
     args = parser.parse_args()
     conf = Config(args)  # hyperparameters are in config

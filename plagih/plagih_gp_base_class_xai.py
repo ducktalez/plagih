@@ -545,7 +545,7 @@ class ExplainableGP:
 
             axs0_twin = axs0.twinx()
             axs0_twin.plot(xx, self.monitor_df['gens_since_last_pareto'], color='tab:gray',
-                           label='Generations since last paretofront entry', linestyle='dashed',
+                           label='Gens since last paretofront entry', linestyle='dashed',
                            marker='')  # linestyle='None'
             axs0_twin.tick_params(axis='y', labelcolor='tab:gray')
             try:

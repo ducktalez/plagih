@@ -9,6 +9,10 @@ from keras import layers, initializers, regularizers
 from functools import partial
 from pathlib import Path
 import csv
+import os
+
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
 class ReplayBuffer:

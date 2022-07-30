@@ -4,6 +4,8 @@ import time
 import yaml
 from pathlib import Path
 
+from distutils.spawn import find_executable
+
 
 DEBUG_DUMMY = True  # Use this to find codeblocks that are just interesting during development
 TEST_DUMMY = True  # sfeh: actually use this later! check trees, check if all ops are usable,
@@ -91,8 +93,9 @@ def file_dump(path, data, verbose='SKIPsfeh', print_type=None):
 
 pyplot_size = (3.6, 2.7)  # default: (6.4, 4.8) S: (4, 3)  XXL: (16, 9)  M: (4.8, 3.6) (4.4, 3.3)
 plplot_size_up = (3.6, 3.6)
+
 pyplot_rc_tex = {'figure.autolayout': True,
-                 'text.usetex': True,
+                 'text.usetex': find_executable('latex') or False,  # sfeh:debug check if latex is available
                  'backend': 'pgf',
                  'figure.figsize': pyplot_size,
                  'axes.labelpad': 0.5,  # padding axis-ticks to axis title

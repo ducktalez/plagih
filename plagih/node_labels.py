@@ -6,6 +6,8 @@ import tensorflow as tf
 import ast
 import numpy as np
 
+tf.compat.v1.enable_eager_execution()
+
 
 class NodeLabel:
     """
@@ -23,6 +25,13 @@ class NodeLabel:
 
     def __str__(self):
         return self.nlabel
+
+    def tf_eager(self):
+        """
+        Introduce eager execution (tensorflow v2) into nodes.
+
+        """
+        pass
 
     # def __init__(self, *args, **kwargs):
     #     # nlabel=None, arity=0, xtype_out=(tuple([None]), None), tflow=None, expr_sym=None, pycode=None, latex=None
@@ -48,6 +57,7 @@ class NodeLabel:
     def mutate_self_filter(self, *args, **kwargs):
         """
          as default, return own index
+         sfeh:move to tree
         """
         pass
 
@@ -62,12 +72,25 @@ class Operator(NodeLabel):
     def eval(self, *args):
         return args[self.arity:]
 
+    def tf_eager(self):
+        pass
+
 
 class Terminal(NodeLabel):
+    """
+    Terminal nodes are leaf nodes which can not have children. e.g.:
+    - constants (e.g. 2.3)
+    - observations (e.g. cartVel, aka data input)
+    - user-functions (sfeh:open)
+    """
     arity = 0
 
     def mutate_self_filter(self, *args, **kwargs):
         # sfeh:? ...only for terminal nodes
+        pass
+
+    def tf_eager(self):
+        """In child nodes"""
         pass
 
 
@@ -80,10 +103,15 @@ class Constant(Terminal):
     def mutate_self_filter(self, *args, **kwargs):
         pass
 
+    def tf_eager(self):
+        # return tf.constant()
+        # sfeh open
+        pass
 
 def observation_get_family_and_time(name, re_pattern='_\\d+$', none_return=None):
     """
     When an observation is known, return the family, the time and the SIGN!!
+    sfeh:move this function somewhere else
     """
 
     core_expr = re.split(re_pattern, name)[0]
@@ -181,6 +209,16 @@ class Add(Operator):
     #     pass
     #     # super().__init__(*args, **kwargs)
 
+    def backprop(self):
+        """
+        #:      count >, count <, count =
+        #me:    wenn Abweichung am höchsten von allen sum-knoten
+        c:      sum(alle Abweichungen) -> schlimmster +-child
+        propagate-down: y - ^y, wenn 5 zu hoch -> -5 nach unten
+        erst normieren? Also, die avg. Abweichung abziehen?
+        """
+        pass
+
 
 class Subtract(Operator):
     """
@@ -195,6 +233,14 @@ class Subtract(Operator):
     pycode = '({}-{})'
     xtype = (tuple([float, float]), float)
 
+    def propagate_down(self):
+        """
+        defprop:
+        # propagation: Anzahl
+        propagate-down: negativ-Fehler (also summe, bl,os negativ)
+        """
+        pass
+
 
 class Usub(Operator):
     nlabel = 'Usub'
@@ -206,6 +252,14 @@ class Usub(Operator):
     pycode = '(-{})'
     xtype = (tuple([float]), float)
 
+    def propagate_down(self):
+        """
+        defprop:
+        # propagation:
+        propagate-down:
+        """
+        pass
+
 
 class Multiply(Operator):
     nlabel = '*'
@@ -215,6 +269,21 @@ class Multiply(Operator):
     expr_sym = '({} * {})'
     pycode = '({}*{})'
     xtype = (tuple([float, float]), float)
+
+    def propagate_down(self):
+        """
+        Idee: Ein weiterer Faktor bestimmt, wie weit man am Ziel vorbei ist.
+            Beispielsweise Ziel: 20, aber Ergebnis war 10 -> Lösungsfaktor ist 20/10=2.
+            Nun gibt man den eigenen Wert*2 nach unten als Ziel zurück.
+            Falls selbst=0, gib differenz zwischen Ziel und 0 nach unten (also: Ziel)
+
+        wenn 0: immer selbst runterpropagieren, wenn anderer auch 0: beide 0.5
+        defprop:
+        # propagation:
+        propagate-down error: (y-^Y)-
+        propagate-down itsme: (y-^Y)-
+        """
+        pass
 
 
 class Divide_no_nan(Operator):
@@ -236,6 +305,12 @@ class Divide_no_nan(Operator):
     def eval(self, a, b):
         return a/b
 
+    def backprop(self):
+        """
+        Wie bei Mult: Ziel wird ausgerechnet, Faktor für sich selbst wird ausgerechnet. Nach unten propagieren.
+        """
+        pass
+
 
 class Div(Operator):
     """
@@ -252,6 +327,12 @@ class Div(Operator):
 
     def eval(self, a, b):
         return a/b
+
+    def backprop(self):
+        """
+        Wie bei Mult: Ziel wird ausgerechnet, Faktor für sich selbst wird ausgerechnet. Nach unten propagieren.
+        """
+        pass
 
 
 class Power(Operator):
@@ -270,6 +351,15 @@ class Power(Operator):
 
     def eval(self, a, b):
         return a**b
+
+    def backprop(self):
+        """
+        # KILL, wenn Lösung gar nicht erreicht werden kenn (wegen Definitionsbereich). Es ist dann halt einfach so.
+        Idee: Ergebnis Differenz ist vermutlich manchmal sehr hoch.
+            # Zähle, wie oft Basis & Exponent jeweils drüber/drunter liegen
+            -> Nur den Exponenten beachten. Anzahl drüber/drunter im Vergleich zum besten Exponenten (der Ziel erreicht)
+        """
+        pass
 
 
 class Powrounded(Operator):
@@ -301,6 +391,12 @@ class Abs(Operator):
     expr_sym = 'abs({})'
     pycode = 'abs({})'
     xtype = (tuple([float]), float)
+
+    def backprop(self):
+        """
+        inline-propagarion:
+        """
+        pass
 
 
 class Sign(Operator):
@@ -543,6 +639,18 @@ class Ge(Operator):
 
 
 class Ifte(Operator):
+    """
+    self-expert: opportunity_cost = best_vals - chosen_vals
+    self-childs:
+        condition: opportunity_cost = chosen_vals - best_vals
+        a        : opportunity_cost = when_chosen(chosen_vals - best)
+        b        : opportunity_cost = when_chosen(chosen_vals - best)
+    #self.childs:
+        condition: #correct_decisions
+        a        : cond->a, #correct_decisions - #false_decisions
+        b        : cond->b, #correct_decisions - #false_decisions
+    --> If a node
+    """
     nlabel = 'Ifte'
     arity = 3
     tflow = tf.where
@@ -550,6 +658,9 @@ class Ifte(Operator):
     expr_sym = 'Ifte({}, {}, {})'
     pycode = '({} if {} else {})'
     xtype = (tuple([bool, float, float]), float)
+
+    def tf_eager(self, cvals):
+        return tf.where(cvals[0], cvals[1], cvals[2])
 
 
 class Min(Operator):
@@ -668,6 +779,7 @@ op_dict = {
 }
 
 latex_inline = ['+', '-', '*', '**', '==', '!=', '<', '<=', '>', '>=', 'Andb', 'Orb', 'Xor']
+# print(', '.join(['[\'{}\', {:.2f}]'.format(v['label'], 1/v['xtype_out': ([], []), 'c-weight']) for k, v in op_what.items()]))  # retreive a list with all non-ast op_dict:
 
 
 if __name__ == '__main__':

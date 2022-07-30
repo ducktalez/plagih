@@ -18,7 +18,6 @@ from plagih.tree_distances.tree_edit_distance import apted_distance
 from dataclasses import dataclass
 import itertools
 
-
 # logging.basicConfig(filename='example.log', filemode='a', level=logging.DEBUG)  # sfeh encoding='utf-8' maybe in the future
 
 # lol, lol. https://github.com/tensorflow/tensorflow/issues/27023 these messages are tingeling

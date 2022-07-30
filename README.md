@@ -2,7 +2,9 @@
 
 ## Ablage/Todos
 
-- Make regular Functions Sympy Functions
+- gens_since_last_pareto
+- population cluster / races
+- Make regular Function Classes Sympy Functions
 - ASTify all functions
 - introduce integer
 - replace x**2 with Squared(x)
@@ -10,8 +12,10 @@
   - Auto-testruns: loop/reload through [random, origin, origin_fixed] [MC, IB]
   - TF-evaluation equals python-evaluation equals sympy evaluation
 - BackPropagation through nodes, rank value for whole tree 
-- gens_since_last_pareto
 - separate monitoring class
+- introduce NN in alpha-tree, at well-mutable nodes
+- evaluate one very large TF-graph containing the whole population
+- parallelisation
 
 Always check
 - xxxxx
@@ -35,11 +39,11 @@ Attention: If you want to write your own code, look for important developer info
 
 ## Paper ideas
 - unified mathematics as performance improvement for gp
-- cluster-based evolution of subpopulations
+- cluster-based evolution of subpopulations / races
 - Recombining if cases in 
 - BackPropagation through nodes, rank value for whole tree
 - Genetic Backpropagation
-- 
+- transforming the whole population into one graph, bottom to top. Do something with the "reversed" tree
 
 
 ## Intro

@@ -18,7 +18,7 @@ class Config:
         !!! switching between systems is worse than HitlerAIDS !!!
         """
         self.pl_version = 1.1  # must only update if vital changes were made, version important when loading old run
-        self.gen_id = 0
+        # self.gen_id = 0  # delete_this 30-07-2022
         self.name = args.prepared_run or None  # sfeh
 
         try:

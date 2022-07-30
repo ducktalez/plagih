@@ -6,46 +6,83 @@ All paretoefficient GP-candidates, aka the "best" entries for each complexity.
 from plagih.util import printez
 
 
-def poplist_paretosort(pop_list):
+def pareto_from_pop(pop_list):
     """
     sfeh check this!! op_next mostly has 2 pareto entries??
     """
-    # sfeh:open:kernel sorting with x.get_fitness OnLY when fitness has "<" relation. (otherwise: -x.get_fitness)
-    fitness_sign = -1  # sfeh-kernel/remove: this was loaded from self.fitness_sign. Now, every Fitness is better the smaller
-    pop_list = sorted(pop_list, key=lambda x: (x.get_parsimony(), fitness_sign * x.get_fitness()))
+    pop_list = pareto_sort(pop_list)
 
     try:
-        best = pop_list[0]
+        ref = pop_list[0]
     except Exception as ex:
         raise Exception(f'The list is empty, i guess: {pop_list}. {ex}')
 
-    best_par = best.get_parsimony()
-    best_fit = best.get_fitness()
-    pop_pareto = [best]
+    ref_par = ref.get_parsimony()
+    ref_fit = ref.get_fitness()
+
+    pop_pareto = [ref]
 
     for tree in pop_list:
         parsim = tree.get_parsimony()
-        if parsim == best_par:
+        if parsim == ref_par:  # parsim can not be smaller
             continue  # sfeh:discuss does sorted keep the order?
         else:
             fitness = tree.get_fitness()
-            # if self.fitness_compare(fitness, best_fit): sfeh-kernel
-            if fitness < best_fit:
+            if fitness < ref_fit:
                 pop_pareto.append(tree)
-                best_par = parsim
-                best_fit = fitness
+                ref_fit = fitness
+
+            ref_par = parsim
 
     return pop_pareto
 
 
-# def pareto_append_clean(paretofront, tree: FinalizedTree):
-def pareto_append_clean(paretofront, tree):
-    """
+def pareto_sort(tree_list):
+    tree_list = sorted(tree_list, key=lambda x: (x.get_parsimony(), x.get_fitness()))  # keys can be negative (*-1)
+    return tree_list
 
+
+def pareto_from_population(paretofront, pop_next, conf):
     """
-    paretofront.append(tree)
-    paretofront = poplist_paretosort(paretofront)
-    return paretofront
+    sfeh:debug, might be faulty
+    sfeh:discuss pareto-efficient, but different pareto entries?
+    """
+    pop_parcandidates = pareto_from_pop(pop_next)  # pareto-candidates in the pop, renamed to be clear
+    reset_gens_since_last_pareto = False
+    for fintree in pop_parcandidates:
+        success = False
+        fit = fintree.get_fitness()
+        par = fintree.get_parsimony()
+
+        if par < paretofront[0].get_parsimony():
+            printez('a', f'Paretofront: New simplest entry. parsimony: {par} fitness: {fit:6.4f},'
+                         f'old simplest entry had {paretofront[0].get_parsimony()}', conf.print_type)
+            success = True
+
+        # if all([self.fitness_compare(fit, p.get_fitness()) for p in paretofront]):  # sfeh-kernel
+        elif fit < paretofront[-1].get_fitness():
+            printez('a', f'Paretofront: New best-fitness entry. parsimony: {par} fitness: {fit:6.4f}',
+                    conf.print_type)
+            success = True
+        else:
+            for p in paretofront:
+                if par >= p.get_parsimony():
+                    continue
+                else:
+                    if fit < p.get_fitness():
+                        success = True
+
+        if success:
+            reset_gens_since_last_pareto = True
+            printez('a', f'Paretofront: New entry. parsimony: {par} fitness: {fit:6.4f}', conf.print_type)
+            obsolete_entries = [x for x in paretofront if x.get_fitness() > fintree.get_fitness() and x.get_parsimony() >= fintree.get_parsimony()]
+            if obsolete_entries:
+                printez('a', f'Paretofront: Getting rid of obsolete entries {[str(x) for x in obsolete_entries]}', conf.print_type)
+            paretofront = [x for x in paretofront if x not in obsolete_entries]
+            paretofront.append(fintree)
+            paretofront = pareto_sort(paretofront)
+
+    return paretofront, reset_gens_since_last_pareto
 
 
 def pareto_export(paretofront):
@@ -55,56 +92,6 @@ def pareto_export(paretofront):
     """
     return [f'Parsimony: \t{parsim} MeanError: \t{fitness} Expr: \t{tree.meta.expr_raw}' for (parsim, fitness, tree)
             in paretofront]
-
-
-def pareto_from_population(paretofront, pop_next, conf):
-    """
-    sfeh:debug, might be faulty
-    sfeh:discuss pareto-efficient, but different pareto entries?
-    """
-    pop_parcandidates = poplist_paretosort(pop_next)  # pareto-candidates in the pop, renamed to be clear
-
-    if len(paretofront) == 0:
-        firstpareto = pop_parcandidates[0]
-        printez('a',
-                f'Starting a new paretofront with parsimony: {firstpareto.get_parsimony()} fitness: {firstpareto.get_fitness():6.4f}',
-                conf.print_type)
-        paretofront.append(firstpareto)
-
-    for fintree in pop_parcandidates:
-        success = False
-        fit = fintree.get_fitness()
-        par = fintree.get_parsimony()
-
-        if all([par < p.get_parsimony() for p in paretofront]):
-            printez('a', f'Paretofront: New simplest entry. parsimony: {par} fitness: {fit:6.4f}', conf.print_type)
-            success = True
-            # optional: print now deprecated entries in the paretofront
-
-        # if all([self.fitness_compare(fit, p.get_fitness()) for p in paretofront]):  # sfeh-kernel
-        if all([fit < p.get_fitness() for p in paretofront]):
-            printez('a', f'Paretofront: New best-fitness entry. parsimony: {par} fitness: {fit:6.4f}',
-                    conf.print_type)
-            success = True
-            # optional: print now deprecated entries in the paretofront
-
-        for p in paretofront:
-            # better fitness at a comparatively good
-            # if self.fitness_compare(fit, p.get_fitness()) and par <= p.get_parsimony():  #sfeh-kernel
-            if fit < p.get_fitness() and par <= p.get_parsimony():
-                # paretofront.remove(p)  # sfeh: remove in the other cases aswell or not at all
-                success = True
-
-        if success:
-            printez('a', f'Paretofront: New entry. parsimony: {par} fitness: {fit:6.4f}', conf.print_type)
-            pareto_append_clean(paretofront, fintree)
-            gens_since_last_pareto = 0
-        else:
-            gens_since_last_pareto = None
-
-    paretofront = poplist_paretosort(paretofront)
-
-    return paretofront
 
 
 def pareto_insert_again_simplified(self, fintree):

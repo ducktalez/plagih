@@ -733,6 +733,12 @@ class FinalizedTree(Tree):
         self.tree = tree
         self.meta = meta
 
+    def __str__(self):
+        """
+        Show the Fitness and Parsimony of a tree
+        """
+        return f'[{self.get_parsimony():2.1f}: fit {self.get_fitness():4.2f}]'
+
     def get_evotree(self):
         return self.tree
 

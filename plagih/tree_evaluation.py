@@ -2,11 +2,17 @@
 tree_evaluation.py
 
 """
+import os
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from plagih.node_labels import op_dict
 from plagih.util import *
 
 import tensorflow
 import ast
+
+
+tensorflow.compat.v1.enable_eager_execution()
 
 
 def ast_expr_to(node, tensors=None, build=None):

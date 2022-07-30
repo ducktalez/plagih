@@ -1,9 +1,20 @@
+import os
+
+from matplotlib import pyplot as plt
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+import numpy as np
 import tensorflow
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
 from plagih.util import *
 from plagih.tree_evaluation import ast_convert_from_expr
+
+# Eager execution used to be not possible in tf v1, in tf v2, this is the standard
+# however, we need to build a complete graph before inserting the data in the leaf nodes.
+tensorflow.compat.v1.disable_eager_execution()
 
 
 class EvalAction:
@@ -52,8 +63,10 @@ class Kernel:
 
         self.fitness_sign = -1
 
-        df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
-        self.data_train, self.data_control = train_test_split(df, test_size=0.2, random_state=0)  # discussion: random state 0 okay? test_size 0.2?
+        df = df.astype(
+            'float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
+        self.data_train, self.data_control = train_test_split(df, test_size=0.2,
+                                                              random_state=0)  # discussion: random state 0 okay? test_size 0.2?
 
     def eval_tf(self, *args, **kwargs):
         return float('nan')
@@ -76,7 +89,6 @@ class RegressionKernel(Kernel):
 
     def __init__(self, path_data_csv, conf, *args, **kwargs):
         super().__init__(path_data_csv, conf, *args, **kwargs)
-        self.np_best_fitness = np.min
 
         # self.kernel_version_plot_yaxis = f"regression error"
         # for option, plot_axis_string in {'discrete': ', discrete', 'bounded': ', bounded', 'tanhpenalize': ', penalize (tanh)'}.items():
@@ -191,9 +203,11 @@ class RegressionKernel(Kernel):
         """
         tensorflow.compat.v1.reset_default_graph()
         solution = tensorflow.constant(self.data_train[self.action.data_column_name])  # tensors[self.action.name]
-        tensors = {obs_name: tensorflow.constant(self.data_train[obs_name]) for obs_name in used_observations}  # do not assign dtype here, do this in the pandas df aka data
+        tensors = {obs_name: tensorflow.constant(self.data_train[obs_name]) for obs_name in
+                   used_observations}  # do not assign dtype here, do this in the pandas df aka data
 
-        results_agent = ast_convert_from_expr(expr, tensors=tensors)  # the actual result from the expression in the agent
+        results_agent = ast_convert_from_expr(expr,
+                                              tensors=tensors)  # the actual result from the expression in the agent
 
         # fit the agents to the possible outcome
         results_kernel = results_agent  # The ids change in the next lines! {id(results_kernel)} vs. {id(results_agent)}
@@ -219,10 +233,14 @@ class RegressionKernel(Kernel):
         if self.exploration_risk and self.origin_results is not None:
             # tf_error = tensorflow.abs  # sfeh this is required (??)
             # (1 * tensorflow.abs(pairwise_diff)) - # 1 * abs, as the other one is within the error. usually 2*  # sfeh not sure
-            exploration_korridor = tensorflow.abs(solution - self.origin_results)  # the complete range that is 'okay' to actually explore here.
-            exploration = (self.origin_results - results_kernel)  # the difference to the origin - which we want to "penalize" here
-            explore_penalize = tensorflow.maximum(exploration_korridor - exploration, 0)  # removes the above mentioned expected exploration from the penalize process
-            penalize_exploration = self.pen_explorate * (tf_error(explore_penalize))  # this should not be weighted as much as the regular expression (0 to 1).
+            exploration_korridor = tensorflow.abs(
+                solution - self.origin_results)  # the complete range that is 'okay' to actually explore here.
+            exploration = (
+                        self.origin_results - results_kernel)  # the difference to the origin - which we want to "penalize" here
+            explore_penalize = tensorflow.maximum(exploration_korridor - exploration,
+                                                  0)  # removes the above mentioned expected exploration from the penalize process
+            penalize_exploration = self.pen_explorate * (
+                tf_error(explore_penalize))  # this should not be weighted as much as the regular expression (0 to 1).
             # Although, even more extreme penalisations are possible. Also, ideas about dummy pen (for no exploration, but no easy improvement) or values >1 for sticking to the origin policy
             # use factor before or after squaring the distance?
             regression_errors += penalize_exploration
@@ -251,13 +269,15 @@ class RegressionKernel(Kernel):
             factor 2 (0.1) stretches the tanh function. the largest improvement should be at the points we want to get rid of
             squared distance? -> smooth transition from the area that is considered okay
             """
-            penalized_bounds = 0.02 * tensorflow.tanh(tensorflow.square(results_agent - results_kernel) * 0.1)  # sfeh amplitude, stretch, squared
+            penalized_bounds = 0.02 * tensorflow.tanh(
+                tensorflow.square(results_agent - results_kernel) * 0.1)  # sfeh amplitude, stretch, squared
             mean_boundpen = tensorflow.reduce_mean(penalized_bounds)  # sfeh could easily be a reduce_sum
             mean_error += mean_boundpen
         else:
             penalized_bounds = tensorflow.no_op()
 
-        with tensorflow.compat.v1.Session(config=self.tf_config) as sess:  # tensorflow evaluation must be done in a "session". funfact: debugging is not ez
+        with tensorflow.compat.v1.Session(
+                config=self.tf_config) as sess:  # tensorflow evaluation must be done in a "session". funfact: debugging is not ez
             with sess.graph.device(self.tf_device):  # GPU evaluation in tensorflow
                 tf_results = sess.run(
                     {'pairwise_diff': pairwise_diff,
@@ -270,9 +290,11 @@ class RegressionKernel(Kernel):
         fitness = tf_results['mean_error']
 
         if fitness != fitness or fitness == float('inf'):
-            raise ValueError(f"fitness is: '{fitness}'")  # sfeh or Exception happens, eg when values are soo wrong that it leaves the float-range
+            raise ValueError(
+                f"fitness is: '{fitness}'")  # sfeh or Exception happens, eg when values are soo wrong that it leaves the float-range
 
-        tf_results['mean_error'] = round(float(tf_results['mean_error']), self.precision)  # sfeh option: round directly in tensorflow
+        tf_results['mean_error'] = round(float(tf_results['mean_error']),
+                                         self.precision)  # sfeh option: round directly in tensorflow
 
         if only_fitness:  # reduced evaluation, only mean_error is returned... (may save memory as only one value gets returned)
             return tf_results['mean_error']
@@ -320,9 +342,12 @@ class ClassificationKernel(Kernel):
         for class_label in range(uniques_num - 2, 0, -1):
             cond = (class_label - 1 - skew < result) & (result <= class_label - skew)
             label_rules[class_label] = tensorflow.cond(cond, lambda: (
-                tensorflow.constant(class_label), tensorflow.constant(f' <= {class_label - skew}')), lambda: label_rules[class_label + 1])
+                tensorflow.constant(class_label), tensorflow.constant(f' <= {class_label - skew}')),
+                                                       lambda: label_rules[class_label + 1])
 
-        pred_label = tensorflow.cond(result <= 0 - skew, lambda: (tensorflow.constant(0), tensorflow.constant(f' <= {0 - skew}')), lambda: label_rules[1])
+        pred_label = tensorflow.cond(result <= 0 - skew,
+                                     lambda: (tensorflow.constant(0), tensorflow.constant(f' <= {0 - skew}')),
+                                     lambda: label_rules[1])
 
         return pred_label
 
@@ -358,7 +383,8 @@ class ClassificationKernel(Kernel):
             tensorflow.less(solution - 1 - skew, kernel_result),
             tensorflow.less_equal(kernel_result, solution - skew))
 
-        pairwise_fitness = tensorflow.dtypes.cast(tensorflow.logical_or(tensorflow.logical_or(rule1, rule2), rule3), tensorflow.int32)
+        pairwise_fitness = tensorflow.dtypes.cast(tensorflow.logical_or(tensorflow.logical_or(rule1, rule2), rule3),
+                                                  tensorflow.int32)
         return pairwise_fitness
 
 
@@ -383,7 +409,9 @@ class MatchKernel(Kernel):
         """
         # pairwise_fitness = tensorflow.dtypes.cast(tensorflow.equal(solution, result), tensorflow.int32) # breaks due to floating points
         rtol, atol = 1e-05, 1e-08  # fixes above issue by checking if a float c1 lies within a range of values
-        pairwise_fitness = tensorflow.dtypes.cast(tensorflow.less_equal(tensorflow.abs(solution - kernel_result), atol + rtol * tensorflow.abs(kernel_result)), tensorflow.int32)
+        pairwise_fitness = tensorflow.dtypes.cast(tensorflow.less_equal(tensorflow.abs(solution - kernel_result),
+                                                                        atol + rtol * tensorflow.abs(kernel_result)),
+                                                  tensorflow.int32)
 
         return pairwise_fitness
 

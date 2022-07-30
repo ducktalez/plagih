@@ -12,9 +12,7 @@ from plagih.util import *
 
 def main():  # argv sys.argv[1:]
     """
-   -h, -help
-   -run_folder
-    # sfeh: options for other functions? run, visualise_tree, analyze_run, check_files, tests
+
    """
 
     parser = argparse.ArgumentParser(description='Plagih genetic programming (PLAusible Genetic Improvements to Heuristics, name changes!)')
@@ -62,6 +60,9 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-less_files', action='store_true', help='Creating less files (e.g. no pareto analysis), "-analysis" trumps this command')
     parser.add_argument('-no_files', action='store_true', help='SFEH, unused. Create no files. dummy.')
 
+    parser.add_argument('-test', type=str, help='Continuous tests, start several test runs, reload them, etc...')  # todo
+
+
     args = parser.parse_args()
     conf = Config(args)  # hyperparameters are in config
 
@@ -83,14 +84,14 @@ def main():  # argv sys.argv[1:]
         if args.force_new_run:
             raise Exception('Dude. Either analyze stuff or force a new run?')
         try:
-            gp.backup_load(args.load_backup)
+            gp.run_backup(path_load_custom_backup=args.load_backup, mode='load')
         except FileNotFoundError as no_file_ex:
             raise FileNotFoundError(f'You need to load a backup file to analyze! {no_file_ex}')
 
     else:
         if not args.force_new_run:
             try:
-                gp.backup_load(args.load_backup)
+                gp.run_backup(path_load_custom_backup=args.load_backup, mode='load')
             except FileNotFoundError as ex:
                 gp.printpl('i', f'No backup file found at {ex}. Starting a new run.')
 
@@ -99,12 +100,12 @@ def main():  # argv sys.argv[1:]
             gp.pop_tmp = []
             # sfeh debug this!
 
-        gp.plagih_gp_run(args.gen_additionally)
+        gp.evoloop(args.gen_additionally)
 
-    gp.file_analysis_plots()
+    gp.evoloop_monitoring_plots()
 
-    if args.gen_max:
-        conf.gen_max = args.gen_max  # workaroung for prepared run
+    # if args.gen_max:
+    #     conf.gen_max = args.gen_max  # workaroung for prepared run. sfeh: why workaround?  # delete this
 
     if args.analyze or not args.less_files:
         gp.paretofront.analyze_pareto(cpu_cores=args.mp_cores)
@@ -119,6 +120,11 @@ def main():  # argv sys.argv[1:]
     print('***Program ending***\n'
           '********************\n\n')
     sys.exit()
+
+
+def autotests():
+    # sfeh:open
+    pass
 
 
 if __name__ == "__main__":

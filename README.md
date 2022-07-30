@@ -16,6 +16,7 @@
 - introduce NN in alpha-tree, at well-mutable nodes
 - evaluate one very large TF-graph containing the whole population
 - parallelisation
+- evolve-operatoren: werte runden, runden einbauen,
 
 Always check
 - xxxxx

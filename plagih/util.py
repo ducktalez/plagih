@@ -9,6 +9,18 @@ from distutils.spawn import find_executable
 
 DEBUG_DUMMY = True  # Use this to find codeblocks that are just interesting during development
 TEST_DUMMY = True  # sfeh: actually use this later! check trees, check if all ops are usable,
+print_dummy = 'wwaaggiiff'  # todo print funktion in util mit buchstaben, die aber überschrieben werden können
+
+
+def printyeah(message_type, message_str):
+    """
+    sfeh:open
+    Lightweight print function.
+    Instead of checking if you should print every time, this is done here.
+    message_type options can be found in config
+    """
+    printez(message_type, message_str, print_type=print_dummy)
+    return
 
 
 class BColors:
@@ -43,7 +55,7 @@ def pickle_dump(path, data):
     with Path.open(path, 'wb') as file:
         pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
 
-    printez('f', f'Backup: {path.as_posix()}')
+    printez('f', f'Backup: {path}')  # .as_posix()
 
 
 def yaml_dump(path, data, print_type=None, default_flow_style=True):
@@ -54,7 +66,7 @@ def yaml_dump(path, data, print_type=None, default_flow_style=True):
     path = path_make_dir(path)
     with Path.open(path, 'w') as file:
         _ = yaml.dump(data, file, default_flow_style=default_flow_style, sort_keys=False)
-        printez('ff', f'{path.as_posix()}', print_type=print_type)
+        printez('ff', f'{path}', print_type=print_type)  # .as_posix()
         return
 
 
@@ -88,7 +100,7 @@ def file_dump(path, data, verbose='SKIPsfeh', print_type=None):
     path_make_dir(path)
     with Path.open(path, 'w') as file:
         file.write(data)
-        printez(verbose, f'{path.as_posix()}', print_type=print_type)
+        printez(verbose, f'{path}', print_type=print_type)  # .as_posix()
 
 
 pyplot_size = (3.6, 2.7)  # default: (6.4, 4.8) S: (4, 3)  XXL: (16, 9)  M: (4.8, 3.6) (4.4, 3.3)

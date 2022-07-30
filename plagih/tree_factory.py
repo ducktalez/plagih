@@ -92,7 +92,7 @@ def choose_build_size(size_mode, mean_min_max_var, tree=None, nodepath=None, for
 
 def node_simplification(node: Node):
     """
-    (Tries to) simplify a tree. It is quite experimental
+    (Tries to) simplify/reduce a tree. It is quite experimental
 
     SFEH Discussion
         # example: Tree sympification did not work: Reduced core is even more complex than before.
@@ -113,7 +113,7 @@ def node_simplification(node: Node):
     return node_rebuilt
 
 
-def evolve_reduce(tree: Node, completely=True):
+def evolve_reduce_simplify(tree: Node, completely=True, force=False):
     """
     Reducing a fintree to its most basic form with sympify.
     (completely = False: reduce just one branch. if you wanted to have more complexity)
@@ -135,11 +135,14 @@ def evolve_reduce(tree: Node, completely=True):
         nd_list = [x for x in nd_list if x.label.arity > 0]  # ignoring leaf nodes
         nd = np.random.choice(nd_list)
         nd.set_new_node(node_simplification(nd))  # sfeh chosen must be set again? or not? test it at least.
-    if len(tree_copy) < len(tree):
-        print_e(f'FFS Trees just become larger? {tree.get_nlabel()}')
-        return tree_copy
-    else:
+    if force:
         return tree
+    else:
+        if len(tree_copy) < len(tree):
+            print_e(f'FFS Trees just become larger? {tree.get_nlabel()}')
+            return tree_copy
+        else:
+            return tree
 
 
 class TreeBuilder:
@@ -446,7 +449,7 @@ class TreeBuilder:
         # mutate_filter = 'gaussian_filter'  # sfeh:future
 
         node = np.random.choice(evotree.eval_mutable_nodes())
-        node.evolve_mutate_filter_branch(precision=self.precision)
+        node.evolve_mutate_filter_branch(self.precision)
 
         # sfeh ==>state
         return evotree

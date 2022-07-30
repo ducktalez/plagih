@@ -3,7 +3,7 @@ All paretoefficient GP-candidates, aka the "best" entries for each complexity.
 -> updated after each generation
 
 """
-from plagih.util import printez
+from plagih.util import *
 
 
 def pareto_from_pop(pop_list):
@@ -42,49 +42,6 @@ def pareto_sort(tree_list):
     return tree_list
 
 
-def pareto_from_population(paretofront, pop_next, conf):
-    """
-    sfeh:debug, might be faulty
-    sfeh:discuss pareto-efficient, but different pareto entries?
-    """
-    pop_parcandidates = pareto_from_pop(pop_next)  # pareto-candidates in the pop, renamed to be clear
-    reset_gens_since_last_pareto = False
-    for fintree in pop_parcandidates:
-        success = False
-        fit = fintree.get_fitness()
-        par = fintree.get_parsimony()
-
-        if par < paretofront[0].get_parsimony():
-            printez('a', f'Paretofront: New simplest entry. parsimony: {par} fitness: {fit:6.4f},'
-                         f'old simplest entry had {paretofront[0].get_parsimony()}', conf.print_type)
-            success = True
-
-        # if all([self.fitness_compare(fit, p.get_fitness()) for p in paretofront]):  # sfeh-kernel
-        elif fit < paretofront[-1].get_fitness():
-            printez('a', f'Paretofront: New best-fitness entry. parsimony: {par} fitness: {fit:6.4f}',
-                    conf.print_type)
-            success = True
-        else:
-            for p in paretofront:
-                if par >= p.get_parsimony():
-                    continue
-                else:
-                    if fit < p.get_fitness():
-                        success = True
-
-        if success:
-            reset_gens_since_last_pareto = True
-            printez('a', f'Paretofront: New entry. parsimony: {par} fitness: {fit:6.4f}', conf.print_type)
-            obsolete_entries = [x for x in paretofront if x.get_fitness() > fintree.get_fitness() and x.get_parsimony() >= fintree.get_parsimony()]
-            if obsolete_entries:
-                printez('a', f'Paretofront: Getting rid of obsolete entries {[str(x) for x in obsolete_entries]}', conf.print_type)
-            paretofront = [x for x in paretofront if x not in obsolete_entries]
-            paretofront.append(fintree)
-            paretofront = pareto_sort(paretofront)
-
-    return paretofront, reset_gens_since_last_pareto
-
-
 def pareto_export(paretofront):
     """
     Save all the paretofront candidates to a file.
@@ -116,6 +73,49 @@ def pareto_insert_again_simplified(self, fintree):
     # else:
     #     self.printpl('aaa', 'Pareto entry was already simplified')
     pass
+
+
+def pareto_plot(paretofront, path, conf):
+    """
+    Write pyplot with paretofront candidates
+    """
+
+    tuples = [[tree.get_parsimony(), tree.get_fitness()] for tree in paretofront]
+    xx, yy = np.array(tuples).T
+
+    if len(xx) == 0:
+        print_e(f'Plotting empty array is not possible! Data={xx, yy}')
+        return
+
+    with plt.rc_context(rc=pyplot_rc_tex):
+        fig, ax = plt.subplots()
+        right = max(max(xx), conf.parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
+
+        # beyond_lines:  # adding a point to the edges to imply that there are no more values (paretofront-plot)
+        # xx = np.concatenate([[xx[0]-1.05], xx, [right + 1]])
+        # yy = np.concatenate([[max(yy) + 1], yy, [yy[-1]]])
+        xx = np.concatenate([xx, [right + 1]])
+        yy = np.concatenate([yy, [yy[-1]]])
+
+        run_name_latex = str(conf.name).replace('_', '-')  # sfeh asd workaround for latex version
+        ax.step(xx, yy, linestyle='dashed', marker='.', label=f'{run_name_latex}', where='post')
+        ax.set(xlabel='complexity', ylabel='regression error',
+               xlim=(0, right),
+               ylim=(0, (max(yy) - min(min(yy), 0)) * 1.05))
+
+        try:
+            path_pdf = path / f'paretofront.pdf'
+            fig.savefig(path_pdf)
+            printez('f', f"paretofront (.pdf): {path_pdf}", conf.print_type)
+
+            path_png = path / f'paretofront.png'
+            fig.savefig(path_png)
+            printez('f', f"paretofront (.png): {path_png}", conf.print_type)
+        except PermissionError as perm_error:
+            print_e(f'Could not save plot: {perm_error}')  # sfeh for everything?
+        except Exception as ex:
+            raise ex
+    return
 
 
 def analyze_pareto(cpu_cores=16):  # sfeh 16 cores? nope

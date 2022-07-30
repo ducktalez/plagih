@@ -1,7 +1,10 @@
 """
 Functions, that might be addable in the future:
 """
+import pandas as pd
+
 from plagih.fitness_kernel import *
+from plagih.monitoring import plot_gen_performance
 from plagih.paretofront import *
 from plagih.tree_factory import *
 
@@ -9,10 +12,21 @@ import copy
 from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.stats
 
 # sfeh https://docs.sympy.org/latest/tutorial/manipulation.html
 
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
+
+
+def pop_selection_tournament(pop_base, tourn_size=3):
+    """
+
+    """
+    tree_list = [np.random.choice(pop_base) for _ in range(tourn_size)]
+    fintree: 'FinalizedTree' = min(tree_list, key=lambda tree: tree.get_fitness())
+    evotree = fintree.get_evotree()
+    return copy.deepcopy(evotree)  # sfeh deepcopy not required if it is copied later
 
 
 class ExplainableGP:
@@ -54,6 +68,11 @@ class ExplainableGP:
                                                 'fit_avg', 'fit_var', 'fit_best',
                                                 'parsim_avg', 'parsim_var', 'parsim_best',
                                                 'gens_since_last_pareto'])
+        # sfeh:open confidence interval NOT symmetric!
+        # self.monitor_evolutions = {}
+        # for tag in self.evolve_tags:
+        #     self.monitor_evolutions[tag] = pd.DataFrame(columns=['fit_avg', 'fit_var', 'time_per_tree'])
+
         """
         was Evolution class
         The evolve_dict is converted into a list of the population length.
@@ -153,74 +172,6 @@ class ExplainableGP:
         self.evolve_tags = list(self.evolve_loop.keys()) + list(self.evolve_random.keys())
         return
 
-    #
-    # def file_pareto_latex(self, parsim, fintree):
-    #     """
-    #     Generates latex-file with the computational fintree structure of all paretofront agents
-    #     - build fintree from expression
-    #     - fill fintree meta-data, just in case we want to visualise anything of it
-    #     - create latex-forest representation
-    #     """
-    #
-    #     """
-    #     whole procedure from fintree to forest core
-    #     tight_viz:
-    #         0: display every node
-    #         1: clever tight-visualisation where possible
-    #         2: one single mathematical expression
-    #     """
-    #
-    #     fintree.set_fix_nodes(self.origin)
-    #     fintree = fintree.get_oldtree()
-    #
-    #     pl_forest = lambda x: f'\\plforest{{{x}}}\n'
-    #
-    #     forest_tree_full = None  # pl_forest(latex_brackettree(fintree))
-    #     forest_tree_tight = None  # pl_forest(latex_brackettree_tight(latex_tree_semitight(fintree)))
-    #     # sfeh workaround delete this
-    #     tex_expr_raw = f'${fintree.export_visualization_latex()}$'  # sfeh dollars
-    #     tex_expr_forest = pl_forest(f'[{tex_expr_raw}]')
-    #
-    #     path_subfolder_tex = path_make_dir(self.rootdir / 'visualisation')  # sfeh running this in every fintree seems unneccesary
-    #
-    #     """
-    #     The following lines delete this
-    #     """
-    #     # sfeh
-    #     file_dump(path_subfolder_tex / f'full_{parsim:02d}.tex', forest_tree_full, verbose='ff', print_type=self.print_type)
-    #     file_dump(path_subfolder_tex / f'full_{parsim:02d}_tight.tex', forest_tree_tight, verbose='ff', print_type=self.print_type)
-    #     file_dump(path_subfolder_tex / f'{parsim:02d}_input.tex', tex_expr_raw, print_type=self.print_type)
-    #     file_dump(path_subfolder_tex / f'{parsim:02d}_input_forest.tex', tex_expr_forest, verbose='ff', print_type=self.print_type)
-    #     file_dump(path_subfolder_tex / f'{parsim:02d}_doc.tex', latex_treeviz_full_document(forest_tree_full), verbose='ff', print_type=self.print_type)  # delete this
-    #
-    #     return forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest
-
-    #     # pyc_complete = f"import math; import numpy as np\n" \
-    #     #     "import sys\n" \
-    #     #     "from pathlib import Path\n" \
-    #     #     "sys.path.pop_append_evotree(str(Path(Path.cwd() / '../../../'))\n" \
-    #     #     "from benchmarks.MC.agents.quick_eval import *\n" \
-    #     #     "from pathlib import Path\n" \
-    #     #     "folder = Path.cwd() / 'custom_files'\n" \
-    #     #     "from benchmarks.MC.agents.mtc_agent_sarsa import * \n" \
-    #     #     f"with Path.open(Path(Path.cwd() / '../../../benchmarks/MC/agents/sarsa_agent_{sarsa_agent}.p'), 'rb') as file:\n" \
-    #     #     "\tsarsa_agent = pickle.load(file)\n" \
-    #     #     "\n" \
-    #     #     f"{all_agents}\n" \
-    #     #     f"all_agents_more = [{all_more_info}]\n" \
-    #     #     f"agent_tuples = [{agent_tuples}]\n" \
-    #     #     f"\n\n" \
-    #     #     "if __name__ == '__main__':\n" \
-    #     #     "\tprint('executing!')\n" \
-    #     #     "\teval_agent_list(agent_tuples, folder=folder, goal_agent=sarsa_agent)\n"
-    #
-    #     # pth = path_make_dir(self.rootdir / self.dir_pycode / f"agents.py")
-    #     # with Path.open(pth, 'w') as file:
-    #     #     file.write(pyc_complete)
-    #     #     self.printpl('ff', f'Pycode: {pth.as_posix()}')
-    #
-    #     return
-
     def verify_evolution_params(self, evolve_dict):
         """
         Updates tournament size and evolve rates
@@ -241,7 +192,7 @@ class ExplainableGP:
     def evoloop(self, gen_additionally):
         """
         Start a regular GP run.
-        Instead, the only option is to analyze a previous run.
+        The only other option is to analyze a loaded run.
         """
         if gen_additionally:
             printdummy = copy.deepcopy(self.conf.gen_max)
@@ -289,15 +240,15 @@ class ExplainableGP:
                         self.conf.print_type)
 
             tmp_pareto = pareto_from_pop(self.pop_next)  # sfeh:optional paretofront in each generation?
-            self.paretofront, reset_gens_since_last_pareto = pareto_from_population(self.paretofront, tmp_pareto, self.conf)
-            if reset_gens_since_last_pareto:
-                self.gens_since_last_pareto = 0
+            self.paretofront = self.run_update_paretofront(self.paretofront)
 
             gen_time = time.perf_counter() - self.time_genstart
             pop_analysis_dict = pop_analyze(self.pop_next)
             pop_analysis_dict['gen_time'] = gen_time
             pop_analysis_dict['gens_since_last_pareto'] = self.gens_since_last_pareto
             self.monitor_df.loc[self.gen_id] = pop_analysis_dict
+
+            pop_tree_analysis(self.pop_next)
 
             self.printpl('gg',
                          f"Created {len(self.pop_next)}/{self.conf.pop_max} ({pop_analysis_dict['pop_unique']} unique) "
@@ -317,6 +268,63 @@ class ExplainableGP:
         self.run_backup(mode='save')
 
         return
+
+    def run_update_paretofront(self, paretofront):
+        """
+        CAUTION: This Function was tried to be separated many times now. it never worked.
+        This was tried =3= times now. Please increase the counter when you try.
+        sfeh:debug, might be faulty
+        sfeh:discuss pareto-efficient, but different pareto entries?
+        """
+        pop_parcandidates = pareto_from_pop(self.pop_next)  # pareto-candidates in the pop, renamed to be clear
+
+        for fintree in pop_parcandidates:
+            success = False
+            fit = fintree.get_fitness()
+            par = fintree.get_parsimony()
+
+            if par < paretofront[0].get_parsimony():
+                printyeah('a', f'Paretofront: New simplest entry. parsimony: {par} fitness: {fit:6.4f}, '
+                               f'old simplest entry had {paretofront[0].get_parsimony()}')
+                success = True
+
+            # if all([self.fitness_compare(fit, p.get_fitness()) for p in paretofront]):  # sfeh-kernel
+            elif fit < paretofront[-1].get_fitness():
+                printyeah('a', f'Paretofront: New fittest entry. parsimony: {par} fitness: {fit:6.4f}')
+                success = True
+            else:
+                for p in paretofront:
+                    if par >= p.get_parsimony():
+                        continue
+                    else:
+                        if fit < p.get_fitness():
+                            success = True
+
+            if success:
+                self.gens_since_last_pareto = 0
+                printyeah('a', f'Paretofront: New entry. parsimony: {par} fitness: {fit:6.4f}')
+
+                # sfeh: trying to simplify the tree for a even improved pareto # todo
+                try:
+                    symtree = evolve_reduce_simplify(fintree.get_evotree(), force=True)
+                    symmeta = self.finalize_tree_get_meta(symtree)
+                    symtree_fin = FinalizedTree(symtree, symmeta)
+                    if symtree_fin.get_parsimony() < fintree.get_parsimony():
+                        printyeah('a', f'Paretofront: Even further simplified! '
+                                       f'{symtree_fin.get_parsimony()} < {fintree.get_parsimony()}')
+
+                    self.genloop_performance_append_tree(symtree, tag='sfeh-sympifyed_pareto')
+                except Exception as ex:
+                    raise  # todo debug
+                obsolete_entries = [x for x in paretofront if
+                                    x.get_fitness() > fintree.get_fitness() and x.get_parsimony() >= fintree.get_parsimony()]
+                if obsolete_entries:
+                    printyeah('a', f'Paretofront: Removing obsolete entries {[str(x) for x in obsolete_entries]}')
+                paretofront = [x for x in paretofront if x not in obsolete_entries]
+                paretofront.append(fintree)
+                paretofront = pareto_sort(paretofront)
+
+        return paretofront
 
     def gen_create_initial(self):
         """
@@ -341,7 +349,7 @@ class ExplainableGP:
 
                 for nn in range(evolve_num):
                     evotree = self.tb.pop_random(custom_params, origin=self.origin)
-                    self.gen_append_evotree(evotree, tag)
+                    self.genloop_performance_append_tree(evotree, tag)
         return
 
     def gen_create_next(self):
@@ -369,26 +377,26 @@ class ExplainableGP:
                 Reproduction
                 """
                 for nn in range(evolve_num):
-                    evotree = self.pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
+                    evotree = pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
                     if custom_params.get('simplify'):  # sfeh==>debug
                         try:
-                            evotree = evolve_reduce(evotree, completely=False)
+                            evotree = evolve_reduce_simplify(evotree, completely=False)
                             # fintree.meta.last_evolution = tag
                         except Exception as ex:
                             print_warning('www', f'Evolve reproduce failed: {ex}', print_type=self.conf.print_type)
                             # raise ex  # sfeh debug
 
-                    self.gen_append_evotree(evotree, tag)  # pop_append_evotree anyways... it was worth a try :P
+                    self.genloop_performance_append_tree(evotree, tag)  # pop_append_evotree anyways... it was worth a try :P
 
             elif evolve_name == 'mutate point':
                 """
                 Point mutation, one point (terminal or function) gets mutated.
                 """
                 for nn in range(evolve_num):
-                    evotree = self.pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
+                    evotree = pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
                     evotree = self.tb.evolve_mutate_point(evotree)
                     # fintree.meta.last_evolution = tag
-                    self.gen_append_evotree(evotree, tag)
+                    self.genloop_performance_append_tree(evotree, tag)
 
             elif evolve_name == 'mutate branch':
                 """
@@ -398,7 +406,7 @@ class ExplainableGP:
                     _, size_mode, mean_min_max_var, p_full = helper_evolve_params_branch(custom_params,
                                                                                          tree_depth_max=self.conf.tree_depth_max,
                                                                                          parsimony_max=self.conf.parsimony_max)
-                    evotree = self.pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
+                    evotree = pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
                     build_size = choose_build_size(size_mode, mean_min_max_var, tree=evotree, force='branch')
                     # sfeh:test options, depth, in this case
 
@@ -410,7 +418,7 @@ class ExplainableGP:
                     else:
                         raise
                     evotree = self.tb.evolve_prune(evotree)  # sfeh:performance runtime-wise, do this somewhere else
-                    self.gen_append_evotree(evotree, tag)
+                    self.genloop_performance_append_tree(evotree, tag)
 
             elif evolve_name == 'crossover branch':
                 for nn in range(int(evolve_num / 2)):  # two childs
@@ -422,16 +430,16 @@ class ExplainableGP:
                     - delete a_parent branch and pareto_insert b_parent branch (which tactic?)
                     sfeh:idea into main fintree?
                     """
-                    atree = self.pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
-                    btree = self.pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
+                    atree = pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
+                    btree = pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
 
                     # 1. two parents
                     # 2. search nodes for left and right that can be exchanged. convert_needed
                     try:
                         atree, btree = self.tb.evolve_crossover(atree, btree)
                         # fintree = self.tb.finalize(etree)  # ==>state
-                        self.gen_append_evotree(atree, tag=tag)
-                        self.gen_append_evotree(btree, tag=tag)
+                        self.genloop_performance_append_tree(atree, tag=tag)
+                        self.genloop_performance_append_tree(btree, tag=tag)
                     except Exception as ex:
                         print_warning("www", f'Crossover failed: {ex}')
                         # sfeh: mostly 1-noded trees
@@ -439,9 +447,9 @@ class ExplainableGP:
             elif evolve_name == 'filter optimize':
 
                 for nn in range(evolve_num):
-                    evotree = self.pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
+                    evotree = pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
                     evotree = self.tb.evolve_mutate_filter_random(evotree, custom_params)
-                    self.gen_append_evotree(evotree, tag)
+                    self.genloop_performance_append_tree(evotree, tag)
 
             elif evolve_name == 'revive paretofront':
 
@@ -453,7 +461,7 @@ class ExplainableGP:
 
                 for nn in range(evolve_num):
                     evotree = self.tb.pop_random(custom_params, origin=self.origin)
-                    self.gen_append_evotree(evotree, tag=tag)
+                    self.genloop_performance_append_tree(evotree, tag=tag)
 
             else:
                 print_e(f"Evolution not known: '{evolve_name}'")
@@ -465,15 +473,11 @@ class ExplainableGP:
             else:
                 self.printpl('iii', f'{missing_trees}/{self.conf.pop_max} trees are missing in this population!')
 
-            while len(self.pop_next) < self.conf.pop_max:
+            for _ in range(self.conf.pop_max - len(self.pop_next)):
+                # sfeh aka create trees here if desired. Is this desired? ->correct tag, ->correct randoms
+                # while len(self.pop_next) < self.conf.pop_max:
                 evotree = self.tb.pop_random(custom_params, origin=self.origin)
-                self.gen_append_evotree(evotree, tag=tag)
-                return  # sfeh aka create trees here if desired. Is this desired?
-
-        # sfeh automatically fill with random trees (check this at the initiation)
-        # total_rate = sum([x['evolve_rate'] for x in self.evolve_list.values()])
-        # if total_rate < 0:
-        #     self.gen_create_random(int(self.conf.pop_max'] * (1 - total_rate)))
+                self.genloop_performance_append_tree(evotree, tag='taggyRnd')  # sfeh
 
         return
 
@@ -484,11 +488,10 @@ class ExplainableGP:
         try:
             path_monitoring = self.rootdir / 'monitoring.png'
             plot_gen_performance(self.monitor_df, self.conf.name, path_monitoring)  # largest plot analysing the
-            self.printpl('f', f"monitoring: {path_monitoring.as_posix()}")
-
+            self.printpl('f', f"monitoring: {path_monitoring}")  # .as_posix()
             pareto_plot(self.paretofront, self.rootdir, self.conf)
-        except:
-            self.printpl("e", 'DAAAMN YO sfeh, could not plot under windows 11')
+        except Exception as ex:
+            self.printpl("e", f'Could not create plots: {ex}\n')
 
     def evoloop_monitoring_scheduled_io(self, conf, gen_id):
         """
@@ -544,11 +547,9 @@ class ExplainableGP:
                 except EOFError as ex:
                     raise Exception(f'EOFError: \n{ex}')
 
-                help_dict, self.gen_id, self.pop_base, self.paretofront, self.monitor_df = run_data  # sfeh use a helping dictt a_helping_dict is used for a useable sldifjsdfsdfg , a_helping_dict
+                help_dict, self.gen_id, self.pop_base, self.paretofront, self.monitor_df = run_data
                 self.printpl('g', f'Successfully loaded backup file. Generation: {self.gen_id}')
 
-                # except Exception as ex:
-                #     raise Exception(f'Even though a backup exists for this run, it could not be loaded, because of\n{ex}')
             else:
                 raise FileNotFoundError(f'No backup-file found at {path_backup}.')
 
@@ -569,68 +570,55 @@ class ExplainableGP:
         except Exception:
             return False
 
-    # # sfeh open
-    # def plot_evolve_performance(self):
-    #     """
-    #     Plots for each tag in the evolution list
-    #     (too much, i guess)
-    #     sfeh: this should be saved within the trees. Everything else is a waste of memory!
-    #     """
-    #     try:
-    #         with plt.rc_context(rc=pyplot_rc_tex):
-    #             fig, axs = plt.subplots(nrows=3, ncols=1, figsize=(16, 9), sharex='all')  # , gridspec_kw={'height_ratios': [1,1,1]}
-    #             fig.tight_layout()
-    #             for tag in self.evolve_tags:
-    #                 # ['fitness_train', 'parsimony', 'lentree', 'evolve_num', 'count']
-    #                 axs[0].plot(self.monitor_evol[tag]['fitness_train'], label=f'{tag}')
-    #                 axs[1].plot(self.monitor_evol[tag]['parsimony'], label=f'{tag}')
-    #                 axs[2].plot((self.monitor_evol[tag]['lentree'] / self.monitor_evol[tag]['evolve_num']), label=f'{tag}')
-    #
-    #             plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
-    #             path = self.rootdir / f'monitoring_evolutions.pdf'
-    #             fig.savefig(path)
-    #             self.printpl('f', f"monitoring_evolutions (pdf): {path.as_posix()}")
-    #
-    #     except Exception as ex:
-    #         print_e(f'plot_evolution_analysis failed because of: {ex}')
-
-    def pop_selection_tournament(self, pop_base, tourn_size=3):
+    def plot_evolve_performance(self):
         """
-
+        Plots for each tag in the evolution list
+        (too much, i guess)
+        sfeh: this should be saved within the trees. Everything else is a waste of memory!
+        todo
         """
-        tree_list = [np.random.choice(pop_base) for _ in range(tourn_size)]
-        fintree: 'FinalizedTree' = min(tree_list, key=lambda tree: tree.get_fitness())
-        evotree = fintree.get_evotree()
-        return copy.deepcopy(evotree)  # sfeh deepcopy not required if it is copied later
+        try:
+            with plt.rc_context(rc=pyplot_rc_tex):
+                fig, axs = plt.subplots(nrows=3, ncols=1, figsize=(16, 9), sharex='all')  # , gridspec_kw={'height_ratios': [1,1,1]}
+                fig.tight_layout()
+                for tag in self.evolve_tags:
+                    # ['fitness_train', 'parsimony', 'lentree', 'evolve_num', 'count']
+                    axs[0].plot(self.monitor_df[tag]['fitness_train'], label=f'{tag}')
+                    axs[1].plot(self.monitor_evol[tag]['parsimony'], label=f'{tag}')
+                    axs[2].plot((self.monitor_evol[tag]['lentree'] / self.monitor_evol[tag]['evolve_num']), label=f'{tag}')
 
-    def gen_append_evotree(self, evotree: Node, tag):
+                plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
+                path = self.rootdir / f'monitoring_evolutions.pdf'
+                fig.savefig(path)
+                self.printpl('f', f"monitoring_evolutions (pdf): {path}")  # .as_posix()
+
+        except Exception as ex:
+            print_e(f'plot_evolution_analysis failed because of: {ex}')
+
+    def genloop_performance_append_tree(self, evotree: Node, tag):
         """
-        was: def pop_append(self, fintree: Node):
-            # sfeh this check might be important...
         Safely append a fintree to the population.
         Even though the raw trees should have everything to display their expression,
         they have gone through a process of changes. Here, the fintree is refurbished.
-        sfeh: if trees are 100% safely created, tree_check_deep() must not be used. Useful when trying out new gp-operators.
         - Enrich the raw fintree for the next generation
         - check if the fintree is actually valid
         ->
         """
-        # evotree = self.tb.evolve_prune(evotree)  # sfeh:performance runtime-wise, do this somewhere else
         if DEBUG_DUMMY:
+            # if trees are 100% safely created, tree checks are not required. Useful when trying out new gp-operators.
             self.tb.check_all(evotree, fatal=True)
+
         try:
             meta = self.lut[str(evotree)]
         except KeyError as ex:
             try:
                 meta = self.finalize_tree_get_meta(evotree)
             except ValueError as ex:
-                print_warning('wwww', f'Could not append fintree to population because: {ex}',
-                              print_type=self.conf.print_type)
+                print_warning('wwww', f'Could not append fintree to population because: {ex}', print_type=self.conf.print_type)
                 return  # sfeh:print
             except Exception as ex:
-                print_warning('www', f'Could not append fintree to population because: {ex}\n'
-                                     f'=>fintree: {evotree}', print_type=self.conf.print_type)
-                # print_warning('w', f'fintree failed the quick check. last-mod: {self.meta.last_evolution}. Reason:\n{ex}', print_type=self.print_type)
+                print_warning('www', f'Could not append tree to population because: {ex}\n'
+                                     f'=>tree: {evotree}', print_type=self.conf.print_type)
                 return
 
         fintree = FinalizedTree(evotree, meta)
@@ -672,8 +660,7 @@ class ExplainableGP:
         try:
             expr_sym = expr_sympify(expr_raw)
         except ValueError as ex:
-            print_warning('wwww', f'Exception while evaluating: {ex}, fintree: {evotree}.',
-                          print_type=self.conf.print_type)
+            print_warning('wwww', f'fintree: {evotree} had ex: {ex}', print_type=self.conf.print_type)
             raise ValueError(ex)
 
         treeobs = evotree.get_observation_list()
@@ -725,84 +712,32 @@ def pop_analyze(popul):
               'parsim_var': np.std(pop_parsim),
               'parsim_best': np.min(pop_treelen),
               # 'time': gen_time,  # todo
-              # 'gens_since_last_pareto': self.gens_since_last_pareto  # gens was here!  # todo
+              # 'gens_since_last_pareto': self.gens_since_last_pareto  # was here!
               }  # sfeh delete?
     return result
 
 
-def plot_gen_performance(monitor_df, name, path_monitoring: Path):
+def pop_tree_analysis(popul):
     """
-    All monitoring infos
-    sfeh den shit in Funktionen aufteilen
+
     """
-    with plt.rc_context(rc={'axes.grid': True}):
-        fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]},
-                                sharex='all')  # , figsize=(9, 9)
-        plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
-        xx = list(monitor_df.index)
+    evo_perfo = {}
+    for tree in popul:
+        tag = tree.get_last_evolution()
+        fit = tree.get_fitness()
+        parsim = tree.get_parsimony()
 
-        axs0 = axs[0]
-        axs0.plot(monitor_df['fit_avg'], marker='', label='Regression error (average)')
-        # sfeh:improvement not just the stderr on both sides...
-        try:
-            avg = monitor_df['fit_avg']
-            std = monitor_df['fit_var']
-            axs0.fill_between(xx, avg - std, avg + std, alpha=0.2)
-            # axs0.set_title('Regression Error (average)')  # sfeh not stderr... upper/lower bound?
-        except Exception as ex:
-            raise Exception(f'Delete this. were there any problems? {ex}')
-        # sfeh: the best candidate is the best one in the current population. discussion: best overall?
-        axs0.step(x=xx, y=monitor_df['fit_best'], linestyle='dashed', marker='', where='post', color='g',
-                  label='Best candidate')  # , label=ax_label
-        axs0.set_ylim(ymin=0), axs0.legend(loc='lower left')  # , shadow=True
+        if evo_perfo.get(tag) is None:
+            evo_perfo[tag] = {'fitness': [], 'parsim': []}
 
-        axs0_twin = axs0.twinx()
-        axs0_twin.plot(xx, monitor_df['gens_since_last_pareto'], color='tab:gray',
-                       label='Gens since last paretofront entry', linestyle='dashed',
-                       marker='')  # linestyle='None'
-        axs0_twin.tick_params(axis='y', labelcolor='tab:gray')
-        try:
-            axs0_twin.set_ylim(ymin=0, ymax=max(monitor_df['gens_since_last_pareto'].max() or 1, 50))
-        except Exception as ex:
-            try:
-                print_e(f'damn setting ylim not working sfeh :s {ex}')
-                axs0_twin.set_ylim(ymin=0,
-                                   ymax=max(monitor_df['gens_since_last_pareto'].notnull().max() or 1, 50))
-                # print(monitor_df['gens_since_last_pareto'].notnull().max())
-            except Exception as ex2:
-                print_e(f'damn setting ylim not working, version 2! {ex2}')
-                axs0_twin.set_ylim(ymin=0, ymax=50)
+        evo_perfo[tag]['fitness'].append(fit)
+        evo_perfo[tag]['parsim'].append(parsim)
 
-        axs0_twin.legend(loc='lower right')
-
-        axs1 = axs[1]
-        axs1.plot(monitor_df['parsim_avg'], label='Complexity (average)')
-        # self.conf.complexity_measure
-
-        try:
-            p_avg = monitor_df['parsim_avg']
-            p_var = monitor_df['parsim_var']
-            axs1.fill_between(xx, p_avg - p_var, p_avg + p_var, alpha=0.2)  # axs1.set_title('TED (average)')
-        except Exception as ex:
-            raise Exception(f'Delete this if no raise since some time. {ex}')
-        axs1.set_ylim(ymin=0), axs1.legend(loc='lower left')
-
-        axs2 = axs[2]
-        axs2.plot(monitor_df['pop_len'], label='pop_list size')
-        axs2.plot(monitor_df['pop_unique'], label='unique')
-        axs2.margins(y=0.25), axs2.set_ylim(ymin=0), axs2.legend(loc='lower left')
-
-        axs3 = axs[3]
-        between_outliers = monitor_df['time'].between(0, 2 * monitor_df['time'].mean())
-        axs3.plot(monitor_df['time'][between_outliers], label='time (s)')  # sfeh could be a better rule...
-        axs3.set_ylim(ymin=0), axs3.legend(loc='lower left')
-
-        # Top level style
-        axs3.set_xlim(xmin=0, xmax=max(xx)), axs3.set_xlabel('generations')
-        axs0.set_title(f'monitoring gp generations {name}')  # sfeh
-        fig.tight_layout()
-        fig.savefig(path_monitoring)
-        plt.close('all')
+    for tag, v in evo_perfo.items():
+        evo_perfo[tag]['fitness'] = np.average(evo_perfo[tag]['fitness'])
+        evo_perfo[tag]['parsim'] = np.average(evo_perfo[tag]['parsim'])
+    # todo
+    return
 
 
 def printpl(message_type, message_str, print_type):
@@ -812,51 +747,6 @@ def printpl(message_type, message_str, print_type):
     message_type options can be found in config
     """
     printez(message_type, message_str, print_type=print_type)
-    return
-
-
-def pareto_plot(paretofront, path, conf):
-    """
-    Write pyplot with paretofront candidates
-    """
-
-    run_name_latex = str(conf.name).replace('_', '-')  # sfeh asd workaround for latex version
-
-    tuples = [[tree.get_parsimony(), tree.get_fitness()] for tree in paretofront]
-    xx, yy = np.array(tuples).T
-
-    if len(xx) == 0:
-        print_e(f'Plotting empty array is not possible! Data={xx, yy}')
-        return
-
-    with plt.rc_context(rc=pyplot_rc_tex):
-        fig, ax = plt.subplots()
-        right = max(max(xx), conf.parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
-
-        # beyond_lines:  # adding a point to the edges to imply that there are no more values (paretofront-plot)
-        # xx = np.concatenate([[xx[0]-1.05], xx, [right + 1]])
-        # yy = np.concatenate([[max(yy) + 1], yy, [yy[-1]]])
-        xx = np.concatenate([xx, [right + 1]])
-        yy = np.concatenate([yy, [yy[-1]]])
-
-        ax.step(xx, yy, linestyle='dashed', marker='.', label=f'{run_name_latex}', where='post')
-        ax.set(xlabel='complexity', ylabel='regression error',
-               xlim=(0, right),
-               ylim=(0, (max(yy) - min(min(yy), 0)) * 1.05))
-
-        try:
-            path_pdf = path / f'paretofront.pdf'
-            fig.savefig(path_pdf)
-            printez('f', f"paretofront (.pdf): {path_pdf}", conf.print_type)
-
-            path_png = path / f'paretofront.png'
-            fig.savefig(path_png)
-            printez('f', f"paretofront (.png): {path_png}", conf.print_type)
-        except PermissionError as perm_error:
-            print_e(f'Could not save plot: {perm_error}')  # sfeh for everything?
-        except Exception as ex:
-            raise ex
-
     return
 
 

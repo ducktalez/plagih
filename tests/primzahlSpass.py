@@ -48,9 +48,6 @@ def altering_sum_plus_minus(pmax=1000):
 
     lul_remerge = [*zip(altsum_even_mean, altsum_odd_mean)]
     lul_remerge = np.array([item for t in lul_remerge for item in t])
-    # print(lul_remerge)
-    print(ppp)
-    print(p_altsum)
 
     # print(np.array(p_altsum_mean))
     t = p_altsum_mean
@@ -59,19 +56,17 @@ def altering_sum_plus_minus(pmax=1000):
 
     """another test"""
     asdasd = help_running_sum(ppp)
-    print(asdasd)
+    # print(asdasd)
 
     # print(p_altsum)
     # print(p_odd)
     # print(p_diff)
 
-
     with plt.rc_context(rc={}):
         fig, ax = plt.subplots()
-        ax.plot(np.array(ppp[1:]), asdasd)
-        plt.show()
-
-        # ax.plot(p_altsum)
+        # ax.plot(np.array(ppp[1:]), asdasd)
+        print(p_altsum)
+        ax.plot(p_altsum)
         # ax.plot([abs(x) for x in p_altsum])
         # ax.plot([p_diff[x] for x in p_diff])
         # ax.plot(p_diff)
@@ -79,6 +74,7 @@ def altering_sum_plus_minus(pmax=1000):
         # ax.plot(lul_remerge)
         # plt.plot(p_altsum[1::2])
         ax.grid(True, linestyle='-.')
+        plt.show()
 
 
 def plottingspass(nmax=100):
@@ -91,4 +87,4 @@ def plottingspass(nmax=100):
 
 
 if __name__ == '__main__':
-    binearspass()
+    altering_sum_plus_minus()

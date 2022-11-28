@@ -1,14 +1,10 @@
 """
 The factory to create trees
-trees are the structure, which can be filled
 """
 
-from plagih.node_labels import *
 from plagih.plagih_tree import Node
-from plagih.sympy_extras import expr_sympify
-from plagih.tree_evaluation import ast_convert_from_expr
+from plagih.sympy_extras import *
 from plagih.util import *
-from plagih.node_labels import op_dict  # ...loaded in this class
 
 import copy
 import random
@@ -96,13 +92,13 @@ def node_simplification(node: Node):
 
     SFEH Discussion
         # example: Tree sympification did not work: Reduced core is even more complex than before.
-        # expr_raw: sign(Mini(((Velocity_2 * -0.790706) - sqrt(Gain_0)), (-0.569271 - Velocity_9)))
-        # old_core:[sign, [Mini, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
-        # new_node: [sign, [Mini, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.569271]]]
+        # expr_raw: sign(BinaryMin(((Velocity_2 * -0.790706) - sqrt(Gain_0)), (-0.569271 - Velocity_9)))
+        # old_core:[sign, [BinaryMin, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
+        # new_node: [sign, [BinaryMin, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.56921]]]
     """
     expr_raw = node.eval_expr()
     expr_sym = expr_sympify(expr_raw)
-    nested_labels = ast_convert_from_expr(expr_sym, build=True)
+    nested_labels = sympy_to_nestedlist(expr_sym)
     node_rebuilt = tree_from_nested_string(nested_labels)
     # node_rebuilt = node_rebuilt.update_fixed_nodes(node)  # this is not our problem
     if DEBUG_DUMMY:
@@ -153,14 +149,14 @@ class TreeBuilder:
     return np.random.choice(func_list, p_full=probability_list)
     """
 
-    # sfeh random with numpy?
+    # todo sfeh random with sympy?
     distributions = {float: [lambda: random.normalvariate(0, 1),
                              lambda: random.normalvariate(1, 1),
                              lambda: random.normalvariate(10, 5),
                              lambda: random.randint(1, 20)],  # 0 has actually no purpose (except as being an action)
                      bool: [lambda: random.choice([True, False])]}  # sfeh:discussion
 
-    def __init__(self, obs_names, conf, operator_pool=None, root_xtype=float, csv_data_samples=None, precision=6):
+    def __init__(self, obs_names, conf, operator_pool=None, root_xtype=float, precision=6):
         self.operators_add(operator_pool)
         self.constants_add()
         self.observations_add(obs_names)
@@ -202,28 +198,25 @@ class TreeBuilder:
 
         if operator_pool is None:  # quick developer adjustments
 
-            operator_pool = [['+', 2],
-                             ['-', 1], ['Usub', 1],
-                             ['*', 2], ['/', 1],
-                             ['Square', 0.75],
-                             # ['**', 0.25],  # sfeh:open
-                             ['abs', 0.5], ['sign', 0.5],  # sfeh stop chain of arity-1 op_dict in buid method?
-                             # ['sqrt', 0.25],  # sfeh debug this
-                             # ['log', 0.1], ['log1p', 0.1],
-                             ['sin', 0.5],
-                             # ['tan', 0.1], ['cos', 0.33], ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
-                             ['tanh', 0.2],
-                             # ['xor', 1],  # sfeh
+            # todo sfeh 0 is not allowed
+            # sfeh same prob for all for testing
+            operator_pool = {BinaryAdd: 2, Subtract: 1, Usub: 1, BinaryMultiply: 2, Div: 1,
+                             Square: 0.75,
+                             Power: 0.1,  # 0.25,  # sfeh:open
+                             Abs: 0.5, Sign: 0.5,  # sfeh stop chain of arity-1 op_dict in buid method?
+                             Sqrt: 0.1,  # 0.25,  # sfeh debug this
+                             Log: 0.1, Log1p: 0.1,
+                             Sin: 0.5, Tan: 0.1, Cos: 0.33, Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.2,
+                             Xor: 1,  # sfeh
                              # sympy extra classes (Capitalized)
-                             ['Round', 0.5],
-                             ['Andb', 1], ['Orb', 1], ['Notb', 0.5],
-                             ['==', 1], ['!=', 0.5],
-                             ['<', 0.5], ['<=', 0.5], ['>', 0.1], ['>=', 0.1],
-                             ['Ifte', 2],
-                             ['Mini', 1], ['Maxi', 1]]
-            operator_pool = {op_dict[x[0]]: x[1] for x in operator_pool}  # sfeh this maps the actual class to the label
+                             Round: 0.5,
+                             BinaryAnd: 1, BinaryOr: 1, BinaryNot: 0.5,
+                             BinaryEq: 1, Neq: 0.5,
+                             Lt: 0.5, Le: 0.5, Gt: 0.1, Ge: 0.1,
+                             Ifte: 2,
+                             BinaryMin: 1, BinaryMax: 1}
 
-        # if no_crazyops:
+        # if no_crazyops:  # todo remove non-allowed operators, (dont allow them), kick them ou while rebuilding
         #     del operator_pool['**']
         #     # workaround sfeh (delete this)
 
@@ -232,8 +225,8 @@ class TreeBuilder:
         choose_oparray = {
             # all operator_pool with a certain xtype_out-result
             # None: [[], []],
-            float: [[], []],  # 2f
-            bool: [[], []],  # 2b
+            float: [[], []],  # to float
+            bool: [[], []],  # to bool
             (tuple([]), float): [[], []],  # sfeh?  replacing float
             (tuple([]), bool): [[], []],  # sfeh? not required? empty
             (tuple([float]), float): [[], []],  # x**2, sqrt, log, sin, ...
@@ -270,11 +263,11 @@ class TreeBuilder:
         any_xtype can be a tuple, single type or even None
         """
         # return self.operators[xtype_out]()  # "seloplam"
-        try:
-            return np.random.choice(self.operators[any_xtype][0], p=self.operators[any_xtype][1])
-        except:
-            # delete this
-            return np.random.choice(self.operators[any_xtype][0], p=self.operators[any_xtype][1])
+        return np.random.choice(self.operators[any_xtype][0], p=self.operators[any_xtype][1])
+        # try:
+        # except:
+        #     # delete this
+        #     return np.random.choice(self.operators[any_xtype][0], p=self.operators[any_xtype][1])
 
     def constants_add(self, path_distrib=Path.cwd(), data_train=None, n_samples=100):
         """
@@ -285,7 +278,7 @@ class TreeBuilder:
             # sfeh:discussion how should distributions be loaded?
             # e.g. sample_amount = lambdadist_as_string.get('observed_floats')
             self.distributions = {float: [], bool: []}
-            self.distributions[float].extend([eval(x) for x in lambdadist_as_string[float]]),
+            self.distributions[float].extend([eval(x) for x in lambdadist_as_string[float]]),  # todo:check
             self.distributions[bool].extend([eval(x) for x in lambdadist_as_string[bool]])
 
             # self.constants_add_data_samples(obs_infos, data_train, n_samples=n_samples)  # sfeh:open
@@ -295,7 +288,7 @@ class TreeBuilder:
 
     def constants_add_data_samples(self, obs_infos, data_train, n_samples=100):
         """
-        ONLY floats, because ...do you really want to load Boolean True/False samples??
+        ONLY floats, because ...why would you want to load Boolean True/False samples.
         (okay, it might make sense as it better represents the actual distribution- NO FUCK IT.)
         """
         if obs_infos is not None:
@@ -394,7 +387,7 @@ class TreeBuilder:
         """
         This version counts the amount of operators as construction limit!
         sfeh:idea nodes are now about being operators...
-        '+' = xtype = (tuple([float, float]), float)
+        '+': xtype = (tuple([float, float]), float)
         """
         childs = []
         label = self.choose_op(xt)
@@ -473,6 +466,14 @@ class TreeBuilder:
 
         tree.status = 1  # sfeh==>state
         return evotree
+
+    def evolve_mutate_pointxxx(self, tree: Node):
+        """
+
+        """
+        evotree = self.evotree_deepcopy(tree)  # ==>state
+        for node in evotree.eval_mutable_nodes():
+            pass
 
     def evolve_mutate_branch_depth(self, evotree, depth_goal, p_full=1.0):
         """
@@ -799,8 +800,7 @@ class OriginTree:
             tf_origin_results = kernel.eval_tf(expr_sym, used_observations)
             fitness_train = round(float(tf_origin_results['mean_error']), kernel.precision)
             if kernel.exploration_risk:
-                kernel.origin_results = tf_origin_results[
-                    'results_kernel']  # after getting the origin-results, these informations can be updated
+                kernel.origin_results = tf_origin_results['results_kernel']  # opt update after getting origin-results
 
             meta = TreeMeta(fitness=fitness_train, parsimony=0, expr_raw=expr_raw, expr_sym=expr_sym)
             meta.append_tag('origin')
@@ -824,6 +824,7 @@ def rec_build_tree(lst, depth=0, obs_list=None):
     nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
     nstr = '[+,[-,[Ifte,[True],[sin,[2]],[/,[2.043],[4]]],[cartVel]],[-1.3]]'
     """
+
     strlabel = str(lst[0])
     if ':fix' in strlabel:
         strlabel = strlabel.replace(':fix', '')
@@ -837,9 +838,9 @@ def rec_build_tree(lst, depth=0, obs_list=None):
         try:
             strlabel = float(strlabel)
             label = FloatConstant(strlabel)
-        except Exception as ex:
-            if strlabel in op_dict:
-                label = op_dict[strlabel]
+        except ValueError:  # todo match exception
+            if strlabel in loadable_ops_dict:
+                label = loadable_ops_dict[strlabel]
             else:
                 if obs_list:
                     if strlabel in obs_list:
@@ -869,7 +870,8 @@ def check_expression_reconstruction(tree: Node):
     """
     tree_0 = copy.deepcopy(tree)
     expr_raw = tree.eval_expr()
-    nested_labels = ast_convert_from_expr(expr_raw, build=True)
+    expr_sym = expr_sympify(expr_raw)
+    nested_labels = sympy_to_nestedlist(expr_sym)  # ok what is nested here
     tree_1 = tree_from_nested_string(nested_labels)
     tree_1.update_fixed_nodes(tree_0)
 
@@ -879,25 +881,27 @@ def check_expression_reconstruction(tree: Node):
     return a == b
 
 
-def tree_from_nested_string(nested_str):
+def tree_from_nested_string(nested_str, obs_list=None):
     """
     optional: op_dict + labels not in '' can be used to load the operators directly
-    all_input_options = ['1', '0', '-1.132', 'True', 'False', 'vel', 'Ifte', 'max', 'Maxi', '-vel']
+    all_input_options = ['1', '0', '-1.132', 'True', 'False', 'vel', 'Ifte', 'max', 'BinaryMax', '-vel']
     nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
     """
 
-    evaled_expr = eval(nested_str)
-    tree = rec_build_tree(evaled_expr, 0)
+    evaled_expr = eval(nested_str)  # sfeh:discuss -> sympify? <- no
+    tree = rec_build_tree(evaled_expr, depth=0, obs_list=obs_list)
     tree.finalize_set_depth()
 
     return tree
 
 
 if __name__ == '__main__':
-    trexpr1 = '(Ifte, (Orb, (cartPos < -1), (Andb, (cartPos < 0.1), (cartVel < -0.05))), 2, (Ifte, (Andb, (Andb, (cartPos > -0.45), (cartPos < -0.05)), (cartVel < -0.5)), 0, (Ifte, (cartVel < 0), 0, 2)))'
-    nstr = "['+',['-',['Ifte',['True'],['sin',[2]],['/',[2.043],['4']]],['cartVel']],[-1.3]]"
-    # nstr = '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]'
+    trexpr1 = '(Ifte, (BinaryOr, (cartPos < -1), (BinaryAnd, (cartPos < 0.1), (cartVel < -0.05))), 2, (Ifte, (BinaryAnd, (BinaryAnd, (cartPos > -0.45), (cartPos < -0.05)), (cartVel < -0.5)), 0, (Ifte, (cartVel < 0), 0, 2)))'
+    nstr = "['+',['-',['Ifte',['True'],['sign',['cartVel']],['/',[2.043],['4']]],['cartVel']],[-1.3]]"
+    nstr = '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]'
+    nstr = '["Ifte", ["BinaryNot", [False]], [0.0], [2.0]]'
 
     tr = tree_from_nested_string(nstr)
-    res = check_expression_reconstruction(tr)
-    print(res)
+    print(tr)
+    tr2 = check_expression_reconstruction(tr)
+    print(tr2)

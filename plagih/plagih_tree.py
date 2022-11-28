@@ -8,11 +8,11 @@ The core of the fintree, which "is" the fintree, is stored recursively
 Example core: [+, 1, [*, [-, 2, 3], 2]] = 1 + ((2-3) * 2)
 
 sfeh: write test that checks all operators for sympificytion (...+branch-combinations, and more?)
-sfeh: use function-types (-> 'kommuttative'?)
+sfeh: use function-types (-> 'commutative'?)
 
 """
 
-from plagih.node_labels import *
+from plagih.sympy_extras import *
 from plagih.tree_distances.tree_edit_distance import apted_distance
 
 from dataclasses import dataclass
@@ -30,7 +30,7 @@ class Node:
     It recursively holds the nodes of a fintree; every fintree has a list of potential children.
     Example core: [+, 1, [*, [-, 2, 3], 2]] = 1 + ((2-3) * 2)
 
-    states?
+    states? sfeh:discuss
     [None]: not set
     [0]:    evolution/construction/build mode (potentially missing leaf nodes)
     [1]:    structurally complete/finalized branch (node_depths correct, node_id set, ...)
@@ -108,19 +108,6 @@ class Node:
     #             raise Exception('ASDASD NOOO WHYY')
     #         return const
 
-    def loadable_string(self):
-        """
-        Returns a string-statement that is also loadable
-        """
-        print_label = self.get_label().nlabel
-        if self.is_fix:
-            print_label = f'{print_label}:fix'
-
-        if self.childs:
-            childstr = ', '.join([f'{x}' for x in self.childs])
-            print_label = f"{print_label}, {childstr}"
-        return f"[{print_label}]"
-
     def __len__(self):
         """
         counting the amount of nodes recursively
@@ -135,9 +122,6 @@ class Node:
 
         """
         return self.label.nlabel
-
-    def get_pycode(self):
-        return self.label.pycode
 
     def get_arity(self):
         return self.label.arity
@@ -160,6 +144,7 @@ class Node:
     def get_observation_list(self):
         """
         these are required for the evaluation (are loaded by Tensorflow)
+        todo returns [cartVel, -cartVel], should not ever happen?
         """
         obslist = []
         if self.get_arity() > 0:
@@ -235,10 +220,11 @@ class Node:
 
     def get_nodes_at_depth(self, goal_depth, allow_fixed=False, expand_depth=False):
         """
-        Returns a list with mutable ids which are *goal_depth* layers away from non modifiable nodes
+        Returns a list with mutable ids which are *goal_depth* layers away from non-modifiable nodes
         last_leaves: if you want so save all leave nodes aswell
 
         sum_layers=False, get_closest=True, return_all_layers=False
+
         """
         nodes = []
         if (not self.is_fix or allow_fixed) and (
@@ -252,30 +238,30 @@ class Node:
         else:
             return []
 
-    def eval_expr(self, reducible=None, obs_names=None):
+    def eval_expr(self):
         """
-        accumulate and return the complete expression the fintree holds recursively
-        """
-        if self.get_arity() > 0:
-            child_expr_list = [cc.eval_expr() for cc in self.childs]  # sfeh what was that again?
-            # if reducible:
-            #     # my_expr = op_dict[self.get_label()]['sym_reduce'] or my_expr
-            #     # symloc = sympy_symbol_defaults(obs_names)  # sfeh solve the problem... new version of sympy?
-            #     xxx = plagih_sympify(my_expr.format(*child_expr_list), eval_locals=symloc)  # sfeh the xxx variable
-            #     return xxx
-            return self.label.expr_sym.format(*child_expr_list)  # *list makes the list args :D f'cos({})'([33]) does not work.
-        else:
-            return self.label.expr_sym
-
-    def eval_pycode(self):
+        Accumulate and return the complete expression the fintree holds recursively
         """
 
-        """
-        if self.get_arity() == 0:
-            return f'{self.get_pycode()}'
-        else:
-            results = [cc.eval_pycode() for cc in self.childs]
-            return self.get_pycode().format(*results)  # abs -> lambda a: 'abs({})'.formadt(a) (result1)
+        expr_str = self.label.nlabel
+        expr_str = str(expr_str)  # todo
+
+        if self.childs:
+            cc_expr = [cc.eval_expr() for cc in self.childs]
+            cc_expr = ', '.join(cc_expr)
+
+            expr_str = f'{expr_str}({cc_expr})'
+
+        return expr_str
+
+    # def eval_expr_todo_old(self):
+    #     """
+    #     """
+    #     if self.get_arity() > 0:
+    #         child_expr_list = [cc.eval_expr_todo_old() for cc in self.childs]
+    #         return self.label.expr_sym.format(*child_expr_list)  # *list makes the list args :D f'cos({})'([33]) does not work.
+    #     else:
+    #         return self.label.expr_sym
 
     def eval_apted_notation(self):
         """
@@ -396,8 +382,7 @@ class Node:
 
     def check_typing(self, xtype_parent, fatal=True):  # sfeh
         """
-        Überprüft, ob die Informationen zu
-        :return:
+        Checks, if all child nodes match the parents nodes types
         """
         result = [self.get_xtype_out() == xtype_parent,
                   self.get_xtype_in() == tuple([cc.get_xtype_out() for cc in self.childs]),

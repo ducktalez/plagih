@@ -1,13 +1,18 @@
 # Familiar Genetic Programming with TensorFlow
 
+- Lightning fast. Believe me.
+- 
+
 ## Ablage/Todos
 
-- gens_since_last_pareto
+- tree evaluate nodes for best improvement 
 - population cluster / races
 - Make regular Function Classes Sympy Functions
-- ASTify all functions
 - introduce integer
-- replace x**2 with Squared(x)
+- replacing
+  - replace x**2 with Squared(x)
+  - replace -1*x, coming from sympy functions
+  - 
 - Tests for:
   - Auto-testruns: loop/reload through [random, origin, origin_fixed] [MC, IB]
   - TF-evaluation equals python-evaluation equals sympy evaluation
@@ -23,8 +28,14 @@ Always check
 - sfeh
 - asd
 
+## Compared to DEAP
+- DEAP has non-Programming options (altering arrays). Plagih is only for GP.
+- complexity node-count based, instead of depth-baased only.
+- trees that are not lists
+
 ## crazy ideas
 - evolution+ranking of node evolutions
+- GP individuals for evolution process
 
 ## Checks for when you have altered code
 - Functions need to be in ops_dict
@@ -140,12 +151,12 @@ Operators get randomly picked, so adding some more often will change the result.
 
 Possible operators are:
 
-|Group|examples|
-|:------------------ |:-----------------|
-|Mathematical operators|`+`, `-`, `*`, `/`, `**`, `abs`, `sign`, `Square`, `sqrt`, `log`, `log1p`, `cos`, `sin`, `tan`, `acos`, `asin`, `atan`, `Mini`, `Maxi`|
-|Logical operators | `Andb`, `Orb`, `not`|
-|Comparative operators|`==`, `!=`, `<`, `<=`, `>`, `>=`|
-|Conditional (If-then-else)|`Ifte`|
+| Group                      | examples                                                                                                                                         |
+|:---------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------|
+| Mathematical operators     | `+`, `-`, `*`, `/`, `**`, `abs`, `sign`, `Square`, `sqrt`, `log`, `log1p`, `cos`, `sin`, `tan`, `acos`, `asin`, `atan`, `BinaryMin`, `BinaryMax` |
+| Logical operators          | `BinaryAnd`, `BinaryOr`, `not`                                                                                                                             |
+| Comparative operators      | `==`, `!=`, `<`, `<=`, `>`, `>=`                                                                                                                 |
+| Conditional (If-then-else) | `Ifte`                                                                                                                                           |
 
 
 ### How to: tree_labels.csv

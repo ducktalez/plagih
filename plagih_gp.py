@@ -25,7 +25,6 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-path_origin', type=str)
     parser.add_argument('-load_config', type=Path, metavar='CONFIG_YAML', default=None, help='The config file in the run directory.')
     parser.add_argument('-load_backup', '-backup', type=str, help='Starting a run from a backup file (backup.p).')
-    # parser.add_argument('-file_distrib', type=str, help='File with distributions for creating a fintree (maybe use the loaded config file aswell)')
     parser.add_argument('-prepared_run', '-lookup', type=str, help='Handy lookup for quick access to runs that (at least I) currently use a lot')
     parser.add_argument('-force_new_run', action='store_true', help='Shortcut for forcing a new run (->developing)')
 
@@ -61,7 +60,6 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-no_files', action='store_true', help='SFEH, unused. Create no files. dummy.')
 
     parser.add_argument('-test', type=str, help='Continuous tests, start several test runs, reload them, etc...')  # todo
-
 
     args = parser.parse_args()
     conf = Config(args)  # hyperparameters are in config
@@ -110,7 +108,7 @@ def main():  # argv sys.argv[1:]
     if args.analyze or not args.less_files:
         gp.paretofront.analyze_pareto(cpu_cores=args.mp_cores)
     else:
-        print_blue('You actively decided not to use analyze out run.\n'
+        print_blue('You decided not to use analyze a run.\n'
                    'This option was created for distributed cluster evaluation on slurm. The files\n'
                    '1. May be deprecated if the GP process is restarted from here'
                    '2. take a lot of disc space (many images)\n'

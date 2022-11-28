@@ -1,7 +1,9 @@
 """
-Functions, that might be addable in the future:
+The main class of a gp run. It holds the following functionalities
+- run informations (config, evolution-specifications for the loop, success monitoring])
+- population (pop_base, pop_next)
+-
 """
-import pandas as pd
 
 from plagih.fitness_kernel import *
 from plagih.monitoring import plot_gen_performance
@@ -12,16 +14,14 @@ import copy
 from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.stats
-
-# sfeh https://docs.sympy.org/latest/tutorial/manipulation.html
 
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
 
 def pop_selection_tournament(pop_base, tourn_size=3):
     """
-
+    The "main" selection mechanism,the tournament selection.
+    Chooses a 
     """
     tree_list = [np.random.choice(pop_base) for _ in range(tourn_size)]
     fintree: 'FinalizedTree' = min(tree_list, key=lambda tree: tree.get_fitness())
@@ -54,9 +54,9 @@ class ExplainableGP:
               f'\tLocated in: \n'
               f'\t{rootdir}\n')
 
-        self.paretofront = []  # not a separate class as requires too much information
+        self.paretofront = []  # not a separate class; requires too much information
         self.pop_next = []
-        self.pop_base = []  # sfeh maybe better names
+        self.pop_base = []  # sfeh:discuss maybe better names?
 
         # Lookup-table for tree(-expressions) and tits fitness/parsimony. Improving runtime a lot!
         self.lut = {}  # using str(), hash() is only temporary, repr() currently not required for LUT info
@@ -235,11 +235,10 @@ class ExplainableGP:
 
             if len(self.paretofront) == 0:
                 self.paretofront = [self.pop_next[0]]  # initialize
-                printez('a',
-                        f'Starting a new paretofront with parsimony: {self.paretofront[0].get_parsimony()} fitness: {self.paretofront[0].get_fitness():6.4f}',
-                        self.conf.print_type)
+                printez('a', f'Starting a new paretofront with parsimony: {self.paretofront[0].get_parsimony()} '
+                             f'fitness: {self.paretofront[0].get_fitness():6.4f}', self.conf.print_type)
 
-            tmp_pareto = pareto_from_pop(self.pop_next)  # sfeh:optional paretofront in each generation?
+            # tmp_pareto = pareto_from_pop(self.pop_next)  # sfeh:optional paretofront in each generation?
             self.paretofront = self.run_update_paretofront(self.paretofront)
 
             gen_time = time.perf_counter() - self.time_genstart
@@ -273,6 +272,7 @@ class ExplainableGP:
         """
         CAUTION: This Function was tried to be separated many times now. it never worked.
         This was tried =3= times now. Please increase the counter when you try.
+        Reason: The paretocandidates should be simplified if possible and gens_since_last_pareto is reset.
         sfeh:debug, might be faulty
         sfeh:discuss pareto-efficient, but different pareto entries?
         """
@@ -305,17 +305,14 @@ class ExplainableGP:
                 printyeah('a', f'Paretofront: New entry. parsimony: {par} fitness: {fit:6.4f}')
 
                 # sfeh: trying to simplify the tree for a even improved pareto # todo
-                try:
-                    symtree = evolve_reduce_simplify(fintree.get_evotree(), force=True)
-                    symmeta = self.finalize_tree_get_meta(symtree)
-                    symtree_fin = FinalizedTree(symtree, symmeta)
-                    if symtree_fin.get_parsimony() < fintree.get_parsimony():
-                        printyeah('a', f'Paretofront: Even further simplified! '
-                                       f'{symtree_fin.get_parsimony()} < {fintree.get_parsimony()}')
+                symtree = evolve_reduce_simplify(fintree.get_evotree(), force=True)
+                symmeta = self.finalize_tree_get_meta(symtree)
+                symtree_fin = FinalizedTree(symtree, symmeta)
+                if symtree_fin.get_parsimony() < fintree.get_parsimony():
+                    printyeah('a', f'Paretofront: Even further simplified! '
+                                   f'{symtree_fin.get_parsimony()} < {fintree.get_parsimony()}')
 
-                    self.genloop_performance_append_tree(symtree, tag='sfeh-sympifyed_pareto')
-                except Exception as ex:
-                    raise  # todo debug
+                self.genloop_performance_append_tree(symtree, tag='sfeh-sympifyed_pareto')
                 obsolete_entries = [x for x in paretofront if
                                     x.get_fitness() > fintree.get_fitness() and x.get_parsimony() >= fintree.get_parsimony()]
                 if obsolete_entries:
@@ -397,6 +394,16 @@ class ExplainableGP:
                     evotree = self.tb.evolve_mutate_point(evotree)
                     # fintree.meta.last_evolution = tag
                     self.genloop_performance_append_tree(evotree, tag)
+
+            elif evolve_name == 'mutate XXX':
+                """
+                todo ok
+                First, analyze the node with the most potential.
+                """
+                for nn in range(evolve_num):
+                    evotree = pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
+                    evotree = self.tb.evolve_mutate_pointxxx(evotree)
+                    # self.genloop_performance_append_tree(evotree, tag)
 
             elif evolve_name == 'mutate branch':
                 """
@@ -495,7 +502,7 @@ class ExplainableGP:
 
     def evoloop_monitoring_scheduled_io(self, conf, gen_id):
         """
-        every x generations, save a backup and/or save plots
+        Every x generations, save a backup and/or save plots
         """
         plot_gen = int(conf.period.get('gen_plots', 10))
         if gen_id >= plot_gen and gen_id % plot_gen == 0:
@@ -507,14 +514,14 @@ class ExplainableGP:
 
     def run_backup(self, path_load_custom_backup=None, mode='load'):
         """
-        load/safe backup of a run. Both done in this method
+        Load/safe backup of a run. Both done in this method
         """
 
         path_backup = self.rootdir / 'backup/backup.pkl'
 
         if mode == 'save':
             """
-            automatically saves everything important after a certain amount of time
+            Automatically saves everything important after a certain amount of time
             - save the paretofront front (custom_done)
             - save the last generation (custom_done)
             - Save valuable meta-data_csv_path: current generation (custom_done)

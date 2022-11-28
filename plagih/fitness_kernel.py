@@ -1,16 +1,13 @@
 import os
-
-from matplotlib import pyplot as plt
-
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-import numpy as np
+
 import tensorflow
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
 from plagih.util import *
-from plagih.tree_evaluation import ast_convert_from_expr
+from plagih.sympy_extras import sympy_to_tensorflow
 
 # Eager execution used to be not possible in tf v1, in tf v2, this is the standard
 # however, we need to build a complete graph before inserting the data in the leaf nodes.
@@ -155,18 +152,6 @@ class RegressionKernel(Kernel):
         """
         pass  # no, greater=better is ambiguous
 
-    def pycode_wrap_result(self, action_min_max):
-        wrap = '{}'
-
-        if self.bounded:
-            wrap = f'min(max({action_min_max[0]}, {wrap}), {action_min_max[1]})'
-
-        if self.discrete:
-            # regression that fits the outputs to a discrete set of actions defined by min and max
-            wrap = f'int(math.round({wrap}))'
-
-        return wrap
-
     def plot_agent_histogram(self, parsim, tree, path_hist):
         """
         Make histograms for all paretofront-efficient candidates
@@ -206,8 +191,7 @@ class RegressionKernel(Kernel):
         tensors = {obs_name: tensorflow.constant(self.data_train[obs_name]) for obs_name in
                    used_observations}  # do not assign dtype here, do this in the pandas df aka data
 
-        results_agent = ast_convert_from_expr(expr,
-                                              tensors=tensors)  # the actual result from the expression in the agent
+        results_agent = sympy_to_tensorflow(expr, tensors_dict=tensors)  # the actual expression result in the agent
 
         # fit the agents to the possible outcome
         results_kernel = results_agent  # The ids change in the next lines! {id(results_kernel)} vs. {id(results_agent)}

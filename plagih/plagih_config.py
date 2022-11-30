@@ -17,8 +17,8 @@ class Config:
         SFEH ALERT: NEVER try to save the ui/paths.
         !!! switching between systems is worse than HitlerAIDS !!!
         """
-        self.pl_version = 1.1  # must only update if vital changes were made, version important when loading old run
-        # self.gen_id = 0  # delete_this 30-07-2022
+        self.pl_version = 1.2  # must only update if vital changes were made, version important when loading old run
+
         self.name = args.prepared_run or None  # sfeh
 
         try:
@@ -26,21 +26,27 @@ class Config:
                 conf = yaml.load(file, Loader=yaml.FullLoader)
         except Exception as ex:
             conf = {}
-        print_everything = 'wwwwaaaggggiiiff'
-        self.print_type = print_everything if args.print_all else conf.get('print_type', 'wwaaggiiff')  # (a)lert~pareto, (w)arning, (g)en, (i)nfo, (f)ile written
+
+        self.print_type = 'wwwwaaaggggiiiff' if args.print_all else conf.get('print_type', 'wwaaaggiiff')  # (a)lert-pareto, (w)arning, (g)eneration, (i)nfo, (f)ile written
+
+        self.dc = conf.get('dc', [])
 
         # can be updated from everywhere
-        self.pop_max = args.pop_max or int(conf.get('pop_max', 1000))  #: 1000,  # amount is never tested
-        self.gen_max = args.gen_max or int(conf.get('gen_max', 1000))  # : 1000,  # Maximum amount of generations
         self.action_name = args.action_name or conf.get('action_name', None)
         self.kernel_name = args.kernel_name or conf.get('kernel_name', 'regression')
+
+        # tree construction
         self.tree_depth_max = int(conf.get('tree_depth_max', 10))  #: 10,  # maximum Tree depth for entire run
         self.parsimony_max = conf.get('parsimony_max', 50)
-        self.tourn_size = int(conf.get('tourn_size', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
-        self.dc = conf.get('dc', [])
-        self.period = conf.get('period', {'gen_plots': 5, 'gen_save': 5})  # sfeh 10 or 5 for debugging, something higher for actual runs
 
-        self.precision = args.pop_max or conf.get('precision', 6)  # makes the lut more practical - more hits are achieved. be careful with rounding to zero.  # sfeh check this
+        # run size
+        self.pop_max = args.pop_max or int(conf.get('pop_max', 1000))  #: 1000,  # amount is never tested
+        self.gen_max = args.gen_max or int(conf.get('gen_max', 1000))  # : 1000,  # Maximum amount of generations
+
+        # GP Evolution
+        self.tourn_size = int(conf.get('tourn_size', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
+        self.period = conf.get('period', {'gen_plots': 5, 'gen_save': 5})  # sfeh 10 or 5 for debugging, something higher for actual runs
+        self.precision = args.pop_max or conf.get('precision', 6)
 
         # sfeh not here?
         self.evolve_list_random = conf.get('evolve_list_random', None)  # sfeh
@@ -51,6 +57,7 @@ class Config:
                                "Using 'tree_node_count' instead.", print_type=self.print_type)
 
         self.action_name = args.action_name or conf.get('action_name', None)  # sfeh type=float or maybe sometimes bool-.-.-
+
         self.mp_cores = args.mp_cores or conf.get('mp_cores', 1)
 
         self.tf_device_log = args.tf_device_log or conf.get('tf_device_log', False)
@@ -138,6 +145,5 @@ class Config:
         print(f'AUTOLOAD: kernel_name {kernel_name}')
         self.kernel_name = kernel_name
         self.name = prepared_run
-        # choose_distributions = ChooseConstants(path_distrib=path_distrib, csv_data_samples, n_samples=100)
 
         return rootdir, path_origin, path_data_csv

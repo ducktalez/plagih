@@ -1,4 +1,8 @@
 import os
+
+import numpy as np
+from matplotlib import pyplot as plt
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
@@ -165,7 +169,7 @@ class RegressionKernel(Kernel):
         """
 
         action_bins = self.histogram_bins(self.action.minmax)
-        expr_sym = tree.eval_expr()
+        expr_sym = tree.eval_expr_str()
         used_observations = tree.get_observation_list()
         pairwise_diff = self.eval_tf(expr_sym, used_observations)['pairwise_diff']
 

@@ -96,7 +96,7 @@ def node_simplification(node: Node):
         # old_core:[sign, [BinaryMin, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
         # new_node: [sign, [BinaryMin, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.56921]]]
     """
-    expr_raw = node.eval_expr()
+    expr_raw = node.eval_expr_str()
     expr_sym = expr_sympify(expr_raw)
     nested_labels = sympy_to_nestedlist(expr_sym)
     node_rebuilt = tree_from_nested_string(nested_labels)
@@ -116,7 +116,7 @@ def evolve_reduce_simplify(tree: Node, completely=True, force=False):
 
     """
     # self.state = STATE_BUILDING  #  ==>state
-    tree_copy = copy.deepcopy(tree)
+    tree_copy = copy.deepcopy(tree)  # todo todo this function does currently not work
     if completely:  # reduce the complete fintree
         nodes_lv0 = tree.get_nodes_at_depth(0, allow_fixed=False)  # only required for fixed-core trees
         for cc in nodes_lv0:
@@ -200,18 +200,20 @@ class TreeBuilder:
 
             # todo sfeh 0 is not allowed
             # sfeh same prob for all for testing
-            operator_pool = {BinaryAdd: 2, Subtract: 1, Usub: 1, BinaryMultiply: 2, Div: 1,
+            operator_pool = {BinaryAdd: 2, Subtract: 1, BinaryMultiply: 2, Div: 1,
+                             # Usub: 1,  # sfeh
                              Square: 0.75,
-                             Power: 0.1,  # 0.25,  # sfeh:open
+                             Pow: 0.1,  # 0.25,  # sfeh:open
                              Abs: 0.5, Sign: 0.5,  # sfeh stop chain of arity-1 op_dict in buid method?
                              Sqrt: 0.1,  # 0.25,  # sfeh debug this
                              Log: 0.1, Log1p: 0.1,
-                             Sin: 0.5, Tan: 0.1, Cos: 0.33, Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.2,
+                             Sin: 0.5, Tan: 0.1, Cos: 0.33,
+                             # Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.5,
                              Xor: 1,  # sfeh
                              # sympy extra classes (Capitalized)
                              Round: 0.5,
                              BinaryAnd: 1, BinaryOr: 1, BinaryNot: 0.5,
-                             BinaryEq: 1, Neq: 0.5,
+                             Eq: 1, Ne: 0.5,
                              Lt: 0.5, Le: 0.5, Gt: 0.1, Ge: 0.1,
                              Ifte: 2,
                              BinaryMin: 1, BinaryMax: 1}
@@ -572,8 +574,7 @@ class TreeBuilder:
 
         prune_amount = len(evotree) - self.parsimony_max
         while prune_amount > 0:
-            print_warning('wwww',
-                          f'Tree is too complex: {len(evotree)} > {self.parsimony_max}, pruning {prune_amount} nodes.',
+            print_warning('wwww', f'Tree too complex: {len(evotree)} > {self.parsimony_max}, pruning {prune_amount} nodes.',
                           print_type=self.print_type)
             nodelist = evotree.eval_mutable_nodes()
             prune_now = 1 + np.random.randint(prune_amount)  # 19 -> prune branch with 1 to max. 19 nodes
@@ -694,14 +695,8 @@ def helper_evolve_params_branch(custom_params, tree_depth_max=10, parsimony_max=
 
 
 class TreeMeta:
-    # fitness: float = None
-    # parsimony: float = None
-    # expr_raw: str = None
-    # expr_sym: str = None
-    # state: int = None
-    # last_evolution: list[str] = dataclasses.field(default_factory=list)
+
     def __init__(self, fitness=None, parsimony=None, expr_raw=None, expr_sym=None):
-        # def __init__(self, fitness, parsimony, expr_raw, expr_sym, state):
         self.fitness = fitness
         self.parsimony = parsimony
         self.expr_raw = expr_raw
@@ -728,9 +723,6 @@ class Tree:
 
 
 class FinalizedTree(Tree):
-    # class FinalizedTree(Node):
-    # ==>fintree status sfeh to evaluated...
-    # ->rootnode
 
     def __init__(self, tree: Node, meta: TreeMeta):
         super().__init__(tree, meta)
@@ -757,11 +749,6 @@ class FinalizedTree(Tree):
 
     def get_parsimony(self):
         return self.meta.parsimony
-        # sfeh hmmm
-        # if self.meta.state == STATE_EVALUATED:
-        #     pass
-        # else:
-        #     raise Exception('This fintree was not yet evaluated!')
 
     def set_fitness(self, fitness):
         self.meta.fitness = fitness
@@ -785,7 +772,7 @@ class OriginTree:
                 nested_expr = file.read()
 
             tree = tree_from_nested_string(nested_expr)
-            expr_raw = tree.eval_expr()
+            expr_raw = tree.eval_expr_str()
             try:
                 expr_sym = expr_sympify(expr_raw)
             except Exception as sympex:
@@ -857,28 +844,80 @@ def rec_build_tree(lst, depth=0, obs_list=None):
         node.set_childs(childs)
 
     else:
+        childs = [rec_build_tree(x, depth=depth + 1, obs_list=obs_list) for x in lst[1:]]
+        node.set_childs(childs)
+        # raise Exception(f'Tree-building list length {len(lst[1:])} does not match the nodes arity {node.get_arity()}.')  # todo
+
+    return node
+
+
+def rec_build_tree2(lst, depth=0, obs_list=None):
+    """
+    """
+
+    strlabel = str(lst[0])
+    if ':fix' in strlabel:
+        strlabel = strlabel.replace(':fix', '')
+        is_fix = True
+    else:
+        is_fix = False
+
+    if strlabel in ['True', 'False']:
+        label = BoolConstant(strlabel)
+    else:
+        try:
+            strlabel = float(strlabel)
+            label = FloatConstant(strlabel)
+        except ValueError:  # todo match exception
+            if strlabel in loadable_ops_dict:
+                label = loadable_ops_dict[strlabel]
+            else:
+                if obs_list:
+                    if strlabel in obs_list:
+                        label = Observation(strlabel)
+                    else:
+                        raise Exception(f'Label "{strlabel}" can not be assigned to a node-label!')
+                else:
+                    label = Observation(strlabel)
+
+    node = Node(label=label, depth=depth, is_fix=is_fix)
+
+    if len(lst[1:]) == node.get_arity():
+        childs = [rec_build_tree2(x, depth=depth + 1, obs_list=obs_list) for x in lst[1:]]
+        node.set_childs(childs)
+
+    else:
         raise Exception(f'Tree-building list length {len(lst[1:])} does not match the nodes arity {node.get_arity()}.')
 
     return node
 
 
-def check_expression_reconstruction(tree: Node):
+def check_tree_loadable_reconstruction(tree: Node):
     """
     Extracts a tree expression and rebuilds the tree
     The trees must be identical, as it only rebuilt itself
     :return:
     """
     tree_0 = copy.deepcopy(tree)
-    expr_raw = tree.eval_expr()
-    expr_sym = expr_sympify(expr_raw)
-    nested_labels = sympy_to_nestedlist(expr_sym)  # ok what is nested here
-    tree_1 = tree_from_nested_string(nested_labels)
-    tree_1.update_fixed_nodes(tree_0)
+    _nested_string = tree.eval_expr_str()
+    tree_1 = tree_from_nested_string(_nested_string)
+    tree_1.update_fixed_nodes(tree_0)  # todo
 
     a = repr(tree_0)
     b = repr(tree_1)
 
     return a == b
+
+
+def tree_from_listree(listree, obs_list=None):
+    """
+
+    """
+
+    tree = rec_build_tree2(listree, depth=0, obs_list=obs_list)
+    tree.finalize_set_depth()
+
+    return tree
 
 
 def tree_from_nested_string(nested_str, obs_list=None):
@@ -887,7 +926,6 @@ def tree_from_nested_string(nested_str, obs_list=None):
     all_input_options = ['1', '0', '-1.132', 'True', 'False', 'vel', 'Ifte', 'max', 'BinaryMax', '-vel']
     nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
     """
-
     evaled_expr = eval(nested_str)  # sfeh:discuss -> sympify? <- no
     tree = rec_build_tree(evaled_expr, depth=0, obs_list=obs_list)
     tree.finalize_set_depth()
@@ -896,12 +934,14 @@ def tree_from_nested_string(nested_str, obs_list=None):
 
 
 if __name__ == '__main__':
-    trexpr1 = '(Ifte, (BinaryOr, (cartPos < -1), (BinaryAnd, (cartPos < 0.1), (cartVel < -0.05))), 2, (Ifte, (BinaryAnd, (BinaryAnd, (cartPos > -0.45), (cartPos < -0.05)), (cartVel < -0.5)), 0, (Ifte, (cartVel < 0), 0, 2)))'
-    nstr = "['+',['-',['Ifte',['True'],['sign',['cartVel']],['/',[2.043],['4']]],['cartVel']],[-1.3]]"
-    nstr = '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]'
-    nstr = '["Ifte", ["BinaryNot", [False]], [0.0], [2.0]]'
+    _test_open = '[Ifte, [BinaryOr, [b < -1], [BinaryAnd, [b < 0.1], [a < -0.05]]], 2, [Ifte, [BinaryAnd, [BinaryAnd, ' \
+                 '[b > -0.45], [b < -0.05]], [a < -0.5]], 0, [Ifte, [a < 0], 0, 2]]]',
 
-    tr = tree_from_nested_string(nstr)
-    print(tr)
-    tr2 = check_expression_reconstruction(tr)
-    print(tr2)
+    _test_loadabls = ["['+',['-',['Ifte',['True'],['sign',['cartVel']],['/',[2.3],[4]]],['cartVel']],[-1.3]]",
+                      '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]',
+                      '["Ifte", ["BinaryNot", [False]], [0.0], [2.0]]']
+    for nstr in _test_loadabls:
+        tr = tree_from_nested_string(nstr)
+        print(tr)
+        tr2 = check_tree_loadable_reconstruction(tr)
+        print(tr2)

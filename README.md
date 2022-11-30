@@ -5,6 +5,8 @@
 
 ## Ablage/Todos
 
+- trees with one node just very rarely?
+
 - tree evaluate nodes for best improvement 
 - population cluster / races
 - Make regular Function Classes Sympy Functions
@@ -38,7 +40,8 @@ Always check
 - GP individuals for evolution process
 
 ## Checks for when you have altered code
-- Functions need to be in ops_dict
+- Functions need to be in ops_dict (and some more)
+- reconstruction of trees
 
 Attention: If you want to write your own code, look for important developer informations in the section below!
 
@@ -72,10 +75,10 @@ Main features:
 - (example available)
 
 
-## Python 3.8 packages
+## Python 3.9 packages
 
-I am using Anaconda. Some packages are only available in pip though.
-save this as requirements
+I am using Anaconda. Some packages are only available in pip.
+sfeh:save this as requirements
 
 Conda packages:
 matplotlib
@@ -83,12 +86,14 @@ pathlib
 sympy
 apted
 tensorflow
-tensorflow-gpu
 sklearn
 pandas
 sympy
 tikzplotlib (optional)
 gym (optional)
+
+`conda install matplotlib pathlib sympy apted tensorflow tensorflow-gpu pandas sympy gym`
+`pip install sklearn gym apted tikzplotlib`
 
 non-conda packages:
 apted
@@ -154,8 +159,9 @@ Possible operators are:
 | Group                      | examples                                                                                                                                         |
 |:---------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------|
 | Mathematical operators     | `+`, `-`, `*`, `/`, `**`, `abs`, `sign`, `Square`, `sqrt`, `log`, `log1p`, `cos`, `sin`, `tan`, `acos`, `asin`, `atan`, `BinaryMin`, `BinaryMax` |
-| Logical operators          | `BinaryAnd`, `BinaryOr`, `not`                                                                                                                             |
+| Logical operators          | `BinaryAnd`, `BinaryOr`, `not`                                                                                                                   |
 | Comparative operators      | `==`, `!=`, `<`, `<=`, `>`, `>=`                                                                                                                 |
+|                            |                                                                                                                                                  |
 | Conditional (If-then-else) | `Ifte`                                                                                                                                           |
 
 

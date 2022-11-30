@@ -71,15 +71,16 @@ class NodeLabel:
         pass
 
 
-class Operator(NodeLabel):
+class Operator(NodeLabel, sympy.Function):
     """
     operator nodes (+, +, *, /, sin(), sign(), ...)
     inner nodes of a fintree
     """
-    pass
+    is_Function = True
 
-    def eval(self, *args):
-        return args[self.arity:]
+    @classmethod
+    def eval(cls, *args):
+        return cls.insym(*args)   # just if no eval is implemented
 
     def tflambda(self):
         pass
@@ -92,10 +93,10 @@ class ChainableOperator(NodeLabel):
     And, Or
     Actually not:
     """
-    pass
 
-    def eval(self, *args):
-        return args[self.arity:]
+    # @classmethod
+    # def eval(self, *args):
+    #     return  # args[self.arity:]  # todo
 
     def tflambda(self):
         pass
@@ -109,7 +110,7 @@ class Terminal(NodeLabel):
     """
     Terminal nodes are leaf nodes which can not have children. e.g.:
     - constants (e.g. 2.3)
-    - observations (e.g. cartVel, aka data input)
+    - observations (e.g. b, aka data input)
     - user-functions (sfeh:open)
     """
     arity = 0
@@ -214,8 +215,11 @@ class BinaryAdd(Operator):
     arity = 2
     tflow = tf.add
     expr_sym = '({} + {})'  # todo vs. Add()
-    insym = None
+    insym = sympy.Add
     xtype = (tuple([float, float]), float)
+
+    nargs = 2
+    is_real = True
 
     #
     # def __init__(self, *args, **kwargs):
@@ -241,7 +245,7 @@ class Subtract(Operator):
     arity = 2
     tflow = tf.subtract
     expr_sym = '({}-{})'
-    insym = None
+    insym = sympy.Add
     xtype = (tuple([float, float]), float)
 
     def propagate_down(self):
@@ -251,6 +255,10 @@ class Subtract(Operator):
         propagate-down: negativ-Fehler (also summe, bl,os negativ)
         """
         pass
+
+    @classmethod
+    def eval(cls, a, b):
+        return a - b  # sfeh check if its sympied
 
 
 class BinaryMultiply(Operator):
@@ -280,73 +288,40 @@ class BinaryMultiply(Operator):
         pass
 
 
-class MapxMultiply(Operator):
-    """
-    sfeh:reduceoperator
-    """
-    nlabel = 'Mul'
-    arity = None
-    tflow = tf.multiply
-    expr_sym = '({} * {})'
-    mapping_expr = '*'.split()
-    insym = None
-    xtype = (float, float)
-
-    def propagate_down(self):
-        """
-        Idee: Ein weiterer Faktor bestimmt, wie weit man am Ziel vorbei ist.
-            Beispielsweise Ziel: 20, aber Ergebnis war 10 -> Lösungsfaktor ist 20/10=2.
-            Nun gibt man den eigenen Wert*2 nach unten als Ziel zurück.
-            Falls selbst=0, gib differenz zwischen Ziel und 0 nach unten (also: Ziel)
-
-        wenn 0: immer selbst runterpropagieren, wenn anderer auch 0: beide 0.5
-        defprop:
-        # propagation:
-        propagate-down error: (y-^Y)-
-        propagate-down itsme: (y-^Y)-
-        """
-        pass
-
-
-class Divide_no_nan(Operator):
-    """
-    # Division: SAFE division by zero!
-    -->tf.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented
-    sfeh: is it okay to display this as '/'?
-    xxxx optional to use high value instead of tf-eval to 1
-    """
-    nlabel = 'Divide_no_nan'
-    # classname = 'Divide_no_nan'  # sfeh??
-    arity = 2
-    tflow = tf.math.divide_no_nan
-    expr_sym = 'Div_no_nan({}, {})'
-    insym = None
-    xtype = (tuple([float, float]), float)
-
-    def eval(self, a, b):
-        return a / b
-
-    def backprop(self):
-        """
-        Wie bei Mult: Ziel wird ausgerechnet, Faktor für sich selbst wird ausgerechnet. Nach unten propagieren.
-        """
-        pass
+# class Divide_no_nan(Operator):
+#     """
+#     # Division: SAFE division by zero!
+#     -->tf.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented
+#     sfeh: is it okay to display this as '/'?
+#     xxxx optional to use high value instead of tf-eval to 1
+#     """
+#     nlabel = 'Divide_no_nan'
+#     # classname = 'Divide_no_nan'  # sfeh??
+#     arity = 2
+#     tflow = tf.math.divide_no_nan
+#     expr_sym = 'Div_no_nan({}, {})'
+#     insym = None
+#     xtype = (tuple([float, float]), float)
+#     @classmethod
+#     def eval(self, a, b):
+#         return a / b
 
 
 class Div(Operator):
     """
     sfeh:xxx make this available, make a correct version of "Divide_no_nan"
-
+    div
     """
     nlabel = 'Div'
     arity = 2
     tflow = tf.math.divide
     expr_sym = '({} / {})'
-    insym = sympy.div
+    insym = None
     xtype = (tuple([float, float]), float)
 
-    def eval(self, a, b):
-        return a / b
+    @classmethod
+    def eval(cls, a, b):
+        return a / b  # is a sympy thing returned?
 
     def backprop(self):
         """
@@ -355,7 +330,7 @@ class Div(Operator):
         pass
 
 
-class Power(Operator, NoSympyClass):
+class Pow(Operator):
     """
     AKA Power
     ALERT: Power can create complex numbers, maybe you should use Powerounded
@@ -368,8 +343,10 @@ class Power(Operator, NoSympyClass):
     insym = sympy.Pow
     xtype = (tuple([float, float]), float)
 
+    @classmethod
     def eval(self, a, b):
-        return a ** b
+        # return a ** b
+        return sympy.Pow(a, b)
 
     def backprop(self):
         """
@@ -394,8 +371,9 @@ class Powrounded(Operator, NoSympyClass):
     insym = None
     xtype = (tuple([float, float]), float)
 
-    def eval(self, a, b):
-        return a ** b
+    @classmethod
+    def eval(cls, a, b):
+        return sympy.Pow(a, sympy.N(b, 0))
 
 
 class Abs(Operator):
@@ -426,8 +404,21 @@ class Sign(Operator):
     insym = sympy.sign
     xtype = (tuple([float]), float)
 
+    # @classmethod
+    # def eval(cls, a):
+    #     print('SIGN EVAL WAS THERE SYMPY???')
+    #     # if a.is_real:
+    #     #     return a ** 2  # sfeh:update
+    #     # else:
+    #     #     return None
+    #     return sympy.sign(a)
 
-class Square(Operator, sympy.Function, NoSympyClass):
+    def _sympy_(self, *args):
+        print('SIGN SYMPY')
+        return self.eval(*args)
+
+
+class Square(Operator):
     nlabel = 'Square'
     arity = 1
     tflow = tf.square
@@ -436,18 +427,18 @@ class Square(Operator, sympy.Function, NoSympyClass):
     xtype = (tuple([float]), float)
 
     nargs = 1
-    is_Function = True
     is_real = True
 
     @classmethod
     def eval(cls, a):
-        if a.is_real:
-            return a ** 2  # sfeh:update
-        else:
-            return None
+        # if a.is_real:
+        #     return a ** 2  # sfeh:update
+        # else:
+        #     return None
+        return sympy.Pow(a, 2)
 
-    def _sympy_(self, a):
-        return eval(self, a)
+    def _sympy_(self, *args):
+        return self.eval(*args)
 
 
 class Sqrt(Operator, NoSympyClass):
@@ -478,6 +469,10 @@ class Log1p(Operator, NoSympyClass):
     expr_sym = 'log1p({})'
     insym = None
     xtype = (tuple([float]), float)
+
+    @classmethod
+    def eval(cls, a):
+        return sympy.log(a + 1)   # just if no eval is implemented
 
 
 class Cos(Operator):
@@ -545,13 +540,22 @@ class Tanh(Operator):
     xtype = (tuple([float]), float)
 
 
-class MapxAnd(Operator):
-    nlabel = 'And'
-    arity = 2
-    tflow = tf.logical_and
-    expr_sym = '({} & {})'
-    insym = sympy.And
-    xtype = (tuple([bool, bool]), bool)
+class Sinh(Operator):
+    nlabel = 'sinh'
+    arity = 1
+    tflow = tf.sinh  # sfeh sinh, asinh
+    expr_sym = 'sinh({})'
+    insym = sympy.sinh
+    xtype = (tuple([float]), float)
+
+
+class Cosh(Operator):
+    nlabel = 'cosh'
+    arity = 1
+    tflow = tf.cosh  # sfeh acosh
+    expr_sym = 'cosh({})'
+    insym = sympy.cosh
+    xtype = (tuple([float]), float)
 
 
 class Xor(Operator):
@@ -564,9 +568,6 @@ class Xor(Operator):
 
 
 class Not(Operator):
-    """
-
-    """
     nlabel = 'Not'
     arity = 1
     tflow = tf.logical_not
@@ -575,10 +576,9 @@ class Not(Operator):
     xtype = (tuple([bool]), bool)
 
     nargs = 1
-    is_Function = True
 
 
-class BinaryNot(Operator, sympy.Function):
+class BinaryNot(Operator):
     """
     Not (boolean)
     Problem was:
@@ -589,45 +589,198 @@ class BinaryNot(Operator, sympy.Function):
     arity = 1
     tflow = tf.logical_not
     expr_sym = 'BinaryNot({})'
-    insym = None
+    insym = sympy.Not
     xtype = (tuple([bool]), bool)
 
     nargs = 1
-    is_Function = True
 
-    @classmethod
-    def eval(cls, a):
-        if a.is_Boolean:  # sfeh sympify.is_xxx here seems dumb
-            return not a
+    # @classmethod
+    # def eval(cls, a):
+    #     # if a.is_Boolean:  # sfeh sympify.is_xxx here seems dumb
+    #     #     return not a
+    #     return sympy.Not(a)
 
-    def _sympy_(self, a):
-        return eval(self, a)
-
-
-class MapxEq(Operator):
-    nlabel = 'Eq'
-    arity = 2
-    tflow = tf.equal
-    expr_sym = 'Eq({})'
-    insym = sympy.Equality
-    xtype = (bool, bool)
+    def _sympy_(self, *args):
+        print('BinaryNot SUCKS')
+        return self.eval(*args)
 
 
-class BinaryEq(Operator):
+class Eq(Operator):
     nlabel = 'Eq'
     arity = 2
     tflow = tf.equal
     expr_sym = '({} == {})'
-    insym = sympy.Equality
+    insym = sympy.Eq
+    xtype = (tuple([float, float]), bool)
+
+
+class MapxMultiply(Operator):
+    """
+    sfeh:reduceoperator
+    """
+    nlabel = 'Mul'
+    arity = None
+    tflow = tf.multiply
+    expr_sym = '({} * {})'
+    mapping_expr = '*'.split()
+    insym = sympy.Mul
+    xtype = (float, float)
+
+    nargs = 2
+    is_real = True
+
+    def propagate_down(self):
+        """
+        Idee: Ein weiterer Faktor bestimmt, wie weit man am Ziel vorbei ist.
+            Beispielsweise Ziel: 20, aber Ergebnis war 10 -> Lösungsfaktor ist 20/10=2.
+            Nun gibt man den eigenen Wert*2 nach unten als Ziel zurück.
+            Falls selbst=0, gib differenz zwischen Ziel und 0 nach unten (also: Ziel)
+
+        wenn 0: immer selbst runterpropagieren, wenn anderer auch 0: beide 0.5
+        defprop:
+        # propagation:
+        propagate-down error: (y-^Y)-
+        propagate-down itsme: (y-^Y)-
+        """
+        pass
+
+
+class BinaryMin(Operator):
+    """
+    Minimum function with arity-2.
+    min() does not work (for now), as min(min()) get folded to min(), which leads to problems creating the tf-graph
+    """
+    # todo
+    nlabel = 'BinaryMin'
+    arity = 2
+    tflow = tf.minimum
+    expr_sym = 'BinaryMin({}, {})'
+    insym = sympy.Min
+    xtype = (tuple([float, float]), float)
+
+    nargs = 2
+    is_real = True
+
+    # @classmethod
+    # def eval(cls, a, b):
+    #
+    #     # # if (a < b) == True or (a < b) == False: # first solution
+    #     #
+    #     # if a.is_number and b.is_number:  # must be real for a comparison
+    #     #     return a if a <= b else b
+    #     # elif a == b:  # recent update for BinaryMin(b, b)
+    #     #     return a
+    #     # else:
+    #     #     return
+    #     return sympy.Min(a, b)
+
+    def _sympy_(self, *args):
+
+        print('binMin todo SUCKS')
+        return self.eval(*args)
+
+
+class BinaryMax(Operator):
+    """
+
+    """
+    nlabel = 'BinaryMax'
+    arity = 2
+    tflow = tf.maximum
+    expr_sym = 'BinaryMax({}, {})'
+    insym = sympy.Max
+    xtype = (tuple([float, float]), float)
+
+    nargs = 2
+    is_real = True
+
+    # @classmethod
+    # def eval(cls, a, b):
+    #
+    #     # # if (a < b) == True or (a < b) == False: # first solution, was working.
+    #     #
+    #     # if a.is_number and b.is_number:
+    #     #     return a if a > b else b
+    #     # elif a == b:  # recent update for BinaryMin(b, b)
+    #     #     return a
+    #     # else:
+    #     #     return
+    #     return sympy.Max(a, b)
+
+    def _sympy_(self, *args):
+        print('binMax SUCKS')
+        return self.eval(*args)
+
+
+class BinaryAnd(Operator):
+    """
+
+    """
+    nlabel = 'BinaryAnd'
+    arity = 2
+    tflow = tf.logical_and
+    expr_sym = '({} & {})'
+    insym = sympy.And
     xtype = (tuple([bool, bool]), bool)
 
+    nargs = 2
 
-class Neq(Operator):
-    nlabel = 'Neq'
+    is_Boolean = True
+
+    # @classmethod
+    # def eval(cls, *args):
+    #
+    #     # # if (a == True or a == False) and (b == True or b == False):
+    #     # # sfeh xxx
+    #     #
+    #     # if a.is_Boolean and b.is_Boolean:
+    #     #     return a and b
+    #     # elif a == b:
+    #     #     return a
+    #     # else:
+    #     #     return None
+    #     return sympy.And(*args)
+
+    def _sympy_(self, *args):
+        print('BinAnd SUCKS')
+        return self.eval(*args)
+
+
+class BinaryOr(Operator):
+    """
+    """
+    nlabel = 'BinaryOr'
+    arity = 2
+    tflow = tf.logical_or
+    expr_sym = '({} | {})'
+    insym = sympy.Or
+    xtype = (tuple([bool, bool]), bool)
+
+    nargs = 2
+
+    # @classmethod
+    # def eval(cls, *args):
+    #
+    #     # # if (a == True or a == False) and (b == True or b == False):  # this works guaranteed
+    #     #
+    #     # if a.is_Boolean and b.is_Boolean:
+    #     #     return a and b
+    #     # elif a == b:
+    #     #     return a
+    #     # else:
+    #     #     return None
+    #     sympy.Or(*args)
+
+    def _sympy_(self, *args):
+        return self.eval(*args)
+
+
+class Ne(Operator):
+    nlabel = 'Ne'
     arity = 2
     tflow = tf.not_equal
     expr_sym = '({} != {})'
-    insym = sympy.Unequality
+    insym = sympy.Ne  # sympy.Unequality
     xtype = (tuple([bool, bool]), bool)
 
 
@@ -636,7 +789,7 @@ class Lt(Operator):
     arity = 2
     tflow = tf.less
     expr_sym = '({} < {})'
-    insym = sympy.StrictLessThan
+    insym = sympy.Lt  # sympy.StrictLessThan
     xtype = (tuple([float, float]), bool)
 
 
@@ -645,7 +798,7 @@ class Le(Operator):
     arity = 2
     tflow = tf.less_equal
     expr_sym = '({} <= {})'
-    insym = sympy.LessThan
+    insym = sympy.Le  # sympy.LessThan
     xtype = (tuple([float, float]), bool)
 
 
@@ -654,7 +807,7 @@ class Gt(Operator):
     arity = 2
     tflow = tf.greater
     expr_sym = '({} > {})'
-    insym = sympy.StrictGreaterThan
+    insym = sympy.Gt  # sympy.StrictGreaterThan
     xtype = (tuple([float, float]), bool)
 
 
@@ -667,71 +820,30 @@ class Ge(Operator):
     xtype = (tuple([float, float]), bool)
 
 
-class MapxMax(Operator):
-    nlabel = 'Max'
-    arity = 2
-    tflow = tf.maximum
-    expr_sym = 'Max({}, {})'
-    insym = sympy.Max
-    xtype = (tuple([float, float]), float)
+# class Usub(sympy.Function, Operator, NoSympyClass):
+#     """
+#     todo idea introduce negative labels as input?
+#     """
+#     nlabel = 'Usub'
+#     arity = 1
+#     tflow = tf.negative
+#     expr_sym = '(-{})'
+#     insym = None
+#     xtype = (tuple([float]), float)
+#
+#     nargs = 1
+#     is_Function = True
+#     is_real = True
+#
+#     @classmethod
+#     def eval(cls, a):
+#         return -a  # sfeh
+#
+#     def _sympy_(self, *args):
+#         return self.eval(*args)
 
 
-class MapxAdd(Operator, sympy.Function):
-    """
-
-    """
-    nlabel = 'Add'
-    arity = 1
-    tflow = tf.negative
-    expr_sym = 'Add({})'
-    insym = None
-    xtype = (float, float)
-
-    nargs = None
-
-    is_Function = True
-    is_real = True
-
-
-class Usub(sympy.Function, Operator, NoSympyClass):
-    """
-    todo idea introduce negative labels as input?
-    """
-    nlabel = 'Usub'
-    arity = 1
-    tflow = tf.negative
-    expr_sym = '(-{})'
-    insym = None
-    xtype = (tuple([float]), float)
-
-    nargs = 1
-    is_Function = True
-    is_real = True
-
-    @classmethod
-    def eval(cls, a):
-        return -a  # see
-
-    def _sympy_(self, a):
-        return eval(self, a)
-
-    def propagate_down(self):
-        """
-        defprop:
-        # propagation:
-        propagate-down:
-        """
-        pass
-
-
-class MapxPiecewise(ChainableOperator, sympy.Function):
-    # todo all the function assumptions!!
-    # todo must have a True-case
-    chainable_xtype = tuple([float, bool])
-    pass
-
-
-class Ifte(Operator, sympy.Function, NoSympyClass):
+class Ifte(Operator):
     """
     self-expert: opportunity_cost = best_vals - chosen_vals
     self-childs:
@@ -747,161 +859,91 @@ class Ifte(Operator, sympy.Function, NoSympyClass):
     """
     nlabel = 'Ifte'
     arity = 3
-    tflow = tf.where_v2
+    tflow = tf.where
     expr_sym = 'Ifte({}, {}, {})'
-    insym = None  # piecewise...
+    insym = None
     xtype = (tuple([bool, float, float]), float)
 
     nargs = 3
-    is_Function = True
     is_real = True
 
     @classmethod
     def eval(cls, a, b, c):
-        if a.is_Boolean:
-            return b if a else c  # search for 'gotcha' in https://docs.sympy.org/latest/_modules/sympy/core/relational.html
-        else:
-            return None  # returns None, is not further evaluated
+        # if a.is_Boolean:
+        #     return b if a else c  # search for 'gotcha' in https://docs.sympy.org/latest/_modules/sympy/core/relational.html
+        # else:
+        #     return None  # returns None, is not further evaluated
+        return sympy.Piecewise((b, a), (c, True))  # also available: sympy.piecewise_fold
 
     def _sympy_(self, *args):
-        return eval(self, *args)
+        return self.eval(*args)
+
+
+class MapxAnd(Operator):
+    nlabel = 'And'
+    arity = 2
+    tflow = tf.logical_and
+    expr_sym = '({} & {})'
+    insym = sympy.And
+    xtype = (tuple([bool, bool]), bool)
+
+
+class MapxMax(Operator):
+    nlabel = 'Max'
+    arity = 2
+    tflow = tf.maximum
+    expr_sym = 'Max({}, {})'
+    insym = sympy.Max
+    xtype = (tuple([float, float]), float)
+
+
+class MapxAdd(Operator):
+    """
+
+    """
+    nlabel = 'Add'
+    arity = 1
+    tflow = tf.negative
+    expr_sym = 'Add({})'
+    insym = sympy.Add
+    xtype = (float, float)
+
+    nargs = None
+
+    is_real = True
+
+
+class MapxPiecewise(ChainableOperator):
+    # todo all the function assumptions!!
+    # todo must have a True-case
+    nlabel = 'Piecewise'
+    arity = None
+    tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
+    expr_sym = 'Piecewise({})'
+    insym = sympy.Piecewise
+    xtype = (float, float)  # todo
+
+    # nargs = None  # sfeh:hmmm
+
+    is_real = True
 
 
 class MapxMin(Operator):
     nlabel = 'Min'
     arity = None  # sfeh:does not have arity?
     tflow = tf.minimum
-    expr_sym = 'Min({}, {})'  # todo
+    expr_sym = 'Min({}, {})'
     insym = sympy.Min
     xtype = (tuple([float, float]), float)
 
 
-class BinaryMin(Operator, sympy.Function):
-    """
-    Minimum function with arity-2.
-    min() does not work (for now), as nested min() get accumulated, which leads to problems creating the tf-graph
-    """
-    # todo
-    nlabel = 'BinaryMin'
-    arity = 2
-    tflow = tf.minimum
-    expr_sym = 'BinaryMin({}, {})'
-    insym = None
-    xtype = (tuple([float, float]), float)
-
-    nargs = 2
-    is_Function = True
-    is_real = True
-
-    @classmethod
-    def eval(cls, a, b):
-
-        # if (a < b) == True or (a < b) == False: # first solution
-        if a.is_number and b.is_number:  # must be real for a comparison
-            return a if a <= b else b
-        elif a == b:  # recent update for BinaryMin(cartVel, cartVel)
-            return a
-        else:
-            return
-
-    def _sympy_(self, a, b):
-        return eval(self, a, b)
-
-
-class BinaryMax(Operator, sympy.Function):
-    """
-
-    """
-    nlabel = 'BinaryMax'
-    arity = 2
-    tflow = tf.maximum
-    expr_sym = 'BinaryMax({}, {})'
-    insym = None
-    xtype = (tuple([float, float]), float)
-
-    nargs = 2
-    is_Function = True
-    is_real = True
-
-    @classmethod
-    def eval(cls, a, b):
-
-        # if (a < b) == True or (a < b) == False: # first solution, was working.
-        if a.is_number and b.is_number:
-            return a if a > b else b
-        elif a == b:  # recent update for BinaryMin(cartVel, cartVel)
-            return a
-        else:
-            return
-
-    def _sympy_(self, a, b):
-        return eval(self, a, b)
-
-
-class BinaryAnd(Operator, sympy.Function):
-    """
-
-    """
-    nargs = 2
-    is_Function = True
-
-    nlabel = 'And'
-    arity = 2
-    tflow = tf.logical_and
-    insym = None
-    xtype = (tuple([bool, bool]), bool)
-
-    @classmethod
-    def eval(cls, a, b):
-
-        # if (a == True or a == False) and (b == True or b == False):
-        # sfeh xxx
-        if a.is_Boolean and b.is_Boolean:
-            return a and b
-        elif a == b:
-            return a
-        else:
-            return None
-
-    def _sympy_(self, a, b):
-        return eval(self, a, b)
-
-
-class MapxOr(Operator, sympy.Function):
+class MapxOr(Operator):
     nlabel = 'Or'
     arity = 2
     tflow = tf.logical_or
     expr_sym = '({} | {})'
     insym = sympy.Or
     xtype = (tuple([bool, bool]), bool)
-
-
-class BinaryOr(Operator, sympy.Function):
-    """
-    """
-    nlabel = 'BinaryOr'
-    arity = 2
-    tflow = tf.logical_or
-    expr_sym = 'BinaryOr({}, {})'
-    insym = None
-    xtype = (tuple([bool, bool]), bool)
-
-    nargs = 2
-    is_Function = True
-
-    @classmethod
-    def eval(cls, a, b):
-
-        # if (a == True or a == False) and (b == True or b == False):  # this works guaranteed
-        if a.is_Boolean and b.is_Boolean:
-            return a and b
-        elif a == b:
-            return a
-        else:
-            return None
-
-    def _sympy_(self, a, b):
-        return eval(self, a, b)
 
 
 class Round(Operator, sympy.Function, NoSympyClass):
@@ -915,53 +957,51 @@ class Round(Operator, sympy.Function, NoSympyClass):
     xtype = (tuple([float]), float)
 
     nargs = 1
-    is_Function = True
     is_real = True
 
     @classmethod
     def eval(cls, a):
-        if a.is_number:  # sympify(a) evaluates first... but i guess it is evaluated already
-            return round(a)  # see
-        else:
-            return  # f'Round({a})'
+        # if a.is_number:  # sympify(a) evaluates first... but i guess it is evaluated already
+        #     return round(a)  # see
+        return sympy.N(a, 0)
 
-    def _sympy_(self, a):
-        return eval(self, a)
+    def _sympy_(self, *args):
+        return self.eval(*args)
 
 
 def sympy_symbol_defaults(name_list):
     """
     sfeh workaround.
-    sympy expressions like 'sign(((cartPos * cartVel) ** 151))' take forever.
+    sympy expressions like 'sign(((a * b) ** 151))' take forever.
     ignoring complex numbers with this trick (use this as locals)
 
     'sym_reduce': '({} ** {})'
     'sym_reduce': 'sign(re({}))'
     """
-    symloc = {str(x): sympy.symbols(str(x), real=True, imaginary=False) for x in name_list}
-    return symloc
+    return {str(x): sympy.symbols(str(x), real=True, imaginary=False) for x in name_list}
 
 
 # attention: exactly same capitals/letters! (gets replaced)
 # todo todotodo potential names
 # arityfix, custom, structural
-# collective, reduce, chained, fold, map
-# todo is this required?
-local_sympy_dict = {'Ifte': Ifte,
-                    'BinaryMin': BinaryMin,
-                    'BinaryMax': BinaryMax,
-                    'BinaryAnd': BinaryAnd,
-                    'BinaryOr': BinaryOr,
-                    'BinaryNot': BinaryNot,
-                    'Square': Square,
-                    'Usub': Usub,
-                    'Round': Round}
+# Folding, collective, reduce, chained, fold, map
+# todo required, if string is loaded. not required, if sympys are loaded
+
+loadable_ops_dict = {'BinaryAdd': BinaryAdd, 'BinaryMultiply': BinaryMultiply, 'Sub': Subtract,
+                     # 'Divide_no_nan': Divide_no_nan, 'Usub': Usub,
+                     'Div': Div, 'Pow': Pow, 'Powrounded': Powrounded, 'Abs': Abs, 'sign': Sign, 'Square': Square,
+                     'sqrt': Sqrt, 'log': Log, 'log1p': Log1p, 'cos': Cos, 'sin': Sin, 'tan': Tan, 'acos': Acos,
+                     'asin': Asin, 'atan': Atan, 'tanh': Tanh, 'cosh': Cosh, 'sinh': Sinh,
+                     'Xor': Xor, 'BinaryNot': BinaryNot,
+                     'Ne': Ne, 'Lt': Lt, 'Le': Le, 'Gt': Gt, 'Ge': Ge, 'Ifte': Ifte,
+                     'Round': Round,
+                     'BinaryMin': BinaryMin, 'BinaryMax': BinaryMax, 'BinaryAnd': BinaryAnd, 'BinaryOr': BinaryOr, 'Eq': Eq}
 
 
-# inline_operator_dict2 = {'and': And, 'or': Or, '<>': Neq}
+# inline_operator_dict2 = {'and': And, 'or': Or, '<>': Ne}
 
 
-def expr_sympify(expr, evaluate=True, eval_locals=None):
+def expr_sympify(expr, evaluate=None, eval_locals=None):
     """
     Returns a simplified expression using sympify.
     - sympify the expression
@@ -989,10 +1029,10 @@ def expr_sympify(expr, evaluate=True, eval_locals=None):
     Lastly, it is recommended that you not use I, E, S, N, C, O, or Q
     """
 
-    local_sympy_dict.update(eval_locals or {})
+    loadable_ops_dict.update(eval_locals or {})
 
     try:
-        expr_sym = sympy.sympify(expr, evaluate=evaluate, locals=local_sympy_dict)
+        expr_sym = sympy.sympify(expr, evaluate=evaluate, locals=loadable_ops_dict)
         # try:  # todo
         #     expr_sym2 = expr_sym.factor()
         #     if expr_sym != expr_sym2:
@@ -1000,14 +1040,17 @@ def expr_sympify(expr, evaluate=True, eval_locals=None):
         # except Exception as ex:
         #     print('fdsfdsahds')
         if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I):
-            raise Exception(f'Simplification failed for expression: {expr_sym}')
+            raise ArithmeticError(f'Simplification failed for expression: {expr_sym}')
         return expr_sym
 
-    except ValueError:
-        return 'nan'  # 'nan' always evaluates to nan. ALl nan bugs should be solved.
-    except Exception as ex:
-        raise Exception(f'sympify_1: {expr} reason: ({ex})')
-
+    except ValueError as ex:
+        # return 'nan'  # 'nan' always evaluates to nan. ALl nan bugs should be solved.
+        raise ValueError(f'NaN in {ex}')
+    except AttributeError as ex:
+        # print(f'sfeh: This sympy bug happens, when sympifying "True": {ex}')
+        return sympy.true if expr else sympy.false
+    # except Exception as ex:
+    #     raise Exception(f'sympify_1: {expr} reason: ({ex})')
 
 # sympy_constants = {
 #     sympy.numbers.Zero: 0,
@@ -1075,76 +1118,82 @@ def labels_from_nestedexpr(labels_nested_list, result_accum):
 #     tflow = tf.pow
 # #     expr_sym = 'BinaryMax({}, {})'
 # #     xtype = (tuple([float, float]), float)
-"""
-Converts a sympy expression to TensorFlow.
-"""
 
-import sympy as sp
-import tensorflow as tf
-
-
-loadable_ops_dict = {'Add': BinaryAdd, 'Sub': Subtract, 'Divide_no_nan': Divide_no_nan,
-                     'Div': Div, 'Pow': Power, 'Powrounded': Powrounded, 'Abs': Abs, 'sign': Sign, 'square': Square,
+loadable_ops_dict = {'BinaryAdd': BinaryAdd, 'BinaryMultiply': BinaryMultiply, 'Sub': Subtract,
+                     # 'Divide_no_nan': Divide_no_nan, 'Usub': Usub,
+                     'Div': Div, 'Pow': Pow, 'Powrounded': Powrounded, 'Abs': Abs, 'sign': Sign, 'Square': Square,
                      'sqrt': Sqrt, 'log': Log, 'log1p': Log1p, 'cos': Cos, 'sin': Sin, 'tan': Tan, 'acos': Acos,
-                     'asin': Asin, 'atan': Atan, 'tanh': Tanh, 'Xor': Xor, 'BinaryNot': BinaryNot,
-                     'Neq': Neq, 'Lt': Lt, 'Le': Le, 'Gt': Gt, 'Ge': Ge,'Usub': Usub, 'Ifte': Ifte,
-                     'BinaryMin': BinaryMin, 'BinaryMax': BinaryMax, 'BinaryOr': BinaryOr,
+                     'asin': Asin, 'atan': Atan, 'tanh': Tanh, 'sinh': Sinh, 'cosh': Cosh, 'Xor': Xor, 'BinaryNot': BinaryNot,
+                     'Ne': Ne, 'Lt': Lt, 'Le': Le, 'Gt': Gt, 'Ge': Ge, 'Ifte': Ifte,
+                     'BinaryMin': BinaryMin, 'BinaryMax': BinaryMax, 'BinaryAnd': BinaryAnd, 'BinaryOr': BinaryOr,
                      'Round': Round}
 
 # TODO_LOADABLE_LATER = { 'Multiply': Multiply, 'And': And, 'Or': Or, 'Eq': Eq, 'Max': Max, 'Min': Min}
 
-loadable_inline_operator_dict = {'+': BinaryAdd, '-': Subtract, '*': BinaryMultiply, '/': Div, '**': Power,
-                                 '==': BinaryEq, '!=': Neq, '<': Lt, '<=': Le, '>': Gt, '>=': Ge,
+loadable_inline_operator_dict = {'+': BinaryAdd, '-': Subtract, '*': BinaryMultiply, '/': Div, '**': Pow,
+                                 '==': Eq, '!=': Ne, '<': Lt, '<=': Le, '>': Gt, '>=': Ge,
                                  '&': BinaryAnd, '|': BinaryOr}
 loadable_ops_dict.update(loadable_inline_operator_dict)
 
-
 totf = {
     # sympy.Symbol: 'tf': lambda x: tf.cons
-    sp.Min: tf.minimum,
-    sp.Max: tf.maximum,
-    sp.Add: tf.add,
-    sp.Mul: tf.multiply,
-    sp.Pow: tf.pow,
-    sp.Abs: tf.abs,
+    sympy.Min: tf.minimum,
+    sympy.Max: tf.maximum,
+    sympy.Add: tf.add,
+    sympy.Mul: tf.multiply,
+    sympy.Pow: tf.pow,
+    sympy.Abs: tf.abs,
 
-    sp.Not: tf.logical_not,
-    sp.And: tf.logical_and,
-    sp.Or: tf.logical_or,
-    sp.Xor: tf.logical_xor,
+    sympy.Not: tf.logical_not,
+    sympy.And: tf.logical_and,
+    sympy.Or: tf.logical_or,
+    sympy.Xor: tf.math.logical_xor,
 
-    sp.Equality: tf.equal,
-    sp.Unequality: tf.not_equal,
-    sp.GreaterThan: tf.greater_equal,
-    sp.StrictGreaterThan: tf.greater,
-    sp.LessThan: tf.less_equal,
-    sp.StrictLessThan: tf.less,
+    sympy.Equality: tf.equal,
+    sympy.Unequality: tf.not_equal,
+    sympy.GreaterThan: tf.greater_equal,
+    sympy.StrictGreaterThan: tf.greater,
+    sympy.LessThan: tf.less_equal,
+    sympy.StrictLessThan: tf.less,
 
-    sp.N: tf.math.round,
+    sympy.N: tf.math.round,
 
-    sp.log: tf.log,
-    sp.cos: tf.cos,
-    sp.sin: tf.sin,
-    sp.tan: tf.tan,
-    sp.acos: tf.acos,
-    sp.asin: tf.asin,
-    sp.atan: tf.atan,
-    sp.tanh: tf.tanh,
+    sympy.log: tf.math.log,
+    sympy.cos: tf.cos,
+    sympy.sin: tf.sin,
+    sympy.tan: tf.tan,
+    sympy.acos: tf.acos,
+    sympy.asin: tf.asin,
+    sympy.atan: tf.atan,
+    sympy.tanh: tf.tanh,
 
-    BinaryMin: tf.minimum,
-    BinaryMax: tf.maximum,
-    Round: tf.round,
-    Ifte: tf.where_v2,
+    sympy.sign: tf.sign,
+
+    # BinaryAnd: tf.add,
+    # BinaryMin: tf.minimum,
+    # BinaryMax: tf.maximum,
+    # Round: tf.round,
+    # Ifte: tf.where,
+
+    sympy.ITE: tf.where,  # sfeh:test this
+    sympy.re: lambda x: tf.convert_to_tensor(x, dtype=tf.dtypes.float32),  # gotcha, comes up rndomly
 }
 
-sympy_to_node = {Subtract: Subtract, sympy.div: Div, sympy.Pow: Power, Powrounded: Powrounded, sympy.Abs: Abs,
-                 Divide_no_nan: Divide_no_nan,
+# Sfeh:error "has no attribute 'tflow'" ->
+sympy_to_node = {Subtract: Subtract, sympy.div: Div, sympy.Pow: Pow, Powrounded: Powrounded, sympy.Abs: Abs,
+                 # Divide_no_nan: Divide_no_nan,
                  sympy.sign: Sign, Square: Square, sympy.sqrt: Sqrt, sympy.log: Log, Log1p: Log1p,
                  sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos, sympy.asin: Asin,
-                 sympy.atan: Atan, sympy.tanh: Tanh, sympy.And: BinaryAnd, sympy.Xor: Xor,
-                 sympy.Not: Not, sympy.Unequality: Neq, sympy.StrictLessThan: Lt,
-                 sympy.LessThan: Le, sympy.StrictGreaterThan: Gt, sympy.GreaterThan: Ge,
-                 Usub: Usub, Ifte: Ifte, BinaryMin: BinaryMin, BinaryMax: BinaryMax, BinaryOr: BinaryOr}
+                 sympy.atan: Atan, sympy.tanh: Tanh,  sympy.sinh: Sinh,  sympy.cosh: Cosh, sympy.Xor: Xor,
+                 sympy.Not: Not, sympy.Ne: Ne, sympy.Lt: Lt,
+                 sympy.Le: Le, sympy.Gt: Gt, sympy.Ge: Ge,
+                 # Usub: Usub,
+                 Ifte: Ifte, sympy.And: BinaryAnd, Eq: Eq, BinaryOr: BinaryOr,
+                 BinaryMultiply: BinaryMultiply}
+sympy_to_node.update({sympy.Mul: BinaryMultiply, sympy.Max: BinaryMax, sympy.Min: BinaryMin, sympy.Add: BinaryAdd,
+                      sympy.Eq: Eq, sympy.Ne: Ne})
+# todo sympy_to_node mit mapx
+# todo gotcha sympy.re comes up randomly
 
 
 # todo_sympytonode = {sympy.Add: Add, sympy.Mul: Multiply, sympy.Max: Max, sympy.Min: Min, sympy.Or: Or, sympy.Equality: Eq, Piecewise: Piecewise}
@@ -1164,15 +1213,27 @@ def sympy_to_tensorflow(expr, tensors_dict=None):
     -- check symbol
     --
 
-    Bugs/Gotchas:
+    Bugs/gotchas:
 
-    sympify('True')  -> True
-    sympify('1')==True
+    sympify('True')             -> True
+    sympify('1')==True          ->
+    sympify('~(True)')          -> -2
+    sympify('~(False)')         -> -1
+    sympify('a <= Min(a, b)')   ->
+
+    sympy.logic.boolalg.ITE has only boolean inputs
+    evaluate=None/false
+
+    sympy.logic.boolalg.ITE is not If-then-else
+    sympy.cosh can emerge out of sin-stuff
     """
     # shape = tensors[list(tensors.keys())[0]].get_shape()  # sfeh:open:workaround:
 
-    # ==Bug-handling==  sp.sympify('True')->True is no sympy expression anymore
-    if isinstance(expr, bool):
+    # ==Bug-handling==  sympy.sympify('True')->True is no sympy expression anymore
+    if isinstance(expr, bool):  # e.g. '1'
+        return tf.constant(expr, dtype=tf.dtypes.bool)
+    if isinstance(expr, (bool, sympy.logic.boolalg.BooleanAtom)):
+        expr = True if isinstance(expr, sympy.logic.boolalg.BooleanTrue) else False  # sfeh:collect sympy bug gotcha bug
         return tf.constant(expr, dtype=tf.dtypes.bool)
 
     # the following lines are not required, when sympy filters for bad expressions earlier
@@ -1193,8 +1254,25 @@ def sympy_to_tensorflow(expr, tensors_dict=None):
                 return tf.constant(float(expr_eval), dtype=tf.dtypes.float32)
 
     else:  # Operator # len(expr.args) > 0:  # sfeh: line can be removed or replaced
+        if isinstance(expr, sympy.Piecewise):
+            _revlist = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
+            _revlist = [[sympy_to_tensorflow(xx, tensors_dict=tensors_dict) for xx in list(x)] for x in _revlist]
+            otherwise = _revlist[0][0]  # aka the last "True" condition
+            for x in _revlist[1:]:
+                otherwise = tf.where(x[1], x[0], otherwise)
+            return otherwise
+        try:
+            tf_fun = totf[type(expr)]
+        except KeyError:
+            try:
+                tf_fun = type(expr).tflow  # sfeh
+            except Exception as ex:
+                print('aaa', type(expr), expr, type(expr) in sympy_to_node)
+                # ignore:
+                # -> sympy.conjugate
+                tf_fun = expr.tflow  # todo todotodo delete ### binarymax,
+
         tf_args = [sympy_to_tensorflow(x, tensors_dict=tensors_dict) for x in expr.args]
-        tf_fun = totf[type(expr)]
         try:
             result = tf_fun(*tf_args)  # fits, if the arguments match the expected arguments exactly Add(a, b)
         except TypeError:
@@ -1233,10 +1311,10 @@ def sympy_to_nestedlist(expr):
 if __name__ == '__main__':
 
     ns = {
-        'a': sp.Symbol('a', real=True),
-        'b': sp.Symbol('b', real=True),
-        'c': sp.Symbol('c', bool=True),
-        'd': sp.Symbol('d', bool=True),
+        'a': sympy.Symbol('a', real=True),
+        'b': sympy.Symbol('b', real=True),
+        'c': sympy.Symbol('c', bool=True),
+        'd': sympy.Symbol('d', bool=True),
     }
 
     tensors = {
@@ -1245,67 +1323,83 @@ if __name__ == '__main__':
         'c': tf.constant([True, False, True, False, True, False], dtype=tf.dtypes.bool),
         'd': tf.constant([True, True, True, True, True, True], dtype=tf.dtypes.bool)
     }
-
+    tst = [
+        '5', '1', '0', '0.5', '-1', 'True', 'False',
+        'c & True', 'c | False', '~c',
+        'a<1', 'a<b', 'a<=b', 'a>=b', 'a>b', 'a==b', 'a!=b', 'a',
+        # 'oo', 'zoo', 'I',
+        'a + 1', 'a + 2', 'a*2', 'a - 2', 'a/2', 'a < 2', 'a**2', '2/a',
+        'a*b*2', 'a+b+a+2+4', 'Min(a, b, 3)', 'Max(a, b, 4, a**2, a+b)', 'a<3',
+        'Piecewise((a, c), (b, d), (a+b, True))',
+        'Eq(4, 4.0)',
+        # 'Square((BinaryMin(-2.176629, b) - Abs(a)))', 'Round(-123.333334234) + Round(b)',
+        # 'Ifte(c, 1, 2)', '1 < BinaryMax(2, Ifte(1 < a, 1, 1))', 'BinaryMax(a+1, 2**(5-b))'
+    ]
+    tst_custom = [
+        'Ifte(a, b, c)',
+        '(((0.326675 * b_2) - c_9) + (Ifte((-c_9 < b_5), c_7, Ifte((Square(Gain_6) < BinaryMax(a_2, Ifte((c_9 < '
+        'c_4), -Gain_3, Gain_5))), c_9, c_4))))',
+        'BinaryMax(a, 2)',
+        'BinaryMin(b, b)',
+        'Ifte(True, a, 3)',
+        'sin(asin(b))',
+        'And(False, True)',
+        'BinaryAdd(-1.490149, 14.0)',
+        'Ifte(False, (3+a), 3)',
+        'Eq(4, 4.0)',
+        'Lt(a, a)',
+        'BinaryOr(Ne(False, False), False)',
+        'sqrt(5 * a)',
+        'BinaryMultiply(log(acos(-0.212976)), asin(2))',
+        'BinaryNot(False)',
+        'acos(0.5)',
+        'Round(1.2345)',
+        'BinaryMin(Ifte(True, BinaryMultiply(a, 20.0), acos(-0.5)), 1)',
+        'Div(BinaryAdd(13.159398, 19.284178), 1)',
+        'Pow(a, b)',
+        'BinaryAdd(-2, BinaryMin(Ifte(True, 1, b), 8))',
+        '(BinaryOr(True, True) & c)',
+        'Ifte(BinaryAnd(False, True), b, 0.046948)',
+        'Ifte(Ne(True, Lt(Sub(a, 2), 1)), 1, 2)',
+        'cos(tan(Square(BinaryMultiply(BinaryAdd(Round(Ifte(Ne(Ge(b, 15), True), 7, Sub(a, 16.5))), 5), 4))))'
+    ]
+    todo_problems = ['Ifte(Lt(Ifte(Eq(Min(b, 1), 3), Max(a, b), b), 0), 0, 2)']
 
     def test_basic_tfconversion():
-        tst = [
-            '5', '1', '0', '0.5', '-1', 'True', 'False',
-            'c & True', 'c | False', '~c',
-            'a<1', 'a<b', 'a<=b', 'a>=b', 'a>b', 'a==b', 'a!=b', 'a',
-            # 'oo', 'zoo', 'I',
-            'a + 1', 'a + 2', 'a*2', 'a - 2', 'a/2', 'a < 2', 'a**2', '2/a',
-            'a*b*2', 'a+b+a+2+4', 'Min(a, b, 3)', 'Max(a, b, 4, a**2, a+b)', 'a<3',
-            # 'Square((BinaryMin(-2.176629, b) - Abs(a)))', 'Round(-123.333334234) + Round(b)',
-            # 'Ifte(c, 1, 2)', '1 < BinaryMax(2, Ifte(1 < a, 1, 1))', 'BinaryMax(a+1, 2**(5-b))'
-        ]
+        # sfeh:open tests
 
-        tst2 = ['BinaryMax(a, 2)']  # sfeh:open tests
         for t in tst:
-            x = sp.sympify(t, locals=ns)
+            x = sympy.sympify(t, locals=ns)
             x = sympy_to_tensorflow(x, tensors_dict=tensors)
 
             print(f'{t} \t{x}')
-
-
-    def test_custom_sympyfunctions():
-
-        # from plagih.node_labels import *
-
-        tst = ['BinaryMax(a, 2)']  # sfeh:open tests
-        for t in tst:
-            x = sp.sympify(t, locals=ns)
-            x = sympy_to_tensorflow(x, tensors_dict=tensors)
-
-            print(f'{t} \t{x}')
-
 
     def test_sympify():
         print('Running sympify example')
-        exprs = [
-            '(((0.326675 * b_2) - c_9) + (Ifte((-c_9 < b_5), c_7, Ifte((Square(Gain_6) < BinaryMax(a_2, Ifte((c_9 < c_4), -Gain_3, Gain_5))), c_9, c_4))))']
+
         # expr = '-b_0*sign(re(asdW**2)) - 0.004073'
         # expr = 'BinaryMin(-1 - 1 + sqrt(1)'
-        # expr = 'BinaryMax(2.202197, (Abs(cartVel) - sqrt(cartVel)))'
+        # expr = 'BinaryMax(2.202197, (Abs(b) - sqrt(b)))'
         # expr = '(vel + vel)'
-        # expr = 'cartPos - 0.4375'
+        # expr = 'a - 0.4375'
 
-        # obs = ['cartPos', 'cartVel']
+        # obs = ['a', 'b']
         # symloc = {x: sympy.symbols(x, real=True, imaginary=False) for x in obs}
         # sympy_symbol_dict = {'a': sympy.symbols('a', real=True, imaginary=False),
         #                      'b': sympy.symbols('b', real=True, imaginary=False)}
-        # sympify('sign(((cartPos * cartVel) ** 151))', symloc)
+        # sympify('sign(((a * b) ** 151))', symloc)
 
-        # obs = {'cartVel': 0.5, 'cartPos': -0.8}
+        # obs = {'b': 0.5, 'a': -0.8}
         # sympex = plagih_sympify(expr, eval_locals=obs)
-        x = expr_sympify(exprs[0])
-        print(x)
+        for x in tst + tst_custom:
+            sx = expr_sympify(x)
+            print(sx)
 
 
     def test_this():
         x = expr_sympify(
             '(((0.326675 * b_2) - c_9) + (Ifte((-c_9 < b_5), c_7, Ifte((Square(Gain_6) < BinaryMax(a_2, Ifte((c_9 < c_4), -Gain_3, Gain_5))), c_9, c_4))))')
         print(x)
-
 
     # test_basic_tfconversion()
     # test_this()
@@ -1340,4 +1434,7 @@ if __name__ == '__main__':
         print(f'sympy_to_node = {{{st}}}')
 
 
-    print_relevant_subclasses()
+    test_basic_tfconversion()  # sfeh all tests
+    test_sympify()
+    # x = expr_sympify('Ifte(True, 1, 2)')
+    # print(x)

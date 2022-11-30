@@ -12,8 +12,8 @@ from plagih.util import *
 
 def main():  # argv sys.argv[1:]
     """
-
-   """
+    sfeh:command line only optional!
+    """
 
     parser = argparse.ArgumentParser(description='Plagih genetic programming (PLAusible Genetic Improvements to Heuristics, name changes!)')
 
@@ -21,7 +21,7 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-name', type=str, help='If the run has a name')
     parser.add_argument('-rootdir', type=Path, help='A custom output folder (rootdir). Not stable yet.')  # sfeh
     parser.add_argument('-file_backup', type=str, help='rootdir->where the backup file is located')
-    parser.add_argument('-path_data_csv', '-samples_csv', '-data_csv', type=str, help='rootdir->path of the data (.csv-file)')
+    parser.add_argument('-path_data_csv', '-data_csv', type=str, help='rootdir->path of the data (.csv-file)')
     parser.add_argument('-path_origin', type=str)
     parser.add_argument('-load_config', type=Path, metavar='CONFIG_YAML', default=None, help='The config file in the run directory.')
     parser.add_argument('-load_backup', '-backup', type=str, help='Starting a run from a backup file (backup.p).')
@@ -53,15 +53,13 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-mp_cores', type=int, default=4, help='Maximum amount of cores for parallelisation.')
 
     # For developers only, halting at some code
-    parser.add_argument('-testrun', action='store_true',
-                        help='SFEH (not used yet): Start a large test run. no origin (scratch) -> restart -> paretoentry as origin, new run -> restart -> analyze')
     parser.add_argument('-develop', '-dev', action='store_true', help='Extensive debugging and fintree testing during the developing process.')
-    parser.add_argument('-less_files', action='store_true', help='Creating less files (e.g. no pareto analysis), "-analysis" trumps this command')
-    parser.add_argument('-no_files', action='store_true', help='SFEH, unused. Create no files. dummy.')
+    parser.add_argument('-less_files', action='store_true', help='Less files (e.g. no pareto analysis), "-analysis" trumps this command')
 
     parser.add_argument('-test', type=str, help='Continuous tests, start several test runs, reload them, etc...')  # todo
 
     args = parser.parse_args()
+
     conf = Config(args)  # hyperparameters are in config
 
     path_origin, path_data_csv = None, None  # sfeh:open
@@ -80,7 +78,7 @@ def main():  # argv sys.argv[1:]
 
     if args.analyze:
         if args.force_new_run:
-            raise Exception('Dude. Either analyze stuff or force a new run?')
+            raise Exception('Cannot -analyze and -force_new_run, remove one option.')
         try:
             gp.run_backup(path_load_custom_backup=args.load_backup, mode='load')
         except FileNotFoundError as no_file_ex:
@@ -94,9 +92,7 @@ def main():  # argv sys.argv[1:]
                 gp.printpl('i', f'No backup file found at {ex}. Starting a new run.')
 
         if args.pop_kill:
-            gp.pop_base = []
-            gp.pop_tmp = []
-            # sfeh debug this!
+            gp.pop_kill()
 
         gp.evoloop(args.gen_additionally)
 
@@ -120,9 +116,13 @@ def main():  # argv sys.argv[1:]
     sys.exit()
 
 
-def autotests():
-    # sfeh:open
+def _test_random_pop():
+    # 1. set names
     pass
+
+
+# def autotests():
+#     # sfeh:open
 
 
 if __name__ == "__main__":

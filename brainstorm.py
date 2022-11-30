@@ -18,7 +18,7 @@ from pathlib import Path
 import yaml
 import csv
 import sympy
-#
+
 # sys.path.append(os.path.join(sys.path[0], "../"))
 from instabot import Bot  # , utils
 
@@ -261,6 +261,6 @@ from instabot import Bot  # , utils
 bot = Bot(max_likes_per_day=200, follow_delay=random.randint(120, 350), like_delay=random.randint(12, 28),
                        comment_delay=random.randint(18, 34),
                        device='samsung_galaxy_s7')
-bot.login(username="simon.fehrer", password="logiton015")
+bot.login(username="schlechtmensch2", password="Logiton015@")
 
 print(bot)

@@ -9,7 +9,7 @@ from distutils.spawn import find_executable
 
 DEBUG_DUMMY = True  # Use this to find codeblocks that are just interesting during development
 TEST_DUMMY = True  # sfeh: actually use this later! check trees, check if all ops are usable,
-print_dummy = 'wwwaaggiiff'  # todo print funktion in util mit buchstaben, die aber überschrieben werden können
+print_dummy = 'wwaaggiiff'  # todo print funktion in util mit buchstaben, die aber überschrieben werden können
 
 
 def printyeah(message_type, message_str):
@@ -44,6 +44,10 @@ class BColors:
 
     BLACK2 = '\033[40m'
     RED2 = '\033[41m'
+
+
+class Printpl:
+    pass
 
 
 def pickle_dump(path, data):
@@ -89,7 +93,7 @@ def print_warning(message_type, text, print_type=None):
 
 def path_make_dir(p: Path):
     """
-    Creates the folder and files according to run specified through naming (E. g. MTC200_MSE_scratch)
+    Creates the folder and files according to run specified through naming (E.g. MTC200_MSE_scratch)
     """
     folder = p if len(p.suffix) == 0 else p.parent
     folder.mkdir(parents=True, exist_ok=True)

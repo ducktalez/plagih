@@ -80,10 +80,10 @@ class ExplainableGP:
         """
         evolve_loop = {
             # Reproduction (10%)
-            'Repro': {'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.09,
+            'Repro': {'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.09 + 0.05,
                       'custom_params': {}},
-            'Rsympy': {'evolve_name': 'reproduce', 'evolve_rate': 0.05,
-                       'custom_params': {'simplify': True}},
+            # 'Rsympy': {'evolve_name': 'reproduce', 'evolve_rate': 0.05,  # todo gave to repro above
+            #            'custom_params': {'simplify': True}},
             # sfeh 0.03
             'Pareto': {'evolve_name': 'revive paretofront', 'evolve_rate': 0.01,
                        'custom_params': {}},
@@ -172,6 +172,11 @@ class ExplainableGP:
         self.evolve_tags = list(self.evolve_loop.keys()) + list(self.evolve_random.keys())
         return
 
+    def pop_kill(self):
+        """Delets the current population"""
+        self.pop_base = []
+        self.pop_tmp = []
+
     def verify_evolution_params(self, evolve_dict):
         """
         Updates tournament size and evolve rates
@@ -197,9 +202,7 @@ class ExplainableGP:
         if gen_additionally:
             printdummy = copy.deepcopy(self.conf.gen_max)
             self.conf.gen_max = max(self.conf.gen_max, self.gen_id + gen_additionally)
-            self.printpl('i',
-                         f'Adding {gen_additionally} more generations in gen {self.gen_id}, '
-                         f'increasing gen_max from {printdummy} to {self.conf.gen_max}.')
+            self.printpl('i', f'Adding {gen_additionally} more generations in gen {self.gen_id}, increasing gen_max from {printdummy} to {self.conf.gen_max}.')
 
         # sfeh check if any roots
         # yaml_dump(self.rootdir / 'used_config.yaml', self.conf, print_type=self.print_type)
@@ -303,16 +306,19 @@ class ExplainableGP:
             if success:
                 self.gens_since_last_pareto = 0
                 printyeah('a', f'Paretofront: New entry. parsimony: {par} fitness: {fit:6.4f}')
+                try:
+                    # sfeh: trying to simplify the tree for a even improved pareto # todo
+                    symtree = evolve_reduce_simplify(fintree.get_evotree(), force=True)
+                    symmeta = self.finalize_tree_get_meta(symtree)
+                    symtree_fin = FinalizedTree(symtree, symmeta)
+                    if symtree_fin.get_parsimony() < fintree.get_parsimony():
+                        printyeah('a', f'Paretofront: Even further simplified! '
+                                       f'{symtree_fin.get_parsimony()} < {fintree.get_parsimony()}')
 
-                # sfeh: trying to simplify the tree for a even improved pareto # todo
-                symtree = evolve_reduce_simplify(fintree.get_evotree(), force=True)
-                symmeta = self.finalize_tree_get_meta(symtree)
-                symtree_fin = FinalizedTree(symtree, symmeta)
-                if symtree_fin.get_parsimony() < fintree.get_parsimony():
-                    printyeah('a', f'Paretofront: Even further simplified! '
-                                   f'{symtree_fin.get_parsimony()} < {fintree.get_parsimony()}')
+                    self.genloop_performance_append_tree(symtree, tag='sfeh-sympifyed_pareto')
 
-                self.genloop_performance_append_tree(symtree, tag='sfeh-sympifyed_pareto')
+                except Exception as ex:
+                    print(f'SFEH: this tree could todo whatever {ex}')
                 obsolete_entries = [x for x in paretofront if
                                     x.get_fitness() > fintree.get_fitness() and x.get_parsimony() >= fintree.get_parsimony()]
                 if obsolete_entries:
@@ -383,7 +389,8 @@ class ExplainableGP:
                             print_warning('www', f'Evolve reproduce failed: {ex}', print_type=self.conf.print_type)
                             # raise ex  # sfeh debug
 
-                    self.genloop_performance_append_tree(evotree, tag)  # pop_append_evotree anyways... it was worth a try :P
+                    self.genloop_performance_append_tree(evotree,
+                                                         tag)  # pop_append_evotree anyways... it was worth a try :P
 
             elif evolve_name == 'mutate point':
                 """
@@ -391,6 +398,7 @@ class ExplainableGP:
                 """
                 for nn in range(evolve_num):
                     evotree = pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
+                    todocopy = copy.deepcopy(evotree)  # todo delete
                     evotree = self.tb.evolve_mutate_point(evotree)
                     # fintree.meta.last_evolution = tag
                     self.genloop_performance_append_tree(evotree, tag)
@@ -447,7 +455,7 @@ class ExplainableGP:
                         # fintree = self.tb.finalize(etree)  # ==>state
                         self.genloop_performance_append_tree(atree, tag=tag)
                         self.genloop_performance_append_tree(btree, tag=tag)
-                    except Exception as ex:
+                    except ValueError as ex:
                         print_warning("www", f'Crossover failed: {ex}')
                         # sfeh: mostly 1-noded trees
 
@@ -480,11 +488,11 @@ class ExplainableGP:
             else:
                 self.printpl('iii', f'{missing_trees}/{self.conf.pop_max} trees are missing in this population!')
 
-            for _ in range(self.conf.pop_max - len(self.pop_next)):
-                # sfeh aka create trees here if desired. Is this desired? ->correct tag, ->correct randoms
-                # while len(self.pop_next) < self.conf.pop_max:
-                evotree = self.tb.pop_random(custom_params, origin=self.origin)
-                self.genloop_performance_append_tree(evotree, tag='taggyRnd')  # sfeh
+            # for _ in range(self.conf.pop_max - len(self.pop_next)):
+            #     # sfeh aka create trees here if desired. Is this desired? ->correct tag, ->correct randoms
+            #     # while len(self.pop_next) < self.conf.pop_max:
+            #     evotree = self.tb.pop_random(custom_params, origin=self.origin)
+            #     self.genloop_performance_append_tree(evotree, tag='taggyRnd')  # sfeh
 
         return
 
@@ -586,13 +594,15 @@ class ExplainableGP:
         """
         try:
             with plt.rc_context(rc=pyplot_rc_tex):
-                fig, axs = plt.subplots(nrows=3, ncols=1, figsize=(16, 9), sharex='all')  # , gridspec_kw={'height_ratios': [1,1,1]}
+                fig, axs = plt.subplots(nrows=3, ncols=1, figsize=(16, 9),
+                                        sharex='all')  # , gridspec_kw={'height_ratios': [1,1,1]}
                 fig.tight_layout()
                 for tag in self.evolve_tags:
                     # ['fitness_train', 'parsimony', 'lentree', 'evolve_num', 'count']
                     axs[0].plot(self.monitor_df[tag]['fitness_train'], label=f'{tag}')
                     axs[1].plot(self.monitor_evol[tag]['parsimony'], label=f'{tag}')
-                    axs[2].plot((self.monitor_evol[tag]['lentree'] / self.monitor_evol[tag]['evolve_num']), label=f'{tag}')
+                    axs[2].plot((self.monitor_evol[tag]['lentree'] / self.monitor_evol[tag]['evolve_num']),
+                                label=f'{tag}')
 
                 plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
                 path = self.rootdir / f'monitoring_evolutions.pdf'
@@ -613,19 +623,30 @@ class ExplainableGP:
         """
         if DEBUG_DUMMY:
             # if trees are 100% safely created, tree checks are not required. Useful when trying out new gp-operators.
-            self.tb.check_all(evotree, fatal=True)
+            self.tb.check_all(evotree, fatal=False)  # sfeh fatal=True? (raise)
 
         try:
-            meta = self.lut[str(evotree)]
-        except KeyError as ex:
+            meta = self.lut[str(evotree)]  # fixed nodes not relevant
+        except KeyError:
             try:
                 meta = self.finalize_tree_get_meta(evotree)
             except ValueError as ex:
-                print_warning('wwww', f'Could not append fintree to population because: {ex}', print_type=self.conf.print_type)
+                print_warning('www', f'Could not append fintree to population because: {ex}',
+                              print_type=self.conf.print_type)
                 return  # sfeh:print
+            except ArithmeticError as ex:
+                print_warning('www', f'ArithmeticError in expr: {ex}', print_type=self.conf.print_type)
+                return
+            except TypeError as ex:
+                print_warning('ww', f'TypeError: {ex}', print_type=self.conf.print_type)
+                return
             except Exception as ex:
-                print_warning('www', f'Could not append tree to population because: {ex}\n'
-                                     f'=>tree: {evotree}', print_type=self.conf.print_type)
+                try:
+                    meta = self.finalize_tree_get_meta(evotree)  # todo todotodo remove
+                except Exception:
+                    pass
+                print_warning('ww', f'Could not append tree to population because: {ex}\n'
+                                    f'=>tree: {evotree}', print_type=self.conf.print_type)
                 return
 
         fintree = FinalizedTree(evotree, meta)
@@ -662,19 +683,20 @@ class ExplainableGP:
             # print_warning('wwww', f'Parsimony too high, last evolution: {fintree.meta.last_evolution}', print_type=self.print_type)  # sfeh care about wwww. should not
             raise ValueError(f'Tree too complex: {parsimony} > {self.conf.parsimony_max}')
 
-        expr_raw = evotree.eval_expr()
+        expr_raw = evotree.eval_expr_str()
+        expr_sym = expr_sympify(expr_raw)
+        treeobs = evotree.get_observation_list()  # todo makethis irrelevant
 
-        try:
-            expr_sym = expr_sympify(expr_raw)
-        except ValueError as ex:
-            print_warning('wwww', f'fintree: {evotree} had ex: {ex}', print_type=self.conf.print_type)
-            raise ValueError(ex)
-
-        treeobs = evotree.get_observation_list()
         try:
             fitness = self.kernel.eval_tf(expr_sym, treeobs, only_fitness=True)
             # if fitness != fitness or fitness == float('inf'):
             #     raise Exception(f"fitness_train is: '{fitness}'")  # eg very wrong values that exceed the float-range
+        except ValueError as ex:
+            raise ValueError(f'eval-ex nan: {ex}')
+        except TypeError as ex:
+            # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16, float32, float64, int8, int16, int32, int64, complex64, complex128
+            # probably because datatypes in trees do not match (xtypes, build). Happens in random tree generation
+            raise TypeError(f'eval-ex-te: {ex}')
         except Exception as ex:
             raise Exception(f'eval-ex: {ex}')
 
@@ -776,4 +798,4 @@ if __name__ == '__main__':
     # nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
     nstr = '["+:fix",["-:fix",["Ifte",["True"],["sin",["2"]],["/",["2.043"],["4"]]],["cartVel"]],["-1.3"]]'
     tr = tree_from_nested_string(nstr)
-    check_expression_reconstruction(tr)
+    check_tree_loadable_reconstruction(tr)

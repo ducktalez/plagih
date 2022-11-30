@@ -238,21 +238,50 @@ class Node:
         else:
             return []
 
-    def eval_expr(self):
+    def eval_expr_todo(self):
         """
-        Accumulate and return the complete expression the fintree holds recursively
         """
 
         expr_str = self.label.nlabel
-        expr_str = str(expr_str)  # todo
+        expr_str = f'"{expr_str}"'  # todo
 
         if self.childs:
-            cc_expr = [cc.eval_expr() for cc in self.childs]
+            cc_expr = [cc.eval_expr_todo() for cc in self.childs]
             cc_expr = ', '.join(cc_expr)
 
-            expr_str = f'{expr_str}({cc_expr})'
+            expr_str = f'{expr_str}, {cc_expr}'
 
-        return expr_str
+        return f'[{expr_str}]'
+
+    def eval_nested(self):
+        """
+
+        """
+        expr_str = self.label.nlabel
+        expr_str = f'"{expr_str}"'  # todo
+
+        if self.childs:
+            cc_expr = [cc.eval_nested() for cc in self.childs]
+            cc_expr = ', '.join(cc_expr)
+
+            expr_str = f'{expr_str}, {cc_expr}'
+
+        return f'{expr_str}'
+
+    def eval_expr_str(self):
+        """
+        Accumulate and return the complete expression the fintree holds recursively
+        todo directly to sympy in a different method
+        """
+
+        _expr = f'{self.label.nlabel}'
+
+        if self.childs:
+            _cc_expr = ', '.join([cc.eval_expr_str() for cc in self.childs])
+
+            _expr = f'{_expr}({_cc_expr})'
+
+        return _expr
 
     # def eval_expr_todo_old(self):
     #     """
@@ -392,7 +421,7 @@ class Node:
             raise  # sfeh
 
         for ii, cc in enumerate(self.childs):
-            cc.check_typing(self.get_xtype_in()[ii])
+            cc.check_typing(self.get_xtype_in()[ii], fatal=fatal)
 
         return True
 

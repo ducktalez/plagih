@@ -27,7 +27,8 @@ class Config:
         except Exception as ex:
             conf = {}
 
-        self.print_type = 'wwwwaaaggggiiiff' if args.print_all else conf.get('print_type', 'wwaaaggiiff')  # (a)lert-pareto, (w)arning, (g)eneration, (i)nfo, (f)ile written
+        # (a)lert-pareto, (w)arning, (g)eneration, (i)nfo, (f)ile written
+        self.print_type = 'wwwwaaaggggiiiff' if args.print_all else conf.get('print_type', 'wwaaaggiiff')
 
         # can be updated from everywhere
         self.action_name = args.action_name or conf.get('action_name', None)

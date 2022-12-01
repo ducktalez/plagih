@@ -285,7 +285,7 @@ def merge_paretos(path_main):
             xx, yy = np.array(tuples).T
             ax.step(xx, yy, linestyle='dotted', marker='.', label=f'action {ii}', where='post')
 
-        ax.set(xlabel='complexity', ylabel='regression error', xlim=(0, None), ylim=(0, None))  # 1.05  # top * 1.05 for better style
+        ax.set(xlabel='complexity', ylabel='regression error', xlim=(0, None), ylim=(0, None))  # top * 1.05 (style)
         ax.legend(loc='lower left')
 
         path_paretocombined = path_main / f'pareto_combined.pdf'

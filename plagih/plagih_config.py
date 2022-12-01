@@ -29,8 +29,6 @@ class Config:
 
         self.print_type = 'wwwwaaaggggiiiff' if args.print_all else conf.get('print_type', 'wwaaaggiiff')  # (a)lert-pareto, (w)arning, (g)eneration, (i)nfo, (f)ile written
 
-        self.dc = conf.get('dc', [])
-
         # can be updated from everywhere
         self.action_name = args.action_name or conf.get('action_name', None)
         self.kernel_name = args.kernel_name or conf.get('kernel_name', 'regression')
@@ -39,7 +37,7 @@ class Config:
         self.tree_depth_max = int(conf.get('tree_depth_max', 10))  #: 10,  # maximum Tree depth for entire run
         self.parsimony_max = conf.get('parsimony_max', 50)
 
-        # run size
+        # run/computation restrictions
         self.pop_max = args.pop_max or int(conf.get('pop_max', 1000))  #: 1000,  # amount is never tested
         self.gen_max = args.gen_max or int(conf.get('gen_max', 1000))  # : 1000,  # Maximum amount of generations
 
@@ -56,6 +54,7 @@ class Config:
             print_warning('w', "Complexity measurement 'tree_edit_distance' is not possible without origin!\n"
                                "Using 'tree_node_count' instead.", print_type=self.print_type)
 
+        self.dc = conf.get('dc', [])  # drop columns in data
         self.action_name = args.action_name or conf.get('action_name', None)  # sfeh type=float or maybe sometimes bool-.-.-
 
         self.mp_cores = args.mp_cores or conf.get('mp_cores', 1)

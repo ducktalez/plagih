@@ -100,13 +100,6 @@ def path_make_dir(p: Path):
     return p
 
 
-def file_dump(path, data, verbose='SKIPsfeh', print_type=None):
-    path_make_dir(path)
-    with Path.open(path, 'w') as file:
-        file.write(data)
-        printez(verbose, f'{path}', print_type=print_type)  # .as_posix()
-
-
 pyplot_size = (3.6, 2.7)  # default: (6.4, 4.8) S: (4, 3)  XXL: (16, 9)  M: (4.8, 3.6) (4.4, 3.3)
 plplot_size_up = (3.6, 3.6)
 

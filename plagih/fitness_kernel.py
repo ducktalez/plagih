@@ -5,7 +5,6 @@ from matplotlib import pyplot as plt
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-
 import tensorflow
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -118,15 +117,6 @@ class RegressionKernel(Kernel):
                 self.pen_explorate = v
         return
 
-    def fitness_compare(self, fitness, fitness_compared):
-        """
-        ...maybe, the fitness should ALWAYS be better the lower?
-        """
-        if fitness_compared is None:
-            return True
-        else:
-            return fitness < fitness_compared
-
     def histogram_bins(self, action_minmax):
         """
 
@@ -224,7 +214,7 @@ class RegressionKernel(Kernel):
             exploration_korridor = tensorflow.abs(
                 solution - self.origin_results)  # the complete range that is 'okay' to actually explore here.
             exploration = (
-                        self.origin_results - results_kernel)  # the difference to the origin - which we want to "penalize" here
+                    self.origin_results - results_kernel)  # the difference to the origin - which we want to "penalize" here
             explore_penalize = tensorflow.maximum(exploration_korridor - exploration,
                                                   0)  # removes the above mentioned expected exploration from the penalize process
             penalize_exploration = self.pen_explorate * (
@@ -306,7 +296,6 @@ class ClassificationKernel(Kernel):
         pass
 
     def tf_classify_labels_map(self, result, action):
-
         """
         For the CLASSIFY kernel, creates a TensorFlow (TF) sub-graph defined as a sequence of boolean conditions based upon
         the quantity of true class labels provided in the samples-csv.
@@ -338,15 +327,6 @@ class ClassificationKernel(Kernel):
                                      lambda: label_rules[1])
 
         return pred_label
-
-    def fitness_compare(self, fitness1, fitness2):
-        """
-
-        """
-        if fitness2 is None:
-            return True
-        else:
-            return fitness1 < fitness2
 
     def get_fitness_extreme_function(self, *args, **kwargs):
         return min(*args, **kwargs)

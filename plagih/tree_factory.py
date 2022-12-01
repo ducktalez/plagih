@@ -111,12 +111,12 @@ def node_simplification(node: Node):
 
 def evolve_reduce_simplify(tree: Node, completely=True, force=False):
     """
+    # todo this function does currently not work
     Reducing a fintree to its most basic form with sympify.
     (completely = False: reduce just one branch. if you wanted to have more complexity)
 
     """
-    # self.state = STATE_BUILDING  #  ==>state
-    tree_copy = copy.deepcopy(tree)  # todo todo this function does currently not work
+    tree_copy = copy.deepcopy(tree)
     if completely:  # reduce the complete fintree
         nodes_lv0 = tree.get_nodes_at_depth(0, allow_fixed=False)  # only required for fixed-core trees
         for cc in nodes_lv0:
@@ -846,7 +846,8 @@ def rec_build_tree(lst, depth=0, obs_list=None):
     else:
         childs = [rec_build_tree(x, depth=depth + 1, obs_list=obs_list) for x in lst[1:]]
         node.set_childs(childs)
-        # raise Exception(f'Tree-building list length {len(lst[1:])} does not match the nodes arity {node.get_arity()}.')  # todo
+        # todo: The arities do not match (anymore)
+        raise Exception(f'Tree-building list length {len(lst[1:])} does not match the nodes arity {node.get_arity()}.')
 
     return node
 

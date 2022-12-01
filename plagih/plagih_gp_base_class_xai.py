@@ -679,8 +679,7 @@ class ExplainableGP:
         """
         parsimony = evotree.eval_parsimony(self.conf.complexity_measure, origin_tree=self.origin.fintree)
         if parsimony > self.conf.parsimony_max:
-            # sfeh last_evolution leads to error atm
-            # print_warning('wwww', f'Parsimony too high, last evolution: {fintree.meta.last_evolution}', print_type=self.print_type)  # sfeh care about wwww. should not
+            # sfep:discuss: information about last evolution? currently not saved in tree
             raise ValueError(f'Tree too complex: {parsimony} > {self.conf.parsimony_max}')
 
         expr_raw = evotree.eval_expr_str()

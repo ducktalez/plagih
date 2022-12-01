@@ -27,13 +27,11 @@ Useful information:
         - 'And(a<2, a < 5)'
         - sympy.simplify('sign(-a)') -> -sign(a)
 
-    todo https://docs.sympy.org/latest/modules/stats.html
     todo sympy facttor (up/downfactor), so it adds stuff together
     sfeh:discus simplify/unify
 """
 
 import os
-
 os.environ["KMP_WARNINGS"] = "FALSE"
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -54,7 +52,6 @@ class NodeLabel:
     nlabel = None
     arity = None
     xtype = None
-
     tflow = None
     insym = None
 
@@ -80,7 +77,7 @@ class Operator(NodeLabel, sympy.Function):
 
     @classmethod
     def eval(cls, *args):
-        return cls.insym(*args)   # just if no eval is implemented
+        return cls.insym(*args)  # just if no eval is implemented
 
     def tflambda(self):
         pass
@@ -472,7 +469,7 @@ class Log1p(Operator, NoSympyClass):
 
     @classmethod
     def eval(cls, a):
-        return sympy.log(a + 1)   # just if no eval is implemented
+        return sympy.log(a + 1)  # just if no eval is implemented
 
 
 class Cos(Operator):
@@ -675,7 +672,6 @@ class BinaryMin(Operator):
     #     return sympy.Min(a, b)
 
     def _sympy_(self, *args):
-
         print('binMin todo SUCKS')
         return self.eval(*args)
 
@@ -995,7 +991,8 @@ loadable_ops_dict = {'BinaryAdd': BinaryAdd, 'BinaryMultiply': BinaryMultiply, '
                      'Xor': Xor, 'BinaryNot': BinaryNot,
                      'Ne': Ne, 'Lt': Lt, 'Le': Le, 'Gt': Gt, 'Ge': Ge, 'Ifte': Ifte,
                      'Round': Round,
-                     'BinaryMin': BinaryMin, 'BinaryMax': BinaryMax, 'BinaryAnd': BinaryAnd, 'BinaryOr': BinaryOr, 'Eq': Eq}
+                     'BinaryMin': BinaryMin, 'BinaryMax': BinaryMax, 'BinaryAnd': BinaryAnd, 'BinaryOr': BinaryOr,
+                     'Eq': Eq}
 
 
 # inline_operator_dict2 = {'and': And, 'or': Or, '<>': Ne}
@@ -1051,6 +1048,7 @@ def expr_sympify(expr, evaluate=None, eval_locals=None):
         return sympy.true if expr else sympy.false
     # except Exception as ex:
     #     raise Exception(f'sympify_1: {expr} reason: ({ex})')
+
 
 # sympy_constants = {
 #     sympy.numbers.Zero: 0,
@@ -1123,7 +1121,8 @@ loadable_ops_dict = {'BinaryAdd': BinaryAdd, 'BinaryMultiply': BinaryMultiply, '
                      # 'Divide_no_nan': Divide_no_nan, 'Usub': Usub,
                      'Div': Div, 'Pow': Pow, 'Powrounded': Powrounded, 'Abs': Abs, 'sign': Sign, 'Square': Square,
                      'sqrt': Sqrt, 'log': Log, 'log1p': Log1p, 'cos': Cos, 'sin': Sin, 'tan': Tan, 'acos': Acos,
-                     'asin': Asin, 'atan': Atan, 'tanh': Tanh, 'sinh': Sinh, 'cosh': Cosh, 'Xor': Xor, 'BinaryNot': BinaryNot,
+                     'asin': Asin, 'atan': Atan, 'tanh': Tanh, 'sinh': Sinh, 'cosh': Cosh, 'Xor': Xor,
+                     'BinaryNot': BinaryNot,
                      'Ne': Ne, 'Lt': Lt, 'Le': Le, 'Gt': Gt, 'Ge': Ge, 'Ifte': Ifte,
                      'BinaryMin': BinaryMin, 'BinaryMax': BinaryMax, 'BinaryAnd': BinaryAnd, 'BinaryOr': BinaryOr,
                      'Round': Round}
@@ -1184,7 +1183,7 @@ sympy_to_node = {Subtract: Subtract, sympy.div: Div, sympy.Pow: Pow, Powrounded:
                  # Divide_no_nan: Divide_no_nan,
                  sympy.sign: Sign, Square: Square, sympy.sqrt: Sqrt, sympy.log: Log, Log1p: Log1p,
                  sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos, sympy.asin: Asin,
-                 sympy.atan: Atan, sympy.tanh: Tanh,  sympy.sinh: Sinh,  sympy.cosh: Cosh, sympy.Xor: Xor,
+                 sympy.atan: Atan, sympy.tanh: Tanh, sympy.sinh: Sinh, sympy.cosh: Cosh, sympy.Xor: Xor,
                  sympy.Not: Not, sympy.Ne: Ne, sympy.Lt: Lt,
                  sympy.Le: Le, sympy.Gt: Gt, sympy.Ge: Ge,
                  # Usub: Usub,
@@ -1192,6 +1191,8 @@ sympy_to_node = {Subtract: Subtract, sympy.div: Div, sympy.Pow: Pow, Powrounded:
                  BinaryMultiply: BinaryMultiply}
 sympy_to_node.update({sympy.Mul: BinaryMultiply, sympy.Max: BinaryMax, sympy.Min: BinaryMin, sympy.Add: BinaryAdd,
                       sympy.Eq: Eq, sympy.Ne: Ne})
+
+
 # todo sympy_to_node mit mapx
 # todo gotcha sympy.re comes up randomly
 
@@ -1270,7 +1271,7 @@ def sympy_to_tensorflow(expr, tensors_dict=None):
                 print('aaa', type(expr), expr, type(expr) in sympy_to_node)
                 # ignore:
                 # -> sympy.conjugate
-                tf_fun = expr.tflow  # todo todotodo delete ### binarymax,
+                tf_fun = expr.tflow  # todo delete? delete case above? ### binarymax,
 
         tf_args = [sympy_to_tensorflow(x, tensors_dict=tensors_dict) for x in expr.args]
         try:
@@ -1365,6 +1366,7 @@ if __name__ == '__main__':
     ]
     todo_problems = ['Ifte(Lt(Ifte(Eq(Min(b, 1), 3), Max(a, b), b), 0), 0, 2)']
 
+
     def test_basic_tfconversion():
         # sfeh:open tests
 
@@ -1373,6 +1375,7 @@ if __name__ == '__main__':
             x = sympy_to_tensorflow(x, tensors_dict=tensors)
 
             print(f'{t} \t{x}')
+
 
     def test_sympify():
         print('Running sympify example')
@@ -1400,6 +1403,7 @@ if __name__ == '__main__':
         x = expr_sympify(
             '(((0.326675 * b_2) - c_9) + (Ifte((-c_9 < b_5), c_7, Ifte((Square(Gain_6) < BinaryMax(a_2, Ifte((c_9 < c_4), -Gain_3, Gain_5))), c_9, c_4))))')
         print(x)
+
 
     # test_basic_tfconversion()
     # test_this()

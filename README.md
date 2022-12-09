@@ -60,6 +60,13 @@ Attention: If you want to write your own code, look for important developer info
 - Genetic Backpropagation
 - transforming the whole population into one graph, bottom to top. Do something with the "reversed" tree
 
+More ideas:
+- EM algo gp/nn process
+  Step 1: Train a gp process to replace a NN.
+  Step 2: Allow the pareto candidates as input to a nn, making the network smaller
+- propagate matrizes of gradual improvements
+
+Matrix
 
 ## Intro
 
@@ -181,7 +188,7 @@ Possible operators are:
 - `trees/#all_trees.tex` - A Latex file with all computational trees visualized
 
 
-## ====Everything from here is garbage====
+## ====Everything below here is garbage====
 
 ## ideas for names
 - The Elves and the Shoemaker
@@ -194,9 +201,20 @@ Possible operators are:
     - Tensorflow-evaluation (offline)
     - strongly typed
 
+### Tree architecture
+The evolution process uses the Node/Fintree class, but there are 4 tree versions which need conversion.
+1. Loadable trees (nested List, E.g. ['+':fix, ['a'], ['b']])
+2. The tree class
+3. Sympy-trees
+4. Tensorflow graphs
+
+Sympy trees need a lot of conversion options.
+
 ## Description
 
-The Genetic-Programming Framework is primarily intended to extend a human written program to achieve the same performance as a (better) NN solution. Decisive for the "explainability" is the number of changes to the reference program that are necessary to get to the target solution ("tree_edit_distance").    
+The Genetic-Programming Framework is primarily intended to extend a human written program to achieve the same 
+performance as a (better) NN solution. Decisive for the "explainability" is the number of changes to the reference 
+program that are necessary to get to the target solution ("tree_edit_distance").    
 
 PLAGIH stands for PLAusible Genetic Improvements to Heuristics. The name will probably be changed soon.
 This is a Project resulting from my Masters Thesis (with yet unknown name). 
@@ -206,11 +224,6 @@ plausible addition to the original program which the developer does understand.
 
 
 ### All included Plagih stuff
-
-## Run Plagih
-Required packages: `tensorflow` `tensorflow-gpu` `numpy` `sympy` `Apted` `pickle`
-
-Optional: `tikzplotlib` (For additional Latex-graph)
 
 
 ## Developer information

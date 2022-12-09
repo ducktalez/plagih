@@ -59,7 +59,7 @@ class ExplainableGP:
         self.pop_base = []  # sfeh:discuss maybe better names?
 
         # Lookup-table for tree(-expressions) and tits fitness/parsimony. Improving runtime a lot!
-        self.lut = {}  # using str(), hash() is only temporary, repr() currently not required for LUT info
+        self.lut = {}
 
         # monitoring
         self.time_genstart = time.perf_counter()
@@ -175,7 +175,7 @@ class ExplainableGP:
     def pop_kill(self):
         """Delets the current population"""
         self.pop_base = []
-        self.pop_tmp = []
+        self.pop_next = []
 
     def verify_evolution_params(self, evolve_dict):
         """
@@ -429,7 +429,7 @@ class ExplainableGP:
                         evotree = self.tb.evolve_mutate_branch_depth(evotree, build_size, p_full=p_full)
 
                     elif size_mode == 'branch_nodes':  # building a branch with an amount of nodes
-                        evotree = self.tb.evolve_mutate_branch_nodes(evotree, build_size, p_full=p_full)
+                        evotree = self.tb.evolve_mutate_branch_nodes(evotree, build_size, self.conf.tree_depth_max)  # p_full=p_full)
                     else:
                         raise
                     evotree = self.tb.evolve_prune(evotree)  # sfeh:performance runtime-wise, do this somewhere else

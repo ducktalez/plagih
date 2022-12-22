@@ -307,7 +307,7 @@ class ExplainableGP:
                 self.gens_since_last_pareto = 0
                 printyeah('a', f'Paretofront: New entry. parsimony: {par} fitness: {fit:6.4f}')
                 try:
-                    # sfeh: trying to simplify the tree for a even improved pareto # todo
+                    # sfeh: trying to simplify the tree for a even improved pareto # sfeh:open
                     symtree = evolve_reduce_simplify(fintree.get_evotree(), force=True)
                     symmeta = self.finalize_tree_get_meta(symtree)
                     symtree_fin = FinalizedTree(symtree, symmeta)

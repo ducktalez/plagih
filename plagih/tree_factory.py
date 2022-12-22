@@ -678,7 +678,9 @@ class TreeBuilder:
             checks.extend([tree.get_max_depth() <= self.tree_depth_max])
         faults = len(checks) - sum(checks)
         if faults > 0:
-            raise
+            if fatal:
+                raise
+            print_warning('ww', f'Tree failed check: {tree}')
         return faults  # returns true if all checks are true
 
 
@@ -863,7 +865,6 @@ def rec_build_tree(lst, depth=0, obs_list=None):
     else:
         childs = [rec_build_tree(x, depth=depth + 1, obs_list=obs_list) for x in lst[1:]]
         node.set_childs(childs)
-        # todo: The arities do not match (anymore)
         raise Exception(f'Tree-building list length {len(lst[1:])} does not match the nodes arity {node.get_arity()}.')
 
     return node

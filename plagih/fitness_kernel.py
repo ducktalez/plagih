@@ -1,10 +1,8 @@
 import os
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import numpy as np
 from matplotlib import pyplot as plt
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
 import tensorflow
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -61,8 +59,6 @@ class Kernel:
         self.obs_names = list(df.columns)
         self.obs_names.remove(action_name)
 
-        self.fitness_sign = -1
-
         df = df.astype(
             'float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
         self.data_train, self.data_control = train_test_split(df, test_size=0.2,
@@ -70,13 +66,6 @@ class Kernel:
 
     def eval_tf(self, *args, **kwargs):
         return float('nan')
-
-    def get_fitness_extreme_function(self, *args, **kwargs):
-        """
-        probably return min(*args, **kwargs)
-        e.g. the regression kernel
-        """
-        return min(*args, **kwargs)
 
     def tf_get_pairwise_fitness(self, *arg):
         pass
@@ -95,8 +84,6 @@ class RegressionKernel(Kernel):
         #     if option in kernel_name:
         #         self.kernel_version_plot_yaxis += plot_axis_string
         kernel_name = conf.kernel_name
-        self.precision = conf.precision or 6
-        self.bounded = 'bounded' in kernel_name
         self.discrete = 'discrete' in kernel_name
         self.tanhpenalize = 'tanhpenalize' in kernel_name  # sfeh only makes sense when bounded
 
@@ -109,8 +96,6 @@ class RegressionKernel(Kernel):
         sfeh_help = {'explorate01': 0.1,
                      'explorate05': 0.5}
 
-        self.fitness_sign = -1
-
         self.pen_explorate = 0.1
         for k, v in sfeh_help.items():
             if k in kernel_name:
@@ -119,7 +104,6 @@ class RegressionKernel(Kernel):
 
     def histogram_bins(self, action_minmax):
         """
-
         :param action_minmax: action min and max, to display the whole range of actions
         :return: bins for a beautiful histogram
         """
@@ -206,7 +190,6 @@ class RegressionKernel(Kernel):
             tf_error = tensorflow.abs
 
         regression_errors = tf_error(pairwise_diff)
-        # improved_errors = regression_errors  # sfeh not yet required... only one error
 
         if self.exploration_risk and self.origin_results is not None:
             # tf_error = tensorflow.abs  # sfeh this is required (??)
@@ -272,7 +255,7 @@ class RegressionKernel(Kernel):
                 f"fitness is: '{fitness}'")  # sfeh or Exception happens, eg when values are soo wrong that it leaves the float-range
 
         tf_results['mean_error'] = round(float(tf_results['mean_error']),
-                                         self.precision)  # sfeh option: round directly in tensorflow
+                                         PRECISION)  # sfeh option: round directly in tensorflow
 
         if only_fitness:  # reduced evaluation, only mean_error is returned... (may save memory as only one value gets returned)
             return tf_results['mean_error']

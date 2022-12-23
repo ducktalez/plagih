@@ -176,7 +176,7 @@ class FloatConstant(Constant):
         self.nlabel = nlabel
         self.expr_sym = self.nlabel
 
-    def mutate_self_filter(self, filter_type='gaussian_filter', precision=6, *args, **kwargs):  # sfeh:open
+    def mutate_self_filter(self, filter_type='gaussian_filter', *args, **kwargs):  # sfeh:open
         """
 
         """
@@ -185,7 +185,7 @@ class FloatConstant(Constant):
                 constant = self.nlabel + np.random.normal(0, 0.1)  # sfeh better adjustments?
             else:
                 constant = np.random.normal(self.nlabel, 0.1)  # sfeh better adjustments?
-            self.nlabel = round(constant, precision)  # sfeh:discussion be careful, might create zero sometimes
+            self.nlabel = round(constant, PRECISION)  # sfeh:discussion be careful, might create zero sometimes
 
 
 class BoolConstant(Constant):

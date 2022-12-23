@@ -368,7 +368,7 @@ class Node:
         #     *[cc.eval_mutable_nodes(xtype_out=xtype_out, allow_root=allow_root) for cc in self.childs])))
         return node_list
 
-    def evolve_mutate_filter_branch(self, precision=6):
+    def evolve_mutate_filter_branch(self):
         """
         Recursively filter the nodes in the branch of fintree
         sfeh:   random filter all terminal nodes /
@@ -380,9 +380,9 @@ class Node:
         # self.state = STATE_BUILDING  #  ==>state
         if self.get_arity() > 0:
             for cc in self.childs:
-                cc.evolve_mutate_filter_branch(precision=precision)
+                cc.evolve_mutate_filter_branch()
         else:
-            self.label.mutate_self_filter(filter_type='gaussian_filter', precision=precision)
+            self.label.mutate_self_filter(filter_type='gaussian_filter')
 
     # def finalize_set_nodepath(self, nodepath):
     #     """

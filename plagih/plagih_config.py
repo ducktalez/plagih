@@ -24,15 +24,12 @@ class Config:
         try:
             with Path.open(args.load_config, 'r') as file:
                 conf = yaml.load(file, Loader=yaml.FullLoader)
-        except AttributeError as ex:  # was Exception
+        except AttributeError:
             conf = {}
-        # except Exception as ex:
-        #     conf = {}
 
         # (a)lert-pareto, (w)arning, (g)eneration, (i)nfo, (f)ile written
         self.print_type = 'wwwwaaaggggiiiff' if args.print_all else conf.get('print_type', 'wwaaaggiiff')
 
-        # can be updated from everywhere
         self.action_name = args.action_name or conf.get('action_name', None)
         self.kernel_name = args.kernel_name or conf.get('kernel_name', 'regression')
 

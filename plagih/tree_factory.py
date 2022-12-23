@@ -167,12 +167,11 @@ class TreeBuilder:
                              lambda: random.randint(1, 20)],  # 0 has actually no purpose (except as being an action)
                      bool: [lambda: random.choice([True, False])]}  # sfeh:discussion
 
-    def __init__(self, obs_names, conf, operator_pool=None, root_xtype=float, precision=6):
+    def __init__(self, obs_names, conf, operator_pool=None, root_xtype=float):
         self.operators_add(operator_pool)
         self.constants_add()
         self.observations_add(obs_names)
         self.root_xtype = root_xtype
-        self.precision = precision
         if conf:
             self.tree_depth_max = conf.tree_depth_max
             self.parsimony_max = conf.parsimony_max
@@ -368,7 +367,7 @@ class TreeBuilder:
         """
         value = random.choice(self.distributions[xtype])()
         if xtype == float:
-            value = float(round(value, self.precision))
+            value = float(round(value, PRECISION))
             return FloatConstant(value)
         elif xtype == bool:
             return BoolConstant(value)
@@ -463,7 +462,7 @@ class TreeBuilder:
         # mutate_filter = 'gaussian_filter'  # sfeh:future
 
         node = np.random.choice(evotree.eval_mutable_nodes())
-        node.evolve_mutate_filter_branch(self.precision)
+        node.evolve_mutate_filter_branch(PRECISION)
 
         # sfeh ==>state
         return evotree
@@ -691,10 +690,9 @@ def helper_evolve_params_branch(custom_params, tree_depth_max=10, parsimony_max=
     sfeh:delete if possible
     """
     build_spec = custom_params.get('build_spec')
-
     size_mode = build_spec['size_mode']
-
     mean_min_max_var = list(build_spec.get('mean_min_max_var'))  # (base, min, max, normal_distrib)->list
+
     if 'depth' in size_mode:
         max_dummy = tree_depth_max
     elif 'nodes' in size_mode:
@@ -804,7 +802,7 @@ class OriginTree:
 
             used_observations = tree.get_observation_list()
             tf_origin_results = kernel.eval_tf(expr_sym, used_observations)
-            fitness_train = round(float(tf_origin_results['mean_error']), kernel.precision)
+            fitness_train = round(float(tf_origin_results['mean_error']), PRECISION)
             if kernel.exploration_risk:
                 kernel.origin_results = tf_origin_results['results_kernel']  # opt update after getting origin-results
 

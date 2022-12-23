@@ -10,6 +10,7 @@ from distutils.spawn import find_executable
 DEBUG_DUMMY = True  # Use this to find codeblocks that are just interesting during development
 TEST_DUMMY = True  # sfeh: actually use this later! check trees, check if all ops are usable,
 print_dummy = 'wwaaggiiff'  # todo print funktion in util mit buchstaben, die aber überschrieben werden können
+PRECISION = 6
 
 
 def printyeah(message_type, message_str):

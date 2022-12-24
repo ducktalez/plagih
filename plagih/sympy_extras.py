@@ -32,14 +32,16 @@ Useful information:
 """
 
 import os
+
 os.environ["KMP_WARNINGS"] = "FALSE"
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
+from plagih.util import *
+
 import tensorflow as tf
 import re
-
-import numpy as np
 import sympy
+import numpy as np
 
 tf.compat.v1.enable_eager_execution()
 
@@ -1208,8 +1210,9 @@ sympy_to_node.update({sympy.Mul: BinaryMultiply, sympy.Max: BinaryMax, sympy.Min
 # }
 
 
-def sympy_to_tensorflow(expr, tensors_dict=None):
+def sympy_to_tensorflow(expr, pandas_data=None):
     """
+    todo tensors_dict -> just the data
     - check terminal-node
     -- check symbol
     --
@@ -1244,7 +1247,7 @@ def sympy_to_tensorflow(expr, tensors_dict=None):
     # ==Terminal nodes==
     elif expr.is_Atom:
         if expr.is_Symbol:
-            result = tensors_dict[expr.name]  # sfeh:discuss placeholder
+            result = pandas_data[expr.name]  # sfeh:discuss placeholder
             return result
 
         else:
@@ -1257,7 +1260,7 @@ def sympy_to_tensorflow(expr, tensors_dict=None):
     else:  # Operator # len(expr.args) > 0:  # sfeh: line can be removed or replaced
         if isinstance(expr, sympy.Piecewise):
             _revlist = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
-            _revlist = [[sympy_to_tensorflow(xx, tensors_dict=tensors_dict) for xx in list(x)] for x in _revlist]
+            _revlist = [[sympy_to_tensorflow(xx, pandas_data=pandas_data) for xx in list(x)] for x in _revlist]
             otherwise = _revlist[0][0]  # aka the last "True" condition
             for x in _revlist[1:]:
                 otherwise = tf.where(x[1], x[0], otherwise)
@@ -1273,7 +1276,7 @@ def sympy_to_tensorflow(expr, tensors_dict=None):
                 # -> sympy.conjugate
                 tf_fun = expr.tflow  # todo delete? delete case above? ### binarymax,
 
-        tf_args = [sympy_to_tensorflow(x, tensors_dict=tensors_dict) for x in expr.args]
+        tf_args = [sympy_to_tensorflow(x, pandas_data=pandas_data) for x in expr.args]
         try:
             result = tf_fun(*tf_args)  # fits, if the arguments match the expected arguments exactly Add(a, b)
         except TypeError:

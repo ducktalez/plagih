@@ -18,6 +18,7 @@ from plagih.tree_distances.tree_edit_distance import apted_distance
 from dataclasses import dataclass
 import itertools
 
+
 # logging.basicConfig(filename='example.log', filemode='a', level=logging.DEBUG)  # sfeh encoding='utf-8' maybe in the future
 
 # lol, lol. https://github.com/tensorflow/tensorflow/issues/27023 these messages are tingeling
@@ -133,6 +134,7 @@ class Node:
         return self.label.xtype[0]
 
     def get_xtype_out(self):
+        """type (float or bool), which is the nodes output"""
         return self.label.xtype[1]
 
     def is_root(self):
@@ -309,26 +311,6 @@ class Node:
         else:
             return max(cc.get_max_depth(depth=depth + 1) for cc in self.childs)
 
-    def eval_parsimony(self, complexity_measure, origin_tree=None, weights=None):
-        """
-        complexity_measure: compute the chosen distance by the user.
-        #     'tree_node_count': tree_get_size,
-        #     'tree_depth': tree_get_depth,
-        #     'tree_edit_distance': tree_parsimony_ted,
-        """
-        if complexity_measure == 'tree_node_count':  # number of nodes
-            return len(self)  # returns the number of nodes  # sfeh weights
-        elif complexity_measure == 'tree_edit_distance':  # tree_edit_distance, fintree-edit-distance
-            apted1 = self.eval_apted_notation()
-            apted2 = origin_tree.eval_apted_notation()
-            distance, mapping = apted_distance(apted1, apted2)  # sfeh the mapping could be handy somewhere
-            if weights is None:
-                return distance
-            else:
-                raise
-        else:
-            raise Exception(f'Complexity measurement not available: {complexity_measure}')
-
     def repair_depth(self, depth=0):
         """
         aka set_depth recursively for all nodes in a branch
@@ -445,6 +427,25 @@ class Node:
         """
         results = [self.check_depth_infos(fatal=fatal) if check_depth else 0]
         return sum(results)
+
+
+def eval_parsimony(tree: Node, complexity_measure, origin_tree: Node = None):
+    """
+    complexity_measure: compute the chosen distance by the user.
+    #     'tree_node_count': tree_get_size,
+    #     'tree_depth': tree_get_depth,
+    #     'tree_edit_distance': tree_parsimony_ted,
+
+    sfeh open: weights
+    """
+    if complexity_measure == 'tree_node_count':  # number of nodes
+        return len(tree)  # returns the number of nodes  # sfeh weights
+    elif complexity_measure == 'tree_edit_distance':  # tree_edit_distance, fintree-edit-distance
+        apted1 = tree.eval_apted_notation()
+        apted2 = origin_tree.eval_apted_notation()
+        distance, mapping = apted_distance(apted1, apted2)  # sfeh the mapping could be useful somewhere
+    else:
+        raise Exception(f'Complexity measurement not available: {complexity_measure}')
 
 # sfeh:discussion especially with mc: there can be more than one pareto entry with the same parsimony/fitness!
 

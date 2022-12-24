@@ -18,31 +18,16 @@ import numpy as np
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
 
-def pop_selection_tournament(pop_base, tourn_size=3):
-    """
-    The "main" selection mechanism,the tournament selection.
-    Chooses a 
-    """
-    tree_list = [np.random.choice(pop_base) for _ in range(tourn_size)]
-    fintree: 'FinalizedTree' = min(tree_list, key=lambda tree: tree.get_fitness())
-    evotree = fintree.get_evotree()
-    return copy.deepcopy(evotree)  # sfeh deepcopy not required if it is copied later
-
-
 class ExplainableGP:
     """
 
     """
 
-    def __init__(self, conf, rootdir, path_origin, path_data_csv, args):
+    def __init__(self, conf, rootdir, kernel, path_origin, tb):
         self.conf = conf
-        # self.develop = args.develop  # more testing and stuff during development phase
         self.time_start = time.perf_counter()
-        kernel = RegressionKernel(path_data_csv, conf)  # sfeh relative to rootdir? -> nah -> absolute path... discuss
         self.kernel = kernel
-        self.tb = TreeBuilder(kernel.obs_names, self.conf, root_xtype=float)
         self.origin = OriginTree(kernel, path_origin=path_origin)
-        # self.evolve_loop = EvolutionLoop()
         self.rootdir = rootdir
         self.gen_id = 0
 
@@ -78,70 +63,91 @@ class ExplainableGP:
         The evolve_dict is converted into a list of the population length.
         The evolve_loop is for the regular evolution, the evolve_random is especially required for the first generation.
         """
+        # evolve_loop = {
+        #     # Reproduction (10%)
+        #     'Repro': {'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.09 + 0.05,
+        #               'custom_params': {}},
+        #     # 'Rsympy': {'evolve_name': 'reproduce', 'evolve_rate': 0.05,  # todo gave to repro above
+        #     #            'custom_params': {'simplify': True}},
+        #     # sfeh 0.03
+        #     'Pareto': {'evolve_name': 'revive paretofront', 'evolve_rate': 0.01,
+        #                'custom_params': {}},
+        #
+        #     # Mutation (25%)
+        #     'Point': {'evolve_name': 'mutate point', 'evolve_rate': 0.05,
+        #               'custom_params': {}},
+        #
+        #     'BranchDF': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
+        #                  'custom_params': {
+        #                      'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 4, 0.8),
+        #                                     'p_full': 1.0}}},
+        #     'BranchDG': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
+        #                  'custom_params': {
+        #                      'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 5, 1),
+        #                                     'p_full': 0.5}}},
+        #     'BranchNF': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
+        #                  'custom_params': {
+        #                      'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 12, 3),
+        #                                     'p_full': 1.0}}},
+        #     'BranchNG': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
+        #                  'custom_params': {
+        #                      'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 15, 3),
+        #                                     'p_full': 0.5}}},
+        #     'BranchShrink': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
+        #                      'custom_params': {
+        #                          'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (1, 1, 1, 0),
+        #                                         'p_full': 0.5}}},
+        #
+        #     'FilterBO': {'evolve_name': 'filter optimize', 'evolve_rate': 0.03, 'tourn_size': 5,
+        #                  'custom_params': {'filter_mode': 'branch', 'filter_observations': True}},
+        #     'FilterB': {'evolve_name': 'filter optimize', 'evolve_rate': 0.02, 'tourn_size': 5,
+        #                 'custom_params': {'filter_mode': 'branch', 'filter_observations': False}},
+        #     'FilterP': {'evolve_name': 'filter optimize', 'evolve_rate': 0.03, 'tourn_size': 5,
+        #                 'custom_params': {'filter_mode': 'point', 'filter_observations': True}},
+        #
+        #     # Crossover (35%)
+        #     'Xover': {'evolve_name': 'crossover branch', 'evolve_rate': 0.20, 'custom_params': {}},
+        #
+        #     # Leftovers are automatically filled with random trees
+        #
+        #     # Random (25%)
+        #     'Rand1': {'evolve_name': 'random trees', 'evolve_rate': 0.05,
+        #               'custom_params': {
+        #                   'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 3, 4, 1), 'p_full': 1.0}}},
+        #     'Rand2': {'evolve_name': 'random trees', 'evolve_rate': 0.02,
+        #               'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1),
+        #                                                'p_full': 0.5}}},
+        #     'Rand3': {'evolve_name': 'random trees', 'evolve_rate': 0.10,
+        #               'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 3, None, 5),
+        #                                                'p_full': 0.5}}},
+        #     'Rand4': {'evolve_name': 'random trees', 'evolve_rate': 0.10,
+        #               'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 3, None, 5),
+        #                                                'p_full': 1.0}}},  # param 'max' can be None
+        # }
+
         evolve_loop = {
             # Reproduction (10%)
-            'Repro': {'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.09 + 0.05,
-                      'custom_params': {}},
-            # 'Rsympy': {'evolve_name': 'reproduce', 'evolve_rate': 0.05,  # todo gave to repro above
-            #            'custom_params': {'simplify': True}},
-            # sfeh 0.03
-            'Pareto': {'evolve_name': 'revive paretofront', 'evolve_rate': 0.01,
-                       'custom_params': {}},
-
-            # Mutation (25%)
-            'Point': {'evolve_name': 'mutate point', 'evolve_rate': 0.05,
-                      'custom_params': {}},
-
-            'BranchDF': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                         'custom_params': {
-                             'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 4, 0.8),
-                                            'p_full': 1.0}}},
-            'BranchDG': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                         'custom_params': {
-                             'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 5, 1),
-                                            'p_full': 0.5}}},
-            'BranchNF': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                         'custom_params': {
-                             'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 12, 3),
-                                            'p_full': 1.0}}},
-            'BranchNG': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                         'custom_params': {
-                             'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 15, 3),
-                                            'p_full': 0.5}}},
-            'BranchShrink': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                             'custom_params': {
-                                 'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (1, 1, 1, 0),
-                                                'p_full': 0.5}}},
-
-            'FilterBO': {'evolve_name': 'filter optimize', 'evolve_rate': 0.03, 'tourn_size': 5,
-                         'custom_params': {'filter_mode': 'branch', 'filter_observations': True}},
-            'FilterB': {'evolve_name': 'filter optimize', 'evolve_rate': 0.02, 'tourn_size': 5,
-                        'custom_params': {'filter_mode': 'branch', 'filter_observations': False}},
-            'FilterP': {'evolve_name': 'filter optimize', 'evolve_rate': 0.03, 'tourn_size': 5,
-                        'custom_params': {'filter_mode': 'point', 'filter_observations': True}},
-
-            # Crossover (35%)
-            'Xover': {'evolve_name': 'crossover branch', 'evolve_rate': 0.20, 'custom_params': {}},
-
-            # Leftovers are automatically filled with random trees
-
-            # Random (25%)
-            'Rand1': {'evolve_name': 'random trees', 'evolve_rate': 0.05,
-                      'custom_params': {
-                          'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 3, 4, 1), 'p_full': 1.0}}},
-            'Rand2': {'evolve_name': 'random trees', 'evolve_rate': 0.02,
-                      'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1),
-                                                       'p_full': 0.5}}},
-            'Rand3': {'evolve_name': 'random trees', 'evolve_rate': 0.10,
-                      'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 3, None, 5),
-                                                       'p_full': 0.5}}},
-            'Rand4': {'evolve_name': 'random trees', 'evolve_rate': 0.10,
-                      'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 3, None, 5),
-                                                       'p_full': 1.0}}},  # param 'max' can be None
+            'Repro': {'evolve_rate': 0.1,
+                    'selection': [self.pop_selection_tournament(tourn_size=3)],
+                      'evolution': None},
+            'Point': {'evolve_rate': 0.1,
+                      'selection': [self.pop_selection_tournament(tourn_size=3)],
+                      'evolution': lambda x: self.tb.evolve_mutate_point(x)},
+            'FilterBO': {'evolve_rate': 0.1,
+                         'selection': [self.pop_selection_tournament(tourn_size=3)],
+                         'evolution': lambda x: tb.evolve_mutate_filter_random(x, filter_mode='branch', filter_observations=True)},
+            'Xover': {'evolve_rate': 0.1,
+                      'selection': [self.pop_selection_tournament(tourn_size=3),
+                                    self.pop_selection_tournament(tourn_size=3)]},
+                      'evolution': lambda x: self.tb.evolve_crossover,
+            'Rand1': {'evolve_rate': 0.1,
+                      'selection': [],
+                      tb.pop_random(p_full=1, goaldepth_randomizer=np.clip(int(random.normalvariate(4, 1)), 1, 5), origin=self.origin)}
         }
+
         sum_rates = sum(x['evolve_rate'] for x in evolve_loop.values())
         if sum_rates != 1:
-            print_warning('w', f'Evolution rates do not add up to 1: {sum_rates}', print_type=self.conf.print_type)
+            print_warning('w', f'Evolution rates do not add up to 1: {sum_rates}')
 
         self.evolve_loop = self.verify_evolution_params(evolve_loop)
 
@@ -151,26 +157,43 @@ class ExplainableGP:
                                                                          'mean_min_max_var': (10, 3, None, 4),
                                                                          'p_full': 1.0}}}}
         else:
-            # try:  # sfeh still not sure about this
-            #     evolve_random = self.evolve_list_random['from_scratch']
-            # except:
-            evolve_random = {'Rand1': {'evolve_name': 'random trees', 'evolve_rate': 0.30,
-                                       'custom_params': {
-                                           'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (3.5, 2, 5, 1),
-                                                          'p_full': 1.0}}},
-                             'Rand2': {'evolve_name': 'random trees', 'evolve_rate': 0.30,
-                                       'custom_params': {
-                                           'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 2, 6, 1),
-                                                          'p_full': 0.5}}},
-                             'Rand3': {'evolve_name': 'random trees', 'evolve_rate': 0.40,
-                                       'custom_params': {'build_spec': {'size_mode': 'tree_nodes',
-                                                                        'mean_min_max_var': (12, 3, None, 5),
-                                                                        'p_full': 1.0}}}
+            # evolve_random = {'Rand1': {'evolve_name': 'random trees', 'evolve_rate': 0.30,
+            #                            'custom_params': {
+            #                                'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (3.5, 2, 5, 1),
+            #                                               'p_full': 1.0}}},
+            #                  'Rand2': {'evolve_name': 'random trees', 'evolve_rate': 0.30,
+            #                            'custom_params': {
+            #                                'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 2, 6, 1),
+            #                                               'p_full': 0.5}}},
+            #                  'Rand3': {'evolve_name': 'random trees', 'evolve_rate': 0.40,
+            #                            'custom_params': {'build_spec': {'size_mode': 'tree_nodes',
+            #                                                             'mean_min_max_var': (12, 3, None, 5),
+            #                                                             'p_full': 1.0}}}
+            #                  }
+
+            evolve_random = {'Rand1': {'evolve_rate': 0.30,
+                                       'evolution': tb.pop_random(p_full=1, goaldepth_randomizer=np.clip(int(random.normalvariate(3.5, 1)), 2, 5), origin=self.origin)},
+                             'Rand2': {'evolve_rate': 0.40,
+                                       'evolution': tb.pop_random(p_full=0.5, goaldepth_randomizer=np.clip(int(random.normalvariate(4, 1)), 2, 6), origin=self.origin)},
+                             'Rand3': {'evolve_rate': 0.30,
+                                       'evolution': tb.pop_random(p_full=1, goaldepth_randomizer=np.clip(
+                                           int(random.normalvariate(12, 3)), 3, 50), origin=self.origin)},
                              }
+
         self.evolve_random = self.verify_evolution_params(evolve_random)
 
         self.evolve_tags = list(self.evolve_loop.keys()) + list(self.evolve_random.keys())
         return
+
+    def pop_selection_tournament(self, tourn_size=3):
+        """
+        The "main" selection mechanism,the tournament selection.
+        Chooses a 
+        """
+        tree_list = [np.random.choice(self.pop_base) for _ in range(tourn_size)]
+        fintree: 'FinalizedTree' = min(tree_list, key=lambda tree: tree.get_fitness())
+        evotree = fintree.get_evotree()
+        return copy.deepcopy(evotree)  # sfeh deepcopy not required if it is copied later
 
     def pop_kill(self):
         """Delets the current population"""
@@ -189,7 +212,6 @@ class ExplainableGP:
         for k, v in evolve_dict.items():
             evolve_dict[k]['tourn_size'] = v.get('tourn_size', self.conf.tourn_size)
             evolve_dict[k]['evolve_num'] = int(v.get('evolve_rate') * self.conf.pop_max)
-            v['custom_params'] = v.get('custom_params', {})
         return evolve_dict
 
     # self.printpl('i', 'Using evolve rates from config')
@@ -202,10 +224,11 @@ class ExplainableGP:
         if gen_additionally:
             printdummy = copy.deepcopy(self.conf.gen_max)
             self.conf.gen_max = max(self.conf.gen_max, self.gen_id + gen_additionally)
-            self.printpl('i', f'Adding {gen_additionally} more generations in gen {self.gen_id}, increasing gen_max from {printdummy} to {self.conf.gen_max}.')
+            self.printpl('i',
+                         f'Adding {gen_additionally} more generations in gen {self.gen_id}, increasing gen_max from {printdummy} to {self.conf.gen_max}.')
 
         # sfeh check if any roots
-        # yaml_dump(self.rootdir / 'used_config.yaml', self.conf, print_type=self.print_type)
+        # yaml_dump(self.rootdir / 'used_config.yaml', self.conf)
 
         # self.pop.gens_since_last_pareto = 0
 
@@ -239,7 +262,7 @@ class ExplainableGP:
             if len(self.paretofront) == 0:
                 self.paretofront = [self.pop_next[0]]  # initialize
                 printez('a', f'Starting a new paretofront with parsimony: {self.paretofront[0].get_parsimony()} '
-                             f'fitness: {self.paretofront[0].get_fitness():6.4f}', self.conf.print_type)
+                             f'fitness: {self.paretofront[0].get_fitness():6.4f}')
 
             # tmp_pareto = pareto_from_pop(self.pop_next)  # sfeh:optional paretofront in each generation?
             self.paretofront = self.run_update_paretofront(self.paretofront)
@@ -348,10 +371,9 @@ class ExplainableGP:
 
             for tag, evolve_specs in self.evolve_random.items():
                 evolve_num = int(self.conf.pop_max * (evolve_specs['evolve_rate'] / total_rate))
-                custom_params = evolve_specs.get('custom_params')
 
                 for nn in range(evolve_num):
-                    evotree = self.tb.pop_random(custom_params, origin=self.origin)
+                    evotree = tb.pop_random(goaldepth_randomizer=None, goalnodes_randomizer, p_full, origin=self.origin)
                     self.genloop_performance_append_tree(evotree, tag)
         return
 
@@ -380,27 +402,23 @@ class ExplainableGP:
                 Reproduction
                 """
                 for nn in range(evolve_num):
-                    evotree = pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
+                    evotree = self.pop_selection_tournament(tourn_size=tourn_size)
                     if custom_params.get('simplify'):  # sfeh==>debug
                         try:
                             evotree = evolve_reduce_simplify(evotree, completely=False)
-                            # fintree.meta.last_evolution = tag
                         except Exception as ex:
-                            print_warning('www', f'Evolve reproduce failed: {ex}', print_type=self.conf.print_type)
+                            print_warning('www', f'Evolve reproduce failed: {ex}')
                             # raise ex  # sfeh debug
 
-                    self.genloop_performance_append_tree(evotree,
-                                                         tag)  # pop_append_evotree anyways... it was worth a try :P
+                    self.genloop_performance_append_tree(evotree, tag)  # pop_append_evotree anyways.. was worth a try
 
             elif evolve_name == 'mutate point':
                 """
                 Point mutation, one point (terminal or function) gets mutated.
                 """
                 for nn in range(evolve_num):
-                    evotree = pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
-                    todocopy = copy.deepcopy(evotree)  # todo delete
-                    evotree = self.tb.evolve_mutate_point(evotree)
-                    # fintree.meta.last_evolution = tag
+                    evotree = self.pop_selection_tournament(tourn_size=tourn_size)
+                    evotree = tb.evolve_mutate_point(evotree)
                     self.genloop_performance_append_tree(evotree, tag)
 
             elif evolve_name == 'mutate XXX':
@@ -409,7 +427,7 @@ class ExplainableGP:
                 First, analyze the node with the most potential.
                 """
                 for nn in range(evolve_num):
-                    evotree = pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
+                    evotree = self.pop_selection_tournament(tourn_size=tourn_size)
                     evotree = self.tb.evolve_mutate_pointxxx(evotree)
                     # self.genloop_performance_append_tree(evotree, tag)
 
@@ -418,18 +436,19 @@ class ExplainableGP:
                 One node is replaced with a random branch
                 """
                 for nn in range(evolve_num):
-                    _, size_mode, mean_min_max_var, p_full = helper_evolve_params_branch(custom_params,
-                                                                                         tree_depth_max=self.conf.tree_depth_max,
-                                                                                         parsimony_max=self.conf.parsimony_max)
-                    evotree = pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
-                    build_size = choose_build_size(size_mode, mean_min_max_var, tree=evotree, force='branch')
+                    _, size_mode, mean_min_max_var = helper_evolve_params_branch(custom_params,
+                                                                                 tree_depth_max=self.conf.tree_depth_max,
+                                                                                 parsimony_max=self.conf.parsimony_max)
+                    evotree = self.pop_selection_tournament(tourn_size=tourn_size)
+                    xxx_goal = choose_build_size(size_mode, mean_min_max_var, tree=evotree, force='branch')
                     # sfeh:test options, depth, in this case
 
                     if size_mode == 'branch_depth':  # building a branch to a depth
-                        evotree = self.tb.evolve_mutate_branch_depth(evotree, build_size, p_full=p_full)
+                        evotree = tb.evolve_mutate_branch_depth(evotree, xxx_goal, p_full=p_full)
 
                     elif size_mode == 'branch_nodes':  # building a branch with an amount of nodes
-                        evotree = self.tb.evolve_mutate_branch_nodes(evotree, build_size, self.conf.tree_depth_max)  # p_full=p_full)
+                        evotree = tb.evolve_mutate_branch_nodes(evotree, xxx_goal,
+                                                                     self.conf.tree_depth_max)  # p_full=p_full)
                     else:
                         raise
                     evotree = self.tb.evolve_prune(evotree)  # sfeh:performance runtime-wise, do this somewhere else
@@ -445,8 +464,8 @@ class ExplainableGP:
                     - delete a_parent branch and pareto_insert b_parent branch (which tactic?)
                     sfeh:idea into main fintree?
                     """
-                    atree = pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
-                    btree = pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
+                    atree = self.pop_selection_tournament(tourn_size=tourn_size)
+                    btree = self.pop_selection_tournament(tourn_size=tourn_size)
 
                     # 1. two parents
                     # 2. search nodes for left and right that can be exchanged. convert_needed
@@ -462,8 +481,8 @@ class ExplainableGP:
             elif evolve_name == 'filter optimize':
 
                 for nn in range(evolve_num):
-                    evotree = pop_selection_tournament(self.pop_base, tourn_size=tourn_size)
-                    evotree = self.tb.evolve_mutate_filter_random(evotree, custom_params)
+                    evotree = self.pop_selection_tournament(tourn_size=tourn_size)
+                    evotree = self.tb.evolve_mutate_filter_random(evotree)
                     self.genloop_performance_append_tree(evotree, tag)
 
             elif evolve_name == 'revive paretofront':
@@ -536,7 +555,7 @@ class ExplainableGP:
             """
             # sfeh:discuss: saving the yaml is not required
             path_backup_yaml = path_make_dir(path_backup)
-            yaml_dump(path_backup_yaml, self.conf, print_type=self.conf.print_type)
+            yaml_dump(path_backup_yaml, self.conf)
 
             # {} is the help_dict; include this, even if empty, to store/load successfully after future updates
             run_backup_data = {}, self.gen_id, self.pop_base, self.paretofront, self.monitor_df  # sfeh use this later, help_dict
@@ -631,14 +650,13 @@ class ExplainableGP:
             try:
                 meta = self.finalize_tree_get_meta(evotree)
             except ValueError as ex:
-                print_warning('www', f'Could not append fintree to population because: {ex}',
-                              print_type=self.conf.print_type)
+                print_warning('www', f'Could not append fintree to population because: {ex}')
                 return  # sfeh:print
             except ArithmeticError as ex:
-                print_warning('www', f'ArithmeticError in expr: {ex}', print_type=self.conf.print_type)
+                print_warning('www', f'ArithmeticError in expr: {ex}')
                 return
             except TypeError as ex:
-                print_warning('ww', f'TypeError: {ex}', print_type=self.conf.print_type)
+                print_warning('ww', f'TypeError: {ex}')
                 return
             except Exception as ex:
                 try:
@@ -646,7 +664,7 @@ class ExplainableGP:
                 except Exception:
                     pass
                 print_warning('ww', f'Could not append tree to population because: {ex}\n'
-                                    f'=>tree: {evotree}', print_type=self.conf.print_type)
+                                    f'=>tree: {evotree}')
                 return
 
         fintree = FinalizedTree(evotree, meta)
@@ -677,7 +695,7 @@ class ExplainableGP:
         nan: fitness_train == fitness_train -> False
         inf: fitness_train is not float('inf') -> False
         """
-        parsimony = evotree.eval_parsimony(self.conf.complexity_measure, origin_tree=self.origin.fintree)
+        parsimony = eval_parsimony(evotree, self.conf.complexity_measure, origin_tree=self.origin.fintree)
         if parsimony > self.conf.parsimony_max:
             # sfep:discuss: information about last evolution? currently not saved in tree
             raise ValueError(f'Tree too complex: {parsimony} > {self.conf.parsimony_max}')
@@ -687,7 +705,7 @@ class ExplainableGP:
         treeobs = evotree.get_observation_list()  # todo makethis irrelevant
 
         try:
-            fitness = self.kernel.eval_tf(expr_sym, treeobs, only_fitness=True)
+            fitness = self.kernel.eval_tf(expr_sym, treeobs)['mean_error']
             # if fitness != fitness or fitness == float('inf'):
             #     raise Exception(f"fitness_train is: '{fitness}'")  # eg very wrong values that exceed the float-range
         except ValueError as ex:
@@ -709,7 +727,7 @@ class ExplainableGP:
         Instead of checking if you should print every time, this is done here.
         message_type options can be found in config
         """
-        printez(message_type, message_str, print_type=self.conf.print_type)
+        printez(message_type, message_str)
         return
 
 
@@ -768,13 +786,13 @@ def pop_tree_analysis(popul):
     return
 
 
-def printpl(message_type, message_str, print_type):
+def printpl(message_type, message_str):
     """
     Lightweight print function.
     Instead of checking if you should print every time, this is done here.
     message_type options can be found in config
     """
-    printez(message_type, message_str, print_type=print_type)
+    printez(message_type, message_str)
     return
 
 

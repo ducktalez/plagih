@@ -68,7 +68,7 @@ def pareto_insert_again_simplified(self, fintree):
     #         tree_sym.meta.parsimony = parsimony
     #         self.update_pareto_with_tree(tree_sym)
     # except Exception as ex:
-    #     print_warning('www', f'Tree sympification did not work: {ex}', print_type=self.conf.print_type)
+    #     print_warning('www', f'Tree sympification did not work: {ex}')
     #
     # else:
     #     self.printpl('aaa', 'Pareto entry was already simplified')
@@ -106,11 +106,11 @@ def pareto_plot(paretofront, path, conf):
         try:
             path_pdf = path / f'paretofront.pdf'
             fig.savefig(path_pdf)
-            printez('f', f"paretofront (.pdf): {path_pdf}", conf.print_type)
+            printez('f', f"paretofront (.pdf): {path_pdf}")
 
             path_png = path / f'paretofront.png'
             fig.savefig(path_png)
-            printez('f', f"paretofront (.png): {path_png}", conf.print_type)
+            printez('f', f"paretofront (.png): {path_png}")
         except PermissionError as perm_error:
             print_e(f'Could not save plot: {perm_error}')  # sfeh for everything?
         except Exception as ex:

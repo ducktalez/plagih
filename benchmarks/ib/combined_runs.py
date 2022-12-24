@@ -73,11 +73,11 @@ def eval_and_lut(eval_list, parsim_MAX, parsim_1MAX, lut_file, mp_cpu_MAX):
                 open_combinations.append(arow)
 
     mp.Process()
-    mp_cores = min(mp.cpu_count(), mp_cpu_MAX)
+    # mp_cores = min(mp.cpu_count(), mp_cpu_MAX)
 
-    print(f'Using {mp_cores} for mp (available: {mp.cpu_count()})')
-    with mp.Pool(mp_cores) as p:
-        mp_result = p.map(mp_evall, open_combinations)
+    # print(f'Using {mp_cores} for mp (available: {mp.cpu_count()})')
+    # with mp.Pool(mp_cores) as p:
+    #     mp_result = p.map(mp_evall, open_combinations)
 
     mp_result_dict = {a: [b, c, d, e] for a, b, c, d, e in mp_result}  # [lut_hash, experiment, experiment_safe, experiment_r50, experiment_safe_r50]
     lut.update(mp_result_dict)

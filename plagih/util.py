@@ -9,7 +9,7 @@ from distutils.spawn import find_executable
 
 DEBUG_DUMMY = True  # Use this to find codeblocks that are just interesting during development
 TEST_DUMMY = True  # sfeh: actually use this later! check trees, check if all ops are usable,
-print_dummy = 'wwaaggiiff'  # todo print funktion in util mit buchstaben, die aber überschrieben werden können
+PRINT_DUMMY = 'wwwwwaaagggggiiifff'  # sfeh:xxx
 PRECISION = 6
 
 
@@ -20,7 +20,7 @@ def printyeah(message_type, message_str):
     Instead of checking if you should print every time, this is done here.
     message_type options can be found in config
     """
-    printez(message_type, message_str, print_type=print_dummy)
+    printez(message_type, message_str)
     return
 
 
@@ -63,7 +63,7 @@ def pickle_dump(path, data):
     printez('f', f'Backup: {path}')  # .as_posix()
 
 
-def yaml_dump(path, data, print_type=None, default_flow_style=True):
+def yaml_dump(path, data, default_flow_style=True):
     """
     saves prepared plagih data to pickle file
     - default_flow_style=False for dumping in a block style
@@ -71,24 +71,23 @@ def yaml_dump(path, data, print_type=None, default_flow_style=True):
     path = path_make_dir(path)
     with Path.open(path, 'w') as file:
         _ = yaml.dump(data, file, default_flow_style=default_flow_style, sort_keys=False)
-        printez('ff', f'{path}', print_type=print_type)  # .as_posix()
+        printez('ff', f'{path}')  # .as_posix()
         return
 
 
-def print_warning(message_type, text, print_type=None):
+def print_warning(message_type, text):
     """
     Printing warnings
     """
     try:
-        if print_type:
-            if message_type not in print_type:
-                return
+        if message_type not in PRINT_DUMMY:
+            return
         if message_type == 'w':
             print(f'{BColors.WARNING}Warning ({message_type}): {text}{BColors.RESET}')  # completely yellow
         else:
             print(f'{BColors.WARNING}Warning ({message_type}): {text}{BColors.RESET}')  # only "Warning" yellow
     except Exception as ex:
-        print_warning('w', f'Could not print warning: {ex}', print_type=print_type)
+        print_warning('w', f'Could not print warning: {ex}')
     return
 
 
@@ -162,12 +161,6 @@ pyplot_rc_two_column = {'figure.autolayout': True,
 
 rc_pyplot_size = {'figure.figsize': pyplot_size}
 # ['text.latex.preamble'=r"\usepackage{lmodern}"]
-
-# pyplot_rc_options = {'font.family': 'serif',
-#                      'font.serif': ['Times', 'Palatino', 'New Century Schoolbook', 'Bookman', 'Computer Modern Roman'],
-#                      'font.sans-serif': ['Helvetica', 'Avant Garde', 'Computer Modern Sans serif'],
-#                      'font.cursive': ['Zapf Chancery'],
-#                      'font.monospace': ['Courier', 'Computer Modern Typewriter']}
 
 # def plot_rc_default(self):
 #     rc('font', weight='bold')    # bold fonts are easier to see
@@ -262,13 +255,12 @@ def pickle_load(path: Path):
     return pickle_data
 
 
-def printez(message_type, text, print_type=None):
+def printez(message_type, text):
     """
     giving prints colours, accessable from everywhere
     """
-    if print_type:
-        if message_type not in print_type:
-            return
+    if message_type not in PRINT_DUMMY:
+        return
 
     if 'i' in message_type:
         print(f'{BColors.CYAN}Info: {text}{BColors.RESET}')
@@ -277,7 +269,7 @@ def printez(message_type, text, print_type=None):
     elif 'a' in message_type:
         print(f'{BColors.GREEN}{text}{BColors.RESET}')  # Paretofront:
     elif 'w' in message_type:
-        print_warning(message_type, text, print_type=print_type)
+        print_warning(message_type, text)
     elif 'g' in message_type:
         time_now = time.strftime("%d.%m %H:%M", time.localtime())
         print(f'[{time_now}] {text}')

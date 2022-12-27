@@ -13,18 +13,18 @@ sfeh: use function-types (-> 'commutative'?)
 """
 
 from plagih.sympy_extras import *
-from plagih.tree_distances.tree_edit_distance import apted_distance
+from plagih.tree_complexity.tree_edit_distance import apted_distance
 
 from dataclasses import dataclass
 import itertools
+
 
 # logging.basicConfig(filename='example.log', filemode='a', level=logging.DEBUG)  # sfeh encoding='utf-8' maybe in the future
 
 # lol, lol. https://github.com/tensorflow/tensorflow/issues/27023 these messages are tingeling
 
-
 @dataclass
-class Node:
+class TreeNode:
     """
     The core is the structure of a plagih gp-fintree.
     It recursively holds the nodes of a fintree; every fintree has a list of potential children.
@@ -59,7 +59,7 @@ class Node:
 
     def __str__(self):
         """
-        Printing the nodes as nested array structure, easy to read.
+        Printing the nodes as nested list structure, easy to read.
         Also, have a look at __repr__(self) for a more detailed result
         """
         label_str = self.get_nlabel()  # sfeh or: return the label __str__
@@ -72,7 +72,7 @@ class Node:
 
     def __repr__(self):
         """
-        Printing the nodes as nested array structure such that it can be saved/loaded
+        Printing the nodes as nested structure such that it can be saved/loaded
         very closely related to __str__(), but adds the following information:
         - ":fix", when nodes are fixed
         """
@@ -133,6 +133,7 @@ class Node:
         return self.label.xtype[0]
 
     def get_xtype_out(self):
+        """type (float or bool), which is the nodes output"""
         return self.label.xtype[1]
 
     def is_root(self):
@@ -141,18 +142,20 @@ class Node:
         """
         return self.depth == 0
 
-    def get_observation_list(self):
-        """
-        these are required for the evaluation (are loaded by Tensorflow)
-        todo returns [cartVel, -cartVel], should not ever happen?
-        """
-        obslist = []
-        if self.get_arity() > 0:
-            obslist.extend(list(itertools.chain(*[cc.get_observation_list() for cc in self.childs])))
-        elif isinstance(self.label, Observation):
-            obslist.extend([self.get_nlabel()])
-
-        return list(set(obslist))
+    # sfeh:delete, deprecated, but bodymight be useful still
+    # def get_observation_list(self):
+    #     """
+    #     these are required for the evaluation (are loaded by Tensorflow)
+    #     sfeh:bug returns [cartVel, -cartVel], should not ever happen?
+    #     -> SFEH: But it is also not used anymore
+    #     """
+    #     obslist = []
+    #     if self.get_arity() > 0:
+    #         obslist.extend(list(itertools.chain(*[cc.get_observation_list() for cc in self.childs])))
+    #     elif isinstance(self.label, Observation):
+    #         obslist.extend([self.get_nlabel()])
+    #
+    #     return list(set(obslist))
 
     def set_label(self, label: 'NodeLabel'):
         """
@@ -168,8 +171,9 @@ class Node:
             self.childs = childs
         return  # ==>STATE?
 
-    def update_fixed_nodes(self, origin: 'Node'):
+    def update_fixed_nodes(self, origin: 'TreeNode'):
         """
+        deprecated.
         Updating the fixed nodes in a tree where they were lost for some reason.
         This should never be the case! But it happened during development of recreating a tree from expression.
         This might also be useful in tree checks
@@ -238,27 +242,12 @@ class Node:
         else:
             return []
 
-    def eval_expr_todo(self):
-        """
-        """
-
-        expr_str = self.label.nlabel
-        expr_str = f'"{expr_str}"'  # todo
-
-        if self.childs:
-            cc_expr = [cc.eval_expr_todo() for cc in self.childs]
-            cc_expr = ', '.join(cc_expr)
-
-            expr_str = f'{expr_str}, {cc_expr}'
-
-        return f'[{expr_str}]'
-
     def eval_nested(self):
         """
 
         """
         expr_str = self.label.nlabel
-        expr_str = f'"{expr_str}"'  # todo
+        expr_str = f'"{expr_str}"'  # sfeh: Also not used anymore? to-do was here
 
         if self.childs:
             cc_expr = [cc.eval_nested() for cc in self.childs]
@@ -271,7 +260,7 @@ class Node:
     def eval_expr_str(self):
         """
         Accumulate and return the complete expression the fintree holds recursively
-        todo directly to sympy in a different method
+        todo directly sympy in a different method
         """
 
         _expr = f'{self.label.nlabel}'
@@ -309,26 +298,6 @@ class Node:
         else:
             return max(cc.get_max_depth(depth=depth + 1) for cc in self.childs)
 
-    def eval_parsimony(self, complexity_measure, origin_tree=None, weights=None):
-        """
-        complexity_measure: compute the chosen distance by the user.
-        #     'tree_node_count': tree_get_size,
-        #     'tree_depth': tree_get_depth,
-        #     'tree_edit_distance': tree_parsimony_ted,
-        """
-        if complexity_measure == 'tree_node_count':  # number of nodes
-            return len(self)  # returns the number of nodes  # sfeh weights
-        elif complexity_measure == 'tree_edit_distance':  # tree_edit_distance, fintree-edit-distance
-            apted1 = self.eval_apted_notation()
-            apted2 = origin_tree.eval_apted_notation()
-            distance, mapping = apted_distance(apted1, apted2)  # sfeh the mapping could be handy somewhere
-            if weights is None:
-                return distance
-            else:
-                raise
-        else:
-            raise Exception(f'Complexity measurement not available: {complexity_measure}')
-
     def repair_depth(self, depth=0):
         """
         aka set_depth recursively for all nodes in a branch
@@ -341,7 +310,7 @@ class Node:
         for cc in self.childs:
             cc.repair_depth(depth=depth + 1)
 
-    def set_new_node(self, new_node: 'Node'):
+    def set_new_node(self, new_node: 'TreeNode'):
         """
         was: new_core
         """

@@ -65,12 +65,12 @@ def pause(menu_dict):
     elif menu == 'ts':  # adjust the tournament size
         while True:
             try:
-                print('\n\t The current tournament size is:', menu_dict['tourn_size'])
+                print('\n\t The current tournament size is:', menu_dict['tournsize'])
                 query = input('\t Adjust the tournament size (suggest 7 for each 100): ')
                 if query == '':
                     break
                 elif int(query) in list(range(2, menu_dict['tree_pop_max'] + 1)):
-                    menu_dict['tourn_size'] = int(query)
+                    menu_dict['tournsize'] = int(query)
                     break  # rebuilt 20190603
                 else:
                     raise ValueError()

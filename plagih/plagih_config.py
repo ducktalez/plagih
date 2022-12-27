@@ -12,14 +12,89 @@ from plagih.util import *
 
 class Config:
 
-    def __init__(self, args):
+    def load_yaml(self, path):
+
+        try:
+            with Path.open(path, 'r') as file:
+                conf = yaml.load(file, Loader=yaml.FullLoader)
+        except AttributeError:
+            conf = {}
+
+    def __init__(self):
         """
         SFEH ALERT: NEVER try to save the ui/paths.
         !!! switching between systems is worse than HitlerAIDS !!!
         """
         self.pl_version = 1.2  # must only update if vital changes were made, version important when loading old run
 
-        self.name = args.prepared_run or None  # sfeh
+
+    # def __init__(self, args):
+    #     """
+    #     SFEH ALERT: NEVER try to save the ui/paths.
+    #     !!! switching between systems is worse than HitlerAIDS !!!
+    #     """
+    #     self.pl_version = 1.2  # must only update if vital changes were made, version important when loading old run
+    #
+    #     self.name = args.prepared_run or None  # sfeh
+    #
+    #     try:
+    #         with Path.open(args.load_config, 'r') as file:
+    #             conf = yaml.load(file, Loader=yaml.FullLoader)
+    #     except AttributeError:
+    #         conf = {}
+    #
+    #     # (a)lert-pareto, (w)arning, (g)eneration, (i)nfo, (f)ile written
+    #
+    #     self.action_name = args.action_name or conf.get('action_name', None)
+    #     self.kernel_name = args.kernel_name or conf.get('kernel_name', 'regression')
+    #
+    #     # tree construction
+    #     self.tree_depth_max = int(conf.get('tree_depth_max', 10))  #: 10,  # maximum Tree depth for entire run
+    #     self.parsimony_max = conf.get('parsimony_max', 50)
+    #
+    #     # run/computation restrictions
+    #     self.pop_max = args.pop_max or int(conf.get('pop_max', 1000))  #: 1000,  # amount is never tested
+    #     self.gen_max = args.gen_max or int(conf.get('gen_max', 1000))  # : 1000,  # Maximum amount of generations
+    #
+    #     # GP Evolution
+    #     self.tournsize = int(conf.get('tournsize', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
+    #     self.period = conf.get('period', {'gen_plots': 5, 'gen_save': 5})  # sfeh 10 or 5 for debugging, something higher for actual runs
+    #
+    #     # sfeh not here?
+    #     self.evolve_list_random = conf.get('evolve_list_random', None)  # sfeh
+    #     self.complexity_measure = conf.get('complexity_measure', 'tree_edit_distance')  # sfeh check used origin here? backup loaded origin?
+    #     if self.complexity_measure in ['tree_edit_distance']:
+    #         self.complexity_measure = 'tree_node_count'  # sfeh idea
+    #         print_warning('w', "Complexity measurement 'tree_edit_distance' is not possible without origin!\n"
+    #                            "Using 'tree_node_count' instead.")
+    #
+    #     self.dc = conf.get('dc', [])  # drop columns in data
+    #     self.action_name = args.action_name or conf.get('action_name', None)  # sfeh type=float or maybe sometimes bool-.-.-
+    #
+    #     self.mp_cores = args.mp_cores or conf.get('mp_cores', 1)
+    #
+    #     self.tf_device_log = args.tf_device_log or conf.get('tf_device_log', False)
+    #     self.tf_gpu_allow_growth = args.tf_gpu_allow_growth or conf.get('tf_gpu_allow_growth', True)
+    #     self.tf_device = args.tf_device or conf.get('tf_device', '/gpu:0')
+    #
+    #     # self.parsimony_mean = conf.get('parsimony_mean', 15)  #: 20,  # If you wnt your population to be a certain size
+    #     # self.tree_depth_min = conf.get('tree_depth_min', 1)  #: 2,
+    #     # self.swim = 'p'  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
+    #     # self.gen_num_parsim_maxony = conf.get('gen_num_parsim_maxony', 50)  #: 50,  # Increase tmp_parsim to this generation
+    #     # self.name = args.name or self.rootdir.resolve().name  # sfeh name? probably there are better names
+    #
+    #     # self.file_distrib = (args.file_distrib or 'run_files/distributions_file.yaml')
+    #     # self.file_backup = args.file_backup or conf.get('file_backup', 'backup/backup.p')
+    #
+    #     self.path_data_csv = args.path_data_csv or conf.get('path_data_csv', None)  # MUST BE STRING
+    #     self.path_origin = args.path_origin or conf.get('path_origin', None)  # MUST BE STRING
+
+    def SFEH_UPDATE_INIt(self, args):
+        """
+
+        """
+
+        self.name = args.prepared_run or None  # sfeh:open
 
         try:
             with Path.open(args.load_config, 'r') as file:
@@ -28,7 +103,7 @@ class Config:
             conf = {}
 
         # (a)lert-pareto, (w)arning, (g)eneration, (i)nfo, (f)ile written
-        self.print_type = 'wwwwaaaggggiiiff' if args.print_all else conf.get('print_type', 'wwaaaggiiff')
+        # self.print_type = 'wwwwaaaggggiiiff' if args.print_all else conf.get('print_type', 'wwaaaggiiff')
 
         self.action_name = args.action_name or conf.get('action_name', None)
         self.kernel_name = args.kernel_name or conf.get('kernel_name', 'regression')
@@ -42,9 +117,8 @@ class Config:
         self.gen_max = args.gen_max or int(conf.get('gen_max', 1000))  # : 1000,  # Maximum amount of generations
 
         # GP Evolution
-        self.tourn_size = int(conf.get('tourn_size', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
+        self.tournsize = int(conf.get('tournsize', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
         self.period = conf.get('period', {'gen_plots': 5, 'gen_save': 5})  # sfeh 10 or 5 for debugging, something higher for actual runs
-        self.precision = args.pop_max or conf.get('precision', 6)
 
         # sfeh not here?
         self.evolve_list_random = conf.get('evolve_list_random', None)  # sfeh
@@ -52,16 +126,11 @@ class Config:
         if self.complexity_measure in ['tree_edit_distance']:
             self.complexity_measure = 'tree_node_count'  # sfeh idea
             print_warning('w', "Complexity measurement 'tree_edit_distance' is not possible without origin!\n"
-                               "Using 'tree_node_count' instead.", print_type=self.print_type)
+                               "Using 'tree_node_count' instead.")
 
-        self.dc = conf.get('dc', [])  # drop columns in data
         self.action_name = args.action_name or conf.get('action_name', None)  # sfeh type=float or maybe sometimes bool-.-.-
 
         self.mp_cores = args.mp_cores or conf.get('mp_cores', 1)
-
-        self.tf_device_log = args.tf_device_log or conf.get('tf_device_log', False)
-        self.tf_gpu_allow_growth = args.tf_gpu_allow_growth or conf.get('tf_gpu_allow_growth', True)
-        self.tf_device = args.tf_device or conf.get('tf_device', '/gpu:0')
 
         # self.parsimony_mean = conf.get('parsimony_mean', 15)  #: 20,  # If you wnt your population to be a certain size
         # self.tree_depth_min = conf.get('tree_depth_min', 1)  #: 2,

@@ -68,14 +68,14 @@ def pareto_insert_again_simplified(self, fintree):
     #         tree_sym.meta.parsimony = parsimony
     #         self.update_pareto_with_tree(tree_sym)
     # except Exception as ex:
-    #     print_warning('www', f'Tree sympification did not work: {ex}', print_type=self.conf.print_type)
+    #     print_warning('www', f'Tree sympification did not work: {ex}')
     #
     # else:
     #     self.printpl('aaa', 'Pareto entry was already simplified')
     pass
 
 
-def pareto_plot(paretofront, path, conf):
+def pareto_plot(paretofront, path, name, parsimony_max):
     """
     Write pyplot with paretofront candidates
     """
@@ -89,7 +89,7 @@ def pareto_plot(paretofront, path, conf):
 
     with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots()
-        right = max(max(xx), conf.parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
+        right = max(max(xx), tb.parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
 
         # beyond_lines:  # adding a point to the edges to imply that there are no more values (paretofront-plot)
         # xx = np.concatenate([[xx[0]-1.05], xx, [right + 1]])
@@ -106,11 +106,11 @@ def pareto_plot(paretofront, path, conf):
         try:
             path_pdf = path / f'paretofront.pdf'
             fig.savefig(path_pdf)
-            printez('f', f"paretofront (.pdf): {path_pdf}", conf.print_type)
+            printez('f', f"paretofront (.pdf): {path_pdf}")
 
             path_png = path / f'paretofront.png'
             fig.savefig(path_png)
-            printez('f', f"paretofront (.png): {path_png}", conf.print_type)
+            printez('f', f"paretofront (.png): {path_png}")
         except PermissionError as perm_error:
             print_e(f'Could not save plot: {perm_error}')  # sfeh for everything?
         except Exception as ex:

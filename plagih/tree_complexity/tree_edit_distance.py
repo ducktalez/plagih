@@ -175,38 +175,6 @@ def is_bool(x):
 #
 
 
-def aptree_to_width(curlytree):
-    """
-    '{+{+{-{4}{5}}{1}}{*{2}{3}}}'
-    ->
-    [['+'], ['+', '*'], ['-', '1', '2', '3'], ['4', '5']]
-    """
-    xy = []
-    y = -1
-    buffer = ''
-    for letter in curlytree:
-        if letter == '{' or letter == '}':
-            if buffer != '':
-                xy.append([y, buffer])
-                buffer = ''
-            y += (1 if letter == '{' else -1)
-        else:
-            buffer += letter
-
-    max_y = max(xy, key=lambda x: x[0])[0]
-    widtree = [[] for _ in range(max_y + 1)]
-
-    print(curlytree)
-    print(xy)
-
-    for y, label in xy:
-        widtree[y].append(label)
-
-    label_list = sum(widtree, [])
-
-    return label_list
-
-
 def tree_nodeid_ted_mapping(mapping):
 
     for ii, map_i in enumerate(mapping):

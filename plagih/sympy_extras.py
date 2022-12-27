@@ -82,8 +82,9 @@ class Operator(NodeLabel, sympy.Function):
         return cls.insym(*args)  # just if no eval is implemented
 
 
-class ChainableOperator(NodeLabel):
+class ChainOperator(NodeLabel):
     """
+    # todo discuss: sensible to create a new node-type? -> no missconceptions
     todo open, mapping operators are
     Add, Mult, Min, Max
     And, Or
@@ -899,7 +900,22 @@ class MapxAdd(Operator):
     is_real = True
 
 
-class MapxPiecewise(ChainableOperator):
+class ChainChild(NodeLabel):
+    """
+    sfeh:diskuss: Abstract class for the elements in chain operators?
+    """
+    pass
+
+
+class ExprCondPair(ChainChild):
+    """
+    sfeh somehow a chainable element?
+    """
+    pass
+
+
+class Piecewise(ChainOperator):
+    # MapxPiecewise was here
     # todo all the function assumptions!!
     # todo must have a True-case
     nlabel = 'Piecewise'
@@ -907,7 +923,8 @@ class MapxPiecewise(ChainableOperator):
     tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
     # expr_sym = 'Piecewise({})'
     insym = sympy.Piecewise
-    xtype = (float, float)  # todo
+    xtype_out = float  # todo
+    xtype_child = 'TODO'
 
     # nargs = None  # sfeh:hmmm
 
@@ -947,8 +964,6 @@ class Round(Operator, sympy.Function):
 
     @classmethod
     def eval(cls, a):
-        # if a.is_number:  # sympify(a) evaluates first... but i guess it is evaluated already
-        #     return round(a)  # see
         return sympy.N(a, 0)
 
     def _sympy_(self, *args):

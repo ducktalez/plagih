@@ -6,7 +6,6 @@ The main class of a gp run. It holds the following functionalities
 """
 from plagih.monitoring import plot_gen_performance
 from plagih.paretofront import *
-from plagih.tree_complexity.tree_edit_distance import apted_distance
 from plagih.tree_factory import *
 
 import copy
@@ -17,30 +16,9 @@ import pandas as pd
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
 
-def eval_parsimony(tree: TreeNode, complexity_measure, origin_tree=None):
-    """
-    complexity_measure: compute the chosen distance by the user.
-    #     'tree_node_count': tree_get_size,
-    #     'tree_depth': tree_get_depth,
-    #     'tree_edit_distance': tree_parsimony_ted,
-
-    sfeh open: weights
-    """
-    if complexity_measure == 'tree_node_count':  # number of nodes
-        return len(tree)  # returns the number of nodes  # sfeh weights
-    elif complexity_measure == 'tree_edit_distance':  # tree_edit_distance, fintree-edit-distance
-        apted1 = tree.eval_apted_notation()
-        apted2 = origin_tree.eval_apted_notation()
-        distance, mapping = apted_distance(apted1, apted2)  # sfeh the mapping could be useful somewhere
-        return distance
-    else:
-        raise Exception(f'Complexity measurement not available: {complexity_measure}')
-
-
 class ExplainableGP:
 
-    def __init__(self, name, pop_max, gen_max, rootdir, kernel, complexity_measure, origintree, tb: TreeBuilder,
-                 period_plots, period_save):
+    def __init__(self, name, pop_max, gen_max, rootdir, kernel, complexity_measure, origintree, tb: TreeBuilder):
         self.time_start = time.perf_counter()
         self.kernel = kernel
         self.origintree = origintree
@@ -52,9 +30,6 @@ class ExplainableGP:
         self.gen_max = gen_max
         self.rootdir = rootdir
         self.gen_id = 0
-
-        self.period_plots = period_plots
-        self.period_save = period_save
 
         self.printpl('gg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
@@ -85,7 +60,7 @@ class ExplainableGP:
 
     # self.printpl('i', 'Using evolve rates from config')
 
-    def evoloop(self, gen_additionally=0):
+    def evoloop(self, period_plots=10, period_save=10, gen_additionally=0):
         """
         Start a regular GP run.
         The only other option is to analyze a loaded run.
@@ -134,13 +109,13 @@ class ExplainableGP:
             self.pop_next = []
 
             self.printpl('ggg', f'Gen {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}.')
-            self.evoloop_monitoring_scheduled_io(self.gen_id)
+            self.evoloop_monitoring_scheduled_io(self.gen_id, period_plots, period_save)
             self.gen_id += 1
 
         self.printpl('g', f'Done after Generation {self.gen_id}.\n'
                           f'Time since start: {time.perf_counter() - self.time_start:4.2f}s')
 
-        self.run_backup(mode='save')
+        self.backup_save()
 
         return
 
@@ -190,7 +165,7 @@ class ExplainableGP:
 
                     self.evaluate_and_append(symtree)  # sfeh:open , tag='sfeh-sympifyed_pareto'
 
-                except Exception as ex:
+                except KeyError as ex:
                     print(f'SFEH: this tree could todo whatever {ex}')
                     # -> piecewise function, mostly
                 obsolete_entries = [x for x in paretofront if
@@ -394,54 +369,54 @@ class ExplainableGP:
         except Exception as ex:
             self.printpl("e", f'Could not create plots: {ex}\n')
 
-    def evoloop_monitoring_scheduled_io(self, gen_id):
+    def evoloop_monitoring_scheduled_io(self, gen_id, period_plots, period_save):
         """
         Every x generations, save a backup and/or save plots
         """
-        plot_gen = self.period_plots
+        plot_gen = period_plots
         if gen_id >= plot_gen and gen_id % plot_gen == 0:
             self.evoloop_monitoring_plots()
 
-        save_gen = self.period_save
+        save_gen = period_save
         if gen_id >= save_gen and gen_id % save_gen == 0 or gen_id == 10:
-            self.run_backup(mode='save')
+            self.backup_save()
 
-    def run_backup(self, path_load_custom_backup=None, mode='load'):
+    def backup_save(self):
         """
         Load/safe backup of a run
         """
 
         path_backup = self.rootdir / 'backup/backup.pkl'
 
-        if mode == 'save':
-            # {} is the help_dict; include this, even if empty, to store/load successfully after future updates
-            run_backup_data = {}, self.gen_id, self.pop_base, self.paretofront, self.monitor_df  # sfeh use this later, help_dict
-            path_backup = path_make_dir(path_backup)
-            pickle_dump(path_backup, run_backup_data)
-            # sfeh:debug
+        # {} is the help_dict; include this, even if empty, to store/load successfully after future updates
+        run_backup_data = {}, self.gen_id, self.pop_base, self.paretofront, self.monitor_df  # sfeh use this later, help_dict
+        path_backup = path_make_dir(path_backup)
+        pickle_dump(path_backup, run_backup_data)
+        # sfeh:debug
 
-        elif mode == 'load':
-            # run_backup_load(self, argpath_backup):
-            path_backup = path_load_custom_backup or self.rootdir / 'backup/backup.pkl'
+    def backup_load(self, path_load_custom_backup=None):
+        """
+        Load/safe backup of a run
+        """
 
-            if Path.is_file(path_backup):
-                self.printpl('g', f'Loading data from backup-file {path_backup}')
-                try:
-                    with Path.open(path_backup, 'rb') as file:
-                        run_data = pickle.load(file)
-                except NotImplementedError as ex:
-                    raise Exception(f'NotImplementedError: {ex}')
-                except EOFError as ex:
-                    raise Exception(f'EOFError: \n{ex}')
+        path_backup = path_load_custom_backup or self.rootdir / 'backup/backup.pkl'
 
-                help_dict, self.gen_id, self.pop_base, self.paretofront, self.monitor_df = run_data
-                self.printpl('g', f'Successfully loaded backup file. Generation: {self.gen_id}')
+        if Path.is_file(path_backup):
+            self.printpl('g', f'Loading data from backup-file {path_backup}')
+            try:
+                with Path.open(path_backup, 'rb') as file:
+                    run_data = pickle.load(file)
+            except NotImplementedError as ex:
+                raise Exception(f'NotImplementedError: {ex}')
+            except EOFError as ex:
+                raise Exception(f'EOFError: \n{ex}')
 
-            else:
-                raise FileNotFoundError(f'No backup-file found at {path_backup}.')
+            help_dict, self.gen_id, self.pop_base, self.paretofront, self.monitor_df = run_data
+            self.printpl('g', f'Successfully loaded backup file. Generation: {self.gen_id}')
 
         else:
-            raise
+            raise FileNotFoundError(f'No backup-file found at {path_backup}.')
+
 
     def run_custom_exit_condition(self):
         """
@@ -604,5 +579,5 @@ if __name__ == '__main__':
     # nstr = "['Ifte', ['<', ['*', [2.85], ['cartVel']], ['Square', ['cartVel']]], ['*', ['cartPos'], ['*', ['cartPos'], [0.014]]], ['/', [2.0], ['cartPos']]]"
     # nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
     nstr = '["+:fix",["-:fix",["Ifte",["True"],["sin",["2"]],["/",["2.043"],["4"]]],["cartVel"]],["-1.3"]]'
-    tr = node_from_nested_labels(nstr)
+    tr = evotree_from_nested_labels(nstr)
     check_tree_loadable_reconstruction(tr)

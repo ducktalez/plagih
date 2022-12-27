@@ -5,15 +5,33 @@ The factory to create trees
 from plagih.plagih_tree import TreeNode
 from plagih.sympy_extras import *
 from plagih.util import *
+from plagih.tree_complexity.tree_edit_distance import apted_distance
 
 import random
 from collections import deque
 import logging
-from pathlib import Path
-
-
 import copy
 import numpy as np
+
+
+def eval_parsimony(tree: TreeNode, complexity_measure, origin_tree=None):
+    """
+    complexity_measure: compute the chosen distance by the user.
+    #     'tree_node_count': tree_get_size,
+    #     'tree_depth': tree_get_depth,
+    #     'tree_edit_distance': tree_parsimony_ted,
+
+    sfeh open: weights
+    """
+    if complexity_measure == 'tree_node_count':  # number of nodes
+        return len(tree)  # returns the number of nodes  # sfeh weights
+    elif complexity_measure == 'tree_edit_distance':  # tree_edit_distance, fintree-edit-distance
+        apted1 = tree.eval_apted_notation()
+        apted2 = origin_tree.eval_apted_notation()
+        distance, mapping = apted_distance(apted1, apted2)  # sfeh the mapping could be useful somewhere
+        return distance
+    else:
+        raise Exception(f'Complexity measurement not available: {complexity_measure}')
 
 
 def randomly_split_range(range_max, num_splits):
@@ -67,7 +85,7 @@ def node_simplification(node: TreeNode):
     expr_raw = node.eval_expr_str()
     expr_sym = expr_sympify(expr_raw)
     nested_labels = sympy_to_nestedlist(expr_sym)
-    node_rebuilt = node_from_nested_labels(nested_labels)
+    node_rebuilt = evotree_from_nested_labels(nested_labels)
     # node_rebuilt = node_rebuilt.update_fixed_nodes(node)  # this is not our problem
     if DEBUG_DUMMY:
         if len(node) < len(node_rebuilt):
@@ -132,7 +150,6 @@ class TreeBuilder:
                      bool: [lambda: random.choice([True, False])]}  # sfeh:discussion
 
     def __init__(self, obs_names, depth_max, nodes_max, root_xtype, operator_pool=None, origin=None):
-        self.operators_add(operator_pool)
         self.observations_add(obs_names)
         self.root_xtype = root_xtype
         self.depth_max = depth_max
@@ -140,19 +157,14 @@ class TreeBuilder:
         self.origin = origin
         # Loading some random default options for quick debugging, without loading a config
 
-    def operators_add(self, operator_pool=None):
-        """
-
-        """
-
-        def operator_pool_check(operator_pool):
+        def operator_pool_check(operatorPool):
             """
             Check if the user-specified loaded operators allow closure
             (either float-only/bool only or all 4 types of operators)
             @:param operator_pool: list with operators and their weight of being selected
             """
             # sfeh dunno if that works... 2f not in x
-            opxtypes = [oper.xtype for oper in operator_pool.keys()]
+            opxtypes = [oper.xtype for oper in operatorPool.keys()]
             has_2f = any([float == x[1] for x in opxtypes])
             has_2b = any([bool == x[1] for x in opxtypes])
             has_f2b = any([float in x[0] and bool == x[1] for x in opxtypes])
@@ -219,7 +231,7 @@ class TreeBuilder:
 
         self.operators = {}
         for xtype, x in choose_oparray.items():
-            # self.operators[xtype_out] = lambda: np.random.choice(x[0], p=x[1])  # "seloplam" faster, but less readable version
+            # self.operators[xtype_out] = lambda: np.random.choice(x[0], p=x[1])  # "seloplam" faster, but less readable
             self.operators[xtype] = (x[0], x[1])
 
     def choose_op(self, any_xtype):
@@ -531,7 +543,7 @@ class TreeBuilder:
                 lvl0_node.set_new_node(new_subbranch)
 
         else:
-            evotree = self.invent_core_depth(xtype, depth_goal, p_full, depth=0)
+            evotree = self.invent_core_depth(xtype, depth_goal, p_full=p_full, depth=0)
 
         return evotree
 
@@ -672,7 +684,7 @@ def check_expert_origin_tree(nested_labels):
     """
     # with Path.open(p, newline='') as file:
     #     nested_expr = file.read()
-    tree = node_from_nested_labels(nested_labels)
+    tree = evotree_from_nested_labels(nested_labels)
     expr_raw = tree.eval_expr_str()
     try:
         expr_sym = expr_sympify(expr_raw)
@@ -750,8 +762,8 @@ def rec_build_tree(lst, depth=0, obs_list=None):
         node.set_childs(childs)
 
     else:
-        childs = [rec_build_tree(x, depth=depth + 1, obs_list=obs_list) for x in lst[1:]]
-        node.set_childs(childs)
+        # childs = [rec_build_tree(x, depth=depth + 1, obs_list=obs_list) for x in lst[1:]]
+        # node.set_childs(childs)  # sfeh delete
         raise Exception(f'Tree-building list length {len(lst[1:])} does not match the nodes arity {node.get_arity()}.')
 
     return node
@@ -806,7 +818,7 @@ def check_tree_loadable_reconstruction(tree: TreeNode):
     """
     tree_0 = copy.deepcopy(tree)
     _nested = tree.eval_expr_str()
-    tree_1 = node_from_nested_labels(_nested)
+    tree_1 = evotree_from_nested_labels(_nested)
     tree_1.update_fixed_nodes(tree_0)
 
     a = repr(tree_0)
@@ -815,7 +827,7 @@ def check_tree_loadable_reconstruction(tree: TreeNode):
     return a == b
 
 
-def node_from_nested_labels(nested_str, obs_list=None):
+def evotree_from_nested_labels(nested_str, obs_list=None):
     """
     optional: op_dict + labels not in '' can be used to load the operators directly
     all_input_options = ['1', '0', '-1.132', 'True', 'False', 'vel', 'Ifte', 'max', 'BinaryMax', '-vel']
@@ -828,11 +840,11 @@ def node_from_nested_labels(nested_str, obs_list=None):
     return tree
 
 
-def tree_from_nested_labels(nested_str, kernel):
+def fintree_from_nested_labels(nested_str, kernel):
     """
 
     """
-    node = node_from_nested_labels(nested_str, obs_list=None)  # discuss
+    node = evotree_from_nested_labels(nested_str, obs_list=None)  # discuss
     expr_raw = node.eval_expr_str()
     expr_sym = expr_sympify(expr_raw)
     fitness = kernel.eval_tf(expr_sym)['mean_error']
@@ -862,7 +874,7 @@ if __name__ == '__main__':
                       '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]',
                       '["Ifte", ["BinaryNot", [False]], [0.0], [2.0]]']
     for nstr in _test_loadabls:
-        tr = node_from_nested_labels(nstr)
+        tr = evotree_from_nested_labels(nstr)
         print(tr)
         tr2 = check_tree_loadable_reconstruction(tr)
         print(tr2)

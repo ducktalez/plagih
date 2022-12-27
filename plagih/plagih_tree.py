@@ -169,14 +169,14 @@ class TreeNode:
         """
         if len(childs) == self.get_arity():
             self.childs = childs
-        return  # ==>STATE?
+        else:
+            raise  # sfeh:discuss do not raise in new GP
+        return
 
     def update_fixed_nodes(self, origin: 'TreeNode'):
         """
-        deprecated.
         Updating the fixed nodes in a tree where they were lost for some reason.
-        This should never be the case! But it happened during development of recreating a tree from expression.
-        This might also be useful in tree checks
+        This should only occur during the reconstructing test of a tree from expression.
         """
         if origin.is_fix:
             if self.label.nlabel != origin.label.nlabel:

@@ -2,6 +2,8 @@
 This starts the whole genetic programming.
 This (extra) file was added to have a file in the root directory that can be started.
 """
+import sys
+
 from sklearn.model_selection import train_test_split
 
 from plagih.fitness_kernel import RegressionKernel
@@ -177,7 +179,7 @@ def _test_random_pop():
     # '["Ifte",["<",["cartVel"],["0"]],["0"],["2"]]'
     # '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]'
     # sfeh:open give user feedback for tree
-    origin_tree = tree_from_nested_labels('["Ifte",["<",["cartVel"],["0"]],["0"],["2"]]', kernel)
+    origin_tree = fintree_from_nested_labels('["Ifte",["<",["cartVel"],["0"]],["0"],["2"]]', kernel)
     # origin_tree = None
 
     # tree construction complexity
@@ -186,43 +188,19 @@ def _test_random_pop():
 
     period_plots = 10
     period_save = 10
-    gp = ExplainableGP(name, pop_max, gen_max, rootdir, kernel, complexity_measure, origin_tree, tb, period_plots,
-                       period_save)
-    gp.evoloop()
+    gp = ExplainableGP(name, pop_max, gen_max, rootdir, kernel, complexity_measure, origin_tree, tb)
+    # gp.pop_kill()  # optional, maybe restart pop between runs?
+    try:
+        gp.backup_load(path_load_custom_backup=rootdir)
+    except FileNotFoundError as ex:
+        gp.printpl('i', f'No backup file found at {ex}. Starting a new run.')
+
+    gp.evoloop(period_plots, period_save)
     gp.evoloop_monitoring_plots()
 
-    # try:
-    #     gp.run_backup(path_load_custom_backup=load_backup, mode='load')
-    # except FileNotFoundError as ex:
-    #     gp.printpl('i', f'No backup file found at {ex}. Starting a new run.')
-    #
-    #     if args.pop_kill:
-    #         gp.pop_kill()
-    #
-    #     gp.evoloop(args.gen_additionally)
-
-    # gp.evoloop_monitoring_plots()
-    #
-    # # if args.gen_max:
-    # #     conf.gen_max = args.gen_max  # workaroung for prepared run. sfeh: why workaround?  # delete this
-    #
-    # if args.analyze or not args.less_files:
-    #     gp.paretofront.analyze_pareto(cpu_cores=args.mp_cores)
-    # else:
-    #     print_blue('You decided not to use analyze a run.\n'
-    #                'This option was created for distributed cluster evaluation on slurm. The files\n'
-    #                '1. May be deprecated if the GP process is restarted from here'
-    #                '2. take a lot of disc space (many images)\n'
-    #                '3. Need to be computed, after all\n'
-    #                '4. Computation (Already happened, although not lately ;~D)')
-    #
-    # print('***Program ending***\n'
-    #       '********************\n\n')
-    # sys.exit()
-
-
-# def autotests():
-#     # sfeh:open
+    print('***Program ending***\n'
+          '********************\n\n')
+    sys.exit()
 
 
 if __name__ == "__main__":

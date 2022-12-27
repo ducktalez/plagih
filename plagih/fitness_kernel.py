@@ -44,7 +44,7 @@ class Kernel:
     idea: supporting multiple Kernels?
     """
 
-    def __init__(self, data_train, data_control, action_clip, action_round, action_name=None, tf_gpu_allow_growth=True, tf_device='/gpu:0', tf_device_log=False, *args, **kwargs):
+    def __init__(self, data_train, data_control, action_clip, action_round, tf_gpu_allow_growth=True, tf_device='/gpu:0', tf_device_log=False, *args, **kwargs):
         """
         sfeh: tf_device_log is set automatically to false
         """
@@ -107,9 +107,9 @@ class RegressionKernel(Kernel):
         """
 
         action_bins = self.histogram_bins()
-        expr_sym = tree.eval_expr_str()
+        expr_raw = tree.eval_expr_str()
         # used_observations = tree.get_observation_list()  sfeh:delete all the cases where this was used
-        pairwise_diff = self.eval_tf(expr_sym)['pairwise_diff']
+        pairwise_diff = self.eval_tf(expr_raw)['pairwise_diff']
 
         with plt.rc_context(rc=pyplot_rc_tex):
             fig, ax = plt.subplots()
@@ -178,9 +178,9 @@ def sfeh_open():
     #     # (1 * tf.abs(pairwise_diff)) - # 1 * abs, as the other one is within the error. usually 2*  # sfeh not sure
     #     exploration_korridor = tf.abs(
     #         self.solution - self.origin_results)  # the complete range that is 'okay' to actually explore here.
-    #     exploration = (self.origin_results - results)  # the difference to the origin - which we want to "penalize" here
+    #     exploration = (self.origin_results - results)  # the difference to the origin - which to "penalize" here
     #     explore_penalize = tf.maximum(exploration_korridor - exploration,
-    #                                           0)  # removes the above mentioned expected exploration from the penalize process
+    #                                           0)  # removes the above mentioned expected exploration from penalize
     #     penalize_exploration = self.pen_explorate * (
     #         tf_error(explore_penalize))  # this should not be weighted as much as the regular expression (0 to 1).
     #     # Although, even more extreme penalisations are possible. Also, ideas about dummy pen

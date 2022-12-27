@@ -125,7 +125,6 @@ class TreeBuilder:
     return np.random.choice(func_list, p_full=probability_list)
     """
 
-    # todo sfeh random with sympy?
     distributions = {float: [lambda: random.normalvariate(0, 1),
                              lambda: random.normalvariate(1, 1),
                              lambda: random.normalvariate(10, 5),
@@ -184,10 +183,6 @@ class TreeBuilder:
                              Lt: 0.5, Le: 0.5, Gt: 0.1, Ge: 0.1,
                              Ifte: 2,
                              BinaryMin: 1, BinaryMax: 1}
-
-        # if no_crazyops:  # todo remove non-allowed operators, (dont allow them), kick them ou while rebuilding
-        #     del operator_pool['**']
-        #     # workaround sfeh (delete this)
 
         operator_pool_check(operator_pool)
 
@@ -325,46 +320,7 @@ class TreeBuilder:
 
         return self.choose_const(xtype)
 
-    def invent_core_depth(self, xtype, depth_goal, p_full=1.0, depth=0):  # sfeh:check grow method
-        """
-        # sfeh:discussion set path/id?
-        """
-        if depth >= self.depth_max or depth == depth_goal or random.random() > p_full:  # or nodeops_max <= 0
-            label = self.choose_term(xtype)
-            childs = []
-        else:
-            label = self.choose_op(xtype)
-            childs = [self.invent_core_depth(depth_goal, xt, p_full, depth=depth + 1) for xt in label.xtype[0]]
-
-        node = TreeNode(label=label, childs=childs, depth=depth)  # , depth=depth sfeh no depth?
-
-        return node
-
-    def invent_core_nodeops(self, xt, nodeamount_left, depth=0):
-        """
-        This version counts the amount of operators as construction limit!
-        sfeh:idea nodes are now about being operators...
-        '+': xtype = (tuple([float, float]), float)
-        sfeh:pfull?
-        """
-        childs = []
-        label = self.choose_op(xt)
-
-        if depth == self.depth_max or nodeamount_left == 0:
-            label = self.choose_term(xt)
-
-        else:  # nodeops_max > 0:
-            nodeamount_left -= 1
-            nodeops_split = randomly_split_range(nodeamount_left, label.arity)
-
-            for ii, xt_child in enumerate(label.xtype[0]):
-                childs.append(self.invent_core_nodeops(xt_child, nodeops_split[ii], depth=depth + 1))
-
-        node = TreeNode(label=label, childs=childs, depth=depth)  # , depth=depth sfeh no depth?
-
-        return node
-
-    def invent_core_depth(self, xt, depth_goal, p_full=1.0, depth=0):  # sfeh:check grow method
+    def invent_core_depth(self, xt, depth_goal, depth=0, p_full=1.0):  # sfeh:check grow method
         """
         # sfeh:discussion set path/id?
         """
@@ -375,6 +331,30 @@ class TreeBuilder:
             label = self.choose_op(xt)  # self.choose_any(xtype, p_full)
             childs = [self.invent_core_depth(xt, depth_goal, p_full=p_full, depth=depth + 1) for xt in label.xtype[0]]
             node = TreeNode(label=label, childs=childs, depth=depth)  # , depth=depth sfeh no depth?
+
+        return node
+
+    def invent_core_operatoramount(self, xt, operatoramount_left, depth=0, p_full=1.0):
+        """
+        This version counts the amount of operators as construction limit!
+        sfeh:idea nodes are now about being operators...
+        '+': xtype = (tuple([float, float]), float)
+        sfeh:pfull?
+        """
+        childs = []
+        label = self.choose_op(xt)
+
+        if depth == self.depth_max or operatoramount_left == 0:
+            label = self.choose_term(xt)
+
+        else:  # nodeops_max > 0:
+            operatoramount_left -= 1
+            nodeops_split = randomly_split_range(operatoramount_left, label.arity)
+
+            for ii, xt_child in enumerate(label.xtype[0]):
+                childs.append(self.invent_core_operatoramount(xt_child, nodeops_split[ii], depth=depth + 1))
+
+        node = TreeNode(label=label, childs=childs, depth=depth)  # , depth=depth sfeh no depth?
 
         return node
 
@@ -393,7 +373,7 @@ class TreeBuilder:
         # mutate_filter = 'gaussian_filter'  # sfeh:future
 
         node = np.random.choice(evotree.eval_mutable_nodes())
-        node.evolve_mutate_filter_branch(PRECISION)
+        node.evolve_mutate_filter_branch()
 
         # sfeh ==>state
         return evotree
@@ -435,7 +415,7 @@ class TreeBuilder:
         """
         node = np.random.choice(evotree.eval_mutable_nodes())
         xtype_out = node.get_xtype_out()
-        branch = self.invent_core_depth(xtype_out, depth_goal, p_full, depth=0)  # sfeh ==>dummies
+        branch = self.invent_core_depth(xtype_out, depth_goal, p_full=p_full, depth=0)  # sfeh ==>dummies
         node.set_new_node(branch)
         # if node.depth == depth_goal:
         #     node.set_label(tb.choose_term(xtype_out))  # sfeh update node nlabel
@@ -445,7 +425,7 @@ class TreeBuilder:
         # etree.finalize()  # sfeh ==>state
         return evotree
 
-    def evolve_mutate_branch_nodes(self, evotree, nodes_goal):
+    def evolve_mutate_branch_nodes(self, evotree, nodes_goal, p_full=1.0):
         """
         evotree, cool_build_size, p_full=p_full
 
@@ -454,7 +434,7 @@ class TreeBuilder:
         """
         node = np.random.choice(evotree.eval_mutable_nodes())
         xtype_out = node.get_xtype_out()
-        branch = self.invent_core_nodeops(xtype_out, nodes_goal, depth=node.depth)
+        branch = self.invent_core_operatoramount(xtype_out, nodes_goal, depth=node.depth, p_full=p_full)
         node.set_new_node(branch)
         return evotree
 
@@ -510,7 +490,7 @@ class TreeBuilder:
 
         sfeh:discussion there is a difference between parsimony and complexity...
         sfeh:discuss analyze the amount of trees that have to be pruned?
-        todo add labelweight_max to
+        sfeh:open add labelweight_max to
         """
 
         nodelist = evotree.eval_mutable_nodes()
@@ -577,13 +557,13 @@ class TreeBuilder:
                     layer0_nodes):  # pareto_insert branches! get layer every time (node ids might have changed)
                 lvl0_node = np.random.choice(node0.eval_mutable_nodes())  # layer0_branch =
                 # branch_size = layer0_nodes[ii]  # sfeh:idea + len(lvl0_node)
-                new_subbranch = self.invent_core_nodeops(lvl0_node.get_xtype_out(), layer0_splits[ii],
-                                                         depth=lvl0_node.depth)
+                new_subbranch = self.invent_core_operatoramount(lvl0_node.get_xtype_out(), layer0_splits[ii],
+                                                                depth=lvl0_node.depth)
                 lvl0_node.set_new_node(new_subbranch)
 
         else:
 
-            evotree = self.invent_core_nodeops(xtype, nodeamount, depth=0)  # more debugging?
+            evotree = self.invent_core_operatoramount(xtype, nodeamount, depth=0)  # more debugging?
 
         return evotree
 
@@ -794,7 +774,7 @@ def rec_build_tree2(lst, depth=0, obs_list=None):
         try:
             strlabel = float(strlabel)
             label = FloatConstant(strlabel)
-        except ValueError:  # todo match exception
+        except ValueError:  # sfeh:debug match exception
             if strlabel in loadable_ops_dict:
                 label = loadable_ops_dict[strlabel]
             else:
@@ -827,7 +807,7 @@ def check_tree_loadable_reconstruction(tree: TreeNode):
     tree_0 = copy.deepcopy(tree)
     _nested = tree.eval_expr_str()
     tree_1 = node_from_nested_labels(_nested)
-    tree_1.update_fixed_nodes(tree_0)  # todo
+    tree_1.update_fixed_nodes(tree_0)
 
     a = repr(tree_0)
     b = repr(tree_1)

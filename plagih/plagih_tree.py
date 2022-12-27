@@ -145,7 +145,8 @@ class TreeNode:
     def get_observation_list(self):
         """
         these are required for the evaluation (are loaded by Tensorflow)
-        todo returns [cartVel, -cartVel], should not ever happen?
+        sfeh:bug returns [cartVel, -cartVel], should not ever happen?
+        -> SFEH: But it is also not used anymore
         """
         obslist = []
         if self.get_arity() > 0:
@@ -171,6 +172,7 @@ class TreeNode:
 
     def update_fixed_nodes(self, origin: 'TreeNode'):
         """
+        deprecated.
         Updating the fixed nodes in a tree where they were lost for some reason.
         This should never be the case! But it happened during development of recreating a tree from expression.
         This might also be useful in tree checks
@@ -244,7 +246,7 @@ class TreeNode:
         """
 
         expr_str = self.label.nlabel
-        expr_str = f'"{expr_str}"'  # todo
+        expr_str = f'"{expr_str}"'  # sfeh:delete? Here was a to-do, idk why
 
         if self.childs:
             cc_expr = [cc.eval_expr_todo() for cc in self.childs]
@@ -259,7 +261,7 @@ class TreeNode:
 
         """
         expr_str = self.label.nlabel
-        expr_str = f'"{expr_str}"'  # todo
+        expr_str = f'"{expr_str}"'  # sfeh: Also not used anymore? to-do was here
 
         if self.childs:
             cc_expr = [cc.eval_nested() for cc in self.childs]
@@ -272,7 +274,7 @@ class TreeNode:
     def eval_expr_str(self):
         """
         Accumulate and return the complete expression the fintree holds recursively
-        todo directly to sympy in a different method
+        todo directly sympy in a different method
         """
 
         _expr = f'{self.label.nlabel}'

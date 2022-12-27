@@ -160,8 +160,8 @@ def _test_random_pop():
     ### Run/Computation restrictions
     pop_max = 100
     gen_max = 100
-    tree_nodes_max = 50
-    tree_depth_max = 10
+    nodeamount_max = 50
+    depth_max = 10
 
     # GP Evolution
     period = {'gen_plots': 5, 'gen_save': 5}
@@ -178,7 +178,7 @@ def _test_random_pop():
 
     # tree construction complexity
     obs_names = ['cartVel', 'cartPos']
-    tb = TreeBuilder(obs_names, tree_depth_max, tree_nodes_max, root_xtype=float)
+    tb = TreeBuilder(obs_names, depth_max, nodeamount_max, root_xtype=float)
     period_plots = 10
     period_save = 10
     gp = ExplainableGP(name, pop_max, gen_max, rootdir, kernel, complexity_measure, origin_tree, tb, period_plots,

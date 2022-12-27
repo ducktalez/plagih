@@ -50,7 +50,6 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-tf_gpu_allow_growth', type=bool, help='I dont know how a GPU can grow, but here you have the option.')
     parser.add_argument('-tf_device', default="/gpu:0", help='I hope your GPU nas Nvidia Cuda cores')
     parser.add_argument('-tf_device_log', type=Path, help='Logging tensorflow evaluation feedback. (recently: checked if GPU actually used)')
-    parser.add_argument('-mp_cores', type=int, default=4, help='Maximum amount of cores for parallelisation.')
 
     # For developers only, halting at some code
     parser.add_argument('-develop', '-dev', action='store_true', help='Extensive debugging and fintree testing during the developing process.')
@@ -73,8 +72,6 @@ def main():  # argv sys.argv[1:]
     rootdir = path_make_dir(args.rootdir or rootdir)
 
     gp = ExplainableGP(conf, rootdir, path_origin, path_data_csv, args)
-    time_start2 = time.perf_counter()
-    gp.printpl('gg', f'Init. Time: {time.perf_counter() - time_start2:4.2f}s')
 
     if args.analyze:
         if args.force_new_run:

@@ -57,7 +57,7 @@ class Config:
     #     self.gen_max = args.gen_max or int(conf.get('gen_max', 1000))  # : 1000,  # Maximum amount of generations
     #
     #     # GP Evolution
-    #     self.tourn_size = int(conf.get('tourn_size', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
+    #     self.tournsize = int(conf.get('tournsize', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
     #     self.period = conf.get('period', {'gen_plots': 5, 'gen_save': 5})  # sfeh 10 or 5 for debugging, something higher for actual runs
     #
     #     # sfeh not here?
@@ -117,7 +117,7 @@ class Config:
         self.gen_max = args.gen_max or int(conf.get('gen_max', 1000))  # : 1000,  # Maximum amount of generations
 
         # GP Evolution
-        self.tourn_size = int(conf.get('tourn_size', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
+        self.tournsize = int(conf.get('tournsize', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
         self.period = conf.get('period', {'gen_plots': 5, 'gen_save': 5})  # sfeh 10 or 5 for debugging, something higher for actual runs
 
         # sfeh not here?

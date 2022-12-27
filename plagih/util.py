@@ -9,7 +9,7 @@ from distutils.spawn import find_executable
 
 DEBUG_DUMMY = True  # Use this to find codeblocks that are just interesting during development
 TEST_DUMMY = True  # sfeh: actually use this later! check trees, check if all ops are usable,
-PRINT_DUMMY = 'wwaaggiiff'  # todo print funktion in util mit buchstaben, die aber überschrieben werden können
+PRINT_DUMMY = 'wwwwwaaagggggiiifff'  # todo print funktion in util mit buchstaben, die aber überschrieben werden können
 PRECISION = 6
 
 

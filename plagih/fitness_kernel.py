@@ -39,6 +39,7 @@ def get_observation_names(df, action_name):
 
 class Kernel:
     """
+    sfeh:OfflineKernel? Also: online kernels here?
     The "abstract" Kernel class for the GP process.
     idea: supporting multiple Kernels?
     """
@@ -47,6 +48,7 @@ class Kernel:
         """
         sfeh: tf_device_log is set automatically to false
         """
+
         # Evaluating kernel (that uses tensorflow)
         self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=tf_device_log,
                                                   allow_soft_placement=True)  # check if GPU is actually used
@@ -60,18 +62,20 @@ class Kernel:
         self.action_clip = action_clip
         self.action_round = action_round
 
+        # todo obs_list here? or in treeBuilder?
+
     def eval_tf(self, *args, **kwargs):
         return float('nan')
 
 
 class RegressionKernel(Kernel):
 
-    def __init__(self, use_RMSE_vs_MAE_dummy_todo, data_train, data_control, action_name, *args, **kwargs):
-        super().__init__(data_train, data_control, action_name, *args, **kwargs)
+    def __init__(self, use_RMSE_vs_MAE_dummy_todo, data_train, data_control, action_clip, action_round, action_name, *args, **kwargs):
+        super().__init__(data_train, data_control, action_clip, action_round, *args, **kwargs)
 
         self.solution = tf.constant(self.data_train[action_name])  # tensors[self.action.name]
         self.use_RMSE_vs_MAE_dummy_todo = use_RMSE_vs_MAE_dummy_todo
-        # todo todotodo
+        # todo xxx
 
         return
 
@@ -104,8 +108,8 @@ class RegressionKernel(Kernel):
 
         action_bins = self.histogram_bins()
         expr_sym = tree.eval_expr_str()
-        used_observations = tree.get_observation_list()
-        pairwise_diff = self.eval_tf(expr_sym, used_observations)['pairwise_diff']
+        # used_observations = tree.get_observation_list()  sfeh:delete all the cases where this was used
+        pairwise_diff = self.eval_tf(expr_sym)['pairwise_diff']
 
         with plt.rc_context(rc=pyplot_rc_tex):
             fig, ax = plt.subplots()
@@ -117,8 +121,10 @@ class RegressionKernel(Kernel):
 
         return histpath
 
-    def eval_tf(self, expr, used_observations):
+    def eval_tf(self, expr):
         """
+        -->>>>> used_observations was here, delete me
+
         Evaluates an expression using TensorFlow (TF)
         - receives a (string) expression in numpy-style that was reduced with pythons "sympy" (for simplification)
         - uses "ast" to generate a, kind of, python-intern-executable-fintree
@@ -130,22 +136,21 @@ class RegressionKernel(Kernel):
         results = results_raw  # The ids change in the next lines! {id(results)} vs. {id(results_raw)}
 
         if self.action_round is not None:
-            results = tf.round(results, self.action_round)
+            results = tf.round(results)
         if self.action_clip is not None:
-            results = tf.clip_by_value(self.action_clip[0], self.action_clip[1])
+            results = tf.clip_by_value(results, self.action_clip[0], self.action_clip[1])
 
         pairwise_diff = self.solution - results
 
         if self.use_RMSE_vs_MAE_dummy_todo:  # sfeh huber loss! mse, mae, rmse, huber, (log)
-            # regression_errors = tf.square(pairwise_diff)
-            # # sfeh:keras option for RMSE available:
-            # tf.keras.metrics.RootMeanSquaredError(pairwise_diff)
-            # mean_error = tf.sqrt(tf.reduce_mean(regression_errors))
-            mean_error = keras.metrics.RootMeanSquaredError()
+            regression_errors = tf.square(pairwise_diff)
+            # sfeh:keras option for RMSE available:
+            mean_error = tf.sqrt(tf.reduce_mean(regression_errors))
+            # mean_error = keras.metrics.RootMeanSquaredError(pairwise_diff)
         else:
-            # regression_errors = tf.abs(pairwise_diff)
-            # mean_error = tf.reduce_mean(regression_errors)
-            mean_error = keras.metrics.MeanAbsoluteError()
+            regression_errors = tf.abs(pairwise_diff)
+            mean_error = tf.reduce_mean(regression_errors)
+            # mean_error = keras.metrics.MeanAbsoluteError(pairwise_diff)
 
         with tf.compat.v1.Session(config=self.tf_config) as sess:
             with sess.graph.device(self.tf_device):  # GPU evaluation in tensorflow

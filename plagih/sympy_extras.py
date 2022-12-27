@@ -57,7 +57,7 @@ class NodeLabel:
     tflow = None
     insym = None
 
-    # expr_sym = None  # todo: does zis
+    # expr_sym = None  # sfeh:del zis?
 
     def __str__(self):
         return self.nlabel
@@ -93,10 +93,6 @@ class ChainableOperator(NodeLabel):
     # @classmethod
     # def eval(self, *args):
     #     return  # args[self.arity:]  # todo
-
-
-class NoSympyClass:
-    pass
 
 
 class Terminal(NodeLabel):
@@ -350,7 +346,7 @@ class Pow(Operator):
         pass
 
 
-class Powrounded(Operator, NoSympyClass):
+class Powrounded(Operator):
     """
     ALERT: This Power Version does not round the results
     inline-available
@@ -433,7 +429,7 @@ class Square(Operator):
         return self.eval(*args)
 
 
-class Sqrt(Operator, NoSympyClass):
+class Sqrt(Operator):
     nlabel = 'sqrt'
     arity = 1
     tflow = tf.sqrt
@@ -454,7 +450,7 @@ class Log(Operator):
     xtype = (tuple([float]), float)
 
 
-class Log1p(Operator, NoSympyClass):
+class Log1p(Operator):
     nlabel = 'log1p'
     arity = 1
     tflow = tf.math.log1p
@@ -811,7 +807,7 @@ class Ge(Operator):
     xtype = (tuple([float, float]), bool)
 
 
-# class Usub(sympy.Function, Operator, NoSympyClass):
+# class Usub(sympy.Function, Operator):
 #     """
 #     todo idea introduce negative labels as input?
 #     """
@@ -823,7 +819,6 @@ class Ge(Operator):
 #     xtype = (tuple([float]), float)
 #
 #     nargs = 1
-#     is_Function = True
 #     is_real = True
 #
 #     @classmethod
@@ -937,7 +932,7 @@ class MapxOr(Operator):
     xtype = (tuple([bool, bool]), bool)
 
 
-class Round(Operator, sympy.Function, NoSympyClass):
+class Round(Operator, sympy.Function):
     """
     sfeh:discussion this does only round to full numbers
     """
@@ -1033,7 +1028,7 @@ def expr_sympify(expr, evaluate=None, eval_locals=None):
         #     print('fdsfdsahds')
         if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I):
             raise ArithmeticError(f'Simplification failed for expression: {expr_sym}')
-        return # expr_sym
+        return expr_sym
 
     except ValueError as ex:
         # return 'nan'  # 'nan' always evaluates to nan. ALl nan bugs should be solved.
@@ -1223,6 +1218,7 @@ def sympy_to_tensorflow(expr, pandas_data=None):
 
     sympy.logic.boolalg.ITE is not If-then-else
     sympy.cosh can emerge out of sin-stuff
+    sympy.sympify('True')->True is no sympy expression anymore
     """
     # shape = tensors[list(tensors.keys())[0]].get_shape()  # sfeh:open:workaround:
 
@@ -1233,7 +1229,7 @@ def sympy_to_tensorflow(expr, pandas_data=None):
         expr = True if isinstance(expr, sympy.logic.boolalg.BooleanTrue) else False  # sfeh:collect sympy bug gotcha bug
         return tf.constant(expr, dtype=tf.dtypes.bool)
 
-    # the following lines are not required, when sympy filters for bad expressions earlier
+    # the following lines are not required, if sympy filters for bad expressions earlier
     # if expr.is_imaginary or expr.is_infinite:
     #     raise ValueError(f'Cannot convert this to Tensorflow: {expr}')
 
@@ -1254,7 +1250,7 @@ def sympy_to_tensorflow(expr, pandas_data=None):
         if isinstance(expr, sympy.Piecewise):
             _revlist = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
             _revlist = [[sympy_to_tensorflow(xx, pandas_data=pandas_data) for xx in list(x)] for x in _revlist]
-            otherwise = _revlist[0][0]  # aka the last "True" condition
+            otherwise = _revlist[0][0]  # the last "True" condition
             for x in _revlist[1:]:
                 otherwise = tf.where(x[1], x[0], otherwise)
             return otherwise

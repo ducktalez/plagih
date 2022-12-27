@@ -2,6 +2,9 @@
 This starts the whole genetic programming.
 This (extra) file was added to have a file in the root directory that can be started.
 """
+from sklearn.model_selection import train_test_split
+
+from plagih.fitness_kernel import RegressionKernel
 from plagih.plagih_gp_base_class_xai import *
 from plagih.util import *
 
@@ -153,6 +156,7 @@ def _test_random_pop():
     df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P design pattern #YOLO
     data_train, data_control = train_test_split(df, test_size=0.2, random_state=0)
     use_RMSE_vs_MAE_dummy_todo = True  # RMSE
+    root_type = float
     action_clip = [0, 2]
     action_round = 0
     kernel = RegressionKernel(use_RMSE_vs_MAE_dummy_todo, data_train, data_control, action_clip, action_round, action_name)
@@ -178,7 +182,8 @@ def _test_random_pop():
 
     # tree construction complexity
     obs_names = ['cartVel', 'cartPos']
-    tb = TreeBuilder(obs_names, depth_max, nodeamount_max, root_xtype=float)
+    tb = TreeBuilder(obs_names, depth_max, nodeamount_max, root_xtype=root_type)
+
     period_plots = 10
     period_save = 10
     gp = ExplainableGP(name, pop_max, gen_max, rootdir, kernel, complexity_measure, origin_tree, tb, period_plots,

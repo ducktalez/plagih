@@ -514,7 +514,7 @@ class TreeBuilder:
             prune_amount = len(evotree) - self.nodeamount_max
         return evotree
 
-    def pop_random_depth(self, depth_goal, p_full, xtype=None):
+    def pop_random_depth(self, depth_goal, p_full=1, xtype=None):
         # sfeh:random make origin with modifiable nodes first change leaf nodes
         xtype = xtype or self.root_xtype
 
@@ -567,24 +567,24 @@ class TreeBuilder:
 
         return evotree
 
-    def check_all(self, tree: TreeNode, fatal=False, extre_tests=False):
+    def check_all(self, tree: TreeNode, raise_on_failure=False, extre_tests=False):
         """
-        :param fatal: if True, raise Exception
+        :param raise_on_failure: if True, raise Exception
         :return:
         """
 
         # checks will raise an Exception if they fail
         checks = [
             tree.is_root(),
-            tree.check_typing(self.root_xtype, fatal=fatal),
-            tree.selfcheck(fatal=fatal),
+            tree.check_typing(self.root_xtype, fatal=raise_on_failure),
+            tree.selfcheck(fatal=raise_on_failure),
         ]
         if extre_tests:
             #
             checks.extend([tree.get_max_depth() <= self.depth_max])
         faults = len(checks) - sum(checks)
         if faults > 0:
-            if fatal:
+            if raise_on_failure:
                 raise
             print_warning('ww', f'Tree failed check: {tree}')
         return faults  # returns true if all checks are true

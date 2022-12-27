@@ -121,19 +121,16 @@ class ExplainableGP:
                 printez('a', f'Starting a new paretofront with parsimony: {self.paretofront[0].get_parsimony()} '
                              f'fitness: {self.paretofront[0].get_fitness():6.4f}')
 
-            # tmp_pareto = pareto_from_pop(self.pop_next)  # sfeh:optional paretofront in each generation?
+            # tmp_pareto = pareto_from_pop(self.pop_next)  # sfeh:idea paretofront in each generation?
             self.paretofront = self.run_update_paretofront(self.paretofront)
 
             gen_time = time.perf_counter() - self.time_genstart
-            pop_analysis_dict = pop_analyze(self.pop_next)
-            pop_analysis_dict['gen_time'] = gen_time
-            pop_analysis_dict['gens_since_last_pareto'] = self.gens_since_last_pareto
+            pop_analysis_dict = pop_analyze(self.pop_next, gen_time, self.gens_since_last_pareto)
             self.monitor_df.loc[self.gen_id] = pop_analysis_dict
-
             self.printpl('gg', f"Created {len(self.pop_next)}/{self.pop_max} ({pop_analysis_dict['pop_unique']}"
                                f" unique) in generation {self.gen_id}. Gen took {gen_time:4.2f}s")
 
-            self.pop_base = self.pop_next[:]  # deepcopy
+            self.pop_base = self.pop_next[:]  # is deepcopy
             self.pop_next = []
 
             self.printpl('ggg', f'Gen {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}.')
@@ -222,20 +219,19 @@ class ExplainableGP:
             #     for nn in range(evolve_num):
             #         evotree = tb.pop_random(goaldepth_randomizer=None, goalnodes_randomizer, p_full, origin=self.origin)
             #         self.genloop_performance_append_tree(evotree, tag)
-            @self.create_trees(1)
+            @self.create_trees(0.5)
             def rand1():
-                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(4, 1)), 1, 5), p_full=1, xtype=float)
+                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(4, 1)), 1, 5), p_full=1)
 
-            # def rand2():
-            #     # todo float? nope
-            #     return [self.tb.pop_random_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 5), p_full=1, xtype=float)]
-            # self.create_trees(0.5, rand2)
+            @self.create_trees(0.5)
+            def rand2():
+                return [self.tb.pop_random_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 5), p_full=1)]
         return
 
     def lut_to_meta(self, evotree):
         if DEBUG_DUMMY:
             # if trees are 100% safely created, tree checks are not required. Useful when trying out new gp-operators.
-            self.tb.check_all(evotree, fatal=False)  # sfeh fatal=True? (raise)
+            self.tb.check_all(evotree, raise_on_failure=False)  # sfeh fatal=True? (raise)
 
         try:
             meta = self.lut[str(evotree)]  # fixed nodes not relevant
@@ -276,7 +272,7 @@ class ExplainableGP:
                     self.evaluate_and_append(evotree)
                     # self.printpl('ggggg', f'Success with tree: {evotree}')
                     n_success += 1
-                except (ValueError, ArithmeticError, TypeError):
+                except (ValueError, ArithmeticError, TypeError) as ex:
                     n_fails += 1
 
         return loop
@@ -341,12 +337,12 @@ class ExplainableGP:
 
         @self.create_trees(0.1)
         def rand1():
-            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(4, 1)), 1, 5), p_full=1, xtype=float)
+            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(4, 1)), 1, 5), p_full=1)
 
         @self.create_trees(0.1)
         def rand2():
             # todo float? nope
-            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 5), p_full=1, xtype=float)
+            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 5), p_full=1)
 
         # @self.create_trees(0.1)
         # def reproSym():
@@ -549,7 +545,7 @@ class ExplainableGP:
         return
 
 
-def pop_analyze(popul):
+def pop_analyze(popul, gen_time, gens_since_last_pareto):
     """
     Analysing the population (done in each generation)
     - amount of trees
@@ -566,7 +562,7 @@ def pop_analyze(popul):
     pop_parsim = [tree.get_parsimony() for tree in popul]
     pop_treelen = [len(fintree.tree) for fintree in popul]
     pop_fitness_best = np.min(pop_fitness)
-    pop_unique = len(set([hash(x) for x in popul]))  # sfeh analyze this?
+    pop_unique = len(set([hash(x) for x in popul]))  # sfeh:analyze this?
     result = {'pop_len': len(popul),
               'pop_unique': pop_unique,
               'fit_avg': np.average(pop_fitness),
@@ -575,9 +571,9 @@ def pop_analyze(popul):
               'parsim_avg': np.average(pop_parsim),
               'parsim_var': np.std(pop_parsim),
               'parsim_best': np.min(pop_treelen),
-              # 'time': gen_time,  # todo
-              # 'gens_since_last_pareto': self.gens_since_last_pareto  # was here!
-              }  # sfeh delete?
+              'time': gen_time,
+              'gens_since_last_pareto': gens_since_last_pareto
+              }
     return result
 
 
@@ -595,7 +591,6 @@ if __name__ == '__main__':
     """
     Alpha tests
     """
-    tb = TreeBuilder(obs_names=['cartPos', 'cartVel'])
     # t1 = tb.invent_core_depth(float, 3, p_full=0.5)
     # tree2 = tb.evolve_mutate_point(t1)
     # t1 = tb.invent_core_depth(float, 3, p_full=0.9)

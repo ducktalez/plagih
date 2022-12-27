@@ -1,11 +1,14 @@
 import os
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+from matplotlib import pyplot as plt
 
-import tensorflow as tf
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 from plagih.util import *
 from plagih.sympy_extras import sympy_to_tensorflow
+
+import tensorflow as tf
+import numpy as np
 
 # Eager execution used to be not possible in tf v1, in tf v2, this is the standard
 # however, we need to build a complete graph before inserting the data in the leaf nodes.

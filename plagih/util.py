@@ -9,6 +9,7 @@ from distutils.spawn import find_executable
 
 DEBUG_DUMMY = True  # Use this to find codeblocks that are just interesting during development
 TEST_DUMMY = True  # sfeh: actually use this later! check trees, check if all ops are usable,
+DELETE_ME = True  # sfeh:delete this when development phase is over
 PRINT_DUMMY = 'wwwwwaaagggggiiifff'  # sfeh:xxx
 PRECISION = 6
 

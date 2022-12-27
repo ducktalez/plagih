@@ -4,8 +4,6 @@ The main class of a gp run. It holds the following functionalities
 - population (pop_base, pop_next)
 -
 """
-
-from plagih.fitness_kernel import *
 from plagih.monitoring import plot_gen_performance
 from plagih.paretofront import *
 from plagih.tree_complexity.tree_edit_distance import apted_distance
@@ -14,6 +12,7 @@ from plagih.tree_factory import *
 import copy
 from pathlib import Path
 import numpy as np
+import pandas as pd
 
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
@@ -131,8 +130,6 @@ class ExplainableGP:
             pop_analysis_dict['gens_since_last_pareto'] = self.gens_since_last_pareto
             self.monitor_df.loc[self.gen_id] = pop_analysis_dict
 
-            # pop_tree_analysis(self.pop_next)
-
             self.printpl('gg', f"Created {len(self.pop_next)}/{self.pop_max} ({pop_analysis_dict['pop_unique']}"
                                f" unique) in generation {self.gen_id}. Gen took {gen_time:4.2f}s")
 
@@ -204,7 +201,7 @@ class ExplainableGP:
                                     x.get_parsimony() >= fintree.get_parsimony()]
                 if obsolete_entries:
                     printyeah('a', f'Paretofront: Removing obsolete entries {[str(x) for x in obsolete_entries]}')
-                paretofront = [x for x in paretofront if x not in obsolete_entries]
+                paretofront = [ftree for ftree in paretofront if ftree not in obsolete_entries]
                 paretofront.append(fintree)
                 paretofront = pareto_sort(paretofront)
 
@@ -469,7 +466,7 @@ class ExplainableGP:
     #     Plots for each tag in the evolution list
     #     (too much, i guess)
     #     sfeh: this should be saved within the trees. Everything else is a waste of memory!
-    #     todo
+    #     sfeh:open
     #     """
     #     try:
     #         with plt.rc_context(rc=pyplot_rc_tex):
@@ -582,29 +579,6 @@ def pop_analyze(popul):
               # 'gens_since_last_pareto': self.gens_since_last_pareto  # was here!
               }  # sfeh delete?
     return result
-
-
-def pop_tree_analysis(popul):
-    """
-
-    """
-    evo_perfo = {}
-    for tree in popul:
-        tag = tree.get_last_evolution()
-        fit = tree.get_fitness()
-        parsim = tree.get_parsimony()
-
-        if evo_perfo.get(tag) is None:
-            evo_perfo[tag] = {'fitness': [], 'parsim': []}
-
-        evo_perfo[tag]['fitness'].append(fit)
-        evo_perfo[tag]['parsim'].append(parsim)
-
-    for tag, v in evo_perfo.items():
-        evo_perfo[tag]['fitness'] = np.average(evo_perfo[tag]['fitness'])
-        evo_perfo[tag]['parsim'] = np.average(evo_perfo[tag]['parsim'])
-    # todo
-    return
 
 
 def printpl(message_type, message_str):

@@ -1,12 +1,8 @@
 import os
 
-import keras.metrics
-
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 import tensorflow as tf
-import pandas as pd
-from sklearn.model_selection import train_test_split
 
 from plagih.util import *
 from plagih.sympy_extras import sympy_to_tensorflow
@@ -30,7 +26,6 @@ class EvalAction:
 
 
 def get_observation_names(df, action_name):
-
     obs_names = list(df.columns)
     obs_names.remove(action_name)
 
@@ -44,7 +39,8 @@ class Kernel:
     idea: supporting multiple Kernels?
     """
 
-    def __init__(self, data_train, data_control, action_clip, action_round, tf_gpu_allow_growth=True, tf_device='/gpu:0', tf_device_log=False, *args, **kwargs):
+    def __init__(self, data_train, data_control, action_clip, action_round, tf_gpu_allow_growth=True,
+                 tf_device='/gpu:0', tf_device_log=False, *args, **kwargs):
         """
         sfeh: tf_device_log is set automatically to false
         """
@@ -62,15 +58,14 @@ class Kernel:
         self.action_clip = action_clip
         self.action_round = action_round
 
-        # todo obs_list here? or in treeBuilder?
-
     def eval_tf(self, *args, **kwargs):
         return float('nan')
 
 
 class RegressionKernel(Kernel):
 
-    def __init__(self, use_RMSE_vs_MAE_dummy_todo, data_train, data_control, action_clip, action_round, action_name, *args, **kwargs):
+    def __init__(self, use_RMSE_vs_MAE_dummy_todo, data_train, data_control, action_clip, action_round, action_name,
+                 *args, **kwargs):
         super().__init__(data_train, data_control, action_clip, action_round, *args, **kwargs)
 
         self.solution = tf.constant(self.data_train[action_name])  # tensors[self.action.name]
@@ -223,7 +218,6 @@ def sfeh_open():
     #     if k in kernel_name:
     #         self.pen_explorate = v
 
-
 # class ClassificationKernel(Kernel):
 #
 #     def __init__(self, path_data_csv, conf, *args, **kwargs):
@@ -328,28 +322,28 @@ def sfeh_open():
 #         #  # , 'predicted_labels': predicted_labels    # predicted_labels
 #         pass
 
-    # def conclusion_text(self, result, fitness_control_best):
-    #     """
-    #
-    #     """
-    #     elif self.kernel == 'regression':
-    #         mse = skm.mean_squared_error(result['agent_result'], result['solution_goal'])
-    #         result_str += ('\n\n Regression fitness_train score: {}'.format(result['fitness_train']))
-    #         result_str += ('\n Mean Squared Error: {}'.format(mse))
-    #
-    #     result_str = ''
-    #
-    #     if self.kernel == 'classification':
-    #         result_str += f'\n\n Classification fitness_train score: {fitness_control_best}'
-    #         result_str += ('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['solution_goal'], result['predicted_labels'][0])))
-    #         result_str += ('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution_goal'], result['predicted_labels'][0])))
-    #
-    #     elif self.kernel == 'regression bounded':
-    #
-    #     elif self.kernel == 'match':
-    #         result_str += f"\n\n Matching fitness_train score: {result['fitness_train']}"
-    #
-    #     else:  # 'regression discrete':
-    #         result_str = 'No summary provided for this kernel'
-    #
-    #     return result_str
+# def conclusion_text(self, result, fitness_control_best):
+#     """
+#
+#     """
+#     elif self.kernel == 'regression':
+#         mse = skm.mean_squared_error(result['agent_result'], result['solution_goal'])
+#         result_str += ('\n\n Regression fitness_train score: {}'.format(result['fitness_train']))
+#         result_str += ('\n Mean Squared Error: {}'.format(mse))
+#
+#     result_str = ''
+#
+#     if self.kernel == 'classification':
+#         result_str += f'\n\n Classification fitness_train score: {fitness_control_best}'
+#         result_str += ('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['solution_goal'], result['predicted_labels'][0])))
+#         result_str += ('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution_goal'], result['predicted_labels'][0])))
+#
+#     elif self.kernel == 'regression bounded':
+#
+#     elif self.kernel == 'match':
+#         result_str += f"\n\n Matching fitness_train score: {result['fitness_train']}"
+#
+#     else:  # 'regression discrete':
+#         result_str = 'No summary provided for this kernel'
+#
+#     return result_str

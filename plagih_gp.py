@@ -173,7 +173,7 @@ def _test_random_pop():
     # '["Ifte",["<",["cartVel"],["0"]],["0"],["2"]]'
     # '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]'
     # sfeh:open give user feedback for tree
-    origin_tree = tree_from_nested_labels('["Ifte",["<",["cartVel"],["0"]],["0"],["2"]]', kernel, obs_list)
+    origin_tree = tree_from_nested_labels('["Ifte",["<",["cartVel"],["0"]],["0"],["2"]]', kernel)
     # origin_tree = None
 
     # tree construction complexity

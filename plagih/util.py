@@ -9,7 +9,7 @@ from distutils.spawn import find_executable
 
 DEBUG_DUMMY = True  # Use this to find codeblocks that are just interesting during development
 TEST_DUMMY = True  # sfeh: actually use this later! check trees, check if all ops are usable,
-PRINT_DUMMY = 'wwwwwaaagggggiiifff'  # todo print funktion in util mit buchstaben, die aber überschrieben werden können
+PRINT_DUMMY = 'wwwwwaaagggggiiifff'  # sfeh:xxx
 PRECISION = 6
 
 
@@ -161,12 +161,6 @@ pyplot_rc_two_column = {'figure.autolayout': True,
 
 rc_pyplot_size = {'figure.figsize': pyplot_size}
 # ['text.latex.preamble'=r"\usepackage{lmodern}"]
-
-# pyplot_rc_options = {'font.family': 'serif',
-#                      'font.serif': ['Times', 'Palatino', 'New Century Schoolbook', 'Bookman', 'Computer Modern Roman'],
-#                      'font.sans-serif': ['Helvetica', 'Avant Garde', 'Computer Modern Sans serif'],
-#                      'font.cursive': ['Zapf Chancery'],
-#                      'font.monospace': ['Courier', 'Computer Modern Typewriter']}
 
 # def plot_rc_default(self):
 #     rc('font', weight='bold')    # bold fonts are easier to see

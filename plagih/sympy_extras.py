@@ -57,7 +57,7 @@ class NodeLabel:
     tflow = None
     insym = None
 
-    expr_sym = None  # todo: does zis
+    # expr_sym = None  # todo: does zis
 
     def __str__(self):
         return self.nlabel
@@ -81,9 +81,6 @@ class Operator(NodeLabel, sympy.Function):
     def eval(cls, *args):
         return cls.insym(*args)  # just if no eval is implemented
 
-    def tflambda(self):
-        pass
-
 
 class ChainableOperator(NodeLabel):
     """
@@ -96,9 +93,6 @@ class ChainableOperator(NodeLabel):
     # @classmethod
     # def eval(self, *args):
     #     return  # args[self.arity:]  # todo
-
-    def tflambda(self):
-        pass
 
 
 class NoSympyClass:
@@ -162,7 +156,7 @@ class Observation(Terminal):
         self.nlabel = nlabel
         self.fam, self.timeindex, _ = observation_get_family_and_time(self.nlabel, none_return=None)
         self.xtype = (tuple([]), float)  # tuple([]) -> workaround for empty tuple
-        self.expr_sym = self.nlabel
+        # self.expr_sym = self.nlabel
         self.index_minmax = None
 
 
@@ -176,7 +170,7 @@ class FloatConstant(Constant):
 
     def __init__(self, nlabel):
         self.nlabel = nlabel
-        self.expr_sym = self.nlabel
+        # self.expr_sym = self.nlabel
 
     def mutate_self_filter(self, filter_type='gaussian_filter', *args, **kwargs):  # sfeh:open
         """
@@ -198,9 +192,8 @@ class BoolConstant(Constant):
     tf_type = tf.bool
 
     def __init__(self, expr):
-        # super().__init__(nlabel)
         self.nlabel = expr
-        self.expr_sym = str(self.nlabel)
+        # self.expr_sym = str(self.nlabel)
 
     def mutate_self_filter(self, *args, **kwargs):
         """
@@ -213,7 +206,7 @@ class BinaryAdd(Operator):
     nlabel = 'BinaryAdd'
     arity = 2
     tflow = tf.add
-    expr_sym = '({} + {})'  # todo vs. Add()
+    # expr_sym = '({} + {})'  # todo vs. Add()
     insym = sympy.Add
     xtype = (tuple([float, float]), float)
 
@@ -243,7 +236,7 @@ class Subtract(Operator):
     nlabel = 'Sub'
     arity = 2
     tflow = tf.subtract
-    expr_sym = '({}-{})'
+    # expr_sym = '({}-{})'
     insym = sympy.Add
     xtype = (tuple([float, float]), float)
 
@@ -267,7 +260,7 @@ class BinaryMultiply(Operator):
     nlabel = 'BinaryMultiply'
     arity = 2
     tflow = tf.multiply
-    expr_sym = '({} * {})'
+    # expr_sym = '({} * {})'
     insym = sympy.Mul
     xtype = (tuple([float, float]), float)
 
@@ -298,7 +291,7 @@ class BinaryMultiply(Operator):
 #     # classname = 'Divide_no_nan'  # sfeh??
 #     arity = 2
 #     tflow = tf.math.divide_no_nan
-#     expr_sym = 'Div_no_nan({}, {})'
+#     # expr_sym = 'Div_no_nan({}, {})'
 #     insym = None
 #     xtype = (tuple([float, float]), float)
 #     @classmethod
@@ -314,7 +307,7 @@ class Div(Operator):
     nlabel = 'Div'
     arity = 2
     tflow = tf.math.divide
-    expr_sym = '({} / {})'
+    # expr_sym = '({} / {})'
     insym = None
     xtype = (tuple([float, float]), float)
 
@@ -338,7 +331,7 @@ class Pow(Operator):
     nlabel = 'Pow'
     arity = 2
     tflow = tf.pow
-    expr_sym = '({} ** {})'  # **
+    # expr_sym = '({} ** {})'  # **
     insym = sympy.Pow
     xtype = (tuple([float, float]), float)
 
@@ -366,7 +359,7 @@ class Powrounded(Operator, NoSympyClass):
     nlabel = 'Powrounded'
     arity = 2
     tflow = tf.pow
-    expr_sym = '({}**Round({}))'
+    # expr_sym = '({}**Round({}))'
     insym = None
     xtype = (tuple([float, float]), float)
 
@@ -382,7 +375,7 @@ class Abs(Operator):
     nlabel = 'Abs'
     arity = 1
     tflow = tf.abs
-    expr_sym = 'Abs({})'
+    # expr_sym = 'Abs({})'
     insym = sympy.Abs
     xtype = (tuple([float]), float)
 
@@ -399,7 +392,7 @@ class Sign(Operator):
     nlabel = 'sign'
     arity = 1
     tflow = tf.sign
-    expr_sym = 'sign({})'  # todo 'sign({})' sympy.simplify('sign(-a)') -> -sign(a)
+    # expr_sym = 'sign({})'  # todo 'sign({})' sympy.simplify('sign(-a)') -> -sign(a)
     insym = sympy.sign
     xtype = (tuple([float]), float)
 
@@ -421,7 +414,7 @@ class Square(Operator):
     nlabel = 'Square'
     arity = 1
     tflow = tf.square
-    expr_sym = 'Square({})'
+    # expr_sym = 'Square({})'
     insym = None
     xtype = (tuple([float]), float)
 
@@ -444,7 +437,7 @@ class Sqrt(Operator, NoSympyClass):
     nlabel = 'sqrt'
     arity = 1
     tflow = tf.sqrt
-    expr_sym = 'sqrt({})'
+    # expr_sym = 'sqrt({})'
     insym = sympy.sqrt
     xtype = (tuple([float]), float)
 
@@ -456,7 +449,7 @@ class Log(Operator):
     nlabel = 'log'
     arity = 1
     tflow = tf.math.log
-    expr_sym = 'log({})'
+    # expr_sym = 'log({})'
     insym = sympy.log
     xtype = (tuple([float]), float)
 
@@ -465,7 +458,7 @@ class Log1p(Operator, NoSympyClass):
     nlabel = 'log1p'
     arity = 1
     tflow = tf.math.log1p
-    expr_sym = 'log1p({})'
+    # expr_sym = 'log1p({})'
     insym = None
     xtype = (tuple([float]), float)
 
@@ -478,7 +471,7 @@ class Cos(Operator):
     nlabel = 'cos'
     arity = 1
     tflow = tf.cos
-    expr_sym = 'cos({})'
+    # expr_sym = 'cos({})'
     insym = sympy.cos
     xtype = (tuple([float]), float)
 
@@ -487,7 +480,7 @@ class Sin(Operator):
     nlabel = 'sin'
     arity = 1
     tflow = tf.sin
-    expr_sym = 'sin({})'
+    # expr_sym = 'sin({})'
     insym = sympy.sin
     xtype = (tuple([float]), float)
 
@@ -497,7 +490,7 @@ class Tan(Operator):
     # nlabel = 'tan'
     arity = 1
     tflow = tf.tan
-    expr_sym = 'tan({})'
+    # expr_sym = 'tan({})'
     insym = sympy.tan
     xtype = (tuple([float]), float)
 
@@ -506,7 +499,7 @@ class Acos(Operator):
     nlabel = 'acos'
     arity = 1
     tflow = tf.acos
-    expr_sym = 'acos({})'
+    # expr_sym = 'acos({})'
     insym = sympy.acos
     xtype = (tuple([float]), float)
 
@@ -515,7 +508,7 @@ class Asin(Operator):
     nlabel = 'asin'
     arity = 1
     tflow = tf.asin
-    expr_sym = 'asin({})'
+    # expr_sym = 'asin({})'
     insym = sympy.asin
     xtype = (tuple([float]), float)
 
@@ -525,7 +518,7 @@ class Atan(Operator):
     # nlabel = 'atan'
     arity = 1
     tflow = tf.atan
-    expr_sym = 'atan({})'
+    # expr_sym = 'atan({})'
     insym = sympy.atan
     xtype = (tuple([float]), float)
 
@@ -534,7 +527,7 @@ class Tanh(Operator):
     nlabel = 'tanh'
     arity = 1
     tflow = tf.tanh
-    expr_sym = 'tanh({})'
+    # expr_sym = 'tanh({})'
     insym = sympy.tanh
     xtype = (tuple([float]), float)
 
@@ -543,7 +536,7 @@ class Sinh(Operator):
     nlabel = 'sinh'
     arity = 1
     tflow = tf.sinh  # sfeh sinh, asinh
-    expr_sym = 'sinh({})'
+    # expr_sym = 'sinh({})'
     insym = sympy.sinh
     xtype = (tuple([float]), float)
 
@@ -552,7 +545,7 @@ class Cosh(Operator):
     nlabel = 'cosh'
     arity = 1
     tflow = tf.cosh  # sfeh acosh
-    expr_sym = 'cosh({})'
+    # expr_sym = 'cosh({})'
     insym = sympy.cosh
     xtype = (tuple([float]), float)
 
@@ -561,7 +554,7 @@ class Xor(Operator):
     nlabel = 'Xor'
     arity = 2
     tflow = tf.math.logical_xor
-    expr_sym = 'Xor({}, {})'
+    # expr_sym = 'Xor({}, {})'
     insym = sympy.Xor
     xtype = (tuple([bool, bool]), bool)
 
@@ -570,7 +563,7 @@ class Not(Operator):
     nlabel = 'Not'
     arity = 1
     tflow = tf.logical_not
-    expr_sym = '~({})'
+    # expr_sym = '~({})'
     insym = sympy.Not
     xtype = (tuple([bool]), bool)
 
@@ -587,7 +580,7 @@ class BinaryNot(Operator):
     nlabel = 'BinaryNot'
     arity = 1
     tflow = tf.logical_not
-    expr_sym = 'BinaryNot({})'
+    # expr_sym = 'BinaryNot({})'
     insym = sympy.Not
     xtype = (tuple([bool]), bool)
 
@@ -608,7 +601,7 @@ class Eq(Operator):
     nlabel = 'Eq'
     arity = 2
     tflow = tf.equal
-    expr_sym = '({} == {})'
+    # expr_sym = '({} == {})'
     insym = sympy.Eq
     xtype = (tuple([float, float]), bool)
 
@@ -620,7 +613,7 @@ class MapxMultiply(Operator):
     nlabel = 'Mul'
     arity = None
     tflow = tf.multiply
-    expr_sym = '({} * {})'
+    # expr_sym = '({} * {})'
     mapping_expr = '*'.split()
     insym = sympy.Mul
     xtype = (float, float)
@@ -653,7 +646,7 @@ class BinaryMin(Operator):
     nlabel = 'BinaryMin'
     arity = 2
     tflow = tf.minimum
-    expr_sym = 'BinaryMin({}, {})'
+    # expr_sym = 'BinaryMin({}, {})'
     insym = sympy.Min
     xtype = (tuple([float, float]), float)
 
@@ -685,7 +678,7 @@ class BinaryMax(Operator):
     nlabel = 'BinaryMax'
     arity = 2
     tflow = tf.maximum
-    expr_sym = 'BinaryMax({}, {})'
+    # expr_sym = 'BinaryMax({}, {})'
     insym = sympy.Max
     xtype = (tuple([float, float]), float)
 
@@ -717,7 +710,7 @@ class BinaryAnd(Operator):
     nlabel = 'BinaryAnd'
     arity = 2
     tflow = tf.logical_and
-    expr_sym = '({} & {})'
+    # expr_sym = '({} & {})'
     insym = sympy.And
     xtype = (tuple([bool, bool]), bool)
 
@@ -750,7 +743,7 @@ class BinaryOr(Operator):
     nlabel = 'BinaryOr'
     arity = 2
     tflow = tf.logical_or
-    expr_sym = '({} | {})'
+    # expr_sym = '({} | {})'
     insym = sympy.Or
     xtype = (tuple([bool, bool]), bool)
 
@@ -777,7 +770,7 @@ class Ne(Operator):
     nlabel = 'Ne'
     arity = 2
     tflow = tf.not_equal
-    expr_sym = '({} != {})'
+    # expr_sym = '({} != {})'
     insym = sympy.Ne  # sympy.Unequality
     xtype = (tuple([bool, bool]), bool)
 
@@ -786,7 +779,7 @@ class Lt(Operator):
     nlabel = 'Lt'
     arity = 2
     tflow = tf.less
-    expr_sym = '({} < {})'
+    # expr_sym = '({} < {})'
     insym = sympy.Lt  # sympy.StrictLessThan
     xtype = (tuple([float, float]), bool)
 
@@ -795,7 +788,7 @@ class Le(Operator):
     nlabel = 'Le'
     arity = 2
     tflow = tf.less_equal
-    expr_sym = '({} <= {})'
+    # expr_sym = '({} <= {})'
     insym = sympy.Le  # sympy.LessThan
     xtype = (tuple([float, float]), bool)
 
@@ -804,7 +797,7 @@ class Gt(Operator):
     nlabel = 'Gt'
     arity = 2
     tflow = tf.greater
-    expr_sym = '({} > {})'
+    # expr_sym = '({} > {})'
     insym = sympy.Gt  # sympy.StrictGreaterThan
     xtype = (tuple([float, float]), bool)
 
@@ -813,7 +806,7 @@ class Ge(Operator):
     nlabel = 'Ge'
     arity = 2
     tflow = tf.greater_equal
-    expr_sym = '({} >= {})'
+    # expr_sym = '({} >= {})'
     insym = sympy.GreaterThan
     xtype = (tuple([float, float]), bool)
 
@@ -825,7 +818,7 @@ class Ge(Operator):
 #     nlabel = 'Usub'
 #     arity = 1
 #     tflow = tf.negative
-#     expr_sym = '(-{})'
+#     # expr_sym = '(-{})'
 #     insym = None
 #     xtype = (tuple([float]), float)
 #
@@ -858,7 +851,7 @@ class Ifte(Operator):
     nlabel = 'Ifte'
     arity = 3
     tflow = tf.where
-    expr_sym = 'Ifte({}, {}, {})'
+    # expr_sym = 'Ifte({}, {}, {})'
     insym = None
     xtype = (tuple([bool, float, float]), float)
 
@@ -881,7 +874,7 @@ class MapxAnd(Operator):
     nlabel = 'And'
     arity = 2
     tflow = tf.logical_and
-    expr_sym = '({} & {})'
+    # expr_sym = '({} & {})'
     insym = sympy.And
     xtype = (tuple([bool, bool]), bool)
 
@@ -890,7 +883,7 @@ class MapxMax(Operator):
     nlabel = 'Max'
     arity = 2
     tflow = tf.maximum
-    expr_sym = 'Max({}, {})'
+    # expr_sym = 'Max({}, {})'
     insym = sympy.Max
     xtype = (tuple([float, float]), float)
 
@@ -902,7 +895,7 @@ class MapxAdd(Operator):
     nlabel = 'Add'
     arity = 1
     tflow = tf.negative
-    expr_sym = 'Add({})'
+    # expr_sym = 'Add({})'
     insym = sympy.Add
     xtype = (float, float)
 
@@ -917,7 +910,7 @@ class MapxPiecewise(ChainableOperator):
     nlabel = 'Piecewise'
     arity = None
     tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
-    expr_sym = 'Piecewise({})'
+    # expr_sym = 'Piecewise({})'
     insym = sympy.Piecewise
     xtype = (float, float)  # todo
 
@@ -930,7 +923,7 @@ class MapxMin(Operator):
     nlabel = 'Min'
     arity = None  # sfeh:does not have arity?
     tflow = tf.minimum
-    expr_sym = 'Min({}, {})'
+    # expr_sym = 'Min({}, {})'
     insym = sympy.Min
     xtype = (tuple([float, float]), float)
 
@@ -939,7 +932,7 @@ class MapxOr(Operator):
     nlabel = 'Or'
     arity = 2
     tflow = tf.logical_or
-    expr_sym = '({} | {})'
+    # expr_sym = '({} | {})'
     insym = sympy.Or
     xtype = (tuple([bool, bool]), bool)
 
@@ -1033,14 +1026,14 @@ def expr_sympify(expr, evaluate=None, eval_locals=None):
     try:
         expr_sym = sympy.sympify(expr, evaluate=evaluate, locals=loadable_ops_dict)
         # try:  # todo
-        #     expr_sym2 = expr_sym.factor()
-        #     if expr_sym != expr_sym2:
-        #         print(f'COMPARE FACTOR:\n{expr_sym}  len {len(expr_sym)}\n{expr_sym2}  len {len(expr_sym2)}')
+        #     # expr_sym2 = # expr_sym.factor()
+        #     if # expr_sym != # expr_sym2:
+        #         print(f'COMPARE FACTOR:\n{# expr_sym}  len {len(# expr_sym)}\n{# expr_sym2}  len {len(# expr_sym2)}')
         # except Exception as ex:
         #     print('fdsfdsahds')
         if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I):
             raise ArithmeticError(f'Simplification failed for expression: {expr_sym}')
-        return expr_sym
+        return # expr_sym
 
     except ValueError as ex:
         # return 'nan'  # 'nan' always evaluates to nan. ALl nan bugs should be solved.
@@ -1116,7 +1109,7 @@ def labels_from_nestedexpr(labels_nested_list, result_accum):
 #     nlabel = 'Pown'
 #     arity = 2
 #     tflow = tf.pow
-# #     expr_sym = 'BinaryMax({}, {})'
+# #     # expr_sym = 'BinaryMax({}, {})'
 # #     xtype = (tuple([float, float]), float)
 
 loadable_ops_dict = {'BinaryAdd': BinaryAdd, 'BinaryMultiply': BinaryMultiply, 'Sub': Subtract,

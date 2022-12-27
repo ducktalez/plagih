@@ -828,9 +828,9 @@ def node_from_nested_labels(nested_str, obs_list=None):
     return tree
 
 
-def tree_from_nested_labels(nested_str, kernel, obs_list=None):
+def tree_from_nested_labels(nested_str, kernel):
     """
-    sfeh obs_list for what?
+
     """
     node = node_from_nested_labels(nested_str, obs_list=None)  # discuss
     expr_raw = node.eval_expr_str()

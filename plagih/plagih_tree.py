@@ -142,19 +142,20 @@ class TreeNode:
         """
         return self.depth == 0
 
-    def get_observation_list(self):
-        """
-        these are required for the evaluation (are loaded by Tensorflow)
-        sfeh:bug returns [cartVel, -cartVel], should not ever happen?
-        -> SFEH: But it is also not used anymore
-        """
-        obslist = []
-        if self.get_arity() > 0:
-            obslist.extend(list(itertools.chain(*[cc.get_observation_list() for cc in self.childs])))
-        elif isinstance(self.label, Observation):
-            obslist.extend([self.get_nlabel()])
-
-        return list(set(obslist))
+    # sfeh:delete, deprecated, but bodymight be useful still
+    # def get_observation_list(self):
+    #     """
+    #     these are required for the evaluation (are loaded by Tensorflow)
+    #     sfeh:bug returns [cartVel, -cartVel], should not ever happen?
+    #     -> SFEH: But it is also not used anymore
+    #     """
+    #     obslist = []
+    #     if self.get_arity() > 0:
+    #         obslist.extend(list(itertools.chain(*[cc.get_observation_list() for cc in self.childs])))
+    #     elif isinstance(self.label, Observation):
+    #         obslist.extend([self.get_nlabel()])
+    #
+    #     return list(set(obslist))
 
     def set_label(self, label: 'NodeLabel'):
         """
@@ -240,21 +241,6 @@ class TreeNode:
             return nodes
         else:
             return []
-
-    def eval_expr_todo(self):
-        """
-        """
-
-        expr_str = self.label.nlabel
-        expr_str = f'"{expr_str}"'  # sfeh:delete? Here was a to-do, idk why
-
-        if self.childs:
-            cc_expr = [cc.eval_expr_todo() for cc in self.childs]
-            cc_expr = ', '.join(cc_expr)
-
-            expr_str = f'{expr_str}, {cc_expr}'
-
-        return f'[{expr_str}]'
 
     def eval_nested(self):
         """

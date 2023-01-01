@@ -400,14 +400,11 @@ class TreeBuilder:
         node = np.random.choice(evotree.eval_mutable_nodes())
         xtype = node.get_xtype()
 
-        tree.status = 0  # Building=0, structure-complete=1, evaluated=2
-
         if node.get_arity() > 0:
             node.set_label(self.choose_op(xtype))  # Function is same type, same arity
         else:
             node.set_label(self.choose_term(xtype[1]))  # 3 -> '2f' -> 5
 
-        tree.status = 1  # sfeh==>state
         return evotree
 
     def evolve_mutate_pointxxx(self, tree: TreeNode):
@@ -427,7 +424,7 @@ class TreeBuilder:
         """
         node = np.random.choice(evotree.eval_mutable_nodes())
         xtype_out = node.get_xtype_out()
-        branch = self.invent_core_depth(xtype_out, depth_goal, p_full=p_full, depth=0)  # sfeh ==>dummies
+        branch = self.invent_core_depth(xtype_out, depth_goal, depth=0, p_full=p_full)  # sfeh ==>dummies
         node.set_new_node(branch)
         # if node.depth == depth_goal:
         #     node.set_label(tb.choose_term(xtype_out))  # sfeh update node nlabel
@@ -444,6 +441,8 @@ class TreeBuilder:
         sfeh ==>depth only
         currently only one branch
         """
+        if evotree is None:
+            raise NotImplementedError('SFEH:TODO Implement standard selection mechanism')
         node = np.random.choice(evotree.eval_mutable_nodes())
         xtype_out = node.get_xtype_out()
         branch = self.invent_core_operatoramount(xtype_out, nodes_goal, depth=node.depth, p_full=p_full)
@@ -462,8 +461,8 @@ class TreeBuilder:
         - delete a_parent branch and pareto_insert b_parent branch (which tactic?)
         sfeh:idea into main fintree?
         """
-        atree = evotree_deepcopy(tree1)  # ==>state
-        btree = evotree_deepcopy(tree2)  # ==>state, was: btree = copy.deepcopy(tree2)
+        atree = evotree_deepcopy(tree1)
+        btree = evotree_deepcopy(tree2)
 
         anodes = atree.eval_mutable_nodes(allow_root=False)
         anode = np.random.choice(anodes)
@@ -480,16 +479,13 @@ class TreeBuilder:
             anode = np.random.choice(anodes)
 
         # sfeh deepcopy required??
-        anode_copy = copy.deepcopy(anode)  # sfeh ==>state
+        anode_copy = copy.deepcopy(anode)
 
         anode.set_new_node(bnode)
         bnode.set_new_node(anode_copy)
 
         atree = self.evolve_prune(evotree=atree)
         btree = self.evolve_prune(evotree=btree)
-
-        # atree.meta.last_evolution = tag  # sfeh ==>fintree tag
-        # btree.meta.last_evolution = tag
 
         return atree, btree
 
@@ -543,7 +539,7 @@ class TreeBuilder:
                 lvl0_node.set_new_node(new_subbranch)
 
         else:
-            evotree = self.invent_core_depth(xtype, depth_goal, p_full=p_full, depth=0)
+            evotree = self.invent_core_depth(xtype, depth_goal, depth=0, p_full=p_full)
 
         return evotree
 

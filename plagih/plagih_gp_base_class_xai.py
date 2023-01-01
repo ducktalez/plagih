@@ -105,11 +105,11 @@ class ExplainableGP:
             self.printpl('gg', f"Created {len(self.pop_next)}/{self.pop_max} ({pop_analysis_dict['pop_unique']}"
                                f" unique) in generation {self.gen_id}. Gen took {gen_time:4.2f}s")
 
-            self.pop_base = self.pop_next[:]  # is deepcopy
+            self.pop_base = self.pop_next[:]
             self.pop_next = []
 
             self.printpl('ggg', f'Gen {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}.')
-            self.evoloop_monitoring_scheduled_io(self.gen_id, period_plots, period_save)
+            self.monitoring_scheduled_io(self.gen_id, period_plots, period_save)
             self.gen_id += 1
 
         self.printpl('g', f'Done after Generation {self.gen_id}.\n'
@@ -158,16 +158,16 @@ class ExplainableGP:
                     # sfeh: trying to simplify the tree for a even improved pareto # sfeh:open
                     symtree = evolve_reduce_simplify(fintree.get_evotree(), force=True)
                     symmeta = self.finalize_tree_get_meta(symtree)
-                    symtree_fin = FinalizedTree(symtree, symmeta)
-                    if symtree_fin.get_parsimony() < fintree.get_parsimony():
+                    _symtree_fin = FinalizedTree(symtree, symmeta)
+                    if _symtree_fin.get_parsimony() < fintree.get_parsimony():
                         printyeah('a', f'Paretofront: Even further simplified! '
-                                       f'{symtree_fin.get_parsimony()} < {fintree.get_parsimony()}')
+                                       f'{_symtree_fin.get_parsimony()} < {fintree.get_parsimony()}')
 
                     self.evaluate_and_append(symtree)  # sfeh:open , tag='sfeh-sympifyed_pareto'
 
                 except KeyError as ex:
-                    print(f'SFEH: this tree could todo whatever {ex}')
-                    # -> piecewise function, mostly
+                    print(f'SFEH: this tree could todo whatever {ex}')  # -> piecewise function, mostly
+
                 obsolete_entries = [x for x in paretofront if
                                     x.get_fitness() > fintree.get_fitness() and
                                     x.get_parsimony() >= fintree.get_parsimony()]
@@ -182,8 +182,7 @@ class ExplainableGP:
     def gen_create_initial(self):
 
         if self.origintree is not None:
-            self.pop_next.append(self.origintree)
-            # self.pop_append_evotree(self.origin.fintree)  # sfeh why not :P
+            self.pop_next.append(self.origintree)  # sfeh why not :P
             # self.pareto.pareto_insert(self.origin)  # the origin fintree is the only candidate (automatically added)
         else:
             # total_rate = sum([x['evolve_rate'] for x in self.evolve_random.values()])
@@ -297,7 +296,7 @@ class ExplainableGP:
         @self.create_trees(0.1)
         def mutateB():
             evotree = selection_tournament(self.pop_base, tournsize=3)
-            return self.tb.evolve_mutate_branch_nodes(evotree, 4)  # sfeh:todo also
+            return self.tb.evolve_mutate_branch_nodes(evotree, 4, p_full=0.85)  # sfeh:todo also
 
         @self.create_trees_crossover(0.2)
         def xover():
@@ -335,18 +334,18 @@ class ExplainableGP:
         #     return self.tb.evolve_mutate_pointxxx(evotree)
 
         @self.create_trees(0.1)
-        def mxBranchD():
+        def mx_ranch_d():
             evotree = selection_tournament(self.pop_base, tournsize=3)
             return self.tb.evolve_mutate_branch_depth(evotree, self.tb.depth_max, p_full=0.5)
 
         @self.create_trees(0.1)
-        def mxBranchN():
+        def mx_branch_n():
             evotree = selection_tournament(self.pop_base, tournsize=3)
             nodeamount_goal = np.clip(int(random.normalvariate(12, 4)), 0, 30)
             return self.tb.evolve_mutate_branch_nodes(evotree, nodeamount_goal)
 
         @self.create_trees(0.1)
-        def filterOptimize():
+        def filter_optimize():
             evotree = selection_tournament(self.pop_base, tournsize=3)
             return self.tb.evolve_mutate_filter_random(evotree)
 
@@ -369,7 +368,7 @@ class ExplainableGP:
         except Exception as ex:
             self.printpl("e", f'Could not create plots: {ex}\n')
 
-    def evoloop_monitoring_scheduled_io(self, gen_id, period_plots, period_save):
+    def monitoring_scheduled_io(self, gen_id, period_plots, period_save):
         """
         Every x generations, save a backup and/or save plots
         """
@@ -552,16 +551,6 @@ def pop_analyze(popul, gen_time, gens_since_last_pareto):
     return result
 
 
-def printpl(message_type, message_str):
-    """
-    Lightweight print function.
-    Instead of checking if you should print every time, this is done here.
-    message_type options can be found in config
-    """
-    printez(message_type, message_str)
-    return
-
-
 if __name__ == '__main__':
     """
     Alpha tests
@@ -576,7 +565,7 @@ if __name__ == '__main__':
     #     t1, t2 = tb.evolve_crossover(t1, t2)
     #     print('x~D', t1, '===', t2)
 
-    # nstr = "['Ifte', ['<', ['*', [2.85], ['cartVel']], ['Square', ['cartVel']]], ['*', ['cartPos'], ['*', ['cartPos'], [0.014]]], ['/', [2.0], ['cartPos']]]"
+    # nstr = "['Ifte', ['<', ['*', [2.85], ['vel']], ['Square', ['vel']]], ['*', ['pos'], ['*', ['pos'], [0.014]]], ['/', [2.0], ['pos']]]"
     # nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
     nstr = '["+:fix",["-:fix",["Ifte",["True"],["sin",["2"]],["/",["2.043"],["4"]]],["cartVel"]],["-1.3"]]'
     tr = evotree_from_nested_labels(nstr)

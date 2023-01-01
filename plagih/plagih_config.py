@@ -25,13 +25,7 @@ class Config:
         SFEH ALERT: NEVER try to save the ui/paths.
         !!! switching between systems is worse than HitlerAIDS !!!
         """
-        self.pl_version = 1.2  # must only update if vital changes were made, version important when loading old run
 
-
-    # def __init__(self, args):
-    #     """
-    #     SFEH ALERT: NEVER try to save the ui/paths.
-    #     !!! switching between systems is worse than HitlerAIDS !!!
     #     """
     #     self.pl_version = 1.2  # must only update if vital changes were made, version important when loading old run
     #
@@ -128,21 +122,18 @@ class Config:
             print_warning('w', "Complexity measurement 'tree_edit_distance' is not possible without origin!\n"
                                "Using 'tree_node_count' instead.")
 
-        self.action_name = args.action_name or conf.get('action_name', None)  # sfeh type=float or maybe sometimes bool-.-.-
+        self.action_name = args.action_name or conf.get('action_name', None)  # sfeh type=float or maybe sometimes bool
 
         self.mp_cores = args.mp_cores or conf.get('mp_cores', 1)
 
-        # self.parsimony_mean = conf.get('parsimony_mean', 15)  #: 20,  # If you wnt your population to be a certain size
+        # self.parsimony_mean = conf.get('parsimony_mean', 15)  #: 20,  # If you want the population of a certain size
         # self.tree_depth_min = conf.get('tree_depth_min', 1)  #: 2,
-        # self.swim = 'p'  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
-        # self.gen_num_parsim_maxony = conf.get('gen_num_parsim_maxony', 50)  #: 50,  # Increase tmp_parsim to this generation
+        # self.swim = 'p'  # require (p)artial or (f)ull set of features (operators) for each Tree entering the
+        # self.gen_num_parsim_maxony = conf.get('gen_num_parsim_maxony', 50)  #: 50,  # Increase tmp_parsim to this
         # self.name = args.name or self.rootdir.resolve().name  # sfeh name? probably there are better names
 
         # self.file_distrib = (args.file_distrib or 'run_files/distributions_file.yaml')
         # self.file_backup = args.file_backup or conf.get('file_backup', 'backup/backup.p')
-
-        self.path_data_csv = args.path_data_csv or conf.get('path_data_csv', None)  # MUST BE STRING
-        self.path_origin = args.path_origin or conf.get('path_origin', None)  # MUST BE STRING
 
     def load_prepared_run(self, prepared_run, slurm_runs_folder):
 
@@ -211,7 +202,5 @@ class Config:
 
         print(f'AUTOLOAD: path_origin {path_origin}')
         print(f'AUTOLOAD: kernel_name {kernel_name}')
-        self.kernel_name = kernel_name
-        self.name = prepared_run
 
         return rootdir, path_origin, path_data_csv

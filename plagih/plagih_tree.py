@@ -18,9 +18,6 @@ from plagih.tree_complexity.tree_edit_distance import apted_distance
 from dataclasses import dataclass
 import itertools
 
-
-# logging.basicConfig(filename='example.log', filemode='a', level=logging.DEBUG)  # sfeh encoding='utf-8' maybe in the future
-
 # lol, lol. https://github.com/tensorflow/tensorflow/issues/27023 these messages are tingeling
 
 @dataclass
@@ -40,12 +37,11 @@ class TreeNode:
 
     meta = None
 
-    def __init__(self, label: 'NodeLabel' = None, depth=None, is_fix=False, childs=None, status=0):
+    def __init__(self, label: 'NodeLabel' = None, depth=None, is_fix=False, childs=None):
         self.label = label
         self.is_fix = is_fix
         self.childs = childs or []
         self.depth = depth
-        self.status = status  # 0 =
 
     def __hash__(self):
         """
@@ -61,6 +57,7 @@ class TreeNode:
         """
         Printing the nodes as nested list structure, easy to read.
         Also, have a look at __repr__(self) for a more detailed result
+        sfeh:idea https://docs.sympy.org/latest/modules/core.html#sympy.core.basic.Basic.subs
         """
         label_str = self.get_nlabel()  # sfeh or: return the label __str__
 
@@ -69,6 +66,21 @@ class TreeNode:
             label_str = f"{label_str}, {childstr}"
 
         return f"[{label_str}]"
+
+    def eval_expr_str(self):
+        """
+        Accumulate and return the complete expression the fintree holds recursively
+        todo directly sympy in a different method
+        """
+
+        _expr = f'{self.label.nlabel}'
+
+        if self.childs:
+            _cc_expr = ', '.join([cc.eval_expr_str() for cc in self.childs])
+
+            _expr = f'{_expr}({_cc_expr})'
+
+        return _expr
 
     def __repr__(self):
         """
@@ -185,42 +197,42 @@ class TreeNode:
             for ii, cc in enumerate(self.childs):
                 cc.update_fixed_nodes(origin.childs[ii])
 
-    def get_nodes_to_depth(self, goal_depth, only_mutable=False, get_closest_depth=False):
-        """
-        sum_layers=False, get_closest=True, return_all_layers=False
-        """
-        child_results = []
-        if self.depth < goal_depth:
-            child_results = sum(
-                [child.get_nodes_to_depth(goal_depth, only_mutable=only_mutable, force_depth=get_closest_depth) for
-                 child in self.childs], [])
-
-        if only_mutable and self.is_fix or \
-                get_closest_depth and self.depth != goal_depth:
-            my_result = []
-        else:
-            my_result = [self]
-
-        return my_result + child_results
-
-    def get_labellist_breath(self):
-        """
-        Returns all labels in a core node
-        Breitensuche im Baum
-        """
-        label_list = []
-        max_depth = self.childs_depth_max
-        for depth in range(0, max_depth + 1):
-            labels_at_depth = [x.label for x in self.get_nodes_at_depth(depth)]
-            label_list.extend(labels_at_depth)
-
-        return label_list
-
-    def get_all_nodes(self):
-        if len(self.childs) == 0:
-            return [self]
-        else:
-            return [self] + [cc.get_all_nodes() for cc in self.childs]
+    # def get_nodes_to_depth(self, goal_depth, only_mutable=False, get_closest_depth=False):
+    #     """
+    #     sum_layers=False, get_closest=True, return_all_layers=False
+    #     """
+    #     child_results = []
+    #     if self.depth < goal_depth:
+    #         child_results = sum(
+    #             [child.get_nodes_to_depth(goal_depth, only_mutable=only_mutable, force_depth=get_closest_depth) for
+    #              child in self.childs], [])
+    #
+    #     if only_mutable and self.is_fix or \
+    #             get_closest_depth and self.depth != goal_depth:
+    #         my_result = []
+    #     else:
+    #         my_result = [self]
+    #
+    #     return my_result + child_results
+    #
+    # def get_labellist_breath(self):
+    #     """
+    #     Returns all labels in a core node
+    #     Breitensuche im Baum
+    #     """
+    #     label_list = []
+    #     max_depth = self.childs_depth_max
+    #     for depth in range(0, max_depth + 1):
+    #         labels_at_depth = [x.label for x in self.get_nodes_at_depth(depth)]
+    #         label_list.extend(labels_at_depth)
+    #
+    #     return label_list
+    #
+    # def get_all_nodes(self):
+    #     if len(self.childs) == 0:
+    #         return [self]
+    #     else:
+    #         return [self] + [cc.get_all_nodes() for cc in self.childs]
 
     def get_nodes_at_depth(self, goal_depth, allow_fixed=False, expand_depth=False):
         """
@@ -242,35 +254,20 @@ class TreeNode:
         else:
             return []
 
-    def eval_nested(self):
-        """
-
-        """
-        expr_str = self.label.nlabel
-        expr_str = f'"{expr_str}"'  # sfeh: Also not used anymore? to-do was here
-
-        if self.childs:
-            cc_expr = [cc.eval_nested() for cc in self.childs]
-            cc_expr = ', '.join(cc_expr)
-
-            expr_str = f'{expr_str}, {cc_expr}'
-
-        return f'{expr_str}'
-
-    def eval_expr_str(self):
-        """
-        Accumulate and return the complete expression the fintree holds recursively
-        todo directly sympy in a different method
-        """
-
-        _expr = f'{self.label.nlabel}'
-
-        if self.childs:
-            _cc_expr = ', '.join([cc.eval_expr_str() for cc in self.childs])
-
-            _expr = f'{_expr}({_cc_expr})'
-
-        return _expr
+    # def eval_nested(self):
+    #     """
+    #
+    #     """
+    #     expr_str = self.label.nlabel
+    #     expr_str = f'"{expr_str}"'  # sfeh: Also not used anymore? to-do was here
+    #
+    #     if self.childs:
+    #         cc_expr = [cc.eval_nested() for cc in self.childs]
+    #         cc_expr = ', '.join(cc_expr)
+    #
+    #         expr_str = f'{expr_str}, {cc_expr}'
+    #
+    #     return f'{expr_str}'
 
     # def eval_expr_todo_old(self):
     #     """

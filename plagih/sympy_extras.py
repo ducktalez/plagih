@@ -46,6 +46,9 @@ import numpy as np
 tf.compat.v1.enable_eager_execution()
 
 
+# class BaseTreenode(object):
+
+
 class NodeLabel:
     """
     Kind of abstract class; Dummy-node that holds a nlabel
@@ -56,8 +59,6 @@ class NodeLabel:
     xtype = None
     tflow = None
     insym = None
-
-    # expr_sym = None  # sfeh:del zis?
 
     def __str__(self):
         return self.nlabel
@@ -830,6 +831,48 @@ class Ge(Operator):
 #         return self.eval(*args)
 
 
+class ChainChild(NodeLabel):
+    """
+    sfeh:diskuss: Abstract class for the elements in chain operators?
+    """
+    pass
+
+
+class ExprCondPair(ChainChild):
+    """
+    sfeh somehow a chainable element?
+    """
+    nlabel = 'xxx'
+    arity = None
+    tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
+    # expr_sym = 'Piecewise({})'
+    insym = sympy.functions.elementary.piecewise.ExprCondPair
+
+    xtype_out = float  # todo
+    xtype_child = 'TODO'
+
+    # nargs = None  # sfeh:hmmm
+
+    is_real = True
+
+
+class Piecewise(ChainOperator):
+    # MapxPiecewise was here
+    # todo all the function assumptions!!
+    # todo must have a True-case
+    nlabel = 'Piecewise'
+    arity = None
+    tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
+    # expr_sym = 'Piecewise({})'
+    insym = sympy.Piecewise
+    xtype_out = float  # todo
+    xtype_child = 'TODO'
+
+    # nargs = None  # sfeh:hmmm
+
+    is_real = True
+
+
 class Ifte(Operator):
     """
     self-expert: opportunity_cost = best_vals - chosen_vals
@@ -896,37 +939,6 @@ class MapxAdd(Operator):
     xtype = (float, float)
 
     nargs = None
-
-    is_real = True
-
-
-class ChainChild(NodeLabel):
-    """
-    sfeh:diskuss: Abstract class for the elements in chain operators?
-    """
-    pass
-
-
-class ExprCondPair(ChainChild):
-    """
-    sfeh somehow a chainable element?
-    """
-    pass
-
-
-class Piecewise(ChainOperator):
-    # MapxPiecewise was here
-    # todo all the function assumptions!!
-    # todo must have a True-case
-    nlabel = 'Piecewise'
-    arity = None
-    tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
-    # expr_sym = 'Piecewise({})'
-    insym = sympy.Piecewise
-    xtype_out = float  # todo
-    xtype_child = 'TODO'
-
-    # nargs = None  # sfeh:hmmm
 
     is_real = True
 

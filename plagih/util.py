@@ -48,10 +48,6 @@ class BColors:
     RED2 = '\033[41m'
 
 
-class Printpl:
-    pass
-
-
 def pickle_dump(path, data):
     """
 

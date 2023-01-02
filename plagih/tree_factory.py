@@ -2,8 +2,7 @@
 The factory to create trees
 """
 
-from plagih.plagih_tree import TreeNode
-from plagih.sympy_extras import *
+from plagih.plagih_tree import *
 from plagih.util import *
 from plagih.tree_complexity.tree_edit_distance import apted_distance
 
@@ -14,7 +13,7 @@ import copy
 import numpy as np
 
 
-def eval_parsimony(tree: TreeNode, complexity_measure, origin_tree=None):
+def eval_parsimony(tree: BaseTree, complexity_measure, origin_tree=None):
     """
     complexity_measure: compute the chosen distance by the user.
     #     'tree_node_count': tree_get_size,
@@ -72,7 +71,7 @@ def randomly_split_range(range_max, num_splits):
     return sample_dist
 
 
-def node_simplification(node: TreeNode):
+def node_simplification(evotree: BaseTree):
     """
     (Tries to) simplify/reduce a tree. It is quite experimental
 
@@ -82,20 +81,20 @@ def node_simplification(node: TreeNode):
         # old_core:[sign, [BinaryMin, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
         # new_node: [sign, [BinaryMin, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.56921]]]
     """
-    expr_raw = node.eval_expr_str()
+    expr_raw = evotree.eval_expr_str()
     expr_sym = expr_sympify(expr_raw)
     nested_labels = sympy_to_nestedlist(expr_sym)
     node_rebuilt = evotree_from_nested_labels(nested_labels)
     # node_rebuilt = node_rebuilt.update_fixed_nodes(node)  # this is not our problem
     if DEBUG_DUMMY:
-        if len(node) < len(node_rebuilt):
+        if len(evotree) < len(node_rebuilt):
             raise Exception(f'Simplified node has become more complex??\n'
-                            f'{node}\n'
+                            f'{evotree}\n'
                             f'{node_rebuilt}')
     return node_rebuilt
 
 
-def evolve_reduce_simplify(tree: TreeNode, completely=True, force=False):
+def evolve_reduce_simplify(tree: BaseTree, completely=True, force=False):
     """
     # todo this function does currently not work
     Reducing a fintree to its most basic form with sympify.
@@ -114,7 +113,7 @@ def evolve_reduce_simplify(tree: TreeNode, completely=True, force=False):
         # nd = np.random.choice(functions)
         #   ...
         nd_list = tree.eval_mutable_nodes()
-        nd_list = [x for x in nd_list if x.label.arity > 0]  # ignoring leaf nodes
+        nd_list = [x for x in nd_list if x.get_arity() > 0]  # ignoring leaf nodes
         nd = np.random.choice(nd_list)
         nd.set_new_node(node_simplification(nd))  # sfeh chosen must be set again? or not? test it at least.
     if force:
@@ -127,7 +126,7 @@ def evolve_reduce_simplify(tree: TreeNode, completely=True, force=False):
             return tree
 
 
-def evotree_deepcopy(tree: TreeNode):
+def evotree_deepcopy(tree: BaseTree):
     """
 
     """
@@ -178,23 +177,23 @@ class TreeBuilder:
 
             # todo sfeh 0 is not allowed
             # sfeh same prob for all for testing
-            operator_pool = {BinaryAdd: 2, Subtract: 1, BinaryMultiply: 2, Div: 1,
+            operator_pool = {Add: 2, Sub: 1, Mul: 2, Div: 1,
                              # Usub: 1,  # sfeh
                              Square: 0.75,
                              Pow: 0.1,  # 0.25,  # sfeh:open
-                             Abs: 0.5, Sign: 0.5,  # sfeh stop chain of arity-1 op_dict in buid method?
-                             Sqrt: 0.1,  # 0.25,  # sfeh debug this
-                             Log: 0.1, Log1p: 0.1,
-                             Sin: 0.5, Tan: 0.1, Cos: 0.33,
+                             Abs: 0.5, sign: 0.5,  # sfeh stop chain of arity-1 op_dict in buid method?
+                             sqrt: 0.1,  # 0.25,  # sfeh debug this
+                             log: 0.1, Log1p: 0.1,
+                             sin: 0.5, tan: 0.1, cos: 0.33,
                              # Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.5,
                              Xor: 1,  # sfeh
                              # sympy extra classes (Capitalized)
                              Round: 0.5,
-                             BinaryAnd: 1, BinaryOr: 1, BinaryNot: 0.5,
+                             And: 1, Or: 1, Not: 0.5,
                              Eq: 1, Ne: 0.5,
                              Lt: 0.5, Le: 0.5, Gt: 0.1, Ge: 0.1,
                              Ifte: 2,
-                             BinaryMin: 1, BinaryMax: 1}
+                             Min: 1, Max: 1}
 
         operator_pool_check(operator_pool)
 
@@ -294,7 +293,7 @@ class TreeBuilder:
         #         obs_names.pop_append_evotree(obs)
         #         obs_prop.pop_append_evotree(1)  # just one value
 
-        obs_list = [Observation(x) for x in obs_names]
+        obs_list = [SymbolNode(x) for x in obs_names]
 
         self.observables = {float: lambda: np.random.choice(obs_list),  # , p=obs_prop
                             bool: None}  # sfeh:discussion None? no  lambda? yeah, not important but still...
@@ -327,7 +326,7 @@ class TreeBuilder:
         if random.random() < p_observation:
             try:
                 return self.choose_obs(xtype)
-            except Exception:
+            except Exception:  # sfeh:debug
                 pass  # just return a constant now, e.g. because there are no boolean observations
 
         return self.choose_const(xtype)
@@ -337,12 +336,12 @@ class TreeBuilder:
         # sfeh:discussion set path/id?
         """
         if depth == self.depth_max or depth == depth_goal or random.random() > p_full:
-            label = self.choose_term(xt)
-            node = TreeNode(label=label, depth=depth)
+            node = self.choose_term(xt)
+            # node = BaseTree(label=label, depth=depth)  # todo
         else:
             label = self.choose_op(xt)  # self.choose_any(xtype, p_full)
-            childs = [self.invent_core_depth(xt, depth_goal, p_full=p_full, depth=depth + 1) for xt in label.xtype[0]]
-            node = TreeNode(label=label, childs=childs, depth=depth)  # , depth=depth sfeh no depth?
+            node = [self.invent_core_depth(xt, depth_goal, p_full=p_full, depth=depth + 1) for xt in label.xtype[0]]
+            # node = BaseTree(label=label, childs=childs, depth=depth)  # , depth=depth sfeh no depth?
 
         return node
 
@@ -366,7 +365,7 @@ class TreeBuilder:
             for ii, xt_child in enumerate(label.xtype[0]):
                 childs.append(self.invent_core_operatoramount(xt_child, nodeops_split[ii], depth=depth + 1))
 
-        node = TreeNode(label=label, childs=childs, depth=depth)  # , depth=depth sfeh no depth?
+        node = BaseTree(label=label, childs=childs, depth=depth)  # , depth=depth sfeh no depth?
 
         return node
 
@@ -390,7 +389,7 @@ class TreeBuilder:
         # sfeh ==>state
         return evotree
 
-    def evolve_mutate_point(self, tree: TreeNode):
+    def evolve_mutate_point(self, tree: BaseTree):
         """
         Mutate a single mutable point in any Tree.
         sfeh is the fintree a fintree copy or the same fintree?
@@ -407,11 +406,11 @@ class TreeBuilder:
 
         return evotree
 
-    def evolve_mutate_pointxxx(self, tree: TreeNode):
+    def evolve_mutate_pointxxx(self, evotree: BaseTree):
         """
 
         """
-        evotree = evotree_deepcopy(tree)  # ==>state
+        evotree = evotree_deepcopy(evotree)
         for node in evotree.eval_mutable_nodes():
             pass
 
@@ -449,7 +448,7 @@ class TreeBuilder:
         node.set_new_node(branch)
         return evotree
 
-    def evolve_crossover(self, tree1: TreeNode, tree2: TreeNode):
+    def evolve_crossover(self, tree1: BaseTree, tree2: BaseTree):
         """
         Evolution with crossover of branches with two trees
         currently only one branch
@@ -489,7 +488,7 @@ class TreeBuilder:
 
         return atree, btree
 
-    def evolve_prune(self, evotree: TreeNode):
+    def evolve_prune(self, evotree: BaseTree):
         """
         prune depth
         -> prune everything below a certain level... (should not happen in the first place)
@@ -505,7 +504,7 @@ class TreeBuilder:
         for dnode in nodelist:
             if dnode.depth == self.nodeamount_max and dnode.get_arity() > 0:
                 print_warning('wwww', f'Node in fintree is too deep: {dnode.depth}')
-                new_node = TreeNode(label=self.choose_term(dnode.get_xtype_out()), depth=dnode.depth)
+                new_node = BaseTree(label=self.choose_term(dnode.get_xtype_out()), depth=dnode.depth)
                 dnode.set_new_node(new_node)
                 # sfeh:debug did this work?
 
@@ -517,7 +516,7 @@ class TreeBuilder:
 
             nodelist = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
             node = np.random.choice(nodelist)
-            new_node = TreeNode(label=self.choose_term(node.get_xtype_out()), depth=node.depth)
+            new_node = BaseTree(label=self.choose_term(node.get_xtype_out()), depth=node.depth)
             node.set_new_node(new_node)
             prune_amount = len(evotree) - self.nodeamount_max
         return evotree
@@ -575,7 +574,7 @@ class TreeBuilder:
 
         return evotree
 
-    def check_all(self, tree: TreeNode, raise_on_failure=False, extre_tests=False):
+    def check_all(self, tree: BaseTree, raise_on_failure=False, extre_tests=False):
         """
         :param raise_on_failure: if True, raise Exception
         :return:
@@ -584,7 +583,7 @@ class TreeBuilder:
         # checks will raise an Exception if they fail
         checks = [
             tree.is_root(),
-            tree.check_typing(self.root_xtype, fatal=raise_on_failure),
+            # tree.check_typing(self.root_xtype, fatal=raise_on_failure),
             tree.selfcheck(fatal=raise_on_failure),
         ]
         if extre_tests:
@@ -634,10 +633,10 @@ class TreeMeta:
     #     return self.get_fitness() <= other.get_fitness()
 
 
-class FinalizedTree(object):
+class FinalizedTree:
     """An actual individual (Tree + meta-infos/phenotypes)"""
 
-    def __init__(self, tree: TreeNode, meta: TreeMeta):
+    def __init__(self, tree: BaseTree, meta: TreeMeta):
         self.tree = tree
         self.meta = meta
 
@@ -718,7 +717,7 @@ def check_expert_origin_tree(nested_labels):
 #         return copy.deepcopy(self.fintree.tree)
 
 
-def rec_build_tree(lst, depth=0, obs_list=None):
+def rec_build_tree(lst, obs_list=None, depth=0):
     """
     [rec]ursive building of a tree
     recursively loads a nested list into a evotree structure
@@ -734,24 +733,24 @@ def rec_build_tree(lst, depth=0, obs_list=None):
         is_fix = False
 
     if strlabel in ['True', 'False']:
-        label = BoolConstant(strlabel)
+        node = BoolConstant(strlabel)
     else:
         try:
             strlabel = float(strlabel)
-            label = FloatConstant(strlabel)
+            node = FloatConstant(strlabel)
         except ValueError:
             if strlabel in loadable_ops_dict:
-                label = loadable_ops_dict[strlabel]
+                node = loadable_ops_dict[strlabel]
             else:
                 if obs_list:
                     if strlabel in obs_list:
-                        label = Observation(strlabel)
+                        node = SymbolNode(strlabel)
                     else:
                         raise Exception(f'Label "{strlabel}" can not be assigned to a node-label!')
                 else:
-                    label = Observation(strlabel)
+                    node = SymbolNode(strlabel)
 
-    node = TreeNode(label=label, depth=depth, is_fix=is_fix)
+    # node = BaseTree(label=label, depth=depth, is_fix=is_fix)
 
     if len(lst[1:]) == node.get_arity():
         childs = [rec_build_tree(x, depth=depth + 1, obs_list=obs_list) for x in lst[1:]]
@@ -764,49 +763,46 @@ def rec_build_tree(lst, depth=0, obs_list=None):
 
     return node
 
-
-def rec_build_tree2(lst, depth=0, obs_list=None):
-    """
-    """
-
-    strlabel = str(lst[0])
-    if ':fix' in strlabel:
-        strlabel = strlabel.replace(':fix', '')
-        is_fix = True
-    else:
-        is_fix = False
-
-    if strlabel in ['True', 'False']:
-        label = BoolConstant(strlabel)
-    else:
-        try:
-            strlabel = float(strlabel)
-            label = FloatConstant(strlabel)
-        except ValueError:  # sfeh:debug match exception
-            if strlabel in loadable_ops_dict:
-                label = loadable_ops_dict[strlabel]
-            else:
-                if obs_list:
-                    if strlabel in obs_list:
-                        label = Observation(strlabel)
-                    else:
-                        raise Exception(f'Label "{strlabel}" can not be assigned to a node-label!')
-                else:
-                    label = Observation(strlabel)
-
-    node = TreeNode(label=label, depth=depth, is_fix=is_fix)
-
-    if len(lst[1:]) == node.get_arity():
-        childs = [rec_build_tree2(x, depth=depth + 1, obs_list=obs_list) for x in lst[1:]]
-        node.set_childs(childs)
-
-    else:
-        raise Exception(f'Tree-building list length {len(lst[1:])} does not match the nodes arity {node.get_arity()}.')
-
-    return node
+# sfeh:del what is that fgood for?
+# def rec_build_tree2(lst, depth=0, obs_list=None):
+#     strlabel = str(lst[0])
+#     if ':fix' in strlabel:
+#         strlabel = strlabel.replace(':fix', '')
+#         is_fix = True
+#     else:
+#         is_fix = False
+#
+#     if strlabel in ['True', 'False']:
+#         label = BoolConstant(strlabel)
+#     else:
+#         try:
+#             strlabel = float(strlabel)
+#             label = FloatConstant(strlabel)
+#         except ValueError:  # sfeh:debug match exception
+#             if strlabel in loadable_ops_dict:
+#                 label = loadable_ops_dict[strlabel]
+#             else:
+#                 if obs_list:
+#                     if strlabel in obs_list:
+#                         label = Observation(strlabel)
+#                     else:
+#                         raise Exception(f'Label "{strlabel}" can not be assigned to a node-label!')
+#                 else:
+#                     label = Observation(strlabel)
+#
+#     node = BaseTree(label=label, depth=depth, is_fix=is_fix)
+#
+#     if len(lst[1:]) == node.get_arity():
+#         childs = [rec_build_tree2(x, depth=depth + 1, obs_list=obs_list) for x in lst[1:]]
+#         node.set_childs(childs)
+#
+#     else:
+#         raise Exception(f'Tree-building list length {len(lst[1:])} does not match the nodes arity {node.get_arity()}.')
+#
+#     return node
 
 
-def check_tree_loadable_reconstruction(tree: TreeNode):
+def check_tree_loadable_reconstruction(tree: BaseTree):
     """
     Extracts a tree expression and rebuilds the tree
     The trees must be identical, as it only rebuilt itself

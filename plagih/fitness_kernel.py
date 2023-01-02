@@ -2,10 +2,11 @@ import os
 
 from matplotlib import pyplot as plt
 
+from plagih.plagih_tree import sympy_to_tensorflow
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 from plagih.util import *
-from plagih.sympy_extras import sympy_to_tensorflow
 
 import tensorflow as tf
 import numpy as np
@@ -130,7 +131,7 @@ class RegressionKernel(Kernel):
         """
         # tf.compat.v1.reset_default_graph()  # sfeh:xxx is this really required to do? legacy code
 
-        results_raw = sympy_to_tensorflow(expr, pandas_data=self.data_train)
+        results_raw = sympy_to_tensorflow(expr, self.data_train)
         results = results_raw  # The ids change in the next lines! {id(results)} vs. {id(results_raw)}
 
         if self.action_round is not None:

@@ -28,7 +28,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-class EffectiveAction(object):
+class EffectiveAction:
 
     def __init__(self, velocity,gain, setpoint):
         self.setpoint = setpoint

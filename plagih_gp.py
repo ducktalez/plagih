@@ -212,3 +212,20 @@ if __name__ == "__main__":
     """
     # main()
     _test_random_pop()
+
+
+# class ObservationIndex(Observation):
+#     """
+#       sfeh:open
+#     """
+#
+#     def __init__(self, nlabel, xtype_out=float, obs_indizes=None):
+#         # super().__init__(nlabel, xtype_out)
+#         self.obs_indizes = obs_indizes
+#         latex = f'\\text{{{self.fam}}}_{{{self.timeindex}}}'  # remove this {self.preexpr}
+#         self.latex = (latex, latex)  # remove this {self.preexpr}
+#
+#     def mutate_self_filter(self):
+#         new_index = int(max(min(round(random.gauss(self.timeindex, 1)), self.index_minmax[1]), 0))
+#         self.timeindex = new_index
+#         self.name = f'{self.fam}_{new_index}'

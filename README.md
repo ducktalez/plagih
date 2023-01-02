@@ -26,7 +26,10 @@
 - parallelisation
 - evolve-operatoren: werte runden, runden einbauen,
 
-Always check
+- sfeh:discussion especially with mc: there can be more than one pareto entry with the same parsimony/fitness!
+
+
+- Always check
 - xxxxx
 - sfeh
 - asd

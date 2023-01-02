@@ -57,6 +57,7 @@ os.environ["KMP_WARNINGS"] = "FALSE"
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 import tensorflow as tf
+
 tf.compat.v1.enable_eager_execution()
 
 import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
@@ -66,6 +67,7 @@ from abc import ABC, abstractmethod  # sfeh:xxx check this
 
 import itertools
 import re
+
 
 # lol, lol. https://github.com/tensorflow/tensorflow/issues/27023 these messages are tingeling
 
@@ -84,6 +86,7 @@ class BaseTree(ABC):
     [2]:    root-correct structure
     [3]:    including meta-data (fitness_train, complexity)
     """
+
     @abstractmethod
     def __init__(self, childs=None, depth=0, is_fix=False):
         self.depth = depth
@@ -117,11 +120,9 @@ class BaseTree(ABC):
 
         return _expr
 
-    # def get_sympy(self):
-    #     _sexpr = self.insym
-    #
-    #     if self.childs:
-    #         _sexpr.args = [cc.eval_expr_str() for cc in self.childs]
+    @abstractmethod
+    def get_sympy(self):
+        pass
 
     # def get_tfgraph(self):
     #     _graph = self.tflow
@@ -132,7 +133,7 @@ class BaseTree(ABC):
     def __repr__(self):
         """
         Printing the nodes as nested structure such that it can be saved/loaded
-        very closely related to __str__(), but adds the following information:
+        very closely related to str(), but adds the following information:
         - ":fix", when nodes are fixed
         """
         _str = self.get_nlabel()
@@ -176,7 +177,6 @@ class BaseTree(ABC):
 
     @classmethod
     def get_nlabel(cls):
-        # return __class__.__name__
         return cls.__name__
 
     # def get_xtype(self):
@@ -450,16 +450,30 @@ class BaseTree(ABC):
         return sum(results)
 
 
-class Operator(BaseTree):  # todo todotodo sympy.Function was here
+class Operator(BaseTree, ABC):  # todo todotodo sympy.Function was here
     """operator nodes (+, +, *, /, sin(), sign(), ...)
     inner nodes of a fintree"""
     is_Function = True
 
+    def __init__(self, childs=None, depth=0, is_fix=False):
+        super().__init__(childs, depth, is_fix)
+        self.insym = None
+
     def eval(self, *args):
-        return eval(*args)  # todo insym was here
+        return self.insym  # eval(*args)  # todo insym was here
+
+    def get_nlabel(self):
+        _sexpr = self.insym
+
+        if self.childs:
+            _sexpr.args = [cc.eval_expr_str() for cc in self.childs]
+        return _sexpr
+
+    def get_sympy(self, *args):
+        self.eval(self, *args)
 
 
-class ChainOperator(BaseTree):
+class ChainOperator(BaseTree, ABC):
     """
     # todo discuss: sensible to create a new node-type? -> no missconceptions
     todo open, mapping operators are
@@ -472,7 +486,12 @@ class ChainOperator(BaseTree):
     # @classmethod
     # def eval(self, *args):
     #     return  # args[self.arity:]  # todo
-    pass
+    def get_nlabel(cls):
+        pass  # todo
+
+    def get_sympy(self):
+        pass
+
 
 
 class MathOperator(Operator):
@@ -490,9 +509,11 @@ class RelationalOperator(Operator, ABC):
     arity = 2
 
 
-class AngleOperator(Operator, ABC):
+class AngleOperator(Operator):
     arity = 1
-    pass
+
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
 
 
 class MinMaxBase(ChainOperator, ABC):
@@ -512,11 +533,18 @@ class TerminalNode(BaseTree, ABC):  # todo sympy.Atom
     """
     arity = 0
 
+    def get_sympy(self, *args):
+        return self.get_nlabel()
 
-class ConstantNode(TerminalNode):
 
-    def __init__(self, *args, **kwargs):
+class ConstantNode(TerminalNode, ABC):
+
+    def __init__(self, nlabel, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.nlabel = nlabel
+
+    def get_nlabel(self):
+        return f'{self.__name__}({self.nlabel})'
 
     def mutate_self_filter(self, *args, **kwargs):
         pass
@@ -560,14 +588,11 @@ class SymbolNode(TerminalNode):
     """
 
     def __init__(self, nlabel, *args, **kwargs):
-        super().__init__(nlabel, *args, **kwargs)  # todo
+        super().__init__(*args, **kwargs)  # todo (what is to-do?)
         self.nlabel = nlabel
-        self.fam, self.timeindex, _ = observation_get_family_and_time(self.get_nlabel(), none_return=None)
+        self.fam, self.timeindex, _ = observation_get_family_and_time(nlabel, none_return=None)
         self.xtype = (tuple([]), float)  # -> workaround for empty tuple
         self.index_minmax = None
-
-    def __str__(self):
-        return f'{__class__.__name__}({self.nlabel})'
 
 
 # class NodeType:
@@ -682,7 +707,6 @@ class Pow(MathOperator):  # nlabel = 'Pow'  # expr_sym = '({} ** {})'  # **
     tflow = tf.pow
     arity = 2
     xtype = (tuple([float, float]), float)
-
 
     def backprop(self):
         """
@@ -1125,6 +1149,7 @@ sympy_to_node = {sympy.Pow: Pow,  # sympy.div: Div, Powrounded: Powrounded,
                  Mul: Mul}
 sympy_to_node.update({sympy.Mul: Mul, sympy.Max: Max, sympy.Min: Min, sympy.Add: Add,
                       sympy.Eq: Eq, sympy.Ne: Ne})
+
 
 # todo sympy_to_node mit mapx
 # todo gotcha sympy.re comes up randomly
@@ -1577,7 +1602,6 @@ if __name__ == '__main__':
         st = ', '.join([f"{k}: {v}" for k, v in st.items()])
         print(f'sympy_to_node = {{{st}}}')
 
-
     # # test_this()
     # test_basic_tfconversion()  # sfeh all tests
     # test_sympify()
@@ -1586,5 +1610,7 @@ if __name__ == '__main__':
 
     # print(list(get_subclasses(Operator)))
 
-x = Add(childs=[Add(childs=[SymbolNode('a'), Mul(childs=[2, 3])]), 8])
-print(x)
+x = Add(childs=[SymbolNode('a'), Mul(childs=[2, 3])])
+x = ConstantNode(1.23)
+x = sin(childs=[SymbolNode('b')])
+print(x.eval_expr_str())

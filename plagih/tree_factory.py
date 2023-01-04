@@ -71,59 +71,60 @@ def randomly_split_range(range_max, num_splits):
     return sample_dist
 
 
-def node_simplification(evotree: BaseTree):
-    """
-    (Tries to) simplify/reduce a tree. It is quite experimental
+# def node_simplification(evotree: BaseTree):
+#     """
+#         todo
+#     (Tries to) simplify/reduce a tree. It is quite experimental
+#
+#     SFEH Discussion
+#         # example: Tree sympification did not work: Reduced core is even more complex than before.
+#         # expr_raw: sign(BinaryMin(((Velocity_2 * -0.790706) - sqrt(Gain_0)), (-0.569271 - Velocity_9)))
+#         # old_core:[sign, [BinaryMin, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
+#         # new_node: [sign, [BinaryMin, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.56921]]]
+#     """
+#     expr_raw = evotree.eval_expr_str()
+#     expr_sym = expr_sympify(expr_raw)
+#     nested_labels = sympy_to_nestedlist(expr_sym)
+#     node_rebuilt = evotree_from_nested_labels(nested_labels)
+#     # node_rebuilt = node_rebuilt.update_fixed_nodes(node)  # this is not our problem
+#     if DEBUG_DUMMY:
+#         if len(evotree) < len(node_rebuilt):
+#             raise Exception(f'Simplified node has become more complex??\n'
+#                             f'{evotree}\n'
+#                             f'{node_rebuilt}')
+#     return node_rebuilt
 
-    SFEH Discussion
-        # example: Tree sympification did not work: Reduced core is even more complex than before.
-        # expr_raw: sign(BinaryMin(((Velocity_2 * -0.790706) - sqrt(Gain_0)), (-0.569271 - Velocity_9)))
-        # old_core:[sign, [BinaryMin, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
-        # new_node: [sign, [BinaryMin, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.56921]]]
-    """
-    expr_raw = evotree.eval_expr_str()
-    expr_sym = expr_sympify(expr_raw)
-    nested_labels = sympy_to_nestedlist(expr_sym)
-    node_rebuilt = evotree_from_nested_labels(nested_labels)
-    # node_rebuilt = node_rebuilt.update_fixed_nodes(node)  # this is not our problem
-    if DEBUG_DUMMY:
-        if len(evotree) < len(node_rebuilt):
-            raise Exception(f'Simplified node has become more complex??\n'
-                            f'{evotree}\n'
-                            f'{node_rebuilt}')
-    return node_rebuilt
 
-
-def evolve_reduce_simplify(tree: BaseTree, completely=True, force=False):
-    """
-    # todo this function does currently not work
-    Reducing a fintree to its most basic form with sympify.
-    (completely = False: reduce just one branch. if you wanted to have more complexity)
-
-    """
-    tree_copy = copy.deepcopy(tree)
-    if completely:  # reduce the complete fintree
-        nodes_lv0 = tree.get_nodes_at_depth(0, allow_fixed=False)  # only required for fixed-core trees
-        for cc in nodes_lv0:
-            cc.set_new_node(node_simplification(cc))
-    else:
-        # # this was implemented for runtime, to prevent simplifing leaf nodes
-        # functions = [x for x in nodes if x.get_arity() > 0]
-        # if functions:
-        # nd = np.random.choice(functions)
-        #   ...
-        nd_list = tree.eval_mutable_nodes()
-        nd_list = [x for x in nd_list if x.get_arity() > 0]  # ignoring leaf nodes
-        nd = np.random.choice(nd_list)
-        nd.set_new_node(node_simplification(nd))  # sfeh chosen must be set again? or not? test it at least.
-    if force:
-        return tree
-    else:
-        if len(tree_copy) < len(tree):
-            print_e(f'FFS Trees just become larger? {tree.get_nclass()}')
-            return tree_copy
-        else:
-            return tree
+# def evolve_reduce_simplify(tree: BaseTree, completely=True, force=False):
+#     """
+#     # todo this function does currently not work
+#     Reducing a fintree to its most basic form with sympify.
+#     (completely = False: reduce just one branch. if you wanted to have more complexity)
+#
+#     """
+#     tree_copy = copy.deepcopy(tree)
+#     if completely:  # reduce the complete fintree
+#         nodes_lv0 = tree.get_nodes_at_depth(0, allow_fixed=False)  # only required for fixed-core trees
+#         for cc in nodes_lv0:
+#             cc.set_new_node(node_simplification(cc))
+#     else:
+#         # # this was implemented for runtime, to prevent simplifing leaf nodes
+#         # functions = [x for x in nodes if x.get_arity() > 0]
+#         # if functions:
+#         # nd = np.random.choice(functions)
+#         #   ...
+#         nd_list = tree.eval_mutable_nodes()
+#         nd_list = [x for x in nd_list if x.get_arity() > 0]  # ignoring leaf nodes
+#         nd = np.random.choice(nd_list)
+#         nd.set_new_node(node_simplification(nd))  # sfeh chosen must be set again? or not? test it at least.
+#     if force:
+#         return tree
+#     else:
+#         if len(tree_copy) < len(tree):
+#             print_e(f'FFS Trees just become larger? {tree.get_nclass()}')
+#             return tree_copy
+#         else:
+#             return tree
 
 
 def evotree_deepcopy(tree: BaseTree):
@@ -666,34 +667,6 @@ class FinalizedTree:
         return self.meta.get_last_tag()  # sfeh same name?
 
 
-def check_expert_origin_tree(nested_labels):
-    """
-    loading a tree from a file.
-    sfeh: describe the structure of a nested_expr here
-    sfeh:xxx: nested_labels/nested_string/nested_expr/nested_list... one naming convention
-    -> It holds labels
-    -> it is loaded as String
-    -> It is represented with the structure of a List
-    path_origin was here! delete me
-    sfeh: offer more options for a new user to check, if the loaded tree is working and in good "shape"
-    """
-    # with Path.open(p, newline='') as file:
-    #     nested_expr = file.read()
-    tree = evotree_from_nested_labels(nested_labels)
-    expr_raw = tree.eval_expr_str()
-    try:
-        expr_sym = expr_sympify(expr_raw)
-
-        # sfeh, this does not work
-        # if not tree_check_is_sympified(fintree):
-        #     print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}\n'
-        #                          ''.format(expr_raw, expr_sym))
-
-    except Exception as sympex:
-        raise Exception(f'Loaded tree expression could not be mathematically simplified: {sympex}')
-    return tree
-
-
 # class OriginTree(FinalizedTree):
 #     """
 #     The origin fintree (which was already loaded) gets activated for its use in the GP-process
@@ -717,51 +690,51 @@ def check_expert_origin_tree(nested_labels):
 #         return copy.deepcopy(self.fintree.tree)
 
 
-def rec_build_tree(lst, obs_list=None, depth=0):
-    """
-    [rec]ursive building of a tree
-    recursively loads a nested list into a evotree structure
-    nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
-    nstr = '[+,[-,[Ifte,[True],[sin,[2]],[/,[2.043],[4]]],[cartVel]],[-1.3]]'
-    """
-
-    strlabel = str(lst[0])
-    if ':fix' in strlabel:
-        strlabel = strlabel.replace(':fix', '')
-        is_fix = True
-    else:
-        is_fix = False
-
-    if strlabel in ['True', 'False']:
-        node = Bool(strlabel)
-    else:
-        try:
-            strlabel = float(strlabel)
-            node = Float(strlabel)
-        except ValueError:
-            if strlabel in loadable_ops_dict:
-                node = loadable_ops_dict[strlabel]
-            else:
-                if obs_list:
-                    if strlabel in obs_list:
-                        node = Symbol(strlabel)
-                    else:
-                        raise Exception(f'Label "{strlabel}" can not be assigned to a node-label!')
-                else:
-                    node = Symbol(strlabel)
-
-    # node = BaseTree(label=label, depth=depth, is_fix=is_fix)
-
-    if len(lst[1:]) == node.get_arity():
-        childs = [rec_build_tree(x, depth=depth + 1, obs_list=obs_list) for x in lst[1:]]
-        node.set_childs(childs)
-
-    else:
-        # childs = [rec_build_tree(x, depth=depth + 1, obs_list=obs_list) for x in lst[1:]]
-        # node.set_childs(childs)  # sfeh delete
-        raise Exception(f'Tree-building list length {len(lst[1:])} does not match the nodes arity {node.get_arity()}.')
-
-    return node
+# def rec_build_tree(lst, obs_list=None, depth=0):
+#     """
+#     [rec]ursive building of a tree
+#     recursively loads a nested list into a evotree structure
+#     nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
+#     nstr = '[+,[-,[Ifte,[True],[sin,[2]],[/,[2.043],[4]]],[cartVel]],[-1.3]]'
+#     """
+#
+#     strlabel = str(lst[0])
+#     if ':fix' in strlabel:
+#         strlabel = strlabel.replace(':fix', '')
+#         is_fix = True
+#     else:
+#         is_fix = False
+#
+#     if strlabel in ['True', 'False']:
+#         node = Bool(strlabel)
+#     else:
+#         try:
+#             strlabel = float(strlabel)
+#             node = Float(strlabel)
+#         except ValueError:
+#             if strlabel in loadable_ops_dict:
+#                 node = loadable_ops_dict[strlabel]
+#             else:
+#                 if obs_list:
+#                     if strlabel in obs_list:
+#                         node = Symbol(strlabel)
+#                     else:
+#                         raise Exception(f'Label "{strlabel}" can not be assigned to a node-label!')
+#                 else:
+#                     node = Symbol(strlabel)
+#
+#     # node = BaseTree(label=label, depth=depth, is_fix=is_fix)
+#
+#     if len(lst[1:]) == node.get_arity():
+#         childs = [rec_build_tree(x, depth=depth + 1, obs_list=obs_list) for x in lst[1:]]
+#         node.set_childs(childs)
+#
+#     else:
+#         # childs = [rec_build_tree(x, depth=depth + 1, obs_list=obs_list) for x in lst[1:]]
+#         # node.set_childs(childs)  # sfeh delete
+#         raise Exception(f'Tree-building list length {len(lst[1:])} does not match the nodes arity {node.get_arity()}.')
+#
+#     return node
 
 # sfeh:del what is that fgood for?
 # def rec_build_tree2(lst, depth=0, obs_list=None):
@@ -802,34 +775,34 @@ def rec_build_tree(lst, obs_list=None, depth=0):
 #     return node
 
 
-def check_tree_loadable_reconstruction(tree: BaseTree):
-    """
-    Extracts a tree expression and rebuilds the tree
-    The trees must be identical, as it only rebuilt itself
-    :return:
-    """
-    tree_0 = copy.deepcopy(tree)
-    _nested = tree.eval_expr_str()
-    tree_1 = evotree_from_nested_labels(_nested)
-    tree_1.update_fixed_nodes(tree_0)
+# def check_tree_loadable_reconstruction(tree: BaseTree):
+#     """
+#     Extracts a tree expression and rebuilds the tree
+#     The trees must be identical, as it only rebuilt itself
+#     :return:
+#     """
+#     tree_0 = copy.deepcopy(tree)
+#     _nested = tree.eval_expr_str()
+#     tree_1 = evotree_from_nested_labels(_nested)
+#     tree_1.update_fixed_nodes(tree_0)
+#
+#     a = repr(tree_0)
+#     b = repr(tree_1)
+#
+#     return a == b
 
-    a = repr(tree_0)
-    b = repr(tree_1)
 
-    return a == b
-
-
-def evotree_from_nested_labels(nested_str, obs_list=None):
-    """
-    optional: op_dict + labels not in '' can be used to load the operators directly
-    all_input_options = ['1', '0', '-1.132', 'True', 'False', 'vel', 'Ifte', 'max', 'BinaryMax', '-vel']
-    nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
-    """
-    evaled_expr = eval(nested_str)  # sfeh:discuss -> sympify? <- no
-    tree = rec_build_tree(evaled_expr, depth=0, obs_list=obs_list)
-    tree.finalize_set_depth()
-
-    return tree
+# def evotree_from_nested_labels(nested_str, obs_list=None):
+#     """
+#     optional: op_dict + labels not in '' can be used to load the operators directly
+#     all_input_options = ['1', '0', '-1.132', 'True', 'False', 'vel', 'Ifte', 'max', 'BinaryMax', '-vel']
+#     nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
+#     """
+#     evaled_expr = eval(nested_str)  # sfeh:discuss -> sympify? <- no
+#     tree = rec_build_tree(evaled_expr, depth=0, obs_list=obs_list)
+#     tree.finalize_set_depth()
+#
+#     return tree
 
 
 def fintree_from_nested_labels(nested_str, kernel):
@@ -865,8 +838,8 @@ if __name__ == '__main__':
     _test_loadabls = ["['+',['-',['Ifte',['True'],['sign',['cartVel']],['/',[2.3],[4]]],['cartVel']],[-1.3]]",
                       '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]',
                       '["Ifte", ["BinaryNot", [False]], [0.0], [2.0]]']
-    for nstr in _test_loadabls:
-        tr = evotree_from_nested_labels(nstr)
-        print(tr)
-        tr2 = check_tree_loadable_reconstruction(tr)
-        print(tr2)
+    # for nstr in _test_loadabls:
+    #     tr = evotree_from_nested_labels(nstr)
+    #     print(tr)
+    #     tr2 = check_tree_loadable_reconstruction(tr)
+    #     print(tr2)

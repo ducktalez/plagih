@@ -159,6 +159,12 @@ class BaseTree(ABC):
             _str = f"{_str}, {childstr}"
         return f"[{_str}]"
 
+    def __len__(self):
+        """
+        counting the amount of nodes recursively
+        """
+        return 1 + sum([len(cc) for cc in self.childs])
+
     # def choose_term(xtype_out, choose_obs, choose_distributions, precision):
     #
     #     # sfeh 50% chance observation/value
@@ -177,12 +183,6 @@ class BaseTree(ABC):
     #         else:
     #             raise Exception('ASDASD NOOO WHYY')
     #         return const
-
-    def __len__(self):
-        """
-        counting the amount of nodes recursively
-        """
-        return 1 + sum([len(cc) for cc in self.childs])
 
     # def get_label(self):
     #     return self.label
@@ -460,28 +460,16 @@ class BaseTree(ABC):
         results = [self.check_depth_infos(fatal=fatal) if check_depth else 0]
         return sum(results)
 
+    # todo set tree depth at the end or so
 
-class Operator(BaseTree, ABC):  # todo todotodo sympy.Function was here
+
+class Operator(BaseTree, ABC):  # todo sympy.Function was here
     """operator nodes (+, +, *, /, sin(), sign(), ...)
     inner nodes of a fintree"""
     is_Function = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # if self.childs is None:
-        #     raise
-        #     # _autoconvert = {float: FloatConstant,
-        #     #                 int: FloatConstant,  # sfeh
-        #     #                 bool: BoolType,
-        #     #                 str: Symbol}
-        #     # childs = [_autoconvert[type(_c)](_c) for _c in childs]
-        #
-        #     childs = [x for x in args if isinstance(x, BaseTree)]
-
-        # if not isinstance(childs, list):
-        #     childs = [childs]
-
         self.childs = [x for x in args if isinstance(x, BaseTree)]
 
     def __str__(self):
@@ -493,11 +481,14 @@ class Operator(BaseTree, ABC):  # todo todotodo sympy.Function was here
 
     def __repr__(self):
         # todo
-        _str = super().__str__()
+        _rpr = super().__str__()
+
+        _isfix = ', is_fix=True' if self.is_fix else ''
+
         if self.childs:
             childstr = ', '.join([str(x) for x in self.childs])
-            _str = f"{_str}({childstr})"
-        return _str
+            _str = f"{_rpr}({childstr})"
+        return _rpr
 
     def eval(self, *args, **kwargs):
         return self.insym  # eval(*args)
@@ -513,7 +504,6 @@ class Operator(BaseTree, ABC):  # todo todotodo sympy.Function was here
 class ChainOperator(BaseTree, ABC):
     """
     # todo discuss: sensible to create a new node-type? -> no missconceptions
-    todo open, mapping operators are
     sfeh:diskuss: Abstract class for the elements in chain operators?
     Add, Mult, Min, Max
     And, Or
@@ -621,6 +611,7 @@ class Symbol(TerminalNode):
         also: When reconstructing trees, the sign can appear in observations
     This was used to deal with negative labels
         self.name = nlabel if nlabel[0] != '-' else nlabel[1:]
+        sfeh:xxx option here for type float/bool
     """
     insym = sympy.Symbol
     xtype = (tuple([]), float)  # -> workaround for empty tuple
@@ -674,7 +665,6 @@ class ExprCondPair(ChainOperator):
     insym = sympy.functions.elementary.piecewise.ExprCondPair
     arity = None
     tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
-    # expr_sym = 'Piecewise({})'
 
     is_real = True
 
@@ -1111,21 +1101,6 @@ totf = {
     sympy.re: lambda x: tf.convert_to_tensor(x, dtype=tf.dtypes.float32),  # gotcha, comes up rndomly
 }
 
-# Sfeh:error "has no attribute 'tflow'" ->
-sympy_to_node = {sympy.Pow: Pow,  # sympy.div: Div, Powrounded: Powrounded,
-                 sympy.Abs: Abs,
-                 # Divide_no_nan: Divide_no_nan,
-                 sympy.sign: sign, sympy.log: log,  # Log1p: Log1p,
-                 sympy.cos: cos, sympy.sin: sin, sympy.tan: tan, sympy.acos: acos, sympy.asin: asin,
-                 sympy.atan: atan, sympy.tanh: tanh, sympy.sinh: sinh, sympy.cosh: cosh, sympy.Xor: Xor,
-                 sympy.Not: Not, sympy.Ne: Ne, sympy.Lt: Lt,
-                 sympy.Le: Le, sympy.Gt: Gt, sympy.Ge: Ge,
-                 # Usub: Usub, Ifte: Ifte,
-                 sympy.And: And, Eq: Eq, Or: Or,
-                 Mul: Mul}
-sympy_to_node.update({sympy.Mul: Mul, sympy.Max: Max, sympy.Min: Min, sympy.Add: Add,
-                      sympy.Eq: Eq, sympy.Ne: Ne})
-
 
 # todo sympy_to_node mit mapx
 # todo gotcha sympy.re comes up randomly
@@ -1254,30 +1229,6 @@ class sqrt(MathOperator, CustomSympyFunction):  # nlabel = 'sqrt'
     xtype = (tuple([float]), float)
 
 
-def sympy_to_nestedlist(expr):
-    """
-    creates a nestedlist, which can be used to create/load a Tree in the GP process
-    """
-    if isinstance(expr, bool):
-        print('dndfjfugjuh')
-        me = expr
-        raise  # todo
-
-    # ==Terminal nodes==
-    elif expr.is_Atom:
-        if expr.is_Symbol:
-            me = f"'{expr}'"
-        else:
-            me = expr
-
-    else:
-        cc = [sympy_to_nestedlist(x) for x in expr.args]
-        cc = ', '.join(cc)
-        me = f"'{sympy_to_node[expr.func].get_nclass()}', {cc}"
-
-    return f'[{me}]'
-
-
 # class Divide_no_nan(Operator):
 #     """
 #     # Division: SAFE division by zero!
@@ -1351,21 +1302,21 @@ def sympy_to_nestedlist(expr):
 # #     # expr_sym = 'BinaryMax({}, {})'
 # #     xtype = (tuple([float, float]), float)
 
-loadable_ops_dict = {'BinaryAdd': Add, 'BinaryMultiply': Mul, 'Sub': Sub,
-                     # 'Divide_no_nan': Divide_no_nan, 'Usub': Usub,
-                     'Div': Div, 'Pow': Pow, 'Abs': Abs, 'sign': sign, 'Square': Square,
-                     'sqrt': sqrt, 'log': log, 'log1p': Log1p, 'cos': cos, 'sin': sin, 'tan': tan, 'acos': acos,
-                     'asin': asin, 'atan': atan, 'tanh': tanh, 'sinh': sinh, 'cosh': cosh, 'Xor': Xor,
-                     'BinaryNot': Not,
-                     'Ne': Ne, 'Lt': Lt, 'Le': Le, 'Gt': Gt, 'Ge': Ge, 'Ifte': Ifte,
-                     'BinaryMin': Min, 'Max': Max, 'BinaryAnd': And, 'Or': Or,
-                     'Round': Round}
-# TODO_LOADABLE_LATER = { 'Multiply': Multiply, 'And': And, 'Or': Or, 'Eq': Eq, 'Max': Max, 'Min': Min}
-
-loadable_inline_operator_dict = {'+': Add, '-': Sub, '*': Mul, '/': Div, '**': Pow,
-                                 '==': Eq, '!=': Ne, '<': Lt, '<=': Le, '>': Gt, '>=': Ge,
-                                 '&': And, '|': Or}
-loadable_ops_dict.update(loadable_inline_operator_dict)
+# loadable_ops_dict = {'BinaryAdd': Add, 'BinaryMultiply': Mul, 'Sub': Sub,
+#                      # 'Divide_no_nan': Divide_no_nan, 'Usub': Usub,
+#                      'Div': Div, 'Pow': Pow, 'Abs': Abs, 'sign': sign, 'Square': Square,
+#                      'sqrt': sqrt, 'log': log, 'log1p': Log1p, 'cos': cos, 'sin': sin, 'tan': tan, 'acos': acos,
+#                      'asin': asin, 'atan': atan, 'tanh': tanh, 'sinh': sinh, 'cosh': cosh, 'Xor': Xor,
+#                      'BinaryNot': Not,
+#                      'Ne': Ne, 'Lt': Lt, 'Le': Le, 'Gt': Gt, 'Ge': Ge, 'Ifte': Ifte,
+#                      'BinaryMin': Min, 'Max': Max, 'BinaryAnd': And, 'Or': Or,
+#                      'Round': Round}
+# # TODO_LOADABLE_LATER = { 'Multiply': Multiply, 'And': And, 'Or': Or, 'Eq': Eq, 'Max': Max, 'Min': Min}
+#
+# loadable_inline_operator_dict = {'+': Add, '-': Sub, '*': Mul, '/': Div, '**': Pow,
+#                                  '==': Eq, '!=': Ne, '<': Lt, '<=': Le, '>': Gt, '>=': Ge,
+#                                  '&': And, '|': Or}
+# loadable_ops_dict.update(loadable_inline_operator_dict)
 
 
 def sympy_to_tensorflow(expr, pandas_df):
@@ -1430,7 +1381,7 @@ def sympy_to_tensorflow(expr, pandas_df):
             try:
                 tf_fun = type(expr).tflow  # sfeh
             except Exception as ex:
-                print('aaa', type(expr), expr, type(expr) in sympy_to_node)
+                # print('aaa', type(expr), expr, type(expr) in sympy_to_node)
                 # ignore:
                 # -> sympy.conjugate
                 tf_fun = expr.tflow  # todo delete? delete case above? ### binarymax,
@@ -1535,10 +1486,12 @@ if __name__ == '__main__':
             sx = expr_sympify(x)
             print(sx)
 
+
     def test_this():
         x = expr_sympify(
             '(((0.326675 * b_2) - c_9) + (Ifte((-c_9 < b_5), c_7, Ifte((Square(Gain_6) < BinaryMax(a_2, Ifte((c_9 < c_4), -Gain_3, Gain_5))), c_9, c_4))))')
         print(x)
+
 
     def print_relevant_subclasses():
 

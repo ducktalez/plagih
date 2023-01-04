@@ -53,6 +53,8 @@ Useful information:
 """
 import os
 
+from plagih.util import get_subclasses
+
 os.environ["KMP_WARNINGS"] = "FALSE"
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -86,12 +88,24 @@ class BaseTree(ABC):
     [2]:    root-correct structure
     [3]:    including meta-data (fitness_train, complexity)
     """
+    insym = None
 
     @abstractmethod
-    def __init__(self, childs=None, depth=0, is_fix=False):
-        self.depth = depth
-        self.is_fix = is_fix
-        self.childs = childs or []
+    def __init__(self, *args, **kwargs):
+
+        self.childs = []
+        # self.__dict__.update(kwargs)
+        self.depth = kwargs.get('depth', 0)
+        self.is_fix = kwargs.get('is_fix', False)
+
+    # @property
+    # def childs(self):
+    #     return self._childs
+    #
+    # @childs.setter
+    # def childs(self,  childs):
+    #     childs = [x for x in childs if isinstance(x, BaseTree)]
+    #     self.childs = childs
 
     def __str__(self):
         """
@@ -99,30 +113,29 @@ class BaseTree(ABC):
         Also, have a look at __repr__(self) for a more detailed result
         sfeh:idea https://docs.sympy.org/latest/modules/core.html#sympy.core.basic.Basic.subs
         """
-        _str = self.get_nlabel()  # was sfeh or: return the label __str__
+        return self.__class__.__name__
+
+    def _sympy_(self):  # -> sympy.Basic:
+        _sym = self.insym
 
         if self.childs:
-            childstr = ', '.join([str(x) for x in self.childs])
-            _str = f"{_str}({childstr})"
+            childstr = [sympy.sympify(cc) for cc in self.childs]
+            _sym = _sym(*childstr)
 
-        return f"{_str}"
+        return _sym
 
     def eval_expr_str(self):
         """
         Accumulate and return the complete expression the fintree holds recursively
         todo directly sympy in a different method
         """
-        _expr = self.get_nlabel()
+        _expr = self.get_nclass()
 
         if self.childs:
             _cc_expr = ', '.join([cc.eval_expr_str() for cc in self.childs])
             _expr = f'{_expr}({_cc_expr})'
 
         return _expr
-
-    @abstractmethod
-    def get_sympy(self):
-        pass
 
     # def get_tfgraph(self):
     #     _graph = self.tflow
@@ -136,8 +149,7 @@ class BaseTree(ABC):
         very closely related to str(), but adds the following information:
         - ":fix", when nodes are fixed
         """
-        _str = self.get_nlabel()
-        _str = str(_str)
+        _str = self.__class__.__name__
 
         if self.is_fix:
             _str += ':fix'
@@ -175,9 +187,8 @@ class BaseTree(ABC):
     # def get_label(self):
     #     return self.label
 
-    @classmethod
-    def get_nlabel(cls):
-        return cls.__name__
+    def get_nclass(self):
+        return self.__class__.__name__
 
     # def get_xtype(self):
     #     return self.xtype
@@ -229,7 +240,7 @@ class BaseTree(ABC):
         This should only occur during the reconstructing test of a tree from expression.
         """
         if other.is_fix:
-            if self.get_nlabel() != other.get_nlabel():
+            if self.get_nclass() != other.get_nclass():
                 raise
             self.is_fix = True
             for ii, cc in enumerate(self.childs):
@@ -322,7 +333,7 @@ class BaseTree(ABC):
         e.g. {+{Ifte{True}{1}{2}}{3}}
         """
         # sfEh check if this still works as one-liner
-        return f"{{{self.get_nlabel()}{''.join([cc.eval_apted_notation() for cc in self.childs])}}}"
+        return f"{{{self.get_nclass()}{''.join([cc.eval_apted_notation() for cc in self.childs])}}}"
 
     def get_max_depth(self, depth=0):
         """
@@ -455,22 +466,48 @@ class Operator(BaseTree, ABC):  # todo todotodo sympy.Function was here
     inner nodes of a fintree"""
     is_Function = True
 
-    def __init__(self, childs=None, depth=0, is_fix=False):
-        super().__init__(childs, depth, is_fix)
-        self.insym = None
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-    def eval(self, *args):
-        return self.insym  # eval(*args)  # todo insym was here
+        # if self.childs is None:
+        #     raise
+        #     # _autoconvert = {float: FloatConstant,
+        #     #                 int: FloatConstant,  # sfeh
+        #     #                 bool: BoolType,
+        #     #                 str: Symbol}
+        #     # childs = [_autoconvert[type(_c)](_c) for _c in childs]
+        #
+        #     childs = [x for x in args if isinstance(x, BaseTree)]
 
-    def get_nlabel(self):
-        _sexpr = self.insym
+        # if not isinstance(childs, list):
+        #     childs = [childs]
 
+        self.childs = [x for x in args if isinstance(x, BaseTree)]
+
+    def __str__(self):
+        _str = super().__str__()
         if self.childs:
-            _sexpr.args = [cc.eval_expr_str() for cc in self.childs]
-        return _sexpr
+            childstr = ', '.join([str(x) for x in self.childs])
+            _str = f"{_str}({childstr})"
+        return _str
 
-    def get_sympy(self, *args):
-        self.eval(self, *args)
+    def __repr__(self):
+        # todo
+        _str = super().__str__()
+        if self.childs:
+            childstr = ', '.join([str(x) for x in self.childs])
+            _str = f"{_str}({childstr})"
+        return _str
+
+    def eval(self, *args, **kwargs):
+        return self.insym  # eval(*args)
+
+    # todo
+    # _sexpr = self.insym
+    #
+    # if self.childs:
+    #     _sexpr.args = [cc.eval_expr_str() for cc in self.childs]
+    # return _sexpr
 
 
 class ChainOperator(BaseTree, ABC):
@@ -484,20 +521,13 @@ class ChainOperator(BaseTree, ABC):
     """
 
     # @classmethod
-    # def eval(self, *args):
+    # def eval(self, *args, **kwargs):
     #     return  # args[self.arity:]  # todo
-    def get_nlabel(cls):
-        pass  # todo
-
-    def get_sympy(self):
-        pass
-
+    pass
 
 
 class MathOperator(Operator):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    pass
 
 
 class BooleanOperator(Operator):
@@ -509,11 +539,8 @@ class RelationalOperator(Operator, ABC):
     arity = 2
 
 
-class AngleOperator(Operator):
+class AngleOperator(Operator, ABC):
     arity = 1
-
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
 
 
 class MinMaxBase(ChainOperator, ABC):
@@ -533,29 +560,38 @@ class TerminalNode(BaseTree, ABC):  # todo sympy.Atom
     """
     arity = 0
 
-    def get_sympy(self, *args):
-        return self.get_nlabel()
-
-
-class ConstantNode(TerminalNode, ABC):
-
     def __init__(self, nlabel, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.nlabel = nlabel
+        self.childs = []
 
-    def get_nlabel(self):
-        return f'{self.__name__}({self.nlabel})'
+    def __str__(self):
+        return f'{self.nlabel}'
+
+    def __repr__(self):
+        # todo
+        _str = super().__str__()
+        return f'{_str}({self.nlabel})'
+
+    def _sympy_(self):
+        return self.insym(self.nlabel)
+
+
+# todo idea: allow Add(2, 3) in init of nodes with custom parametrisation
+
+
+class ConstantNode(TerminalNode, ABC):
 
     def mutate_self_filter(self, *args, **kwargs):
         pass
 
 
-class BoolConstant(ConstantNode):
-    pass
+class Bool(ConstantNode):
+    insym = sympy.logic.boolalg.Boolean
 
 
-class FloatConstant(ConstantNode):
-    pass
+class Float(ConstantNode):
+    insym = sympy.Float
 
 
 def observation_get_family_and_time(name, re_pattern='_\\d+$', none_return=None):
@@ -578,7 +614,7 @@ def observation_get_family_and_time(name, re_pattern='_\\d+$', none_return=None)
     return core_expr, temp_diff, preexpr
 
 
-class SymbolNode(TerminalNode):
+class Symbol(TerminalNode):
     """
     todo sfeh discuss: labels should not have a sign (-pos)
         y though? -> just use a '-'-operator in an additional node.
@@ -586,12 +622,12 @@ class SymbolNode(TerminalNode):
     This was used to deal with negative labels
         self.name = nlabel if nlabel[0] != '-' else nlabel[1:]
     """
+    insym = sympy.Symbol
+    xtype = (tuple([]), float)  # -> workaround for empty tuple
 
     def __init__(self, nlabel, *args, **kwargs):
-        super().__init__(*args, **kwargs)  # todo (what is to-do?)
-        self.nlabel = nlabel
-        self.fam, self.timeindex, _ = observation_get_family_and_time(nlabel, none_return=None)
-        self.xtype = (tuple([]), float)  # -> workaround for empty tuple
+        super().__init__(nlabel, *args, **kwargs)  # todo (what is to-do?)
+        self.fam, self.timeindex, _ = observation_get_family_and_time(self.nlabel, none_return=None)
         self.index_minmax = None
 
 
@@ -607,15 +643,6 @@ class SymbolNode(TerminalNode):
 #     pass
 
 
-@dataclass
-class ExprCondPairType:
-    """
-    just an input type like float or bool
-    but it is a sympy ExprCondPairType for piecewise operator
-    """
-    pass
-
-
 class BaseType:
     pass
 
@@ -625,10 +652,10 @@ class FloatType(BaseType):
     todo:discuss: how to deal with sign of observations?
     """
     arity = 0
-    otype = float
     xtype = (tuple([]), float)
 
-    def __init__(self, nlabel):
+    def __init__(self, nlabel, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.nlabel = nlabel
 
     # def mutate_self_filter(self, filter_type='gaussian_filter', *args, **kwargs):  # sfeh:open
@@ -643,20 +670,8 @@ class FloatType(BaseType):
     #         self.get_nlabel() = round(constant, PRECISION)  # sfeh:discussion be careful, might create zero sometimes
 
 
-class BoolType(BaseType):
-    """
-    True/False
-    """
-    xtype = (tuple([]), bool)
-    tf_type = tf.bool
-
-    def __init__(self, expr):
-        self.nlabel = expr
-
-
 class ExprCondPair(ChainOperator):
     insym = sympy.functions.elementary.piecewise.ExprCondPair
-    nlabel = 'xxx'
     arity = None
     tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
     # expr_sym = 'Piecewise({})'
@@ -675,10 +690,6 @@ class Add(MathOperator):  # expr_sym = '({} + {})'
 
     nargs = 2  # todo in sympy, this is a "FiniteSet"?
     is_real = True
-
-    def _sympy_(self, *args):
-        print('Add SUCKS')
-        return self.eval(*args)
 
     def backprop(self):
         """
@@ -732,10 +743,6 @@ class sign(MathOperator, NoSymCapitalized):  # nlabel = 'sign',  # expr_sym = 's
     arity = 1
     xtype = (tuple([float]), float)
 
-    def _sympy_(self, *args):
-        print('SIGN SYMPY')
-        return self.eval(*args)
-
 
 class log(MathOperator, NoSymCapitalized):  # nlabel = 'log'  # expr_sym = 'log({})'
     """sfeh: Log isactually Ln (base e)"""
@@ -754,15 +761,16 @@ class cos(AngleOperator, NoSymCapitalized):  # nlabel = 'cos' # expr_sym = 'cos(
 
 
 class sin(AngleOperator, NoSymCapitalized):  # expr_sym = 'sin({})'
-    nlabel = 'sin'
     insym = sympy.sin
     tflow = tf.sin
     arity = 1
     xtype = (tuple([float]), float)
 
 
+# sin = Sin  # sfeh:discuss: i think this wont work, cause __name__
+
+
 class tan(AngleOperator, NoSymCapitalized):
-    nlabel = 'tan'
     insym = sympy.tan
     arity = 1
     tflow = tf.tan
@@ -779,7 +787,6 @@ class acos(AngleOperator, NoSymCapitalized):  # nlabel = 'acos'  # expr_sym = 'a
 class asin(AngleOperator, NoSymCapitalized):  # nlabel = 'asin'
     insym = sympy.asin
     tflow = tf.asin
-    arity = 1
     xtype = (tuple([float]), float)
 
 
@@ -828,10 +835,6 @@ class Not(BooleanOperator):  # nlabel = 'Not'  # expr_sym = '~({})'
 
     nargs = 1
 
-    def _sympy_(self, *args):
-        print('BinaryNot SUCKS')
-        return self.eval(*args)
-
 
 class Eq(BooleanOperator):  # nlabel = 'Eq'  # expr_sym = '({} == {})'
     insym = sympy.Eq
@@ -877,10 +880,6 @@ class And(BooleanOperator):  # nlabel = 'And'  # expr_sym = '({} & {})'
     nargs = 2
     is_Boolean = True
 
-    def _sympy_(self, *args):
-        print('BinAnd SUCKS')
-        return self.eval(*args)
-
 
 class Piecewise(ChainOperator):  # nlabel = 'Piecewise'
     # MapxPiecewise was here
@@ -905,10 +904,6 @@ class Min(MinMaxBase):  # nlabel = 'Min'  # expr_sym = 'Min({}, {})'
     nargs = 2
     is_real = True
 
-    def _sympy_(self, *args):
-        print('binMin todo SUCKS')
-        return self.eval(*args)
-
 
 class Max(MinMaxBase):  # nlabel = 'Max'  # expr_sym = 'BinaryMax({}, {})'
     insym = sympy.Max
@@ -918,10 +913,6 @@ class Max(MinMaxBase):  # nlabel = 'Max'  # expr_sym = 'BinaryMax({}, {})'
     nargs = 2
     is_real = True
 
-    def _sympy_(self, *args):
-        print('binMax SUCKS')
-        return self.eval(*args)
-
 
 class Or(BooleanOperator):  # nlabel = 'Or'  # expr_sym = '({} | {})'
     insym = sympy.Or
@@ -930,9 +921,6 @@ class Or(BooleanOperator):  # nlabel = 'Or'  # expr_sym = '({} | {})'
     xtype = (tuple([bool, bool]), bool)
 
     nargs = 2
-
-    def _sympy_(self, *args):
-        return self.eval(*args)
 
 
 class Ne(RelationalOperator):  # nlabel = 'Ne'  # expr_sym = '({} != {})'
@@ -982,18 +970,6 @@ class Ge(RelationalOperator):  # nlabel = 'Ge'  # expr_sym = '({} >= {})'
 # sfeh:xxx potential names
 # arityfix, custom, structural
 # Folding, collective, reduce, chained, fold, map
-
-# sfeh:xxx required, if string is loaded. not required, if sympys are loaded
-# loadable_ops_dict = {'BinaryAdd': Add, 'BinaryMultiply': Mul, 'Sub': Sub,
-#                      'Xor': Xor, 'BinaryNot': Not, 'Ne': Ne, 'Lt': Lt, 'Le': Le, 'Gt': Gt, 'Ge': Ge, 'Ifte': Ifte,
-#                      'Round': Round,
-#                      'Min': Min, 'Max': Max, 'And': And, 'Or': Or,
-#                      'Eq': Eq,
-#                      # 'Divide_no_nan': Divide_no_nan, 'Usub': Usub,
-#                      'Div': Div, 'Pow': Pow, 'Powrounded': Powrounded, 'Abs': Abs, 'Square': Square,
-#                      'sign': Sign, 'sqrt': Sqrt, 'log': Log, 'log1p': Log1p,
-#                      'cos': Cos, 'sin': Sin, 'tan': Tan, 'acos': Acos, 'asin': Asin, 'atan': Atan, 'tanh': Tanh,
-#                      'cosh': Cosh, 'sinh': Sinh}
 
 
 def expr_sympify(expr):
@@ -1182,9 +1158,6 @@ class Square(MathOperator, CustomSympyFunction):  # nlabel = 'Square'  # expr_sy
     def eval(cls, a):
         return sympy.Pow(a, 2)
 
-    def _sympy_(self, *args):
-        return self.eval(*args)
-
 
 class Sub(MathOperator, CustomSympyFunction):  # todo Sub is subclass of add?  # nlabel = 'Sub', expr_sym = '({}-{})'
     tflow = tf.subtract
@@ -1224,9 +1197,6 @@ class Ifte(Operator, CustomSympyFunction):  # nlabel = 'Ifte'  # expr_sym = 'Ift
         #     return None  # returns None, is not further evaluated
         return sympy.Piecewise((b, a), (c, True))  # also available: sympy.piecewise_fold
 
-    def _sympy_(self, *args):
-        return self.eval(*args)
-
 
 class Round(MathOperator, CustomSympyFunction):  # nlabel = 'Round'
     """
@@ -1243,9 +1213,6 @@ class Round(MathOperator, CustomSympyFunction):  # nlabel = 'Round'
     @classmethod
     def eval(cls, a):
         return sympy.N(a, 0)
-
-    def _sympy_(self, *args):
-        return self.eval(*args)
 
 
 class Log1p(MathOperator, CustomSympyFunction):
@@ -1280,7 +1247,7 @@ class Div(MathOperator, CustomSympyFunction):  # nlabel = 'Div'  # # expr_sym = 
 class sqrt(MathOperator, CustomSympyFunction):  # nlabel = 'sqrt'
     # todo sqrt is actually not a simplified Version
     # todo sympy.sqrt is a function, not a class
-    insym = None  # sympy.sqrt
+    insym = sympy.sqrt
     tflow = tf.sqrt
     arity = 1
 
@@ -1306,7 +1273,7 @@ def sympy_to_nestedlist(expr):
     else:
         cc = [sympy_to_nestedlist(x) for x in expr.args]
         cc = ', '.join(cc)
-        me = f"'{sympy_to_node[expr.func].get_nlabel()}', {cc}"
+        me = f"'{sympy_to_node[expr.func].get_nclass()}', {cc}"
 
     return f'[{me}]'
 
@@ -1348,8 +1315,8 @@ def sympy_to_nestedlist(expr):
 #     def eval(cls, a):
 #         return -a  # sfeh
 #
-#     def _sympy_(self, *args):
-#         return self.eval(*args)
+#     def _sympy_(self, *args, **kwargs):
+#         return self.eval(*args, **kwargs)
 
 
 # class Powrounded(Operator):
@@ -1568,22 +1535,14 @@ if __name__ == '__main__':
             sx = expr_sympify(x)
             print(sx)
 
-
     def test_this():
         x = expr_sympify(
             '(((0.326675 * b_2) - c_9) + (Ifte((-c_9 < b_5), c_7, Ifte((Square(Gain_6) < BinaryMax(a_2, Ifte((c_9 < c_4), -Gain_3, Gain_5))), c_9, c_4))))')
         print(x)
 
-
-    def get_subclasses(cls):
-        for subclass in cls.__subclasses__():
-            yield from get_subclasses(subclass)
-            yield subclass
-
-
     def print_relevant_subclasses():
 
-        l = [x.get_nlabel() for x in get_subclasses(Operator)]
+        l = [x.get_nclass() for x in get_subclasses(Operator)]
         print(f'loadable_strings = {l}')
         c = [x.__name__ for x in get_subclasses(Operator)]
         print(f'operator_classes = {c}')
@@ -1610,7 +1569,18 @@ if __name__ == '__main__':
 
     # print(list(get_subclasses(Operator)))
 
-x = Add(childs=[SymbolNode('a'), Mul(childs=[2, 3])])
-x = ConstantNode(1.23)
-x = sin(childs=[SymbolNode('b')])
-print(x.eval_expr_str())
+# x = Add(childs=[Symbol('a'), Mul(childs=[2, 3])])
+n1 = Float(1.23)
+n2 = Symbol('b')
+x = sin(Add(n1, n2))
+x = sympy.sympify(x)
+print(x)
+
+# for _subc in get_subclasses(BaseTree):
+#     if ABC in _subc.__bases__:
+#         # print(f'ignoring {_subc}')
+#         pass
+#     else:
+#         print(f'{_subc.__name__}')
+#
+# print(type(RelationalOperator))

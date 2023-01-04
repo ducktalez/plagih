@@ -120,7 +120,7 @@ def evolve_reduce_simplify(tree: BaseTree, completely=True, force=False):
         return tree
     else:
         if len(tree_copy) < len(tree):
-            print_e(f'FFS Trees just become larger? {tree.get_nlabel()}')
+            print_e(f'FFS Trees just become larger? {tree.get_nclass()}')
             return tree_copy
         else:
             return tree
@@ -293,7 +293,7 @@ class TreeBuilder:
         #         obs_names.pop_append_evotree(obs)
         #         obs_prop.pop_append_evotree(1)  # just one value
 
-        obs_list = [SymbolNode(x) for x in obs_names]
+        obs_list = [Symbol(x) for x in obs_names]
 
         self.observables = {float: lambda: np.random.choice(obs_list),  # , p=obs_prop
                             bool: None}  # sfeh:discussion None? no  lambda? yeah, not important but still...
@@ -314,9 +314,9 @@ class TreeBuilder:
         value = random.choice(self.distributions[xtype])()
         if xtype == float:
             value = float(round(value, PRECISION))
-            return FloatConstant(value)
+            return Float(value)
         elif xtype == bool:
-            return BoolConstant(value)
+            return Bool(value)
 
     def choose_term(self, xtype, p_observation=0.5):
         """
@@ -733,22 +733,22 @@ def rec_build_tree(lst, obs_list=None, depth=0):
         is_fix = False
 
     if strlabel in ['True', 'False']:
-        node = BoolConstant(strlabel)
+        node = Bool(strlabel)
     else:
         try:
             strlabel = float(strlabel)
-            node = FloatConstant(strlabel)
+            node = Float(strlabel)
         except ValueError:
             if strlabel in loadable_ops_dict:
                 node = loadable_ops_dict[strlabel]
             else:
                 if obs_list:
                     if strlabel in obs_list:
-                        node = SymbolNode(strlabel)
+                        node = Symbol(strlabel)
                     else:
                         raise Exception(f'Label "{strlabel}" can not be assigned to a node-label!')
                 else:
-                    node = SymbolNode(strlabel)
+                    node = Symbol(strlabel)
 
     # node = BaseTree(label=label, depth=depth, is_fix=is_fix)
 

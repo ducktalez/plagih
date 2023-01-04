@@ -48,6 +48,12 @@ class BColors:
     RED2 = '\033[41m'
 
 
+def get_subclasses(cls):
+    for subclass in cls.__subclasses__():
+        yield from get_subclasses(subclass)
+        yield subclass
+
+
 def pickle_dump(path, data):
     """
 

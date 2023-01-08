@@ -65,7 +65,6 @@ tf.compat.v1.enable_eager_execution()
 import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
 import sympy
 from dataclasses import dataclass
-from abc import ABC, abstractmethod  # sfeh:xxx check this
 
 import itertools
 import re
@@ -75,7 +74,7 @@ import re
 
 
 # @dataclass  # classes that are meant to hold data - which is not the case?
-class BaseTree(ABC):
+class BaseTree:
     """
     The core is the structure of a plagih gp-fintree.
     It recursively holds the nodes of a fintree; every fintree has a list of potential children.
@@ -90,13 +89,18 @@ class BaseTree(ABC):
     """
     insym = None
 
-    @abstractmethod
-    def __init__(self, *args, **kwargs):
-
-        self.childs = []
-        # self.__dict__.update(kwargs)
-        self.depth = kwargs.get('depth', 0)
-        self.is_fix = kwargs.get('is_fix', False)
+    def __new__(cls, *args, **kwargs):
+        cls.childs = args
+        cls.is_fix = kwargs.get('is_fix', False)
+        obj = object.__new__(cls)
+        return obj
+        # # self.childs = []
+        # # self.depth = depth
+        # cls.childs = childs
+        # cls.is_fix = is_fix
+        # # self.depth = kwargs.get('depth', 0)
+        # # self.childs = kwargs.get('childs', [])
+        # # self.is_fix = kwargs.get('is_fix', False)
 
     # @property
     # def childs(self):
@@ -124,18 +128,18 @@ class BaseTree(ABC):
 
         return _sym
 
-    def eval_expr_str(self):
-        """
-        Accumulate and return the complete expression the fintree holds recursively
-        todo directly sympy in a different method
-        """
-        _expr = self.get_nclass()
-
-        if self.childs:
-            _cc_expr = ', '.join([cc.eval_expr_str() for cc in self.childs])
-            _expr = f'{_expr}({_cc_expr})'
-
-        return _expr
+    # def eval_expr_str(self):
+    #     """
+    #     Accumulate and return the complete expression the fintree holds recursively
+    #     todo directly sympy in a different method
+    #     """
+    #     _expr = self.get_nclass()
+    #
+    #     if self.childs:
+    #         _cc_expr = ', '.join([cc.eval_expr_str() for cc in self.childs])
+    #         _expr = f'{_expr}({_cc_expr})'
+    #
+    #     return _expr
 
     # def get_tfgraph(self):
     #     _graph = self.tflow
@@ -196,6 +200,12 @@ class BaseTree(ABC):
     # def get_xtype_in(self):
     #     return self.xtype[0]
 
+    # def get_depth(self):
+    #     return self.depth
+    #
+    # def set_depth(self, depth):
+    #     self.depth = depth
+
     def is_root(self):
         """
         does this work while building a fintree?
@@ -210,7 +220,7 @@ class BaseTree(ABC):
     #     -> SFEH: But it is also not used anymore
     #     """
     #     obslist = []
-    #     if self.get_arity() > 0:
+    #     if self.garitgetya() > 0:
     #         obslist.extend(list(itertools.chain(*[cc.get_observation_list() for cc in self.childs])))
     #     elif isinstance(self.label, Observation):
     #         obslist.extend([self.get_nlabel()])
@@ -227,11 +237,6 @@ class BaseTree(ABC):
         """
         Sets the self.childs variable, which must be nodes or None
         """
-        # if len(childs) == self.get_arity():
-        #     self.childs = childs
-        # else:
-        #     raise  # sfeh:discuss do not raise in new GP
-        # return
         self.childs = childs
 
     def update_fixed_nodes(self, other: 'BaseTree'):
@@ -318,15 +323,6 @@ class BaseTree(ABC):
     #
     #     return f'{expr_str}'
 
-    # def eval_expr_todo_old(self):
-    #     """
-    #     """
-    #     if self.get_arity() > 0:
-    #         child_expr_list = [cc.eval_expr_todo_old() for cc in self.childs]
-    #         return self.label.expr_sym.format(*child_expr_list)  # *list makes the list args :D f'cos({})'([33]) does not work.
-    #     else:
-    #         return self.label.expr_sym
-
     def eval_apted_notation(self):
         """
         Calculating the TED requires this (weird) representation
@@ -394,7 +390,6 @@ class BaseTree(ABC):
     #             intelligent filtering
     #     """
     #     # self.state = STATE_BUILDING  #  ==>state
-    #     if self.get_arity() > 0:
     #         for cc in self.childs:
     #             cc.evolve_mutate_filter_branch()
     #     else:
@@ -463,14 +458,16 @@ class BaseTree(ABC):
     # todo set tree depth at the end or so
 
 
-class Operator(BaseTree, ABC):  # todo sympy.Function was here
+class Operator(BaseTree):  # todo sympy.Function was here
     """operator nodes (+, +, *, /, sin(), sign(), ...)
     inner nodes of a fintree"""
     is_Function = True
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.childs = [x for x in args if isinstance(x, BaseTree)]
+    # def __new__(cls, *args, **kwargs):
+    #     cls.childs = args  # [x for x in args if isinstance(x, BaseTree)]
+    #
+    #     obj = object.__new__(cls)
+    #     return obj
 
     def __str__(self):
         _str = super().__str__()
@@ -501,7 +498,7 @@ class Operator(BaseTree, ABC):  # todo sympy.Function was here
     # return _sexpr
 
 
-class ChainOperator(BaseTree, ABC):
+class ChainOperator(BaseTree):
     """
     # todo discuss: sensible to create a new node-type? -> no missconceptions
     sfeh:diskuss: Abstract class for the elements in chain operators?
@@ -525,35 +522,36 @@ class BooleanOperator(Operator):
     pass
 
 
-class RelationalOperator(Operator, ABC):
-    arity = 2
+class RelationalOperator(Operator):
+    pass
 
 
-class AngleOperator(Operator, ABC):
-    arity = 1
+class AngleOperator(Operator):
+    pass
 
 
-class MinMaxBase(ChainOperator, ABC):
-    arity = 2
+class MinMaxBase(ChainOperator):
+    pass
 
 
 class NoSymCapitalized:
     pass
 
 
-class TerminalNode(BaseTree, ABC):  # todo sympy.Atom
+class TerminalNode(BaseTree):  # todo sympy.Atom
     """
     Terminal nodes are leaf nodes which can not have children. e.g.:
     - constants (e.g. 2.3)
     - observations (e.g. b, aka data input)
     - user-functions (sfeh:open)
     """
-    arity = 0
 
-    def __init__(self, nlabel, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.nlabel = nlabel
-        self.childs = []
+    def __new__(cls, nlabel, *args, **kwargs):
+        cls.nlabel = nlabel
+        cls.childs = []
+
+        obj = object.__new__(cls)
+        return obj
 
     def __str__(self):
         return f'{self.nlabel}'
@@ -570,7 +568,7 @@ class TerminalNode(BaseTree, ABC):  # todo sympy.Atom
 # todo idea: allow Add(2, 3) in init of nodes with custom parametrisation
 
 
-class ConstantNode(TerminalNode, ABC):
+class ConstantNode(TerminalNode):
 
     def mutate_self_filter(self, *args, **kwargs):
         pass
@@ -616,10 +614,13 @@ class Symbol(TerminalNode):
     insym = sympy.Symbol
     xtype = (tuple([]), float)  # -> workaround for empty tuple
 
-    def __init__(self, nlabel, *args, **kwargs):
-        super().__init__(nlabel, *args, **kwargs)  # todo (what is to-do?)
-        self.fam, self.timeindex, _ = observation_get_family_and_time(self.nlabel, none_return=None)
-        self.index_minmax = None
+    def __new__(cls, nlabel, *args, **kwargs):
+        cls.nlabel = nlabel
+        cls.fam, cls.timeindex, _ = observation_get_family_and_time(nlabel, none_return=None)
+        cls.index_minmax = None
+
+        obj = object.__new__(cls)
+        return obj
 
 
 # class NodeType:
@@ -638,32 +639,26 @@ class BaseType:
     pass
 
 
-class FloatType(BaseType):
-    """
-    todo:discuss: how to deal with sign of observations?
-    """
-    arity = 0
-    xtype = (tuple([]), float)
-
-    def __init__(self, nlabel, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.nlabel = nlabel
-
-    # def mutate_self_filter(self, filter_type='gaussian_filter', *args, **kwargs):  # sfeh:open
-    #     """
-    #     todo
-    #     """
-    #     if filter_type == 'gaussian_filter':
-    #         if np.random.choice(['v1', 'v2']) == 'v1' or self.get_nlabel() == 0:
-    #             constant = self.get_nlabel + np.random.normal(0, 0.1)  # sfeh better adjustments?
-    #         else:
-    #             constant = np.random.normal(self.get_nlabel(), 0.1)  # sfeh better adjustments?
-    #         self.get_nlabel() = round(constant, PRECISION)  # sfeh:discussion be careful, might create zero sometimes
+# class FloatType(BaseType):
+#     """
+#     todo:discuss: how to deal with sign of observations?
+#     """
+#     xtype = (tuple([]), float)
+#
+#     # def mutate_self_filter(self, filter_type='gaussian_filter', *args, **kwargs):  # sfeh:open
+#     #     """
+#     #     todo
+#     #     """
+#     #     if filter_type == 'gaussian_filter':
+#     #         if np.random.choice(['v1', 'v2']) == 'v1' or self.get_nlabel() == 0:
+#     #             constant = self.get_nlabel + np.random.normal(0, 0.1)  # sfeh better adjustments?
+#     #         else:
+#     #             constant = np.random.normal(self.get_nlabel(), 0.1)  # sfeh better adjustments?
+#     #         self.get_nlabel() = round(constant, PRECISION)  # sfeh:discussion be careful, might create zero sometimes
 
 
 class ExprCondPair(ChainOperator):
     insym = sympy.functions.elementary.piecewise.ExprCondPair
-    arity = None
     tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
 
     is_real = True
@@ -673,7 +668,6 @@ class Add(MathOperator):  # expr_sym = '({} + {})'
 
     # TODO chainoperator option?
     insym = sympy.Add  # todo delete
-    arity = 2
     tflow = tf.add
     # todo vs. Add()
     xtype = (tuple([float, float]), float)
@@ -706,7 +700,6 @@ class Pow(MathOperator):  # nlabel = 'Pow'  # expr_sym = '({} ** {})'  # **
     """ALERT: Power can create complex numbers, maybe you should use Powerounded"""
     insym = sympy.Pow
     tflow = tf.pow
-    arity = 2
     xtype = (tuple([float, float]), float)
 
     def backprop(self):
@@ -722,7 +715,6 @@ class Pow(MathOperator):  # nlabel = 'Pow'  # expr_sym = '({} ** {})'  # **
 class Abs(MathOperator):  # nlabel = 'Abs'  # expr_sym = 'Abs({})'
     insym = sympy.Abs
     tflow = tf.abs
-    arity = 1
     xtype = (tuple([float]), float)
 
 
@@ -730,7 +722,6 @@ class sign(MathOperator, NoSymCapitalized):  # nlabel = 'sign',  # expr_sym = 's
     # todo 'sign({})' sympy.simplify('sign(-a)') -> -sign(a)
     insym = sympy.sign
     tflow = tf.sign
-    arity = 1
     xtype = (tuple([float]), float)
 
 
@@ -738,7 +729,6 @@ class log(MathOperator, NoSymCapitalized):  # nlabel = 'log'  # expr_sym = 'log(
     """sfeh: Log isactually Ln (base e)"""
     insym = sympy.log  # todo log is a function
     tflow = tf.math.log
-    arity = 1
 
     xtype = (tuple([float]), float)
 
@@ -746,14 +736,12 @@ class log(MathOperator, NoSymCapitalized):  # nlabel = 'log'  # expr_sym = 'log(
 class cos(AngleOperator, NoSymCapitalized):  # nlabel = 'cos' # expr_sym = 'cos({})'
     insym = sympy.cos
     tflow = tf.cos
-    arity = 1
     xtype = (tuple([float]), float)
 
 
 class sin(AngleOperator, NoSymCapitalized):  # expr_sym = 'sin({})'
     insym = sympy.sin
     tflow = tf.sin
-    arity = 1
     xtype = (tuple([float]), float)
 
 
@@ -762,7 +750,6 @@ class sin(AngleOperator, NoSymCapitalized):  # expr_sym = 'sin({})'
 
 class tan(AngleOperator, NoSymCapitalized):
     insym = sympy.tan
-    arity = 1
     tflow = tf.tan
     xtype = (tuple([float]), float)
 
@@ -770,7 +757,6 @@ class tan(AngleOperator, NoSymCapitalized):
 class acos(AngleOperator, NoSymCapitalized):  # nlabel = 'acos'  # expr_sym = 'acos({})'
     insym = sympy.acos
     tflow = tf.acos
-    arity = 1
     xtype = (tuple([float]), float)
 
 
@@ -807,7 +793,6 @@ class cosh(AngleOperator, NoSymCapitalized):  # nlabel = 'cosh'
 class Xor(BooleanOperator, NoSymCapitalized):  # nlabel = 'Xor'
     insym = sympy.Xor
     tflow = tf.math.logical_xor
-    arity = 2
     xtype = (tuple([bool, bool]), bool)
 
 
@@ -820,7 +805,6 @@ class Not(BooleanOperator):  # nlabel = 'Not'  # expr_sym = '~({})'
     """
     insym = sympy.Not
     tflow = tf.logical_not
-    arity = 1
     xtype = (tuple([bool]), bool)
 
     nargs = 1
@@ -829,7 +813,6 @@ class Not(BooleanOperator):  # nlabel = 'Not'  # expr_sym = '~({})'
 class Eq(BooleanOperator):  # nlabel = 'Eq'  # expr_sym = '({} == {})'
     insym = sympy.Eq
     tflow = tf.equal
-    arity = 2
     xtype = (tuple([float, float]), bool)
 
 
@@ -839,7 +822,6 @@ class Mul(MathOperator):  # nlabel = 'Mul'  # expr_sym = '({} * {})'
     """
     insym = sympy.Mul
     tflow = tf.multiply
-    arity = 2
     xtype = (tuple([float, float]), float)
 
     nargs = 2
@@ -864,7 +846,6 @@ class Mul(MathOperator):  # nlabel = 'Mul'  # expr_sym = '({} * {})'
 class And(BooleanOperator):  # nlabel = 'And'  # expr_sym = '({} & {})'
     insym = sympy.And
     tflow = tf.logical_and
-    arity = 2
     xtype = (tuple([bool, bool]), bool)
 
     nargs = 2
@@ -877,9 +858,11 @@ class Piecewise(ChainOperator):  # nlabel = 'Piecewise'
     # todo must have a True-case
     insym = sympy.Piecewise
     tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
-    arity = None
 
     is_real = True
+
+    def __add__(self, other):
+        pass  # todo
 
 
 class Min(MinMaxBase):  # nlabel = 'Min'  # expr_sym = 'Min({}, {})'
@@ -907,7 +890,6 @@ class Max(MinMaxBase):  # nlabel = 'Max'  # expr_sym = 'BinaryMax({}, {})'
 class Or(BooleanOperator):  # nlabel = 'Or'  # expr_sym = '({} | {})'
     insym = sympy.Or
     tflow = tf.logical_or
-    arity = 2
     xtype = (tuple([bool, bool]), bool)
 
     nargs = 2
@@ -958,7 +940,6 @@ class Ge(RelationalOperator):  # nlabel = 'Ge'  # expr_sym = '({} >= {})'
 
 # attention: exactly same capitals/letters! (gets replaced)
 # sfeh:xxx potential names
-# arityfix, custom, structural
 # Folding, collective, reduce, chained, fold, map
 
 
@@ -1123,7 +1104,6 @@ class CustomSympyFunction:
 
 class Square(MathOperator, CustomSympyFunction):  # nlabel = 'Square'  # expr_sym = 'Square({})'
     tflow = tf.square
-    arity = 1
     xtype = (tuple([float]), float)
 
     nargs = 1
@@ -1136,7 +1116,6 @@ class Square(MathOperator, CustomSympyFunction):  # nlabel = 'Square'  # expr_sy
 
 class Sub(MathOperator, CustomSympyFunction):  # todo Sub is subclass of add?  # nlabel = 'Sub', expr_sym = '({}-{})'
     tflow = tf.subtract
-    arity = 2
     xtype = (tuple([float, float]), float)
 
     @classmethod
@@ -1158,7 +1137,6 @@ class Ifte(Operator, CustomSympyFunction):  # nlabel = 'Ifte'  # expr_sym = 'Ift
     --> If a node
     """
     tflow = tf.where
-    arity = 3
     xtype = (tuple([bool, float, float]), float)
 
     nargs = 3
@@ -1179,7 +1157,6 @@ class Round(MathOperator, CustomSympyFunction):  # nlabel = 'Round'
     """
 
     tflow = lambda a: tf.math.round(a, 1)
-    arity = 1
     xtype = (tuple([float]), float)
 
     nargs = 1
@@ -1192,7 +1169,6 @@ class Round(MathOperator, CustomSympyFunction):  # nlabel = 'Round'
 
 class Log1p(MathOperator, CustomSympyFunction):
     nlabel = 'log1p'
-    arity = 1
     tflow = tf.math.log1p
     # expr_sym = 'log1p({})'
     xtype = (tuple([float]), float)
@@ -1204,7 +1180,6 @@ class Log1p(MathOperator, CustomSympyFunction):
 
 class Div(MathOperator, CustomSympyFunction):  # nlabel = 'Div'  # # expr_sym = '({} / {})'
     """sfeh:xxx make this available, make a correct version of "Divide_no_nan" """
-    arity = 2
     tflow = tf.math.divide
     xtype = (tuple([float, float]), float)
 
@@ -1224,7 +1199,6 @@ class sqrt(MathOperator, CustomSympyFunction):  # nlabel = 'sqrt'
     # todo sympy.sqrt is a function, not a class
     insym = sympy.sqrt
     tflow = tf.sqrt
-    arity = 1
 
     xtype = (tuple([float]), float)
 
@@ -1238,7 +1212,6 @@ class sqrt(MathOperator, CustomSympyFunction):  # nlabel = 'sqrt'
 #     """
 #     nlabel = 'Divide_no_nan'
 #     # classname = 'Divide_no_nan'  # sfeh??
-#     arity = 2
 #     tflow = tf.math.divide_no_nan
 #     # expr_sym = 'Div_no_nan({}, {})'
 #     insym = None
@@ -1253,7 +1226,6 @@ class sqrt(MathOperator, CustomSympyFunction):  # nlabel = 'sqrt'
 #     todo idea introduce negative labels as input?
 #     """
 #     nlabel = 'Usub'
-#     arity = 1
 #     tflow = tf.negative
 #     # expr_sym = '(-{})'
 #     insym = None
@@ -1277,7 +1249,6 @@ class sqrt(MathOperator, CustomSympyFunction):  # nlabel = 'sqrt'
 #     sfeh:xxx not yet used, make this available and rewrite Power above
 #     """
 #     nlabel = 'Powrounded'
-#     arity = 2
 #     tflow = tf.pow
 #     # expr_sym = '({}**Round({}))'
 #     insym = None
@@ -1297,7 +1268,6 @@ class sqrt(MathOperator, CustomSympyFunction):  # nlabel = 'sqrt'
 # class PowRounded(Operator):
 # sfeh open
 #     nlabel = 'Pown'
-#     arity = 2
 #     tflow = tf.pow
 # #     # expr_sym = 'BinaryMax({}, {})'
 # #     xtype = (tuple([float, float]), float)
@@ -1522,18 +1492,23 @@ if __name__ == '__main__':
 
     # print(list(get_subclasses(Operator)))
 
-# x = Add(childs=[Symbol('a'), Mul(childs=[2, 3])])
-n1 = Float(1.23)
-n2 = Symbol('b')
-x = sin(Add(n1, n2))
-x = sympy.sympify(x)
-print(x)
+    # sfeh:xxx why are node classes all in memory, is that bad? use__new__()?
 
-# for _subc in get_subclasses(BaseTree):
-#     if ABC in _subc.__bases__:
-#         # print(f'ignoring {_subc}')
-#         pass
-#     else:
-#         print(f'{_subc.__name__}')
-#
-# print(type(RelationalOperator))
+    # x = Add(childs=[Symbol('a'), Mul(childs=[2, 3])])
+    n1 = Float(1.23)
+    n2 = Symbol('b')
+    # tr = Add(n1, n2)
+    tr = Ifte(Bool(True), Mul(sin(Add(n1, n1)), n2), n1)
+    # x = sympy.sympify(x)
+    # xx = Add()
+    # xx.childs=[n1, n2]
+    print(tr)
+
+    # for _subc in get_subclasses(BaseTree):
+    #     if ABC in _subc.__bases__:
+    #         # print(f'ignoring {_subc}')
+    #         pass
+    #     else:
+    #         print(f'{_subc.__name__}')
+    #
+    # print(type(RelationalOperator))

@@ -3,7 +3,9 @@ All paretoefficient GP-candidates, aka the "best" entries for each complexity.
 -> updated after each generation
 
 """
-from plagih.util import *
+import matplotlib.pyplot as plt
+
+from plagih.tree_factory import *
 
 
 def pareto_from_pop(pop_list):
@@ -97,7 +99,7 @@ def pareto_plot(paretofront, path, name, parsimony_max):
         xx = np.concatenate([xx, [right + 1]])
         yy = np.concatenate([yy, [yy[-1]]])
 
-        run_name_latex = str(conf.name).replace('_', '-')  # sfeh asd workaround for latex version
+        run_name_latex = str(name).replace('_', '-')  # sfeh asd workaround for latex version
         ax.step(xx, yy, linestyle='dashed', marker='.', label=f'{run_name_latex}', where='post')
         ax.set(xlabel='complexity', ylabel='regression error',
                xlim=(0, right),

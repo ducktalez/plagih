@@ -1,7 +1,7 @@
 """
 The factory to create trees
 """
-
+from plagih.nested_structure import NestedStruc
 from plagih.plagih_tree import *
 from plagih.util import *
 from plagih.tree_complexity.tree_edit_distance import apted_distance
@@ -178,7 +178,7 @@ class TreeBuilder:
                              Pow: 0.1,  # 0.25,  # sfeh:open
                              Abs: 0.5, sign: 0.5,  # sfeh stop chain of arity-1 op_dict in buid method?
                              Sqrt: 0.1,  # 0.25,  # sfeh debug this
-                             log: 0.1, Log1p: 0.1,
+                             log: 0.1,  # Log1p: 0.1,
                              sin: 0.5, tan: 0.1, cos: 0.33,
                              # Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.5,
                              Xor: 1,  # sfeh
@@ -218,10 +218,8 @@ class TreeBuilder:
         for o, p in choose_oparray.items():
             # normalizing the probabilities in every case to a sum of 1 (100%)
             # (saving some very little time...)
-            if p[0]:
+            if p[0]:  # if operators for this xtype/arity combination
                 choose_oparray[o][1] = [x / sum(p[1]) for x in p[1]]
-            else:
-                pass  # sfeh debug delete the entry?
 
         self.operators = {}
         for xtype, x in choose_oparray.items():

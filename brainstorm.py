@@ -36,10 +36,10 @@ class Testhis(Operator):
         obj = object.__new__(cls)
         return obj
 
-xx = Testhis(1.23)
-# yy = Testme(1.23)
-# print(xx)
-x = sympy.sin(sympy.Symbol('a'))
+
+class tanh:
+    insym = sympy.tanh
+    xtype = (tuple([float]), float)
 
 
-sympy.sin(sympy.Symbol('a'))
+print(tanh.insym.__name__)

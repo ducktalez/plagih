@@ -46,7 +46,7 @@ class TestHelpers:
                        '<', 'BinaryOr',
                        'cartVel', '0', 'True', 'BinaryAnd',
                        'BinaryAnd', '!=',
-                       'False', 'BinaryOr', 'log1p', 'Usub',
+                       'False', 'BinaryOr', 'Usub',
                        'BinaryAnd', 'True', 'BinaryMin', '2.4', '<', 'BinaryOr', '1.0', '0.8', 'cartVel', '0', '>', 'BinaryAnd', '0.9', '-', 'False', 'BinaryAnd', 'cartPos', '2.0', 'True', 'True']
         # tree_labels = ['Ifte',
         #                'BinaryAnd', '0', '2',

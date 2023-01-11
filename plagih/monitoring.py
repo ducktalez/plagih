@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import numpy as np
 from matplotlib import pyplot as plt
 from plagih.util import print_e
 
@@ -12,7 +11,7 @@ def plot_gen_performance(monitor_df, name, path_monitoring: Path):
     """
     with plt.rc_context(rc={'axes.grid': True}):
         fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]},
-                                sharex='all')  # , figsize=(9, 9)
+                                sharex='all')
         plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
         xx = list(monitor_df.index)
 

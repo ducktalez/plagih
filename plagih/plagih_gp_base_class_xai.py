@@ -166,7 +166,7 @@ class ExplainableGP:
                     self.evaluate_and_append(symtree)  # sfeh:open , tag='sfeh-sympifyed_pareto'
 
                 except KeyError as ex:
-                    print(f'SFEH: this tree could todo whatever {ex}')  # -> piecewise function, mostly
+                    print(f'SFEH: this tree could whatever {ex}')  # -> piecewise function, mostly
 
                 obsolete_entries = [x for x in paretofront if
                                     x.get_fitness() > fintree.get_fitness() and
@@ -315,7 +315,7 @@ class ExplainableGP:
 
         @self.create_trees(0.1)
         def rand2():
-            # todo float? nope
+            # sfeh float? nope
             return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 5), p_full=1)
 
         # @self.create_trees(0.1)

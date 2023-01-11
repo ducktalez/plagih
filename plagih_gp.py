@@ -157,13 +157,13 @@ def _test_random_pop():
     df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv')
     df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P design pattern #YOLO
     data_train, data_control = train_test_split(df, test_size=0.2, random_state=0)
-    use_RMSE_vs_MAE_dummy_todo = True  # RMSE
+    use_RMSE_vs_MAE_sfeh = True  # RMSE
     root_type = float
     action_clip = [0, 2]
     action_round = 0
-    kernel = RegressionKernel(use_RMSE_vs_MAE_dummy_todo, data_train, data_control, action_clip, action_round, action_name)
+    kernel = RegressionKernel(use_RMSE_vs_MAE_sfeh, data_train, data_control, action_clip, action_round, action_name)
 
-    ### Run/Computation restrictions
+    # ## Run/Computation restrictions
     pop_max = 100
     gen_max = 100
     nodeamount_max = 50
@@ -173,13 +173,13 @@ def _test_random_pop():
     period = {'gen_plots': 5, 'gen_save': 5}
     mp_cores = 1
 
-    complexity_measure = 'tree_node_count'  # 'tree_edit_distance'  # tree_edit_distance / 'tree_node_count'  # sfeh idea todo
+    complexity_measure = 'tree_node_count'
 
     # ### A simple tree and a simple tree with fixed nodes
     # '["Ifte",["<",["cartVel"],["0"]],["0"],["2"]]'
     # '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]'
     # sfeh:open give user feedback for tree
-    origin_tree = fintree_from_nested_labels('["Ifte",["<",["cartVel"],["0"]],["0"],["2"]]', kernel)
+    origin_tree = Ifte(Le(Symbol('cartVel'), Float(0)), Float(0), Float(2))
     # origin_tree = None
 
     # tree construction complexity
@@ -222,10 +222,10 @@ if __name__ == "__main__":
 #     def __init__(self, nlabel, xtype_out=float, obs_indizes=None):
 #         # super().__init__(nlabel, xtype_out)
 #         self.obs_indizes = obs_indizes
-#         latex = f'\\text{{{self.fam}}}_{{{self.timeindex}}}'  # remove this {self.preexpr}
+#         latex = f'\\text{{{self.fam}}}_{{{self.time_index}}}'  # remove this {self.preexpr}
 #         self.latex = (latex, latex)  # remove this {self.preexpr}
 #
 #     def mutate_self_filter(self):
-#         new_index = int(max(min(round(random.gauss(self.timeindex, 1)), self.index_minmax[1]), 0))
-#         self.timeindex = new_index
+#         new_index = int(max(min(round(random.gauss(self.time_index, 1)), self.index_minmax[1]), 0))
+#         self.time_index = new_index
 #         self.name = f'{self.fam}_{new_index}'

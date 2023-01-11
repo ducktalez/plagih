@@ -68,13 +68,13 @@ class Kernel:
 
 class RegressionKernel(Kernel):
 
-    def __init__(self, use_RMSE_vs_MAE_dummy_todo, data_train, data_control, action_clip, action_round, action_name,
+    def __init__(self, use_RMSE_vs_MAE_sfeh, data_train, data_control, action_clip, action_round, action_name,
                  *args, **kwargs):
         super().__init__(data_train, data_control, action_clip, action_round, *args, **kwargs)
 
         self.solution = tf.constant(self.data_train[action_name])  # tensors[self.action.name]
-        self.use_RMSE_vs_MAE_dummy_todo = use_RMSE_vs_MAE_dummy_todo
-        # todo xxx
+        self.use_RMSE_vs_MAE_sfeh = use_RMSE_vs_MAE_sfeh
+        # sfeh:xxx rework Kernel
 
         return
 
@@ -141,7 +141,7 @@ class RegressionKernel(Kernel):
 
         pairwise_diff = self.solution - results
 
-        if self.use_RMSE_vs_MAE_dummy_todo:  # sfeh huber loss! mse, mae, rmse, huber, (log)
+        if self.use_RMSE_vs_MAE_sfeh:  # sfeh huber loss! mse, mae, rmse, huber, (log)
             regression_errors = tf.square(pairwise_diff)
             # sfeh:keras option for RMSE available:
             mean_error = tf.sqrt(tf.reduce_mean(regression_errors))

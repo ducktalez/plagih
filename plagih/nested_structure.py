@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 import itertools
 
+from plagih.plagih_tree import NodeBase
+
 
 @dataclass
 class NestedStruc:
@@ -16,11 +18,11 @@ class NestedStruc:
     [3]:    including meta-data (fitness_train, complexity)
     """
 
-    def __init__(self, anylabel, depth=None, is_fix=False, childs=None):
+    def __init__(self, anylabel: NodeBase, depth=None, is_fix=False, childs=None):
         try:
             anylabel.args = None  # sfeh: or remove childs, isfix
             anylabel.is_fix = None
-            self.label: 'NodeBase' = anylabel
+            self.label = anylabel
         except AttributeError:
             self.label = anylabel
 
@@ -51,8 +53,7 @@ class NestedStruc:
         very closely related to str(), but adds the following information:
         - ":fix", when nodes are fixed
         """
-        label_str = self.get_nlabel()
-        label_str = str(label_str)
+        label_str = str(self.label)
 
         if self.is_fix:
             label_str += ':fix'

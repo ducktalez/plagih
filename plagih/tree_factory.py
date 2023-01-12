@@ -766,4 +766,4 @@ if __name__ == '__main__':
 
     tb = TreeBuilder(['a', 'b'], 10, 30, float)
     tr = tb.pop_random_depth(4, float, p_full=0.7)
-    print(tr)
+    print(repr(tr))

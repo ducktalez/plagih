@@ -1,7 +1,7 @@
 # Familiar Genetic Programming with TensorFlow
 
 - Lightning fast. Believe me.
-- 
+- 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
 
 ## Ablage/Todos
 
@@ -25,6 +25,7 @@
 - evaluate one very large TF-graph containing the whole population
 - parallelisation
 - evolve-operatoren: werte runden, runden einbauen,
+- test-cases with notation, docstring
 
 - sfeh:discussion especially with mc: there can be more than one pareto entry with the same parsimony/fitness!
 
@@ -240,4 +241,19 @@ plausible addition to the original program which the developer does understand.
 The plagih_gp run depends on the following modules:
 - a loop, in which new generations of evolved trees are created
 - trees, which are a recursive node-structure, that allow evolution
-- 
+
+
+# Biographie
+Große Weltveränderer stehen auf jeden Fall für Veränderung
+
+
+- real vs. symbolisch  (Bill Gates vs. Mutter Theresa)
+  - Namenlose Unternehmer  (Hätte auch jeder andere machen können)
+  - Bill Gates
+  - Musk  ("Herausragend")
+- "Großer Sprung überwunden"
+  - Rückschlag
+  - Zero-to-Hero
+  - Besonderheit
+- Extrempunkte
+- Extremlösungen

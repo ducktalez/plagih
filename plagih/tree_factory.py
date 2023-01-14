@@ -37,6 +37,7 @@ def randomly_split_range(range_max, num_splits):
     """
     split a integer range randomly into parts
     [1..100] -> [33, 15, 52]
+    used for building trees
     0 is allowed! (ends a branch with a terminal node)
     """
 
@@ -150,7 +151,6 @@ class TreeBuilder:
         self.depth_max = depth_max
         self.nodeamount_max = nodes_max
         self.origin = origin
-        # Loading some random default options for quick debugging, without loading a config
 
         def operator_pool_check(operatorPool):
             """
@@ -172,7 +172,8 @@ class TreeBuilder:
         if operator_pool is None:  # quick developer adjustments
 
             # sfeh same prob for all for testing
-            operator_pool = {Add: 2, Sub: 1, Mul: 2, Div: 1,
+            operator_pool = {Add: 2, Sub: 1,
+                             Mul: 2, Div: 1,
                              # Usub: 1,  # sfeh
                              Square: 0.75,
                              Pow: 0.1,  # 0.25,  # sfeh:open
@@ -228,8 +229,8 @@ class TreeBuilder:
 
         obs_list = [Symbol(x) for x in obs_names]
 
-        self.observables = {float: lambda: np.random.choice(obs_list),  # , p=obs_prop
-                            bool: None}  # sfeh:discussion None? no  lambda? yeah, not important but still...
+        self.symbols_xtdc = {float: lambda: np.random.choice(obs_list),  # , p=obs_prop
+                             bool: None}  # sfeh:discussion None? no  lambda? yeah, not important but still...
 
     def choose_op(self, any_xtype):
         """
@@ -248,7 +249,7 @@ class TreeBuilder:
         (okay, it might make sense as it better represents the actual distribution- NO FUCK IT.)
         """
         if obs_infos is not None:
-            obsnames = obs_infos.observables[float].keys()
+            obsnames = obs_infos.symbols_xtdc[float].keys()
             obs_samples = data_train[obsnames].to_numpy().flatten()
             obs_samples = np.random.choice(obs_samples, size=n_samples)
             self.distributions[float].extend([lambda: random.choice(obs_samples)]),  # take one
@@ -292,14 +293,15 @@ class TreeBuilder:
         #         obs_prop.pop_append_evotree(1)  # just one value
         pass
 
-    def choose_obs(self, xtype):
+    def choose_symbol(self, xtype):
         """
         Randomly choosing an operator-label for a given xtype_out.
         choose_oparray3 must be given, as they are different between runs.
         arity can also be set optionally, e.g. for point mutation
         sfeh:open DOUBLE-check if this xtype_out is chosen correctly... better: replace it
         """
-        return self.observables[xtype]()
+        _sym = self.symbols_xtdc[xtype]()
+        return NestedStruc(Symbol, _sym)
 
     def choose_const(self, xtype):
         """
@@ -308,9 +310,9 @@ class TreeBuilder:
         value = random.choice(self.distributions[xtype])()
         if xtype == float:
             value = float(round(value, PRECISION))
-            return Float(value)
+            return NestedStruc(Float, childs=value)
         elif xtype == bool:
-            return Boolean(value)
+            return NestedStruc(Boolean, childs=value)
 
     def choose_term(self, xtype, p_observation=0.5):
         """
@@ -319,7 +321,7 @@ class TreeBuilder:
         """
         if random.random() < p_observation:
             try:
-                return self.choose_obs(xtype)
+                return self.choose_symbol(xtype)
             except TypeError:
                 pass  # return a constant (maybe because there are no boolean observations)
 
@@ -330,10 +332,10 @@ class TreeBuilder:
         # sfeh:discussion set path/id?
         """
         if depth == self.depth_max or depth == depth_goal or random.random() > p_full:
-            label = self.choose_term(xt)
-            nsted = NestedStruc(label, depth=depth)
+            # label = self.choose_term(xt)
+            nsted = self.choose_term(xt)
         else:
-            label = self.choose_op(xt)  # self.choose_any(xtype, p_full)
+            nsted = self.choose_op(xt)  # self.choose_any(xtype, p_full)
             childs = [self.invent_core_depth(xt, depth_goal, p_full=p_full, depth=depth + 1) for xt in label.xtype[0]]
             nsted = NestedStruc(label, childs=childs, depth=depth)  # , depth=depth sfeh no depth?
 
@@ -365,16 +367,11 @@ class TreeBuilder:
     def evolve_mutate_filter_random(self, nsted):
         """
         Mutates a number of float terminal of a fintree
-        - sfeh:==>ROOT
         - filter point/branch/all, branch can also affect a point only aswell as all nodes
         - filter observations?
         - filter terminals
         - filter with which filter?
         """
-
-        # filter_mode = custom_params['filter_mode']
-        # filter_observations = custom_params['filter_observations']
-        # mutate_filter = 'gaussian_filter'  # sfeh:future
 
         _nd = np.random.choice(nsted.eval_mutable_nodes())
         _nd.evolve_mutate_filter_branch()
@@ -505,7 +502,7 @@ class TreeBuilder:
         return _a, _b
 
     def pop_random_depth(self, depth_goal, xtype=None, p_full=1.0):
-        # sfeh:random make origin with modifiable nsteds first change leaf nsteds
+
         xtype = xtype or self.root_xtype
 
         if self.origin is not None:
@@ -555,24 +552,6 @@ class TreeBuilder:
             evonsted = self.invent_core_operatoramount(xtype, nodeamount, depth=0)  # more debugging?
 
         return evonsted
-
-    def check_all(self, tree: NestedStruc, raise_on_failure=False, extre_tests=False):
-
-        # checks will raise an Exception if they fail
-        checks = [
-            tree.is_root(),
-            # tree.check_typing(self.root_xtype, fatal=raise_on_failure),
-            tree.selfcheck(fatal=raise_on_failure),
-        ]
-        if extre_tests:
-            #
-            checks.extend([tree.get_max_depth() <= self.depth_max])
-        faults = len(checks) - sum(checks)
-        if faults > 0:
-            if raise_on_failure:
-                raise
-            print_warning('ww', f'Tree failed check: {tree}')
-        return faults  # returns true if all checks are true
 
 
 class TreeMeta:
@@ -757,13 +736,13 @@ def selection_tournament(individuals, tournsize=3):
 
 
 if __name__ == '__main__':
-    _test_open = '[Ifte, [BinaryOr, [b < -1], [BinaryAnd, [b < 0.1], [a < -0.05]]], 2, [Ifte, [BinaryAnd, [BinaryAnd, ' \
+    _test_open = '[Ifte, [Or, [b < -1], [And, [b < 0.1], [a < -0.05]]], 2, [Ifte, [BinaryAnd, [BinaryAnd, ' \
                  '[b > -0.45], [b < -0.05]], [a < -0.5]], 0, [Ifte, [a < 0], 0, 2]]]',
 
     _test_loadabls = ["['+',['-',['Ifte',['True'],['sign',['cartVel']],['/',[2.3],[4]]],['cartVel']],[-1.3]]",
                       '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]',
-                      '["Ifte", ["BinaryNot", [False]], [0.0], [2.0]]']
+                      '["Ifte", ["Not", [False]], [0.0], [2.0]]']
 
     tb = TreeBuilder(['a', 'b'], 10, 30, float)
     tr = tb.pop_random_depth(4, float, p_full=0.7)
-    print(repr(tr))
+    print(str(tr))

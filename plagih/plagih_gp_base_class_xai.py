@@ -203,9 +203,6 @@ class ExplainableGP:
         return
 
     def lut_to_meta(self, evotree):
-        if DEBUG_DUMMY:
-            # if trees are 100% safely created, tree checks are not required. Useful when trying out new gp-operators.
-            self.tb.check_all(evotree, raise_on_failure=False)  # sfeh fatal=True? (raise)
 
         try:
             meta = self.lut[str(evotree)]  # fixed nodes not relevant

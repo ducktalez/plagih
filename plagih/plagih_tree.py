@@ -52,12 +52,9 @@ Useful information:
     sfeh:discus simplify/unify
 """
 import os
-import numpy as np
-
 import sympy
 import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
 import itertools
-import re
 
 os.environ["KMP_WARNINGS"] = "FALSE"
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -92,15 +89,16 @@ class BaseTree:
     is_fix = False  # sfeh:xx here?
 
     def __new__(cls, *args, **kwargs):
-        if isinstance(cls, Operator):
-            pass
-        elif isinstance(cls, TerminalNode):
-            if isinstance(cls, Symbol):
-                cls.fam, cls.time_index, _ = observation_get_family_and_time(args, none_return=None)
-                cls.index_minmax = None
+        # if isinstance(cls, Operator):
+        #     pass
+        # elif isinstance(cls, TerminalNode):
+        #     if isinstance(cls, Symbol):
+        #         cls.fam, cls.time_index, _ = observation_get_family_and_time(args, none_return=None)
+        #         cls.index_minmax = None
 
+        cls.args = [x for x in args]  # was 'childs'
         obj = object.__new__(cls)
-        obj.args = [x for x in args]  # was 'childs'
+        # obj.args = [x for x in args]  # was 'childs'
         obj.is_fix = kwargs.get('is_fix', False)
 
         return obj
@@ -135,18 +133,6 @@ class BaseTree:
             raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
 
         return f"{self.__class__.__name__}({childstr}{_isfix})"
-
-    def huehuetodo(self):
-
-        if isinstance(self, Operator):
-            pass
-        elif isinstance(self, TerminalNode):
-            if isinstance(self, Symbol):
-                pass
-            elif isinstance(self, ConstantNode):
-                pass
-
-        raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
 
     def __len__(self):
         return 1 + sum([len(cc) for cc in self.args])
@@ -291,7 +277,7 @@ class BaseTree:
 
     def eval_apted_notation(self):
         """
-        Calculating the TED requires this (weird) representation
+        Calculating the TED requires this representation
         e.g. {+{Ifthe{True}{1}{2}}{3}}
         """
         # sfEh check if this still works as one-liner
@@ -311,7 +297,7 @@ class BaseTree:
         aka set_depth recursively for all nodes in a branch
         mainly used in branch
 
-        The depth is written inevery node (for whatever reason), and instead of having to propagate
+        The depth is written in every node (for whatever reason), and instead of having to propagate
         the depth through every crossover/branch mutation function, instead, we call it when replacing nodes
         """
         self.depth = depth
@@ -323,9 +309,7 @@ class BaseTree:
         was: new_core
         """
         self.__class__ = new_node
-        self.args = new_node.args or []  # maybe must be updated recursively
-        #
-        # self.repair_depth(self.depth)  # Especially required for crossover or branches
+        self.args = new_node.args or []  # todo must be updated recursively
 
     def eval_mutable_nodes(self, xtype_out=None, allow_root=True):
         """
@@ -371,26 +355,12 @@ class BaseTree:
     #         nodepath_child = nodepath + [ii]
     #         child.finalize_set_nodepath(nodepath_child)
 
-    def finalize_set_depth(self, depth=0, recursive=True):
-        """
-        depth=0 is the root node
-        """
-        self.depth = depth
-        max_depth = depth
-        if recursive:
-            for cc in self.args:
-                cc_depth = cc.finalize_set_depth(depth=depth + 1)
-                max_depth = max(cc_depth, max_depth)
-
-        return max_depth
-
     def check_depth_infos(self, depth=0, fatal=None):
         """
         Checks, whether the depth of all nodes in the tree are set correctly.
         Should not be necessary if all evolutions (branch-mutation, crossover) work fine
         - starts at depth 0, increase at every level
         - compare with the written value
-        :return: boolean
         """
         if depth != self.depth:
             if fatal:
@@ -408,35 +378,32 @@ class BaseTree:
 
 class NodeBase(BaseTree):
     insym = None
+    tflow = None
     xtype = None  # sfeh: will this b deprecated?
 
     def __str__(self):
-        if isinstance(self, Operator):
-            _str = self.__class__.__name__
-        elif isinstance(self, TerminalNode):
-            _str = str(self.args[0])
-        else:
-            raise
-        # try:
-        #     _str = super().__str__()
-        # except Exception as ex:
-        #     print(f'SFEH {ex}')
+        _str = self.__class__.__name__
+        # if self.args:
+        #     # sfeh does not work
+        #     _childstr = ', '.join([str(x) for x in self.args])
+        #     _str = f'{_str}({_childstr})'
         return _str
 
-    def _sympy_(self):  # -> sympy.Basic:
+    def _sympy_(self, *args):  # -> sympy.Basic:
         _sym = self.insym
+        _sym = _sym(*args)
+        # childstr = [sympy.sympify(cc) for cc in args]
+        # _sym = _sym(*childstr)
 
-        if isinstance(self, Operator):
-            # if self.args:
-            childstr = [sympy.sympify(cc) for cc in self.args]
-            _sym = _sym(*childstr)
-
-        elif isinstance(self, TerminalNode):
-            # if isinstance(self, Symbol)  # sfeh
-            return self.insym(self.args[0])
-
-        else:
-            raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
+        # if isinstance(self, Operator):
+        #     childstr = [sympy.sympify(cc) for cc in args]
+        #     _sym = _sym(*childstr)
+        #
+        # elif isinstance(self, TerminalNode):
+        #     return self.insym(self.args[0])
+        #
+        # else:
+        #     raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
 
         return _sym
 
@@ -456,6 +423,12 @@ class ChainOperator(NodeBase):
     Actually not:
     """
     pass
+
+
+class AddChain(ChainOperator):
+    xtype = None
+    insym = sympy.Add
+    tflow = None
 
 
 class MathOperator(Operator):
@@ -479,7 +452,7 @@ class AngleOperator(Operator):
     pass
 
 
-class MinMaxBase(Operator):  # sfeh chainableOperator
+class MinMaxBase(Operator):
     pass
 
 
@@ -497,136 +470,57 @@ class TerminalNode(NodeBase):  # sfeh sympy.Atom
     pass
 
 
-class ConstantNode(TerminalNode):
-
-    def mutate_self_filter(self, *args, **kwargs):
-        pass
-
-
-class Boolean(ConstantNode):
+class Boolean(TerminalNode):
+    # sfeh:discuss just for True/False?
     xtype = (None, bool)
-    insym = sympy.logic.boolalg.Boolean  # sfeh:discuss
-    # insym = bool
+    insym = lambda x: True if x else False  # sympy.logic.boolalg.Boolean  # sfeh:discuss
+    tflow = lambda x: tf.constant(x, dtype=tf.bool)
 
 
-class Float(ConstantNode):
+class Float(TerminalNode):
     xtype = (None, bool)
     insym = sympy.Float
-
-    def mutate_self_filter(self, filter_type='gaussian_filter', *args, **kwargs):  # sfeh:open
-        """
-        sfeh:open, gaussian_filter,
-        sfeh: only one random, either numpy <- (or random)
-        """
-        if filter_type == 'gaussian_filter':
-            if np.random.choice(['v1', 'v2']) == 'v1' or self.args == 0:
-                constant = self.args + np.random.normal(0, 0.1)  # sfeh better adjustments?
-            else:
-                constant = np.random.normal(self.args, 0.1)  # sfeh better adjustments?
-            self.args = round(constant, PRECISION)  # sfeh:discussion be careful, might create zero sometimes
-
-
-def observation_get_family_and_time(name, re_pattern='_\\d+$', none_return=None):
-    """
-    When an observation is known, return the family, the time and the SIGN!!
-    sfeh:move this function somewhere else
-    """
-    core_expr = re.split(re_pattern, name)[0]
-    if core_expr[0] == '-':
-        core_expr = core_expr[1::]
-        preexpr = '-'
-    else:
-        preexpr = ''
-    try:
-        re_search = re.search(re_pattern, name)  # re_search => ['_12']
-        temp_diff = re_search[0].replace('_', '')  # (only) solution found (at [0]), e.g. '_14'. only keep the digits
-        temp_diff = int(temp_diff)
-    except Exception as ex:
-        temp_diff = none_return
-    return core_expr, temp_diff, preexpr
+    tflow = lambda x: tf.constant(x, dtype=tf.float32)
 
 
 class Symbol(TerminalNode):
     """
-    sfeh:discuss:
-        labels should not have a sign (-pos)
-        y though? -> just use a '-'-operator in an additional node.
-        also: When reconstructing trees, the sign can appear in observations
+    sfeh:discuss: should labels have a sign (-pos); can appear in observations
     This was used to deal with negative labels
         self.name = nlabl if nlabl[0] != '-' else nlabl[1:]
         sfeh:xxx option here for type float/bool
     """
-    fam = None
-    time_index = None
-    index_minmax = None
     insym = sympy.Symbol  # lambda x: sympy.Symbol(*x, real=True, imaginary=False)  # sfeh: real=/imaginary= -> faster
+    tflow = lambda x: tf.constant(x, dtype=tf.float32 if isinstance(x, float) else tf.bool)
     xtype = (tuple([]), float)
-
-
-# class NodeType:
-#     xtype = None
-#
-#
-# class FloatType(NodeType, float):
-#     pass
-#
-#
-# class BoolType(NodeType):
-#     pass
-
-
-class BaseType:
-    pass
 
 
 class ExprCondPair(ChainOperator):
     insym = sympy.functions.elementary.piecewise.ExprCondPair
-    tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
 
-    is_real = True
+    # tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
+
+    def __init__(self, val, cond):
+        self.cond = cond
+        self.val = val
 
 
 class Add(MathOperator):
-
     insym = sympy.Add
     tflow = tf.add
     xtype = (tuple([float, float]), float)
-    # sfeh:discuss in sympy, this is a "FiniteSet"? whats going on...
-    is_real = True
-
-    def backprop(self):
-        """
-        #:      count >, count <, count =
-        #me:    wenn Abweichung am höchsten von allen sum-knoten
-        c:      sum(alle Abweichungen) -> schlimmster +-child
-        propagate-down: y - ^y, wenn 5 zu hoch -> -5 nach unten
-        erst normieren? Also, die avg. Abweichung abziehen?
-        """
-        pass
 
 
 class InverseFraction(Operator):
-    # tflow = tf.pow  # sfeh:open
     xtype = (tuple([float, float]), float)
-
-    def _sympy_(self):
-        return sympy.Pow(self.args[0], -1)
+    insym = lambda x: sympy.Pow(x, -1)
+    tflow = lambda x: tf.pow(x, -1)
 
 
 class Pow(MathOperator):
-    """ALERT: Power can create complex numbers, maybe you should use Powerounded"""
     insym = sympy.Pow
     tflow = tf.pow
     xtype = (tuple([float, float]), float)
-
-    def backprop(self):
-        """
-        # KILL, wenn Lösung gar nicht erreicht werden kenn (wegen Definitionsbereich). Es ist dann halt einfach so.
-        Idee: Ergebnis Differenz ist vermutlich manchmal sehr hoch.
-            # Zähle, wie oft Basis & Exponent jeweils drüber/drunter liegen
-            -> Nur den Exponenten beachten. Anzahl drüber/drunter im Vergleich zum besten Exponenten (der Ziel erreicht)
-        """
-        pass
 
 
 class Abs(MathOperator):
@@ -643,8 +537,7 @@ class sign(MathOperator, NoSymCapitalized):
 
 
 class log(MathOperator, NoSymCapitalized):
-    """sfeh: Log isactually Ln (base e)"""
-    insym = sympy.log
+    insym = sympy.log  # sfeh: Log isactually Ln (base e)
     tflow = tf.math.log
     xtype = (tuple([float]), float)
 
@@ -659,9 +552,6 @@ class sin(AngleOperator, NoSymCapitalized):
     insym = sympy.sin
     tflow = tf.sin
     xtype = (tuple([float]), float)
-
-
-# sin = Sin  # sfeh:discuss: i think this wont work, cause __name__
 
 
 class tan(AngleOperator, NoSymCapitalized):
@@ -713,11 +603,6 @@ class Xor(LogicOperator, NoSymCapitalized):
 
 
 class Not(LogicOperator):
-    """
-    Problem was:
-    - Not(a) evaluates to ~a
-    - not(a<2) evaluates to nan
-    """
     insym = sympy.Not
     tflow = tf.logical_not
     xtype = (tuple([bool]), bool)
@@ -730,29 +615,9 @@ class Eq(LogicOperator):
 
 
 class Mul(MathOperator):
-    """
-    sfeh:reduceoperator
-    """
     insym = sympy.Mul
     tflow = tf.multiply
     xtype = (tuple([float, float]), float)
-
-    is_real = True
-
-    def propagate_down(self):
-        """
-        Idee: Ein weiterer Faktor bestimmt, wie weit man am Ziel vorbei ist.
-            Beispielsweise Ziel: 20, aber Ergebnis war 10 -> Lösungsfaktor ist 20/10=2.
-            Nun gibt man den eigenen Wert*2 nach unten als Ziel zurück.
-            Falls selbst=0, gib differenz zwischen Ziel und 0 nach unten (also: Ziel)
-
-        wenn 0: immer selbst runterpropagieren, wenn anderer auch 0: beide 0.5
-        defprop:
-        # propagation:
-        propagate-down error: (y-^Y)-
-        propagate-down itsme: (y-^Y)-
-        """
-        pass
 
 
 class And(LogicOperator):
@@ -762,24 +627,15 @@ class And(LogicOperator):
 
 
 class Piecewise(ChainOperator):
-    # MapxPiecewise was here
-    # sfeh:xxx all the function assumptions that sympy has
-    # sfeh:xxx must have a True-case
+    tflow = tf.where
+    xtype = (tuple([bool, float, float]), float)
     insym = sympy.Piecewise
-    tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
-
-    is_real = True
-
-    def __add__(self, other):
-        pass  # sfeh:idea? probable no reason for
 
 
 class Min(MinMaxBase):
     insym = sympy.Min
     tflow = tf.minimum
     xtype = (tuple([float, float]), float)
-
-    is_real = True
 
 
 class Max(MinMaxBase):
@@ -824,6 +680,69 @@ class Ge(RelationalOperator):
     xtype = (tuple([float, float]), bool)
 
 
+class Square(MathOperator):
+    tflow = tf.square
+    xtype = (tuple([float]), float)
+    insym = lambda a: sympy.Pow(a, 2)
+
+
+class Sub(MathOperator):
+    tflow = tf.subtract
+    xtype = (tuple([float, float]), float)
+    insym = lambda a, b: sympy.Add(a, -b)
+
+
+class Ifte(Operator):
+    tflow = tf.where
+    xtype = (tuple([bool, float, float]), float)
+    # insym = lambda c, a, b: sympy.Piecewise((a, c), (b, True))
+    insym = lambda *args: sympy.Piecewise((args[1], args[0]), (args[2], True))
+
+
+class Round(MathOperator):  # 'Round'
+    tflow = lambda a: tf.math.round(a, 1)
+    xtype = (tuple([float]), float)
+    insym = lambda a: sympy.N(a, 0)
+
+
+class Log1p(MathOperator):
+    # https://docs.sympy.org/latest/modules/codegen.html#sympy.codegen.cfunctions.log1p
+    tflow = tf.math.log1p
+    xtype = (tuple([float]), float)
+    insym = lambda a: sympy.log(a + 1)
+
+
+class Div(MathOperator):
+    tflow = tf.math.divide
+    xtype = (tuple([float, float]), float)
+    insym = lambda a, b: sympy.Mul(a, 1 / b)
+
+
+class Sqrt(MathOperator):
+    insym = sympy.sqrt
+    tflow = tf.sqrt
+    xtype = (tuple([float]), float)
+
+
+# class Divide_no_nan(Operator):
+#     # classname = 'Divide_no_nan'  # sfeh??
+#     tflow = tf.math.divide_no_nan
+#     insym = lambda a, b: sympy.Mul(a, )
+#     xtype = (tuple([float, float]), float)
+
+
+class Usub(Operator, sympy.Function):
+    tflow = tf.negative
+    insym = lambda a: sympy.Mul(a, -1)
+    xtype = (tuple([float]), float)
+
+
+class Powrounded(Operator):
+    tflow = lambda a, b: tf.pow(a, tf.round(b))
+    insym = lambda a, b: sympy.Pow(a, sympy.N(b, 0))
+    xtype = (tuple([float, float]), float)
+
+
 # def sympy_symbol_defaults(name_list):
 #     """
 # sfeh:idea setting real=true is still a good idea
@@ -835,12 +754,6 @@ class Ge(RelationalOperator):
 #     'sym_reduce': 'sign(re({}))'
 #     """
 #     return {str(x): sympy.symbols(str(x), real=True, imaginary=False) for x in name_list}
-
-
-# attention: exactly same capitals/letters! (gets replaced)
-# sfeh:xxx potential names
-# Folding, collective, reduce, chained, fold, map
-
 
 def expr_sympify(expr):
     """
@@ -917,26 +830,6 @@ def expr_sympify(expr):
 #  sympy.numbers.NaN: tensorflow.constant(sympy.numbers.NaN),
 
 
-def labels_from_nestedexpr(labels_nested_list, result_accum):
-    """
-    Returns a label list from the nested list which ast_expr_to() created
-    [+, [a], [/, [b, c]]]]  -> [+, a, /, b, c]
-    """
-
-    for x in labels_nested_list:  # all elements, that are not lists themselves
-        if type(x) is not list:
-            x = str(x)  # labels must be string!
-            result_accum.append(x)
-
-    only_lists = [x for x in labels_nested_list if (type(x) == list)]
-    if only_lists:
-        from itertools import chain
-        lists_removed = list(chain(*only_lists))
-        result_accum = labels_from_nestedexpr(lists_removed, result_accum)
-
-    return result_accum
-
-
 totf = {
     # sympy.Symbol: 'tf': lambda x: tf.cons
     sympy.Min: tf.minimum,
@@ -972,185 +865,8 @@ totf = {
     sympy.sign: tf.sign,
 
     sympy.ITE: tf.where,  # sfeh:test this
-    sympy.re: lambda x: tf.convert_to_tensor(x, dtype=tf.dtypes.float32),  # gotcha, comes up rndomly
+    sympy.re: lambda x: tf.convert_to_tensor(x, dtype=tf.dtypes.float32),  # gotcha, comes up randomly
 }
-
-
-class CustomSympyFunction:
-    pass
-
-
-class Square(MathOperator, CustomSympyFunction):  # 'Square'  # expr_sym = 'Square({})'
-    tflow = tf.square
-    xtype = (tuple([float]), float)
-
-    is_real = True
-
-    @classmethod
-    def eval(cls, a):
-        return sympy.Pow(a, 2)
-
-
-class Sub(MathOperator, CustomSympyFunction):
-    # sfeh:discuss remove for add? Sub is subclass of add?  # 'Sub', expr_sym = '({}-{})'
-    tflow = tf.subtract
-    xtype = (tuple([float, float]), float)
-    insym = lambda a, b: sympy.Add(a, -b)
-
-    @classmethod
-    def eval(cls, a, b):
-        return a - b  # sfeh check if its sympied
-
-
-class Ifte(Operator, CustomSympyFunction):  # 'Ifte'  # expr_sym = 'Ifte({}, {}, {})'
-    """
-    self-expert: opportunity_cost = best_vals - chosen_vals
-    self-childs:
-    condition: opportunity_cost = chosen_vals - best_vals
-    a        : opportunity_cost = when_chosen(chosen_vals - best)
-    b        : opportunity_cost = when_chosen(chosen_vals - best)
-    #self.args:
-    condition: #correct_decisions
-    a        : cond->a, #correct_decisions - #false_decisions
-    b        : cond->b, #correct_decisions - #false_decisions
-    --> If a node
-    """
-    tflow = tf.where
-    xtype = (tuple([bool, float, float]), float)
-    insym = sympy.Piecewise
-    is_real = True
-
-    # @classmethod
-    # def eval(cls, a, b, c):
-    #     # if a.is_Boolean:
-    #     #     return b if a else c  # search for 'gotcha' in https://docs.sympy.org/latest/_modules/sympy/core/relational.html
-    #     # else:
-    #     #     return None  # returns None, is not further evaluated
-    #     return sympy.Piecewise((b, a), (c, True))  # also available: sympy.piecewise_fold
-
-    def _sympy_(self):
-        a = self.args[0]  # sfeh:xxx open
-        # a = a  # sympy.logic.boolalg.Boolean(True) not working, sfeh: piecewise quecks the datatype
-        b = self.args[1]
-        c = self.args[2]
-        return sympy.Piecewise((b, a), (c, sympy.S.true))
-
-
-class Round(MathOperator, CustomSympyFunction):  # 'Round'
-    """
-    sfeh:discussion this does only round to full numbers
-    """
-    tflow = lambda a: tf.math.round(a, 1)
-    xtype = (tuple([float]), float)
-
-    @classmethod
-    def eval(cls, a):
-        return sympy.N(a, 0)
-
-
-# class Log1p(MathOperator, CustomSympyFunction):
-#     # nlabel = 'log1p'
-#     # https://docs.sympy.org/latest/modules/codegen.html#sympy.codegen.cfunctions.log1p
-#     tflow = tf.math.log1p
-#     xtype = (tuple([float]), float)
-#
-#     @classmethod
-#     def eval(cls, a):
-#         return sympy.log(a + 1)  # just if no eval is implemented
-
-
-class Div(MathOperator, CustomSympyFunction):
-    tflow = tf.math.divide
-    xtype = (tuple([float, float]), float)
-
-    @classmethod
-    def eval(cls, a, b):
-        return a / b  # is a sympy thing returned?
-
-    def backprop(self):
-        """
-        Wie bei mult: Ziel wird ausgerechnet, Faktor für sich selbst wird ausgerechnet. Nach unten propagieren.
-        """
-        pass
-
-
-class Sqrt(MathOperator, CustomSympyFunction):
-    # sfeh:xxx sqrt is actually not a simplified Version
-    # sfeh sympy.sqrt is a function, not a class
-    insym = sympy.sqrt
-    tflow = tf.sqrt
-    xtype = (tuple([float]), float)
-
-
-# class Divide_no_nan(Operator):
-#     """
-#     # Division: SAFE division by zero!
-#     -->tf.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented
-#     sfeh: is it okay to display this as '/'?
-#     xxxx optional to use high value instead of tf-eval to 1
-#     """
-#     # classname = 'Divide_no_nan'  # sfeh??
-#     tflow = tf.math.divide_no_nan
-#     # expr_sym = 'Div_no_nan({}, {})'
-#     insym = None
-#     xtype = (tuple([float, float]), float)
-#     @classmethod
-#     def eval(self, a, b):
-#         return a / b
-
-
-# class Usub(Operator, sympy.Function):
-#     """
-#     sfeh:idea introduce negative labels as input?
-#     """
-#     tflow = tf.negative
-#     # expr_sym = '(-{})'
-#     insym = None
-#     xtype = (tuple([float]), float)
-#
-#     is_real = True
-#
-#     @classmethod
-#     def eval(cls, a):
-#         return -a  # sfeh
-#
-#     def _sympy_(self, *args, **kwargs):
-#         return self.eval(*args, **kwargs)
-
-
-# class Powrounded(Operator):
-#     """
-#     ALERT: This Power Version does not round the results
-#     inline-available
-#     sfeh:xxx not yet used, make this available and rewrite Power above
-#     """
-#     tflow = tf.pow
-#     # expr_sym = '({}**Round({}))'
-#     insym = None
-#     xtype = (tuple([float, float]), float)
-#
-#     @classmethod
-#     def eval(cls, a, b):
-#         return sympy.Pow(a, sympy.N(b, 0))
-
-
-# print(Max(3, 4), sympy.Max(3, 4))
-
-# x = sympy.sympify('Max(a, 4)', locals={'Max': Max.__base__, 'Integer': Integer.__base__})
-# x = sympy.sympify('Max(a, 4) + b ** 2')
-
-
-# class PowRounded(Operator):
-# sfeh open
-#     tflow = tf.pow
-# #     # expr_sym = 'Max({}, {})'
-# #     xtype = (tuple([float, float]), float)
-
-#
-# loadable_inline_operator_dict = {'+': Add, '-': Sub, '*': Mul, '/': Div, '**': Pow,
-#                                  '==': Eq, '!=': Ne, '<': Lt, '<=': Le, '>': Gt, '>=': Ge,
-#                                  '&': And, '|': Or}
-# loadable_ops_dict.update(loadable_inline_operator_dict)
 
 
 def sympy_to_tensorflow(expr, pandas_df):
@@ -1204,7 +920,7 @@ def sympy_to_tensorflow(expr, pandas_df):
     else:  # Operator # len(expr.args) > 0:  # sfeh: line can be removed or replaced
         if isinstance(expr, sympy.Piecewise):
             _revlist = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
-            _revlist = [[sympy_to_tensorflow(xx, pandas_df) for xx in list(_ls)] for _ls in _revlist]
+            _revlist = [[sympy_to_tensorflow(xx, pandas_df) for xx in list(x)] for x in _revlist]
             otherwise = _revlist[0][0]  # the last "True" condition
             for x in _revlist[1:]:
                 otherwise = tf.where(x[1], x[0], otherwise)
@@ -1289,6 +1005,7 @@ if __name__ == '__main__':
     ]
     xxx_problems = ['Ifte(Lt(Ifte(Eq(Min(b, 1), 3), Max(a, b), b), 0), 0, 2)']
 
+
     def test_basic_tfconversion():
         # sfeh:open tests
 
@@ -1298,12 +1015,14 @@ if __name__ == '__main__':
 
             print(f'{t} \t{x}')
 
+
     def test_sympify():
         print('Running sympify example')
 
         for x in tst + tst_custom:
             sx = expr_sympify(x)
             print(sx)
+
 
     def print_relevant_subclasses():
 
@@ -1325,6 +1044,7 @@ if __name__ == '__main__':
         st = ', '.join([f"{k}: {v}" for k, v in st.items()])
         print(f'sympy_to_node = {{{st}}}')
 
+
     # test_basic_tfconversion()  # sfeh all tests
     # test_sympify()
     #
@@ -1334,7 +1054,9 @@ if __name__ == '__main__':
     n1 = Float(1.23)
     n2 = Symbol('b')
     n3 = Boolean('True', is_fix=True)
-    # print(n1, n2, n3)
+    print(n1, n2, n3)
+
+
     # n4 = Add(n1, n2)
     # print(n4.get_str_recursive())
     # tr1 = Add(n1, n2)
@@ -1348,14 +1070,12 @@ if __name__ == '__main__':
     # print(tr)
     # tr = sin(sin(Symbol('a')))
 
-
     def get_ev_childs(node):
         _childs = []
         for ii, cc in enumerate(node.args):
             _childs.append(lambda x: node.set_child_n(ii, x))
         _childs.extend(list(itertools.chain(*[get_ev_childs(cc) for cc in node.args])))
         return _childs
-
 
     # lel = get_ev_childs(tr)
     # print(lel)
@@ -1364,8 +1084,6 @@ if __name__ == '__main__':
     # print(tr)
 
     # print(repr(tr))
-    tr = Ifte(n3, n2, n1)
-    print(sympy.sympify(tr))
 
     # for _subc in get_subclasses(BaseTree):
     #     if  in _subc.__bases__:

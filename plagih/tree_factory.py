@@ -227,7 +227,7 @@ class TreeBuilder:
             # self.operators[xtype_out] = lambda: np.random.choice(x[0], p=x[1])  # "seloplam" faster, but less readable
             self.operators[xtype] = (x[0], x[1])
 
-        obs_list = [Symbol(x) for x in obs_names]
+        obs_list = [x for x in obs_names]
 
         self.symbols_xtdc = {float: lambda: np.random.choice(obs_list),  # , p=obs_prop
                              bool: None}  # sfeh:discussion None? no  lambda? yeah, not important but still...
@@ -238,10 +238,6 @@ class TreeBuilder:
         """
         # return self.operators[xtype_out]()  # "seloplam"
         return np.random.choice(self.operators[any_xtype][0], p=self.operators[any_xtype][1])
-        # try:
-        # except:
-        #     # delete this
-        #     return np.random.choice(self.operators[any_xtype][0], p=self.operators[any_xtype][1])
 
     def constants_add_data_samples(self, obs_infos, data_train, n_samples=100):
         """
@@ -301,18 +297,16 @@ class TreeBuilder:
         sfeh:open DOUBLE-check if this xtype_out is chosen correctly... better: replace it
         """
         _sym = self.symbols_xtdc[xtype]()
-        return NestedStruc(Symbol, _sym)
+        return Symbol(_sym)
 
     def choose_const(self, xtype):
-        """
-
-        """
-        value = random.choice(self.distributions[xtype])()
+        value = np.random.choice(self.distributions[xtype])()
+        # value = random.choice(self.distributions[xtype])()
         if xtype == float:
-            value = float(round(value, PRECISION))
-            return NestedStruc(Float, childs=value)
+           return Float(round(value, PRECISION))
+           # return NestedStruc(Float, childs=value)
         elif xtype == bool:
-            return NestedStruc(Boolean, childs=value)
+            return Boolean(value)
 
     def choose_term(self, xtype, p_observation=0.5):
         """
@@ -332,10 +326,10 @@ class TreeBuilder:
         # sfeh:discussion set path/id?
         """
         if depth == self.depth_max or depth == depth_goal or random.random() > p_full:
-            # label = self.choose_term(xt)
-            nsted = self.choose_term(xt)
+            label = self.choose_term(xt)
+            nsted = NestedStruc(label, childs=[], depth=depth)
         else:
-            nsted = self.choose_op(xt)  # self.choose_any(xtype, p_full)
+            label = self.choose_op(xt)  # self.choose_any(xtype, p_full)
             childs = [self.invent_core_depth(xt, depth_goal, p_full=p_full, depth=depth + 1) for xt in label.xtype[0]]
             nsted = NestedStruc(label, childs=childs, depth=depth)  # , depth=depth sfeh no depth?
 
@@ -410,19 +404,19 @@ class TreeBuilder:
         for dnode in nodelist:
             if dnode.depth == self.nodeamount_max and dnode.get_arity() > 0:
                 print_warning('wwww', f'Node in fintree is too deep: {dnode.depth}')
-                new_node = NestedStruc(self.choose_term(dnode.get_xtype_out()), depth=dnode.depth)
+                new_node = NestedStruc(self.choose_term(dnode.get_xtype_out()), childs=[], depth=dnode.depth)
                 dnode.set_new_node(new_node)
                 # sfeh:debug did this work?
 
         prune_amount = len(nsted) - self.nodeamount_max
         while prune_amount > 0:
-            print_warning('wwww', f'Tree too complex: {len(nsted)} > {self.nodeamount_max}, pruning {prune_amount} nodes.')
+            print_warning('wwww', f'Tree too complex: {len(nsted)} > {self.nodeamount_max}, pruning {prune_amount}.')
             nodelist = nsted.eval_mutable_nodes()
             prune_now = 1 + np.random.randint(prune_amount)  # 19 -> prune branch with 1 to max. 19 nodes
 
             nodelist = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
             node = np.random.choice(nodelist)
-            new_node = NestedStruc(self.choose_term(node.get_xtype_out()), depth=node.depth)
+            new_node = NestedStruc(self.choose_term(node.get_xtype_out()), childs=[], depth=node.depth)
             node.set_new_node(new_node)
             prune_amount = len(nsted) - self.nodeamount_max
         return nsted

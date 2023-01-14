@@ -57,7 +57,7 @@ import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
 import itertools
 
 os.environ["KMP_WARNINGS"] = "FALSE"
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # https://github.com/tensorflow/tensorflow/issues/27023
 import tensorflow as tf
 from plagih.util import get_subclasses, PRECISION
 
@@ -65,329 +65,43 @@ from plagih.util import get_subclasses, PRECISION
 tf.compat.v1.enable_eager_execution()
 
 
-# lol, lol. https://github.com/tensorflow/tensorflow/issues/27023 these messages are tingeling
-
-
-class BaseTree:
-    """
-    The core is the structure of a plagih gp-fintree.
-    It recursively holds the nodes of a fintree; every fintree has a list of potential children.
-    Example core: [+, 1, [*, [-, 2, 3], 2]] = 1 + ((2-3) * 2)
-
-    states? sfeh:discuss
-    [None]: not set
-    [0]:    evolution/construction/build mode (potentially missing leaf nodes)
-    [1]:    structurally complete/finalized branch (node_depths correct, node_id set, ...)
-    [2]:    root-correct structure
-    [3]:    including meta-data (fitness_train, complexity)
-
-    # sfeh:discuss set tree depth at the end or so
-    # sfeh:xxx set NodeBase as metatype and make this class (ExpressionTree, or so...) a new thing
-    """
-
-    args = []
-    is_fix = False  # sfeh:xx here?
-
-    def __new__(cls, *args, **kwargs):
-        # if isinstance(cls, Operator):
-        #     pass
-        # elif isinstance(cls, TerminalNode):
-        #     if isinstance(cls, Symbol):
-        #         cls.fam, cls.time_index, _ = observation_get_family_and_time(args, none_return=None)
-        #         cls.index_minmax = None
-
-        cls.args = [x for x in args]  # was 'childs'
-        obj = object.__new__(cls)
-        # obj.args = [x for x in args]  # was 'childs'
-        obj.is_fix = kwargs.get('is_fix', False)
-
-        return obj
-
-    def __str__(self):
-        return self.get_str_recursive()
-
-    def get_str_recursive(self):
-        if isinstance(self, Operator):
-            childstr = ', '.join([str(x) for x in self.args])
-            _str = f"{self}({childstr})"
-        elif isinstance(self, TerminalNode):
-            _str = f'{self.args[0]}'
-        else:
-            raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
-
-        return _str
-
-    def __repr__(self):
-        return self.get_repr_recursive()
-
-    def get_repr_recursive(self):
-
-        _isfix = ', is_fix=True' if self.is_fix else ''
-        if isinstance(self, Operator):
-            childstr = ', '.join([repr(x) for x in self.args])
-
-        elif isinstance(self, TerminalNode):
-            childstr = self.args[0]
-
-        else:
-            raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
-
-        return f"{self.__class__.__name__}({childstr}{_isfix})"
-
-    def __len__(self):
-        return 1 + sum([len(cc) for cc in self.args])
-
-    def get_nclass(self):
-        return self.__class__.__name__
-
-    # def get_xtype(self):
-    #     return self.xtype
-    #
-    # def get_xtype_in(self):
-    #     return self.xtype[0]
-
-    # def get_depth(self):
-    #     return self.depth
-    #
-    # def set_depth(self, depth):
-    #     self.depth = depth
-
-    def is_root(self):
-        """
-        does this work while building a fintree?
-        """
-        return self.depth == 0
-
-    # sfeh:delete, deprecated, but bodymight be useful still
-    # def get_observation_list(self):
-    #     """
-    #     these are required for the evaluation (are loaded by Tensorflow)
-    #     sfeh:bug returns [cartVel, -cartVel], should not ever happen?
-    #     -> SFEH: But it is also not used anymore
-    #     """
-    #     obslist = []
-    #     if self.garitgetya() > 0:
-    #         obslist.extend(list(itertools.chain(*[cc.get_observation_list() for cc in self.args])))
-    #     elif isinstance(self.label, Observation):
-    #         obslist.extend([self.get_nlabel()])
-    #
-    #     return list(set(obslist))
-
-    # def set_label(self, label: 'NodeLabel'):
-    #     """
-    #     all other values are automatically set by assigning the respected node
-    #     """
-    #     self.label = label
-
-    def set_childs(self, childs):
-        """
-        Sets the self.args variable, which must be nodes or None
-        """
-        self.args = childs
-
-    def set_child_n(self, n, new_node):
-        """
-        Sets the self.args variable, which must be nodes or None
-        """
-        self.args[n] = new_node
-
-    def update_fixed_nodes(self, other: 'BaseTree'):
-        """
-        Updating the fixed nodes in a tree where they were lost for some reason.
-        This should only occur during the reconstructing test of a tree from expression.
-        """
-        if other.is_fix:
-            if self.get_nclass() != other.get_nclass():
-                raise
-            self.is_fix = True
-            for ii, cc in enumerate(self.args):
-                cc.update_fixed_nodes(other.args[ii])
-
-    # def get_nodes_to_depth(self, goal_depth, only_mutable=False, get_closest_depth=False):
-    #     """
-    #     sum_layers=False, get_closest=True, return_all_layers=False
-    #     """
-    #     child_results = []
-    #     if self.depth < goal_depth:
-    #         child_results = sum(
-    #             [child.get_nodes_to_depth(goal_depth, only_mutable=only_mutable, force_depth=get_closest_depth) for
-    #              child in self.args], [])
-    #
-    #     if only_mutable and self.is_fix or \
-    #             get_closest_depth and self.depth != goal_depth:
-    #         my_result = []
-    #     else:
-    #         my_result = [self]
-    #
-    #     return my_result + child_results
-    #
-    # def get_labellist_breath(self):
-    #     """
-    #     Returns all labels in a core node
-    #     Breitensuche im Baum
-    #     """
-    #     label_list = []
-    #     max_depth = self.args_depth_max
-    #     for depth in range(0, max_depth + 1):
-    #         labels_at_depth = [x.label for x in self.get_nodes_at_depth(depth)]
-    #         label_list.extend(labels_at_depth)
-    #
-    #     return label_list
-    #
-    # def get_all_nodes(self):
-    #     if len(self.args) == 0:
-    #         return [self]
-    #     else:
-    #         return [self] + [cc.get_all_nodes() for cc in self.args]
-
-    def get_nodes_at_depth(self, goal_depth, allow_fixed=False, expand_depth=False):
-        """
-        Returns a list with mutable ids which are *goal_depth* layers away from non-modifiable nodes
-        last_leaves: if you want so save all leave nodes aswell
-
-        sum_layers=False, get_closest=True, return_all_layers=False
-
-        """
-        nodes = []
-        if (not self.is_fix or allow_fixed) and (
-                self.depth == goal_depth or (self.depth > goal_depth and expand_depth)):
-            return [self]
-        elif self.depth <= goal_depth or expand_depth:
-            nodes.extend(list(itertools.chain(
-                *[cc.get_nodes_at_depth(goal_depth, allow_fixed=allow_fixed, expand_depth=expand_depth) for cc in
-                  self.args])))
-            return nodes
-        else:
-            return []
-
-    # def eval_nested(self):
-    #     """
-    #
-    #     """
-    #     expr_str = self.label.nlabel
-    #     expr_str = f'"{expr_str}"'  # sfeh: Also not used anymore? to-do was here
-    #
-    #     if self.args:
-    #         cc_expr = [cc.eval_nested() for cc in self.args]
-    #         cc_expr = ', '.join(cc_expr)
-    #
-    #         expr_str = f'{expr_str}, {cc_expr}'
-    #
-    #     return f'{expr_str}'
-
-    def eval_apted_notation(self):
-        """
-        Calculating the TED requires this representation
-        e.g. {+{Ifthe{True}{1}{2}}{3}}
-        """
-        # sfEh check if this still works as one-liner
-        return f"{{{self.get_nclass()}{''.join([cc.eval_apted_notation() for cc in self.args])}}}"
-
-    def get_max_depth(self, depth=0):
-        """
-        Go through all nodes, save depth
-        """
-        if len(self.args) == 0:
-            return depth
-        else:
-            return max(cc.get_max_depth(depth=depth + 1) for cc in self.args)
-
-    def repair_depth(self, depth=0):
-        """
-        aka set_depth recursively for all nodes in a branch
-        mainly used in branch
-
-        The depth is written in every node (for whatever reason), and instead of having to propagate
-        the depth through every crossover/branch mutation function, instead, we call it when replacing nodes
-        """
-        self.depth = depth
-        for cc in self.args:
-            cc.repair_depth(depth=depth + 1)
-
-    def set_new_node(self, new_node: 'BaseTree'):
-        """
-        was: new_core
-        """
-        self.__class__ = new_node
-        self.args = new_node.args or []  # todo must be updated recursively
-
-    def eval_mutable_nodes(self, xtype_out=None, allow_root=True):
-        """
-        return all nodes that are mutable (non fixed)
-        sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!
-        """
-        node_list = []
-        if not self.is_fix:  # requirement for mutability
-            # crossover requires excluding types that are not matching, and excludes the root node
-            if (xtype_out is None) and (allow_root or not self.is_root()):
-                node_list.append(self)
-
-        for cc in self.args:
-            node_list.extend(cc.eval_mutable_nodes(xtype_out=xtype_out, allow_root=allow_root))
-        # deprecated:
-        # node_list.extend(list(itertools.chain(
-        #     *[cc.eval_mutable_nodes(xtype_out=xtype_out, allow_root=allow_root) for cc in self.args])))
-        return node_list
-
-    # sfeh:xxx
-    # def evolve_mutate_filter_branch(self):
-    #     """
-    #     Recursively filter the nodes in the branch of fintree
-    #     sfeh:   random filter all terminal nodes /
-    #             single node /
-    #             nodes in a branch /
-    #             random nodes in a branch /
-    #             intelligent filtering
-    #     """
-    #     # self.state = STATE_BUILDING  #  ==>state
-    #         for cc in self.args:
-    #             cc.evolve_mutate_filter_branch()
-    #     else:
-    #         self.mutate_self_filter(filter_type='gaussian_filter')
-
-    # def finalize_set_nodepath(self, nodepath):
-    #     """
-    #     [0,2,1,0,0]
-    #     ==>ROOT
-    #     """
-    #     self.nodepath = nodepath
-    #     for ii, child in enumerate(self.args):
-    #         nodepath_child = nodepath + [ii]
-    #         child.finalize_set_nodepath(nodepath_child)
-
-    def check_depth_infos(self, depth=0, fatal=None):
-        """
-        Checks, whether the depth of all nodes in the tree are set correctly.
-        Should not be necessary if all evolutions (branch-mutation, crossover) work fine
-        - starts at depth 0, increase at every level
-        - compare with the written value
-        """
-        if depth != self.depth:
-            if fatal:
-                raise
-            return False
-        return all([cc.check_depth_infos(depth=depth + 1, fatal=fatal) for cc in self.args])
-
-    def selfcheck(self, check_depth=True, fatal=None):
-        """
-        Tree Self-check for its structure
-        """
-        results = [self.check_depth_infos(fatal=fatal) if check_depth else 0]
-        return sum(results)
-
-
-class NodeBase(BaseTree):
+class NodeBase:
     insym = None
     tflow = None
     xtype = None  # sfeh: will this b deprecated?
 
     def __str__(self):
         _str = self.__class__.__name__
-        # if self.args:
-        #     # sfeh does not work
-        #     _childstr = ', '.join([str(x) for x in self.args])
-        #     _str = f'{_str}({_childstr})'
+        if self.args:
+            if issubclass(self.__class__, Operator):
+                # sfeh does not work
+                _childstr = ', '.join([str(x) for x in self.args])
+                _str = f'{_str}({_childstr})'
+            elif issubclass(type(self), TerminalNode):
+                _str = f'{self.args[0]}'
+            else:
+                raise
         return _str
+
+    def __new__(cls, *args, **kwargs):
+        # if isinstance(cls, TerminalNode):
+        #     cls.args = args
+        obj = object.__new__(cls)
+        if args:
+            obj.args = args
+        else:
+            obj.args = args
+            if issubclass(cls, TerminalNode):
+                obj.args = args
+
+        return obj
+
+    def __len__(self):
+        """ONLY works, when args are there"""
+        if issubclass(self.__class__, TerminalNode):
+            return 1
+        else:
+            return 1 + sum([len(cc) for cc in self.args])
 
     def _sympy_(self, *args):  # -> sympy.Basic:
         _sym = self.insym
@@ -948,6 +662,260 @@ def sympy_to_tensorflow(expr, pandas_df):
         return result
 
 
+class BaseTree(NodeBase):
+    """
+    The core is the structure of a plagih gp-fintree.
+    It recursively holds the nodes of a fintree; every fintree has a list of potential children.
+    Example core: [+, 1, [*, [-, 2, 3], 2]] = 1 + ((2-3) * 2)
+
+    states? sfeh:discuss
+    [None]: not set
+    [0]:    evolution/construction/build mode (potentially missing leaf nodes)
+    [1]:    structurally complete/finalized branch (node_depths correct, node_id set, ...)
+    [2]:    root-correct structure
+    [3]:    including meta-data (fitness_train, complexity)
+
+    # sfeh:discuss set tree depth at the end or so
+    # sfeh:xxx set NodeBase as metatype and make this class (ExpressionTree, or so...) a new thing
+    """
+
+    args = []
+    is_fix = False  # sfeh:xx here?
+
+    def __new__(cls, subcls, *args, **kwargs):
+        # if isinstance(cls, Operator):
+        #     pass
+        # elif isinstance(cls, TerminalNode):
+        #     if isinstance(cls, Symbol):
+        #         cls.fam, cls.time_index, _ = observation_get_family_and_time(args, none_return=None)
+        #         cls.index_minmax = None
+
+        # cls.args = [x for x in args]  # was 'childs'
+        # obj = object.__new__(subcls)
+        # obj = super().__new__(subcls)
+        # obj = object.__new__(subcls)
+        # obj.args = [x for x in args]  # was 'childs'
+        # obj.is_fix = kwargs.get('is_fix', False)
+        # obj = subcls
+        obj = object.__new__(subcls)
+        obj.args = [x for x in args]
+        return obj
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.args = kwargs.get('args', [])
+        cls.is_fix = kwargs.get('is_fix', [])
+
+    def __str__(self):
+        return self.get_str_recursive()
+
+    def get_str_recursive(self):
+        if isinstance(self, Operator):
+            childstr = ', '.join([str(x) for x in self.args])
+            _str = f"{self}({childstr})"
+        elif isinstance(self, TerminalNode):
+            _str = f'{self.args[0]}'
+        else:
+            raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
+
+        return _str
+
+    def __repr__(self):
+        return self.get_repr_recursive()
+
+    def get_repr_recursive(self):
+
+        _isfix = ', is_fix=True' if self.is_fix else ''
+        if isinstance(self, Operator):
+            childstr = ', '.join([repr(x) for x in self.args])
+        elif isinstance(self, TerminalNode):
+            childstr = self.args[0]
+        else:
+            raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
+
+        return f"{self.__class__.__name__}({childstr}{_isfix})"
+
+    def __len__(self):
+        return 1 + sum([len(cc) for cc in self.args])
+
+    def get_nclass(self):
+        return self.__class__.__name__
+
+    def is_root(self):
+        """
+        does this work while building a fintree?
+        """
+        return self.depth == 0
+
+    def set_childs(self, childs):
+        """
+        Sets the self.args variable, which must be nodes or None
+        """
+        self.args = childs
+
+    def update_fixed_nodes(self, other: 'BaseTree'):
+        """
+        Updating the fixed nodes in a tree where they were lost for some reason.
+        This should only occur during the reconstructing test of a tree from expression.
+        """
+        if other.is_fix:
+            if self.get_nclass() != other.get_nclass():
+                raise
+            self.is_fix = True
+            for ii, cc in enumerate(self.args):
+                cc.update_fixed_nodes(other.args[ii])
+
+    def get_nodes_to_depth(self, goal_depth, only_mutable=False, get_closest_depth=False):
+        child_results = []
+        if self.depth < goal_depth:
+            child_results = sum(
+                [child.get_nodes_to_depth(goal_depth, only_mutable=only_mutable, force_depth=get_closest_depth) for
+                 child in self.args], [])
+
+        if only_mutable and self.is_fix or \
+                get_closest_depth and self.depth != goal_depth:
+            my_result = []
+        else:
+            my_result = [self]
+
+        return my_result + child_results
+
+    def get_labellist_breath(self):
+        label_list = []
+        max_depth = self.args_depth_max
+        for depth in range(0, max_depth + 1):
+            labels_at_depth = [x.label for x in self.get_nodes_at_depth(depth)]
+            label_list.extend(labels_at_depth)
+    #
+    #     return label_list
+    #
+    # def get_all_nodes(self):
+    #     if len(self.args) == 0:
+    #         return [self]
+    #     else:
+    #         return [self] + [cc.get_all_nodes() for cc in self.args]
+
+    def get_nodes_at_depth(self, goal_depth, allow_fixed=False, expand_depth=False):
+        """Returns a list with mutable ids which are *goal_depth* layers away from non-modifiable nodes
+        last_leaves: if you want so save all leave nodes aswell
+        sum_layers=False, get_closest=True, return_all_layers=False"""
+        nodes = []
+        if (not self.is_fix or allow_fixed) and (
+                self.depth == goal_depth or (self.depth > goal_depth and expand_depth)):
+            return [self]
+        elif self.depth <= goal_depth or expand_depth:
+            nodes.extend(list(itertools.chain(
+                *[cc.get_nodes_at_depth(goal_depth, allow_fixed=allow_fixed, expand_depth=expand_depth) for cc in
+                  self.args])))
+            return nodes
+        else:
+            return []
+
+    # def eval_nested(self):
+    #     """
+    #
+    #     """
+    #     expr_str = self.label.nlabel
+    #     expr_str = f'"{expr_str}"'  # sfeh: Also not used anymore? to-do was here
+    #
+    #     if self.args:
+    #         cc_expr = [cc.eval_nested() for cc in self.args]
+    #         cc_expr = ', '.join(cc_expr)
+    #
+    #         expr_str = f'{expr_str}, {cc_expr}'
+    #
+    #     return f'{expr_str}'
+
+    def eval_apted_notation(self):
+        """Calculating the TED requires this representation
+        e.g. {+{Ifthe{True}{1}{2}}{3}}"""
+        # sfEh check if this still works as one-liner
+        return f"{{{self.get_nclass()}{''.join([cc.eval_apted_notation() for cc in self.args])}}}"
+
+    def repair_depth(self, depth=0):
+        """
+        aka set_depth recursively for all nodes in a branch
+        mainly used in branch
+
+        The depth is written in every node (for whatever reason), and instead of having to propagate
+        the depth through every crossover/branch mutation function, instead, we call it when replacing nodes
+        """
+        self.depth = depth
+        for cc in self.args:
+            cc.repair_depth(depth=depth + 1)
+
+    def set_new_node(self, new_node: 'BaseTree'):
+        """
+        was: new_core
+        """
+        self.__class__ = new_node
+        self.args = new_node.args or []  # todo must be updated recursively
+
+    def eval_mutable_nodes(self, xtype_out=None, allow_root=True):
+        """
+        return all nodes that are mutable (non fixed)
+        sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!
+        """
+        node_list = []
+        if not self.is_fix:  # requirement for mutability
+            # crossover requires excluding types that are not matching, and excludes the root node
+            if (xtype_out is None) and (allow_root or not self.is_root()):
+                node_list.append(self)
+
+        for cc in self.args:
+            node_list.extend(cc.eval_mutable_nodes(xtype_out=xtype_out, allow_root=allow_root))
+        # deprecated:
+        # node_list.extend(list(itertools.chain(
+        #     *[cc.eval_mutable_nodes(xtype_out=xtype_out, allow_root=allow_root) for cc in self.args])))
+        return node_list
+
+    # sfeh:xxx
+    # def evolve_mutate_filter_branch(self):
+    #     """
+    #     Recursively filter the nodes in the branch of fintree
+    #     sfeh:   random filter all terminal nodes /
+    #             single node /
+    #             nodes in a branch /
+    #             random nodes in a branch /
+    #             intelligent filtering
+    #     """
+    #     # self.state = STATE_BUILDING  #  ==>state
+    #         for cc in self.args:
+    #             cc.evolve_mutate_filter_branch()
+    #     else:
+    #         self.mutate_self_filter(filter_type='gaussian_filter')
+
+    # def finalize_set_nodepath(self, nodepath):
+    #     """
+    #     [0,2,1,0,0]
+    #     ==>ROOT
+    #     """
+    #     self.nodepath = nodepath
+    #     for ii, child in enumerate(self.args):
+    #         nodepath_child = nodepath + [ii]
+    #         child.finalize_set_nodepath(nodepath_child)
+
+    def check_depth_infos(self, depth=0, fatal=None):
+        """
+        Checks, whether the depth of all nodes in the tree are set correctly.
+        Should not be necessary if all evolutions (branch-mutation, crossover) work fine
+        - starts at depth 0, increase at every level
+        - compare with the written value
+        """
+        if depth != self.depth:
+            if fatal:
+                raise
+            return False
+        return all([cc.check_depth_infos(depth=depth + 1, fatal=fatal) for cc in self.args])
+
+    def selfcheck(self, check_depth=True, fatal=None):
+        """
+        Tree Self-check for its structure
+        """
+        results = [self.check_depth_infos(fatal=fatal) if check_depth else 0]
+        return sum(results)
+
+
 if __name__ == '__main__':
 
     ns = {
@@ -1051,11 +1019,18 @@ if __name__ == '__main__':
     # # sfeh:xxx why are node classes all in memory, is that bad? use__neew__()?
 
     # x = Add(childs=[Symbol('a'), Mul(childs=[2, 3])])
+    n1 = Float()
+    n2 = Symbol()
+    n3 = Boolean()
+    n4 = Add()
+    print(n1, n2, n3, n4)
+    print(len(n1), len(n4))
     n1 = Float(1.23)
-    n2 = Symbol('b')
-    n3 = Boolean('True', is_fix=True)
-    print(n1, n2, n3)
-
+    n2 = Symbol('a')
+    n3 = Boolean(True)
+    n4 = Add(n1, n2)
+    print(n1, n2, n3, n4)
+    print(len(n1), len(n4))
 
     # n4 = Add(n1, n2)
     # print(n4.get_str_recursive())
@@ -1069,13 +1044,6 @@ if __name__ == '__main__':
     # tr = sin(Symbol('a'))
     # print(tr)
     # tr = sin(sin(Symbol('a')))
-
-    def get_ev_childs(node):
-        _childs = []
-        for ii, cc in enumerate(node.args):
-            _childs.append(lambda x: node.set_child_n(ii, x))
-        _childs.extend(list(itertools.chain(*[get_ev_childs(cc) for cc in node.args])))
-        return _childs
 
     # lel = get_ev_childs(tr)
     # print(lel)

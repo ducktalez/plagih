@@ -17,39 +17,30 @@ class NestedStruc:
     [3]:    including meta-data (fitness_train, complexity)
     """
 
-    def __init__(self, anylabel: NodeBase, childs, depth=None, is_fix=False):
-        try:
-            anylabel.args = None  # sfeh: or remove childs, isfix
-            anylabel.is_fix = None
-            self.label = anylabel
-        except AttributeError:
-            self.label = anylabel
+    def __init__(self, label, childs, depth=None, is_fix=False):
+        self.label = label
+        self.childs = childs
 
-        self.childs = childs or []
         self.is_fix = is_fix
         self.depth = depth
 
     def __str__(self):
-        """
-        Printing the nodes as nested array structure, easy to read.
-        Also, have a look at repr(self) for a more detailed result
-        """
-
         try:
             label_str = self.label.__name__
-        except:
+        except Exception as ex:
             label_str = self.label
-            label_str = str(self.label.childs[0])
 
         if self.childs:
             childstr = ', '.join([str(x) for x in self.childs])
-            label_str += childstr
+            label_str = f'{label_str}, {childstr}'
 
         return f"[{label_str}]"
 
-    def eval_str(self):
+    def repr_str(self):
+        pass
 
-        return self.get_nlabel()  # sfeh open
+    def eval_str(self):
+        return self.get_label()  # sfeh open
 
     def __repr__(self):
         """
@@ -67,35 +58,11 @@ class NestedStruc:
             label_str = f"{label_str}, {childstr}"
         return f"[{label_str}]"
 
-    # def choose_term(xtype_out, choose_obs, choose_distributions, precision):
-    #
-    #     # sfeh 50% chance observation/value
-    #     if random.choice(['obs', 'distrib']) == 'obs' and choose_obs[xtype_out]:
-    #         obs = choose_obs[xtype_out]()
-    #         # prsint('SAME???', obs.name, obs.label)  # sfeh
-    #         return obs
-    #     else:
-    #         dist_fun = random.choice(choose_distributions[xtype_out])
-    #         value = dist_fun()
-    #         if xtype_out == float:  # sfeh int aswell?
-    #             value = float(round(value, precision))
-    #             const = FloatConstant(value)
-    #         elif xtype_out == bool:
-    #             const = BoolConstant(value)
-    #         else:
-    #             raise Exception('ASDASD NOOO WHYY')
-    #         return const
-
     def __len__(self):
-        """
-        counting the amount of nodes recursively
-        """
+        """counting the amount of nodes recursively"""
         return 1 + sum([len(cc) for cc in self.childs])
 
     def get_label(self):
-        return self.label
-
-    def get_nlabel(self):
         return self.label
 
     def get_arity(self):
@@ -119,11 +86,9 @@ class NestedStruc:
         self.label = label
 
     def update_fixed_nodes(self, origin: 'NestedStruc'):
-        """
-        Updating the fixed nodes in a tree where they were lost for some reason.
+        """Updating the fixed nodes in a tree where they were lost for some reason.
         This should never be the case! But it happened during development of recreating a tree from expression.
-        This might also be useful in tree checks
-        """
+        This might also be useful in tree checks"""
         if origin.is_fix:
             if str(self.label) != str(origin.label):
                 raise
@@ -132,9 +97,7 @@ class NestedStruc:
                 cc.update_fixed_nodes(origin.childs[ii])
 
     def get_nodes_to_depth(self, goal_depth, only_mutable=False, get_closest_depth=False):
-        """
-        sum_layers=False, get_closest=True, return_all_layers=False
-        """
+        """sum_layers=False, get_closest=True, return_all_layers=False"""
         child_results = []
         if self.depth < goal_depth:
             child_results = sum(
@@ -173,16 +136,11 @@ class NestedStruc:
             return []
 
     def eval_apted_notation(self):
-        """
-        Calculating the TED requires this (weird) representation
-        """
-        # sfEh check if this still works as one-liner
-        return f"{{{self.get_nlabel()}{''.join([cc.eval_apted_notation() for cc in self.childs])}}}"
+        """Calculating the TED requires this (weird) representation"""
+        return f"{{{self.get_label()}{''.join([cc.eval_apted_notation() for cc in self.childs])}}}"
 
     def get_max_depth(self, depth=0):
-        """
-        Go through all nodes, save depth
-        """
+        """Go through all nodes, save depth"""
         if len(self.childs) == 0:
             return depth
         else:
@@ -218,9 +176,6 @@ class NestedStruc:
 
         for cc in self.childs:
             node_list.extend(cc.eval_mutable_nodes(xtype_out=xtype_out, allow_root=allow_root))
-        # deprecated:
-        # node_list.extend(list(itertools.chain(
-        #     *[cc.eval_mutable_nodes(xtype_out=xtype_out, allow_root=allow_root) for cc in self.childs])))
         return node_list
 
     def evolve_mutate_filter_branch(self, precision=6):
@@ -233,7 +188,7 @@ class NestedStruc:
                 intelligent filtering
         """
         # self.state = STATE_BUILDING  #  ==>state
-        if self.get_arity() > 0:
+        if isinstance(self.get_label(), Operator):
             for cc in self.childs:
                 cc.evolve_mutate_filter_branch(precision=precision)
         else:
@@ -243,5 +198,6 @@ class NestedStruc:
 
 
 if __name__ == '__main__':
-    x = NestedStruc(Add(), depth=0, childs=[NestedStruc(Symbol(), childs=['a']), NestedStruc(Float(2.2), childs=[2.2])])
+    x = NestedStruc(Add(), depth=0, childs=[Symbol('a'), Float(2.2)])
+    # x = NestedStruc(Symbol(), childs=['a'])
     print(x)

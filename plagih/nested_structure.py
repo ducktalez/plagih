@@ -4,6 +4,16 @@ import sympy
 
 from plagih.plagih_tree import *
 
+# For sympy_to_Nested conversion
+sptonode = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: sign, sympy.log: log, sympy.Mul: Mul,
+            sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,
+            sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
+            sympy.GreaterThan: Ge, sympy.cos: cos, sympy.sin: sin, sympy.tan: tan, sympy.acos: acos,
+            sympy.asin: asin, sympy.atan: atan, sympy.tanh: tanh, sympy.sinh: sinh, sympy.cosh: cosh,
+            sympy.Min: Min, sympy.Max: Max}
+# , sympy.Equality: Eq
+stn_keys = tuple(sptonode.keys())  # sfeh: debug this... relevant?
+
 
 @dataclass
 class Nested:
@@ -51,27 +61,8 @@ class Nested:
                 _sym = _sym(*_cs)
         else:
             if self.label.args:
-                # _cs = self.label.args
-                # try:
-                #     _sym = _sym(_cs[0])
-                # except Exception as ex:
-                #     try:
-                #         _sym = _sym(self.label)  # todo
-                #         print('bbbbbbb')
-                #     except Exception as ex:
-                #         try:
-                #             _sym = _sym()  # todo
-                #         except Exception as ex:
-                #             try:
-                #                 _sym = _sym(_cs)  # todo
-                #             except Exception as ex:
-                #                 _sym = _sym(_cs)  # todo
                 _sym = self.label.get_sym()
                 _sym = _sym(*self.label.args)
-                # try:
-                #     _sym = _sym(*self.label.args)
-                # except Exception as ex:
-                #     _sym = _sym(*self.label.args)
             else:
                 raise
         return _sym
@@ -239,12 +230,10 @@ class Nested:
 
 def sympy_to_nsted(expr, allow_chain=False):
     if isinstance(expr, bool):
-        _r = Boolean(expr)
-        return Nested(_r, [])
-    if isinstance(expr, sympy.logic.boolalg.BooleanAtom):
+        return Nested(Boolean(expr), [])
+    elif isinstance(expr, sympy.logic.boolalg.BooleanAtom):
         expr = True if isinstance(expr, (bool, sympy.logic.boolalg.BooleanTrue)) else False
-        _r = Boolean(expr)
-        return Nested(_r, [])
+        return Nested(Boolean(expr), [])
 
     # the following lines are not required, if sympy filters for bad expressions earlier
     # if expr.is_imaginary or expr.is_infinite:
@@ -253,30 +242,23 @@ def sympy_to_nsted(expr, allow_chain=False):
     # ==Terminal nodes==
     elif expr.is_Atom:
         if expr.is_Symbol:
-            _r = Symbol(str(expr))  # sfeh str VERY important!!
-            # _r = Nested(Symbol(), [expr])
+            _r = Symbol  # sfeh str VERY important!!
+            return Nested(Symbol(str(expr)), [])
         else:
-            expr_eval = expr.evalf()  # standard 15 digits
+            expr_eval = expr.evalf()  # standard 15 digits, sfeh prec=FLOAT_PRECISION?
             if expr.is_Boolean:
-                _r = Boolean(expr_eval)
-                # _r = Nested(Boolean(), [expr])
+                return Nested(Boolean(expr_eval), [])
             elif expr.is_number:  # is_float does not match int
-                _r = Float(float(expr_eval))  # sfeh round
-                # _r = Nested(Float(), [float(expr)])
+                try:
+                    return Nested(Float(float(expr_eval)), [])  # sfeh round
+                except Exception as ex:
+                    # todo TypeError: Cannot convert complex to float
+                    return Nested(Float(float(expr_eval)), [])  # sfeh round
             else:
                 print(f'XXX What happened here? {expr}')
                 raise
-        return Nested(_r, [])
 
     else:
-        sptonode = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: sign, sympy.log: log, sympy.Mul: Mul,
-                    sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,
-                    sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
-                    sympy.GreaterThan: Ge, sympy.cos: cos, sympy.sin: sin, sympy.tan: tan, sympy.acos: acos,
-                    sympy.asin: asin, sympy.atan: atan, sympy.tanh: tanh, sympy.sinh: sinh, sympy.cosh: cosh,
-                    sympy.Min: Min, sympy.Max: Max}
-        # , sympy.Equality: Eq
-        stn_keys = tuple(sptonode.keys())
 
         # todo FIRST check chainability!!
 
@@ -285,7 +267,7 @@ def sympy_to_nsted(expr, allow_chain=False):
                 raise NotImplementedError
             else:
                 _revlist = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
-                _revlist = [[sympy_to_nsted(xx) for xx in list(x)] for x in _revlist]
+                _revlist = [[sympy_to_nsted(xx, allow_chain=allow_chain) for xx in list(x)] for x in _revlist]
                 otherwise = _revlist[0][0]  # the last "True" condition
                 for x in _revlist[1:]:
                     otherwise = Nested(Ifte, [x[1], x[0], otherwise])
@@ -298,32 +280,39 @@ def sympy_to_nsted(expr, allow_chain=False):
                     _r = Square
                 else:
                     raise
-                return Nested(_r, [sympy_to_nsted(expr.args[0])])  # can ignore args[1] now
+                return Nested(_r, [sympy_to_nsted(expr.args[0], allow_chain=allow_chain)])  # can ignore args[1] now
+
             if isinstance(expr.args[1], sympy.Integer):
                 _r = Powrounded
             else:
                 _r = Pow
-            return Nested(_r, [sympy_to_nsted(x) for x in expr.args])
+            childnstd = [sympy_to_nsted(x, allow_chain=allow_chain) for x in expr.args]
+            return Nested(_r, childnstd)
+
         elif isinstance(expr, stn_keys):
 
             clss = sptonode[type(expr)]
-            args = [sympy_to_nsted(x) for x in expr.args]
-            # todo propagate allow_chain
+            args = [sympy_to_nsted(x, allow_chain=allow_chain) for x in expr.args]
+
             if len(expr.args) > len(clss.xtype[0]):
                 if issubclass(clss, ChainableOp):
                     if allow_chain:
-                        return Nested(clss, args)
+                        return Nested(clss, args)  # todo mark this node
                     else:
                         # All have arity-2
-                        childnstd = [sympy_to_nsted(x) for x in expr.args]
+                        childnstd = [sympy_to_nsted(x, allow_chain=allow_chain) for x in expr.args]
                         _cc = childnstd[0]
                         for _c2 in childnstd[1:]:
                             _cc = Nested(clss, [_cc, _c2])
                         return _cc
                 else:
                     raise TypeError(f"{clss} takes exactly {len(clss.xtype[0])} arguments ({len(expr.args)} given)")
+            else:
+                return Nested(clss, args)  # same as in allow_chain
+
         else:
             raise NotImplementedError(f'Expr missing: {expr}')
+    raise Exception("How did we get here??")
 
 
 if __name__ == '__main__':

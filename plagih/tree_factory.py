@@ -299,38 +299,37 @@ class TreeBuilder:
         _sym = self.symbols_xtdc[xtype]()
         return Symbol(_sym)
 
-    def choose_const(self, xtype):
-        value = np.random.choice(self.distributions[xtype])()
-        # value = random.choice(self.distributions[xtype])()
-        if xtype == float:
+    def choose_value(self, xt_out):
+        value = np.random.choice(self.distributions[xt_out])()
+        if xt_out == float:
             return Float(round(value, PRECISION))
-        elif xtype == bool:
+        elif xt_out == bool:
             return Boolean(value)
 
-    def choose_term(self, xtype, p_observation=0.5):
+    def choose_term(self, xt_out, p_observation=0.5):
         if random.random() < p_observation:
             try:
-                return self.choose_symbol(xtype)
+                return self.choose_symbol(xt_out)
             except TypeError:
                 pass  # return a constant (maybe because there are no boolean observations)
 
-        return self.choose_const(xtype)
+        return self.choose_value(xt_out)
 
-    def invent_core_depth(self, xt, depth_goal, depth=0, p_full=1.0):  # sfeh:check grow method
+    def invent_core_depth(self, xt_out, depth_goal, depth=0, p_full=1.0):  # sfeh:check grow method
         """
         # sfeh:discussion set path/id?
         """
         if depth == self.depth_max or depth == depth_goal or random.random() > p_full:
-            label = self.choose_term(xt)
+            label = self.choose_term(xt_out)
             nsted = Nested(label, [], depth=depth)
         else:
-            label = self.choose_op(xt)  # self.choose_any(xtype, p_full)
-            childs = [self.invent_core_depth(xt, depth_goal, p_full=p_full, depth=depth + 1) for xt in label.xtype[0]]
+            label = self.choose_op(xt_out)  # self.choose_any(xtype, p_full)
+            childs = [self.invent_core_depth(xt, depth_goal, depth=depth + 1, p_full=p_full) for xt in label.xtype[0]]
             nsted = Nested(label, childs, depth=depth)  # , depth=depth sfeh no depth?
 
         return nsted
 
-    def invent_core_operatoramount(self, xt, operator_amount_left, depth=0, p_full=1.0):
+    def invent_core_operatoramount(self, xt_out, ops_left, depth=0, p_full=1.0):
         """
         This version counts the amount of operators as construction limit!
         sfeh:idea nodes are now about being operators...
@@ -338,19 +337,20 @@ class TreeBuilder:
         sfeh:pfull?
         """
         childs = []
-        label = self.choose_op(xt)  # sfeh:xxx
 
-        if depth == self.depth_max or operator_amount_left == 0:
-            label = self.choose_term(xt)
+        if depth == self.depth_max or ops_left == 0:
+            label = self.choose_term(xt_out)
 
         else:  # nodeops_max > 0:
-            operator_amount_left -= 1
-            nodeops_split = randomly_split_range(operator_amount_left, len(label.xtype[0]))
+            label = self.choose_op(xt_out)  # sfeh:xxx
+
+            ops_left -= 1
+            nodeops_split = randomly_split_range(ops_left, len(label.xtype[0]))
 
             for ii, xt_child in enumerate(label.xtype[0]):
-                childs.append(self.invent_core_operatoramount(xt_child, nodeops_split[ii], depth=depth + 1))
+                childs.append(self.invent_core_operatoramount(xt_child, nodeops_split[ii], depth=depth+1))
 
-        nsted = Nested(label, childs=childs, depth=depth)  # , depth=depth sfeh no depth?
+        nsted = Nested(label, childs, depth=depth)  # , depth=depth sfeh no depth?
         return nsted
 
     def evolve_mutate_filter_random(self, nsted):
@@ -377,11 +377,12 @@ class TreeBuilder:
         _nd = np.random.choice(evostruc.eval_mutable_nodes())
         xtype = _nd.get_xtype()
 
+        # todo chainable
         if _nd.get_arity() > 0:
-            _nd.set_label(self.choose_op(xtype))  # Function is same type, same arity
+            new_label = self.choose_op(xtype)  # Function is same type, same arity
         else:
-            _nd.set_label(self.choose_term(xtype[1]))  # 3 -> '2f' -> 5
-
+            new_label = self.choose_term(xtype[1])  # 3 -> '2f' -> 5
+        _nd.set_label(new_label)
         return evostruc
 
     def evolve_prune(self, nsted: Nested):
@@ -493,9 +494,9 @@ class TreeBuilder:
 
         return _a, _b
 
-    def pop_random_depth(self, depth_goal, xtype=None, p_full=1.0):
+    def pop_random_depth(self, depth_goal, xt_out=None, p_full=1.0):
 
-        xtype = xtype or self.root_xtype
+        xt_out = xt_out or self.root_xtype
 
         if self.origin is not None:
 
@@ -509,7 +510,7 @@ class TreeBuilder:
                 lvl0_nsted.set_new_nested(new_subbranch)
 
         else:
-            evonsted = self.invent_core_depth(xtype, depth_goal)
+            evonsted = self.invent_core_depth(xt_out, depth_goal)
 
         return evonsted
 
@@ -524,7 +525,7 @@ class TreeBuilder:
             - get these nodes, randomly choose a subset of those
             - get the amount of nodes allowed to add. (max nodes without the core-fintree + the nodes about to delete)
             - split the amount of nodes up (randomly) and add these new branches to the fintree
-            sfeh:idea mutate only the childs of a node! The label stays the same
+            sfeh:idea mtate only the childs of a node! The label stays the same
             """
             evonsted = nsted_deepcopy(self.origin)
             layer0_nodes = evonsted.get_nodes_at_depth(0, allow_fixed=False, expand_depth=True)
@@ -748,5 +749,7 @@ if __name__ == '__main__':
         x2 = tr_new.get_sympy_expr()
         print(tr)
         print(tr_new)
-        print(x, '<-->', x2)
+        if str(x) != str(x2):
+            print(x, '<-->', x2)
+            raise Exception('asfdasdfafdsafds')
 

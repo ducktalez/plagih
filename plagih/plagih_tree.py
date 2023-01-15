@@ -200,13 +200,13 @@ class TerminalNode(NodeBase):  # sfeh sympy.Atom
 
 class Boolean(TerminalNode):
     # sfeh:discuss just for True/False?
-    xtype = (None, bool)
+    xtype = (tuple([]), bool)
     insym = lambda *args: sympy.S.true if args[0] else ~sympy.S.true   # sympy.logic.boolalg.Boolean  # sfeh:discuss
     tflow = lambda x: tf.constant(x, dtype=tf.bool)
 
 
 class Float(TerminalNode):
-    xtype = (None, bool)
+    xtype = (tuple([]), float)
     insym = sympy.Float
     tflow = lambda x: tf.constant(x, dtype=tf.float32)
 

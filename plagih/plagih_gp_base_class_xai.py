@@ -286,74 +286,74 @@ class ExplainableGP:
         - (2 trees) can make a crossover
         """
 
-        # All gp creators: name, function, num of trees from tournament selection
-        @self.create_trees(0.1)
-        def repro1():
-            return selection_tournament(self.pop_base, tournsize=3)
-
-        # self.create_trees(0.10, repro1)
-
-        # sfeh:xxx repro-sympify
-        @self.create_trees(0.1)
-        def mutateB():
-            evotree = selection_tournament(self.pop_base, tournsize=3)
-            return self.tb.evolve_mutate_branch_nodes(evotree, 4, p_full=0.85)  # sfeh:todo also
-
-        @self.create_trees_crossover(0.2)
-        def xover():
-            # try:
-            t1 = selection_tournament(self.pop_base, tournsize=3)
-            t2 = selection_tournament(self.pop_base, tournsize=3)
-            # except ValueError as ex:
-            #     print_warning("www", f'Crossover failed: {ex}')
-            #     # sfeh: mostly 1-noded trees
-            evo1, evo2 = self.tb.evolve_crossover(t1, t2)
-            return evo1, evo2
+        # # All gp creators: name, function, num of trees from tournament selection
+        # @self.create_trees(0.1)
+        # def repro1():
+        #     return selection_tournament(self.pop_base, tournsize=3)
+        #
+        # # self.create_trees(0.10, repro1)
+        #
+        # # sfeh:xxx repro-sympify
+        # @self.create_trees(0.1)
+        # def mutateB():
+        #     evotree = selection_tournament(self.pop_base, tournsize=3)
+        #     return self.tb.evolve_mutate_branch_nodes(evotree, 4, p_full=1)  # sfeh:todo also
+        #
+        # @self.create_trees_crossover(0.2)
+        # def xover():
+        #     # try:
+        #     t1 = selection_tournament(self.pop_base, tournsize=3)
+        #     t2 = selection_tournament(self.pop_base, tournsize=3)
+        #     # except ValueError as ex:
+        #     #     print_warning("www", f'Crossover failed: {ex}')
+        #     #     # sfeh: mostly 1-noded trees
+        #     evo1, evo2 = self.tb.evolve_crossover(t1, t2)
+        #     return evo1, evo2
 
         @self.create_trees(0.1)
         def rand1():
-            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(4, 1)), 1, 5), p_full=1)
+            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(4, 1)), 1, 4), p_full=1)
 
         @self.create_trees(0.1)
         def rand2():
             # sfeh float? nope
-            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 5), p_full=1)
+            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 4), p_full=1)
 
-        # @self.create_trees(0.1)
-        # def reproSym():
-        #     evotree = selection_tournament(self.pop_base, tournsize=3)
-        #     return evolve_reduce_simplify(evotree, completely=False)
-
+        # # @self.create_trees(0.1)
+        # # def reproSym():
+        # #     evotree = selection_tournament(self.pop_base, tournsize=3)
+        # #     return evolve_reduce_simplify(evotree, completely=False)
+        #
         @self.create_trees(0.1)
         def mutatePoint():
             evotree = selection_tournament(self.pop_base, tournsize=3)
             return self.tb.evolve_mutate_point(evotree)
-
+        #
+        # # @self.create_trees(0.1)
+        # # def mxPointXXX():
+        # #     evotree = selection_tournament(self.pop_base, tournsize=3)
+        # #     return self.tb.evolve_mutate_pointxxx(evotree)
+        #
         # @self.create_trees(0.1)
-        # def mxPointXXX():
+        # def mx_ranch_d():
         #     evotree = selection_tournament(self.pop_base, tournsize=3)
-        #     return self.tb.evolve_mutate_pointxxx(evotree)
-
-        @self.create_trees(0.1)
-        def mx_ranch_d():
-            evotree = selection_tournament(self.pop_base, tournsize=3)
-            return self.tb.evolve_mutate_branch_depth(evotree, self.tb.depth_max, p_full=0.5)
-
-        @self.create_trees(0.1)
-        def mx_branch_n():
-            evotree = selection_tournament(self.pop_base, tournsize=3)
-            nodeamount_goal = np.clip(int(random.normalvariate(12, 4)), 0, 30)
-            return self.tb.evolve_mutate_branch_nodes(evotree, nodeamount_goal)
-
-        @self.create_trees(0.1)
-        def filter_optimize():
-            evotree = selection_tournament(self.pop_base, tournsize=3)
-            return self.tb.evolve_mutate_filter_random(evotree)
-
-        @self.create_trees(0.1)
-        def pareto_revive():
-            fintree = np.random.choice(self.paretofront)
-            return fintree.tree
+        #     return self.tb.evolve_mutate_branch_depth(evotree, self.tb.depth_max, p_full=1)
+        #
+        # @self.create_trees(0.1)
+        # def mx_branch_n():
+        #     evotree = selection_tournament(self.pop_base, tournsize=3)
+        #     nodeamount_goal = np.clip(int(random.normalvariate(12, 4)), 0, 30)
+        #     return self.tb.evolve_mutate_branch_nodes(evotree, nodeamount_goal)
+        #
+        # @self.create_trees(0.1)
+        # def filter_optimize():
+        #     evotree = selection_tournament(self.pop_base, tournsize=3)
+        #     return self.tb.evolve_mutate_filter_random(evotree)
+        #
+        # @self.create_trees(0.1)
+        # def pareto_revive():
+        #     fintree = np.random.choice(self.paretofront)
+        #     return fintree.tree
 
         return
 
@@ -490,10 +490,7 @@ class ExplainableGP:
 
         # expr_raw = evotree.eval_expr_str()
         # expr_sym = expr_sympify(expr_raw)
-        try:
-            expr_sym = evotree.get_sympy_expr()
-        except Exception as ex:
-            expr_sym = evotree.get_sympy_expr()  # todo
+        expr_sym = evotree.get_sympy_expr()
 
         try:
             fitness = self.kernel.eval_tf(expr_sym)['mean_error']

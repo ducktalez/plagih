@@ -3,27 +3,27 @@ class TestHelpers:
     def __init__(self):
         # self.func_arr_dummy = [[[], ['sin', 'cos', '~'], ['+', '+', '+', '-', '*', '/'], []],
         #                        [[], [], ['<', '>', '==', '!='], []],
-        #                        [[], ['BinaryNot', 'BinaryNot'], ['BinaryAnd'], []],
+        #                        [[], ['Not', 'Not'], ['And'], []],
         #                        [[], [], [], []],
         #                        [[], [], [], ['Ifte']]]
 
         self.tree_MTC_simon_labels = ['Ifte',
-                                      'BinaryOr', '2', 'Ifte',
-                                      '<', 'BinaryAnd', 'BinaryAnd', '0', 'Ifte',
-                                      'cartVel', '1', '<', '<', '<', 'BinaryAnd', '<', '0', '2',
+                                      'Or', '2', 'Ifte',
+                                      '<', 'And', 'And', '0', 'Ifte',
+                                      'cartVel', '1', '<', '<', '<', 'And', '<', '0', '2',
                                       'cartVel', '0.1', 'cartPos', '-0.05', 'cartPos', '0.02', '>', '<', 'cartPos', '0',
                                       'cartVel', '-0.45', 'cartVel', '-0.05']
         self.tree_reducing = ['Ifte',
-                              'BinaryAnd', '2', '0',
+                              'And', '2', '0',
                               '<=', '<=',
-                              'BinaryMin', 'cartVel', 'cartVel', '+',
+                              'Min', 'cartVel', 'cartVel', '+',
                               '+', '-', '*', '0.7',
                               '*', '0.03', '*', '0.008', '-0.07', '**',
                               '-0.09', '**', '0.3', '**', '+', '2.0',
                               '+', '2.0', '+', '4.0', 'cartPos', '0.38',
                               'cartPos', '0.25', 'cartPos', '0.874488804']
 
-        self.tree_MTC_simon_expr = 'Ifte(BinaryOr(pos < -1,  BinaryAnd(pos < 0.1, vel < -0.05)), 2, Ifte(BinaryAnd(BinaryAnd(pos > -0.45, pos < -0.05), vel < 0.02), 0,  Ifte(vel < 0, 0, 2)))'
+        self.tree_MTC_simon_expr = 'Ifte(Or(pos < -1,  And(pos < 0.1, vel < -0.05)), 2, Ifte(And(And(pos > -0.45, pos < -0.05), vel < 0.02), 0,  Ifte(vel < 0, 0, 2)))'
 
     # def test_ted_weighting(self):
     #     distance, mapping = tree_parsimony_ted(self.tree1, self.tree2)
@@ -42,21 +42,21 @@ class TestHelpers:
 
     def test_visualisation(self):
         tree_labels = ['Ifte',
-                       'BinaryAnd', '0', '2',
-                       '<', 'BinaryOr',
-                       'cartVel', '0', 'True', 'BinaryAnd',
-                       'BinaryAnd', '!=',
-                       'False', 'BinaryOr', 'Usub',
-                       'BinaryAnd', 'True', 'BinaryMin', '2.4', '<', 'BinaryOr', '1.0', '0.8', 'cartVel', '0', '>', 'BinaryAnd', '0.9', '-', 'False', 'BinaryAnd', 'cartPos', '2.0', 'True', 'True']
+                       'And', '0', '2',
+                       '<', 'Or',
+                       'cartVel', '0', 'True', 'And',
+                       'And', '!=',
+                       'False', 'Or', 'Usub',
+                       'And', 'True', 'Min', '2.4', '<', 'Or', '1.0', '0.8', 'cartVel', '0', '>', 'And', '0.9', '-', 'False', 'And', 'cartPos', '2.0', 'True', 'True']
         # tree_labels = ['Ifte',
-        #                'BinaryAnd', '0', '2',
-        #                '<', 'BinaryOr',
-        #                '*', '0', '>', 'BinaryAnd',
-        #                '6.0', 'cartVel', '*', '-', '<', 'BinaryOr',
-        #                'cartPos', 'cartVel', '~', '1.0372722469', 'tanh', 'cartVel', '>', 'BinaryOr',
-        #                'cartPos', '2.1365828912', 'BinaryMax', '*', '!=', 'BinaryAnd',
-        #                'cartPos', '*', 'Usub', 'cartPos', 'cartPos', 'cartVel', 'True', 'BinaryAnd',
-        #                'cartPos', '~', '2.0', '<=', 'BinaryAnd',
+        #                'And', '0', '2',
+        #                '<', 'Or',
+        #                '*', '0', '>', 'And',
+        #                '6.0', 'cartVel', '*', '-', '<', 'Or',
+        #                'cartPos', 'cartVel', '~', '1.0372722469', 'tanh', 'cartVel', '>', 'Or',
+        #                'cartPos', '2.1365828912', 'Max', '*', '!=', 'And',
+        #                'cartPos', '*', 'Usub', 'cartPos', 'cartPos', 'cartVel', 'True', 'And',
+        #                'cartPos', '~', '2.0', '<=', 'And',
         #                '0.1', '22.5', '~', '<', 'False',
         #                'cartVel', 'cartVel', '~', '0.0374348335']
         # fintree = self.karoo_tree_from_only_labellist(tree_labels)
@@ -80,13 +80,13 @@ class MountainCarExamples:
     tree_v2_expr_sym = 'Ifte(vel < 0.0, 0.0, 2.0)'
     tree_v2_expr_raw = '(Ifte(((vel)<(0.0)), (0.0), (Ifte((True), (2.0), (1.0)))))'
 
-    tree_v3_list = ['Ifte', 'BinaryAnd', '2', '0', '<=', '<=', 'BinaryMin', 'vel', 'vel', '+', '+', '-', '*', '0.7',
+    tree_v3_list = ['Ifte', 'And', '2', '0', '<=', '<=', 'Min', 'vel', 'vel', '+', '+', '-', '*', '0.7',
                     '*', '0.03', '*', '0.008', '-0.07', '**',
                     '-0.09', '**', '0.3', '**', '+', '2', '+', '2', '+', '4', 'pos', '0.38', 'pos', '0.25',
                     'pos', '0.9']
     tree_v3_modify = [0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
-    tree_v3_new = ['Ifte', 'BinaryAnd', 2, 0, '<=', '<=', 'BinaryMin', 'vel', 'vel', '+', '+', '-', '*', 0.7, '*',
+    tree_v3_new = ['Ifte', 'And', 2, 0, '<=', '<=', 'Min', 'vel', 'vel', '+', '+', '-', '*', 0.7, '*',
                    0.03, '*', 0.008, '-', '**', '-', '**', 0.3, '**', 0.07, '+', 2, 0.09, '+', 2, '+', 4,
                    'pos', 0.38, 'pos', 0.25, 'pos', 0.9]
 
@@ -99,7 +99,7 @@ class MountainCarExamples:
                     'vel': tf.constant(2.2, dtype=tf.float32),
                     'bl': tf.constant(True, dtype=tf.bool)}
 
-    expr_test1 = 'Ifte(1.019*(-0.09)**b*(0.98 - 0.13) + BinaryMin(b, pos) > -0.97, 0.0, 2.0)'
+    expr_test1 = 'Ifte(1.019*(-0.09)**b*(0.98 - 0.13) + Min(b, pos) > -0.97, 0.0, 2.0)'
 
 
 live_test = TestHelpers()

@@ -163,6 +163,8 @@ def _test_random_pop():
     action_round = 0
     kernel = RegressionKernel(use_RMSE_vs_MAE_sfeh, data_train, data_control, action_clip, action_round, action_name)
 
+    # sfeh:idea track total trees in lut and matches, maybe even check diversity?
+
     # ## Run/Computation restrictions
     pop_max = 100
     gen_max = 100

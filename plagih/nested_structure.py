@@ -38,9 +38,9 @@ class Nested:
 
     def __str__(self):
         try:
-            label_str = self.label.__name__
-        except Exception as ex:
-            label_str = self.label  # todo Float obj has no attr __name__
+            label_str = self.label.__name__  # sfeh: can str(label) work? -> str with args recursively?
+        except AttributeError as ex:
+            label_str = self.label  # because Terminals are obj -> 'Symbol' obj has no attr __name__
 
         if self.childs:
             childstr = ', '.join([str(x) for x in self.childs])
@@ -52,13 +52,8 @@ class Nested:
         _sym = self.label.insym
         if self.childs:
             _cs = [cc.get_sympy_expr() for cc in self.childs]
-            if self.label == Ifte:
-                try:
-                    _sym = _sym(*_cs)
-                except Exception as ex:
-                    _sym = _sym(*_cs)  # todo
-            else:
-                _sym = _sym(*_cs)
+            # if self.label == Ifte:
+            _sym = _sym(*_cs)
         else:
             if self.label.args:
                 _sym = self.label.get_sym()
@@ -249,18 +244,13 @@ def sympy_to_nsted(expr, allow_chain=False):
             if expr.is_Boolean:
                 return Nested(Boolean(expr_eval), [])
             elif expr.is_number:  # is_float does not match int
-                try:
-                    return Nested(Float(float(expr_eval)), [])  # sfeh round
-                except Exception as ex:
-                    # todo TypeError: Cannot convert complex to float
-                    return Nested(Float(float(expr_eval)), [])  # sfeh round
+                return Nested(Float(float(expr_eval)), [])  # sfeh round
+                # "TypeError: Cannot convert complex to float" -> ignore the whole expression, let it fail
             else:
                 print(f'XXX What happened here? {expr}')
                 raise
 
     else:
-
-        # todo FIRST check chainability!!
 
         if isinstance(expr, sympy.Piecewise):
             if allow_chain:

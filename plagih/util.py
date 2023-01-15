@@ -12,6 +12,7 @@ TEST_DUMMY = True  # sfeh: actually use this later! check trees, check if all op
 DELETE_ME = True  # sfeh:delete this when development phase is over
 PRINT_DUMMY = 'wwwwwaaagggggiiifff'  # sfeh:xxx
 PRECISION = 6
+FLOAT_PRECISION = 6  # sfeh use this
 
 
 def printyeah(message_type, message_str):
@@ -245,7 +246,7 @@ def print_e(txt):
     Printing errors that are not worth stopping by raising an exception
     BColors.FAIL
     """
-    print(f'{BColors.RED}ERROR!\n{BColors.WARNING}{txt}{BColors.RESET}\n')
+    print(f'{BColors.RED}ERROR! {BColors.WARNING}{txt}{BColors.RESET}')
 
 
 def pickle_load(path: Path):

@@ -62,7 +62,7 @@ import tensorflow as tf
 from plagih.util import get_subclasses, PRECISION
 
 # sfeh: check, if this leads to tf warnings
-tf.compat.v1.disable_eager_execution()  # was enable; enable not compatible with placeholders!
+tf.compat.v1.enable_eager_execution()  # sfeh possibly faster with disable
 
 
 class NodeBase:
@@ -201,7 +201,7 @@ class TerminalNode(NodeBase):  # sfeh sympy.Atom
 class Boolean(TerminalNode):
     # sfeh:discuss just for True/False?
     xtype = (tuple([]), bool)
-    insym = lambda *args: sympy.S.true if args[0] else ~sympy.S.true   # sympy.logic.boolalg.Boolean  # sfeh:discuss
+    insym = lambda *args: sympy.S.true if args[0] else ~sympy.S.true  # sympy.logic.boolalg.Boolean  # sfeh:discuss
     tflow = lambda x: tf.constant(x, dtype=tf.bool)
 
 
@@ -336,6 +336,7 @@ class Not(LogicOperator):
     tflow = tf.logical_not
     xtype = (tuple([bool]), bool)
 
+
 # todo annoying
 # class Eq(LogicOperator):
 #     insym = sympy.Eq
@@ -437,28 +438,37 @@ class Ifte(Operator):
 
 
 class Round(MathOperator):  # 'Round'
-    tflow = lambda a: tf.math.round(a, 1)
+    """sfeh:XXX this does not work
+    discuss:
+    - sympy.Integer(x)
+    - sympy.N(x, 1)
+        insym(Symbol('a'))
+        insym(1.23)
+        insym(sympy.Add(a, Symbol('a'))
+    -> Write custom round function that evaluates only when is_number
+    """
     xtype = (tuple([float]), float)
-    insym = lambda a: sympy.N(a, 0)
+    insym = lambda a: sympy.N(a, 1)
+    tflow = lambda a: tf.math.round(a, 1)
 
 
 class Log1p(MathOperator):
     # https://docs.sympy.org/latest/modules/codegen.html#sympy.codegen.cfunctions.log1p
-    tflow = tf.math.log1p
     xtype = (tuple([float]), float)
+    tflow = tf.math.log1p
     insym = lambda a: sympy.log(a + 1)
 
 
 class Div(MathOperator):
     tflow = tf.math.divide
-    xtype = (tuple([float, float]), float)
     insym = lambda a, b: sympy.Mul(a, 1 / b)
+    xtype = (tuple([float, float]), float)
 
 
 class Sqrt(MathOperator):
+    xtype = (tuple([float]), float)
     insym = sympy.sqrt
     tflow = tf.sqrt
-    xtype = (tuple([float]), float)
 
 
 # class Divide_no_nan(Operator):
@@ -469,9 +479,9 @@ class Sqrt(MathOperator):
 
 
 class Usub(Operator, sympy.Function):
+    xtype = (tuple([float]), float)
     tflow = tf.negative
     insym = lambda a: sympy.Mul(a, -1)
-    xtype = (tuple([float]), float)
 
 
 class Powrounded(Operator):
@@ -808,12 +818,6 @@ class BaseTree(NodeBase):
 
         return my_result + child_results
 
-    def get_labellist_breath(self):
-        label_list = []
-        max_depth = self.args_depth_max
-        for depth in range(0, max_depth + 1):
-            labels_at_depth = [x.label for x in self.get_nodes_at_depth(depth)]
-            label_list.extend(labels_at_depth)
     #
     #     return label_list
     #

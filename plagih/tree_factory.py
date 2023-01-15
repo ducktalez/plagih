@@ -75,17 +75,17 @@ def randomly_split_range(range_max, num_splits):
 
 def node_simplification(nsted):
     """
-# sfeh sympy-reconstruct patterns
-#   map symoy-sign to a sum
-#   map piecewise to if-then-else
-#   map power fractal - to sqrt?
+    # sfeh sympy-reconstruct patterns
+    #   map symoy-sign to a sum
+    #   map piecewise to if-then-else
+    #   map power fractal - to sqrt?
     (Tries to) simplify/reduce a tree. It is quite experimental
 
     SFEH Discussion
         # example: Tree sympification did not work: Reduced core is even more complex than before.
-        # expr_raw: sign(BinaryMin(((Velocity_2 * -0.790706) - sqrt(Gain_0)), (-0.569271 - Velocity_9)))
-        # old_core:[sign, [BinaryMin, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
-        # new_node: [sign, [BinaryMin, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.56921]]]
+        # expr_raw: sign(Min(((Velocity_2 * -0.790706) - sqrt(Gain_0)), (-0.569271 - Velocity_9)))
+        # old_core:[sign, [Min, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
+        # new_node: [sign, [Min, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.56921]]]
     """
     expr_sym = nsted.get_sympy_expr()
     nsted_rebuilt = sympy_to_nsted(expr_sym)
@@ -120,7 +120,7 @@ def evolve_reduce_simplify(nstruc: Nested, completely=True, force=False):
         return nstruc
     else:
         if len(tree_copy) < len(nstruc):
-            print_e(f'FFS Trees just become larger? {nstruc.__class__.__name__}')
+            print_e(f'sfeh Trees just become larger? {nstruc.__class__.__name__}')
             return tree_copy
         else:
             return nstruc
@@ -311,14 +311,11 @@ class TreeBuilder:
             try:
                 return self.choose_symbol(xt_out)
             except TypeError:
-                pass  # return a constant (maybe because there are no boolean observations)
+                pass  # return a constant (E.g. because there are no boolean observations)
 
         return self.choose_value(xt_out)
 
-    def invent_core_depth(self, xt_out, depth_goal, depth=0, p_full=1.0):  # sfeh:check grow method
-        """
-        # sfeh:discussion set path/id?
-        """
+    def invent_core_depth(self, xt_out, depth_goal, depth=0, p_full=1.0):
         if depth == self.depth_max or depth == depth_goal or random.random() > p_full:
             label = self.choose_term(xt_out)
             nsted = Nested(label, [], depth=depth)
@@ -374,10 +371,10 @@ class TreeBuilder:
         """
         evostruc = nsted_deepcopy(nsted)
 
+        # todo:chain only mutable nodes that are not chainable operators
         _nd = np.random.choice(evostruc.eval_mutable_nodes())
         xtype = _nd.get_xtype()
 
-        # todo chainable
         if _nd.get_arity() > 0:
             new_label = self.choose_op(xtype)  # Function is same type, same arity
         else:
@@ -704,7 +701,7 @@ class FinalizedTree:
 # def evonsted_from_nested_labels(nested_str, obs_list=None):
 #     """
 #     optional: op_dict + labels not in '' can be used to load the operators directly
-#     all_input_options = ['1', '0', '-1.132', 'True', 'False', 'vel', 'Ifte', 'max', 'BinaryMax', '-vel']
+#     all_input_options = ['1', '0', '-1.132', 'True', 'False', 'vel', 'Ifte', 'max', 'Max', '-vel']
 #     nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
 #     """
 #     evaled_expr = eval(nested_str)  # sfeh:discuss -> sympify? <- no
@@ -750,6 +747,6 @@ if __name__ == '__main__':
         print(tr)
         print(tr_new)
         if str(x) != str(x2):
-            print(x, '<-->', x2)
-            raise Exception('asfdasdfafdsafds')
+            print()
+            raise Exception(f'sympy process failed {x}, <-->, {x2}')
 

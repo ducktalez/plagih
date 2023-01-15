@@ -1,7 +1,7 @@
 """
 The factory to create trees
 """
-from plagih.nested_structure import NestedStruc
+from plagih.nested_structure import NestedStruc, sympy_to_nsted
 from plagih.plagih_tree import *
 from plagih.util import *
 from plagih.tree_complexity.tree_edit_distance import apted_distance
@@ -56,7 +56,8 @@ def randomly_split_range(range_max, num_splits):
 
         # sfeh workaround, this makes exactly the correct range by changing the most extreme entry
         imprecise_diff = range_max - sum(sample_dist)  # sfeh: this can be [0, 0, 0], which assigns to the 0th bin...
-        # sfeh:discussion: maybe this difference is 2 or larger more often than 1 (->rounding), so maybe while-loop (just check if it happens?)
+        # sfeh:discussion: maybe this difference is 2 or larger more often than 1 (->rounding),
+        # so maybe while-loop (just check if it happens?)
         if imprecise_diff != 0:
             if sum(sample_dist) < range_max:
                 # sfeh:minor mistake: if relatively empty, this appends to the first bin
@@ -86,9 +87,8 @@ def node_simplification(nsted):
         # old_core:[sign, [BinaryMin, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
         # new_node: [sign, [BinaryMin, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.56921]]]
     """
-    expr_raw = nsted.eval_expr_str()
-    expr_sym = expr_sympify(expr_raw)
-    # node_rebuilt = nsted_from_nested_labels(nested_labels)
+    expr_sym = nsted.get_sympy_expr()
+    node_rebuilt = sympy_to_nsted(expr_sym)
     # node_rebuilt = node_rebuilt.update_fixed_nodes(node)  # this is not our problem
 
     return
@@ -165,7 +165,7 @@ class TreeBuilder:
             has_f2b = any([float in x[0] and bool == x[1] for x in opxtypes])
             has_b2f = any([bool in x[0] and float == x[1] for x in opxtypes])
             if not all([has_2f, has_2b, has_f2b, has_b2f]):
-                logging.warning(f'Loaded operators do not feature both numeric (float) and Boolean type.')
+                logging.warning(f'Loaded operators do not feature both numeric (float) and bool type.')
             if all([has_2f, has_2b]) and not all([has_f2b or has_b2f]):
                 raise Exception(f'Loaded operators do not allow closure!')
 
@@ -223,9 +223,9 @@ class TreeBuilder:
                 choose_oparray[o][1] = [x / sum(p[1]) for x in p[1]]
 
         self.operators = {}
-        for xtype, x in choose_oparray.items():
+        for xtype, _opx in choose_oparray.items():
             # self.operators[xtype_out] = lambda: np.random.choice(x[0], p=x[1])  # "seloplam" faster, but less readable
-            self.operators[xtype] = (x[0], x[1])
+            self.operators[xtype] = (_opx[0], _opx[1])
 
         obs_list = [x for x in obs_names]
 
@@ -241,7 +241,7 @@ class TreeBuilder:
 
     def constants_add_data_samples(self, obs_infos, data_train, n_samples=100):
         """
-        ONLY floats, because ...why would you want to load Boolean True/False samples.
+        ONLY floats, because ...why would you want to load True/False samples.
         (okay, it might make sense as it better represents the actual distribution- NO FUCK IT.)
         """
         if obs_infos is not None:
@@ -303,16 +303,11 @@ class TreeBuilder:
         value = np.random.choice(self.distributions[xtype])()
         # value = random.choice(self.distributions[xtype])()
         if xtype == float:
-           return Float(round(value, PRECISION))
-           # return NestedStruc(Float, childs=value)
+            return Float(round(value, PRECISION))
         elif xtype == bool:
             return Boolean(value)
 
     def choose_term(self, xtype, p_observation=0.5):
-        """
-        sfeh: precision not required?
-        # sfeh 50% chance observatio    n/value
-        """
         if random.random() < p_observation:
             try:
                 return self.choose_symbol(xtype)
@@ -327,11 +322,11 @@ class TreeBuilder:
         """
         if depth == self.depth_max or depth == depth_goal or random.random() > p_full:
             label = self.choose_term(xt)
-            nsted = NestedStruc(label, childs=[], depth=depth)
+            nsted = NestedStruc(label, [], depth=depth)
         else:
             label = self.choose_op(xt)  # self.choose_any(xtype, p_full)
             childs = [self.invent_core_depth(xt, depth_goal, p_full=p_full, depth=depth + 1) for xt in label.xtype[0]]
-            nsted = NestedStruc(label, childs=childs, depth=depth)  # , depth=depth sfeh no depth?
+            nsted = NestedStruc(label, childs, depth=depth)  # , depth=depth sfeh no depth?
 
         return nsted
 
@@ -550,10 +545,9 @@ class TreeBuilder:
 
 class TreeMeta:
 
-    def __init__(self, fitness, parsimony, expr_raw, expr_sym):
+    def __init__(self, fitness, parsimony, expr_sym):
         self.fitness = fitness
         self.parsimony = parsimony
-        self.expr_raw = expr_raw
         self.expr_sym = expr_sym
         self.last_evolution = deque([], maxlen=10)  # sfeh:open
 
@@ -566,7 +560,6 @@ class TreeMeta:
     def reset(self):
         self.fitness = None
         self.parsimony = None
-        self.expr_raw = None
         self.expr_sym = None
         # self.last_evolution = deque([], maxlen=10)
 
@@ -595,7 +588,7 @@ class FinalizedTree:
         """Show the Fitness and Parsimony of a tree"""
         return f'[{self.get_parsimony():2.1f}: fit {self.get_fitness():4.2f}]'
 
-    def get_nsted(self):
+    def get_evotree(self):
         return self.tree
 
     def append_tag(self, tag):
@@ -738,5 +731,16 @@ if __name__ == '__main__':
                       '["Ifte", ["Not", [False]], [0.0], [2.0]]']
 
     tb = TreeBuilder(['a', 'b'], 10, 30, float)
-    tr = tb.pop_random_depth(4, float, p_full=0.7)
-    print(str(tr))
+    tr = NestedStruc(Add, [NestedStruc(Symbol('a'), []), NestedStruc(Float(1.23), [])])
+    x = tr.get_sympy_expr()
+    tr2 = sympy_to_nsted(x)
+    print(tr, tr2)
+    for _ in range(10):
+        tr = tb.pop_random_depth(3, float, p_full=0.7)
+        x = tr.get_sympy_expr()
+        tr_new = sympy_to_nsted(x)
+        # x2 = tr_new.get_sympy_expr()
+        print(tr)
+        print(tr_new)
+        print()
+

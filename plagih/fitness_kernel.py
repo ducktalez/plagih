@@ -56,6 +56,7 @@ class Kernel:
         self.tf_device = tf_device
 
         self.data_train = data_train
+        self.tensor_dict = data_train.to_dict('list')
         self.data_control = data_control  # sfeh: currently not used
 
         # sfeh:better solution...
@@ -131,7 +132,7 @@ class RegressionKernel(Kernel):
         """
         # tf.compat.v1.reset_default_graph()  # sfeh:xxx is this really required to do? legacy code
 
-        results_raw = sympy_to_tensorflow(expr, self.data_train)
+        results_raw = sympy_to_tensorflow(expr, self.tensor_dict)  # self.data_train
         results = results_raw  # The ids change in the next lines! {id(results)} vs. {id(results_raw)}
 
         if self.action_round is not None:
@@ -156,7 +157,7 @@ class RegressionKernel(Kernel):
                 tf_results = sess.run(
                     {'pairwise_diff': pairwise_diff,
                      'results': results,
-                     'mean_error': mean_error})
+                     'mean_error': mean_error})  # no feed_dict
 
         fitness = tf_results['mean_error']
 

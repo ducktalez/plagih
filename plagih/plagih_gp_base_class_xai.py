@@ -93,7 +93,7 @@ class ExplainableGP:
 
             if len(self.paretofront) == 0:
                 self.paretofront = [self.pop_next[0]]  # initialize
-                printez('a', f'Starting a new paretofront with parsimony: {self.paretofront[0].get_parsimony()} '
+                printez('a', f'Starting a new paretofront with parsimony: {self.pop_next[0].get_parsimony()} '
                              f'fitness: {self.paretofront[0].get_fitness():6.4f}')
 
             # tmp_pareto = pareto_from_pop(self.pop_next)  # sfeh:idea paretofront in each generation?
@@ -199,7 +199,7 @@ class ExplainableGP:
 
             @self.create_trees(0.5)
             def rand2():
-                return [self.tb.pop_random_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 5), p_full=1)]
+                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 5), p_full=1)
         return
 
     def lut_to_meta(self, evotree):
@@ -244,7 +244,7 @@ class ExplainableGP:
                     # self.printpl('ggggg', f'Success with tree: {evotree}')
                     n_success += 1
                 except (ValueError, ArithmeticError, TypeError) as ex:
-                    n_fails += 1
+                    n_fails += 1  # sfeh:use this for something?
 
         return loop
 
@@ -482,10 +482,12 @@ class ExplainableGP:
         parsimony = eval_parsimony(evotree, self.complexity_measure, origin_tree=self.origintree)
         if parsimony > self.tb.nodeamount_max:
             # sfep:discuss: information about last evolution? currently not saved in tree. Is this not autopruned?
-            raise ValueError(f'Tree too complex: {parsimony} > {self.tb.nodeamount_max}')
+            raise ValueError(f'Tree too complex: {parsimony} > {self.tb.nodeamount_max}')  # sfeh print evolution
 
-        expr_raw = evotree.eval_expr_str()
-        expr_sym = expr_sympify(expr_raw)
+        # expr_raw = evotree.eval_expr_str()
+        # expr_sym = expr_sympify(expr_raw)
+
+        expr_sym = evotree.get_sympy_expr()
 
         try:
             fitness = self.kernel.eval_tf(expr_sym)['mean_error']
@@ -500,7 +502,7 @@ class ExplainableGP:
         except Exception as ex:
             raise Exception(f'eval-ex: {ex}')
 
-        meta = TreeMeta(fitness=fitness, parsimony=parsimony, expr_raw=expr_raw, expr_sym=expr_sym)
+        meta = TreeMeta(fitness=fitness, parsimony=parsimony, expr_sym=expr_sym)  # expr_raw=expr_raw is ignored
 
         self.lut[str(evotree)] = meta  # sfeh:discuss: lut update in finalize_tree_get_meta()?
 
@@ -565,5 +567,3 @@ if __name__ == '__main__':
     # nstr = "['Ifte', ['<', ['*', [2.85], ['vel']], ['Square', ['vel']]], ['*', ['pos'], ['*', ['pos'], [0.014]]], ['/', [2.0], ['pos']]]"
     # nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
     nstr = '["+:fix",["-:fix",["Ifte",["True"],["sin",["2"]],["/",["2.043"],["4"]]],["cartVel"]],["-1.3"]]'
-    tr = evotree_from_nested_labels(nstr)
-    check_tree_loadable_reconstruction(tr)

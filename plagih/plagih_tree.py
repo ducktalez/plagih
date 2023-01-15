@@ -62,7 +62,7 @@ import tensorflow as tf
 from plagih.util import get_subclasses, PRECISION
 
 # sfeh: check, if this leads to tf warnings
-tf.compat.v1.enable_eager_execution()
+tf.compat.v1.disable_eager_execution()  # was enable; enable not compatible with placeholders!
 
 
 class NodeBase:
@@ -365,13 +365,13 @@ class Or(LogicOperator):
 
 
 class Ne(RelationalOperator):
-    insym = sympy.Ne  # sympy.Unequality
+    insym = sympy.Ne
     tflow = tf.not_equal
     xtype = (tuple([bool, bool]), bool)
 
 
 class Lt(RelationalOperator):
-    insym = sympy.Lt  # sympy.StrictLessThan
+    insym = sympy.Lt
     tflow = tf.less
     xtype = (tuple([float, float]), bool)
 
@@ -543,7 +543,6 @@ def expr_sympify(expr):
 #  sympy.numbers.Catalan: tensorflow.constant(sympy.numbers.Catalan),
 #  sympy.numbers.NaN: tensorflow.constant(sympy.numbers.NaN),
 
-
 totf = {
     # sympy.Symbol: 'tf': lambda x: tf.cons
     sympy.Min: tf.minimum,
@@ -583,7 +582,7 @@ totf = {
 }
 
 
-def sympy_to_tensorflow(expr, pandas_df):
+def sympy_to_tensorflow(expr, tensor_dict):
     """
     - check terminal-node
     -- check symbol
@@ -621,20 +620,26 @@ def sympy_to_tensorflow(expr, pandas_df):
     # ==Terminal nodes==
     elif expr.is_Atom:
         if expr.is_Symbol:
-            result = pandas_df[expr.name]  # sfeh:discuss placeholder
+            # result = feed_dict[expr.name]  # sfeh:discuss placeholder
+
+            # result = tf.compat.v1.placeholder(tf.bool, name=str(expr))
+            # result = tf.constant(tensor_dict[str(expr)], dtype=tf.bool if expr.assumptions0.get('bool') else tf.float32)  # sfeh:runtime?
+            result = tf.constant(tensor_dict[str(expr)], dtype=tf.bool if expr.assumptions0.get('bool') else tf.float32)
             return result
 
         else:
             expr_eval = expr.evalf()  # standard 15 digits
             if expr.is_Boolean:
                 return tf.constant(expr_eval, dtype=tf.dtypes.bool)
-            else:  # float
+            elif expr.is_number:  # is_float does not match int
                 return tf.constant(float(expr_eval), dtype=tf.dtypes.float32)
+            else:
+                print(f'XXX What happened here? {expr}')
 
     else:  # Operator # len(expr.args) > 0:  # sfeh: line can be removed or replaced
         if isinstance(expr, sympy.Piecewise):
             _revlist = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
-            _revlist = [[sympy_to_tensorflow(xx, pandas_df) for xx in list(x)] for x in _revlist]
+            _revlist = [[sympy_to_tensorflow(xx, tensor_dict) for xx in list(x)] for x in _revlist]
             otherwise = _revlist[0][0]  # the last "True" condition
             for x in _revlist[1:]:
                 otherwise = tf.where(x[1], x[0], otherwise)
@@ -651,7 +656,7 @@ def sympy_to_tensorflow(expr, pandas_df):
             #     # -> sympy.conjugate
             #     tf_fun = expr.tflow  # sfeh:delete? delete case above? ### max,
 
-        tf_args = [sympy_to_tensorflow(x, pandas_df) for x in expr.args]
+        tf_args = [sympy_to_tensorflow(x, tensor_dict) for x in expr.args]
         try:
             result = tf_fun(*tf_args)  # fits, if the arguments match the expected arguments exactly Add(a, b)
         except TypeError:
@@ -917,6 +922,7 @@ class BaseTree(NodeBase):
 
 
 if __name__ == '__main__':
+    import inspect
 
     ns = {
         'a': sympy.Symbol('a', real=True),
@@ -925,12 +931,19 @@ if __name__ == '__main__':
         'd': sympy.Symbol('d', bool=True),
     }
 
+    # tensors = {
+    #     'a': tf.constant([1.0, 2, 3, 4, 5, 6], dtype=tf.dtypes.float32),
+    #     'b': tf.constant([-1.0, -2, -3, -4, -5, -6], dtype=tf.float32),
+    #     'c': tf.constant([True, False, True, False, True, False], dtype=tf.dtypes.bool),
+    #     'd': tf.constant([True, True, True, True, True, True], dtype=tf.dtypes.bool)
+    # }` # sfeh are tensors actually better??
+
     tensors = {
-        'a': tf.constant([1.0, 2, 3, 4, 5, 6], dtype=tf.dtypes.float32),
-        'b': tf.constant([-1.0, -2, -3, -4, -5, -6], dtype=tf.float32),
-        'c': tf.constant([True, False, True, False, True, False], dtype=tf.dtypes.bool),
-        'd': tf.constant([True, True, True, True, True, True], dtype=tf.dtypes.bool)
-    }
+        'a': [1.0, 2, 3, 4, 5, 6],
+        'b': [-1.0, -2, -3, -4, -5, -6],
+        'c': [True, False, True, False, True, False],
+        'd': [True, True, True, True, True, True]}
+
     tst = [
         '5', '1', '0', '0.5', '-1', 'True', 'False',
         'c & True', 'c | False', '~c',
@@ -994,21 +1007,16 @@ if __name__ == '__main__':
 
     def print_relevant_subclasses():
 
-        l = [x.get_nclass() for x in get_subclasses(Operator)]
-        print(f'loadable_strings = {l}')
-        c = [x.__name__ for x in get_subclasses(Operator)]
-        print(f'operator_classes = {c}')
-        d = dict(zip(l, c))
-        d = ', '.join([f"'{k}': {v}" for k, v in d.items()])
-        print(f'loadable_ops_dict = {{{d}}}')
-        # sfeh: matches sympy/tenorflow
         st = {}
         for x in get_subclasses(Operator):
             try:
+                # st[f'{x.insym.__name__}'] = x.__name__  # x.tflow.__name__
+
                 st[f'sympy.{x.insym.__name__}'] = x.__name__  # x.tflow.__name__
             except AttributeError as ex:
                 print(f'Could not get {x}: {ex}')
-                st[x.__name__] = x.__name__
+                # st[x.__name__] = x.__name__
+                pass
         st = ', '.join([f"{k}: {v}" for k, v in st.items()])
         print(f'sympy_to_node = {{{st}}}')
 
@@ -1019,18 +1027,18 @@ if __name__ == '__main__':
     # # sfeh:xxx why are node classes all in memory, is that bad? use__neew__()?
 
     # x = Add(childs=[Symbol('a'), Mul(childs=[2, 3])])
-    n1 = Float()
-    n2 = Symbol()
-    n3 = Boolean()
-    n4 = Add()
-    print(n1, n2, n3, n4)
-    print(len(n1), len(n4))
-    n1 = Float(1.23)
-    n2 = Symbol('a')
-    n3 = Boolean(True)
-    n4 = Add(n1, n2)
-    print(n1, n2, n3, n4)
-    print(len(n1), len(n4))
+    # n1 = Float()
+    # n2 = Symbol()
+    # n3 = Boolean()
+    # n4 = Add()
+    # print(n1, n2, n3, n4)
+    # print(len(n1), len(n4))
+    # n1 = Float(1.23)
+    # n2 = Symbol('a')
+    # n3 = Boolean(True)
+    # n4 = Add(n1, n2)
+    # print(n1, n2, n3, n4)
+    # print(len(n1), len(n4))
 
     # n4 = Add(n1, n2)
     # print(n4.get_str_recursive())
@@ -1061,3 +1069,4 @@ if __name__ == '__main__':
     #         print(f'{_subc.__name__}')
     #
     # print(type(RelationalOperator))
+    print_relevant_subclasses()

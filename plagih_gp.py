@@ -179,8 +179,8 @@ def _test_random_pop():
     # '["Ifte",["<",["cartVel"],["0"]],["0"],["2"]]'
     # '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]'
     # sfeh:open give user feedback for tree
-    origin_tree = Ifte(Le(Symbol('cartVel'), Float(0)), Float(0), Float(2))
-    # origin_tree = None
+    # origin_tree = Ifte(Le(Symbol('cartVel'), Float(0)), Float(0), Float(2))
+    origin_tree = None
 
     # tree construction complexity
     obs_names = ['cartVel', 'cartPos']

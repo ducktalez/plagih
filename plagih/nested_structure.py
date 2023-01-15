@@ -36,6 +36,25 @@ class NestedStruc:
 
         return f"[{label_str}]"
 
+    def get_sympy_expr(self):
+        _sym = self.label.insym
+        if self.childs:
+            _cs = [cc.get_sympy_expr() for cc in self.childs]
+            _sym = _sym(*_cs)
+        elif self.label.args:
+            _cs = self.label.args
+            try:
+                _sym = _sym(_cs[0])
+            except Exception as ex:
+                try:
+                    _sym = _sym(self.label)  # todo
+                    print('bbbbbbb')
+                except Exception as ex:
+                    _sym = _sym()  # todo
+        else:
+            raise
+        return _sym
+
     def repr_str(self):
         pass
 
@@ -197,7 +216,83 @@ class NestedStruc:
             pass
 
 
+def sympy_to_nsted(expr):
+    if isinstance(expr, bool):
+        _r = Symbol(expr)
+        return NestedStruc(_r, [])
+    if isinstance(expr, sympy.logic.boolalg.BooleanAtom):
+        expr = True if isinstance(expr, (bool, sympy.logic.boolalg.BooleanTrue)) else False
+        _r = Boolean(expr)
+        return NestedStruc(_r, [])
+
+    # the following lines are not required, if sympy filters for bad expressions earlier
+    # if expr.is_imaginary or expr.is_infinite:
+    #     raise ValueError(f'Cannot convert this to Tensorflow: {expr}')
+
+    # ==Terminal nodes==
+    elif expr.is_Atom:
+        if expr.is_Symbol:
+            _r = Symbol(expr)
+            # _r = NestedStruc(Symbol(), [expr])
+        else:
+            expr_eval = expr.evalf()  # standard 15 digits
+            if expr.is_Boolean:
+                _r = Boolean(expr_eval)
+                # _r = NestedStruc(Boolean(), [expr])
+            elif expr.is_number:  # is_float does not match int
+                _r = Float(float(expr_eval))  # sfeh round
+                # _r = NestedStruc(Float(), [float(expr)])
+            else:
+                print(f'XXX What happened here? {expr}')
+                raise
+        return NestedStruc(_r, [])
+
+    else:
+        sptonode = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: sign, sympy.log: log, sympy.Mul: Mul,
+                    sympy.Xor: Xor, sympy.Not: Not, sympy.Equality: Eq, sympy.And: And, sympy.Or: Or,
+                    sympy.Unequality: Ne, sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
+                    sympy.GreaterThan: Ge, sympy.cos: cos, sympy.sin: sin, sympy.tan: tan, sympy.acos: acos,
+                    sympy.asin: asin, sympy.atan: atan, sympy.tanh: tanh, sympy.sinh: sinh, sympy.cosh: cosh,
+                    sympy.Min: Min, sympy.Max: Max}
+        stn_keys = tuple(sptonode.keys())
+
+        if isinstance(expr, sympy.Piecewise):
+            _revlist = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
+            _revlist = [[sympy_to_nsted(xx) for xx in list(x)] for x in _revlist]
+            otherwise = _revlist[0][0]  # the last "True" condition
+            for x in _revlist[1:]:
+                otherwise = NestedStruc(Ifte, [x[1], x[0], otherwise])
+            return otherwise
+
+        elif isinstance(expr, stn_keys):
+
+            clss = sptonode[type(expr)]
+            args = [sympy_to_nsted(x) for x in expr.args]
+
+            try:
+                _r = NestedStruc(clss, args)
+            except TypeError:
+                result = args.pop()  # only commutative arity-2 functions here (Add, Mul, Max, Min)
+                while args:
+                    # sfeh:optimization
+                    _r = clss(result, args.pop())
+        else:
+            raise NotImplementedError(f'Expr missing: {expr}')
+        return _r
+
+
 if __name__ == '__main__':
-    x = NestedStruc(Add(), depth=0, childs=[Symbol('a'), Float(2.2)])
-    # x = NestedStruc(Symbol(), childs=['a'])
-    print(x)
+    # x = NestedStruc(Add(), depth=0, childs=[Symbol('a'), Float(2.2)])
+    # # x = NestedStruc(Symbol(), childs=['a'])
+    # print(x)
+    sptonode = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: sign, sympy.log: log, sympy.Mul: Mul,
+                sympy.Xor: Xor, sympy.Not: Not, sympy.Equality: Eq, sympy.And: And, sympy.Or: Or,
+                sympy.Unequality: Ne, sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
+                sympy.GreaterThan: Ge, sympy.cos: cos, sympy.sin: sin, sympy.tan: tan, sympy.acos: acos,
+                sympy.asin: asin, sympy.atan: atan, sympy.tanh: tanh, sympy.sinh: sinh, sympy.cosh: cosh,
+                sympy.Min: Min, sympy.Max: Max}
+    todo = {sympy.sqrt: Sqrt}
+    stn_keys = tuple(sptonode.keys())
+    for x in stn_keys:
+        lel = 4.5
+        print(x, isinstance(lel, x))

@@ -28,7 +28,7 @@ class NestedStruc:
         try:
             label_str = self.label.__name__
         except Exception as ex:
-            label_str = self.label
+            label_str = self.label  # todo Float obj has no attr __name__
 
         if self.childs:
             childstr = ', '.join([str(x) for x in self.childs])
@@ -41,18 +41,31 @@ class NestedStruc:
         if self.childs:
             _cs = [cc.get_sympy_expr() for cc in self.childs]
             _sym = _sym(*_cs)
-        elif self.label.args:
-            _cs = self.label.args
-            try:
-                _sym = _sym(_cs[0])
-            except Exception as ex:
-                try:
-                    _sym = _sym(self.label)  # todo
-                    print('bbbbbbb')
-                except Exception as ex:
-                    _sym = _sym()  # todo
         else:
-            raise
+            if self.label.args:
+                # _cs = self.label.args
+                # try:
+                #     _sym = _sym(_cs[0])
+                # except Exception as ex:
+                #     try:
+                #         _sym = _sym(self.label)  # todo
+                #         print('bbbbbbb')
+                #     except Exception as ex:
+                #         try:
+                #             _sym = _sym()  # todo
+                #         except Exception as ex:
+                #             try:
+                #                 _sym = _sym(_cs)  # todo
+                #             except Exception as ex:
+                #                 _sym = _sym(_cs)  # todo
+                _sym = self.label.get_sym()
+                _sym = _sym(*self.label.args)
+                # try:
+                #     _sym = _sym(*self.label.args)
+                # except Exception as ex:
+                #     _sym = _sym(*self.label.args)
+            else:
+                raise
         return _sym
 
     def repr_str(self):
@@ -218,7 +231,7 @@ class NestedStruc:
 
 def sympy_to_nsted(expr):
     if isinstance(expr, bool):
-        _r = Symbol(expr)
+        _r = Boolean(expr)
         return NestedStruc(_r, [])
     if isinstance(expr, sympy.logic.boolalg.BooleanAtom):
         expr = True if isinstance(expr, (bool, sympy.logic.boolalg.BooleanTrue)) else False
@@ -232,7 +245,7 @@ def sympy_to_nsted(expr):
     # ==Terminal nodes==
     elif expr.is_Atom:
         if expr.is_Symbol:
-            _r = Symbol(expr)
+            _r = Symbol(str(expr))  # sfeh str VERY important!!
             # _r = NestedStruc(Symbol(), [expr])
         else:
             expr_eval = expr.evalf()  # standard 15 digits
@@ -270,7 +283,7 @@ def sympy_to_nsted(expr):
             args = [sympy_to_nsted(x) for x in expr.args]
 
             try:
-                _r = NestedStruc(clss, args)
+                return NestedStruc(clss, args)
             except TypeError:
                 result = args.pop()  # only commutative arity-2 functions here (Add, Mul, Max, Min)
                 while args:
@@ -278,7 +291,6 @@ def sympy_to_nsted(expr):
                     _r = clss(result, args.pop())
         else:
             raise NotImplementedError(f'Expr missing: {expr}')
-        return _r
 
 
 if __name__ == '__main__':

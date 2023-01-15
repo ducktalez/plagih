@@ -88,10 +88,10 @@ def node_simplification(nsted):
         # new_node: [sign, [BinaryMin, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.56921]]]
     """
     expr_sym = nsted.get_sympy_expr()
-    node_rebuilt = sympy_to_nsted(expr_sym)
+    nsted_rebuilt = sympy_to_nsted(expr_sym)
     # node_rebuilt = node_rebuilt.update_fixed_nodes(node)  # this is not our problem
 
-    return
+    return nsted_rebuilt
 
 
 def evolve_reduce_simplify(nstruc: NestedStruc, completely=True, force=False):
@@ -731,16 +731,17 @@ if __name__ == '__main__':
                       '["Ifte", ["Not", [False]], [0.0], [2.0]]']
 
     tb = TreeBuilder(['a', 'b'], 10, 30, float)
-    tr = NestedStruc(Add, [NestedStruc(Symbol('a'), []), NestedStruc(Float(1.23), [])])
-    x = tr.get_sympy_expr()
-    tr2 = sympy_to_nsted(x)
-    print(tr, tr2)
+    # tr = NestedStruc(Add, [NestedStruc(Symbol('a'), []), NestedStruc(Float(1.23), [])])
+    # x = tr.get_sympy_expr()
+    # tr2 = sympy_to_nsted(x)
+    # print(tr, tr2)
     for _ in range(10):
         tr = tb.pop_random_depth(3, float, p_full=0.7)
         x = tr.get_sympy_expr()
+        print('First sym success')
         tr_new = sympy_to_nsted(x)
-        # x2 = tr_new.get_sympy_expr()
+        x2 = tr_new.get_sympy_expr()
         print(tr)
         print(tr_new)
-        print()
+        print(x, x2)
 

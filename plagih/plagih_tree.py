@@ -121,6 +121,25 @@ class NodeBase:
 
         return _sym
 
+    def get_sym(self):
+        _sym = self.insym
+        # if self.args:
+        #     print(self.args, len(self.args), 'asd')
+        #     if issubclass(self.__class__, Operator):
+        #         _sym = _sym(*[x.get_sym() for x in self.args])
+        #
+        #     elif issubclass(type(self), TerminalNode):
+        #         try:
+        #             _sym = _sym(self.args[0])
+        #         except Exception as ex:
+        #             _sym = _sym()(self.args[0])
+        #
+        #     else:
+        #         raise
+        # else:
+        #     pass
+        return _sym
+
     def get_symstr(self):
         return self.insym.__name__
 
@@ -187,7 +206,7 @@ class TerminalNode(NodeBase):  # sfeh sympy.Atom
 class Boolean(TerminalNode):
     # sfeh:discuss just for True/False?
     xtype = (None, bool)
-    insym = lambda x: True if x else False  # sympy.logic.boolalg.Boolean  # sfeh:discuss
+    insym = lambda *args: sympy.S.true if args[0] else ~sympy.S.true   # sympy.logic.boolalg.Boolean  # sfeh:discuss
     tflow = lambda x: tf.constant(x, dtype=tf.bool)
 
 
@@ -204,7 +223,7 @@ class Symbol(TerminalNode):
         self.name = nlabl if nlabl[0] != '-' else nlabl[1:]
         sfeh:xxx option here for type float/bool
     """
-    insym = sympy.Symbol  # lambda x: sympy.Symbol(*x, real=True, imaginary=False)  # sfeh: real=/imaginary= -> faster
+    insym = sympy.Symbol  # (x, real=True, imaginary=False)  # sfeh: real=/imaginary= -> faster
     tflow = lambda x: tf.constant(x, dtype=tf.float32 if isinstance(x, float) else tf.bool)
     xtype = (tuple([]), float)
 
@@ -1026,19 +1045,21 @@ if __name__ == '__main__':
     #
     # # sfeh:xxx why are node classes all in memory, is that bad? use__neew__()?
 
-    # x = Add(childs=[Symbol('a'), Mul(childs=[2, 3])])
-    # n1 = Float()
-    # n2 = Symbol()
-    # n3 = Boolean()
-    # n4 = Add()
-    # print(n1, n2, n3, n4)
-    # print(len(n1), len(n4))
-    # n1 = Float(1.23)
-    # n2 = Symbol('a')
-    # n3 = Boolean(True)
-    # n4 = Add(n1, n2)
-    # print(n1, n2, n3, n4)
-    # print(len(n1), len(n4))
+    x = Add(childs=[Symbol('a'), Mul(childs=[2, 3])])
+    n1 = Float()
+    n2 = Symbol()
+    n3 = Boolean()
+    n4 = Add()
+    print(n1, n2, n3, n4)
+    print('dsaasd', n1.get_sym(), n2.get_sym(), n3.get_sym(), n4.get_sym())
+    print(len(n1), len(n4))
+    n1 = Float(1.23)
+    n2 = Symbol('a')
+    n3 = Boolean(True)
+    n4 = Add(n1, n2)
+    print(n1, n2, n3, n4)
+    print('ssssss', n1.get_sym(), n2.get_sym(), n3.get_sym(), n4.get_sym())
+    print(len(n1), len(n4))
 
     # n4 = Add(n1, n2)
     # print(n4.get_str_recursive())
@@ -1069,4 +1090,4 @@ if __name__ == '__main__':
     #         print(f'{_subc.__name__}')
     #
     # print(type(RelationalOperator))
-    print_relevant_subclasses()
+    # print_relevant_subclasses()

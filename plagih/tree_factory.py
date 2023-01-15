@@ -1,7 +1,7 @@
 """
 The factory to create trees
 """
-from plagih.nested_structure import NestedStruc, sympy_to_nsted
+from plagih.nested_structure import Nested, sympy_to_nsted
 from plagih.plagih_tree import *
 from plagih.util import *
 from plagih.tree_complexity.tree_edit_distance import apted_distance
@@ -13,7 +13,7 @@ import copy
 import numpy as np
 
 
-def eval_parsimony(tree: NestedStruc, complexity_measure, origin_tree=None):
+def eval_parsimony(tree: Nested, complexity_measure, origin_tree=None):
     """
     complexity_measure: compute the chosen distance by the user.
     #     'tree_node_count': tree_get_size,
@@ -94,7 +94,7 @@ def node_simplification(nsted):
     return nsted_rebuilt
 
 
-def evolve_reduce_simplify(nstruc: NestedStruc, completely=True, force=False):
+def evolve_reduce_simplify(nstruc: Nested, completely=True, force=False):
     """
     # sfeh:open this function does currently not work
     Reducing a fintree to its most basic form with sympify.
@@ -105,7 +105,7 @@ def evolve_reduce_simplify(nstruc: NestedStruc, completely=True, force=False):
     if completely:  # reduce the complete fintree
         nodes_lv0 = nstruc.get_nodes_at_depth(0, allow_fixed=False)  # only required for fixed-core trees
         for cc in nodes_lv0:
-            cc.set_new_node(node_simplification(cc))
+            cc.set_new_nested(node_simplification(cc))
     else:
         # # this was implemented for runtime, to prevent simplifing leaf nodes
         # functions = [x for x in nodes if x.get_arity() > 0]
@@ -115,7 +115,7 @@ def evolve_reduce_simplify(nstruc: NestedStruc, completely=True, force=False):
         nd_list = nstruc.eval_mutable_nodes()
         nd_list = [x for x in nd_list if x.get_arity() > 0]  # ignoring leaf nodes
         nd = np.random.choice(nd_list)
-        nd.set_new_node(node_simplification(nd))  # sfeh chosen must be set again? or not? test it at least.
+        nd.set_new_nested(node_simplification(nd))  # sfeh chosen must be set again? or not? test it at least.
     if force:
         return nstruc
     else:
@@ -126,7 +126,7 @@ def evolve_reduce_simplify(nstruc: NestedStruc, completely=True, force=False):
             return nstruc
 
 
-def nsted_deepcopy(nsted: NestedStruc):
+def nsted_deepcopy(nsted: Nested):
     _cpy = copy.deepcopy(nsted)
     return _cpy
 
@@ -186,7 +186,7 @@ class TreeBuilder:
                              # sympy extra classes (Capitalized)
                              Round: 0.5,
                              And: 1, Or: 1, Not: 0.5,
-                             Eq: 1, Ne: 0.5,
+                             # Eq: 1,  # Ne: 0.5,
                              Lt: 0.5, Le: 0.5, Gt: 0.1, Ge: 0.1,
                              Ifte: 2,
                              Min: 1, Max: 1}
@@ -322,11 +322,11 @@ class TreeBuilder:
         """
         if depth == self.depth_max or depth == depth_goal or random.random() > p_full:
             label = self.choose_term(xt)
-            nsted = NestedStruc(label, [], depth=depth)
+            nsted = Nested(label, [], depth=depth)
         else:
             label = self.choose_op(xt)  # self.choose_any(xtype, p_full)
             childs = [self.invent_core_depth(xt, depth_goal, p_full=p_full, depth=depth + 1) for xt in label.xtype[0]]
-            nsted = NestedStruc(label, childs, depth=depth)  # , depth=depth sfeh no depth?
+            nsted = Nested(label, childs, depth=depth)  # , depth=depth sfeh no depth?
 
         return nsted
 
@@ -345,12 +345,12 @@ class TreeBuilder:
 
         else:  # nodeops_max > 0:
             operator_amount_left -= 1
-            nodeops_split = randomly_split_range(operator_amount_left, label.arity)
+            nodeops_split = randomly_split_range(operator_amount_left, len(label.xtype[0]))
 
             for ii, xt_child in enumerate(label.xtype[0]):
                 childs.append(self.invent_core_operatoramount(xt_child, nodeops_split[ii], depth=depth + 1))
 
-        nsted = NestedStruc(label, childs=childs, depth=depth)  # , depth=depth sfeh no depth?
+        nsted = Nested(label, childs=childs, depth=depth)  # , depth=depth sfeh no depth?
         return nsted
 
     def evolve_mutate_filter_random(self, nsted):
@@ -384,7 +384,7 @@ class TreeBuilder:
 
         return evostruc
 
-    def evolve_prune(self, nsted: NestedStruc):
+    def evolve_prune(self, nsted: Nested):
         """
         prune depth
         -> prune everything below a certain level... (should not happen in the first place)
@@ -399,8 +399,8 @@ class TreeBuilder:
         for dnode in nodelist:
             if dnode.depth == self.nodeamount_max and dnode.get_arity() > 0:
                 print_warning('wwww', f'Node in fintree is too deep: {dnode.depth}')
-                new_node = NestedStruc(self.choose_term(dnode.get_xtype_out()), childs=[], depth=dnode.depth)
-                dnode.set_new_node(new_node)
+                new_node = Nested(self.choose_term(dnode.get_xtype_out()), childs=[], depth=dnode.depth)
+                dnode.set_new_nested(new_node)
                 # sfeh:debug did this work?
 
         prune_amount = len(nsted) - self.nodeamount_max
@@ -411,8 +411,8 @@ class TreeBuilder:
 
             nodelist = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
             node = np.random.choice(nodelist)
-            new_node = NestedStruc(self.choose_term(node.get_xtype_out()), childs=[], depth=node.depth)
-            node.set_new_node(new_node)
+            new_node = Nested(self.choose_term(node.get_xtype_out()), childs=[], depth=node.depth)
+            node.set_new_nested(new_node)
             prune_amount = len(nsted) - self.nodeamount_max
         return nsted
 
@@ -426,7 +426,7 @@ class TreeBuilder:
         _nd = np.random.choice(nsted.eval_mutable_nodes())
         xtype_out = _nd.get_xtype_out()
         branch = self.invent_core_depth(xtype_out, depth_goal, depth=0, p_full=p_full)  # sfeh ==>dummies
-        _nd.set_new_node(branch)
+        _nd.set_new_nested(branch)
         # if _nd.depth == depth_goal:
         #     _nd.set_label(tb.choose_term(xtype_out))  # sfeh update _nd nlabel
         # else:
@@ -447,10 +447,10 @@ class TreeBuilder:
         _nd = np.random.choice(nsted.eval_mutable_nodes())
         xtype_out = _nd.get_xtype_out()
         branch = self.invent_core_operatoramount(xtype_out, nodes_goal, depth=_nd.depth, p_full=p_full)
-        _nd.set_new_node(branch)
+        _nd.set_new_nested(branch)
         return nsted
 
-    def evolve_crossover(self, tree1: NestedStruc, tree2: NestedStruc):
+    def evolve_crossover(self, tree1: Nested, tree2: Nested):
         """
         Evolution with crossover of branches with two trees
         currently only one branch
@@ -482,8 +482,11 @@ class TreeBuilder:
         # sfeh deepcopy required??
         ansted_copy = copy.deepcopy(_a_nd)
 
-        _a_nd.set_new_nsted(_b_nd)
-        _b_nd.set_new_nsted(ansted_copy)
+        try:
+            _a_nd.set_new_nested(_b_nd)
+        except Exception as ex:
+            _a_nd.set_new_nested(_b_nd)
+        _b_nd.set_new_nested(ansted_copy)
 
         _a = self.evolve_prune(nsted=_a)
         _b = self.evolve_prune(nsted=_b)
@@ -503,7 +506,7 @@ class TreeBuilder:
                 nd_list = nsted0.eval_mutable_nsteds()
                 lvl0_nsted = np.random.choice(nd_list)
                 new_subbranch = self.invent_core_depth(lvl0_nsted.get_xtype_out(), depth_goal, depth=lvl0_nsted.depth, p_full=p_full)
-                lvl0_nsted.set_new_nsted(new_subbranch)
+                lvl0_nsted.set_new_nested(new_subbranch)
 
         else:
             evonsted = self.invent_core_depth(xtype, depth_goal)
@@ -534,7 +537,7 @@ class TreeBuilder:
                 # branch_size = layer0_nodes[ii]  # sfeh:idea + len(lvl0_node)
                 new_subbranch = self.invent_core_operatoramount(lvl0_node.get_xtype_out(), layer0_splits[ii],
                                                                 depth=lvl0_node.depth)
-                lvl0_node.set_new_node(new_subbranch)
+                lvl0_node.set_new_nested(new_subbranch)
 
         else:
 
@@ -580,7 +583,7 @@ class TreeMeta:
 class FinalizedTree:
     """An actual individual (Tree + meta-infos/phenotypes)"""
 
-    def __init__(self, tree: NestedStruc, meta: TreeMeta):
+    def __init__(self, tree: Nested, meta: TreeMeta):
         self.tree = tree
         self.meta = meta
 
@@ -666,7 +669,7 @@ class FinalizedTree:
 #                 else:
 #                     node = Symbol(strlabel)
 #
-#     # node = NestedStruc(label, depth=depth, is_fix=is_fix)
+#     # node = Nested(label, depth=depth, is_fix=is_fix)
 #
 #     if len(lst[1:]) == node.get_arity():
 #         childs = [rec_build_tree(x, depth=depth + 1, obs_list=obs_list) for x in lst[1:]]
@@ -680,7 +683,7 @@ class FinalizedTree:
 #     return node
 
 
-# def check_tree_loadable_reconstruction(tree: NestedStruc):
+# def check_tree_loadable_reconstruction(tree: Nested):
 #     """
 #     Extracts a tree expression and rebuilds the tree
 #     The trees must be identical, as it only rebuilt itself
@@ -717,13 +720,13 @@ def selection_tournament(individuals, tournsize=3):
     """
     tree_list = [np.random.choice(individuals) for _ in range(tournsize)]
     fintree: 'FinalizedTree' = min(tree_list, key=lambda tree: tree.get_fitness())
-    evonsted = fintree.get_nsted()
+    evonsted = fintree.get_evotree()
     evonsted = copy.deepcopy(evonsted)
     return evonsted
 
 
 if __name__ == '__main__':
-    _test_open = '[Ifte, [Or, [b < -1], [And, [b < 0.1], [a < -0.05]]], 2, [Ifte, [BinaryAnd, [BinaryAnd, ' \
+    _test_open = '[Ifte, [Or, [b < -1], [And, [b < 0.1], [a < -0.05]]], 2, [Ifte, [And, [And, ' \
                  '[b > -0.45], [b < -0.05]], [a < -0.5]], 0, [Ifte, [a < 0], 0, 2]]]',
 
     _test_loadabls = ["['+',['-',['Ifte',['True'],['sign',['cartVel']],['/',[2.3],[4]]],['cartVel']],[-1.3]]",
@@ -731,10 +734,12 @@ if __name__ == '__main__':
                       '["Ifte", ["Not", [False]], [0.0], [2.0]]']
 
     tb = TreeBuilder(['a', 'b'], 10, 30, float)
-    # tr = NestedStruc(Add, [NestedStruc(Symbol('a'), []), NestedStruc(Float(1.23), [])])
-    # x = tr.get_sympy_expr()
-    # tr2 = sympy_to_nsted(x)
-    # print(tr, tr2)
+    tr = Nested(Add, [Nested(Symbol('a'), []), Nested(Float(1.23), [])])
+    tr = Nested(Ifte, [Nested(Gt, [Nested(Symbol('a'), []), Nested(Float(1.2), [])]), Nested(Float(1.23), []), Nested(Float(2.3), [])])
+    tr = Nested(Max, [Nested(Symbol('a'), []), Nested(Float(1.2), [])])
+    x = tr.get_sympy_expr()
+    tr2 = sympy_to_nsted(x)
+    print(tr, tr2)
     for _ in range(10):
         tr = tb.pop_random_depth(3, float, p_full=0.7)
         x = tr.get_sympy_expr()
@@ -743,5 +748,5 @@ if __name__ == '__main__':
         x2 = tr_new.get_sympy_expr()
         print(tr)
         print(tr_new)
-        print(x, x2)
+        print(x, '<-->', x2)
 

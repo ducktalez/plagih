@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 
+import sympy
+
 from plagih.plagih_tree import *
 
 
 @dataclass
-class NestedStruc:
+class Nested:
     """
     The core is the structure of a plagih gp-fintree.
     It recursively holds the nodes of a fintree; every fintree has a list of potential children.
@@ -40,7 +42,13 @@ class NestedStruc:
         _sym = self.label.insym
         if self.childs:
             _cs = [cc.get_sympy_expr() for cc in self.childs]
-            _sym = _sym(*_cs)
+            if self.label == Ifte:
+                try:
+                    _sym = _sym(*_cs)
+                except Exception as ex:
+                    _sym = _sym(*_cs)  # todo
+            else:
+                _sym = _sym(*_cs)
         else:
             if self.label.args:
                 # _cs = self.label.args
@@ -117,7 +125,7 @@ class NestedStruc:
         """all other values are automatically set by assigning the respected node"""
         self.label = label
 
-    def update_fixed_nodes(self, origin: 'NestedStruc'):
+    def update_fixed_nodes(self, origin: 'Nested'):
         """Updating the fixed nodes in a tree where they were lost for some reason.
         This should never be the case! But it happened during development of recreating a tree from expression.
         This might also be useful in tree checks"""
@@ -189,7 +197,7 @@ class NestedStruc:
         for cc in self.childs:
             cc.repair_depth(depth=depth + 1)
 
-    def set_new_node(self, new_node: 'NestedStruc'):
+    def set_new_nested(self, new_node: 'Nested'):
         self.set_label(new_node.label)  # sfeh remove childs, is_fix...
         self.childs = new_node.childs  # sfeh maybe must be updated recursively
         self.repair_depth(self.depth)  # Especially required for crossover or branches
@@ -229,14 +237,14 @@ class NestedStruc:
             pass
 
 
-def sympy_to_nsted(expr):
+def sympy_to_nsted(expr, allow_chain=False):
     if isinstance(expr, bool):
         _r = Boolean(expr)
-        return NestedStruc(_r, [])
+        return Nested(_r, [])
     if isinstance(expr, sympy.logic.boolalg.BooleanAtom):
         expr = True if isinstance(expr, (bool, sympy.logic.boolalg.BooleanTrue)) else False
         _r = Boolean(expr)
-        return NestedStruc(_r, [])
+        return Nested(_r, [])
 
     # the following lines are not required, if sympy filters for bad expressions earlier
     # if expr.is_imaginary or expr.is_infinite:
@@ -246,64 +254,89 @@ def sympy_to_nsted(expr):
     elif expr.is_Atom:
         if expr.is_Symbol:
             _r = Symbol(str(expr))  # sfeh str VERY important!!
-            # _r = NestedStruc(Symbol(), [expr])
+            # _r = Nested(Symbol(), [expr])
         else:
             expr_eval = expr.evalf()  # standard 15 digits
             if expr.is_Boolean:
                 _r = Boolean(expr_eval)
-                # _r = NestedStruc(Boolean(), [expr])
+                # _r = Nested(Boolean(), [expr])
             elif expr.is_number:  # is_float does not match int
                 _r = Float(float(expr_eval))  # sfeh round
-                # _r = NestedStruc(Float(), [float(expr)])
+                # _r = Nested(Float(), [float(expr)])
             else:
                 print(f'XXX What happened here? {expr}')
                 raise
-        return NestedStruc(_r, [])
+        return Nested(_r, [])
 
     else:
         sptonode = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: sign, sympy.log: log, sympy.Mul: Mul,
-                    sympy.Xor: Xor, sympy.Not: Not, sympy.Equality: Eq, sympy.And: And, sympy.Or: Or,
-                    sympy.Unequality: Ne, sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
+                    sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,
+                    sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
                     sympy.GreaterThan: Ge, sympy.cos: cos, sympy.sin: sin, sympy.tan: tan, sympy.acos: acos,
                     sympy.asin: asin, sympy.atan: atan, sympy.tanh: tanh, sympy.sinh: sinh, sympy.cosh: cosh,
                     sympy.Min: Min, sympy.Max: Max}
+        # , sympy.Equality: Eq
         stn_keys = tuple(sptonode.keys())
 
-        if isinstance(expr, sympy.Piecewise):
-            _revlist = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
-            _revlist = [[sympy_to_nsted(xx) for xx in list(x)] for x in _revlist]
-            otherwise = _revlist[0][0]  # the last "True" condition
-            for x in _revlist[1:]:
-                otherwise = NestedStruc(Ifte, [x[1], x[0], otherwise])
-            return otherwise
+        # todo FIRST check chainability!!
 
+        if isinstance(expr, sympy.Piecewise):
+            if allow_chain:
+                raise NotImplementedError
+            else:
+                _revlist = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
+                _revlist = [[sympy_to_nsted(xx) for xx in list(x)] for x in _revlist]
+                otherwise = _revlist[0][0]  # the last "True" condition
+                for x in _revlist[1:]:
+                    otherwise = Nested(Ifte, [x[1], x[0], otherwise])
+                return otherwise
+        elif isinstance(expr, sympy.Pow):
+            if expr.args[1] in (-1, 2):
+                if expr.args[1] == -1:  # sympy.S.NegativeOne= sfeh:check if assumptions are available
+                    _r = InverseFraction
+                elif expr.args[1] == 2:
+                    _r = Square
+                else:
+                    raise
+                return Nested(_r, [sympy_to_nsted(expr.args[0])])  # can ignore args[1] now
+            if isinstance(expr.args[1], sympy.Integer):
+                _r = Powrounded
+            else:
+                _r = Pow
+            return Nested(_r, [sympy_to_nsted(x) for x in expr.args])
         elif isinstance(expr, stn_keys):
 
             clss = sptonode[type(expr)]
             args = [sympy_to_nsted(x) for x in expr.args]
-
-            try:
-                return NestedStruc(clss, args)
-            except TypeError:
-                result = args.pop()  # only commutative arity-2 functions here (Add, Mul, Max, Min)
-                while args:
-                    # sfeh:optimization
-                    _r = clss(result, args.pop())
+            # todo propagate allow_chain
+            if len(expr.args) > len(clss.xtype[0]):
+                if issubclass(clss, ChainableOp):
+                    if allow_chain:
+                        return Nested(clss, args)
+                    else:
+                        # All have arity-2
+                        childnstd = [sympy_to_nsted(x) for x in expr.args]
+                        _cc = childnstd[0]
+                        for _c2 in childnstd[1:]:
+                            _cc = Nested(clss, [_cc, _c2])
+                        return _cc
+                else:
+                    raise TypeError(f"{clss} takes exactly {len(clss.xtype[0])} arguments ({len(expr.args)} given)")
         else:
             raise NotImplementedError(f'Expr missing: {expr}')
 
 
 if __name__ == '__main__':
-    # x = NestedStruc(Add(), depth=0, childs=[Symbol('a'), Float(2.2)])
-    # # x = NestedStruc(Symbol(), childs=['a'])
+    # x = Nested(Add(), depth=0, childs=[Symbol('a'), Float(2.2)])
+    # # x = Nested(Symbol(), childs=['a'])
     # print(x)
     sptonode = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: sign, sympy.log: log, sympy.Mul: Mul,
-                sympy.Xor: Xor, sympy.Not: Not, sympy.Equality: Eq, sympy.And: And, sympy.Or: Or,
-                sympy.Unequality: Ne, sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
+                sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,
+                sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
                 sympy.GreaterThan: Ge, sympy.cos: cos, sympy.sin: sin, sympy.tan: tan, sympy.acos: acos,
                 sympy.asin: asin, sympy.atan: atan, sympy.tanh: tanh, sympy.sinh: sinh, sympy.cosh: cosh,
                 sympy.Min: Min, sympy.Max: Max}
-    todo = {sympy.sqrt: Sqrt}
+    # todo = {sympy.sqrt: Sqrt, sympy.Unequality: Ne, sympy.Equality: Eq}
     stn_keys = tuple(sptonode.keys())
     for x in stn_keys:
         lel = 4.5

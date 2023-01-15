@@ -148,20 +148,15 @@ class Operator(NodeBase):  # sfeh:xxx sympy.Function was here, also is_Function 
     pass
 
 
-class ChainOperator(NodeBase):
+class ChainableOp:
     """
     sfeh:diskuss: Abstract class for the elements in chain operators?
-    Add, Mult, Min, Max
+    Add, Mul, Min, Max
     And, Or
+    Piecewise
     Actually not:
     """
     pass
-
-
-class AddChain(ChainOperator):
-    xtype = None
-    insym = sympy.Add
-    tflow = None
 
 
 class MathOperator(Operator):
@@ -223,22 +218,23 @@ class Symbol(TerminalNode):
         self.name = nlabl if nlabl[0] != '-' else nlabl[1:]
         sfeh:xxx option here for type float/bool
     """
-    insym = sympy.Symbol  # (x, real=True, imaginary=False)  # sfeh: real=/imaginary= -> faster
+    # insym = sympy.Symbol
+    insym = lambda *args: sympy.Symbol(str(args[0]), real=True, imaginary=False)  # sfeh: real=/imaginary= faster.
     tflow = lambda x: tf.constant(x, dtype=tf.float32 if isinstance(x, float) else tf.bool)
     xtype = (tuple([]), float)
 
 
-class ExprCondPair(ChainOperator):
-    insym = sympy.functions.elementary.piecewise.ExprCondPair
+# class ExprCondPair(ChainableOp):
+#     insym = sympy.functions.elementary.piecewise.ExprCondPair
+#
+#     # tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
+#
+#     def __init__(self, val, cond):
+#         self.cond = cond
+#         self.val = val
 
-    # tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
 
-    def __init__(self, val, cond):
-        self.cond = cond
-        self.val = val
-
-
-class Add(MathOperator):
+class Add(MathOperator, ChainableOp):
     insym = sympy.Add
     tflow = tf.add
     xtype = (tuple([float, float]), float)
@@ -246,7 +242,7 @@ class Add(MathOperator):
 
 class InverseFraction(Operator):
     xtype = (tuple([float, float]), float)
-    insym = lambda x: sympy.Pow(x, -1)
+    insym = lambda x: sympy.Pow(x, sympy.S.NegativeOne)  # aka x**-1
     tflow = lambda x: tf.pow(x, -1)
 
 
@@ -340,53 +336,61 @@ class Not(LogicOperator):
     tflow = tf.logical_not
     xtype = (tuple([bool]), bool)
 
+# todo annoying
+# class Eq(LogicOperator):
+#     insym = sympy.Eq
+#     tflow = tf.equal
+#     xtype = (tuple([float, float]), bool)
+#
+#
+# class Ne(LogicOperator):
+#     insym = sympy.Ne
+#     tflow = tf.not_equal
+#     xtype = (tuple([float, float]), bool)
+#
+#
+# class Unequality(RelationalOperator):
+# according to sympy, unequality is something else
+# Equality, Unequality behave more complex. sfeh:open
+#     insym = sympy.Unequality
+#     tflow = tf.not_equal
+#     xtype = (tuple([float, float]), bool)
 
-class Eq(LogicOperator):
-    insym = sympy.Eq
-    tflow = tf.equal
-    xtype = (tuple([float, float]), bool)
 
-
-class Mul(MathOperator):
+class Mul(MathOperator, ChainableOp):
     insym = sympy.Mul
     tflow = tf.multiply
     xtype = (tuple([float, float]), float)
 
 
-class And(LogicOperator):
+class And(LogicOperator, ChainableOp):
     insym = sympy.And
     tflow = tf.logical_and
     xtype = (tuple([bool, bool]), bool)
 
 
-class Piecewise(ChainOperator):
-    tflow = tf.where
-    xtype = (tuple([bool, float, float]), float)
-    insym = sympy.Piecewise
-
-
-class Min(MinMaxBase):
-    insym = sympy.Min
-    tflow = tf.minimum
-    xtype = (tuple([float, float]), float)
-
-
-class Max(MinMaxBase):
-    insym = sympy.Max
-    tflow = tf.maximum
-    xtype = (tuple([float, float]), float)
-
-
-class Or(LogicOperator):
+class Or(LogicOperator, ChainableOp):
     insym = sympy.Or
     tflow = tf.logical_or
     xtype = (tuple([bool, bool]), bool)
 
 
-class Ne(RelationalOperator):
-    insym = sympy.Ne
-    tflow = tf.not_equal
-    xtype = (tuple([bool, bool]), bool)
+class Piecewise(ChainableOp):
+    tflow = tf.where
+    xtype = (tuple([bool, float, float]), float)
+    insym = sympy.Piecewise
+
+
+class Min(MinMaxBase, ChainableOp):
+    insym = sympy.Min  # sympy.Min fails -> sympy.sympify('Min(a, b)')
+    tflow = tf.minimum
+    xtype = (tuple([float, float]), float)
+
+
+class Max(MinMaxBase, ChainableOp):
+    insym = sympy.Max
+    tflow = tf.maximum
+    xtype = (tuple([float, float]), float)
 
 
 class Lt(RelationalOperator):
@@ -472,7 +476,7 @@ class Usub(Operator, sympy.Function):
 
 class Powrounded(Operator):
     tflow = lambda a, b: tf.pow(a, tf.round(b))
-    insym = lambda a, b: sympy.Pow(a, sympy.N(b, 0))
+    insym = lambda a, b: sympy.Pow(a, sympy.Integer(b))
     xtype = (tuple([float, float]), float)
 
 
@@ -577,7 +581,7 @@ totf = {
     sympy.Xor: tf.math.logical_xor,
 
     sympy.Equality: tf.equal,
-    sympy.Unequality: tf.not_equal,
+    # sympy.Unequality: tf.not_equal,
     sympy.GreaterThan: tf.greater_equal,
     sympy.StrictGreaterThan: tf.greater,
     sympy.LessThan: tf.less_equal,
@@ -1050,16 +1054,16 @@ if __name__ == '__main__':
     n2 = Symbol()
     n3 = Boolean()
     n4 = Add()
-    print(n1, n2, n3, n4)
-    print('dsaasd', n1.get_sym(), n2.get_sym(), n3.get_sym(), n4.get_sym())
+    # print(n1, n2, n3, n4)
+    # print('dsaasd', n1.get_sym(), n2.get_sym(), n3.get_sym(), n4.get_sym())
     print(len(n1), len(n4))
-    n1 = Float(1.23)
-    n2 = Symbol('a')
-    n3 = Boolean(True)
-    n4 = Add(n1, n2)
-    print(n1, n2, n3, n4)
-    print('ssssss', n1.get_sym(), n2.get_sym(), n3.get_sym(), n4.get_sym())
-    print(len(n1), len(n4))
+    # n1 = Float(1.23)
+    # n2 = Symbol('a')
+    # n3 = Boolean(True)
+    # n4 = Add(n1, n2)
+    # print(n1, n2, n3, n4)
+    # print('ssssss', n1.get_sym(), n2.get_sym(), n3.get_sym(), n4.get_sym())
+    # print(len(n1), len(n4))
 
     # n4 = Add(n1, n2)
     # print(n4.get_str_recursive())

@@ -195,11 +195,11 @@ class ExplainableGP:
             #         self.genloop_performance_append_tree(evotree, tag)
             @self.create_trees(0.5)
             def rand1():
-                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(4, 1)), 1, 5), p_full=1)
+                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3, 1)), 1, 3), p_full=1)
 
             @self.create_trees(0.5)
             def rand2():
-                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 5), p_full=1)
+                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(2.5, 1)), 2, 3), p_full=1)
         return
 
     def lut_to_meta(self, evotree):
@@ -254,6 +254,7 @@ class ExplainableGP:
         def loop(createTreeFunc):
             n = rate * self.pop_max
             n_success = 0
+            n_fails = 0
             while n_success < n:
                 try:
                     t1, t2 = createTreeFunc()
@@ -261,8 +262,11 @@ class ExplainableGP:
                     self.evaluate_and_append(t2)
                     # self.printpl('ggggg', f'Success with 2xtrees: {t1}, {t2}')
                     n_success += 2
-                except Exception as ex:
+                except (ValueError, ArithmeticError, TypeError) as ex:
+                    n_fails += 1  # sfeh:use this for something?
                     print(f'{ex}')
+                    if n_fails > n:
+                        return
 
         return loop
 
@@ -486,8 +490,10 @@ class ExplainableGP:
 
         # expr_raw = evotree.eval_expr_str()
         # expr_sym = expr_sympify(expr_raw)
-
-        expr_sym = evotree.get_sympy_expr()
+        try:
+            expr_sym = evotree.get_sympy_expr()
+        except Exception as ex:
+            expr_sym = evotree.get_sympy_expr()  # todo
 
         try:
             fitness = self.kernel.eval_tf(expr_sym)['mean_error']
@@ -496,7 +502,8 @@ class ExplainableGP:
         except ValueError as ex:
             raise ValueError(f'eval-ex nan: {ex}')
         except TypeError as ex:
-            # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16, float32, float64, int8, int16, int32, int64, complex64, complex128
+            # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16, float32,
+            # float64, int8, int16, int32, int64, complex64, complex128
             # probably because datatypes in trees do not match (xtypes, build). Happens in random tree generation
             raise TypeError(f'eval-ex-te: {ex}')
         except Exception as ex:

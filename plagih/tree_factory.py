@@ -40,35 +40,30 @@ def randomly_split_range(range_max, num_splits):
     used for building trees
     0 is allowed! (ends a branch with a terminal node)
     """
-
     # tmp_distributions = random.sample(range(1, range_max), num_splits)
     # d_sum = sum(tmp_distributions)
     # d_list = [int(round(range_max*(x/d_sum), 0)) for x in tmp_distributions]
     # if num_splits == 0:
-    try:
-        # sfeh:discuss create 2 more random split values and remove largest and smallest entry. (better distribution?)
-        # No. Also, allow 0 to occur.
-        sample_dist = np.random.rand(num_splits)  # [0.2, 0.8, 0.5] -> random samples
-        d_sum = sum(sample_dist)  # 1.5
-        sample_dist = [x / d_sum for x in sample_dist]  # [0.12, 0.6, 0.28] -> fittet to sum of 1
-        sample_dist = [x * range_max for x in sample_dist]  # [12, 60, 28] -> for 100 nodes
-        sample_dist = [int(round(x, 0)) for x in sample_dist]  # convert to usable ints
+    # sfeh:discuss create 2 more random split values and remove largest and smallest entry. (better distribution?)
+    # No. Also, allow 0 to occur.
+    sample_dist = np.random.rand(num_splits)  # [0.2, 0.8, 0.5] -> random samples
+    d_sum = sum(sample_dist)  # 1.5
+    sample_dist = [i / d_sum for i in sample_dist]  # [0.12, 0.6, 0.28] -> fittet to sum of 1
+    sample_dist = [i * range_max for i in sample_dist]  # [12, 60, 28] -> for 100 nodes
+    sample_dist = [int(round(i, 0)) for i in sample_dist]  # convert to usable ints
 
-        # sfeh workaround, this makes exactly the correct range by changing the most extreme entry
-        imprecise_diff = range_max - sum(sample_dist)  # sfeh: this can be [0, 0, 0], which assigns to the 0th bin...
-        # sfeh:discussion: maybe this difference is 2 or larger more often than 1 (->rounding),
-        # so maybe while-loop (just check if it happens?)
-        if imprecise_diff != 0:
-            if sum(sample_dist) < range_max:
-                # sfeh:minor mistake: if relatively empty, this appends to the first bin
-                sample_dist[sample_dist.index(min(sample_dist))] += imprecise_diff  # extreme_bin = smallest
-            elif sum(sample_dist) > range_max:
-                sample_dist[sample_dist.index(max(sample_dist))] += imprecise_diff  # extreme_bin = greatest
-            else:
-                raise
-    except Exception as ex:  # sfeh match correct exception. if never occurs, try delete this
-        sample_dist = [range_max]
-        raise  # this raise should be deleted. just a reminder to debug this.
+    # sfeh workaround, this makes exactly the correct range by changing the most extreme entry
+    imprecise_diff = range_max - sum(sample_dist)  # sfeh: this can be [0, 0, 0], which assigns to the 0th bin...
+    # sfeh:discussion: maybe this difference is 2 or larger more often than 1 (->rounding),
+    # so maybe while-loop (just check if it happens?)
+    if imprecise_diff != 0:
+        if sum(sample_dist) < range_max:
+            # sfeh:minor mistake: if relatively empty, this appends to the first bin
+            sample_dist[sample_dist.index(min(sample_dist))] += imprecise_diff  # extreme_bin = smallest
+        elif sum(sample_dist) > range_max:
+            sample_dist[sample_dist.index(max(sample_dist))] += imprecise_diff  # extreme_bin = greatest
+        else:
+            raise
 
     return sample_dist
 
@@ -120,7 +115,7 @@ def evolve_reduce_simplify(nstruc: Nested, completely=True, force=False):
         return nstruc
     else:
         if len(tree_copy) < len(nstruc):
-            print_e(f'sfeh Trees just become larger? {nstruc.__class__.__name__}')
+            print_warning('w', f'sfeh Trees get larger during simplification? {nstruc.__class__.__name__}')
             return tree_copy
         else:
             return nstruc
@@ -176,7 +171,7 @@ class TreeBuilder:
                              Mul: 2, Div: 1,
                              # Usub: 1,  # sfeh
                              Square: 0.75,
-                             Pow: 0.1,  # 0.25,  # sfeh:open
+                             Powrounded: 0.1,
                              Abs: 0.5, sign: 0.5,  # sfeh stop chain of arity-1 op_dict in buid method?
                              Sqrt: 0.1,  # 0.25,  # sfeh debug this
                              log: 0.1,  # Log1p: 0.1,
@@ -371,7 +366,7 @@ class TreeBuilder:
         """
         evostruc = nsted_deepcopy(nsted)
 
-        # todo:chain only mutable nodes that are not chainable operators
+        # todo:chain only mutable nodes that are not operators in chained-mode
         _nd = np.random.choice(evostruc.eval_mutable_nodes())
         xtype = _nd.get_xtype()
 
@@ -477,13 +472,9 @@ class TreeBuilder:
             _a_nds = _a.eval_mutable_nodes(allow_root=False, xtype_out=xtype_out)
             _a_nd = np.random.choice(_a_nds)
 
-        # sfeh deepcopy required??
-        ansted_copy = copy.deepcopy(_a_nd)
+        ansted_copy = copy.deepcopy(_a_nd)  # sfeh deepcopy required??
 
-        try:
-            _a_nd.set_new_nested(_b_nd)
-        except Exception as ex:
-            _a_nd.set_new_nested(_b_nd)
+        _a_nd.set_new_nested(_b_nd)
         _b_nd.set_new_nested(ansted_copy)
 
         _a = self.evolve_prune(nsted=_a)

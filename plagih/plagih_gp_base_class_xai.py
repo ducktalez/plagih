@@ -166,14 +166,13 @@ class ExplainableGP:
                     self.evaluate_and_append(symtree)  # sfeh:open , tag='sfeh-sympifyed_pareto'
 
                 except KeyError as ex:
-                    print(f'SFEH: this tree could whatever {ex}')  # -> piecewise function, mostly
+                    print_e(f'SFEH: this tree could whatever {ex}')  # -> piecewise function, mostly
 
-                obsolete_entries = [x for x in paretofront if
-                                    x.get_fitness() > fintree.get_fitness() and
-                                    x.get_parsimony() >= fintree.get_parsimony()]
-                if obsolete_entries:
-                    printyeah('a', f'Paretofront: Removing obsolete entries {[str(x) for x in obsolete_entries]}')
-                paretofront = [ftree for ftree in paretofront if ftree not in obsolete_entries]
+                _obsoletes = [i for i in paretofront if
+                                    i.get_fitness() > fintree.get_fitness() and i.get_parsimony() >= fintree.get_parsimony()]
+                if _obsoletes:
+                    printyeah('a', f'Paretofront: Removing obsolete entries {[str(i) for i in _obsoletes]}')
+                paretofront = [ftree for ftree in paretofront if ftree not in _obsoletes]
                 paretofront.append(fintree)
                 paretofront = pareto_sort(paretofront)
 
@@ -217,9 +216,11 @@ class ExplainableGP:
                 raise
             except TypeError as ex:
                 print_warning('ww', f'Missing Arg?: {ex}')
+                if 'Argument of Integer should be of' in ex:
+                    print('sfeh:XXX debug this')
                 raise
             except Exception as ex:
-                print_warning('ww', f'Could not append tree to population because: {ex}\n'
+                print_warning('ww', f'Could not append tree to population because: {ex}\t'
                                     f'=>tree: {evotree}')
                 raise
         return meta
@@ -238,10 +239,10 @@ class ExplainableGP:
             n_fails = 0
             while n_success < n:
                 try:
-                    # evotree = selection_tournament(self.pop_base, tournsize=3)
-                    evotree = create_tree_func()  # self.tb.evolve_mutate_branch_nodes(evotree, np.clip(int(random.normalvariate(12, 4)), 0, 30))
+
+                    evotree = create_tree_func()
                     self.evaluate_and_append(evotree)
-                    # self.printpl('ggggg', f'Success with tree: {evotree}')
+
                     n_success += 1
                 except (ValueError, ArithmeticError, TypeError) as ex:
                     n_fails += 1  # sfeh:use this for something?
@@ -262,8 +263,7 @@ class ExplainableGP:
                     self.evaluate_and_append(t2)
                     n_success += 2
                 except (ValueError, ArithmeticError, TypeError) as ex:
-                    n_fails += 1  # sfeh:use this for something?
-                    print(f'{ex}')
+                    n_fails += 2  # sfeh:use this for something?
                     if n_fails > n:
                         return
 
@@ -292,7 +292,7 @@ class ExplainableGP:
         @self.create_trees(0.1)
         def mutateB():
             evotree = selection_tournament(self.pop_base, tournsize=3)
-            return self.tb.evolve_mutate_branch_nodes(evotree, 4, p_full=1)  # sfeh:todo also
+            return self.tb.evolve_mutate_branch_nodes(evotree, 4, p_full=1)
 
         @self.create_trees_crossover(0.2)
         def xover():
@@ -410,8 +410,7 @@ class ExplainableGP:
             self.printpl('g', f'Successfully loaded backup file. Generation: {self.gen_id}')
 
         else:
-            raise FileNotFoundError(f'No backup-file found at {path_backup}.')
-
+            raise FileNotFoundError(f'No backup-file found at {path_backup}')
 
     def run_custom_exit_condition(self):
         """
@@ -480,11 +479,9 @@ class ExplainableGP:
         """
         parsimony = eval_parsimony(evotree, self.complexity_measure, origin_tree=self.origintree)
         if parsimony > self.tb.nodeamount_max:
-            # sfep:discuss: information about last evolution? currently not saved in tree. Is this not autopruned?
+            # sfep:discuss: information about last evolution? currently not saved in tree. Is this not auto-pruned?
             raise ValueError(f'Tree too complex: {parsimony} > {self.tb.nodeamount_max}')
 
-        # expr_raw = evotree.eval_expr_str()
-        # expr_sym = expr_sympify(expr_raw)
         expr_sym = evotree.get_sympy_expr()
 
         try:

@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 
-import sympy
-
 from plagih.plagih_tree import *
 
 # For sympy_to_Nested conversion
@@ -29,12 +27,13 @@ class Nested:
     [3]:    including meta-data (fitness_train, complexity)
     """
 
-    def __init__(self, label, childs, depth=None, is_fix=False):
+    def __init__(self, label, childs, depth=None, is_fix=False, is_chain=False):
         self.label = label
         self.childs = childs
 
         self.is_fix = is_fix
         self.depth = depth
+        self.is_chain = is_chain  # sfeh:discuss Not sure, if this is really required
 
     def __str__(self):
         try:
@@ -49,7 +48,7 @@ class Nested:
         return f"[{label_str}]"
 
     def get_sympy_expr(self):
-        _sym = self.label.insym
+        _sym = self.label.as_sym
         if self.childs:
             _cs = [cc.get_sympy_expr() for cc in self.childs]
             # if self.label == Ifte:
@@ -257,7 +256,7 @@ def sympy_to_nsted(expr, allow_chain=False):
                 raise NotImplementedError
             else:
                 _revlist = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
-                _revlist = [[sympy_to_nsted(xx, allow_chain=allow_chain) for xx in list(x)] for x in _revlist]
+                _revlist = [[sympy_to_nsted(xx, allow_chain=allow_chain) for xx in list(i)] for i in _revlist]
                 otherwise = _revlist[0][0]  # the last "True" condition
                 for x in _revlist[1:]:
                     otherwise = Nested(Ifte, [x[1], x[0], otherwise])
@@ -268,6 +267,8 @@ def sympy_to_nsted(expr, allow_chain=False):
                     _r = InverseFraction
                 elif expr.args[1] == 2:
                     _r = Square
+                elif expr.args[1] == sympy.S.Half:
+                    _r = Sqrt
                 else:
                     raise
                 return Nested(_r, [sympy_to_nsted(expr.args[0], allow_chain=allow_chain)])  # can ignore args[1] now
@@ -287,7 +288,7 @@ def sympy_to_nsted(expr, allow_chain=False):
             if len(expr.args) > len(clss.xtype[0]):
                 if issubclass(clss, ChainableOp):
                     if allow_chain:
-                        return Nested(clss, args)  # todo mark this node
+                        return Nested(clss, args, is_chain=True)
                     else:
                         # All have arity-2
                         childnstd = [sympy_to_nsted(x, allow_chain=allow_chain) for x in expr.args]
@@ -301,8 +302,10 @@ def sympy_to_nsted(expr, allow_chain=False):
                 return Nested(clss, args)  # same as in allow_chain
 
         else:
+            # sfeh:discuss
+            # NotImplementedError: Expr missing: ITE(p > 13, tan(p - v) >= 2.578643, tan(p - v) >= 1)
+            # this should not have occured, because it evaluates to bool, not to float
             raise NotImplementedError(f'Expr missing: {expr}')
-    raise Exception("How did we get here??")
 
 
 if __name__ == '__main__':
@@ -315,7 +318,7 @@ if __name__ == '__main__':
                 sympy.GreaterThan: Ge, sympy.cos: cos, sympy.sin: sin, sympy.tan: tan, sympy.acos: acos,
                 sympy.asin: asin, sympy.atan: atan, sympy.tanh: tanh, sympy.sinh: sinh, sympy.cosh: cosh,
                 sympy.Min: Min, sympy.Max: Max}
-    # todo = {sympy.sqrt: Sqrt, sympy.Unequality: Ne, sympy.Equality: Eq}
+    # sfeh:open = {sympy.Unequality: Ne, sympy.Equality: Eq}
     stn_keys = tuple(sptonode.keys())
     for x in stn_keys:
         lel = 4.5

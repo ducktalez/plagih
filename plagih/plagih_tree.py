@@ -50,24 +50,27 @@ Useful information:
 
     sfeh:xxx sympy facttor (up/downfactor), so it adds stuff together
     sfeh:discus simplify/unify
+
+Custom Operators /Functions/Nodes/Terminals/Nested:
+    Any custom node must have a label subclassing NodeBase
+    Also, make a case in sympy_to_nested to reconstruct trees from sympy expressions.
 """
 import os
 import sympy
 import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
-import itertools
+from plagih.util import get_subclasses, PRECISION  # noqa
 
 os.environ["KMP_WARNINGS"] = "FALSE"
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # https://github.com/tensorflow/tensorflow/issues/27023
-import tensorflow as tf
-from plagih.util import get_subclasses, PRECISION
+import tensorflow as tf  # noqa (check if still required, tensorflow sends endless warnings)
 
-# sfeh: check, if this leads to tf warnings
+# sfeh:check if this leads to tf warnings
 tf.compat.v1.enable_eager_execution()  # sfeh possibly faster with disable
 
 
 class NodeBase:
-    insym = None
-    tflow = None
+    as_sym = None
+    as_tflow = None
     xtype = None  # sfeh: will this b deprecated?
 
     def __str__(self):
@@ -104,7 +107,7 @@ class NodeBase:
             return 1 + sum([len(cc) for cc in self.args])
 
     def _sympy_(self, *args):  # -> sympy.Basic:
-        _sym = self.insym
+        _sym = self.as_sym
         _sym = _sym(*args)
         # childstr = [sympy.sympify(cc) for cc in args]
         # _sym = _sym(*childstr)
@@ -114,7 +117,7 @@ class NodeBase:
         #     _sym = _sym(*childstr)
         #
         # elif isinstance(self, TerminalNode):
-        #     return self.insym(self.args[0])
+        #     return self.as_sym(self.args[0])
         #
         # else:
         #     raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
@@ -122,7 +125,7 @@ class NodeBase:
         return _sym
 
     def get_sym(self):
-        _sym = self.insym
+        _sym = self.as_sym
         # if self.args:
         #     print(self.args, len(self.args), 'asd')
         #     if issubclass(self.__class__, Operator):
@@ -141,7 +144,7 @@ class NodeBase:
         return _sym
 
     def get_symstr(self):
-        return self.insym.__name__
+        return self.as_sym.__name__
 
 
 class Operator(NodeBase):  # sfeh:xxx sympy.Function was here, also is_Function = True
@@ -150,11 +153,14 @@ class Operator(NodeBase):  # sfeh:xxx sympy.Function was here, also is_Function 
 
 class ChainableOp:
     """
-    sfeh:diskuss: Abstract class for the elements in chain operators?
+    (Abstract) class for operators, that allow flexible arity (1-n args).
+    Used e.g. while reconstructing trees from sympy expressions,
+    to check whether it is possible to put more childs than planned into the node.
+
+    The respected Operators are
     Add, Mul, Min, Max
     And, Or
     Piecewise
-    Actually not:
     """
     pass
 
@@ -201,14 +207,14 @@ class TerminalNode(NodeBase):  # sfeh sympy.Atom
 class Boolean(TerminalNode):
     # sfeh:discuss just for True/False?
     xtype = (tuple([]), bool)
-    insym = lambda *args: sympy.S.true if args[0] else ~sympy.S.true  # sympy.logic.boolalg.Boolean  # sfeh:discuss
-    tflow = lambda x: tf.constant(x, dtype=tf.bool)
+    as_sym = lambda *args: sympy.S.true if args[0] else ~sympy.S.true  # sympy.logic.boolalg.Boolean  # sfeh:discuss
+    as_tflow = lambda arg: tf.constant(arg, dtype=tf.bool)
 
 
 class Float(TerminalNode):
     xtype = (tuple([]), float)
-    insym = sympy.Float
-    tflow = lambda x: tf.constant(x, dtype=tf.float32)
+    as_sym = sympy.Float
+    as_tflow = lambda x: tf.constant(x, dtype=tf.float32)
 
 
 class Symbol(TerminalNode):
@@ -218,16 +224,16 @@ class Symbol(TerminalNode):
         self.name = nlabl if nlabl[0] != '-' else nlabl[1:]
         sfeh:xxx option here for type float/bool
     """
-    # insym = sympy.Symbol
-    insym = lambda *args: sympy.Symbol(str(args[0]), real=True, imaginary=False)  # sfeh: real=/imaginary= faster.
-    tflow = lambda x: tf.constant(x, dtype=tf.float32 if isinstance(x, float) else tf.bool)
+    # as_sym = sympy.Symbol
+    as_sym = lambda *args: sympy.Symbol(str(args[0]), real=True, imaginary=False)  # sfeh: real=/imaginary= faster.
+    as_tflow = lambda x: tf.constant(x, dtype=tf.float32 if isinstance(x, float) else tf.bool)
     xtype = (tuple([]), float)
 
 
 # class ExprCondPair(ChainableOp):
-#     insym = sympy.functions.elementary.piecewise.ExprCondPair
+#     as_sym = sympy.functions.elementary.piecewise.ExprCondPair
 #
-#     # tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
+#     # as_tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
 #
 #     def __init__(self, val, cond):
 #         self.cond = cond
@@ -235,206 +241,207 @@ class Symbol(TerminalNode):
 
 
 class Add(MathOperator, ChainableOp):
-    insym = sympy.Add
-    tflow = tf.add
+    as_sym = sympy.Add
+    as_tflow = tf.add
     xtype = (tuple([float, float]), float)
 
 
 class InverseFraction(Operator):
     xtype = (tuple([float, float]), float)
-    insym = lambda x: sympy.Pow(x, sympy.S.NegativeOne)  # aka x**-1
-    tflow = lambda x: tf.pow(x, -1)
+    as_sym = lambda x: sympy.Pow(x, sympy.S.NegativeOne)  # aka x**-1
+    as_tflow = lambda x: tf.pow(x, -1)
 
 
 class Pow(MathOperator):
-    insym = sympy.Pow
-    tflow = tf.pow
+    as_sym = sympy.Pow
+    as_tflow = tf.pow
     xtype = (tuple([float, float]), float)
 
 
 class Abs(MathOperator):
-    insym = sympy.Abs
-    tflow = tf.abs
+    as_sym = sympy.Abs
+    as_tflow = tf.abs
     xtype = (tuple([float]), float)
 
 
 class sign(MathOperator, NoSymCapitalized):
     # does not work in string, but irrelevant. sympy.simplify('sign(-a)') -> -sign(a)
-    insym = sympy.sign
-    tflow = tf.sign
+    as_sym = sympy.sign
+    as_tflow = tf.sign
     xtype = (tuple([float]), float)
 
 
 class log(MathOperator, NoSymCapitalized):
-    insym = sympy.log  # sfeh: Log isactually Ln (base e)
-    tflow = tf.math.log
+    as_sym = sympy.log  # sfeh: Log isactually Ln (base e)
+    as_tflow = tf.math.log
     xtype = (tuple([float]), float)
 
 
 class cos(AngleOperator, NoSymCapitalized):
-    insym = sympy.cos
-    tflow = tf.cos
+    as_sym = sympy.cos
+    as_tflow = tf.cos
     xtype = (tuple([float]), float)
 
 
 class sin(AngleOperator, NoSymCapitalized):
-    insym = sympy.sin
-    tflow = tf.sin
+    as_sym = sympy.sin
+    as_tflow = tf.sin
     xtype = (tuple([float]), float)
 
 
 class tan(AngleOperator, NoSymCapitalized):
-    insym = sympy.tan
-    tflow = tf.tan
+    # sfeh:discuss actually rename classes.
+    # they do not have to match sympy expressions/classes
+    as_sym = sympy.tan
+    as_tflow = tf.tan
     xtype = (tuple([float]), float)
 
 
 class acos(AngleOperator, NoSymCapitalized):
-    insym = sympy.acos
-    tflow = tf.acos
+    as_sym = sympy.acos
+    as_tflow = tf.acos
     xtype = (tuple([float]), float)
 
 
 class asin(AngleOperator, NoSymCapitalized):
-    insym = sympy.asin
-    tflow = tf.asin
+    as_sym = sympy.asin
+    as_tflow = tf.asin
     xtype = (tuple([float]), float)
 
 
 class atan(AngleOperator, NoSymCapitalized):
-    insym = sympy.atan
-    tflow = tf.atan
+    as_sym = sympy.atan
+    as_tflow = tf.atan
     xtype = (tuple([float]), float)
 
 
 class tanh(AngleOperator, NoSymCapitalized):
-    insym = sympy.tanh
-    tflow = tf.tanh
+    as_sym = sympy.tanh
+    as_tflow = tf.tanh
     xtype = (tuple([float]), float)
 
 
 class sinh(AngleOperator, NoSymCapitalized):
-    insym = sympy.sinh
-    tflow = tf.sinh  # sfeh sinh, asinh
+    as_sym = sympy.sinh
+    as_tflow = tf.sinh  # sfeh sinh, asinh
     xtype = (tuple([float]), float)
 
 
 class cosh(AngleOperator, NoSymCapitalized):
-    insym = sympy.cosh
-    tflow = tf.cosh  # sfeh acosh came up...
+    as_sym = sympy.cosh
+    as_tflow = tf.cosh  # sfeh acosh
     xtype = (tuple([float]), float)
 
 
 class Xor(LogicOperator, NoSymCapitalized):
-    insym = sympy.Xor
-    tflow = tf.math.logical_xor
+    as_sym = sympy.Xor
+    as_tflow = tf.math.logical_xor
     xtype = (tuple([bool, bool]), bool)
 
 
 class Not(LogicOperator):
-    insym = sympy.Not
-    tflow = tf.logical_not
+    as_sym = sympy.Not
+    as_tflow = tf.logical_not
     xtype = (tuple([bool]), bool)
 
 
-# todo annoying
-# class Eq(LogicOperator):
-#     insym = sympy.Eq
-#     tflow = tf.equal
-#     xtype = (tuple([float, float]), bool)
-#
-#
-# class Ne(LogicOperator):
-#     insym = sympy.Ne
-#     tflow = tf.not_equal
-#     xtype = (tuple([float, float]), bool)
-#
-#
-# class Unequality(RelationalOperator):
-# according to sympy, unequality is something else
-# Equality, Unequality behave more complex. sfeh:open
-#     insym = sympy.Unequality
-#     tflow = tf.not_equal
-#     xtype = (tuple([float, float]), bool)
+class Eq(LogicOperator):
+    # sfeh:debug Eq and Ne (), which also work for boolean inputs in sympy
+    as_sym = sympy.Eq
+    as_tflow = tf.equal
+    xtype = (tuple([float, float]), bool)
+
+
+class Ne(LogicOperator):
+    as_sym = sympy.Ne
+    as_tflow = tf.not_equal
+    xtype = (tuple([float, float]), bool)
 
 
 class Mul(MathOperator, ChainableOp):
-    insym = sympy.Mul
-    tflow = tf.multiply
+    as_sym = sympy.Mul
+    as_tflow = tf.multiply
     xtype = (tuple([float, float]), float)
 
 
 class And(LogicOperator, ChainableOp):
-    insym = sympy.And
-    tflow = tf.logical_and
+    as_sym = sympy.And
+    as_tflow = tf.logical_and
     xtype = (tuple([bool, bool]), bool)
 
 
 class Or(LogicOperator, ChainableOp):
-    insym = sympy.Or
-    tflow = tf.logical_or
+    as_sym = sympy.Or
+    as_tflow = tf.logical_or
     xtype = (tuple([bool, bool]), bool)
 
 
+class ITE(LogicOperator):
+    """sfeh:is this really required? currrently not in use"""
+    as_sym = sympy.ITE
+    as_tflow = lambda *args: tf.cond(args[0], true_fn=args[1], false_fn=args[2])
+    xtype = (tuple([bool, bool, bool]), bool)
+
+
 class Piecewise(ChainableOp):
-    tflow = tf.where
+    as_tflow = tf.where
     xtype = (tuple([bool, float, float]), float)
-    insym = sympy.Piecewise
+    as_sym = sympy.Piecewise
 
 
 class Min(MinMaxBase, ChainableOp):
-    insym = sympy.Min  # sympy.Min fails -> sympy.sympify('Min(a, b)')
-    tflow = tf.minimum
+    as_sym = sympy.Min  # sympy.Min fails -> sympy.sympify('Min(a, b)')
+    as_tflow = tf.minimum
     xtype = (tuple([float, float]), float)
 
 
 class Max(MinMaxBase, ChainableOp):
-    insym = sympy.Max
-    tflow = tf.maximum
+    as_sym = sympy.Max
+    as_tflow = tf.maximum
     xtype = (tuple([float, float]), float)
 
 
 class Lt(RelationalOperator):
-    insym = sympy.Lt
-    tflow = tf.less
+    as_sym = sympy.Lt
+    as_tflow = tf.less
     xtype = (tuple([float, float]), bool)
 
 
 class Le(RelationalOperator):
-    insym = sympy.Le
-    tflow = tf.less_equal
+    as_sym = sympy.Le
+    as_tflow = tf.less_equal
     xtype = (tuple([float, float]), bool)
 
 
 class Gt(RelationalOperator):
-    insym = sympy.Gt
-    tflow = tf.greater
+    as_sym = sympy.Gt
+    as_tflow = tf.greater
     xtype = (tuple([float, float]), bool)
 
 
 class Ge(RelationalOperator):
-    insym = sympy.Ge
-    tflow = tf.greater_equal
+    as_sym = sympy.Ge
+    as_tflow = tf.greater_equal
     xtype = (tuple([float, float]), bool)
 
 
 class Square(MathOperator):
-    tflow = tf.square
+    as_tflow = tf.square
     xtype = (tuple([float]), float)
-    insym = lambda a: sympy.Pow(a, 2)
+    as_sym = lambda a: sympy.Pow(a, 2)
 
 
 class Sub(MathOperator):
-    tflow = tf.subtract
+    as_tflow = tf.subtract
     xtype = (tuple([float, float]), float)
-    insym = lambda a, b: sympy.Add(a, -b)
+    as_sym = lambda a, b: sympy.Add(a, -b)
 
 
 class Ifte(Operator):
-    tflow = tf.where
+    as_tflow = tf.where
     xtype = (tuple([bool, float, float]), float)
-    # insym = lambda c, a, b: sympy.Piecewise((a, c), (b, True))
-    insym = lambda *args: sympy.Piecewise((args[1], args[0]), (args[2], True))
+    # as_sym = lambda c, a, b: sympy.Piecewise((a, c), (b, True))
+    as_sym = lambda *args: sympy.Piecewise((args[1], args[0]), (args[2], True))
 
 
 class Round(MathOperator):  # 'Round'
@@ -442,51 +449,52 @@ class Round(MathOperator):  # 'Round'
     discuss:
     - sympy.Integer(x)
     - sympy.N(x, 1)
-        insym(Symbol('a'))
-        insym(1.23)
-        insym(sympy.Add(a, Symbol('a'))
+        as_sym(Symbol('a'))
+        as_sym(1.23)
+        as_sym(sympy.Add(a, Symbol('a'))
     -> Write custom round function that evaluates only when is_number
     """
     xtype = (tuple([float]), float)
-    insym = lambda a: sympy.N(a, 1)
-    tflow = lambda a: tf.math.round(a, 1)
+    as_sym = lambda a: sympy.N(a, 1)
+    as_tflow = lambda a: tf.math.round(a, 1)
 
 
 class Log1p(MathOperator):
     # https://docs.sympy.org/latest/modules/codegen.html#sympy.codegen.cfunctions.log1p
     xtype = (tuple([float]), float)
-    tflow = tf.math.log1p
-    insym = lambda a: sympy.log(a + 1)
+    as_tflow = tf.math.log1p
+    as_sym = lambda a: sympy.log(a + 1)
 
 
 class Div(MathOperator):
-    tflow = tf.math.divide
-    insym = lambda a, b: sympy.Mul(a, 1 / b)
+    as_tflow = tf.math.divide
+    as_sym = lambda a, b: sympy.Mul(a, 1 / b)
     xtype = (tuple([float, float]), float)
 
 
 class Sqrt(MathOperator):
+    """Capitalized class name, even though its a sympy function"""
     xtype = (tuple([float]), float)
-    insym = sympy.sqrt
-    tflow = tf.sqrt
+    as_sym = sympy.sqrt  # same as: lambda a: sympy.Pow(a, sympy.S.Half)
+    as_tflow = tf.sqrt
 
 
 # class Divide_no_nan(Operator):
 #     # classname = 'Divide_no_nan'  # sfeh??
-#     tflow = tf.math.divide_no_nan
-#     insym = lambda a, b: sympy.Mul(a, )
+#     as_tflow = tf.math.divide_no_nan
+#     as_sym = lambda a, b: sympy.Mul(a, )
 #     xtype = (tuple([float, float]), float)
 
 
 class Usub(Operator, sympy.Function):
     xtype = (tuple([float]), float)
-    tflow = tf.negative
-    insym = lambda a: sympy.Mul(a, -1)
+    as_tflow = tf.negative
+    as_sym = lambda a: sympy.Mul(a, -1)
 
 
 class Powrounded(Operator):
-    tflow = lambda a, b: tf.pow(a, tf.round(b))
-    insym = lambda a, b: sympy.Pow(a, sympy.Integer(b))
+    as_tflow = lambda a, b: tf.pow(a, tf.round(b))
+    as_sym = lambda a, b: sympy.Pow(a, sympy.Integer(b))
     xtype = (tuple([float, float]), float)
 
 
@@ -505,7 +513,6 @@ class Powrounded(Operator):
 def expr_sympify(expr):
     """
     Returns a simplified expression using sympify.
-    - sympify the expression
     - If sympify evaluates to one of these errors: 'zoo', 'inf', '*I', 'nan', stop evaluation
 
     Sympify is a python core module which reduced mathematical expressions.
@@ -537,12 +544,13 @@ def expr_sympify(expr):
 
     try:
         expr_sym = sympy.sympify(expr)
-        # try:  # sfeh:xxx
-        #     # expr_sym2 = # expr_sym.factor()
-        #     if # expr_sym != # expr_sym2:
-        #         print(f'COMPARE FACTOR:\n{# expr_sym}  len {len(# expr_sym)}\n{# expr_sym2}  len {len(# expr_sym2)}')
-        # except Exception as ex:
-        #     print('fdsfdsahds')
+        try:
+            # sfeh:XXX use or delete this!
+            expr_sym2 = expr_sym.factor()
+            if expr_sym != expr_sym2:
+                print(f'COMPARE FACTOR:\n{expr_sym}  len{len(expr_sym)}\n{expr_sym2}  len{len(expr_sym2)}')
+        except Exception as ex:
+            print(f'sympify-factor ex: {expr_sym} {ex}')
         if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I):
             raise ArithmeticError(f'Simplification failed for expression: {expr_sym}')
         return expr_sym
@@ -680,14 +688,14 @@ def sympy_to_tensorflow(expr, tensor_dict):
         try:
             tf_fun = totf[type(expr)]
         except KeyError:
-            tf_fun = type(expr).tflow
+            tf_fun = type(expr).as_tflow
             # try:
-            #     tf_fun = type(expr).tflow  # sfeh
+            #     tf_fun = type(expr).as_tflow  # sfeh
             # except Exception as ex:
             #     # print('aaa', type(expr), expr, type(expr) in sympy_to_node)
             #     # ignore:
             #     # -> sympy.conjugate
-            #     tf_fun = expr.tflow  # sfeh:delete? delete case above? ### max,
+            #     tf_fun = expr.as_tflow  # sfeh:delete? delete case above? ### max,
 
         tf_args = [sympy_to_tensorflow(x, tensor_dict) for x in expr.args]
         try:
@@ -700,12 +708,9 @@ def sympy_to_tensorflow(expr, tensor_dict):
         return result
 
 
-class BaseTree(NodeBase):
+class ExperimentalBaseTree(NodeBase):
     """
-    The core is the structure of a plagih gp-fintree.
-    It recursively holds the nodes of a fintree; every fintree has a list of potential children.
-    Example core: [+, 1, [*, [-, 2, 3], 2]] = 1 + ((2-3) * 2)
-
+    Is currently not in use and Experimental
     states? sfeh:discuss
     [None]: not set
     [0]:    evolution/construction/build mode (potentially missing leaf nodes)
@@ -728,15 +733,8 @@ class BaseTree(NodeBase):
         #         cls.fam, cls.time_index, _ = observation_get_family_and_time(args, none_return=None)
         #         cls.index_minmax = None
 
-        # cls.args = [x for x in args]  # was 'childs'
-        # obj = object.__new__(subcls)
-        # obj = super().__new__(subcls)
-        # obj = object.__new__(subcls)
-        # obj.args = [x for x in args]  # was 'childs'
-        # obj.is_fix = kwargs.get('is_fix', False)
-        # obj = subcls
         obj = object.__new__(subcls)
-        obj.args = [x for x in args]
+        obj.args = [arg for arg in args]
         return obj
 
     def __init_subclass__(cls, **kwargs):
@@ -779,177 +777,8 @@ class BaseTree(NodeBase):
     def get_nclass(self):
         return self.__class__.__name__
 
-    def is_root(self):
-        """
-        does this work while building a fintree?
-        """
-        return self.depth == 0
-
-    def set_childs(self, childs):
-        """
-        Sets the self.args variable, which must be nodes or None
-        """
-        self.args = childs
-
-    def update_fixed_nodes(self, other: 'BaseTree'):
-        """
-        Updating the fixed nodes in a tree where they were lost for some reason.
-        This should only occur during the reconstructing test of a tree from expression.
-        """
-        if other.is_fix:
-            if self.get_nclass() != other.get_nclass():
-                raise
-            self.is_fix = True
-            for ii, cc in enumerate(self.args):
-                cc.update_fixed_nodes(other.args[ii])
-
-    def get_nodes_to_depth(self, goal_depth, only_mutable=False, get_closest_depth=False):
-        child_results = []
-        if self.depth < goal_depth:
-            child_results = sum(
-                [child.get_nodes_to_depth(goal_depth, only_mutable=only_mutable, force_depth=get_closest_depth) for
-                 child in self.args], [])
-
-        if only_mutable and self.is_fix or \
-                get_closest_depth and self.depth != goal_depth:
-            my_result = []
-        else:
-            my_result = [self]
-
-        return my_result + child_results
-
-    #
-    #     return label_list
-    #
-    # def get_all_nodes(self):
-    #     if len(self.args) == 0:
-    #         return [self]
-    #     else:
-    #         return [self] + [cc.get_all_nodes() for cc in self.args]
-
-    def get_nodes_at_depth(self, goal_depth, allow_fixed=False, expand_depth=False):
-        """Returns a list with mutable ids which are *goal_depth* layers away from non-modifiable nodes
-        last_leaves: if you want so save all leave nodes aswell
-        sum_layers=False, get_closest=True, return_all_layers=False"""
-        nodes = []
-        if (not self.is_fix or allow_fixed) and (
-                self.depth == goal_depth or (self.depth > goal_depth and expand_depth)):
-            return [self]
-        elif self.depth <= goal_depth or expand_depth:
-            nodes.extend(list(itertools.chain(
-                *[cc.get_nodes_at_depth(goal_depth, allow_fixed=allow_fixed, expand_depth=expand_depth) for cc in
-                  self.args])))
-            return nodes
-        else:
-            return []
-
-    # def eval_nested(self):
-    #     """
-    #
-    #     """
-    #     expr_str = self.label.nlabel
-    #     expr_str = f'"{expr_str}"'  # sfeh: Also not used anymore? to-do was here
-    #
-    #     if self.args:
-    #         cc_expr = [cc.eval_nested() for cc in self.args]
-    #         cc_expr = ', '.join(cc_expr)
-    #
-    #         expr_str = f'{expr_str}, {cc_expr}'
-    #
-    #     return f'{expr_str}'
-
-    def eval_apted_notation(self):
-        """Calculating the TED requires this representation
-        e.g. {+{Ifthe{True}{1}{2}}{3}}"""
-        # sfEh check if this still works as one-liner
-        return f"{{{self.get_nclass()}{''.join([cc.eval_apted_notation() for cc in self.args])}}}"
-
-    def repair_depth(self, depth=0):
-        """
-        aka set_depth recursively for all nodes in a branch
-        mainly used in branch
-
-        The depth is written in every node (for whatever reason), and instead of having to propagate
-        the depth through every crossover/branch mutation function, instead, we call it when replacing nodes
-        """
-        self.depth = depth
-        for cc in self.args:
-            cc.repair_depth(depth=depth + 1)
-
-    def set_new_node(self, new_node: 'BaseTree'):
-        """
-        was: new_core
-        """
-        self.__class__ = new_node
-        self.args = new_node.args or []  # todo must be updated recursively
-
-    def eval_mutable_nodes(self, xtype_out=None, allow_root=True):
-        """
-        return all nodes that are mutable (non fixed)
-        sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!
-        """
-        node_list = []
-        if not self.is_fix:  # requirement for mutability
-            # crossover requires excluding types that are not matching, and excludes the root node
-            if (xtype_out is None) and (allow_root or not self.is_root()):
-                node_list.append(self)
-
-        for cc in self.args:
-            node_list.extend(cc.eval_mutable_nodes(xtype_out=xtype_out, allow_root=allow_root))
-        # deprecated:
-        # node_list.extend(list(itertools.chain(
-        #     *[cc.eval_mutable_nodes(xtype_out=xtype_out, allow_root=allow_root) for cc in self.args])))
-        return node_list
-
-    # sfeh:xxx
-    # def evolve_mutate_filter_branch(self):
-    #     """
-    #     Recursively filter the nodes in the branch of fintree
-    #     sfeh:   random filter all terminal nodes /
-    #             single node /
-    #             nodes in a branch /
-    #             random nodes in a branch /
-    #             intelligent filtering
-    #     """
-    #     # self.state = STATE_BUILDING  #  ==>state
-    #         for cc in self.args:
-    #             cc.evolve_mutate_filter_branch()
-    #     else:
-    #         self.mutate_self_filter(filter_type='gaussian_filter')
-
-    # def finalize_set_nodepath(self, nodepath):
-    #     """
-    #     [0,2,1,0,0]
-    #     ==>ROOT
-    #     """
-    #     self.nodepath = nodepath
-    #     for ii, child in enumerate(self.args):
-    #         nodepath_child = nodepath + [ii]
-    #         child.finalize_set_nodepath(nodepath_child)
-
-    def check_depth_infos(self, depth=0, fatal=None):
-        """
-        Checks, whether the depth of all nodes in the tree are set correctly.
-        Should not be necessary if all evolutions (branch-mutation, crossover) work fine
-        - starts at depth 0, increase at every level
-        - compare with the written value
-        """
-        if depth != self.depth:
-            if fatal:
-                raise
-            return False
-        return all([cc.check_depth_infos(depth=depth + 1, fatal=fatal) for cc in self.args])
-
-    def selfcheck(self, check_depth=True, fatal=None):
-        """
-        Tree Self-check for its structure
-        """
-        results = [self.check_depth_infos(fatal=fatal) if check_depth else 0]
-        return sum(results)
-
 
 if __name__ == '__main__':
-    import inspect
 
     ns = {
         'a': sympy.Symbol('a', real=True),
@@ -1037,9 +866,9 @@ if __name__ == '__main__':
         st = {}
         for x in get_subclasses(Operator):
             try:
-                # st[f'{x.insym.__name__}'] = x.__name__  # x.tflow.__name__
+                # st[f'{x.as_sym.__name__}'] = x.__name__  # x.as_tflow.__name__
 
-                st[f'sympy.{x.insym.__name__}'] = x.__name__  # x.tflow.__name__
+                st[f'sympy.{x.as_sym.__name__}'] = x.__name__  # x.as_tflow.__name__
             except AttributeError as ex:
                 print(f'Could not get {x}: {ex}')
                 # st[x.__name__] = x.__name__

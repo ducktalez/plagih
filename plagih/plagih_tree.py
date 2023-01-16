@@ -444,19 +444,19 @@ class Ifte(Operator):
     as_sym = lambda *args: sympy.Piecewise((args[1], args[0]), (args[2], True))
 
 
-class Round(MathOperator):  # 'Round'
-    """sfeh:XXX this does not work
-    discuss:
-    - sympy.Integer(x)
-    - sympy.N(x, 1)
-        as_sym(Symbol('a'))
-        as_sym(1.23)
-        as_sym(sympy.Add(a, Symbol('a'))
-    -> Write custom round function that evaluates only when is_number
-    """
-    xtype = (tuple([float]), float)
-    as_sym = lambda a: sympy.N(a, 1)
-    as_tflow = lambda a: tf.math.round(a, 1)
+# class Round(MathOperator):  # 'Round'
+#     """sfeh:XXX this does not work
+#     discuss:
+#     - sympy.Integer(x)
+#     - sympy.N(x, 1)
+#         as_sym(Symbol('a'))
+#         as_sym(1.23)
+#         as_sym(sympy.Add(a, Symbol('a'))
+#     -> Write custom round function that evaluates only when is_number
+#     """
+#     xtype = (tuple([float]), float)
+#     as_sym = lambda a: sympy.N(a, 1)
+#     as_tflow = lambda a: tf.math.round(a, 1)
 
 
 class Log1p(MathOperator):

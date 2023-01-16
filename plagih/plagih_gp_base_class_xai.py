@@ -169,7 +169,7 @@ class ExplainableGP:
                     print_e(f'SFEH: this tree could whatever {ex}')  # -> piecewise function, mostly
 
                 _obsoletes = [i for i in paretofront if
-                                    i.get_fitness() > fintree.get_fitness() and i.get_parsimony() >= fintree.get_parsimony()]
+                              i.get_fitness() > fintree.get_fitness() and i.get_parsimony() >= fintree.get_parsimony()]
                 if _obsoletes:
                     printyeah('a', f'Paretofront: Removing obsolete entries {[str(i) for i in _obsoletes]}')
                 paretofront = [ftree for ftree in paretofront if ftree not in _obsoletes]
@@ -181,17 +181,8 @@ class ExplainableGP:
     def gen_create_initial(self):
 
         if self.origintree is not None:
-            self.pop_next.append(self.origintree)  # sfeh why not :P
-            # self.pareto.pareto_insert(self.origin)  # the origin fintree is the only candidate (automatically added)
+            self.pop_next.append(self.origintree)  # the origin fintree is the only candidate (automatically added)
         else:
-            # total_rate = sum([x['evolve_rate'] for x in self.evolve_random.values()])
-            #
-            # for tag, evolve_specs in self.evolve_random.items():
-            #     evolve_num = int(self.pop_max * (evolve_specs['evolve_rate'] / total_rate))
-            #
-            #     for nn in range(evolve_num):
-            #         evotree = tb.pop_random(goaldepth_randomizer=None, goalnodes_randomizer, p_full, origin=self.origin)
-            #         self.genloop_performance_append_tree(evotree, tag)
             @self.create_trees(0.5)
             def rand1():
                 return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3, 1)), 1, 3), p_full=1)
@@ -216,7 +207,7 @@ class ExplainableGP:
                 raise
             except TypeError as ex:
                 print_warning('ww', f'Missing Arg?: {ex}')
-                if 'Argument of Integer should be of' in ex:
+                if 'Argument of' in ex:
                     print('sfeh:XXX debug this')
                 raise
             except Exception as ex:
@@ -231,6 +222,7 @@ class ExplainableGP:
         they have gone through a process of changes. Here, the fintree is refurbished.
         - Enrich the raw fintree for the next generation
         - check if the fintree is actually valid"""
+
         # self.printpl('gggg', f'->Evolving \'{createTreeFunc.__name__}\' {n}x starting...')
 
         def loop(create_tree_func):

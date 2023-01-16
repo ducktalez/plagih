@@ -179,7 +179,7 @@ class TreeBuilder:
                              # Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.5,
                              Xor: 1,  # sfeh
                              # sympy extra classes (Capitalized)
-                             Round: 0.5,
+                             # Round: 0.5,  sfeh
                              And: 1, Or: 1, Not: 0.5,
                              # Eq: 1,  # Ne: 0.5,
                              Lt: 0.5, Le: 0.5, Gt: 0.1, Ge: 0.1,

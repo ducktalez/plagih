@@ -366,7 +366,6 @@ class TreeBuilder:
         """
         evostruc = nsted_deepcopy(nsted)
 
-        # todo:chain only mutable nodes that are not operators in chained-mode
         _nd = np.random.choice(evostruc.eval_mutable_nodes())
         xtype = _nd.get_xtype()
 
@@ -462,14 +461,14 @@ class TreeBuilder:
         _a_nd = np.random.choice(_a_nds)
 
         xtype_out = _a_nd.get_xtype_out()
-        _b_nds = _b.eval_mutable_nodes(xtype_out=xtype_out)
+        _b_nds = _b.eval_mutable_nodes(xt_out=xtype_out)
         if len(_b_nds) > 0:
             _b_nd = np.random.choice(_b_nds)
         else:
             xtype_out = float if xtype_out == bool else bool  # the other swap type now
-            _b_nds = _b.eval_mutable_nodes(xtype_out=xtype_out)
+            _b_nds = _b.eval_mutable_nodes(xt_out=xtype_out)
             _b_nd = np.random.choice(_b_nds)
-            _a_nds = _a.eval_mutable_nodes(allow_root=False, xtype_out=xtype_out)
+            _a_nds = _a.eval_mutable_nodes(allow_root=False, xt_out=xtype_out)
             _a_nd = np.random.choice(_a_nds)
 
         ansted_copy = copy.deepcopy(_a_nd)  # sfeh deepcopy required??

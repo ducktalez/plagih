@@ -1,3 +1,4 @@
+import itertools
 from dataclasses import dataclass
 
 from plagih.plagih_tree import *
@@ -33,7 +34,7 @@ class Nested:
 
         self.is_fix = is_fix
         self.depth = depth
-        self.is_chain = is_chain  # sfeh:discuss Not sure, if this is really required
+        self.is_chain = is_chain  # sfeh:xxx check update required
 
     def __str__(self):
         try:
@@ -187,7 +188,7 @@ class Nested:
         self.childs = new_node.childs  # sfeh maybe must be updated recursively
         self.repair_depth(self.depth)  # Especially required for crossover or branches
 
-    def eval_mutable_nodes(self, xtype_out=None, allow_root=True):
+    def eval_mutable_nodes(self, xt_out=None, allow_root=True, allow_chain=False):
         """
         return all nodes that are mutable (non fixed)
         sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!
@@ -196,11 +197,13 @@ class Nested:
         if not self.is_fix:  # requirement for mutability
             # crossover requires excluding types that are not matching, and excludes the root node
             # sfeh:open in anderer klasse
-            if (xtype_out is None or xtype_out == self.get_xtype_out()) and (allow_root or not self.is_root()):
+            if (xt_out is None or xt_out == self.get_xtype_out()) \
+                    and (allow_root or not self.is_root()) \
+                    and (allow_chain or not self.is_chain):
                 node_list.append(self)
 
         for cc in self.childs:
-            node_list.extend(cc.eval_mutable_nodes(xtype_out=xtype_out, allow_root=allow_root))
+            node_list.extend(cc.eval_mutable_nodes(xt_out=xt_out, allow_root=allow_root, allow_chain=allow_chain))
         return node_list
 
     def evolve_mutate_filter_branch(self, precision=6):
@@ -255,10 +258,10 @@ def sympy_to_nsted(expr, allow_chain=False):
             if allow_chain:
                 raise NotImplementedError
             else:
-                _revlist = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
-                _revlist = [[sympy_to_nsted(xx, allow_chain=allow_chain) for xx in list(i)] for i in _revlist]
-                otherwise = _revlist[0][0]  # the last "True" condition
-                for x in _revlist[1:]:
+                _ccinv = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
+                _ccinv = [[sympy_to_nsted(xx, allow_chain=allow_chain) for xx in list(i)] for i in _ccinv]
+                otherwise = _ccinv[0][0]  # the last "True" condition
+                for x in _ccinv[1:]:
                     otherwise = Nested(Ifte, [x[1], x[0], otherwise])
                 return otherwise
         elif isinstance(expr, sympy.Pow):

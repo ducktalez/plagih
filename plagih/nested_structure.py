@@ -4,11 +4,11 @@ from dataclasses import dataclass
 from plagih.plagih_tree import *
 
 # For sympy_to_Nested conversion
-sptonode = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: sign, sympy.log: log, sympy.Mul: Mul,
+sptonode = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul,
             sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,
             sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
-            sympy.GreaterThan: Ge, sympy.cos: cos, sympy.sin: sin, sympy.tan: tan, sympy.acos: acos,
-            sympy.asin: asin, sympy.atan: atan, sympy.tanh: tanh, sympy.sinh: sinh, sympy.cosh: cosh,
+            sympy.GreaterThan: Ge, sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos,
+            sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: sinh, sympy.cosh: cosh,
             sympy.Min: Min, sympy.Max: Max}
 # , sympy.Equality: Eq
 stn_keys = tuple(sptonode.keys())  # sfeh: debug this... relevant?
@@ -315,11 +315,11 @@ if __name__ == '__main__':
     # x = Nested(Add(), depth=0, childs=[Symbol('a'), Float(2.2)])
     # # x = Nested(Symbol(), childs=['a'])
     # print(x)
-    sptonode = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: sign, sympy.log: log, sympy.Mul: Mul,
+    sptonode = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul,
                 sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,
                 sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
-                sympy.GreaterThan: Ge, sympy.cos: cos, sympy.sin: sin, sympy.tan: tan, sympy.acos: acos,
-                sympy.asin: asin, sympy.atan: atan, sympy.tanh: tanh, sympy.sinh: sinh, sympy.cosh: cosh,
+                sympy.GreaterThan: Ge, sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos,
+                sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: sinh, sympy.cosh: cosh,
                 sympy.Min: Min, sympy.Max: Max}
     # sfeh:open = {sympy.Unequality: Ne, sympy.Equality: Eq}
     stn_keys = tuple(sptonode.keys())

@@ -172,10 +172,10 @@ class TreeBuilder:
                              # Usub: 1,  # sfeh
                              Square: 0.75,
                              Powrounded: 0.1,
-                             Abs: 0.5, sign: 0.5,  # sfeh stop chain of arity-1 op_dict in buid method?
+                             Abs: 0.5, Sign: 0.5,  # sfeh stop chain of arity-1 op_dict in buid method?
                              Sqrt: 0.1,  # 0.25,  # sfeh debug this
-                             log: 0.1,  # Log1p: 0.1,
-                             sin: 0.5, tan: 0.1, cos: 0.33,
+                             Log: 0.1,  # Log1p: 0.1,
+                             Sin: 0.5, Tan: 0.1, Cos: 0.33,
                              # Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.5,
                              Xor: 1,  # sfeh
                              # sympy extra classes (Capitalized)
@@ -362,7 +362,7 @@ class TreeBuilder:
     def evolve_mutate_point(self, nsted):
         """
         Mutate a single mutable point in any Tree.
-        sfeh is the fintree a fintree copy or the same fintree?
+        sfeh:debug is the fintree a fintree copy or the same fintree?
         """
         evostruc = nsted_deepcopy(nsted)
 

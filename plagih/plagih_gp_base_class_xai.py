@@ -153,7 +153,6 @@ class ExplainableGP:
 
             if success:
                 self.gens_since_last_pareto = 0
-                printyeah('a', f'Paretofront: New entry. parsimony: {par} fitness: {fit:6.4f}')
                 try:
                     # sfeh: trying to simplify the tree for a even improved pareto # sfeh:open
                     symtree = evolve_reduce_simplify(fintree.get_evotree(), force=True)
@@ -191,30 +190,6 @@ class ExplainableGP:
             def rand2():
                 return self.tb.pop_random_depth(np.clip(int(random.normalvariate(2.5, 1)), 2, 3), p_full=1)
         return
-
-    def lut_to_meta(self, evotree):
-
-        try:
-            meta = self.lut[str(evotree)]  # fixed nodes not relevant
-        except KeyError:
-            try:
-                meta = self.finalize_tree_get_meta(evotree)
-            except ValueError as ex:
-                print_warning('www', f'ValueError: {ex}')
-                raise
-            except ArithmeticError as ex:
-                print_warning('www', f'ArithmeticError: {ex}')
-                raise
-            except TypeError as ex:
-                print_warning('ww', f'Missing Arg?: {ex}')
-                if 'Argument of' in ex:
-                    print('sfeh:XXX debug this')
-                raise
-            except Exception as ex:
-                print_warning('ww', f'Could not append tree to population because: {ex}\t'
-                                    f'=>tree: {evotree}')
-                raise
-        return meta
 
     def create_trees(self, rate):
         """Safely append a fintree to the population.
@@ -262,7 +237,11 @@ class ExplainableGP:
         return loop
 
     def evaluate_and_append(self, evotree):
-        meta = self.lut_to_meta(evotree)
+        try:
+            meta = self.lut[str(evotree)]  # fixed nodes not relevant
+        except KeyError:
+            meta = self.finalize_tree_get_meta(evotree)
+
         fintree = FinalizedTree(evotree, meta)
         # sfeh: tag
         self.pop_next.append(fintree)
@@ -282,18 +261,14 @@ class ExplainableGP:
             return selection_tournament(self.pop_base, tournsize=3)
 
         @self.create_trees(0.1)
-        def mutateB():
+        def mut_br():
             evotree = selection_tournament(self.pop_base, tournsize=3)
             return self.tb.evolve_mutate_branch_nodes(evotree, 4, p_full=1)
 
         @self.create_trees_crossover(0.2)
         def xover():
-            # try:
             t1 = selection_tournament(self.pop_base, tournsize=3)
             t2 = selection_tournament(self.pop_base, tournsize=3)
-            # except ValueError as ex:
-            #     print_warning("www", f'Crossover failed: {ex}')
-            #     # sfeh: mostly 1-noded trees
             evo1, evo2 = self.tb.evolve_crossover(t1, t2)
             return evo1, evo2
 

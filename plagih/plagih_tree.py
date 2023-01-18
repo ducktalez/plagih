@@ -29,8 +29,6 @@ E. g., it reduces '1+1+a' to 'a+2' and thus saves much computation power.
     otherwise: '1 < Max(2, Ifte(1 < a, 1, 1))' will crash. (< operators only work on non-complex - aka real numbers)
     check for is_number if required.
 
-- Classes must currently have the exact same name as their occurance (Ifte -> Ifte, not ifte or so)
-    This is because when None is returned, the class name gets replaced at the function. could be solved, but why though :P
 The following line is an honorable mention for myself; it was required for
 ## if ((a == True or a == False) and (b == True or b == False)) == (sympify(a).is_Boolean and sympify(b).is_Boolean):
 
@@ -160,9 +158,9 @@ class ChainableOp:
     The respected Operators are
     Add, Mul, Min, Max
     And, Or
-    Piecewise
+    Piecewise/Ifte
     """
-    pass
+    chain_xtype = None
 
 
 class MathOperator(Operator):
@@ -244,6 +242,7 @@ class Add(MathOperator, ChainableOp):
     as_sym = sympy.Add
     as_tflow = tf.add
     xtype = (tuple([float, float]), float)
+    chain_xtype = float
 
 
 class InverseFraction(Operator):
@@ -264,32 +263,32 @@ class Abs(MathOperator):
     xtype = (tuple([float]), float)
 
 
-class sign(MathOperator, NoSymCapitalized):
+class Sign(MathOperator, NoSymCapitalized):
     # does not work in string, but irrelevant. sympy.simplify('sign(-a)') -> -sign(a)
     as_sym = sympy.sign
     as_tflow = tf.sign
     xtype = (tuple([float]), float)
 
 
-class log(MathOperator, NoSymCapitalized):
+class Log(MathOperator, NoSymCapitalized):
     as_sym = sympy.log  # sfeh: Log isactually Ln (base e)
     as_tflow = tf.math.log
     xtype = (tuple([float]), float)
 
 
-class cos(AngleOperator, NoSymCapitalized):
+class Cos(AngleOperator, NoSymCapitalized):
     as_sym = sympy.cos
     as_tflow = tf.cos
     xtype = (tuple([float]), float)
 
 
-class sin(AngleOperator, NoSymCapitalized):
+class Sin(AngleOperator, NoSymCapitalized):
     as_sym = sympy.sin
     as_tflow = tf.sin
     xtype = (tuple([float]), float)
 
 
-class tan(AngleOperator, NoSymCapitalized):
+class Tan(AngleOperator, NoSymCapitalized):
     # sfeh:discuss actually rename classes.
     # they do not have to match sympy expressions/classes
     as_sym = sympy.tan
@@ -297,19 +296,19 @@ class tan(AngleOperator, NoSymCapitalized):
     xtype = (tuple([float]), float)
 
 
-class acos(AngleOperator, NoSymCapitalized):
+class Acos(AngleOperator, NoSymCapitalized):
     as_sym = sympy.acos
     as_tflow = tf.acos
     xtype = (tuple([float]), float)
 
 
-class asin(AngleOperator, NoSymCapitalized):
+class Asin(AngleOperator, NoSymCapitalized):
     as_sym = sympy.asin
     as_tflow = tf.asin
     xtype = (tuple([float]), float)
 
 
-class atan(AngleOperator, NoSymCapitalized):
+class Atan(AngleOperator, NoSymCapitalized):
     as_sym = sympy.atan
     as_tflow = tf.atan
     xtype = (tuple([float]), float)
@@ -362,43 +361,42 @@ class Mul(MathOperator, ChainableOp):
     as_sym = sympy.Mul
     as_tflow = tf.multiply
     xtype = (tuple([float, float]), float)
+    chain_xtype = float
 
 
 class And(LogicOperator, ChainableOp):
     as_sym = sympy.And
     as_tflow = tf.logical_and
     xtype = (tuple([bool, bool]), bool)
+    chain_xtype = bool
 
 
 class Or(LogicOperator, ChainableOp):
     as_sym = sympy.Or
     as_tflow = tf.logical_or
     xtype = (tuple([bool, bool]), bool)
+    chain_xtype = bool
 
 
 class ITE(LogicOperator):
-    """sfeh:is this really required? currrently not in use"""
+    """sfeh:is this really required? currently not in use"""
     as_sym = sympy.ITE
     as_tflow = lambda *args: tf.cond(args[0], true_fn=args[1], false_fn=args[2])
     xtype = (tuple([bool, bool, bool]), bool)
 
 
-class Piecewise(ChainableOp):
-    as_tflow = tf.where
-    xtype = (tuple([bool, float, float]), float)
-    as_sym = sympy.Piecewise
-
-
 class Min(MinMaxBase, ChainableOp):
-    as_sym = sympy.Min  # sympy.Min fails -> sympy.sympify('Min(a, b)')
+    as_sym = sympy.Min
     as_tflow = tf.minimum
     xtype = (tuple([float, float]), float)
+    chain_xtype = float
 
 
 class Max(MinMaxBase, ChainableOp):
     as_sym = sympy.Max
     as_tflow = tf.maximum
     xtype = (tuple([float, float]), float)
+    chain_xtype = float
 
 
 class Lt(RelationalOperator):
@@ -426,9 +424,9 @@ class Ge(RelationalOperator):
 
 
 class Square(MathOperator):
+    as_sym = lambda a: sympy.Pow(a, 2)
     as_tflow = tf.square
     xtype = (tuple([float]), float)
-    as_sym = lambda a: sympy.Pow(a, 2)
 
 
 class Sub(MathOperator):
@@ -437,11 +435,16 @@ class Sub(MathOperator):
     as_sym = lambda a, b: sympy.Add(a, -b)
 
 
-class Ifte(Operator):
+class Ifte(Operator, ChainableOp):
+    """Also class Piecewise"""
     as_tflow = tf.where
     xtype = (tuple([bool, float, float]), float)
     # as_sym = lambda c, a, b: sympy.Piecewise((a, c), (b, True))
     as_sym = lambda *args: sympy.Piecewise((args[1], args[0]), (args[2], True))
+    chain_xtype = (float, bool)
+
+
+Piecewise = Ifte
 
 
 # class Round(MathOperator):  # 'Round'
@@ -599,14 +602,12 @@ totf = {
     sympy.Xor: tf.math.logical_xor,
 
     sympy.Equality: tf.equal,
-    # sympy.Unequality: tf.not_equal,
+    sympy.Unequality: tf.not_equal,
     sympy.GreaterThan: tf.greater_equal,
     sympy.StrictGreaterThan: tf.greater,
     sympy.LessThan: tf.less_equal,
     sympy.StrictLessThan: tf.less,
-
-    sympy.N: tf.math.round,
-
+    # sympy.N: tf.math.round,  # incorrect, sympy.N(x, 1) is right
     sympy.log: tf.math.log,
     sympy.cos: tf.cos,
     sympy.sin: tf.sin,
@@ -615,11 +616,9 @@ totf = {
     sympy.asin: tf.asin,
     sympy.atan: tf.atan,
     sympy.tanh: tf.tanh,
-
     sympy.sign: tf.sign,
-
     sympy.ITE: tf.where,  # sfeh:test this
-    sympy.re: lambda x: tf.convert_to_tensor(x, dtype=tf.dtypes.float32),  # gotcha, comes up randomly
+    sympy.re: lambda x: tf.convert_to_tensor(x, dtype=tf.dtypes.float32),  # sympy-gotcha, comes up randomly
 }
 
 
@@ -680,10 +679,10 @@ def sympy_to_tensorflow(expr, tensor_dict):
     else:  # Operator # len(expr.args) > 0:  # sfeh: line can be removed or replaced
         if isinstance(expr, sympy.Piecewise):
             _revlist = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
-            _revlist = [[sympy_to_tensorflow(xx, tensor_dict) for xx in list(x)] for x in _revlist]
+            _revlist = [[sympy_to_tensorflow(xx, tensor_dict) for xx in list(i)] for i in _revlist]
             otherwise = _revlist[0][0]  # the last "True" condition
-            for x in _revlist[1:]:
-                otherwise = tf.where(x[1], x[0], otherwise)
+            for cet in _revlist[1:]:
+                otherwise = tf.where(cet[1], cet[0], otherwise)
             return otherwise
         try:
             tf_fun = totf[type(expr)]
@@ -697,7 +696,7 @@ def sympy_to_tensorflow(expr, tensor_dict):
             #     # -> sympy.conjugate
             #     tf_fun = expr.as_tflow  # sfeh:delete? delete case above? ### max,
 
-        tf_args = [sympy_to_tensorflow(x, tensor_dict) for x in expr.args]
+        tf_args = [sympy_to_tensorflow(arg, tensor_dict) for arg in expr.args]
         try:
             result = tf_fun(*tf_args)  # fits, if the arguments match the expected arguments exactly Add(a, b)
         except TypeError:
@@ -867,7 +866,6 @@ if __name__ == '__main__':
         for x in get_subclasses(Operator):
             try:
                 # st[f'{x.as_sym.__name__}'] = x.__name__  # x.as_tflow.__name__
-
                 st[f'sympy.{x.as_sym.__name__}'] = x.__name__  # x.as_tflow.__name__
             except AttributeError as ex:
                 print(f'Could not get {x}: {ex}')

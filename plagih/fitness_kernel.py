@@ -80,10 +80,6 @@ class RegressionKernel(Kernel):
         return
 
     def histogram_bins(self):
-        """
-        :param action_minmax: action min and max, to display the whole range of actions
-        :return: bins for a beautiful histogram
-        """
         act_range = self.action_clip[1] - self.action_clip[0]  # max value - min value
         if self.action_round:  # [0, 1, 2] -> 2
             # sfehfun make kernel histogram function?

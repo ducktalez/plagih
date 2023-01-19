@@ -11,6 +11,7 @@ sptonode = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sy
             sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: sinh, sympy.cosh: cosh,
             sympy.Min: Min, sympy.Max: Max}
 # , sympy.Equality: Eq
+# sfeh:open = {sympy.Unequality: Ne, sympy.Equality: Eq}
 stn_keys = tuple(sptonode.keys())  # sfeh: debug this... relevant?
 
 
@@ -315,14 +316,6 @@ if __name__ == '__main__':
     # x = Nested(Add(), depth=0, childs=[Symbol('a'), Float(2.2)])
     # # x = Nested(Symbol(), childs=['a'])
     # print(x)
-    sptonode = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul,
-                sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,
-                sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
-                sympy.GreaterThan: Ge, sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos,
-                sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: sinh, sympy.cosh: cosh,
-                sympy.Min: Min, sympy.Max: Max}
-    # sfeh:open = {sympy.Unequality: Ne, sympy.Equality: Eq}
-    stn_keys = tuple(sptonode.keys())
     for x in stn_keys:
         lel = 4.5
         print(x, isinstance(lel, x))

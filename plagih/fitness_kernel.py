@@ -1,5 +1,6 @@
 import os
 
+import sympy
 from matplotlib import pyplot as plt
 
 from plagih.plagih_tree import sympy_to_tensorflow
@@ -56,7 +57,7 @@ class Kernel:
         self.tf_device = tf_device
 
         self.data_train = data_train
-        self.tensor_dict = data_train.to_dict('list')
+        self.data_dict = data_train.to_dict('list')
         self.data_control = data_control  # sfeh: currently not used
 
         # sfeh:better solution...
@@ -73,7 +74,7 @@ class RegressionKernel(Kernel):
                  *args, **kwargs):
         super().__init__(data_train, data_control, action_clip, action_round, *args, **kwargs)
 
-        self.solution = tf.constant(self.data_train[action_name])  # tensors[self.action.name]
+        self.solution_train = tf.constant(self.data_train[action_name])  # tensors[self.action.name],
         self.use_RMSE_vs_MAE_sfeh = use_RMSE_vs_MAE_sfeh
         # sfeh:xxx rework Kernel
 
@@ -117,6 +118,20 @@ class RegressionKernel(Kernel):
 
         return histpath
 
+    def eval_sym(self, expr_sym):
+        results_raw = []
+        pairwise_diff = []
+        square_diff = []
+        for dct in self.data_train.to_dict('index'):
+            x = expr_sym.sub(self.data_train)
+            p_diff = self.solution_train-x
+            results_raw.append(x)
+            pairwise_diff.append(p_diff)
+            square_diff.append(p_diff**2)
+        print('lele', results_raw)
+        # todo check
+        return sympy.sqrt(square_diff)/len(self.data_train)  # sfeh:optimize
+
     def eval_tf(self, expr):
         """
         -->>>>> used_observations was here, delete me
@@ -128,7 +143,7 @@ class RegressionKernel(Kernel):
         """
         # tf.compat.v1.reset_default_graph()  # sfeh:xxx is this really required to do? legacy code
 
-        results_raw = sympy_to_tensorflow(expr, self.tensor_dict)  # self.data_train
+        results_raw = sympy_to_tensorflow(expr, self.data_dict)  # self.data_train
         results = results_raw  # The ids change in the next lines! {id(results)} vs. {id(results_raw)}
 
         if self.action_round is not None:
@@ -136,7 +151,7 @@ class RegressionKernel(Kernel):
         if self.action_clip is not None:
             results = tf.clip_by_value(results, self.action_clip[0], self.action_clip[1])
 
-        pairwise_diff = self.solution - results
+        pairwise_diff = self.solution_train - results
 
         if self.use_RMSE_vs_MAE_sfeh:  # sfeh huber loss! mse, mae, rmse, huber, (log)
             regression_errors = tf.square(pairwise_diff)

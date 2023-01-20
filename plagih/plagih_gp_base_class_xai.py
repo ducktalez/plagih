@@ -184,7 +184,7 @@ class ExplainableGP:
         else:
             @self.create_trees(0.5)
             def rand1():
-                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3, 1)), 1, 3), p_full=1)
+                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3, 1)), 2, 3), p_full=1)
 
             @self.create_trees(0.5)
             def rand2():
@@ -206,7 +206,6 @@ class ExplainableGP:
             n_fails = 0
             while n_success < n:
                 try:
-
                     evotree = create_tree_func()
                     self.evaluate_and_append(evotree)
 
@@ -274,7 +273,7 @@ class ExplainableGP:
 
         @self.create_trees(0.1)
         def rand1():
-            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(4, 1)), 1, 4), p_full=1)
+            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3, 1)), 2, 4), p_full=1)
 
         @self.create_trees(0.1)
         def rand2():
@@ -451,8 +450,20 @@ class ExplainableGP:
 
         expr_sym = evotree.get_sympy_expr()
 
+        if DEBUG_DUMMY:
+            expr_sym2 = expr_sympify(expr_sym)
+            if expr_sym != expr_sym2:
+                print_e(f'asd {expr_sym} vs. {expr_sym2}')
+
         try:
             fitness = self.kernel.eval_tf(expr_sym)['mean_error']
+            if DEBUG_DUMMY and self.gen_id > 5 and np.random.random() > 0.05:
+                fitness_todo = self.kernel.eval_sym_experimental(expr_sym)
+                if fitness_todo != fitness:
+                    print(f'fitness_todo {fitness_todo} vs. fitness {fitness}')
+                else:
+                    print(f'SUCCESS {fitness_todo} vs. {fitness}')
+
         except ValueError as ex:
             raise ValueError(f'eval-ex nan: {ex}')
         except TypeError as ex:
@@ -528,3 +539,4 @@ if __name__ == '__main__':
     # nstr = "['Ifte', ['<', ['*', [2.85], ['vel']], ['Square', ['vel']]], ['*', ['pos'], ['*', ['pos'], [0.014]]], ['/', [2.0], ['pos']]]"
     # nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
     nstr = '["+:fix",["-:fix",["Ifte",["True"],["sin",["2"]],["/",["2.043"],["4"]]],["cartVel"]],["-1.3"]]'
+

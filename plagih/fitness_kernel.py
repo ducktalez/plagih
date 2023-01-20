@@ -1,7 +1,10 @@
+import copy
 import os
 
+import pandas as pd
 import sympy
 from matplotlib import pyplot as plt
+from sklearn.model_selection import train_test_split
 
 from plagih.plagih_tree import sympy_to_tensorflow
 
@@ -118,19 +121,32 @@ class RegressionKernel(Kernel):
 
         return histpath
 
-    def eval_sym(self, expr_sym):
+    def eval_sym_experimental(self, expr):
+        """VERY SLOW and only workd with mountain car
+
+        """
         results_raw = []
         pairwise_diff = []
         square_diff = []
-        for dct in self.data_train.to_dict('index'):
-            x = expr_sym.sub(self.data_train)
-            p_diff = self.solution_train-x
+        index_d = self.data_train.to_dict('index')
+
+        # try:
+        #     float(expr)
+        #     return
+        # except:
+        #     pass
+
+        for ii, dct in index_d.items():
+            ex = sympy.sympify(str(expr))
+            x = ex.subs(dct)  # [('cartVel', 2), ('cartPos', 3)]
+            # x1 = expr.subs(dct)  # must make symbols sympy.Symbol('x', real=True, imaginary=False)
+            p_diff = round(dct['action']-np.clip(x, 0, 2), 0)  # todo
             results_raw.append(x)
             pairwise_diff.append(p_diff)
             square_diff.append(p_diff**2)
-        print('lele', results_raw)
-        # todo check
-        return sympy.sqrt(square_diff)/len(self.data_train)  # sfeh:optimize
+
+        result = np.sqrt(float(np.sum(square_diff) / len(square_diff)))  # sfeh:optimize
+        return np.round(result, PRECISION)
 
     def eval_tf(self, expr):
         """
@@ -363,3 +379,15 @@ def sfeh_open():
 #         result_str = 'No summary provided for this kernel'
 #
 #     return result_str
+
+if __name__ == "__main__":
+
+    # ['cos(1.69234081*Max(0.024077, cartPos + 12.726454)**2) + sign(cartVel)',
+    #  '1.527033*cartVel + sign(cartVel) + Max(cartPos, cartVel)',
+    #  'sign(cartVel) + 1.476507']
+    df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv')
+    df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P design pattern #YOLO
+    data_train, data_control = train_test_split(df, test_size=0.2, random_state=0)
+    kernel = RegressionKernel(True, data_train, data_control, [0, 2], action_round, action_name)
+
+    'sign(cartVel) + 1.476507'

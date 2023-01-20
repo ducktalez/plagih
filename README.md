@@ -26,15 +26,16 @@
 - parallelisation
 - evolve-operatoren: werte runden, runden einbauen,
 - test-cases with notation, docstring
+- numba.pydata.org https://www.youtube.com/watch?v=x58W9A2lnQc
 
 - sfeh:discussion especially with mc: there can be more than one pareto entry with the same parsimony/fitness!
 
-
-- Always check
-- xxxxx
+Always check for notes in code
+- xxx
 - sfeh
 - asd
-- 
+- delete
+- debug this / debug me
 
 ## Compared to DEAP
 - DEAP has non-Programming options (altering arrays). Plagih is only for GP.

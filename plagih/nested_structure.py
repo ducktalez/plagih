@@ -50,18 +50,38 @@ class Nested:
         return f"[{label_str}]"
 
     def get_sympy_expr(self):
-        _sym = self.label.as_sym
-        if self.childs:
+        if self.childs and issubclass(self.label, Operator):
+            _sym = self.label.symfun
             _cs = [cc.get_sympy_expr() for cc in self.childs]
             # if self.label == Ifte:
-            _sym = _sym(*_cs)
+            try:
+                return _sym(*_cs)
+            except RecursionError:
+                print(f'asd {self}')
+            except Exception as todo:
+                print(todo)
         else:
-            if self.label.args:
-                _sym = self.label.get_sym()
-                _sym = _sym(*self.label.args)
+            if issubclass(self.label.__class__, TerminalNode):  # .--class--, as it is initiated?
+                try:
+                    _todo = self.label.get_sym()
+                    return _todo
+                except:
+                    print('TODOsdfgasdfgasedrgsertg')
+
+                # try:
+                #     print(f'Labelargs {self.label.args}      {self}')
+                #     return _sym(self.label.args[0])
+                # except Exception as ex:
+                #     print(f'asddsadsa {self}   {ex}')
+                #     try:
+                #         _sym = _sym(*self.label.args)
+                #     except Exception as ex:
+                #         print(f'NO SUCCESS??? {self}    {ex}')
+                #
+                #     print('why is success not printed?')
             else:
+                print('HHHUUUUUUUUUUsfehxxx')
                 raise
-        return _sym
 
     def repr_str(self):
         pass
@@ -240,12 +260,12 @@ def sympy_to_nsted(expr, allow_chain=False):
     # ==Terminal nodes==
     elif expr.is_Atom:
         if expr.is_Symbol:
-            _r = Symbol  # sfeh str VERY important!!
+            # _r = Symbol  # sfeh str VERY important!! Symbol type input is not accepted
             return Nested(Symbol(str(expr)), [])
         else:
             expr_eval = expr.evalf()  # standard 15 digits, sfeh prec=FLOAT_PRECISION?
             if expr.is_Boolean:
-                return Nested(Boolean(expr_eval), [])
+                return Nested(Boolean(bool(expr_eval)), [])
             elif expr.is_number:  # is_float does not match int
                 return Nested(Float(float(expr_eval)), [])  # sfeh round
                 # "TypeError: Cannot convert complex to float" -> ignore the whole expression, let it fail
@@ -277,10 +297,11 @@ def sympy_to_nsted(expr, allow_chain=False):
                     raise
                 return Nested(_r, [sympy_to_nsted(expr.args[0], allow_chain=allow_chain)])  # can ignore args[1] now
 
-            if isinstance(expr.args[1], sympy.Integer):
-                _r = Powrounded
-            else:
-                _r = Pow
+            # sfeh:open
+            # if isinstance(expr.args[1], sympy.Integer):
+            #     _r = Powrounded
+            # else:
+            _r = Pow
             childnstd = [sympy_to_nsted(x, allow_chain=allow_chain) for x in expr.args]
             return Nested(_r, childnstd)
 

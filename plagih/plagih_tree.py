@@ -54,9 +54,12 @@ Custom Operators /Functions/Nodes/Terminals/Nested:
     Also, make a case in sympy_to_nested to reconstruct trees from sympy expressions.
 """
 import os
+from abc import abstractmethod
+
 import sympy
 import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
-from plagih.util import get_subclasses, PRECISION  # noqa
+
+from plagih.util import get_subclasses, PRECISION, DEBUG_DUMMY  # noqa
 
 os.environ["KMP_WARNINGS"] = "FALSE"
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # https://github.com/tensorflow/tensorflow/issues/27023
@@ -67,35 +70,36 @@ tf.compat.v1.enable_eager_execution()  # sfeh possibly faster with disable
 
 
 class NodeBase:
-    as_sym = None
-    as_tflow = None
+    symfun = None
+    tf_fun = None
     xtype = None  # sfeh: will this b deprecated?
-
-    def __str__(self):
-        _str = self.__class__.__name__
-        if self.args:
-            if issubclass(self.__class__, Operator):
-                # sfeh does not work
-                _childstr = ', '.join([str(x) for x in self.args])
-                _str = f'{_str}({_childstr})'
-            elif issubclass(type(self), TerminalNode):
-                _str = f'{self.args[0]}'
-            else:
-                raise
-        return _str
 
     def __new__(cls, *args, **kwargs):
         # if isinstance(cls, TerminalNode):
         #     cls.args = args
         obj = object.__new__(cls)
-        if args:
-            obj.args = args
-        else:
-            obj.args = args
-            if issubclass(cls, TerminalNode):
-                obj.args = args
+        # sfeh:open there are no instances of operator nodes
+        # if args:
+        #     obj.args = args
+        # else:
+        obj.args = args
+        if issubclass(cls, TerminalNode):
+            pass
 
         return obj
+
+    def __str__(self):
+        _str = self.__class__.__name__
+        # if self.args:
+        if issubclass(self.__class__, Operator):
+            # sfeh does not work
+            _childstr = ', '.join([str(x) for x in self.args])
+            _str = f'{_str}({_childstr})'
+        elif issubclass(type(self), TerminalNode):
+            pass  # _str = f'{self.value}'
+        else:
+            raise
+        return _str
 
     def __len__(self):
         """ONLY works, when args are there"""
@@ -105,8 +109,8 @@ class NodeBase:
             return 1 + sum([len(cc) for cc in self.args])
 
     def _sympy_(self, *args):  # -> sympy.Basic:
-        _sym = self.as_sym
-        _sym = _sym(*args)
+        _sym = self.symfun
+        # _sym = _sym(*args)
         # childstr = [sympy.sympify(cc) for cc in args]
         # _sym = _sym(*childstr)
 
@@ -123,7 +127,7 @@ class NodeBase:
         return _sym
 
     def get_sym(self):
-        _sym = self.as_sym
+        _sym = self.symfun
         # if self.args:
         #     print(self.args, len(self.args), 'asd')
         #     if issubclass(self.__class__, Operator):
@@ -142,7 +146,7 @@ class NodeBase:
         return _sym
 
     def get_symstr(self):
-        return self.as_sym.__name__
+        return self.symfun.__name__
 
 
 class Operator(NodeBase):  # sfeh:xxx sympy.Function was here, also is_Function = True
@@ -199,20 +203,37 @@ class TerminalNode(NodeBase):  # sfeh sympy.Atom
     - observations (e.g. b, aka data input)
     - user-functions (sfeh:open)
     """
-    pass
+    value = 'TODO'
+
+    @abstractmethod
+    def __init__(self):
+        pass
+
+    def get_sym(self):
+        return self.value
 
 
 class Boolean(TerminalNode):
+
     # sfeh:discuss just for True/False?
     xtype = (tuple([]), bool)
-    as_sym = lambda *args: sympy.S.true if args[0] else ~sympy.S.true  # sympy.logic.boolalg.Boolean  # sfeh:discuss
-    as_tflow = lambda arg: tf.constant(arg, dtype=tf.bool)
+    symfun = lambda *a: sympy.S.true if a[0] else ~sympy.S.true  # sympy.logic.boolalg.Boolean  # sfeh:discuss
+    tf_fun = lambda arg: tf.constant(arg, dtype=tf.bool)
+
+    def __init__(self, value):
+        self.value = sympy.S.true if value else ~sympy.S.true
+
+    def get_sym(self):
+        return self.value
 
 
 class Float(TerminalNode):
     xtype = (tuple([]), float)
-    as_sym = sympy.Float
-    as_tflow = lambda x: tf.constant(x, dtype=tf.float32)
+    symfun = lambda *a: sympy.Float(a[0], PRECISION)
+    tf_fun = lambda a: tf.constant(a, dtype=tf.float32)
+
+    def __init__(self, value):
+        self.value = sympy.Float(value, PRECISION)
 
 
 class Symbol(TerminalNode):
@@ -223,9 +244,15 @@ class Symbol(TerminalNode):
         sfeh:xxx option here for type float/bool
     """
     # as_sym = sympy.Symbol
-    as_sym = lambda *args: sympy.Symbol(str(args[0]), real=True, imaginary=False)  # sfeh: real=/imaginary= faster.
-    as_tflow = lambda x: tf.constant(x, dtype=tf.float32 if isinstance(x, float) else tf.bool)
+    symfun = lambda *a: sympy.Symbol(a[0], real=True, imaginary=False)  # sfeh: real=/imaginary= faster.
+    tf_fun = lambda a: tf.constant(a, dtype=tf.float32 if isinstance(a, float) else tf.bool)
     xtype = (tuple([]), float)
+
+    def __init__(self, value):
+        self.value = sympy.Symbol(value, real=True, imaginary=False)
+
+    def get_sym(self):
+        return self.value
 
 
 # class ExprCondPair(ChainableOp):
@@ -239,217 +266,225 @@ class Symbol(TerminalNode):
 
 
 class Add(MathOperator, ChainableOp):
-    as_sym = sympy.Add
-    as_tflow = tf.add
+    symfun = sympy.Add
+    tf_fun = tf.add
     xtype = (tuple([float, float]), float)
     chain_xtype = float
 
 
 class InverseFraction(Operator):
     xtype = (tuple([float, float]), float)
-    as_sym = lambda x: sympy.Pow(x, sympy.S.NegativeOne)  # aka x**-1
-    as_tflow = lambda x: tf.pow(x, -1)
+    symfun = lambda a: sympy.Pow(a, sympy.S.NegativeOne)  # aka x**-1
+    tf_fun = lambda a: tf.pow(a, -1)
 
 
 class Pow(MathOperator):
-    as_sym = sympy.Pow
-    as_tflow = tf.pow
+    symfun = sympy.Pow
+    tf_fun = tf.pow
     xtype = (tuple([float, float]), float)
 
 
 class Abs(MathOperator):
-    as_sym = sympy.Abs
-    as_tflow = tf.abs
+    symfun = sympy.Abs
+    tf_fun = tf.abs
     xtype = (tuple([float]), float)
 
 
 class Sign(MathOperator, NoSymCapitalized):
     # does not work in string, but irrelevant. sympy.simplify('sign(-a)') -> -sign(a)
-    as_sym = sympy.sign
-    as_tflow = tf.sign
+    symfun = sympy.sign
+    tf_fun = tf.sign
     xtype = (tuple([float]), float)
 
 
 class Log(MathOperator, NoSymCapitalized):
-    as_sym = sympy.log  # sfeh: Log isactually Ln (base e)
-    as_tflow = tf.math.log
+    symfun = sympy.log  # sfeh: Log isactually Ln (base e)
+    tf_fun = tf.math.log
     xtype = (tuple([float]), float)
 
 
 class Cos(AngleOperator, NoSymCapitalized):
-    as_sym = sympy.cos
-    as_tflow = tf.cos
+    symfun = sympy.cos
+    tf_fun = tf.cos
     xtype = (tuple([float]), float)
 
 
 class Sin(AngleOperator, NoSymCapitalized):
-    as_sym = sympy.sin
-    as_tflow = tf.sin
+    symfun = sympy.sin
+    tf_fun = tf.sin
     xtype = (tuple([float]), float)
 
 
 class Tan(AngleOperator, NoSymCapitalized):
     # sfeh:discuss actually rename classes.
     # they do not have to match sympy expressions/classes
-    as_sym = sympy.tan
-    as_tflow = tf.tan
+    symfun = sympy.tan
+    tf_fun = tf.tan
     xtype = (tuple([float]), float)
 
 
 class Acos(AngleOperator, NoSymCapitalized):
-    as_sym = sympy.acos
-    as_tflow = tf.acos
+    symfun = sympy.acos
+    tf_fun = tf.acos
     xtype = (tuple([float]), float)
 
 
 class Asin(AngleOperator, NoSymCapitalized):
-    as_sym = sympy.asin
-    as_tflow = tf.asin
+    symfun = sympy.asin
+    tf_fun = tf.asin
     xtype = (tuple([float]), float)
 
 
 class Atan(AngleOperator, NoSymCapitalized):
-    as_sym = sympy.atan
-    as_tflow = tf.atan
+    symfun = sympy.atan
+    tf_fun = tf.atan
     xtype = (tuple([float]), float)
 
 
 class tanh(AngleOperator, NoSymCapitalized):
-    as_sym = sympy.tanh
-    as_tflow = tf.tanh
+    symfun = sympy.tanh
+    tf_fun = tf.tanh
     xtype = (tuple([float]), float)
 
 
 class sinh(AngleOperator, NoSymCapitalized):
-    as_sym = sympy.sinh
-    as_tflow = tf.sinh  # sfeh sinh, asinh
+    symfun = sympy.sinh
+    tf_fun = tf.sinh  # sfeh sinh, asinh
     xtype = (tuple([float]), float)
 
 
 class cosh(AngleOperator, NoSymCapitalized):
-    as_sym = sympy.cosh
-    as_tflow = tf.cosh  # sfeh acosh
+    symfun = sympy.cosh
+    tf_fun = tf.cosh  # sfeh acosh
     xtype = (tuple([float]), float)
 
 
 class Xor(LogicOperator, NoSymCapitalized):
-    as_sym = sympy.Xor
-    as_tflow = tf.math.logical_xor
+    symfun = sympy.Xor
+    tf_fun = tf.math.logical_xor
     xtype = (tuple([bool, bool]), bool)
 
 
 class Not(LogicOperator):
-    as_sym = sympy.Not
-    as_tflow = tf.logical_not
+    symfun = sympy.Not
+    tf_fun = tf.logical_not
     xtype = (tuple([bool]), bool)
 
 
 class Eq(LogicOperator):
     # sfeh:debug Eq and Ne (), which also work for boolean inputs in sympy
-    as_sym = sympy.Eq
-    as_tflow = tf.equal
+    symfun = sympy.Eq
+    tf_fun = tf.equal
     xtype = (tuple([float, float]), bool)
 
 
 class Ne(LogicOperator):
-    as_sym = sympy.Ne
-    as_tflow = tf.not_equal
+    symfun = sympy.Ne
+    tf_fun = tf.not_equal
     xtype = (tuple([float, float]), bool)
 
 
 class Mul(MathOperator, ChainableOp):
-    as_sym = sympy.Mul
-    as_tflow = tf.multiply
+    symfun = sympy.Mul
+    tf_fun = tf.multiply
     xtype = (tuple([float, float]), float)
     chain_xtype = float
 
 
 class And(LogicOperator, ChainableOp):
-    as_sym = sympy.And
-    as_tflow = tf.logical_and
+    symfun = sympy.And
+    tf_fun = tf.logical_and
     xtype = (tuple([bool, bool]), bool)
     chain_xtype = bool
 
 
 class Or(LogicOperator, ChainableOp):
-    as_sym = sympy.Or
-    as_tflow = tf.logical_or
+    symfun = sympy.Or
+    tf_fun = tf.logical_or
     xtype = (tuple([bool, bool]), bool)
     chain_xtype = bool
 
 
 class ITE(LogicOperator):
     """sfeh:is this really required? currently not in use"""
-    as_sym = sympy.ITE
-    as_tflow = lambda *args: tf.cond(args[0], true_fn=args[1], false_fn=args[2])
+    symfun = sympy.ITE
+    tf_fun = lambda *args: tf.cond(args[0], true_fn=args[1], false_fn=args[2])
     xtype = (tuple([bool, bool, bool]), bool)
 
 
 class Min(MinMaxBase, ChainableOp):
-    as_sym = sympy.Min
-    as_tflow = tf.minimum
+    symfun = sympy.Min
+    tf_fun = tf.minimum
     xtype = (tuple([float, float]), float)
     chain_xtype = float
 
 
 class Max(MinMaxBase, ChainableOp):
-    as_sym = sympy.Max
-    as_tflow = tf.maximum
+    symfun = sympy.Max
+    tf_fun = tf.maximum
     xtype = (tuple([float, float]), float)
     chain_xtype = float
 
 
 class Lt(RelationalOperator):
-    as_sym = sympy.Lt
-    as_tflow = tf.less
+    symfun = sympy.Lt
+    tf_fun = tf.less
     xtype = (tuple([float, float]), bool)
 
 
 class Le(RelationalOperator):
-    as_sym = sympy.Le
-    as_tflow = tf.less_equal
+    symfun = sympy.Le
+    tf_fun = tf.less_equal
     xtype = (tuple([float, float]), bool)
 
 
 class Gt(RelationalOperator):
-    as_sym = sympy.Gt
-    as_tflow = tf.greater
+    symfun = sympy.Gt
+    tf_fun = tf.greater
     xtype = (tuple([float, float]), bool)
 
 
 class Ge(RelationalOperator):
-    as_sym = sympy.Ge
-    as_tflow = tf.greater_equal
+    symfun = sympy.Ge
+    tf_fun = tf.greater_equal
     xtype = (tuple([float, float]), bool)
 
 
 class Square(MathOperator):
-    as_sym = lambda a: sympy.Pow(a, 2)
-    as_tflow = tf.square
+    symfun = lambda a: sympy.Pow(a, 2)
+    tf_fun = tf.square
     xtype = (tuple([float]), float)
 
 
 class Sub(MathOperator):
-    as_tflow = tf.subtract
+    tf_fun = tf.subtract
     xtype = (tuple([float, float]), float)
-    as_sym = lambda a, b: sympy.Add(a, -b)
+    symfun = lambda a, b: sympy.Add(a, -b)
 
 
 class Ifte(Operator, ChainableOp):
     """Also class Piecewise"""
-    as_tflow = tf.where
+    tf_fun = tf.where
     xtype = (tuple([bool, float, float]), float)
-    # as_sym = lambda c, a, b: sympy.Piecewise((a, c), (b, True))
-    as_sym = lambda *args: sympy.Piecewise((args[1], args[0]), (args[2], True))
+    # symfun = lambda c, a, b: sympy.Piecewise((a, c), (b, True))
+    symfun = lambda *args: sympy.Piecewise((args[1], args[0]), (args[2], True))
     chain_xtype = (float, bool)
 
 
 Piecewise = Ifte
 
 
+# def round_sympy(sexpr: sympy.Expr):
+#     if sexpr.is_number:
+#         return sympy.Float(sexpr, 1)
+#     else:
+#         return None  # XXX
+
+
 # class Round(MathOperator):  # 'Round'
 #     """sfeh:XXX this does not work
 #     discuss:
+#     - sympy.Float(x, 1)  <-- THIS IS THE SOLUTION TODO
 #     - sympy.Integer(x)
 #     - sympy.N(x, 1)
 #         as_sym(Symbol('a'))
@@ -458,28 +493,28 @@ Piecewise = Ifte
 #     -> Write custom round function that evaluates only when is_number
 #     """
 #     xtype = (tuple([float]), float)
-#     as_sym = lambda a: sympy.N(a, 1)
-#     as_tflow = lambda a: tf.math.round(a, 1)
+#     symfun = lambda a: sympy.Float(float(a), 1)  # float required as int-input fails # sfeh:xxx check conversion
+#     tf_fun = lambda a: tf.math.round(a, 1)
 
 
 class Log1p(MathOperator):
     # https://docs.sympy.org/latest/modules/codegen.html#sympy.codegen.cfunctions.log1p
     xtype = (tuple([float]), float)
-    as_tflow = tf.math.log1p
-    as_sym = lambda a: sympy.log(a + 1)
+    tf_fun = tf.math.log1p
+    symfun = lambda a: sympy.log(a + 1)
 
 
 class Div(MathOperator):
-    as_tflow = tf.math.divide
-    as_sym = lambda a, b: sympy.Mul(a, 1 / b)
+    tf_fun = tf.math.divide
+    symfun = lambda a, b: sympy.Mul(a, 1 / b)
     xtype = (tuple([float, float]), float)
 
 
 class Sqrt(MathOperator):
     """Capitalized class name, even though its a sympy function"""
     xtype = (tuple([float]), float)
-    as_sym = sympy.sqrt  # same as: lambda a: sympy.Pow(a, sympy.S.Half)
-    as_tflow = tf.sqrt
+    symfun = sympy.sqrt  # same as: lambda a: sympy.Pow(a, sympy.S.Half)
+    tf_fun = tf.sqrt
 
 
 # class Divide_no_nan(Operator):
@@ -491,14 +526,29 @@ class Sqrt(MathOperator):
 
 class Usub(Operator, sympy.Function):
     xtype = (tuple([float]), float)
-    as_tflow = tf.negative
-    as_sym = lambda a: sympy.Mul(a, -1)
+    tf_fun = tf.negative
+    symfun = lambda a: sympy.Mul(a, -1)
 
 
-class Powrounded(Operator):
-    as_tflow = lambda a, b: tf.pow(a, tf.round(b))
-    as_sym = lambda a, b: sympy.Pow(a, sympy.Integer(b))
-    xtype = (tuple([float, float]), float)
+# class Powrounded(Operator):
+#     tf_fun = lambda a, b: tf.pow(a, tf.round(b))
+#     symfun = lambda a, b: sympy.Pow(a, round(b))
+#     sympy.lambdify  # sfeh:XXX
+#     xtype = (tuple([float, float]), float)
+
+
+class CustomOperator:
+    # sfeh:xxx make an abstract class + mark all classes
+    as_tflow = lambda *args: None
+    as_sym = lambda *args: None
+    xtype = (tuple([None, None]), None)
+
+
+class Clip(MinMaxBase, CustomOperator):
+    # sfeh:open use this
+    tf_fun = tf.clip_by_value
+    symfun = lambda a, b, c: sympy.Min(sympy.Max(a, b), c)
+    xtype = (tuple([float, float, float]), float)
 
 
 # def sympy_symbol_defaults(name_list):
@@ -547,13 +597,25 @@ def expr_sympify(expr):
 
     try:
         expr_sym = sympy.sympify(expr)
-        try:
-            # sfeh:XXX use or delete this!
-            expr_sym2 = expr_sym.factor()
-            if expr_sym != expr_sym2:
-                print(f'COMPARE FACTOR:\n{expr_sym}  len{len(expr_sym)}\n{expr_sym2}  len{len(expr_sym2)}')
-        except Exception as ex:
-            print(f'sympify-factor ex: {expr_sym} {ex}')
+        # sfeh:xxx sympy expand, for evaluation probably
+        # if DEBUG_DUMMY:
+        #     try:
+        #         # sfeh:XXX use or delete this!
+        #         cartVel, cartPos = sympy.symbols('cartVel cartPos')
+        #         expr_sym2 = expr_sym.factor()
+        #         expr_sym22 = expr_sym.factor(cartVel + cartPos)
+        #         expr_sym3 = expr_sym.expand()
+        #         expr_sym32 = expr_sym.expand(cartVel + cartPos)
+        #         if expr_sym2 != expr_sym22:
+        #             pass
+        #         if expr_sym != expr_sym2:
+        #             print(f'COMPARE FACTOR:\n{expr_sym}\n{expr_sym2}')
+        #         if expr_sym3 != expr_sym32:
+        #             pass
+        #         if expr_sym != expr_sym3:
+        #             print(f'COMPARE EXTEND:\n{expr_sym}\n{expr_sym3}')
+        #     except Exception as ex:
+        #         print(f'sympify-factor ex: {expr_sym} {ex}')
         if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I):
             raise ArithmeticError(f'Simplification failed for expression: {expr_sym}')
         return expr_sym
@@ -687,7 +749,7 @@ def sympy_to_tensorflow(expr, tensor_dict):
         try:
             tf_fun = totf[type(expr)]
         except KeyError:
-            tf_fun = type(expr).as_tflow
+            tf_fun = type(expr).tf_fun
             # try:
             #     tf_fun = type(expr).as_tflow  # sfeh
             # except Exception as ex:
@@ -707,74 +769,80 @@ def sympy_to_tensorflow(expr, tensor_dict):
         return result
 
 
-class ExperimentalBaseTree(NodeBase):
-    """
-    Is currently not in use and Experimental
-    states? sfeh:discuss
-    [None]: not set
-    [0]:    evolution/construction/build mode (potentially missing leaf nodes)
-    [1]:    structurally complete/finalized branch (node_depths correct, node_id set, ...)
-    [2]:    root-correct structure
-    [3]:    including meta-data (fitness_train, complexity)
-
-    # sfeh:discuss set tree depth at the end or so
-    # sfeh:xxx set NodeBase as metatype and make this class (ExpressionTree, or so...) a new thing
-    """
-
-    args = []
-    is_fix = False  # sfeh:xx here?
-
-    def __new__(cls, subcls, *args, **kwargs):
-        # if isinstance(cls, Operator):
-        #     pass
-        # elif isinstance(cls, TerminalNode):
-        #     if isinstance(cls, Symbol):
-        #         cls.fam, cls.time_index, _ = observation_get_family_and_time(args, none_return=None)
-        #         cls.index_minmax = None
-
-        obj = object.__new__(subcls)
-        obj.args = [arg for arg in args]
-        return obj
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        cls.args = kwargs.get('args', [])
-        cls.is_fix = kwargs.get('is_fix', [])
-
-    def __str__(self):
-        return self.get_str_recursive()
-
-    def get_str_recursive(self):
-        if isinstance(self, Operator):
-            childstr = ', '.join([str(x) for x in self.args])
-            _str = f"{self}({childstr})"
-        elif isinstance(self, TerminalNode):
-            _str = f'{self.args[0]}'
-        else:
-            raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
-
-        return _str
-
-    def __repr__(self):
-        return self.get_repr_recursive()
-
-    def get_repr_recursive(self):
-
-        _isfix = ', is_fix=True' if self.is_fix else ''
-        if isinstance(self, Operator):
-            childstr = ', '.join([repr(x) for x in self.args])
-        elif isinstance(self, TerminalNode):
-            childstr = self.args[0]
-        else:
-            raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
-
-        return f"{self.__class__.__name__}({childstr}{_isfix})"
-
-    def __len__(self):
-        return 1 + sum([len(cc) for cc in self.args])
-
-    def get_nclass(self):
-        return self.__class__.__name__
+# class ExperimentalBaseTree(NodeBase):
+#     """
+#     Is currently not in use and Experimental
+#     states? sfeh:discuss
+#     [None]: not set
+#     [0]:    evolution/construction/build mode (potentially missing leaf nodes)
+#     [1]:    structurally complete/finalized branch (node_depths correct, node_id set, ...)
+#     [2]:    root-correct structure
+#     [3]:    including meta-data (fitness_train, complexity)
+#
+#     # sfeh:discuss set tree depth at the end or so
+#     # sfeh:xxx set NodeBase as metatype and make this class (ExpressionTree, or so...) a new thing
+#     """
+#
+#     args = []
+#     is_fix = False  # sfeh:xx here?
+#
+#     def __new__(cls, subcls, *args, **kwargs):
+#         """
+#         Why new instead of init?
+#         -> https://docs.sympy.org/latest/tutorials/intro-tutorial/manipulation.html
+#         " SymPy classes make heavy use of the __new__ class constructor, which, unlike __init__,
+#         allows a different class to be returned from the constructor."
+#         """
+#         # if isinstance(cls, Operator):
+#         #     pass
+#         # elif isinstance(cls, TerminalNode):
+#         #     if isinstance(cls, Symbol):
+#         #         cls.fam, cls.time_index, _ = observation_get_family_and_time(args, none_return=None)
+#         #         cls.index_minmax = None
+#
+#         obj = object.__new__(subcls)
+#         obj.args = [arg for arg in args]
+#         return obj
+#
+#     def __init_subclass__(cls, **kwargs):
+#         super().__init_subclass__(**kwargs)
+#         cls.args = kwargs.get('args', [])
+#         cls.is_fix = kwargs.get('is_fix', [])
+#
+#     def __str__(self):
+#         return self.get_str_recursive()
+#
+#     def get_str_recursive(self):
+#         if isinstance(self, Operator):
+#             childstr = ', '.join([str(x) for x in self.args])
+#             _str = f"{self}({childstr})"
+#         elif isinstance(self, TerminalNode):
+#             _str = f'{self.value[0]}'
+#         else:
+#             raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
+#
+#         return _str
+#
+#     def __repr__(self):
+#         return self.get_repr_recursive()
+#
+#     def get_repr_recursive(self):
+#
+#         _isfix = ', is_fix=True' if self.is_fix else ''
+#         if isinstance(self, Operator):
+#             childstr = ', '.join([repr(x) for x in self.args])
+#         elif isinstance(self, TerminalNode):
+#             childstr = self.args[0]
+#         else:
+#             raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
+#
+#         return f"{self.__class__.__name__}({childstr}{_isfix})"
+#
+#     def __len__(self):
+#         return 1 + sum([len(cc) for cc in self.args])
+#
+#     def get_nclass(self):
+#         return self.__class__.__name__
 
 
 if __name__ == '__main__':
@@ -866,7 +934,7 @@ if __name__ == '__main__':
         for x in get_subclasses(Operator):
             try:
                 # st[f'{x.as_sym.__name__}'] = x.__name__  # x.as_tflow.__name__
-                st[f'sympy.{x.as_sym.__name__}'] = x.__name__  # x.as_tflow.__name__
+                st[f'sympy.{x.symfun.__name__}'] = x.__name__  # x.as_tflow.__name__
             except AttributeError as ex:
                 print(f'Could not get {x}: {ex}')
                 # st[x.__name__] = x.__name__

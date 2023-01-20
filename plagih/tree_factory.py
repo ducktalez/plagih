@@ -115,7 +115,7 @@ def evolve_reduce_simplify(nstruc: Nested, completely=True, force=False):
         return nstruc
     else:
         if len(tree_copy) < len(nstruc):
-            print_warning('w', f'sfeh Trees get larger during simplification? {nstruc.__class__.__name__}')
+            print_warning('w', f'sfeh Trees get larger during simplification?')
             return tree_copy
         else:
             return nstruc
@@ -134,10 +134,11 @@ class TreeBuilder:
     return np.random.choice(func_list, p_full=probability_list)
     """
 
+    # 0 has actually no purpose (except as being an action)
     distributions = {float: [lambda: random.normalvariate(0, 1),
                              lambda: random.normalvariate(1, 1),
                              lambda: random.normalvariate(10, 5),
-                             lambda: random.randint(1, 20)],  # 0 has actually no purpose (except as being an action)
+                             lambda: random.randint(1, 20)],  # currently no int "allowed" in float node
                      bool: [lambda: random.choice([True, False])]}  # sfeh:discussion
 
     def __init__(self, obs_names, depth_max, nodes_max, root_xtype, operator_pool=None, origin=None):
@@ -171,7 +172,7 @@ class TreeBuilder:
                              Mul: 2, Div: 1,
                              # Usub: 1,  # sfeh
                              Square: 0.75,
-                             Powrounded: 0.1,
+                             # Powrounded: 0.1,
                              Abs: 0.5, Sign: 0.5,  # sfeh stop chain of arity-1 op_dict in buid method?
                              Sqrt: 0.1,  # 0.25,  # sfeh debug this
                              Log: 0.1,  # Log1p: 0.1,
@@ -292,14 +293,14 @@ class TreeBuilder:
         sfeh:open DOUBLE-check if this xtype_out is chosen correctly... better: replace it
         """
         _sym = self.symbols_xtdc[xtype]()
-        return Symbol(_sym)
+        return Symbol(str(_sym))
 
     def choose_value(self, xt_out):
-        value = np.random.choice(self.distributions[xt_out])()
+        value = np.random.choice(self.distributions[xt_out])()  # why ()? -> lambda function
         if xt_out == float:
-            return Float(round(value, PRECISION))
+            return Float(float(value))  # round(value, PRECISION)
         elif xt_out == bool:
-            return Boolean(value)
+            return Boolean(bool(value))
 
     def choose_term(self, xt_out, p_observation=0.5):
         if random.random() < p_observation:

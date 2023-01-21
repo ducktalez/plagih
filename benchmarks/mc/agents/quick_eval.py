@@ -199,7 +199,7 @@ def mtc_play(agent, render=False, n=1):
             fail_sum += 1
     reward_average = reward_sum / n
     env.close()
-    print(f'asd {np.average(list_episode_rewards)}')
+    print(f'Average reward: {np.average(list_episode_rewards)}')
 
     return reward_average, fail_sum, list_episode_rewards
 
@@ -310,9 +310,6 @@ def eval_agent_list(agent_list, goal_agent, n=100, dir_save=Path('img/')):
 
 
 # def auto_evaluate_run_end(rootdir, sarsa_agent, n=100):
-#     """
-#     asd
-#     """
 #
 #     class DummyMcAgent:
 #

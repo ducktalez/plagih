@@ -128,25 +128,17 @@ class NodeBase:
 
     def get_sym(self):
         _sym = self.symfun
-        # if self.args:
-        #     print(self.args, len(self.args), 'asd')
-        #     if issubclass(self.__class__, Operator):
-        #         _sym = _sym(*[x.get_sym() for x in self.args])
-        #
-        #     elif issubclass(type(self), TerminalNode):
-        #         try:
-        #             _sym = _sym(self.args[0])
-        #         except Exception as ex:
-        #             _sym = _sym()(self.args[0])
-        #
-        #     else:
-        #         raise
-        # else:
-        #     pass
         return _sym
 
     def get_symstr(self):
         return self.symfun.__name__
+
+
+class CustomOperator:
+    # sfeh:xxx make an abstract class + mark all classes
+    as_tflow = lambda *args: None
+    symfun = lambda *args: None
+    xtype = (tuple([None, None]), None)
 
 
 class Operator(NodeBase):  # sfeh:xxx sympy.Function was here, also is_Function = True
@@ -184,11 +176,11 @@ class RelationalOperator(Operator):
     pass
 
 
-class AngleOperator(Operator):
+class AngleOperator(MathOperator):
     pass
 
 
-class MinMaxBase(Operator):
+class MinMaxBase(MathOperator):
     pass
 
 
@@ -203,14 +195,14 @@ class TerminalNode(NodeBase):  # sfeh sympy.Atom
     - observations (e.g. b, aka data input)
     - user-functions (sfeh:open)
     """
-    value = 'TODO'
+    value = None
 
-    @abstractmethod
-    def __init__(self):
-        pass
-
-    def get_sym(self):
-        return self.value
+    # @abstractmethod
+    # def __init__(self):
+    #     pass
+    #
+    # def get_sym(self):
+    #     return self.value
 
 
 class Boolean(TerminalNode):
@@ -220,11 +212,11 @@ class Boolean(TerminalNode):
     symfun = lambda *a: sympy.S.true if a[0] else ~sympy.S.true  # sympy.logic.boolalg.Boolean  # sfeh:discuss
     tf_fun = lambda arg: tf.constant(arg, dtype=tf.bool)
 
-    def __init__(self, value):
-        self.value = sympy.S.true if value else ~sympy.S.true
-
-    def get_sym(self):
-        return self.value
+    # def __init__(self, value):
+    #     self.value = sympy.S.true if value else ~sympy.S.true
+    #
+    # def get_sym(self):
+    #     return self.value
 
 
 class Float(TerminalNode):
@@ -232,8 +224,8 @@ class Float(TerminalNode):
     symfun = lambda *a: sympy.Float(a[0], PRECISION)
     tf_fun = lambda a: tf.constant(a, dtype=tf.float32)
 
-    def __init__(self, value):
-        self.value = sympy.Float(value, PRECISION)
+    # def __init__(self, value):
+    #     self.value = sympy.Float(value, PRECISION)
 
 
 class Symbol(TerminalNode):
@@ -242,17 +234,18 @@ class Symbol(TerminalNode):
     This was used to deal with negative labels
         self.name = nlabl if nlabl[0] != '-' else nlabl[1:]
         sfeh:xxx option here for type float/bool
+    todo how to set assumptions
     """
     # as_sym = sympy.Symbol
     symfun = lambda *a: sympy.Symbol(a[0], real=True, imaginary=False)  # sfeh: real=/imaginary= faster.
     tf_fun = lambda a: tf.constant(a, dtype=tf.float32 if isinstance(a, float) else tf.bool)
     xtype = (tuple([]), float)
 
-    def __init__(self, value):
-        self.value = sympy.Symbol(value, real=True, imaginary=False)
-
-    def get_sym(self):
-        return self.value
+    # def __init__(self, value, **assumptions):
+    #     self.value = sympy.Symbol(value, real=True, imaginary=False, **assumptions)
+    #
+    # def get_sym(self):
+    #     return self.value
 
 
 # class ExprCondPair(ChainableOp):
@@ -272,7 +265,7 @@ class Add(MathOperator, ChainableOp):
     chain_xtype = float
 
 
-class InverseFraction(Operator):
+class InverseFraction(MathOperator):
     xtype = (tuple([float, float]), float)
     symfun = lambda a: sympy.Pow(a, sympy.S.NegativeOne)  # aka x**-1
     tf_fun = lambda a: tf.pow(a, -1)
@@ -481,20 +474,29 @@ Piecewise = Ifte
 #         return None  # XXX
 
 
-# class Round(MathOperator):  # 'Round'
-#     """sfeh:XXX this does not work
-#     discuss:
-#     - sympy.Float(x, 1)  <-- THIS IS THE SOLUTION TODO
-#     - sympy.Integer(x)
-#     - sympy.N(x, 1)
-#         as_sym(Symbol('a'))
-#         as_sym(1.23)
-#         as_sym(sympy.Add(a, Symbol('a'))
-#     -> Write custom round function that evaluates only when is_number
-#     """
-#     xtype = (tuple([float]), float)
-#     symfun = lambda a: sympy.Float(float(a), 1)  # float required as int-input fails # sfeh:xxx check conversion
-#     tf_fun = lambda a: tf.math.round(a, 1)
+class Round(MathOperator):  # 'Round'
+    """sfeh:XXX this does not work
+    discuss:
+    - sympy.Float(x, 1)  <-- sfeh:open
+    - sympy.Integer(x)
+    - sympy.N(x, 1)
+        as_sym(Symbol('a'))
+        as_sym(1.23)
+        as_sym(sympy.Add(a, Symbol('a'))
+    -> Write custom round function that evaluates only when is_number
+    """
+
+    # def get_sym2(expr: sympy.Expr):
+    #     if expr.is_Number:
+    #         return lambda: expr.round(1)
+    #     else:
+    #         return lambda: sympy.Function(__class__.__name__)(expr)  # aka 'Float'
+    # Round = sympy.Function('Round')
+
+    # sfeh:xxx check conversion
+    xtype = (tuple([float]), float)
+    symfun = lambda a: a.round(0) if a.is_number else sympy.Function('Round')(a)  # float required int fails
+    tf_fun = lambda a: tf.math.round(a, 1)
 
 
 class Log1p(MathOperator):
@@ -518,16 +520,16 @@ class Sqrt(MathOperator):
 
 
 # class Divide_no_nan(Operator):
-#     # classname = 'Divide_no_nan'  # sfeh??
+#     # class-name = 'Divide_no_nan'  # sfeh??
 #     as_tflow = tf.math.divide_no_nan
 #     as_sym = lambda a, b: sympy.Mul(a, )
 #     xtype = (tuple([float, float]), float)
 
 
-class Usub(Operator, sympy.Function):
-    xtype = (tuple([float]), float)
-    tf_fun = tf.negative
-    symfun = lambda a: sympy.Mul(a, -1)
+# class Usub(MathOperator, sympy.Function):
+#     xtype = (tuple([float]), float)
+#     tf_fun = tf.negative
+#     symfun = lambda a: sympy.Mul(a, -1)
 
 
 # class Powrounded(Operator):
@@ -535,13 +537,6 @@ class Usub(Operator, sympy.Function):
 #     symfun = lambda a, b: sympy.Pow(a, round(b))
 #     sympy.lambdify  # sfeh:XXX
 #     xtype = (tuple([float, float]), float)
-
-
-class CustomOperator:
-    # sfeh:xxx make an abstract class + mark all classes
-    as_tflow = lambda *args: None
-    as_sym = lambda *args: None
-    xtype = (tuple([None, None]), None)
 
 
 class Clip(MinMaxBase, CustomOperator):
@@ -680,7 +675,7 @@ totf = {
     sympy.tanh: tf.tanh,
     sympy.sign: tf.sign,
     sympy.ITE: tf.where,  # sfeh:test this
-    sympy.re: lambda x: tf.convert_to_tensor(x, dtype=tf.dtypes.float32),  # sympy-gotcha, comes up randomly
+    sympy.re: lambda a: tf.convert_to_tensor(a, dtype=tf.dtypes.float32),  # sympy-gotcha, comes up randomly
 }
 
 
@@ -725,7 +720,7 @@ def sympy_to_tensorflow(expr, tensor_dict):
             # result = feed_dict[expr.name]  # sfeh:discuss placeholder
 
             # result = tf.compat.v1.placeholder(tf.bool, name=str(expr))
-            # result = tf.constant(tensor_dict[str(expr)], dtype=tf.bool if expr.assumptions0.get('bool') else tf.float32)  # sfeh:runtime?
+            # sfeh:runtime?
             result = tf.constant(tensor_dict[str(expr)], dtype=tf.bool if expr.assumptions0.get('bool') else tf.float32)
             return result
 
@@ -740,10 +735,10 @@ def sympy_to_tensorflow(expr, tensor_dict):
 
     else:  # Operator # len(expr.args) > 0:  # sfeh: line can be removed or replaced
         if isinstance(expr, sympy.Piecewise):
-            _revlist = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
-            _revlist = [[sympy_to_tensorflow(xx, tensor_dict) for xx in list(i)] for i in _revlist]
-            otherwise = _revlist[0][0]  # the last "True" condition
-            for cet in _revlist[1:]:
+            args_reversed = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
+            args_reversed = [[sympy_to_tensorflow(xx, tensor_dict) for xx in list(i)] for i in args_reversed]
+            otherwise = args_reversed[0][0]  # the last "True" condition
+            for cet in args_reversed[1:]:
                 otherwise = tf.where(cet[1], cet[0], otherwise)
             return otherwise
         try:
@@ -897,7 +892,7 @@ if __name__ == '__main__':
         'Multiply(log(acos(-0.212976)), asin(2))',
         'Not(False)',
         'acos(0.5)',
-        'Round(1.2345)',
+        # 'Round(1.2345)',
         'Min(Ifte(True, Multiply(a, 20.0), acos(-0.5)), 1)',
         'Div(Add(13.159398, 19.284178), 1)',
         'Pow(a, b)',
@@ -949,12 +944,11 @@ if __name__ == '__main__':
     # # sfeh:xxx why are node classes all in memory, is that bad? use__neew__()?
 
     x = Add(childs=[Symbol('a'), Mul(childs=[2, 3])])
-    n1 = Float()
-    n2 = Symbol()
-    n3 = Boolean()
+    n1 = Float
+    n2 = Symbol
+    n3 = Boolean
     n4 = Add()
     # print(n1, n2, n3, n4)
-    # print('dsaasd', n1.get_sym(), n2.get_sym(), n3.get_sym(), n4.get_sym())
     print(len(n1), len(n4))
     # n1 = Float(1.23)
     # n2 = Symbol('a')

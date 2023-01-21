@@ -16,7 +16,7 @@ stn_keys = tuple(sptonode.keys())  # sfeh: debug this... relevant?
 
 
 @dataclass
-class Nested:
+class Node:
     """
     The core is the structure of a plagih gp-fintree.
     It recursively holds the nodes of a fintree; every fintree has a list of potential children.
@@ -44,8 +44,14 @@ class Nested:
             label_str = self.label  # because Terminals are obj -> 'Symbol' obj has no attr __name__
 
         if self.childs:
-            childstr = ', '.join([str(x) for x in self.childs])
-            label_str = f'{label_str}, {childstr}'
+            if issubclass(self.label, Operator):
+                childstr = ', '.join([str(cc) for cc in self.childs])
+                label_str = f'{label_str}, {childstr}'
+            else:
+                try:
+                    label_str = f'{self.childs[0]}'  # sfeh:hmmm
+                except Exception as ex:
+                    print(f'TODO IndexError: invalid index to scalar variable? {ex}')
 
         return f"[{label_str}]"
 
@@ -56,35 +62,18 @@ class Nested:
             # if self.label == Ifte:
             try:
                 return _sym(*_cs)
-            except RecursionError:
-                print(f'asd {self}')
-            except Exception as todo:
-                print(todo)
-        else:
-            if issubclass(self.label.__class__, TerminalNode):  # .--class--, as it is initiated?
-                try:
-                    _todo = self.label.get_sym()
-                    return _todo
-                except:
-                    print('TODOsdfgasdfgasedrgsertg')
+            except RecursionError as ex:
+                print(f'RecursionError, maybe Piecewise?: {self}, {ex}')
+                raise RecursionError
+        elif self.childs and issubclass(self.label, TerminalNode):
+            _sym = self.label.symfun
+            _cs = self.childs[0]
+            return _sym(_cs)
+        # else:
+        #     if issubclass(type(self.label), TerminalNode):  # .--class--, as it is initiated?
+        #         return self.label.get_sym()
 
-                # try:
-                #     print(f'Labelargs {self.label.args}      {self}')
-                #     return _sym(self.label.args[0])
-                # except Exception as ex:
-                #     print(f'asddsadsa {self}   {ex}')
-                #     try:
-                #         _sym = _sym(*self.label.args)
-                #     except Exception as ex:
-                #         print(f'NO SUCCESS??? {self}    {ex}')
-                #
-                #     print('why is success not printed?')
-            else:
-                print('HHHUUUUUUUUUUsfehxxx')
-                raise
-
-    def repr_str(self):
-        pass
+        raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.label)}')
 
     def eval_str(self):
         return self.get_label()  # sfeh open
@@ -107,7 +96,10 @@ class Nested:
 
     def __len__(self):
         """counting the amount of nodes recursively"""
-        return 1 + sum([len(cc) for cc in self.childs])
+        if issubclass(self.label, TerminalNode):
+            return 1  # childs can currently be floats
+        else:
+            return 1 + sum([len(cc) for cc in self.childs])
 
     def get_label(self):
         return self.label
@@ -132,7 +124,13 @@ class Nested:
         """all other values are automatically set by assigning the respected node"""
         self.label = label
 
-    def update_fixed_nodes(self, origin: 'Nested'):
+    def set_childs(self, child_list):
+        if isinstance(child_list, (list, tuple)):
+            self.childs = child_list
+        else:
+            raise TypeError(f'childs must be set as list, not {type(child_list)}: {child_list}')
+
+    def update_fixed_nodes(self, origin: 'Node'):
         """Updating the fixed nodes in a tree where they were lost for some reason.
         This should never be the case! But it happened during development of recreating a tree from expression.
         This might also be useful in tree checks"""
@@ -193,6 +191,13 @@ class Nested:
         else:
             return max(cc.get_max_depth(depth=depth + 1) for cc in self.childs)
 
+    def is_operator(self):
+        try:
+            return issubclass(self.label, Operator)
+        except Exception as ex:
+            print(f'whats this? {self}; {self.label} {ex}')
+            return False
+
     def repair_depth(self, depth=0):
         """
         aka set_depth recursively for all nodes in a branch
@@ -201,10 +206,11 @@ class Nested:
         the depth through every crossover/branch mutation function, instead, we call it when replacing nodes
         """
         self.depth = depth
-        for cc in self.childs:
-            cc.repair_depth(depth=depth + 1)
+        if self.is_operator():
+            for cc in self.childs:
+                cc.repair_depth(depth=depth + 1)
 
-    def set_new_nested(self, new_node: 'Nested'):
+    def set_new_nested(self, new_node: 'Node'):
         self.set_label(new_node.label)  # sfeh remove childs, is_fix...
         self.childs = new_node.childs  # sfeh maybe must be updated recursively
         self.repair_depth(self.depth)  # Especially required for crossover or branches
@@ -222,9 +228,9 @@ class Nested:
                     and (allow_root or not self.is_root()) \
                     and (allow_chain or not self.is_chain):
                 node_list.append(self)
-
-        for cc in self.childs:
-            node_list.extend(cc.eval_mutable_nodes(xt_out=xt_out, allow_root=allow_root, allow_chain=allow_chain))
+        if self.is_operator():
+            for cc in self.childs:
+                node_list.extend(cc.eval_mutable_nodes(xt_out=xt_out, allow_root=allow_root, allow_chain=allow_chain))
         return node_list
 
     def evolve_mutate_filter_branch(self, precision=6):
@@ -248,10 +254,12 @@ class Nested:
 
 def sympy_to_nsted(expr, allow_chain=False):
     if isinstance(expr, bool):
-        return Nested(Boolean(expr), [])
+        # return Nested(Boolean(expr), [])
+        return Node(Boolean, [expr])
     elif isinstance(expr, sympy.logic.boolalg.BooleanAtom):
         expr = True if isinstance(expr, (bool, sympy.logic.boolalg.BooleanTrue)) else False
-        return Nested(Boolean(expr), [])
+        # return Nested(Boolean(expr), [])
+        return Node(Boolean, [expr])
 
     # the following lines are not required, if sympy filters for bad expressions earlier
     # if expr.is_imaginary or expr.is_infinite:
@@ -261,13 +269,16 @@ def sympy_to_nsted(expr, allow_chain=False):
     elif expr.is_Atom:
         if expr.is_Symbol:
             # _r = Symbol  # sfeh str VERY important!! Symbol type input is not accepted
-            return Nested(Symbol(str(expr)), [])
+            # return Nested(Symbol(str(expr)), [])
+            return Node(Symbol, [str(expr)])
         else:
             expr_eval = expr.evalf()  # standard 15 digits, sfeh prec=FLOAT_PRECISION?
             if expr.is_Boolean:
-                return Nested(Boolean(bool(expr_eval)), [])
+                # return Nested(Boolean(bool(expr_eval)), [])
+                return Node(Boolean, [bool(expr_eval)])
             elif expr.is_number:  # is_float does not match int
-                return Nested(Float(float(expr_eval)), [])  # sfeh round
+                # return Nested(Float(float(expr_eval)), [])  # sfeh round
+                return Node(Float, [float(expr_eval)])  # sfeh round
                 # "TypeError: Cannot convert complex to float" -> ignore the whole expression, let it fail
             else:
                 print(f'XXX What happened here? {expr}')
@@ -283,7 +294,7 @@ def sympy_to_nsted(expr, allow_chain=False):
                 _ccinv = [[sympy_to_nsted(xx, allow_chain=allow_chain) for xx in list(i)] for i in _ccinv]
                 otherwise = _ccinv[0][0]  # the last "True" condition
                 for x in _ccinv[1:]:
-                    otherwise = Nested(Ifte, [x[1], x[0], otherwise])
+                    otherwise = Node(Ifte, [x[1], x[0], otherwise])
                 return otherwise
         elif isinstance(expr, sympy.Pow):
             if expr.args[1] in (-1, 2):
@@ -295,7 +306,7 @@ def sympy_to_nsted(expr, allow_chain=False):
                     _r = Sqrt
                 else:
                     raise
-                return Nested(_r, [sympy_to_nsted(expr.args[0], allow_chain=allow_chain)])  # can ignore args[1] now
+                return Node(_r, [sympy_to_nsted(expr.args[0], allow_chain=allow_chain)])  # can ignore args[1] now
 
             # sfeh:open
             # if isinstance(expr.args[1], sympy.Integer):
@@ -303,7 +314,7 @@ def sympy_to_nsted(expr, allow_chain=False):
             # else:
             _r = Pow
             childnstd = [sympy_to_nsted(x, allow_chain=allow_chain) for x in expr.args]
-            return Nested(_r, childnstd)
+            return Node(_r, childnstd)
 
         elif isinstance(expr, stn_keys):
 
@@ -313,18 +324,18 @@ def sympy_to_nsted(expr, allow_chain=False):
             if len(expr.args) > len(clss.xtype[0]):
                 if issubclass(clss, ChainableOp):
                     if allow_chain:
-                        return Nested(clss, args, is_chain=True)
+                        return Node(clss, args, is_chain=True)
                     else:
                         # All have arity-2
                         childnstd = [sympy_to_nsted(x, allow_chain=allow_chain) for x in expr.args]
                         _cc = childnstd[0]
                         for _c2 in childnstd[1:]:
-                            _cc = Nested(clss, [_cc, _c2])
+                            _cc = Node(clss, [_cc, _c2])
                         return _cc
                 else:
                     raise TypeError(f"{clss} takes exactly {len(clss.xtype[0])} arguments ({len(expr.args)} given)")
             else:
-                return Nested(clss, args)  # same as in allow_chain
+                return Node(clss, args)  # same as in allow_chain
 
         else:
             # sfeh:discuss

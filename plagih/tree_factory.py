@@ -1,7 +1,9 @@
 """
 The factory to create trees
 """
-from plagih.nested_structure import Nested, sympy_to_nsted
+import pandas
+
+from plagih.nested_structure import Node, sympy_to_nsted
 from plagih.plagih_tree import *
 from plagih.util import *
 from plagih.tree_complexity.tree_edit_distance import apted_distance
@@ -13,7 +15,7 @@ import copy
 import numpy as np
 
 
-def eval_parsimony(tree: Nested, complexity_measure, origin_tree=None):
+def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
     """
     complexity_measure: compute the chosen distance by the user.
     #     'tree_node_count': tree_get_size,
@@ -89,7 +91,7 @@ def node_simplification(nsted):
     return nsted_rebuilt
 
 
-def evolve_reduce_simplify(nstruc: Nested, completely=True, force=False):
+def evolve_reduce_simplify(nstruc: Node, completely=True, force=False):
     """
     # sfeh:open this function does currently not work
     Reducing a fintree to its most basic form with sympify.
@@ -121,9 +123,65 @@ def evolve_reduce_simplify(nstruc: Nested, completely=True, force=False):
             return nstruc
 
 
-def nsted_deepcopy(nsted: Nested):
+def nsted_deepcopy(nsted: Node):
     _cpy = copy.deepcopy(nsted)
     return _cpy
+
+
+def make_choices(val_p_tuples):
+    """
+    make a tuple-list callable for weighted numpy choice
+    [['a', 1], ['b', 2]] -> [('a', 'b'), (0.333, 666)]
+    """
+    xx = list(zip(*val_p_tuples))
+    # normalizing the probabilities in every case to a sum of 1 (100%)
+    psum = sum(xx[1])
+    xx[1] = [i / psum for i in xx[1]]
+    # lambda: np.random.choice(xx[0], p=xx[1])
+    return xx
+
+
+def operator_pool_check(ops):
+    """
+    Check if the user-specified loaded operators allow closure
+    (either float-only/bool only or all 4 types of operators)
+    @:param operator_pool: list with operators and their weight of being selected
+    """
+    # sfeh dunno if that works... 2f not in x
+    opxtypes = [oper.xtype for oper in ops.keys()]
+    has_2f = any([float == i[1] for i in opxtypes])
+    has_2b = any([bool == i[1] for i in opxtypes])
+    has_f2b = any([float in i[0] and bool == i[1] for i in opxtypes])
+    has_b2f = any([bool in i[0] and float == i[1] for i in opxtypes])
+    if not all([has_2f, has_2b, has_f2b, has_b2f]):
+        logging.warning(f'Loaded operators do not feature both numeric (float) and bool type.')
+    if all([has_2f, has_2b]) and not all([has_f2b or has_b2f]):
+        raise Exception(f'Loaded operators do not allow closure!')
+
+
+def xtdict_operators(operator_pool):
+    # sfeh:option allow reconstructed operators? optional?
+    # sfeh
+
+    operator_pool_check(operator_pool)
+
+    pick_op = {float: [], bool: []}
+    pick_op_match = {}
+
+    for _cls, _p in operator_pool.items():
+        xt = _cls.xtype
+        pick_op[xt[1]].append([_cls, _p])
+        if pick_op_match.get(xt, None) is None:
+            pick_op_match[xt] = []
+        pick_op_match[xt].append([_cls, _p])
+
+    pick_op = {float: make_choices(pick_op[float]),
+               bool: make_choices(pick_op[bool])}
+
+    for k_xt in pick_op_match.keys():
+        pick_op_match[k_xt] = make_choices(pick_op_match[k_xt])
+
+    return pick_op, pick_op_match
 
 
 class TreeBuilder:
@@ -134,193 +192,67 @@ class TreeBuilder:
     return np.random.choice(func_list, p_full=probability_list)
     """
 
-    # 0 has actually no purpose (except as being an action)
-    distributions = {float: [lambda: random.normalvariate(0, 1),
-                             lambda: random.normalvariate(1, 1),
-                             lambda: random.normalvariate(10, 5),
-                             lambda: random.randint(1, 20)],  # currently no int "allowed" in float node
-                     bool: [lambda: random.choice([True, False])]}  # sfeh:discussion
+    def __init__(self, root_xt_out, nc, build_restrictions, origin_tree=None):
+        self.root_xt_out = root_xt_out
+        self.nc = nc
 
-    def __init__(self, obs_names, depth_max, nodes_max, root_xtype, operator_pool=None, origin=None):
-        self.observations_add(obs_names)
-        self.root_xtype = root_xtype
-        self.depth_max = depth_max
-        self.nodeamount_max = nodes_max
-        self.origin = origin
+        self.origin_tree = origin_tree
 
-        def operator_pool_check(operatorPool):
-            """
-            Check if the user-specified loaded operators allow closure
-            (either float-only/bool only or all 4 types of operators)
-            @:param operator_pool: list with operators and their weight of being selected
-            """
-            # sfeh dunno if that works... 2f not in x
-            opxtypes = [oper.xtype for oper in operatorPool.keys()]
-            has_2f = any([float == x[1] for x in opxtypes])
-            has_2b = any([bool == x[1] for x in opxtypes])
-            has_f2b = any([float in x[0] and bool == x[1] for x in opxtypes])
-            has_b2f = any([bool in x[0] and float == x[1] for x in opxtypes])
-            if not all([has_2f, has_2b, has_f2b, has_b2f]):
-                logging.warning(f'Loaded operators do not feature both numeric (float) and bool type.')
-            if all([has_2f, has_2b]) and not all([has_f2b or has_b2f]):
-                raise Exception(f'Loaded operators do not allow closure!')
+        self.depth_max = build_restrictions.get('depth_max', 10)
+        self.nodes_max = build_restrictions.get('nodes_max', 100)
 
-        if operator_pool is None:  # quick developer adjustments
-
-            # sfeh same prob for all for testing
-            operator_pool = {Add: 2, Sub: 1,
-                             Mul: 2, Div: 1,
-                             # Usub: 1,  # sfeh
-                             Square: 0.75,
-                             # Powrounded: 0.1,
-                             Abs: 0.5, Sign: 0.5,  # sfeh stop chain of arity-1 op_dict in buid method?
-                             Sqrt: 0.1,  # 0.25,  # sfeh debug this
-                             Log: 0.1,  # Log1p: 0.1,
-                             Sin: 0.5, Tan: 0.1, Cos: 0.33,
-                             # Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.5,
-                             Xor: 1,  # sfeh
-                             # sympy extra classes (Capitalized)
-                             # Round: 0.5,  sfeh
-                             And: 1, Or: 1, Not: 0.5,
-                             # Eq: 1,  # Ne: 0.5,
-                             Lt: 0.5, Le: 0.5, Gt: 0.1, Ge: 0.1,
-                             Ifte: 2,
-                             Min: 1, Max: 1}
-
-        operator_pool_check(operator_pool)
-
-        choose_oparray = {
-            # all operator_pool with a certain xtype_out-result
-            # None: [[], []],
-            float: [[], []],  # to float
-            bool: [[], []],  # to bool
-            (tuple([]), float): [[], []],  # sfeh?  replacing float
-            (tuple([]), bool): [[], []],  # sfeh? not required? empty
-            (tuple([float]), float): [[], []],  # x**2, sqrt, log, sin, ...
-            (tuple([float, float]), float): [[], []],  # +, -, *, /, **, ...
-            (tuple([bool, float, float]), float): [[], []],  # Ifte
-            (tuple([float, float]), bool): [[], []],  # <, >, =, >=
-            (tuple([bool]), bool): [[], []],  # not
-            (tuple([float]), bool): [[], []],  # dummy, currently no such operator
-            (tuple([bool, bool]), bool): [[], []],  # and, or, xor, ...
-        }
-        for label, prob in operator_pool.items():
-            # tuple-xtype_out (point mutations)
-            choose_oparray[label.xtype][0].append(label)
-            choose_oparray[label.xtype][1].append(prob)
-            # float/bool (construction of trees)
-            choose_oparray[label.xtype[1]][0].append(label)
-            choose_oparray[label.xtype[1]][1].append(prob)
-
-        for o, p in choose_oparray.items():
-            # normalizing the probabilities in every case to a sum of 1 (100%)
-            # (saving some very little time...)
-            if p[0]:  # if operators for this xtype/arity combination
-                choose_oparray[o][1] = [x / sum(p[1]) for x in p[1]]
-
-        self.operators = {}
-        for xtype, _opx in choose_oparray.items():
-            # self.operators[xtype_out] = lambda: np.random.choice(x[0], p=x[1])  # "seloplam" faster, but less readable
-            self.operators[xtype] = (_opx[0], _opx[1])
-
-        obs_list = [x for x in obs_names]
-
-        self.symbols_xtdc = {float: lambda: np.random.choice(obs_list),  # , p=obs_prop
-                             bool: None}  # sfeh:discussion None? no  lambda? yeah, not important but still...
-
-    def choose_op(self, any_xtype):
-        """
-        any_xtype can be a tuple, single type or even None
-        """
-        # return self.operators[xtype_out]()  # "seloplam"
-        return np.random.choice(self.operators[any_xtype][0], p=self.operators[any_xtype][1])
-
-    def constants_add_data_samples(self, obs_infos, data_train, n_samples=100):
-        """
-        ONLY floats, because ...why would you want to load True/False samples.
-        (okay, it might make sense as it better represents the actual distribution- NO FUCK IT.)
-        """
-        if obs_infos is not None:
-            obsnames = obs_infos.symbols_xtdc[float].keys()
-            obs_samples = data_train[obsnames].to_numpy().flatten()
-            obs_samples = np.random.choice(obs_samples, size=n_samples)
-            self.distributions[float].extend([lambda: random.choice(obs_samples)]),  # take one
-
-    def observations_add(self, obs_names):
-        """
-        :param obs_names: list of all observation names (e.g. ['cartVel', 'cartPos'])
-        """
-        # def observation_select_index(observations, max_hist=10):
-        #     """
-        #     chooses variables but weighting how old they are.
-        #     observations = ['gain_0', 'gain_1', 'gain_2', 'gain_3', 'gain_4'] -> [0.28, 0.23, 0.19, 0.16, 0.13]
-        #     sfeh: what about larger steps?
-        #     e.g. [0, 1, 2, 3] is good, but [0, 5, 10, 15] is baad
-        #     what if variables are not all of same diff?
-        #     """
-        #     observations = np.delete(observations, np.s_[max_hist:])
-        #     x = len(observations)
-        #     fairness_bonus = np.log(x) + 1  # raising the opportunity of historic data just a little...
-        #     p = np.geomspace(1 + fairness_bonus, x + fairness_bonus, num=x)[::-1]  # reverse the geometric series
-        #     p = p / np.sum(p)  # the sum must be equal to 1  # not required with choices
-        #     return np.random.choice(observations, p=p)  # returning a function this time
-        #
-        # obs_prop = []
-        # obs_info = {}
-        #
-        # for fam in list(set(observation_get_family_and_time(x)[0] for x in obs_names)):
-        #     fam_members = sorted([x for x in obs_names if x.fam == fam], key=lambda o: o.time_index)
-        #     if len(fam_members) > 1:
-        #         obs_names.extend([x for x in fam_members])
-        #         obs_prop.extend(list(observation_select_index(fam_members)))
-        #         index_minmax = (fam_members[0].time_index, fam_members[-1].time_index)
-        #         for obs in fam_members:
-        #             obs.index_minmax = index_minmax
-        #             # environment.obs_infos[obs.name] = obs  # sfeh:open okay do we need this? :s guess we will find out x.D haha
-        #             obs_info[obs.name] = obs
-        #     else:
-        #         obs = fam_members[0]
-        #         obs_info[obs.name] = obs
-        #         obs_names.pop_append_evotree(obs)
-        #         obs_prop.pop_append_evotree(1)  # just one value
-        pass
-
-    def choose_symbol(self, xtype):
-        """
-        Randomly choosing an operator-label for a given xtype_out.
-        choose_oparray3 must be given, as they are different between runs.
-        arity can also be set optionally, e.g. for point mutation
-        sfeh:open DOUBLE-check if this xtype_out is chosen correctly... better: replace it
-        """
-        _sym = self.symbols_xtdc[xtype]()
-        return Symbol(str(_sym))
-
-    def choose_value(self, xt_out):
-        value = np.random.choice(self.distributions[xt_out])()  # why ()? -> lambda function
-        if xt_out == float:
-            return Float(float(value))  # round(value, PRECISION)
-        elif xt_out == bool:
-            return Boolean(bool(value))
-
-    def choose_term(self, xt_out, p_observation=0.5):
-        if random.random() < p_observation:
-            try:
-                return self.choose_symbol(xt_out)
-            except TypeError:
-                pass  # return a constant (E.g. because there are no boolean observations)
-
-        return self.choose_value(xt_out)
+    # def observations_add(self, obs_names):
+    #     """
+    #     :param obs_names: list of all observation names (e.g. ['cartVel', 'cartPos'])
+    #     """
+    #     # def observation_select_index(observations, max_hist=10):
+    #     #     """
+    #     #     chooses variables but weighting how old they are.
+    #     #     observations = ['gain_0', 'gain_1', 'gain_2', 'gain_3', 'gain_4'] -> [0.28, 0.23, 0.19, 0.16, 0.13]
+    #     #     sfeh: what about larger steps?
+    #     #     e.g. [0, 1, 2, 3] is good, but [0, 5, 10, 15] is baad
+    #     #     what if variables are not all of same diff?
+    #     #     """
+    #     #     observations = np.delete(observations, np.s_[max_hist:])
+    #     #     x = len(observations)
+    #     #     fairness_bonus = np.log(x) + 1  # raising the opportunity of historic data just a little...
+    #     #     p = np.geomspace(1 + fairness_bonus, x + fairness_bonus, num=x)[::-1]  # reverse the geometric series
+    #     #     p = p / np.sum(p)  # the sum must be equal to 1  # not required with choices
+    #     #     return np.random.choice(observations, p=p)  # returning a function this time
+    #     #
+    #     # obs_prop = []
+    #     # obs_info = {}
+    #     #
+    #     # for fam in list(set(observation_get_family_and_time(x)[0] for x in obs_names)):
+    #     #     fam_members = sorted([x for x in obs_names if x.fam == fam], key=lambda o: o.time_index)
+    #     #     if len(fam_members) > 1:
+    #     #         obs_names.extend([x for x in fam_members])
+    #     #         obs_prop.extend(list(observation_select_index(fam_members)))
+    #     #         index_minmax = (fam_members[0].time_index, fam_members[-1].time_index)
+    #     #         for obs in fam_members:
+    #     #             obs.index_minmax = index_minmax
+    #     #             # environment.obs_infos[obs.name] = obs  # sfeh:open okay do we need this? :s guess we will find out x.D haha
+    #     #             obs_info[obs.name] = obs
+    #     #     else:
+    #     #         obs = fam_members[0]
+    #     #         obs_info[obs.name] = obs
+    #     #         obs_names.pop_append_evotree(obs)
+    #     #         obs_prop.pop_append_evotree(1)  # just one value
+    #     pass
 
     def invent_core_depth(self, xt_out, depth_goal, depth=0, p_full=1.0):
         if depth == self.depth_max or depth == depth_goal or random.random() > p_full:
-            label = self.choose_term(xt_out)
-            nsted = Nested(label, [], depth=depth)
-        else:
-            label = self.choose_op(xt_out)  # self.choose_any(xtype, p_full)
-            childs = [self.invent_core_depth(xt, depth_goal, depth=depth + 1, p_full=p_full) for xt in label.xtype[0]]
-            nsted = Nested(label, childs, depth=depth)  # , depth=depth sfeh no depth?
 
-        return nsted
+            node = self.nc.choose_terminal(xt_out, as_node=True)
+            node.depth = depth
+            # node = self.nc.choose_terminal(xt_out)
+            # node.depth = depth
+        else:
+            label = self.nc.choose_operator(xt_out)  # self.choose_any(xtype, p_full)
+            childs = [self.invent_core_depth(xt, depth_goal, depth=depth + 1, p_full=p_full) for xt in label.xtype[0]]
+            node = Node(label, childs, depth=depth)  # , depth=depth sfeh no depth?
+
+        return node
 
     def invent_core_operatoramount(self, xt_out, ops_left, depth=0, p_full=1.0):
         """
@@ -332,19 +264,17 @@ class TreeBuilder:
         childs = []
 
         if depth == self.depth_max or ops_left == 0:
-            label = self.choose_term(xt_out)
-
+            node = self.nc.choose_terminal(xt_out, as_node=True)  # depth does not need to be set
         else:  # nodeops_max > 0:
-            label = self.choose_op(xt_out)  # sfeh:xxx
-
+            label = self.nc.choose_operator(xt_out)  # sfeh:xxx
             ops_left -= 1
-            nodeops_split = randomly_split_range(ops_left, len(label.xtype[0]))
 
+            nodeops_split = randomly_split_range(ops_left, len(label.xtype[0]))
             for ii, xt_child in enumerate(label.xtype[0]):
                 childs.append(self.invent_core_operatoramount(xt_child, nodeops_split[ii], depth=depth+1))
 
-        nsted = Nested(label, childs, depth=depth)  # , depth=depth sfeh no depth?
-        return nsted
+            node = Node(label, childs, depth=depth)  # , depth=depth sfeh no depth?
+        return node
 
     def evolve_mutate_filter_random(self, nsted):
         """
@@ -371,13 +301,15 @@ class TreeBuilder:
         xtype = _nd.get_xtype()
 
         if _nd.get_arity() > 0:
-            new_label = self.choose_op(xtype)  # Function is same type, same arity
+            # sfeh:what if its the same function?
+            new_label = self.nc.choose_operator_match(xtype)  # Function is same type, same arity
+            _nd.set_label(new_label)
         else:
-            new_label = self.choose_term(xtype[1])  # 3 -> '2f' -> 5
-        _nd.set_label(new_label)
+            new_node = self.nc.choose_terminal(xtype[1], as_node=True)
+            _nd.set_new_nested(new_node)
         return evostruc
 
-    def evolve_prune(self, nsted: Nested):
+    def evolve_prune(self, nsted: Node):
         """
         prune depth
         -> prune everything below a certain level... (should not happen in the first place)
@@ -390,23 +322,25 @@ class TreeBuilder:
         """
         nodelist = nsted.eval_mutable_nodes()
         for dnode in nodelist:
-            if dnode.depth == self.nodeamount_max and dnode.get_arity() > 0:
+            if dnode.depth == self.nodes_max and dnode.get_arity() > 0:
                 print_warning('wwww', f'Node in fintree is too deep: {dnode.depth}')
-                new_node = Nested(self.choose_term(dnode.get_xtype_out()), childs=[], depth=dnode.depth)
+                new_node = self.nc.choose_terminal(dnode.get_xtype_out(), as_node=True)
+                new_node.depth = dnode.depth
                 dnode.set_new_nested(new_node)
                 # sfeh:debug did this work?
 
-        prune_amount = len(nsted) - self.nodeamount_max
+        prune_amount = len(nsted) - self.nodes_max
         while prune_amount > 0:
-            print_warning('wwww', f'Tree too complex: {len(nsted)} > {self.nodeamount_max}, pruning {prune_amount}.')
+            print_warning('wwww', f'Tree too complex: {len(nsted)} > {self.nodes_max}, pruning {prune_amount}.')
             nodelist = nsted.eval_mutable_nodes()
             prune_now = 1 + np.random.randint(prune_amount)  # 19 -> prune branch with 1 to max. 19 nodes
 
             nodelist = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
             node = np.random.choice(nodelist)
-            new_node = Nested(self.choose_term(node.get_xtype_out()), childs=[], depth=node.depth)
+            new_node = self.nc.choose_terminal(node.get_xtype_out(), as_node=True)
+            new_node.depth = node.depth
             node.set_new_nested(new_node)
-            prune_amount = len(nsted) - self.nodeamount_max
+            prune_amount = len(nsted) - self.nodes_max
         return nsted
 
     def evolve_mutate_branch_depth(self, nsted, depth_goal, p_full=1.0):
@@ -421,7 +355,7 @@ class TreeBuilder:
         branch = self.invent_core_depth(xtype_out, depth_goal, depth=0, p_full=p_full)  # sfeh ==>dummies
         _nd.set_new_nested(branch)
         # if _nd.depth == depth_goal:
-        #     _nd.set_label(tb.choose_term(xtype_out))  # sfeh update _nd nlabel
+        #     _nd.set_label(tb.choose_terminal(xtype_out))  # sfeh update _nd nlabel
         # else:
         #     _nd.childs = [Node(tb.choose_any(xt, p=1)) for xt in _nd.get_xtype()[0]
 
@@ -443,7 +377,7 @@ class TreeBuilder:
         _nd.set_new_nested(branch)
         return nsted
 
-    def evolve_crossover(self, tree1: Nested, tree2: Nested):
+    def evolve_crossover(self, tree1: Node, tree2: Node):
         """
         Evolution with crossover of branches with two trees
         currently only one branch
@@ -484,11 +418,11 @@ class TreeBuilder:
 
     def pop_random_depth(self, depth_goal, xt_out=None, p_full=1.0):
 
-        xt_out = xt_out or self.root_xtype
+        xt_out = xt_out or self.root_xt_out
 
-        if self.origin is not None:
+        if self.origin_tree is not None:
 
-            evonsted = self.origin.origin_tree_copy()
+            evonsted = self.origin_tree.origin_tree_copy()
             layer0_nsteds = evonsted.get_nsteds_at_depth(0, allow_fixed=False, expand_depth=True)
 
             for ii, nsted0 in enumerate(layer0_nsteds):  # -> get layer every time (nsted ids might have changed)
@@ -504,9 +438,9 @@ class TreeBuilder:
 
     def pop_random_nodes(self, nodeamount, p_full, xtype=None):
 
-        xtype = xtype or self.root_xtype
+        xtype = xtype or self.root_xt_out
 
-        if self.origin is not None:
+        if self.origin_tree is not None:
             """
             pareto_insert a (random) number of branches at the first possible "layer"
             (If all nodes are modifiable, it is the root node. Otherwise, it is the first modifiable nodes
@@ -515,7 +449,7 @@ class TreeBuilder:
             - split the amount of nodes up (randomly) and add these new branches to the fintree
             sfeh:idea mtate only the childs of a node! The label stays the same
             """
-            evonsted = nsted_deepcopy(self.origin)
+            evonsted = nsted_deepcopy(self.origin_tree)
             layer0_nodes = evonsted.get_nodes_at_depth(0, allow_fixed=False, expand_depth=True)
 
             layer0_splits = randomly_split_range(nodeamount, len(layer0_nodes))
@@ -572,7 +506,7 @@ class TreeMeta:
 class FinalizedTree:
     """An actual individual (Tree + meta-infos/phenotypes)"""
 
-    def __init__(self, tree: Nested, meta: TreeMeta):
+    def __init__(self, tree: Node, meta: TreeMeta):
         self.tree = tree
         self.meta = meta
 
@@ -723,9 +657,9 @@ if __name__ == '__main__':
                       '["Ifte", ["Not", [False]], [0.0], [2.0]]']
 
     tb = TreeBuilder(['a', 'b'], 10, 30, float)
-    tr = Nested(Add, [Nested(Symbol('a'), []), Nested(Float(1.23), [])])
-    tr = Nested(Ifte, [Nested(Gt, [Nested(Symbol('a'), []), Nested(Float(1.2), [])]), Nested(Float(1.23), []), Nested(Float(2.3), [])])
-    tr = Nested(Max, [Nested(Symbol('a'), []), Nested(Float(1.2), [])])
+    tr = Node(Add, [Node(Symbol('a'), []), Node(Float(1.23), [])])
+    tr = Node(Ifte, [Node(Gt, [Node(Symbol('a'), []), Node(Float(1.2), [])]), Node(Float(1.23), []), Node(Float(2.3), [])])
+    tr = Node(Max, [Node(Symbol('a'), []), Node(Float(1.2), [])])
     x = tr.get_sympy_expr()
     tr2 = sympy_to_nsted(x)
     print(tr, tr2)

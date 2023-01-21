@@ -122,25 +122,30 @@ class RegressionKernel(Kernel):
         return histpath
 
     def eval_sym_experimental(self, expr):
-        """VERY SLOW and only workd with mountain car
-
+        """
+        VERY SLOW and only workd with mountain car
+        todo
+            >>> from sympy import sin, cos, symbols, lambdify
+            >>> import numpy as np
+            >>> x = symbols('x')
+            >>> expr = sin(x) + cos(x)
+            >>> expr
+            sin(x) + cos(x)
+            >>> f = lambdify(x, expr, 'numpy')
+            >>> a = np.array([1, 2])
+            >>> f(a)
+            [1.38177329 0.49315059]
         """
         results_raw = []
         pairwise_diff = []
         square_diff = []
         index_d = self.data_train.to_dict('index')
 
-        # try:
-        #     float(expr)
-        #     return
-        # except:
-        #     pass
-
         for ii, dct in index_d.items():
             ex = sympy.sympify(str(expr))
             x = ex.subs(dct)  # [('cartVel', 2), ('cartPos', 3)]
             # x1 = expr.subs(dct)  # must make symbols sympy.Symbol('x', real=True, imaginary=False)
-            p_diff = round(dct['action']-np.clip(x, 0, 2), 0)  # todo
+            p_diff = round(dct['action']-np.clip(x, 0, 2), 0)  # sfeh:open
             results_raw.append(x)
             pairwise_diff.append(p_diff)
             square_diff.append(p_diff**2)

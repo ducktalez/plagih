@@ -208,10 +208,10 @@ class ExplainableGP:
                 try:
                     evotree = create_tree_func()
                     self.evaluate_and_append(evotree)
-
                     n_success += 1
                 except (ValueError, ArithmeticError, TypeError) as ex:
                     n_fails += 1  # sfeh:use this for something?
+                    print_warning('www', f'failed because: {ex}')
 
         return loop
 
@@ -326,7 +326,7 @@ class ExplainableGP:
             path_monitoring = self.rootdir / 'monitoring.png'
             plot_gen_performance(self.monitor_df, self.name, path_monitoring)  # largest plot analysing the
             self.printpl('f', f"monitoring: {path_monitoring}")  # .as_posix()
-            pareto_plot(self.paretofront, self.rootdir, self.name, self.tb.nodeamount_max)
+            pareto_plot(self.paretofront, self.rootdir, self.name, self.tb.nodes_max)
         except Exception as ex:
             self.printpl("e", f'Could not create plots: {ex}\n')
 
@@ -444,9 +444,9 @@ class ExplainableGP:
         inf: fitness_train is not float('inf') -> False
         """
         parsimony = eval_parsimony(evotree, self.complexity_measure, origin_tree=self.origintree)
-        if parsimony > self.tb.nodeamount_max:
+        if parsimony > self.tb.nodes_max:
             # sfep:discuss: information about last evolution? currently not saved in tree. Is this not auto-pruned?
-            raise ValueError(f'Tree too complex: {parsimony} > {self.tb.nodeamount_max}')
+            raise ValueError(f'Tree too complex: {parsimony} > {self.tb.nodes_max}')
 
         expr_sym = evotree.get_sympy_expr()
 
@@ -457,16 +457,8 @@ class ExplainableGP:
 
         try:
             fitness = self.kernel.eval_tf(expr_sym)['mean_error']
-            if DEBUG_DUMMY and self.gen_id > 5 and np.random.random() > 0.05:
-                fitness_todo = self.kernel.eval_sym_experimental(expr_sym)
-                if fitness_todo != fitness:
-                    print(f'fitness_todo {fitness_todo} vs. fitness {fitness}')
-                else:
-                    print(f'SUCCESS {fitness_todo} vs. {fitness}')
 
-        except ValueError as ex:
-            raise ValueError(f'eval-ex nan: {ex}')
-        except TypeError as ex:
+        except (ValueError, TypeError) as ex:
             # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16, float32,
             # float64, int8, int16, int32, int64, complex64, complex128
             # probably because datatypes in trees do not match (xtypes, build). Happens in random tree generation

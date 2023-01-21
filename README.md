@@ -27,7 +27,8 @@
 - evolve-operatoren: werte runden, runden einbauen,
 - test-cases with notation, docstring
 - numba.pydata.org https://www.youtube.com/watch?v=x58W9A2lnQc
-
+- If no float-symbols found, return (1) true or (2) an operator? 
+- sympy exprtools abchecken
 - sfeh:discussion especially with mc: there can be more than one pareto entry with the same parsimony/fitness!
 
 Always check for notes in code

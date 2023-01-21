@@ -2,6 +2,8 @@
 This starts the whole genetic programming.
 This (extra) file was added to have a file in the root directory that can be started.
 """
+import itertools
+import random
 import sys
 
 from sklearn.model_selection import train_test_split
@@ -150,7 +152,7 @@ def _test_random_pop():
     name = 'MTC200_RMSE_scratch'
     rootdir = Path.cwd() / f'{name}'
 
-    obs_list = ['cartVel', 'cartPos']
+    input_names = ['cartVel', 'cartPos']
     action_name = 'action'
 
     # ## Load the training data into Kernel-class(...only offline training in this run).
@@ -158,7 +160,7 @@ def _test_random_pop():
     df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P design pattern #YOLO
     data_train, data_control = train_test_split(df, test_size=0.2, random_state=0)
     use_RMSE_vs_MAE_sfeh = True  # RMSE
-    root_type = float
+    root_xt_out = float
     action_clip = [0, 2]
     action_round = 0
     kernel = RegressionKernel(use_RMSE_vs_MAE_sfeh, data_train, data_control, action_clip, action_round, action_name)
@@ -168,7 +170,7 @@ def _test_random_pop():
     # ## Run/Computation restrictions
     pop_max = 100
     gen_max = 100
-    nodeamount_max = 50
+    nodes_max = 50
     depth_max = 10
 
     # GP Evolution
@@ -182,14 +184,86 @@ def _test_random_pop():
     # '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]'
     # sfeh:open give user feedback for tree
     # origin_tree = Ifte(Le(Symbol('cartVel'), Float(0)), Float(0), Float(2))
-    origin_tree = None
 
-    # tree construction complexity
-    obs_names = ['cartVel', 'cartPos']
-    tb = TreeBuilder(obs_names, depth_max, nodeamount_max, root_xtype=root_type)
+    origin_tree = None  # todo
+    outcome = sympy.Symbol('outcome', real=True, imaginary=False)
+    tree_base = Clip(Round(outcome), 0, 2)
 
-    period_plots = 10
-    period_save = 10
+    class NodeCreator:
+        def __init__(self):
+            operator_pool = {Add: 2, Sub: 1, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
+                             Sin: 0.5, Tan: 0.1, Cos: 0.33, Min: 1, Max: 1, And: 1, Or: 1, Not: 0.5, Xor: 1, Lt: 0.5,
+                             Le: 0.5, Ifte: 2}  # sfeh: Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.5, Usub: 1,
+            # Round: 0.5, Eq: 1,  # Ne: 0.5, # Powrounded: 0.1, # Log1p: 0.1, Gt: 0.1, Ge: 0.1,
+            self.pick_op, self.pick_op_match = xtdict_operators(operator_pool)
+
+            pick_symbol = {float: [[_n, 1] for _n in input_names]}  # sfeh:discuss
+            self.pick_symbol = {float: make_choices(pick_symbol[float]),
+                                bool: []}  # NotImplementedError
+
+            samples = [i for i in itertools.chain.from_iterable(df[['cartVel', 'cartPos']].sample(n=50).values) if
+                       i != 0]
+            pick_constant = {float: [[lambda: round(random.normalvariate(0, 1), PRECISION), 0.2],
+                                     [lambda: round(random.normalvariate(1, 1), PRECISION), 0.1],
+                                     [lambda: round(random.normalvariate(10, 5), PRECISION), 0.1],
+                                     [lambda: round(random.randint(1, 20), PRECISION), 0.1],  # int fails in Float node
+                                     [lambda: round(random.choice(samples), PRECISION), 0.5]],
+                             bool: [[lambda: random.choice((True, False)), 1]]}
+            self.pick_constant = {float: make_choices(pick_constant[float]),
+                                  bool: make_choices(pick_constant[bool])}
+
+        def choose_operator(self, xt):
+            _op = np.random.choice(self.pick_op[xt][0], p=self.pick_op[xt][1])  # no (), which would evaluate the op
+            # return _op
+            return _op
+
+        def choose_operator_match(self, xtype):
+            _op = np.random.choice(self.pick_op_match[xtype][0], p=self.pick_op_match[xtype][1])
+            return _op
+
+        def choose_terminal(self, xt, p_observation=0.5, as_node=False):
+            if np.random.random() > p_observation:
+                try:
+                    _v = self.choose_symbol(xt)
+                    if not as_node:
+                        return _v
+                    else:
+                        return Node(Symbol, [_v])
+                except (TypeError, IndexError):
+                    pass  # return a constant (E.g. because there are no boolean observations)
+
+            _v = self.choose_constant(xt)
+            if not as_node:
+                return _v
+            else:
+                if xt == float:
+                    return Node(Float, [_v])
+                else:
+                    return Node(Boolean, [_v])
+
+        def choose_constant(self, xt, as_node=False):
+            _v = np.random.choice(self.pick_constant[xt][0], p=self.pick_constant[xt][1])()  # only dist. must be ()
+            if not as_node:
+                return _v
+            else:
+                if xt == float:
+                    return Node(Float, [_v])
+                else:
+                    return Node(Boolean, [_v])
+
+        def choose_symbol(self, xt, as_node=False):
+            _v = np.random.choice(self.pick_symbol[xt][0], p=self.pick_symbol[xt][1])
+            if not as_node:
+                return _v
+            else:
+                return Node(Symbol, [_v])
+
+    nc = NodeCreator()
+
+    build_restrictions = {'depth_max': 7, 'nodes_max': 50}
+
+    tb = TreeBuilder(root_xt_out, nc, build_restrictions)
+
     gp = ExplainableGP(name, pop_max, gen_max, rootdir, kernel, complexity_measure, origin_tree, tb)
     # gp.pop_kill()  # optional, maybe restart pop between runs?
     try:
@@ -197,6 +271,8 @@ def _test_random_pop():
     except FileNotFoundError as ex:
         gp.printpl('i', f'No backup file found at {ex}. Starting a new run.')
 
+    period_plots = 10
+    period_save = 10
     gp.evoloop(period_plots, period_save)
     gp.evoloop_monitoring_plots()
 
@@ -214,7 +290,6 @@ if __name__ == "__main__":
     """
     # main()
     _test_random_pop()
-
 
 # class ObservationIndex(Observation):
 #     """

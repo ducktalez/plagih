@@ -28,12 +28,8 @@ class Good_Expert:
                     yyy = 0
                 else:
                     yyy = 2
-        # deletethis
-        if xxx != yyy:
-            raise Exception(f'oadsasdasdsad {xxx} {yyy}')
 
         return yyy
-
 
 
 class SimonsCheckpoints:

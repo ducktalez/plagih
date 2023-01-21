@@ -99,7 +99,7 @@ def pareto_plot(paretofront, path, name, parsimony_max):
         xx = np.concatenate([xx, [right + 1]])
         yy = np.concatenate([yy, [yy[-1]]])
 
-        run_name_latex = str(name).replace('_', '-')  # sfeh asd workaround for latex version
+        run_name_latex = str(name).replace('_', '-')  # workaround for latex version
         ax.step(xx, yy, linestyle='dashed', marker='.', label=f'{run_name_latex}', where='post')
         ax.set(xlabel='complexity', ylabel='regression error',
                xlim=(0, right),

@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 
 from plagih.fitness_kernel import Regression
 from plagih.plagih_gp_base_class_xai import *
-from plagih.random_nodes_generator import NodeCreator
+from plagih.random_nodes_generator import NodeCreator, xtdict_operators, make_choices
 from plagih.util import *
 
 
@@ -27,7 +27,7 @@ def _test_random_pop():
     data_train, data_control = train_test_split(df, test_size=0.2, random_state=0)
     root_xt_out = float
     outcome = sympy.Symbol('outcome')
-    tree_base = Clip(Round(outcome), 0, 2)
+    tree_base = Clip(Round(outcome), 0, 2)  # sfeh:open
 
     tf_sanitize_results = lambda res: tf.round(tf.clip_by_value(res, 0, 2))
     tf_error_metric = lambda pw_diffs: tf.sqrt(tf.reduce_mean(tf.square(pw_diffs)))
@@ -45,8 +45,6 @@ def _test_random_pop():
     # GP Evolution
     period = {'gen_plots': 5, 'gen_save': 5}
     mp_cores = 1
-
-    complexity_measure = 'tree_node_count'
 
     # ### A simple tree and a simple tree with fixed nodes
     # '["Ifte",["<",["cartVel"],["0"]],["0"],["2"]]'
@@ -128,15 +126,15 @@ def _test_random_pop():
     nc = Nodemaker()
 
     build_restrictions = {'depth_max': 7, 'nodes_max': 50}
+    selection_default = lambda pop: selection_tournament(pop, tournsize=3)
+    tb = TreeBuildRestrictions(root_xt_out, nc, build_restrictions, 'tree_node_count', selection_default)
 
-    tb = TreeBuilder(root_xt_out, nc, build_restrictions)
-
-    gp = ExplainableGP(name, pop_max, gen_max, rootdir, kernel, complexity_measure, origin_tree, tb)
+    gp = ExplainableGP(name, pop_max, gen_max, rootdir, kernel, origin_tree, tb)
     # gp.pop_kill()  # optional, maybe restart pop between runs?
     try:
         gp.backup_load(path_load_custom_backup=rootdir)
     except FileNotFoundError as ex:
-        gp.printpl('i', f'No backup file found at {ex}. Starting a new run.')
+        printpl('i', f'No backup file found at {ex}. Starting a new run.')
 
     period_plots = 10
     period_save = 10
@@ -149,13 +147,6 @@ def _test_random_pop():
 
 
 if __name__ == "__main__":
-    """
-    GP Workflow:
-    1. Load (.csv) data. (gefundene Observationen präsentieren, Aktion präsentieren)
-    2. Persönliche Anpassung des Entwicklers (z.B. andere Aktion, Verteilung, print verbosity, ...)
-    3. Lauf starten
-    """
-    # main()
     _test_random_pop()
 
 # class ObservationIndex(Observation):

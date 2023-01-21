@@ -1,29 +1,18 @@
 """
 The factory to create trees
 """
-import pandas
-
-from plagih.nested_structure import Node, sympy_to_nsted
+from plagih.nested_structure import *
 from plagih.plagih_tree import *
 from plagih.util import *
 from plagih.tree_complexity.tree_edit_distance import apted_distance
 
 import random
 from collections import deque
-import logging
 import copy
 import numpy as np
 
 
 def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
-    """
-    complexity_measure: compute the chosen distance by the user.
-    #     'tree_node_count': tree_get_size,
-    #     'tree_depth': tree_get_depth,
-    #     'tree_edit_distance': tree_parsimony_ted,
-
-    sfeh open: weights
-    """
     if complexity_measure == 'tree_node_count':  # number of nodes
         return len(tree)  # returns the number of nodes  # sfeh weights
     elif complexity_measure == 'tree_edit_distance':  # tree_edit_distance, fintree-edit-distance
@@ -37,26 +26,22 @@ def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
 
 def randomly_split_range(range_max, num_splits):
     """
-    split a integer range randomly into parts
+    split integer range randomly into num_splits parts
     [1..100] -> [33, 15, 52]
     used for building trees
     0 is allowed! (ends a branch with a terminal node)
+    sfeh:discuss create 2 more random split values and remove largest and smallest entry. (better distribution?)
+      -> No. Also, allow 0 nodes.
     """
-    # tmp_distributions = random.sample(range(1, range_max), num_splits)
-    # d_sum = sum(tmp_distributions)
-    # d_list = [int(round(range_max*(x/d_sum), 0)) for x in tmp_distributions]
-    # if num_splits == 0:
-    # sfeh:discuss create 2 more random split values and remove largest and smallest entry. (better distribution?)
-    # No. Also, allow 0 to occur.
     sample_dist = np.random.rand(num_splits)  # [0.2, 0.8, 0.5] -> random samples
     d_sum = sum(sample_dist)  # 1.5
     sample_dist = [i / d_sum for i in sample_dist]  # [0.12, 0.6, 0.28] -> fittet to sum of 1
     sample_dist = [i * range_max for i in sample_dist]  # [12, 60, 28] -> for 100 nodes
-    sample_dist = [int(round(i, 0)) for i in sample_dist]  # convert to usable ints
+    sample_dist = [int(round(i, 0)) for i in sample_dist]  # int required
 
-    # sfeh workaround, this makes exactly the correct range by changing the most extreme entry
+    # sfeh workaround, this makes exactly the correct range by changing the most "extreme" entry
     imprecise_diff = range_max - sum(sample_dist)  # sfeh: this can be [0, 0, 0], which assigns to the 0th bin...
-    # sfeh:discussion: maybe this difference is 2 or larger more often than 1 (->rounding),
+    # sfeh:discuss: maybe this difference is 2 or larger more often than 1 (->rounding),
     # so maybe while-loop (just check if it happens?)
     if imprecise_diff != 0:
         if sum(sample_dist) < range_max:
@@ -70,7 +55,7 @@ def randomly_split_range(range_max, num_splits):
     return sample_dist
 
 
-def node_simplification(nsted):
+def tree_simplification(tree):
     """
     # sfeh sympy-reconstruct patterns
     #   map symoy-sign to a sum
@@ -84,43 +69,38 @@ def node_simplification(nsted):
         # old_core:[sign, [Min, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
         # new_node: [sign, [Min, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.56921]]]
     """
-    expr_sym = nsted.get_sympy_expr()
+    expr_sym = tree.get_sympy_expr()
     nsted_rebuilt = sympy_to_nsted(expr_sym)
     # node_rebuilt = node_rebuilt.update_fixed_nodes(node)  # this is not our problem
 
     return nsted_rebuilt
 
 
-def evolve_reduce_simplify(nstruc: Node, completely=True, force=False):
+def evolve_reduce_simplify(tree: Node, completely=True, force=False):
     """
     # sfeh:open this function does currently not work
     Reducing a fintree to its most basic form with sympify.
     (completely = False: reduce just one branch. if you wanted to have more complexity)
 
     """
-    tree_copy = copy.deepcopy(nstruc)
-    if completely:  # reduce the complete fintree
-        nodes_lv0 = nstruc.get_nodes_at_depth(0, allow_fixed=False)  # only required for fixed-core trees
+    tree_copy = copy.deepcopy(tree)
+    if completely:  # reduce the complete tree
+        nodes_lv0 = tree.get_nodes_at_depth(0, allow_fixed=False)  # only required for fixed-core trees
         for cc in nodes_lv0:
-            cc.set_new_nested(node_simplification(cc))
+            cc.set_new_nested(tree_simplification(cc))
     else:
-        # # this was implemented for runtime, to prevent simplifing leaf nodes
-        # functions = [x for x in nodes if x.get_arity() > 0]
-        # if functions:
-        # nd = np.random.choice(functions)
-        #   ...
-        nd_list = nstruc.eval_mutable_nodes()
-        nd_list = [x for x in nd_list if x.get_arity() > 0]  # ignoring leaf nodes
-        nd = np.random.choice(nd_list)
-        nd.set_new_nested(node_simplification(nd))  # sfeh chosen must be set again? or not? test it at least.
+        node_list = tree.eval_mutable_nodes()
+        node_list = [n for n in node_list if n.get_arity() > 0]  # ignoring leaf nodes
+        node = np.random.choice(node_list)
+        node.set_new_nested(tree_simplification(node))  # sfeh chosen must be set again? or not? test it at least.
     if force:
-        return nstruc
+        return tree
     else:
-        if len(tree_copy) < len(nstruc):
+        if len(tree_copy) < len(tree):
             print_warning('w', f'sfeh Trees get larger during simplification?')
             return tree_copy
         else:
-            return nstruc
+            return tree
 
 
 def nsted_deepcopy(nsted: Node):
@@ -128,74 +108,16 @@ def nsted_deepcopy(nsted: Node):
     return _cpy
 
 
-def make_choices(val_p_tuples):
-    """
-    make a tuple-list callable for weighted numpy choice
-    [['a', 1], ['b', 2]] -> [('a', 'b'), (0.333, 666)]
-    """
-    xx = list(zip(*val_p_tuples))
-    # normalizing the probabilities in every case to a sum of 1 (100%)
-    psum = sum(xx[1])
-    xx[1] = [i / psum for i in xx[1]]
-    # lambda: np.random.choice(xx[0], p=xx[1])
-    return xx
-
-
-def operator_pool_check(ops):
-    """
-    Check if the user-specified loaded operators allow closure
-    (either float-only/bool only or all 4 types of operators)
-    @:param operator_pool: list with operators and their weight of being selected
-    """
-    # sfeh dunno if that works... 2f not in x
-    opxtypes = [oper.xtype for oper in ops.keys()]
-    has_2f = any([float == i[1] for i in opxtypes])
-    has_2b = any([bool == i[1] for i in opxtypes])
-    has_f2b = any([float in i[0] and bool == i[1] for i in opxtypes])
-    has_b2f = any([bool in i[0] and float == i[1] for i in opxtypes])
-    if not all([has_2f, has_2b, has_f2b, has_b2f]):
-        logging.warning(f'Loaded operators do not feature both numeric (float) and bool type.')
-    if all([has_2f, has_2b]) and not all([has_f2b or has_b2f]):
-        raise Exception(f'Loaded operators do not allow closure!')
-
-
-def xtdict_operators(operator_pool):
-    # sfeh:option allow reconstructed operators? optional?
-    # sfeh
-
-    operator_pool_check(operator_pool)
-
-    pick_op = {float: [], bool: []}
-    pick_op_match = {}
-
-    for _cls, _p in operator_pool.items():
-        xt = _cls.xtype
-        pick_op[xt[1]].append([_cls, _p])
-        if pick_op_match.get(xt, None) is None:
-            pick_op_match[xt] = []
-        pick_op_match[xt].append([_cls, _p])
-
-    pick_op = {float: make_choices(pick_op[float]),
-               bool: make_choices(pick_op[bool])}
-
-    for k_xt in pick_op_match.keys():
-        pick_op_match[k_xt] = make_choices(pick_op_match[k_xt])
-
-    return pick_op, pick_op_match
-
-
-class TreeBuilder:
-    """
-    Just a class to prevent referencing all the separate shizzle everytime
-
-    func_list, probability_list = self. Operators[xtype_out]
-    return np.random.choice(func_list, p_full=probability_list)
+class TreeBuildRestrictions:
+    """functions to build trees, with the advantage of being able to use general build restrictions.
     """
 
-    def __init__(self, root_xt_out, nc, build_restrictions, origin_tree=None):
+    def __init__(self, root_xt_out, nc, build_restrictions, complexity_metric, default_selection, origin_tree=None):
         self.root_xt_out = root_xt_out
         self.nc = nc
 
+        self.default_selection = default_selection
+        self.complexity_metric = complexity_metric
         self.origin_tree = origin_tree
 
         self.depth_max = build_restrictions.get('depth_max', 10)
@@ -231,7 +153,6 @@ class TreeBuilder:
     #     #         index_minmax = (fam_members[0].time_index, fam_members[-1].time_index)
     #     #         for obs in fam_members:
     #     #             obs.index_minmax = index_minmax
-    #     #             # environment.obs_infos[obs.name] = obs  # sfeh:open okay do we need this? :s guess we will find out x.D haha
     #     #             obs_info[obs.name] = obs
     #     #     else:
     #     #         obs = fam_members[0]
@@ -240,21 +161,20 @@ class TreeBuilder:
     #     #         obs_prop.pop_append_evotree(1)  # just one value
     #     pass
 
-    def invent_core_depth(self, xt_out, depth_goal, depth=0, p_full=1.0):
-        if depth == self.depth_max or depth == depth_goal or random.random() > p_full:
+    def build_core_depth(self, xt_out, depth_goal, nodes_max=None, depth=0, p_term=0.0):
+        nodes_max = nodes_max or self.nodes_max
+        if depth == self.depth_max or depth == depth_goal or nodes_max == 0 or random.random() < p_term:
 
             node = self.nc.choose_terminal(xt_out, as_node=True)
             node.depth = depth
-            # node = self.nc.choose_terminal(xt_out)
-            # node.depth = depth
         else:
-            label = self.nc.choose_operator(xt_out)  # self.choose_any(xtype, p_full)
-            childs = [self.invent_core_depth(xt, depth_goal, depth=depth + 1, p_full=p_full) for xt in label.xtype[0]]
-            node = Node(label, childs, depth=depth)  # , depth=depth sfeh no depth?
+            label = self.nc.choose_operator(xt_out)
+            childs = [self.build_core_depth(xt, depth_goal, nodes_max-1, depth=depth + 1, p_term=p_term) for xt in label.xtype[0]]
+            node = Node(label, childs, depth=depth)
 
         return node
 
-    def invent_core_operatoramount(self, xt_out, ops_left, depth=0, p_full=1.0):
+    def random_tree_num(self, xt_out, nodes_num, depth=0, p_term=0.0):
         """
         This version counts the amount of operators as construction limit!
         sfeh:idea nodes are now about being operators...
@@ -263,20 +183,20 @@ class TreeBuilder:
         """
         childs = []
 
-        if depth == self.depth_max or ops_left == 0:
+        if depth == self.depth_max or nodes_num == 0:
             node = self.nc.choose_terminal(xt_out, as_node=True)  # depth does not need to be set
         else:  # nodeops_max > 0:
             label = self.nc.choose_operator(xt_out)  # sfeh:xxx
-            ops_left -= 1
+            nodes_num -= 1
 
-            nodeops_split = randomly_split_range(ops_left, len(label.xtype[0]))
+            nodeops_split = randomly_split_range(nodes_num, len(label.xtype[0]))
             for ii, xt_child in enumerate(label.xtype[0]):
-                childs.append(self.invent_core_operatoramount(xt_child, nodeops_split[ii], depth=depth+1))
+                childs.append(self.random_tree_num(xt_child, nodeops_split[ii], depth=depth + 1))
 
             node = Node(label, childs, depth=depth)  # , depth=depth sfeh no depth?
         return node
 
-    def evolve_mutate_filter_random(self, nsted):
+    def mutate_filter(self, nsted):
         """
         Mutates a number of float terminal of a fintree
         - filter point/branch/all, branch can also affect a point only aswell as all nodes
@@ -290,11 +210,9 @@ class TreeBuilder:
 
         return nsted
 
-    def evolve_mutate_point(self, nsted):
-        """
-        Mutate a single mutable point in any Tree.
-        sfeh:debug is the fintree a fintree copy or the same fintree?
-        """
+    def mutate_point(self, nsted):
+        """Mutate a single mutable point in any Tree.
+        sfeh:debug is the fintree a fintree copy or the same fintree?"""
         evostruc = nsted_deepcopy(nsted)
 
         _nd = np.random.choice(evostruc.eval_mutable_nodes())
@@ -309,17 +227,15 @@ class TreeBuilder:
             _nd.set_new_nested(new_node)
         return evostruc
 
-    def evolve_prune(self, nsted: Node):
-        """
-        prune depth
+    def _prune(self, nsted: Node):
+        """prune depth
         -> prune everything below a certain level... (should not happen in the first place)
         prune nsteds
         -> get nsted difference, get nstedlist, untill small enough: split the difference, prune nsteds until
 
         sfeh:discussion there is a difference between parsimony and complexity...
         sfeh:discuss analyze the amount of trees that have to be pruned?
-        sfeh:open add labelweight_max to
-        """
+        sfeh:open add labelweight_max to"""
         nodelist = nsted.eval_mutable_nodes()
         for dnode in nodelist:
             if dnode.depth == self.nodes_max and dnode.get_arity() > 0:
@@ -343,43 +259,46 @@ class TreeBuilder:
             prune_amount = len(nsted) - self.nodes_max
         return nsted
 
-    def evolve_mutate_branch_depth(self, nsted, depth_goal, p_full=1.0):
-        """
-        nsted, cool_build_size, p_full=p_full
-
-        sfeh ==>depth only
-        currently only one branch
-        """
-        _nd = np.random.choice(nsted.eval_mutable_nodes())
-        xtype_out = _nd.get_xtype_out()
-        branch = self.invent_core_depth(xtype_out, depth_goal, depth=0, p_full=p_full)  # sfeh ==>dummies
-        _nd.set_new_nested(branch)
-        # if _nd.depth == depth_goal:
-        #     _nd.set_label(tb.choose_terminal(xtype_out))  # sfeh update _nd nlabel
+    def mutate_branch_depth(self, tree, depth_goal, p_term=0.0):
+        _nodes_init = len(tree)
+        _node = np.random.choice(tree.eval_mutable_nodes())
+        xtype_out = _node.get_xtype_out()
+        branch = self.build_core_depth(xtype_out, depth_goal, self.nodes_max-_nodes_init, depth=0, p_term=p_term)  # sfeh ==>dummies
+        _node.set_new_nested(branch)
+        # if _node.depth == depth_goal:
+        #     _node.set_label(tb.choose_terminal(xtype_out))  # sfeh update _node nlabel
         # else:
-        #     _nd.childs = [Node(tb.choose_any(xt, p=1)) for xt in _nd.get_xtype()[0]
+        #     _node.childs = [Node(tb.choose_any(xt, p=1)) for xt in _node.get_xtype()[0]
 
-        # etree.finalize()  # sfeh ==>state
-        return nsted
+        # etree.finalize()
+        return tree
 
-    def evolve_mutate_branch_nodes(self, nsted, nodes_goal, p_full=1.0):
+    def finalize_tree(self, tree):
+        """When an evolution is done, this function...:
+        - inserts node with input data, if tree has none yet
+        - prunes tree (...should be handled in the respected evolution, as the pruning will affect random nodes)
+        - sets depth in all nodes correctly
+        - (currently) does not perform any checks (depth set correctly? )"""
+        pass
+
+    def evolve_mutate_branch_nodes(self, tree, nodes_goal, p_term=0.0):
         """
-        nsted, cool_build_size, p_full=p_full
 
         sfeh ==>depth only
         currently only one branch
         """
-        if nsted is None:
+        _nodes_init = len(tree)
+        if tree is None:
             raise NotImplementedError('SFEH:open Implement standard selection mechanism')
-        _nd = np.random.choice(nsted.eval_mutable_nodes())
+        _nd = np.random.choice(tree.eval_mutable_nodes())
         xtype_out = _nd.get_xtype_out()
-        branch = self.invent_core_operatoramount(xtype_out, nodes_goal, depth=_nd.depth, p_full=p_full)
+        nodes_goal = min(self.nodes_max-(_nodes_init-len(_nd)), nodes_goal)
+        branch = self.random_tree_num(xtype_out, nodes_goal, depth=_nd.depth, p_term=p_term)
         _nd.set_new_nested(branch)
-        return nsted
+        return tree
 
     def evolve_crossover(self, tree1: Node, tree2: Node):
-        """
-        Evolution with crossover of branches with two trees
+        """Evolution with crossover of branches between two trees
         currently only one branch
 
         swap branches of two trees
@@ -387,8 +306,7 @@ class TreeBuilder:
         - select swappable branche for a_parent from b_parent
             - select a node in a (and crossover here, no matter what)
         - delete a_parent branch and pareto_insert b_parent branch (which tactic?)
-        sfeh:idea into main fintree?
-        """
+        sfeh:idea into main fintree?"""
         _a = nsted_deepcopy(tree1)
         _b = nsted_deepcopy(tree2)
 
@@ -411,12 +329,12 @@ class TreeBuilder:
         _a_nd.set_new_nested(_b_nd)
         _b_nd.set_new_nested(ansted_copy)
 
-        _a = self.evolve_prune(nsted=_a)
-        _b = self.evolve_prune(nsted=_b)
+        _a = self._prune(nsted=_a)
+        _b = self._prune(nsted=_b)
 
         return _a, _b
 
-    def pop_random_depth(self, depth_goal, xt_out=None, p_full=1.0):
+    def pop_random_depth(self, depth_goal, xt_out=None, p_term=0.0):
 
         xt_out = xt_out or self.root_xt_out
 
@@ -428,27 +346,25 @@ class TreeBuilder:
             for ii, nsted0 in enumerate(layer0_nsteds):  # -> get layer every time (nsted ids might have changed)
                 nd_list = nsted0.eval_mutable_nsteds()
                 lvl0_nsted = np.random.choice(nd_list)
-                new_subbranch = self.invent_core_depth(lvl0_nsted.get_xtype_out(), depth_goal, depth=lvl0_nsted.depth, p_full=p_full)
+                new_subbranch = self.build_core_depth(lvl0_nsted.get_xtype_out(), depth_goal, depth=lvl0_nsted.depth, p_term=p_term)
                 lvl0_nsted.set_new_nested(new_subbranch)
 
         else:
-            evonsted = self.invent_core_depth(xt_out, depth_goal)
+            evonsted = self.build_core_depth(xt_out, depth_goal)
 
         return evonsted
 
-    def pop_random_nodes(self, nodeamount, p_full, xtype=None):
+    def pop_random_nodes(self, nodeamount, p_term, xtype=None):
 
         xtype = xtype or self.root_xt_out
 
         if self.origin_tree is not None:
-            """
-            pareto_insert a (random) number of branches at the first possible "layer"
+            """pareto_insert a (random) number of branches at the first possible "layer"
             (If all nodes are modifiable, it is the root node. Otherwise, it is the first modifiable nodes
             - get these nodes, randomly choose a subset of those
             - get the amount of nodes allowed to add. (max nodes without the core-fintree + the nodes about to delete)
             - split the amount of nodes up (randomly) and add these new branches to the fintree
-            sfeh:idea mtate only the childs of a node! The label stays the same
-            """
+            sfeh:idea mutate only the childs of a node! The label stays the same"""
             evonsted = nsted_deepcopy(self.origin_tree)
             layer0_nodes = evonsted.get_nodes_at_depth(0, allow_fixed=False, expand_depth=True)
 
@@ -458,36 +374,29 @@ class TreeBuilder:
                     layer0_nodes):  # pareto_insert branches! get layer every time (node ids might have changed)
                 lvl0_node = np.random.choice(node0.eval_mutable_nodes())  # layer0_branch =
                 # branch_size = layer0_nodes[ii]  # sfeh:idea + len(lvl0_node)
-                new_subbranch = self.invent_core_operatoramount(lvl0_node.get_xtype_out(), layer0_splits[ii],
-                                                                depth=lvl0_node.depth)
+                new_subbranch = self.random_tree_num(lvl0_node.get_xtype_out(), layer0_splits[ii],
+                                                     depth=lvl0_node.depth)
                 lvl0_node.set_new_nested(new_subbranch)
 
         else:
-
-            evonsted = self.invent_core_operatoramount(xtype, nodeamount, depth=0)  # more debugging?
+            evonsted = self.random_tree_num(xtype, nodeamount, depth=0)  # more debugging?
 
         return evonsted
 
 
 class TreeMeta:
 
-    def __init__(self, fitness, parsimony, expr_sym):
+    def __init__(self, fitness, parsimony, expr_sym, tag):
         self.fitness = fitness
         self.parsimony = parsimony
         self.expr_sym = expr_sym
-        self.last_evolution = deque([], maxlen=10)  # sfeh:open
+        self.last_evolution = deque([tag], maxlen=10)  # sfeh:open
 
     def append_tag(self, tag):
         self.last_evolution.append(tag)
 
     def get_last_tag(self):
         return self.last_evolution[-1]
-
-    def reset(self):
-        self.fitness = None
-        self.parsimony = None
-        self.expr_sym = None
-        # self.last_evolution = deque([], maxlen=10)
 
     def get_fitness(self):
         return self.fitness
@@ -511,7 +420,7 @@ class FinalizedTree:
         self.meta = meta
 
     def __str__(self):
-        """Show the Fitness and Parsimony of a tree"""
+        """Show the Parsimony and Fitness of a tree"""
         return f'[{self.get_parsimony():2.1f}: fit {self.get_fitness():4.2f}]'
 
     def get_evotree(self):
@@ -547,7 +456,8 @@ class FinalizedTree:
 #         if tree:
 #             meta.append_tag('origin')  # sfeh:discuss
 #             self.existing = True
-#             # self.printpl('gg', f'Loading origin fintree, regr. error {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')
+#             # self.printpl('gg', f'Loading origin fintree, regr. error {fitness_train}.
+#             Time: {time.perf_counter() - self.time_start:4.2f}s')
 #         else:
 #             self.existing = False
 #             self.fintree = None  # sfeh probably the 'existing' above is deprecated
@@ -601,7 +511,7 @@ class FinalizedTree:
 #     else:
 #         # childs = [rec_build_tree(x, depth=depth + 1, obs_list=obs_list) for x in lst[1:]]
 #         # node.set_childs(childs)  # sfeh delete
-#         raise Exception(f'Tree-building list length {len(lst[1:])} does not match the nodes arity {node.get_arity()}.')
+#         raise Exception(f'Tree-building list length {len(lst[1:])} does not match arity {node.get_arity()}.')
 #
 #     return node
 
@@ -651,20 +561,19 @@ def selection_tournament(individuals, tournsize=3):
 if __name__ == '__main__':
     _test_open = '[Ifte, [Or, [b < -1], [And, [b < 0.1], [a < -0.05]]], 2, [Ifte, [And, [And, ' \
                  '[b > -0.45], [b < -0.05]], [a < -0.5]], 0, [Ifte, [a < 0], 0, 2]]]',
-
     _test_loadabls = ["['+',['-',['Ifte',['True'],['sign',['cartVel']],['/',[2.3],[4]]],['cartVel']],[-1.3]]",
                       '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]',
                       '["Ifte", ["Not", [False]], [0.0], [2.0]]']
 
-    tb = TreeBuilder(['a', 'b'], 10, 30, float)
+    tb = TreeBuildRestrictions(['a', 'b'], 10, 30, float, origin_tree=None)
     tr = Node(Add, [Node(Symbol('a'), []), Node(Float(1.23), [])])
-    tr = Node(Ifte, [Node(Gt, [Node(Symbol('a'), []), Node(Float(1.2), [])]), Node(Float(1.23), []), Node(Float(2.3), [])])
+    tr = Node(Ifte, [Node(Gt, [Node(Symbol('a'), []), Node(Float(1.2), [])]), Node(Float(3.), []), Node(Float(2.), [])])
     tr = Node(Max, [Node(Symbol('a'), []), Node(Float(1.2), [])])
     x = tr.get_sympy_expr()
     tr2 = sympy_to_nsted(x)
     print(tr, tr2)
     for _ in range(10):
-        tr = tb.pop_random_depth(3, float, p_full=0.7)
+        tr = tb.pop_random_depth(3, float, p_term=0.3)
         x = tr.get_sympy_expr()
         print('First sym success')
         tr_new = sympy_to_nsted(x)

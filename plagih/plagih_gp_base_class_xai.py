@@ -16,9 +16,19 @@ import pandas as pd
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
 
+def printpl(message_type, message_str):
+    """
+    Lightweight print function.
+    Instead of checking if you should print every time, this is done here.
+    message_type options can be found in config
+    """
+    printez(message_type, message_str)
+    return
+
+
 class ExplainableGP:
 
-    def __init__(self, name, pop_max, gen_max, rootdir, kernel, complexity_measure, origintree, tb: TreeBuilder):
+    def __init__(self, name, pop_max, gen_max, rootdir, kernel, origintree, tb: TreeBuildRestrictions):
         self.time_start = time.perf_counter()
         self.kernel = kernel
         self.origintree = origintree
@@ -26,12 +36,11 @@ class ExplainableGP:
         self.tb = tb
         self.pop_max = pop_max
         self.mp_cores = 1  # sfeh: open MP (multiprocessing)
-        self.complexity_measure = complexity_measure
         self.gen_max = gen_max
         self.rootdir = rootdir
         self.gen_id = 0
 
-        self.printpl('gg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
+        printpl('gg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
         print(f'\n'
               f'\tInitializing Plagih UI.\n'
@@ -68,8 +77,8 @@ class ExplainableGP:
         if gen_additionally:
             printdummy = copy.deepcopy(self.gen_max)
             self.gen_max = max(self.gen_max, self.gen_id + gen_additionally)
-            self.printpl('i', f'Adding {gen_additionally} more generations in gen {self.gen_id}, '
-                              f'increasing gen_max from {printdummy} to {self.gen_max}.')
+            printpl('i', f'Adding {gen_additionally} more generations in gen {self.gen_id}, '
+                         f'increasing gen_max from {printdummy} to {self.gen_max}.')
 
         # sfeh check if any roots
         # yaml_dump(self.rootdir / 'used_config.yaml', self.conf)
@@ -78,7 +87,7 @@ class ExplainableGP:
             self.time_genstart = time.perf_counter()  # sfeh here?
 
             if self.gen_id == 0:
-                self.printpl('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')  # sfeh debug
+                printpl('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')  # sfeh debug
                 self.gen_create_initial()  # sfeh check if last pop is empty? +info/warnung: neue generation?
                 self.gen_id += 1
             else:
@@ -102,18 +111,18 @@ class ExplainableGP:
             gen_time = time.perf_counter() - self.time_genstart
             pop_analysis_dict = pop_analyze(self.pop_next, gen_time, self.gens_since_last_pareto)
             self.monitor_df.loc[self.gen_id] = pop_analysis_dict
-            self.printpl('gg', f"Created {len(self.pop_next)}/{self.pop_max} ({pop_analysis_dict['pop_unique']}"
-                               f" unique) in generation {self.gen_id}. Gen took {gen_time:4.2f}s")
+            printpl('gg', f"Created {len(self.pop_next)}/{self.pop_max} ({pop_analysis_dict['pop_unique']}"
+                          f" unique) in generation {self.gen_id}. Gen took {gen_time:4.2f}s")
 
             self.pop_base = self.pop_next[:]
             self.pop_next = []
 
-            self.printpl('ggg', f'Gen {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}.')
+            printpl('ggg', f'Gen {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}.')
             self.monitoring_scheduled_io(self.gen_id, period_plots, period_save)
             self.gen_id += 1
 
-        self.printpl('g', f'Done after Generation {self.gen_id}.\n'
-                          f'Time since start: {time.perf_counter() - self.time_start:4.2f}s')
+        printpl('g', f'Done after Generation {self.gen_id}.\n'
+                     f'Time since start: {time.perf_counter() - self.time_start:4.2f}s')
 
         self.backup_save()
 
@@ -156,7 +165,7 @@ class ExplainableGP:
                 try:
                     # sfeh: trying to simplify the tree for a even improved pareto # sfeh:open
                     symtree = evolve_reduce_simplify(fintree.get_evotree(), force=True)
-                    symmeta = self.finalize_tree_get_meta(symtree)
+                    symmeta = self.finalize_tree_get_meta(symtree, tag='sfeh:sym')
                     _symtree_fin = FinalizedTree(symtree, symmeta)
                     if _symtree_fin.get_parsimony() < fintree.get_parsimony():
                         printyeah('a', f'Paretofront: Even further simplified! '
@@ -184,65 +193,56 @@ class ExplainableGP:
         else:
             @self.create_trees(0.5)
             def rand1():
-                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3, 1)), 2, 3), p_full=1)
+                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3, 1)), 2, 3), p_term=0)
 
             @self.create_trees(0.5)
             def rand2():
-                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(2.5, 1)), 2, 3), p_full=1)
+                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(2.5, 1)), 2, 3), p_term=0)
         return
 
-    def create_trees(self, rate):
+    def create_trees(self, rate, select_default=0, crossover=False):
         """Safely append a fintree to the population.
         Even though the raw trees should have everything to display their expression,
         they have gone through a process of changes. Here, the fintree is refurbished.
         - Enrich the raw fintree for the next generation
         - check if the fintree is actually valid"""
 
-        # self.printpl('gggg', f'->Evolving \'{createTreeFunc.__name__}\' {n}x starting...')
-
         def loop(create_tree_func):
             n = rate * self.pop_max
             n_success = 0
             n_fails = 0
-            while n_success < n:
-                try:
-                    evotree = create_tree_func()
-                    self.evaluate_and_append(evotree)
-                    n_success += 1
-                except (ValueError, ArithmeticError, TypeError) as ex:
-                    n_fails += 1  # sfeh:use this for something?
-                    print_warning('www', f'failed because: {ex}')
+            printpl('gggg', f'->Evolving \'{create_tree_func.__name__}\' {n}x starting...')
 
+            while n_success < n:
+                if crossover:
+                    try:
+                        evotree = create_tree_func()
+                        self.evaluate_and_append(evotree, tag=create_tree_func.__name__)
+                        n_success += 1
+                    except (ValueError, ArithmeticError, TypeError) as ex:
+                        n_fails += 1  # sfeh:use this for something?
+                        print_warning('www', f'failed because: {ex}')
+                else:
+                    try:
+                        t1, t2 = create_tree_func()
+                        self.evaluate_and_append(t1, tag=create_tree_func.__name__)
+                        n_success += 1
+                        self.evaluate_and_append(t2, tag=create_tree_func.__name__)
+                        n_success += 1
+                    except (ValueError, ArithmeticError, TypeError) as ex:
+                        n_fails += 2
+                if n_fails > n_success + 5:  # allow more fails: n_fails > n
+                    print_e(f'Evolution "{create_tree_func.__name__}" fails too often: {n_fails}x. {n_success}.')
+                    return  # sfeh raise?
         return loop
 
-    def create_trees_crossover(self, rate):
-        """sfeh:workaround, there are better solutions"""
-
-        def loop(create_tree_func):
-            n = rate * self.pop_max
-            n_success = 0
-            n_fails = 0
-            while n_success < n:
-                try:
-                    t1, t2 = create_tree_func()
-                    self.evaluate_and_append(t1)
-                    self.evaluate_and_append(t2)
-                    n_success += 2
-                except (ValueError, ArithmeticError, TypeError) as ex:
-                    n_fails += 2  # sfeh:use this for something?
-                    if n_fails > n:
-                        return
-
-        return loop
-
-    def evaluate_and_append(self, evotree):
+    def evaluate_and_append(self, evotree, tag='None'):
         try:
             meta = self.lut[str(evotree)]  # fixed nodes not relevant
         except KeyError:
-            meta = self.finalize_tree_get_meta(evotree)
+            meta = self.finalize_tree_get_meta(evotree, tag=tag)
 
         fintree = FinalizedTree(evotree, meta)
-        # sfeh: tag
         self.pop_next.append(fintree)
 
     def gen_create_next(self):
@@ -262,9 +262,9 @@ class ExplainableGP:
         @self.create_trees(0.1)
         def mut_br():
             evotree = selection_tournament(self.pop_base, tournsize=3)
-            return self.tb.evolve_mutate_branch_nodes(evotree, 4, p_full=1)
+            return self.tb.evolve_mutate_branch_nodes(evotree, 4, p_term=0)
 
-        @self.create_trees_crossover(0.2)
+        @self.create_trees(0.2, crossover=True)
         def xover():
             t1 = selection_tournament(self.pop_base, tournsize=3)
             t2 = selection_tournament(self.pop_base, tournsize=3)
@@ -273,12 +273,12 @@ class ExplainableGP:
 
         @self.create_trees(0.1)
         def rand1():
-            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3, 1)), 2, 4), p_full=1)
+            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3, 1)), 2, 4), p_term=0)
 
         @self.create_trees(0.1)
         def rand2():
             # sfeh float? nope
-            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 4), p_full=1)
+            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 4), p_term=0)
 
         @self.create_trees(0.1)
         def re_sym():
@@ -288,7 +288,7 @@ class ExplainableGP:
         @self.create_trees(0.1)
         def mut_pt():
             evotree = selection_tournament(self.pop_base, tournsize=3)
-            return self.tb.evolve_mutate_point(evotree)
+            return self.tb.mutate_point(evotree)
 
         # @self.create_trees(0.1)
         # def mxPointXXX():
@@ -298,7 +298,7 @@ class ExplainableGP:
         @self.create_trees(0.1)
         def mx_ranch_d():
             evotree = selection_tournament(self.pop_base, tournsize=3)
-            return self.tb.evolve_mutate_branch_depth(evotree, 4, p_full=0.5)
+            return self.tb.mutate_branch_depth(evotree, 4, p_term=0.5)
 
         @self.create_trees(0.1)
         def mx_branch_n():
@@ -309,7 +309,7 @@ class ExplainableGP:
         @self.create_trees(0.1)
         def filter_optimize():
             evotree = selection_tournament(self.pop_base, tournsize=3)
-            return self.tb.evolve_mutate_filter_random(evotree)
+            return self.tb.mutate_filter(evotree)
 
         @self.create_trees(0.1)
         def pareto_revive():
@@ -325,10 +325,10 @@ class ExplainableGP:
         try:
             path_monitoring = self.rootdir / 'monitoring.png'
             plot_gen_performance(self.monitor_df, self.name, path_monitoring)  # largest plot analysing the
-            self.printpl('f', f"monitoring: {path_monitoring}")  # .as_posix()
+            printpl('f', f"monitoring: {path_monitoring}")  # .as_posix()
             pareto_plot(self.paretofront, self.rootdir, self.name, self.tb.nodes_max)
         except Exception as ex:
-            self.printpl("e", f'Could not create plots: {ex}\n')
+            printpl("e", f'Could not create plots: {ex}\n')
 
     def monitoring_scheduled_io(self, gen_id, period_plots, period_save):
         """
@@ -350,7 +350,7 @@ class ExplainableGP:
         path_backup = self.rootdir / 'backup/backup.pkl'
 
         # {} is the help_dict; include this, even if empty, to store/load successfully after future updates
-        run_backup_data = {}, self.gen_id, self.pop_base, self.paretofront, self.monitor_df  # sfeh use this later, help_dict
+        run_backup_data = {}, self.gen_id, self.pop_base, self.paretofront, self.monitor_df
         path_backup = path_make_dir(path_backup)
         pickle_dump(path_backup, run_backup_data)
         # sfeh:debug
@@ -363,7 +363,7 @@ class ExplainableGP:
         path_backup = path_load_custom_backup or self.rootdir / 'backup/backup.pkl'
 
         if Path.is_file(path_backup):
-            self.printpl('g', f'Loading data from backup-file {path_backup}')
+            printpl('g', f'Loading data from backup-file {path_backup}')
             try:
                 with Path.open(path_backup, 'rb') as file:
                     run_data = pickle.load(file)
@@ -373,7 +373,7 @@ class ExplainableGP:
                 raise Exception(f'EOFError: \n{ex}')
 
             help_dict, self.gen_id, self.pop_base, self.paretofront, self.monitor_df = run_data
-            self.printpl('g', f'Successfully loaded backup file. Generation: {self.gen_id}')
+            printpl('g', f'Successfully loaded backup file. Generation: {self.gen_id}')
 
         else:
             raise FileNotFoundError(f'No backup-file found at {path_backup}')  # sfeh:beautify occurs 2x
@@ -419,87 +419,37 @@ class ExplainableGP:
     #     except Exception as ex:
     #         print_e(f'plot_evolution_analysis failed because of: {ex}')
 
-    def finalize_tree_get_meta(self, evotree):
+    def finalize_tree_get_meta(self, evotree, tag):
+        """Evaluating the fitness of a tree.
+        - extract the expression
+        - try to simplify the expression (sympy)
+        - create tensorflow-graph from sympy-expr and evaluate it
+
+        Fitness values might evaluate to
+            - 'nan' when dividing by zero or
+            - 'inf' when 20**1234
         """
-        Very fast eval-version that only computes fitness_train of the train data.
-        tree_eval_complete gives more options
-        Evaluating the fitness_train of a fintree.
-        - extract the expression the fintree is holding
-        - sympify the expression
-        - (if sympify fails, evaluating does not make sense! Check sympify errors)
-        - (sfeh: if sympify fails because of inf or zoo, tf could maybe still work due to save-tf-division)
-
-        fintree->fintree!
-        ===
-        # try:
-        #     self.check_all()
-        # attention: regular hashes may change between python runs. do not save anything on their hash values <.<
-
-        ===
-
-        Returns bool value if we can use the calculated fitness_train
-        Fitness values might evaluate to weird stuff
-        e.g. 'nan' after dividing by zero or (inf) after 20**1234
-        nan: fitness_train == fitness_train -> False
-        inf: fitness_train is not float('inf') -> False
-        """
-        parsimony = eval_parsimony(evotree, self.complexity_measure, origin_tree=self.origintree)
+        parsimony = eval_parsimony(evotree, self.tb.complexity_metric, origin_tree=self.origintree)
         if parsimony > self.tb.nodes_max:
-            # sfep:discuss: information about last evolution? currently not saved in tree. Is this not auto-pruned?
             raise ValueError(f'Tree too complex: {parsimony} > {self.tb.nodes_max}')
 
         expr_sym = evotree.get_sympy_expr()
 
-        if DEBUG_DUMMY:
-            expr_sym2 = expr_sympify(expr_sym)
-            if expr_sym != expr_sym2:
-                print_e(f'asd {expr_sym} vs. {expr_sym2}')
+        fitness = self.kernel.eval_tf(expr_sym)['mean_error']
+        # if DEBUG_DUMMY or fitness != self.kernel.eval_sym_experimental(expr_sym):
+        #     print(f'FAILED: {fitness} vs. {self.kernel.eval_sym_experimental(expr_sym)}')
 
-        try:
-            fitness = self.kernel.eval_tf(expr_sym)['mean_error']
-            # if DEBUG_DUMMY and self.gen_id > 3:
-            #     try:
-            #         fit2 = self.kernel.eval_sym_experimental(expr_sym)
-            #         if fitness != fit2:
-            #             print(f'FAILED: {fitness} vs. {fit2}')
-            #         else:
-            #             pass  # print(f'SUCCESS: {fitness} vs. {fit2}')
-            #     except Exception as ex:
-            #         pass  # illegal math (dicide by zero, or something si)
-
-        except (ValueError, TypeError) as ex:
-            # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16, float32,
-            # float64, int8, int16, int32, int64, complex64, complex128
-            # probably because datatypes in trees do not match (xtypes, build). Happens in random tree generation
-            raise TypeError(f'eval-ex-te: {ex}')
-        except Exception as ex:
-            raise Exception(f'eval-ex: {ex}')
-
-        meta = TreeMeta(fitness=fitness, parsimony=parsimony, expr_sym=expr_sym)  # expr_raw=expr_raw is ignored
-
+        meta = TreeMeta(fitness=fitness, parsimony=parsimony, expr_sym=expr_sym, tag=tag)
         self.lut[str(evotree)] = meta  # sfeh:discuss: lut update in finalize_tree_get_meta()?
-
         return meta
-
-    def printpl(self, message_type, message_str):
-        """
-        Lightweight print function.
-        Instead of checking if you should print every time, this is done here.
-        message_type options can be found in config
-        """
-        printez(message_type, message_str)
-        return
 
 
 def pop_analyze(popul, gen_time, gens_since_last_pareto):
-    """
-    Analysing the population (done in each generation)
+    """Analysing the population (in each generation)
     - amount of trees
-    - fittest fintree
-    - average fitness_train
-    - average fintree parsimony
-    """
-    # popul = self.pop_next
+    - fittest tree
+    - average fitness
+    - average tree parsimony"""
 
     if len(popul) == 0:
         raise Exception('Your population isded, its empty. RIP all the computation power used to get here.')
@@ -527,10 +477,10 @@ if __name__ == '__main__':
     """
     Alpha tests
     """
-    # t1 = tb.invent_core_depth(float, 3, p_full=0.5)
+    # t1 = tb.invent_core_depth(float, 3, p_term=0.5)
     # tree2 = tb.evolve_mutate_point(t1)
-    # t1 = tb.invent_core_depth(float, 3, p_full=0.9)
-    # t2 = tb.invent_core_depth(float, 3, p_full=0.9)
+    # t1 = tb.invent_core_depth(float, 3, p_term=0.1)
+    # t2 = tb.invent_core_depth(float, 3, p_term=0.1)
     # t1, t2 = tb.evolve_crossover(t1, t2)
     # for _ in range(5):
     #     print('x.D', t1, '===', t2)
@@ -540,4 +490,3 @@ if __name__ == '__main__':
     # nstr = "['Ifte', ['<', ['*', [2.85], ['vel']], ['Square', ['vel']]], ['*', ['pos'], ['*', ['pos'], [0.014]]], ['/', [2.0], ['pos']]]"
     # nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
     nstr = '["+:fix",["-:fix",["Ifte",["True"],["sin",["2"]],["/",["2.043"],["4"]]],["cartVel"]],["-1.3"]]'
-

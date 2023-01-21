@@ -3,13 +3,13 @@ from dataclasses import dataclass
 
 from plagih.plagih_tree import *
 
-# For sympy_to_Nested conversion
+# For conversion from sympy into node
 sptonode = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul,
             sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,
             sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
             sympy.GreaterThan: Ge, sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos,
             sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: sinh, sympy.cosh: cosh,
-            sympy.Min: Min, sympy.Max: Max}
+            sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE}
 # , sympy.Equality: Eq
 # sfeh:open = {sympy.Unequality: Ne, sympy.Equality: Eq}
 stn_keys = tuple(sptonode.keys())  # sfeh: debug this... relevant?
@@ -17,17 +17,7 @@ stn_keys = tuple(sptonode.keys())  # sfeh: debug this... relevant?
 
 @dataclass
 class Node:
-    """
-    The core is the structure of a plagih gp-fintree.
-    It recursively holds the nodes of a fintree; every fintree has a list of potential children.
-    Example core: [+, 1, [*, [-, 2, 3], 2]] = 1 + ((2-3) * 2)
-    states? sfeh:discuss
-    [None]: not set
-    [0]:    evolution/construction/build mode (potentially missing leaf nodes)
-    [1]:    structurally complete/finalized branch (node_depths correct, node_id set, ...)
-    [2]:    root-correct structure
-    [3]:    including meta-data (fitness_train, complexity)
-    """
+    """Recursively holds the nodes of a tree"""
 
     def __init__(self, label, childs, depth=None, is_fix=False, is_chain=False):
         self.label = label
@@ -65,34 +55,40 @@ class Node:
             except RecursionError as ex:
                 print(f'sfeh:RecursionError, maybe Piecewise?: {self}, {ex}')
                 raise RecursionError
-            except ValueError as ex:
-                raise ex
-            except Exception as ex:
-                print(f'sfeh:XXX this still occurs. {ex}')
-                # The argument '-2.05444 + I*pi' is not comparable.
-                # <lambda>() missing 1 required positional argument: 'b'
-                #   -> Probably in Sub-class lambda-function
-                raise ex
+            # except ValueError as ex:
+            #     raise ex
+            # except Exception as ex:
+            #     print(f'sfeh:XXX this still occurs. {ex}')
+            #     # The argument '-2.05444 + I*pi' is not comparable.
+            #     # <lambda>() missing 1 required positional argument: 'b'
+            #     #   -> Probably in Sub-class lambda-function
+            #     raise ex
         elif self.childs and issubclass(self.label, TerminalNode):
             _sym = self.label.symfun
             _cs = self.childs[0]
             return _sym(_cs)
-        # else:
-        #     if issubclass(type(self.label), TerminalNode):  # .--class--, as it is initiated?
-        #         return self.label.get_sym()
         print(len(self.childs), type(self.label), issubclass(self.label, Operator), issubclass(self.label, TerminalNode))
         raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.label)}')
         # sfeh [Max, [Log, [-0.017988000065088272]], [Ifte, [False], [-0.015212000347673893], [7]]], <class 'type'>
+
+    def get_tf_expr(self):
+        if self.childs and issubclass(self.label, Operator):
+            _tf = self.label.tflow
+            _cs = [cc.get_tf_expr() for cc in self.childs]
+            return _tf(_cs)
+        elif self.childs and issubclass(self.label, TerminalNode):
+            _tf = self.label.tflow
+            _cs = self.childs[0]
+            return _tf(_cs)
+        raise NotImplementedError(f'get_tf_expr no match for {self}, {type(self.label)}')
 
     def eval_str(self):
         return self.get_label()  # sfeh open
 
     def __repr__(self):
-        """
-        Printing the nodes as nested array structure such that it can be saved/loaded
+        """Printing the nodes as nested array structure such that it can be saved/loaded
         very closely related to str(), but adds the following information:
-        - ":fix", when nodes are fixed
-        """
+        - ":fix", when nodes are fixed"""
         label_str = self.label
 
         if self.is_fix:

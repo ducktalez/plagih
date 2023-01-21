@@ -1,5 +1,58 @@
 from abc import ABC, abstractmethod
 
+from plagih.util import print_warning
+
+
+def make_choices(val_p_tuples):
+    """make a tuple-list callable for weighted numpy choice
+    [['a', 1], ['b', 2]] -> [('a', 'b'), (0.333, 666)]"""
+    xx = list(zip(*val_p_tuples))
+    # normalizing the probabilities in every case to a sum of 1 (100%)
+    psum = sum(xx[1])
+    xx[1] = [i / psum for i in xx[1]]
+    # lambda: np.random.choice(xx[0], p=xx[1])
+    return xx
+
+
+def operator_pool_check(ops):
+    """Check if the user-specified loaded operators allow closure
+    (either float-only/bool only or all 4 types of operators)
+    @:param operator_pool: list with operators and their weight of being selected"""
+    # sfeh dunno if that works... 2f not in x
+    opxtypes = [oper.xtype for oper in ops.keys()]
+    has_2f = any([float == i[1] for i in opxtypes])
+    has_2b = any([bool == i[1] for i in opxtypes])
+    has_f2b = any([float in i[0] and bool == i[1] for i in opxtypes])
+    has_b2f = any([bool in i[0] and float == i[1] for i in opxtypes])
+    if not all([has_2f, has_2b, has_f2b, has_b2f]):
+        print_warning('w', f'Loaded operators do not feature both numeric (float) and bool type.')
+    if all([has_2f, has_2b]) and not all([has_f2b or has_b2f]):
+        raise Exception(f'Loaded operators do not allow closure!')
+
+
+def xtdict_operators(operator_pool):
+    """sfeh:option allow reconstructed operators? optional?"""
+
+    operator_pool_check(operator_pool)
+
+    pick_op = {float: [], bool: []}
+    pick_op_match = {}
+
+    for _cls, _p in operator_pool.items():
+        xt = _cls.xtype
+        pick_op[xt[1]].append([_cls, _p])
+        if pick_op_match.get(xt, None) is None:
+            pick_op_match[xt] = []
+        pick_op_match[xt].append([_cls, _p])
+
+    pick_op = {float: make_choices(pick_op[float]),
+               bool: make_choices(pick_op[bool])}
+
+    for k_xt in pick_op_match.keys():
+        pick_op_match[k_xt] = make_choices(pick_op_match[k_xt])
+
+    return pick_op, pick_op_match
+
 
 class NodeCreator(ABC):
 

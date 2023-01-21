@@ -5,9 +5,6 @@
 
 ## Ablage/Todos
 
-- trees with one node just very rarely?
-- https://deap.readthedocs.io/en/master/api/tools.html
-
 - tree evaluate nodes for best improvement 
 - population cluster / races
 - Make regular Function Classes Sympy Functions
@@ -33,6 +30,8 @@
 ### Semi-interesting
 
 - introduce integer
+- trees with one node just very rarely?
+- https://deap.readthedocs.io/en/master/api/tools.html
 
 ## Always check for notes in code
 - xxx
@@ -40,6 +39,7 @@
 - asd
 - delete
 - debug this / debug me
+- check, if every sympy-to-tree reconstruction works
 
 ## Compared to DEAP
 - DEAP has non-Programming options (altering arrays). Plagih is only for GP.

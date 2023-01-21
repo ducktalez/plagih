@@ -90,13 +90,11 @@ class Regression(OfflineKernel):
 
         results_raw = sympy_to_tensorflow(expr, self.data_dict)  # self.data_train
         results = results_raw  # The ids change in the next lines! {id(results)} vs. {id(results_raw)}
-
         results = self.tf_sanitize_results(results)
-
         pairwise_diff = self.solution_train - results
-
         mean_error = self.tf_error_metric(pairwise_diff)
 
+        # sfeh:discuss: calculate more than one complexity? or let the user specify the dict below?
         with tf.compat.v1.Session(config=self.tf_config) as sess:
             with sess.graph.device(self.tf_device):  # GPU evaluation in tensorflow
                 tf_results = sess.run(
@@ -105,10 +103,8 @@ class Regression(OfflineKernel):
                      'mean_error': mean_error})  # no feed_dict
 
         fitness = tf_results['mean_error']
-
         if fitness != fitness or fitness == float('inf'):
             raise ValueError(f"fitness is: '{fitness}'")  # sfeh: so bad, they leave the float-range. delete this?
-
         tf_results['mean_error'] = round(float(tf_results['mean_error']), PRECISION)
 
         return tf_results
@@ -171,10 +167,6 @@ class Regression(OfflineKernel):
             return np.round(fitness, PRECISION)
         else:
             return results
-
-
-def sfeh_open():
-    pass
 
     #################################################
     # if self.exploration_risk and self.origin_results is not None:

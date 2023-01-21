@@ -6,6 +6,7 @@ import itertools
 import sys
 import random
 
+# import multiprocessing as mp
 from sklearn.model_selection import train_test_split
 
 from plagih.fitness_kernel import Regression
@@ -58,8 +59,9 @@ def _test_random_pop():
         def __init__(self):
             operator_pool = {Add: 2, Sub: 1, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
                              Sin: 0.5, Tan: 0.1, Cos: 0.33, Min: 1, Max: 1, And: 1, Or: 1, Not: 0.5, Xor: 1, Lt: 0.5,
-                             Le: 0.5, Ifte: 2}  # sfeh: Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.5, Usub: 1,
-            # Round: 0.5, Eq: 1,  # Ne: 0.5, # Powrounded: 0.1, # Log1p: 0.1, Gt: 0.1, Ge: 0.1,
+                             Le: 0.5, Ifte: 2,
+                             Powrounded: 2}  # todo was 0.1 sfeh: Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.5, Usub: 1,
+            # Round: 0.5, Eq: 1,  # Ne: 0.5, #  # Log1p: 0.1, Gt: 0.1, Ge: 0.1,
             self.pick_op, self.pick_op_match = xtdict_operators(operator_pool)
 
             pick_symbol = {float: [[_n, 1] for _n in input_names]}  # sfeh:discuss
@@ -126,10 +128,9 @@ def _test_random_pop():
     nc = Nodemaker()
 
     build_restrictions = {'depth_max': 7, 'nodes_max': 50}
-    selection_default = lambda pop: selection_tournament(pop, tournsize=3)
-    tb = TreeBuildRestrictions(root_xt_out, nc, build_restrictions, 'tree_node_count', selection_default)
+    tb = TreeBuildRestrictions(root_xt_out, nc, build_restrictions, 'tree_node_count')
 
-    gp = ExplainableGP(name, pop_max, gen_max, rootdir, kernel, origin_tree, tb)
+    gp = ExplainableGP(name, pop_max, gen_max, rootdir, kernel, origin_tree, tb, selection_default=lambda p: selection_tournament(p, tournsize=3))
     # gp.pop_kill()  # optional, maybe restart pop between runs?
     try:
         gp.backup_load(path_load_custom_backup=rootdir)
@@ -147,6 +148,7 @@ def _test_random_pop():
 
 
 if __name__ == "__main__":
+    # mp.set_start_method('spawn')
     _test_random_pop()
 
 # class ObservationIndex(Observation):

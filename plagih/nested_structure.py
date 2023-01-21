@@ -8,7 +8,7 @@ sptonode = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sy
             sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,
             sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
             sympy.GreaterThan: Ge, sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos,
-            sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: sinh, sympy.cosh: cosh,
+            sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
             sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE}
 # , sympy.Equality: Eq
 # sfeh:open = {sympy.Unequality: Ne, sympy.Equality: Eq}

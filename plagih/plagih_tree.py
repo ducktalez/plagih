@@ -91,8 +91,7 @@ class NodeBase:
         _str = self.__class__.__name__
         # if self.args:
         if issubclass(self.__class__, Operator):
-            # sfeh does not work
-            _childstr = ', '.join([str(x) for x in self.args])
+            _childstr = ', '.join([str(a) for a in self.args])
             _str = f'{_str}({_childstr})'
         elif issubclass(type(self), TerminalNode):
             pass  # _str = f'{self.value}'
@@ -135,7 +134,7 @@ class NodeBase:
 
 class CustomOperator:
     # sfeh:xxx make an abstract class + mark all classes
-    as_tflow = lambda *args: None
+    tflow = lambda *args: None
     symfun = lambda *args: None
     xtype = (tuple([None, None]), None)
 
@@ -145,8 +144,7 @@ class Operator(NodeBase):  # sfeh:xxx sympy.Function was here, also is_Function 
 
 
 class ChainableOp:
-    """
-    (Abstract) class for operators, that allow flexible arity (1-n args).
+    """(Abstract) class for operators, that allow flexible arity (1-n args).
     Used e.g. while reconstructing trees from sympy expressions,
     to check whether it is possible to put more childs than planned into the node.
 
@@ -166,8 +164,8 @@ class MathOperator(Operator):
 
 class LogicOperator(Operator):
     # And, Or, Xor, Not
-    # is_real = False
-    # is_Boolean = True
+    # is_real/real = False
+    # is_Boolean/bool = True
     pass
 
 
@@ -205,7 +203,6 @@ class TerminalNode(NodeBase):  # sfeh sympy.Atom
 
 
 class Boolean(TerminalNode):
-
     # sfeh:discuss just for True/False?
     xtype = (tuple([]), bool)
     symfun = lambda *a: sympy.S.true if a[0] else ~sympy.S.true  # sympy.logic.boolalg.Boolean  # sfeh:discuss
@@ -250,7 +247,7 @@ class Symbol(TerminalNode):
 # class ExprCondPair(ChainableOp):
 #     as_sym = sympy.functions.elementary.piecewise.ExprCondPair
 #
-#     # as_tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
+#     # tflow = tf.where  # sfeh:open tf.cond https://stackoverflow.com/questions/45517940
 #
 #     def __init__(self, val, cond):
 #         self.cond = cond
@@ -339,13 +336,13 @@ class tanh(AngleOperator, NoSymCapitalized):
     xtype = (tuple([float]), float)
 
 
-class sinh(AngleOperator, NoSymCapitalized):
+class Sinh(AngleOperator, NoSymCapitalized):
     symfun = sympy.sinh
     tflow = tf.sinh  # sfeh sinh, asinh
     xtype = (tuple([float]), float)
 
 
-class cosh(AngleOperator, NoSymCapitalized):
+class Cosh(AngleOperator, NoSymCapitalized):
     symfun = sympy.cosh
     tflow = tf.cosh  # sfeh acosh
     xtype = (tuple([float]), float)
@@ -527,7 +524,7 @@ class Sqrt(MathOperator):
 
 # class Divide_no_nan(Operator):
 #     # class-name = 'Divide_no_nan'  # sfeh??
-#     as_tflow = tf.math.divide_no_nan
+#     tflow = tf.math.divide_no_nan
 #     as_sym = lambda a, b: sympy.Mul(a, )
 #     xtype = (tuple([float, float]), float)
 
@@ -654,12 +651,14 @@ totf = {
     # sympy.N: tf.math.round,  # incorrect, sympy.N(x, 1) is right
     sympy.log: tf.math.log,
     sympy.cos: tf.cos,
+    sympy.cosh: tf.cosh,
     sympy.sin: tf.sin,
+    sympy.sinh: tf.sinh,
     sympy.tan: tf.tan,
+    sympy.tanh: tf.tanh,
     sympy.acos: tf.acos,
     sympy.asin: tf.asin,
     sympy.atan: tf.atan,
-    sympy.tanh: tf.tanh,
     sympy.sign: tf.sign,
     sympy.re: lambda a: tf.convert_to_tensor(a, dtype=tf.dtypes.float32),  # sympy-gotcha, comes up randomly
 }
@@ -728,28 +727,23 @@ def sympy_to_tensorflow(expr, tensor_dict):
                 otherwise = tf.where(cet[1], cet[0], otherwise)
             return otherwise
         try:
-            tflow = totf[type(expr)]
+            tf_fun = totf[type(expr)]
         except KeyError:
-            tflow = type(expr).tflow
-            # try:
-            #     tflow = type(expr).as_tflow  # sfeh
-            # except Exception as ex:
-            #     # print('aaa', type(expr), expr, type(expr) in sympy_to_node)
-            #     # ignore:
-            #     # -> sympy.conjugate
-            #     tflow = expr.as_tflow  # sfeh:delete? delete case above? ### max,
+            tf_fun = type(expr).tflow
+            # sfeh:idea exception, try to map sympy to tf function with same name (sympy.cos -> tf.cos)
 
-        tf_args = [sympy_to_tensorflow(arg, tensor_dict) for arg in expr.args]
+        tf_args = [sympy_to_tensorflow(a, tensor_dict) for a in expr.args]
         # SFEH:Missing and Problems:
         #   - Exception: eval-ex: type object 'cosh' has no attribute 'tflow'
         try:
-            result = tflow(*tf_args)  # fits, if the arguments match the expected arguments exactly Add(a, b)
+            result = tf_fun(*tf_args)  # fits, if the arguments match the expected arguments exactly Add(a, b)
         except TypeError:
             result = tf_args.pop()  # only commutative arity-2 functions here (Add, Mul, Max, Min)
             while tf_args:
                 # sfeh:optimization
-                result = tflow(result, tf_args.pop())
+                result = tf_fun(result, tf_args.pop())
         return result
+    raise NotImplementedError(f'Cannot convert {expr}')
 
 
 # class ExperimentalBaseTree(NodeBase):
@@ -916,8 +910,7 @@ if __name__ == '__main__':
         st = {}
         for x in get_subclasses(Operator):
             try:
-                # st[f'{x.as_sym.__name__}'] = x.__name__  # x.as_tflow.__name__
-                st[f'sympy.{x.symfun.__name__}'] = x.__name__  # x.as_tflow.__name__
+                st[f'sympy.{x.symfun.__name__}'] = x.__name__  # x.tflow.__name__
             except AttributeError as ex:
                 print(f'Could not get {x}: {ex}')
                 # st[x.__name__] = x.__name__

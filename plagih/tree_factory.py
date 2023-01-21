@@ -112,11 +112,10 @@ class TreeBuildRestrictions:
     """functions to build trees, with the advantage of being able to use general build restrictions.
     """
 
-    def __init__(self, root_xt_out, nc, build_restrictions, complexity_metric, default_selection, origin_tree=None):
+    def __init__(self, root_xt_out, nc, build_restrictions, complexity_metric, origin_tree=None):
         self.root_xt_out = root_xt_out
         self.nc = nc
 
-        self.default_selection = default_selection
         self.complexity_metric = complexity_metric
         self.origin_tree = origin_tree
 
@@ -282,11 +281,7 @@ class TreeBuildRestrictions:
         pass
 
     def evolve_mutate_branch_nodes(self, tree, nodes_goal, p_term=0.0):
-        """
-
-        sfeh ==>depth only
-        currently only one branch
-        """
+        """currently only one branch"""
         _nodes_init = len(tree)
         if tree is None:
             raise NotImplementedError('SFEH:open Implement standard selection mechanism')

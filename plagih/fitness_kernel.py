@@ -104,7 +104,7 @@ class Regression(OfflineKernel):
 
         fitness = tf_results['mean_error']
         if fitness != fitness or fitness == float('inf'):
-            raise ValueError(f"fitness is: '{fitness}'")  # sfeh: so bad, they leave the float-range. delete this?
+            raise ValueError(f"fitness is '{fitness}'")  # sfeh: so bad, they leave the float-range. delete this?
         tf_results['mean_error'] = round(float(tf_results['mean_error']), PRECISION)
 
         return tf_results

@@ -28,7 +28,7 @@ def printpl(message_type, message_str):
 
 class ExplainableGP:
 
-    def __init__(self, name, pop_max, gen_max, rootdir, kernel, origintree, tb: TreeBuildRestrictions):
+    def __init__(self, name, pop_max, gen_max, rootdir, kernel, origintree, tb: TreeBuildRestrictions, selection_default):
         self.time_start = time.perf_counter()
         self.kernel = kernel
         self.origintree = origintree
@@ -39,6 +39,7 @@ class ExplainableGP:
         self.gen_max = gen_max
         self.rootdir = rootdir
         self.gen_id = 0
+        self.selection_default = selection_default
 
         printpl('gg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
@@ -50,7 +51,7 @@ class ExplainableGP:
 
         self.paretofront = []  # not a separate class; requires too much information
         self.pop_next = []
-        self.pop_base = []  # sfeh:discuss maybe better names?
+        self.population = []  # sfeh:discuss maybe better names?
 
         self.lut = {}  # Lookup-table for tree(-expressions) and tits fitness/parsimony. Improving runtime a lot!
 
@@ -64,7 +65,7 @@ class ExplainableGP:
 
     def pop_kill(self):
         """Delets the current population"""
-        self.pop_base = []
+        self.population = []
         self.pop_next = []
 
     # self.printpl('i', 'Using evolve rates from config')
@@ -114,10 +115,10 @@ class ExplainableGP:
             printpl('gg', f"Created {len(self.pop_next)}/{self.pop_max} ({pop_analysis_dict['pop_unique']}"
                           f" unique) in generation {self.gen_id}. Gen took {gen_time:4.2f}s")
 
-            self.pop_base = self.pop_next[:]
+            self.population = self.pop_next[:]
             self.pop_next = []
 
-            printpl('ggg', f'Gen {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}.')
+            printpl('ggg', f'--- Gen {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}. ---')
             self.monitoring_scheduled_io(self.gen_id, period_plots, period_save)
             self.gen_id += 1
 
@@ -165,13 +166,13 @@ class ExplainableGP:
                 try:
                     # sfeh: trying to simplify the tree for a even improved pareto # sfeh:open
                     symtree = evolve_reduce_simplify(fintree.get_evotree(), force=True)
-                    symmeta = self.finalize_tree_get_meta(symtree, tag='sfeh:sym')
+                    symmeta = self.tree_eval_meta(symtree, tag='sfeh:sym')
                     _symtree_fin = FinalizedTree(symtree, symmeta)
                     if _symtree_fin.get_parsimony() < fintree.get_parsimony():
                         printyeah('a', f'Paretofront: Even further simplified! '
                                        f'{_symtree_fin.get_parsimony()} < {fintree.get_parsimony()}')
 
-                    self.evaluate_and_append(symtree)  # sfeh:open , tag='sfeh-sympifyed_pareto'
+                    self.pop_append(symtree)  # sfeh:open , tag='sfeh-sympifyed_pareto'
 
                 except KeyError as ex:
                     print_e(f'SFEH: this tree could whatever {ex}')  # -> piecewise function, mostly
@@ -191,130 +192,124 @@ class ExplainableGP:
         if self.origintree is not None:
             self.pop_next.append(self.origintree)  # the origin fintree is the only candidate (automatically added)
         else:
-            @self.create_trees(0.5)
-            def rand1():
-                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3, 1)), 2, 3), p_term=0)
+            @self.create_trees(rate=0.5)
+            def init_rand1():
+                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3.0, 1.0)), 2, 3), p_term=0)
 
-            @self.create_trees(0.5)
-            def rand2():
-                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(2.5, 1)), 2, 3), p_term=0)
+            @self.create_trees(rate=0.5)
+            def init_rand2():
+                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(2.5, 1.0)), 2, 3), p_term=0)
         return
 
-    def create_trees(self, rate, select_default=0, crossover=False):
-        """Safely append a fintree to the population.
+    def create_trees(self, rate=0.0, select_n=0, crossover=False):
+        """Safely append a tree to the population.
         Even though the raw trees should have everything to display their expression,
         they have gone through a process of changes. Here, the fintree is refurbished.
         - Enrich the raw fintree for the next generation
         - check if the fintree is actually valid"""
 
         def loop(create_tree_func):
-            n = rate * self.pop_max
+            n = int(rate * self.pop_max)
             n_success = 0
             n_fails = 0
-            printpl('gggg', f'->Evolving \'{create_tree_func.__name__}\' {n}x starting...')
+            tag = create_tree_func.__name__
+            printpl('gggg', f'->Evolving {n}x \'{tag}\'...')
 
             while n_success < n:
-                if crossover:
-                    try:
-                        evotree = create_tree_func()
-                        self.evaluate_and_append(evotree, tag=create_tree_func.__name__)
+                trees = [self.selection_default(self.population) for _ in range(select_n)]
+                try:
+                    if not crossover:
+                        evotree = create_tree_func(*trees)
+                        self.pop_append(evotree, tag=tag)
                         n_success += 1
-                    except (ValueError, ArithmeticError, TypeError) as ex:
-                        n_fails += 1  # sfeh:use this for something?
-                        print_warning('www', f'failed because: {ex}')
-                else:
-                    try:
-                        t1, t2 = create_tree_func()
-                        self.evaluate_and_append(t1, tag=create_tree_func.__name__)
+                    else:
+                        t1, t2 = create_tree_func(*trees)
+                        self.pop_append(t1, tag=tag)
                         n_success += 1
-                        self.evaluate_and_append(t2, tag=create_tree_func.__name__)
+                        self.pop_append(t2, tag=tag)
                         n_success += 1
-                    except (ValueError, ArithmeticError, TypeError) as ex:
-                        n_fails += 2
-                if n_fails > n_success + 5:  # allow more fails: n_fails > n
-                    print_e(f'Evolution "{create_tree_func.__name__}" fails too often: {n_fails}x. {n_success}.')
-                    return  # sfeh raise?
+
+                except (ValueError, ArithmeticError, TypeError) as ex:
+                    n_fails += 1  # sfeh:use this for something?
+                    print_warning('www', f'failed because: {ex}')
+                    if n_fails > n_success + 5:  # allow more fails: n_fails > n
+                        print_e(f'Evolution "{tag}" fails too often: {n_fails}x. {n_success}.')
+                        return  # sfeh raise?
         return loop
 
-    def evaluate_and_append(self, evotree, tag='None'):
+    def pop_append(self, evotree, tag=None):
         try:
             meta = self.lut[str(evotree)]  # fixed nodes not relevant
         except KeyError:
-            meta = self.finalize_tree_get_meta(evotree, tag=tag)
+            meta = self.tree_eval_meta(evotree, tag=tag)
 
         fintree = FinalizedTree(evotree, meta)
         self.pop_next.append(fintree)
 
     def gen_create_next(self):
-        """
-        Creates all new Generations by applying the evolutions in the evolve-loop.
+        """Creates all new Generations by applying the evolutions in the evolve-loop.
 
         brainstorm:
         - the fintree can be reproduced (selection), random/new, olymp-reproduction
         - (1 fintree) mutations can affect a point, branch, terminal nodes
-        - (2 trees) can make a crossover
-        """
+        - (2 trees) can make a crossover"""
 
-        @self.create_trees(0.1)
+        @self.create_trees(rate=0.1)
         def repro1():
-            return selection_tournament(self.pop_base, tournsize=3)
+            return selection_tournament(self.population, tournsize=4)
 
-        @self.create_trees(0.1)
-        def mut_br():
-            evotree = selection_tournament(self.pop_base, tournsize=3)
-            return self.tb.evolve_mutate_branch_nodes(evotree, 4, p_term=0)
+        @self.create_trees(rate=0.1, select_n=1)
+        def mut_br(tree):
+            return self.tb.evolve_mutate_branch_nodes(tree, 4, p_term=0)
 
-        @self.create_trees(0.2, crossover=True)
-        def xover():
-            t1 = selection_tournament(self.pop_base, tournsize=3)
-            t2 = selection_tournament(self.pop_base, tournsize=3)
-            evo1, evo2 = self.tb.evolve_crossover(t1, t2)
+        @self.create_trees(rate=0.2, select_n=2, crossover=True)
+        def xover(*trees):
+            evo1, evo2 = self.tb.evolve_crossover(trees[0], trees[1])
             return evo1, evo2
 
-        @self.create_trees(0.1)
-        def rand1():
-            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3, 1)), 2, 4), p_term=0)
+        @self.create_trees(rate=0.1, select_n=1)
+        def re_sym_all(tree):
+            return evolve_reduce_simplify(tree, completely=True)
 
-        @self.create_trees(0.1)
-        def rand2():
-            # sfeh float? nope
-            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 4), p_term=0)
+        @self.create_trees(rate=0.1, select_n=1)
+        def re_sym(tree):
+            return evolve_reduce_simplify(tree, completely=False)
 
-        @self.create_trees(0.1)
-        def re_sym():
-            evotree = selection_tournament(self.pop_base, tournsize=3)
-            return evolve_reduce_simplify(evotree, completely=False)
+        @self.create_trees(rate=0.1, select_n=1)
+        def mut_pt(tree):
+            return self.tb.mutate_point(tree)
 
-        @self.create_trees(0.1)
-        def mut_pt():
-            evotree = selection_tournament(self.pop_base, tournsize=3)
-            return self.tb.mutate_point(evotree)
-
-        # @self.create_trees(0.1)
+        # @self.create_trees(rate=0.1)
         # def mxPointXXX():
         #     evotree = selection_tournament(self.pop_base, tournsize=3)
         #     return self.tb.evolve_mutate_pointxxx(evotree)
 
-        @self.create_trees(0.1)
-        def mx_ranch_d():
-            evotree = selection_tournament(self.pop_base, tournsize=3)
-            return self.tb.mutate_branch_depth(evotree, 4, p_term=0.5)
+        @self.create_trees(rate=0.1, select_n=1)
+        def mx_ranch_d(tree):
+            return self.tb.mutate_branch_depth(tree, 4, p_term=0.5)
 
-        @self.create_trees(0.1)
-        def mx_branch_n():
-            evotree = selection_tournament(self.pop_base, tournsize=3)
+        @self.create_trees(rate=0.1, select_n=1)
+        def mx_branch_n(tree):
             nodeamount_goal = np.clip(int(random.normalvariate(12, 4)), 0, 20)
-            return self.tb.evolve_mutate_branch_nodes(evotree, nodeamount_goal)
+            return self.tb.evolve_mutate_branch_nodes(tree, nodeamount_goal)
 
-        @self.create_trees(0.1)
-        def filter_optimize():
-            evotree = selection_tournament(self.pop_base, tournsize=3)
-            return self.tb.mutate_filter(evotree)
+        @self.create_trees(rate=0.1, select_n=1)
+        def filter_optimize(tree):
+            return self.tb.mutate_filter(tree)
 
-        @self.create_trees(0.1)
+        @self.create_trees(rate=0.1)
         def pareto_revive():
             fintree = np.random.choice(self.paretofront)
             return fintree.tree
+
+        @self.create_trees(rate=0.1)
+        def rand1():
+            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3, 1)), 2, 4), p_term=0)
+
+        @self.create_trees(rate=0.1)
+        def rand2():
+            # sfeh float? nope
+            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 4), p_term=0)
 
         return
 
@@ -350,7 +345,7 @@ class ExplainableGP:
         path_backup = self.rootdir / 'backup/backup.pkl'
 
         # {} is the help_dict; include this, even if empty, to store/load successfully after future updates
-        run_backup_data = {}, self.gen_id, self.pop_base, self.paretofront, self.monitor_df
+        run_backup_data = {}, self.gen_id, self.population, self.paretofront, self.monitor_df
         path_backup = path_make_dir(path_backup)
         pickle_dump(path_backup, run_backup_data)
         # sfeh:debug
@@ -372,7 +367,7 @@ class ExplainableGP:
             except EOFError as ex:
                 raise Exception(f'EOFError: \n{ex}')
 
-            help_dict, self.gen_id, self.pop_base, self.paretofront, self.monitor_df = run_data
+            help_dict, self.gen_id, self.population, self.paretofront, self.monitor_df = run_data
             printpl('g', f'Successfully loaded backup file. Generation: {self.gen_id}')
 
         else:
@@ -419,7 +414,7 @@ class ExplainableGP:
     #     except Exception as ex:
     #         print_e(f'plot_evolution_analysis failed because of: {ex}')
 
-    def finalize_tree_get_meta(self, evotree, tag):
+    def tree_eval_meta(self, tree: Node, tag):
         """Evaluating the fitness of a tree.
         - extract the expression
         - try to simplify the expression (sympy)
@@ -429,18 +424,18 @@ class ExplainableGP:
             - 'nan' when dividing by zero or
             - 'inf' when 20**1234
         """
-        parsimony = eval_parsimony(evotree, self.tb.complexity_metric, origin_tree=self.origintree)
+        parsimony = eval_parsimony(tree, self.tb.complexity_metric, origin_tree=self.origintree)
         if parsimony > self.tb.nodes_max:
             raise ValueError(f'Tree too complex: {parsimony} > {self.tb.nodes_max}')
 
-        expr_sym = evotree.get_sympy_expr()
+        expr_sym = tree.get_sympy_expr()
 
         fitness = self.kernel.eval_tf(expr_sym)['mean_error']
         # if DEBUG_DUMMY or fitness != self.kernel.eval_sym_experimental(expr_sym):
         #     print(f'FAILED: {fitness} vs. {self.kernel.eval_sym_experimental(expr_sym)}')
 
         meta = TreeMeta(fitness=fitness, parsimony=parsimony, expr_sym=expr_sym, tag=tag)
-        self.lut[str(evotree)] = meta  # sfeh:discuss: lut update in finalize_tree_get_meta()?
+        self.lut[str(tree)] = meta  # sfeh:discuss: lut update in finalize_tree_get_meta()?
         return meta
 
 

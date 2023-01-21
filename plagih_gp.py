@@ -3,8 +3,8 @@ This starts the whole genetic programming.
 This (extra) file was added to have a file in the root directory that can be started.
 """
 import itertools
-import random
 import sys
+import random
 
 from sklearn.model_selection import train_test_split
 
@@ -25,17 +25,14 @@ def _test_random_pop():
     df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv')
     df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P design pattern #YOLO
     data_train, data_control = train_test_split(df, test_size=0.2, random_state=0)
-    use_RMSE_vs_MAE_sfeh = True  # RMSE
     root_xt_out = float
     outcome = sympy.Symbol('outcome')
     tree_base = Clip(Round(outcome), 0, 2)
 
-    action_clip = [0, 2]
-    action_round = 0
     tf_sanitize_results = lambda res: tf.round(tf.clip_by_value(res, 0, 2))
     tf_error_metric = lambda pw_diffs: tf.sqrt(tf.reduce_mean(tf.square(pw_diffs)))
     # tf.reduce_mean(tf.abs(pairwise_diff))  # sfeh:open
-    kernel = Regression(data_train, data_control, action_name, tf_error_metric, tf_sanitize_results)
+    kernel = Regression(data_train, action_name, tf_error_metric, tf_sanitize_results)
 
     # sfeh:idea track total trees in lut and matches, maybe even check diversity?
 
@@ -57,7 +54,7 @@ def _test_random_pop():
     # sfeh:open give user feedback for tree
     # origin_tree = Ifte(Le(Symbol('cartVel'), Float(0)), Float(0), Float(2))
 
-    origin_tree = None  # todo
+    origin_tree = None
 
     class Nodemaker(NodeCreator):
         def __init__(self):

@@ -11,7 +11,6 @@
 - tree evaluate nodes for best improvement 
 - population cluster / races
 - Make regular Function Classes Sympy Functions
-- introduce integer
 - replacing
   - replace x**2 with Squared(x)
   - replace -1*x, coming from sympy functions
@@ -31,7 +30,11 @@
 - sympy exprtools abchecken
 - sfeh:discussion especially with mc: there can be more than one pareto entry with the same parsimony/fitness!
 
-Always check for notes in code
+### Semi-interesting
+
+- introduce integer
+
+## Always check for notes in code
 - xxx
 - sfeh
 - asd

@@ -37,7 +37,7 @@ Useful information:
     # To be overridden with True in the appropriate subclasses
 
     #sfeh:open combine the nodes with the sympy shizzle
-    sfeh xxx input variables as locals? Provide information such as real, integer, positive, range/interval?
+    sfeh xxx input variables as locals? ?
     sfeh:open this is probably the reason for the capitalized class names in sympy: return eval(self, a)
     sfeh: I think we should get rid of sympy in the long term. A lot of problems are related to sympy.
 
@@ -221,7 +221,7 @@ class Boolean(TerminalNode):
 
 class Float(TerminalNode):
     xtype = (tuple([]), float)
-    symfun = lambda *a: sympy.Float(a[0], PRECISION)
+    symfun = lambda *a: sympy.Float(float(a[0]), PRECISION)
     tf_fun = lambda a: tf.constant(a, dtype=tf.float32)
 
     # def __init__(self, value):
@@ -234,7 +234,7 @@ class Symbol(TerminalNode):
     This was used to deal with negative labels
         self.name = nlabl if nlabl[0] != '-' else nlabl[1:]
         sfeh:xxx option here for type float/bool
-    todo how to set assumptions
+    sfeh:xxx how to set assumptions, Provide information such as real, integer, positive, range/interval
     """
     # as_sym = sympy.Symbol
     symfun = lambda *a: sympy.Symbol(a[0], real=True, imaginary=False)  # sfeh: real=/imaginary= faster.
@@ -942,8 +942,6 @@ if __name__ == '__main__':
 
     # test_basic_tfconversion()  # sfeh all tests
     # test_sympify()
-    #
-    # # sfeh:xxx why are node classes all in memory, is that bad? use__neew__()?
 
     x = Add(childs=[Symbol('a'), Mul(childs=[2, 3])])
     n1 = Float
@@ -952,34 +950,6 @@ if __name__ == '__main__':
     n4 = Add()
     # print(n1, n2, n3, n4)
     print(len(n1), len(n4))
-    # n1 = Float(1.23)
-    # n2 = Symbol('a')
-    # n3 = Boolean(True)
-    # n4 = Add(n1, n2)
-    # print(n1, n2, n3, n4)
-    # print('ssssss', n1.get_sym(), n2.get_sym(), n3.get_sym(), n4.get_sym())
-    # print(len(n1), len(n4))
-
-    # n4 = Add(n1, n2)
-    # print(n4.get_str_recursive())
-    # tr1 = Add(n1, n2)
-    # tr2 = Ifte(Boolean(True, is_fix=True), Mul(sin(Add(n1, n1)), n2), n1, is_fix=True)
-    # tr3 = Add()
-    # tr3.args = [n1, n2]
-    # print(tr1, tr2, tr3)
-    # tr = Pow(Symbol('a'))
-    # print(tr)
-    # tr = sin(Symbol('a'))
-    # print(tr)
-    # tr = sin(sin(Symbol('a')))
-
-    # lel = get_ev_childs(tr)
-    # print(lel)
-    # lul = random.choice(lel)
-    # lul(Float(5))
-    # print(tr)
-
-    # print(repr(tr))
 
     # for _subc in get_subclasses(BaseTree):
     #     if  in _subc.__bases__:

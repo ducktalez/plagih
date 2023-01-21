@@ -34,13 +34,6 @@ class EvalAction:
         self.data_column_name = name
 
 
-def get_observation_names(df, action_name):
-    obs_names = list(df.columns)
-    obs_names.remove(action_name)
-
-    return obs_names
-
-
 class Kernel(ABC):
     pass
 
@@ -56,26 +49,22 @@ class OfflineKernel(Kernel, ABC):
     idea: supporting multiple Kernels?
     """
 
-    def __init__(self, data_train, data_control, action_name, tf_error_metric, tf_sanitize_results,
+    def __init__(self, data_train, action_name, tf_error_metric, tf_sanitize_results,
                  tf_gpu_allow_growth=True, tf_device='/gpu:0', tf_device_log=False, *args, **kwargs):
         """
         sfeh: tf_device_log is set automatically to false
         """
         self.solution_train = tf.constant(data_train[action_name])  # tensors[self.action.name],
         self.tf_error_metric = tf_error_metric
-        # sfeh:xxx rework Kernel
-
-        self.action_name = action_name
         self.tf_sanitize_results = tf_sanitize_results
-        # Evaluating kernel (that uses tensorflow)
+
         self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=tf_device_log,
                                                   allow_soft_placement=True)  # check if GPU is actually used
         self.tf_config.gpu_options.allow_growth = tf_gpu_allow_growth  # sfeh:use optional args?
         self.tf_device = tf_device
 
-        self.data_train = data_train
         self.data_dict = data_train.to_dict('list')
-        self.data_control = data_control  # sfeh: currently not used
+        # self.data_control = data_control  # sfeh: currently not used
 
     def eval_tf(self, *args, **kwargs):
         return float('nan')
@@ -83,8 +72,8 @@ class OfflineKernel(Kernel, ABC):
 
 class Regression(OfflineKernel):
 
-    def __init__(self, data_train, data_control, action_name, tf_error_metric, tf_sanitize_results, *args, **kwargs):
-        super().__init__(data_train, data_control, action_name, tf_error_metric, tf_sanitize_results, *args, **kwargs)
+    def __init__(self, data_train, action_name, tf_error_metric, tf_sanitize_results, *args, **kwargs):
+        super().__init__(data_train, action_name, tf_error_metric, tf_sanitize_results, *args, **kwargs)
 
         return
 
@@ -94,8 +83,10 @@ class Regression(OfflineKernel):
         - receives a (string) expression in numpy-style that was reduced with pythons "sympy" (for simplification)
         - uses "ast" to generate a, kind of, python-intern-executable-fintree
         - creating a tensorflow graph that is evaluated in an isolated TF session
+
+        sfeh: data_control missing
         """
-        # tf.compat.v1.reset_default_graph()  # sfeh:xxx is this really required to do? legacy code
+        # tf.compat.v1.reset_default_graph()  # sfeh:discuss is this really required to do? legacy code
 
         results_raw = sympy_to_tensorflow(expr, self.data_dict)  # self.data_train
         results = results_raw  # The ids change in the next lines! {id(results)} vs. {id(results_raw)}
@@ -164,11 +155,10 @@ class Regression(OfflineKernel):
         """
         Not stable and only working with mountaincar
         """
-        _inputs = self.data_train.to_dict('list')
+        _inputs = self.data_dict
 
         cartVel, cartPos = sympy.symbols('cartVel cartPos')
         ex = sympy.sympify(str(expr))
-        # ex = sympy.sympify('a+b*2+5')
         f = sympy.lambdify([cartVel, cartPos], ex, 'numpy')
         cartVel = np.array(_inputs['cartVel'])
         cartPos = np.array(_inputs['cartPos'])
@@ -210,32 +200,6 @@ def sfeh_open():
     # else:
     #     penalize_exploration = tf.no_op()
 
-    #################################
-    # if self.tanhpenalize:
-    #     """
-    #     for the bounded kernel.
-    #     Values, that are far too high, which get assigned to the action range, should be slightly punished.
-    #     This should hopefully make improvements towards smaller numbers possible without affecting the parsimony.
-    #     (e.g. results_raw = 33.6, but actionminmax[-1, 1] --> kernel_result = +1)
-    #
-    #     tanh: closer to 0 is better, but rising steadyly without exceeding max value of 1 (outliers like single points inf become irrelevant)
-    #     factor 1 (0.02) the amplitude. should be small enough to not significantly influence the gp process
-    #     factor 2 (0.1) stretches the tanh function. the largest improvement should be at the points we want to get rid of
-    #     squared distance? -> smooth transition from the area that is considered okay
-    #     """
-    #     penalized_bounds = 0.02 * tf.tanh(
-    #         tf.square(results_raw - results) * 0.1)  # sfeh amplitude, stretch, squared
-    #     mean_boundpen = tf.reduce_mean(penalized_bounds)  # sfeh could easily be a reduce_sum
-    #     mean_error += mean_boundpen
-    # else:
-    #     penalized_bounds = tf.no_op()
-
-    ################
-
-    # self.pen_explorate = 0.1
-    # for k, v in {'explorate01': 0.1, 'explorate05': 0.5}:
-    #     if k in kernel_name:
-    #         self.pen_explorate = v
 
 # class ClassificationKernel(Kernel):
 #
@@ -247,18 +211,18 @@ def sfeh_open():
 #
 #     def tf_classify_labels_map(self, result, action):
 #         """
-#         For the CLASSIFY kernel, creates a TensorFlow (TF) sub-graph defined as a sequence of boolean conditions based upon
-#         the quantity of true class labels provided in the samples-csv.
-#         Outputs an array of tuples containing the predicted labels based upon the result and corresponding boolean condition triggered.
+#         For the CLASSIFY kernel, creates a TensorFlow (TF) sub-graph defined as a sequence of boolean conditions
+#         based upon the quantity of true class labels provided in the samples-csv.
+#         Outputs an array of tuples containing the predicted labels based upon the result and corresponding boolean
+#         condition triggered.
 #
 #         For comparison, the original (pre-TensorFlow) cod follows:
 #
-#             skew = (self.uniques_num / 2) - 1 # '-1' keeps a binary classification splitting over the
-#             if solution == 0 and result <= 0 - skew; fitness_train = 1: # check for first class (the left-most bin)
-#             elif solution == self.uniques_num - 1 and result > solution - 1 - skew; fitness_train = 1: # check for last class (the right-most bin)
-#             elif solution - 1 - skew < result <= solution - skew; fitness_train = 1: # check for class bins between first and last
-#             else: fitness_train = 0 # no class match
-#         sfeh remove
+# skew = (self.uniques_num / 2) - 1 # '-1' keeps a binary classification splitting over the if solution == 0 and
+# result <= 0 - skew; fitness_train = 1: # check for first class (the left-most bin) elif solution ==
+# self.uniques_num - 1 and result > solution - 1 - skew; fitness_train = 1: # check for last class (the right-most
+# bin) elif solution - 1 - skew < result <= solution - skew; fitness_train = 1: # check for class bins between first
+# and last else: fitness_train = 0 # no class match sfeh remove
 #
 #         """
 #         uniques_num = action.uniques
@@ -333,39 +297,11 @@ def sfeh_open():
 #
 #         return pairwise_fitness
 #
-#     def eval_tf(self, *args, **kwargs):
-#         # if self.get_predicted_labels:
-#         #     predicted_labels = tf.map_fn(self.tf_classify_labels_map, kernel_result, dtype=(tf.int32, tf.string), swap_memory=True)
-#         # else:
-#         #     predicted_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
-#         #  # , 'predicted_labels': predicted_labels    # predicted_labels
-#         pass
+# def eval_tf(self, *args, **kwargs): # if self.get_predicted_labels: #     predicted_labels = tf.map_fn(
+# self.tf_classify_labels_map, kernel_result, dtype=(tf.int32, tf.string), swap_memory=True) # else: #
+# predicted_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel #  # , 'predicted_labels':
+# predicted_labels    # predicted_labels pass
 
-# def conclusion_text(self, result, fitness_control_best):
-#     """
-#
-#     """
-#     elif self.kernel == 'regression':
-#         mse = skm.mean_squared_error(result['agent_result'], result['solution_goal'])
-#         result_str += ('\n\n Regression fitness_train score: {}'.format(result['fitness_train']))
-#         result_str += ('\n Mean Squared Error: {}'.format(mse))
-#
-#     result_str = ''
-#
-#     if self.kernel == 'classification':
-#         result_str += f'\n\n Classification fitness_train score: {fitness_control_best}'
-#         result_str += ('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['solution_goal'], result['predicted_labels'][0])))
-#         result_str += ('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution_goal'], result['predicted_labels'][0])))
-#
-#     elif self.kernel == 'regression bounded':
-#
-#     elif self.kernel == 'match':
-#         result_str += f"\n\n Matching fitness_train score: {result['fitness_train']}"
-#
-#     else:  # 'regression discrete':
-#         result_str = 'No summary provided for this kernel'
-#
-#     return result_str
 
 if __name__ == "__main__":
 
@@ -375,6 +311,3 @@ if __name__ == "__main__":
     df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv')
     df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P design pattern #YOLO
     data_train, data_control = train_test_split(df, test_size=0.2, random_state=0)
-    kernel = Regression(True, data_train, data_control, [0, 2], action_round, action_name)
-
-    'sign(cartVel) + 1.476507'

@@ -51,7 +51,7 @@ class Node:
                 try:
                     label_str = f'{self.childs[0]}'  # sfeh:hmmm
                 except Exception as ex:
-                    print(f'TODO IndexError: invalid index to scalar variable? {ex}')
+                    print(f'sfeh:debug, delete if no occurs. IndexError: invalid index to scalar variable? {ex}')
 
         return f"[{label_str}]"
 
@@ -65,6 +65,14 @@ class Node:
             except RecursionError as ex:
                 print(f'sfeh:RecursionError, maybe Piecewise?: {self}, {ex}')
                 raise RecursionError
+            except ValueError as ex:
+                raise ex
+            except Exception as ex:
+                print(f'sfeh:XXX this still occurs. {ex}')
+                # The argument '-2.05444 + I*pi' is not comparable.
+                # <lambda>() missing 1 required positional argument: 'b'
+                #   -> Probably in Sub-class lambda-function
+                raise ex
         elif self.childs and issubclass(self.label, TerminalNode):
             _sym = self.label.symfun
             _cs = self.childs[0]
@@ -72,8 +80,9 @@ class Node:
         # else:
         #     if issubclass(type(self.label), TerminalNode):  # .--class--, as it is initiated?
         #         return self.label.get_sym()
-
+        print(len(self.childs), type(self.label), issubclass(self.label, Operator), issubclass(self.label, TerminalNode))
         raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.label)}')
+        # sfeh [Max, [Log, [-0.017988000065088272]], [Ifte, [False], [-0.015212000347673893], [7]]], <class 'type'>
 
     def eval_str(self):
         return self.get_label()  # sfeh open
@@ -261,7 +270,7 @@ def sympy_to_nsted(expr, allow_chain=False):
         # return Nested(Boolean(expr), [])
         return Node(Boolean, [expr])
 
-    # the following lines are not required, if sympy filters for bad expressions earlier
+    # the following two lines are not required, if sympy filters for bad expressions earlier
     # if expr.is_imaginary or expr.is_infinite:
     #     raise ValueError(f'Cannot convert this to Tensorflow: {expr}')
 
@@ -308,10 +317,6 @@ def sympy_to_nsted(expr, allow_chain=False):
                     raise
                 return Node(_r, [sympy_to_nsted(expr.args[0], allow_chain=allow_chain)])  # can ignore args[1] now
 
-            # sfeh:open
-            # if isinstance(expr.args[1], sympy.Integer):
-            #     _r = Powrounded
-            # else:
             _r = Pow
             childnstd = [sympy_to_nsted(x, allow_chain=allow_chain) for x in expr.args]
             return Node(_r, childnstd)

@@ -1,5 +1,6 @@
 import copy
 import os
+from abc import ABC
 
 import pandas as pd
 import sympy
@@ -40,19 +41,32 @@ def get_observation_names(df, action_name):
     return obs_names
 
 
-class Kernel:
+class Kernel(ABC):
+    pass
+
+
+class OnlineKernel(Kernel, ABC):
+    pass
+
+
+class OfflineKernel(Kernel, ABC):
     """
     sfeh:OfflineKernel? Also: online kernels here?
     The "abstract" Kernel class for the GP process.
     idea: supporting multiple Kernels?
     """
 
-    def __init__(self, data_train, data_control, action_clip, action_round, tf_gpu_allow_growth=True,
-                 tf_device='/gpu:0', tf_device_log=False, *args, **kwargs):
+    def __init__(self, data_train, data_control, action_name, tf_error_metric, tf_sanitize_results,
+                 tf_gpu_allow_growth=True, tf_device='/gpu:0', tf_device_log=False, *args, **kwargs):
         """
         sfeh: tf_device_log is set automatically to false
         """
+        self.solution_train = tf.constant(data_train[action_name])  # tensors[self.action.name],
+        self.tf_error_metric = tf_error_metric
+        # sfeh:xxx rework Kernel
 
+        self.action_name = action_name
+        self.tf_sanitize_results = tf_sanitize_results
         # Evaluating kernel (that uses tensorflow)
         self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=tf_device_log,
                                                   allow_soft_placement=True)  # check if GPU is actually used
@@ -63,100 +77,19 @@ class Kernel:
         self.data_dict = data_train.to_dict('list')
         self.data_control = data_control  # sfeh: currently not used
 
-        # sfeh:better solution...
-        self.action_clip = action_clip
-        self.action_round = action_round
-
     def eval_tf(self, *args, **kwargs):
         return float('nan')
 
 
-class RegressionKernel(Kernel):
+class Regression(OfflineKernel):
 
-    def __init__(self, use_RMSE_vs_MAE_sfeh, data_train, data_control, action_clip, action_round, action_name,
-                 *args, **kwargs):
-        super().__init__(data_train, data_control, action_clip, action_round, *args, **kwargs)
-
-        self.solution_train = tf.constant(self.data_train[action_name])  # tensors[self.action.name],
-        self.use_RMSE_vs_MAE_sfeh = use_RMSE_vs_MAE_sfeh
-        # sfeh:xxx rework Kernel
+    def __init__(self, data_train, data_control, action_name, tf_error_metric, tf_sanitize_results, *args, **kwargs):
+        super().__init__(data_train, data_control, action_name, tf_error_metric, tf_sanitize_results, *args, **kwargs)
 
         return
 
-    def histogram_bins(self):
-        act_range = self.action_clip[1] - self.action_clip[0]  # max value - min value
-        if self.action_round:  # [0, 1, 2] -> 2
-            # sfehfun make kernel histogram function?
-            action_bins = np.linspace(-0.5 - act_range, 0.5 + act_range, 2 * act_range + 1 + 1)  # for +-0.5 and 0
-        else:
-            num_bins = 16 + 1  # +1 is extra bin for 0
-            breite = 0.5 * (act_range * 2) / num_bins
-            action_bins = np.linspace(-(breite + act_range), + (breite + act_range), num_bins + 1)  # sfeh 10 bins?
-        return action_bins
-
-    def plot_agent_histogram(self, parsim, tree, path_hist):
-        """
-        Make histograms for all paretofront-efficient candidates
-        sfeh: based on training data- maybe use test data...
-
-        useful code?
-        # histogram_data = np.digitize(histogram_data, bins)  # digitize: the bin index the entry belongs to
-        # histogram_data = np.concatenate((histogram_data.reshape(-1, 1), pairwise_fitness.reshape(-1, 1)), axis=1)
-        # histogram_data = np.multiply.reduce(histogram_data, axis=1)
-        # hist, bins = np.histogram(histogram_data, bins=bins, weights=pairwise_fitness)
-        """
-
-        action_bins = self.histogram_bins()
-        expr_raw = tree.eval_expr_str()
-        # used_observations = tree.get_observation_list()  sfeh:delete all the cases where this was used
-        pairwise_diff = self.eval_tf(expr_raw)['pairwise_diff']
-
-        with plt.rc_context(rc=pyplot_rc_tex):
-            fig, ax = plt.subplots()
-            ax.hist(pairwise_diff, bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')
-            ax.set(ylim=(0, len(self.data_train)), ylabel='frequency', xlabel='deviation')
-            histpath = path_hist / f'acthist_{parsim}.pdf'
-            fig.savefig(histpath)
-            plt.close('all')
-
-        return histpath
-
-    def eval_sym_experimental(self, expr):
-        """
-        VERY SLOW and only workd with mountain car
-        todo
-            >>> from sympy import sin, cos, symbols, lambdify
-            >>> import numpy as np
-            >>> x = symbols('x')
-            >>> expr = sin(x) + cos(x)
-            >>> expr
-            sin(x) + cos(x)
-            >>> f = lambdify(x, expr, 'numpy')
-            >>> a = np.array([1, 2])
-            >>> f(a)
-            [1.38177329 0.49315059]
-        """
-        results_raw = []
-        pairwise_diff = []
-        square_diff = []
-        index_d = self.data_train.to_dict('index')
-
-        for ii, dct in index_d.items():
-            ex = sympy.sympify(str(expr))
-            x = ex.subs(dct)  # [('cartVel', 2), ('cartPos', 3)]
-            # x1 = expr.subs(dct)  # must make symbols sympy.Symbol('x', real=True, imaginary=False)
-            p_diff = round(dct['action']-np.clip(x, 0, 2), 0)  # sfeh:open
-            results_raw.append(x)
-            pairwise_diff.append(p_diff)
-            square_diff.append(p_diff**2)
-
-        result = np.sqrt(float(np.sum(square_diff) / len(square_diff)))  # sfeh:optimize
-        return np.round(result, PRECISION)
-
     def eval_tf(self, expr):
         """
-        -->>>>> used_observations was here, delete me
-
         Evaluates an expression using TensorFlow (TF)
         - receives a (string) expression in numpy-style that was reduced with pythons "sympy" (for simplification)
         - uses "ast" to generate a, kind of, python-intern-executable-fintree
@@ -167,22 +100,11 @@ class RegressionKernel(Kernel):
         results_raw = sympy_to_tensorflow(expr, self.data_dict)  # self.data_train
         results = results_raw  # The ids change in the next lines! {id(results)} vs. {id(results_raw)}
 
-        if self.action_round is not None:
-            results = tf.round(results)
-        if self.action_clip is not None:
-            results = tf.clip_by_value(results, self.action_clip[0], self.action_clip[1])
+        results = self.tf_sanitize_results(results)
 
         pairwise_diff = self.solution_train - results
 
-        if self.use_RMSE_vs_MAE_sfeh:  # sfeh huber loss! mse, mae, rmse, huber, (log)
-            regression_errors = tf.square(pairwise_diff)
-            # sfeh:keras option for RMSE available:
-            mean_error = tf.sqrt(tf.reduce_mean(regression_errors))
-            # mean_error = keras.metrics.RootMeanSquaredError(pairwise_diff)
-        else:
-            regression_errors = tf.abs(pairwise_diff)
-            mean_error = tf.reduce_mean(regression_errors)
-            # mean_error = keras.metrics.MeanAbsoluteError(pairwise_diff)
+        mean_error = self.tf_error_metric(pairwise_diff)
 
         with tf.compat.v1.Session(config=self.tf_config) as sess:
             with sess.graph.device(self.tf_device):  # GPU evaluation in tensorflow
@@ -199,6 +121,66 @@ class RegressionKernel(Kernel):
         tf_results['mean_error'] = round(float(tf_results['mean_error']), PRECISION)
 
         return tf_results
+
+    # def histogram_bins(self):
+    #     act_range = self.action_clip[1] - self.action_clip[0]  # max value - min value
+    #     if self.action_round:  # [0, 1, 2] -> 2
+    #         # sfehfun make kernel histogram function?
+    #         action_bins = np.linspace(-0.5 - act_range, 0.5 + act_range, 2 * act_range + 1 + 1)  # for +-0.5 and 0
+    #     else:
+    #         num_bins = 16 + 1  # +1 is extra bin for 0
+    #         breite = 0.5 * (act_range * 2) / num_bins
+    #         action_bins = np.linspace(-(breite + act_range), + (breite + act_range), num_bins + 1)  # sfeh 10 bins?
+    #     return action_bins
+    #
+    # def plot_agent_histogram(self, parsim, tree, path_hist):
+    #     """
+    #     Make histograms for all paretofront-efficient candidates
+    #     sfeh: based on training data- maybe use test data...
+    #
+    #     useful code?
+    #     # histogram_data = np.digitize(histogram_data, bins)  # digitize: the bin index the entry belongs to
+    #     # histogram_data = np.concatenate((histogram_data.reshape(-1, 1), pairwise_fitness.reshape(-1, 1)), axis=1)
+    #     # histogram_data = np.multiply.reduce(histogram_data, axis=1)
+    #     # hist, bins = np.histogram(histogram_data, bins=bins, weights=pairwise_fitness)
+    #     """
+    #
+    #     action_bins = self.histogram_bins()
+    #     expr_raw = tree.eval_expr_str()
+    #     # used_observations = tree.get_observation_list()  sfeh:delete all the cases where this was used
+    #     pairwise_diff = self.eval_tf(expr_raw)['pairwise_diff']
+    #
+    #     with plt.rc_context(rc=pyplot_rc_tex):
+    #         fig, ax = plt.subplots()
+    #         ax.hist(pairwise_diff, bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')
+    #         ax.set(ylim=(0, len(self.data_train)), ylabel='frequency', xlabel='deviation')
+    #         histpath = path_hist / f'acthist_{parsim}.pdf'
+    #         fig.savefig(histpath)
+    #         plt.close('all')
+    #
+    #     return histpath
+
+    def eval_sym_experimental(self, expr, return_results=False):
+        """
+        Not stable and only working with mountaincar
+        """
+        _inputs = self.data_train.to_dict('list')
+
+        cartVel, cartPos = sympy.symbols('cartVel cartPos')
+        ex = sympy.sympify(str(expr))
+        # ex = sympy.sympify('a+b*2+5')
+        f = sympy.lambdify([cartVel, cartPos], ex, 'numpy')
+        cartVel = np.array(_inputs['cartVel'])
+        cartPos = np.array(_inputs['cartPos'])
+        action = np.array(_inputs['action'])
+        raw_results = f(cartVel, cartPos)
+        results = np.round(np.clip(raw_results, 0, 2), 0)
+
+        if not return_results:
+            fitness = np.sqrt(np.mean((results-action)**2))
+            return np.round(fitness, PRECISION)
+        else:
+            return results
 
 
 def sfeh_open():
@@ -393,6 +375,6 @@ if __name__ == "__main__":
     df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv')
     df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P design pattern #YOLO
     data_train, data_control = train_test_split(df, test_size=0.2, random_state=0)
-    kernel = RegressionKernel(True, data_train, data_control, [0, 2], action_round, action_name)
+    kernel = Regression(True, data_train, data_control, [0, 2], action_round, action_name)
 
     'sign(cartVel) + 1.476507'

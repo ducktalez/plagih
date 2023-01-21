@@ -754,6 +754,8 @@ def sympy_to_tensorflow(expr, tensor_dict):
             #     tf_fun = expr.as_tflow  # sfeh:delete? delete case above? ### max,
 
         tf_args = [sympy_to_tensorflow(arg, tensor_dict) for arg in expr.args]
+        # SFEH:Missing and Problems:
+        #   - Exception: eval-ex: type object 'cosh' has no attribute 'tf_fun'
         try:
             result = tf_fun(*tf_args)  # fits, if the arguments match the expected arguments exactly Add(a, b)
         except TypeError:

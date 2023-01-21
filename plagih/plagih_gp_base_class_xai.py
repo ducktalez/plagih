@@ -376,7 +376,7 @@ class ExplainableGP:
             self.printpl('g', f'Successfully loaded backup file. Generation: {self.gen_id}')
 
         else:
-            raise FileNotFoundError(f'No backup-file found at {path_backup}')
+            raise FileNotFoundError(f'No backup-file found at {path_backup}')  # sfeh:beautify occurs 2x
 
     def run_custom_exit_condition(self):
         """
@@ -457,6 +457,18 @@ class ExplainableGP:
 
         try:
             fitness = self.kernel.eval_tf(expr_sym)['mean_error']
+            if DEBUG_DUMMY and self.gen_id > 3:
+                try:
+                    fit2 = self.kernel.eval_sym_experimental(expr_sym)
+                    if fitness != fit2:
+                        print(f'FAILED: {fitness} vs. {fit2}')
+                        res1 = self.kernel.eval_tf(expr_sym)['results']
+                        res2 = self.kernel.eval_sym_experimental(expr_sym, return_results=True)
+                        print('Versus', res1, res2)
+                    else:
+                        pass  # print(f'SUCCESS: {fitness} vs. {fit2}')
+                except Exception as ex:
+                    pass  # illegal math (dicide by zero, or something si)
 
         except (ValueError, TypeError) as ex:
             # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16, float32,

@@ -63,7 +63,7 @@ class Node:
             try:
                 return _sym(*_cs)
             except RecursionError as ex:
-                print(f'RecursionError, maybe Piecewise?: {self}, {ex}')
+                print(f'sfeh:RecursionError, maybe Piecewise?: {self}, {ex}')
                 raise RecursionError
         elif self.childs and issubclass(self.label, TerminalNode):
             _sym = self.label.symfun

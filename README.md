@@ -32,6 +32,7 @@
 - introduce integer
 - trees with one node just very rarely?
 - https://deap.readthedocs.io/en/master/api/tools.html
+- continuous evolution (with mp), select from 3 and also replace 3
 
 ## Always check for notes in code
 - xxx

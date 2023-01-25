@@ -497,7 +497,7 @@ class Round(MathOperator):  # 'Round'
 
 class Powrounded(Operator):
     tflow = lambda a, b: tf.pow(a, tf.round(b))
-    symfun = lambda a, b: sympy.Pow(a, Round(b))
+    symfun = lambda a, b: a**Round.symfun(b)  # todo sympy.Pow(a, Round(b))
     # sympy.lambdify  # sfeh:XXX
     xtype = (tuple([float, float]), float)
 

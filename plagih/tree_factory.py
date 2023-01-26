@@ -77,20 +77,16 @@ def tree_simplification(tree):
 
 
 def evolve_reduce_simplify(tree: Node, completely=True, force=False):
-    """
-    # sfeh:open this function does currently not work
-    Reducing a fintree to its most basic form with sympify.
-    (completely = False: reduce just one branch. if you wanted to have more complexity)
+    """Reducing a fintree to its most basic form with sympify.
+    (completely = False: reduce just one branch. if you wanted to have more complexity)"""
 
-    """
     tree_copy = copy.deepcopy(tree)
     if completely:  # reduce the complete tree
         nodes_lv0 = tree.get_nodes_at_depth(0, allow_fixed=False)  # only required for fixed-core trees
         for cc in nodes_lv0:
             cc.set_new_nested(tree_simplification(cc))
     else:
-        node_list = tree.eval_mutable_nodes()
-        node_list = [n for n in node_list if n.get_arity() > 0]  # ignoring leaf nodes
+        node_list = [n for n in tree.eval_mutable_nodes() if issubclass(n.label, Operator)]  # ignoring leaf nodes...
         node = np.random.choice(node_list)
         node.set_new_nested(tree_simplification(node))  # sfeh chosen must be set again? or not? test it at least.
     if force:
@@ -103,8 +99,8 @@ def evolve_reduce_simplify(tree: Node, completely=True, force=False):
             return tree
 
 
-def nsted_deepcopy(nsted: Node):
-    _cpy = copy.deepcopy(nsted)
+def node_deepcopy(tree: Node):
+    _cpy = copy.deepcopy(tree)
     return _cpy
 
 
@@ -177,7 +173,7 @@ class TreeBuildRestrictions:
         """
         This version counts the amount of operators as construction limit!
         sfeh:idea nodes are now about being operators...
-        '+': xtype = (tuple([float, float]), float)
+        '+': xtype = ((float, float), float)
         sfeh:pfull?
         """
         childs = []
@@ -205,14 +201,14 @@ class TreeBuildRestrictions:
         """
 
         _nd = np.random.choice(nsted.eval_mutable_nodes())
-        _nd.evolve_mutate_filter_branch()
+        _nd.evolve_mutate_filter_gauss()
 
         return nsted
 
     def mutate_point(self, nsted):
         """Mutate a single mutable point in any Tree.
         sfeh:debug is the fintree a fintree copy or the same fintree?"""
-        evostruc = nsted_deepcopy(nsted)
+        evostruc = node_deepcopy(nsted)
 
         _nd = np.random.choice(evostruc.eval_mutable_nodes())
         xtype = _nd.get_xtype()
@@ -226,7 +222,7 @@ class TreeBuildRestrictions:
             _nd.set_new_nested(new_node)
         return evostruc
 
-    def _prune(self, nsted: Node):
+    def _prune(self, tree: Node):
         """prune depth
         -> prune everything below a certain level... (should not happen in the first place)
         prune nsteds
@@ -235,7 +231,7 @@ class TreeBuildRestrictions:
         sfeh:discussion there is a difference between parsimony and complexity...
         sfeh:discuss analyze the amount of trees that have to be pruned?
         sfeh:open add labelweight_max to"""
-        nodelist = nsted.eval_mutable_nodes()
+        nodelist = tree.eval_mutable_nodes()
         for dnode in nodelist:
             if dnode.depth == self.nodes_max and dnode.get_arity() > 0:
                 print_warning('wwww', f'Node in fintree is too deep: {dnode.depth}')
@@ -244,19 +240,19 @@ class TreeBuildRestrictions:
                 dnode.set_new_nested(new_node)
                 # sfeh:debug did this work?
 
-        prune_amount = len(nsted) - self.nodes_max
+        prune_amount = len(tree) - self.nodes_max
         while prune_amount > 0:
-            print_warning('wwww', f'Tree too complex: {len(nsted)} > {self.nodes_max}, pruning {prune_amount}.')
-            nodelist = nsted.eval_mutable_nodes()
+            print_warning('wwww', f'Tree too complex: {len(tree)} > {self.nodes_max}, pruning {prune_amount}.')
+            nodelist = tree.eval_mutable_nodes()
             prune_now = 1 + np.random.randint(prune_amount)  # 19 -> prune branch with 1 to max. 19 nodes
 
             nodelist = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
-            node = np.random.choice(nodelist)
-            new_node = self.nc.choose_terminal(node.get_xtype_out(), as_node=True)
-            new_node.depth = node.depth
-            node.set_new_nested(new_node)
-            prune_amount = len(nsted) - self.nodes_max
-        return nsted
+            tree = np.random.choice(nodelist)
+            new_node = self.nc.choose_terminal(tree.get_xtype_out(), as_node=True)
+            new_node.depth = tree.depth
+            tree.set_new_nested(new_node)
+            prune_amount = len(tree) - self.nodes_max
+        return tree
 
     def mutate_branch_depth(self, tree, depth_goal, p_term=0.0):
         _nodes_init = len(tree)
@@ -297,37 +293,45 @@ class TreeBuildRestrictions:
         currently only one branch
 
         swap branches of two trees
-        - select parent a and b
+        - select parent aa and bb
         - select swappable branche for a_parent from b_parent
-            - select a node in a (and crossover here, no matter what)
+            - select aa node in aa (and crossover here, no matter what)
         - delete a_parent branch and pareto_insert b_parent branch (which tactic?)
         sfeh:idea into main fintree?"""
-        _a = nsted_deepcopy(tree1)
-        _b = nsted_deepcopy(tree2)
+        aa = node_deepcopy(tree1)
+        bb = node_deepcopy(tree2)
 
-        _a_nds = _a.eval_mutable_nodes(allow_root=False)
-        _a_nd = np.random.choice(_a_nds)
+        a_nds = aa.eval_mutable_nodes(ignore_first=True)  # ignore root node
+        a_nd = np.random.choice(a_nds)
+        xt_out = a_nd.get_xtype_out()
 
-        xtype_out = _a_nd.get_xtype_out()
-        _b_nds = _b.eval_mutable_nodes(xt_out=xtype_out)
-        if len(_b_nds) > 0:
-            _b_nd = np.random.choice(_b_nds)
+        b_nds = bb.eval_mutable_nodes(match_xt=xt_out)
+        if len(b_nds) > 0:
+            b_nd = np.random.choice(b_nds)
         else:
-            xtype_out = float if xtype_out == bool else bool  # the other swap type now
-            _b_nds = _b.eval_mutable_nodes(xt_out=xtype_out)
-            _b_nd = np.random.choice(_b_nds)
-            _a_nds = _a.eval_mutable_nodes(allow_root=False, xt_out=xtype_out)
-            _a_nd = np.random.choice(_a_nds)
+            try:
+                xt_out = float if xt_out == bool else bool  # the other swap type now
+                b_nds = bb.eval_mutable_nodes(match_xt=xt_out)
+                b_nd = np.random.choice(b_nds)
+                a_nds = aa.eval_mutable_nodes(ignore_first=True, match_xt=xt_out)
+                a_nd = np.random.choice(a_nds)
+            except Exception as TODO:
 
-        ansted_copy = copy.deepcopy(_a_nd)  # sfeh deepcopy required??
+                xt_out = float if xt_out == bool else bool  # the other swap type now
+                b_nds = bb.eval_mutable_nodes(match_xt=xt_out)
+                b_nd = np.random.choice(b_nds)
+                a_nds = aa.eval_mutable_nodes(ignore_first=True, match_xt=xt_out)
+                a_nd = np.random.choice(a_nds)
 
-        _a_nd.set_new_nested(_b_nd)
-        _b_nd.set_new_nested(ansted_copy)
+        cpy = copy.deepcopy(a_nd)  # sfeh deepcopy required??
 
-        _a = self._prune(nsted=_a)
-        _b = self._prune(nsted=_b)
+        a_nd.set_new_nested(b_nd)
+        b_nd.set_new_nested(cpy)
 
-        return _a, _b
+        aa = self._prune(tree=aa)
+        bb = self._prune(tree=bb)
+
+        return aa, bb
 
     def pop_random_depth(self, depth_goal, xt_out=None, p_term=0.0):
 
@@ -360,7 +364,7 @@ class TreeBuildRestrictions:
             - get the amount of nodes allowed to add. (max nodes without the core-fintree + the nodes about to delete)
             - split the amount of nodes up (randomly) and add these new branches to the fintree
             sfeh:idea mutate only the childs of a node! The label stays the same"""
-            evonsted = nsted_deepcopy(self.origin_tree)
+            evonsted = node_deepcopy(self.origin_tree)
             layer0_nodes = evonsted.get_nodes_at_depth(0, allow_fixed=False, expand_depth=True)
 
             layer0_splits = randomly_split_range(nodeamount, len(layer0_nodes))

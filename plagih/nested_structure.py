@@ -1,18 +1,21 @@
 import itertools
+import random
 from dataclasses import dataclass
 
 from plagih.plagih_tree import *
 
 # For conversion from sympy into node
-sptonode = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul,
-            sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,
-            sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
-            sympy.GreaterThan: Ge, sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos,
-            sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
-            sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE}
+from plagih.util import FLOAT_PRECISION
+
+sym_nodes = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul,
+             sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,
+             sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
+             sympy.GreaterThan: Ge, sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos,
+             sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
+             sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: exp}
 # , sympy.Equality: Eq
 # sfeh:open = {sympy.Unequality: Ne, sympy.Equality: Eq}
-stn_keys = tuple(sptonode.keys())  # sfeh: debug this... relevant?
+sym_assumption_nodes = (sympy.re,)
 
 
 @dataclass
@@ -55,6 +58,13 @@ class Node:
             except RecursionError as ex:
                 print(f'sfeh:RecursionError, maybe Piecewise?: {self}, {ex}')
                 raise RecursionError
+            except AttributeError as ex:
+                # KeyError: '[Mul, [313.9173583984375], [Max, [Ifte, [Xor, [False], [Not, [False]]], [cartVel], [Sin, [False]]], [cartVel]]]'
+                # During handling of the above exception, another exception occurred:
+                # AttributeError: 'BooleanFalse' object has no attribute 'as_coefficient'
+                # ->???
+                print(_sym(*_cs))
+                raise
             # except ValueError as ex:
             #     raise ex
             # except Exception as ex:
@@ -64,10 +74,11 @@ class Node:
             #     #   -> Probably in Sub-class lambda-function
             #     raise ex
         elif self.childs and issubclass(self.label, TerminalNode):
-            _sym = self.label.symfun
+            _sym = self.label.get_sym()  # _sym = self.label.symfun
             _cs = self.childs[0]
             return _sym(_cs)
-        print(len(self.childs), type(self.label), issubclass(self.label, Operator), issubclass(self.label, TerminalNode))
+        print(len(self.childs), type(self.label), issubclass(self.label, Operator),
+              issubclass(self.label, TerminalNode))
         raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.label)}')
         # sfeh [Max, [Log, [-0.017988000065088272]], [Ifte, [False], [-0.015212000347673893], [7]]], <class 'type'>
 
@@ -220,25 +231,19 @@ class Node:
         self.childs = new_node.childs  # sfeh maybe must be updated recursively
         self.repair_depth(self.depth)  # Especially required for crossover or branches
 
-    def eval_mutable_nodes(self, xt_out=None, allow_root=True, allow_chain=False):
-        """
-        return all nodes that are mutable (non fixed)
-        sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!
-        """
+    def eval_mutable_nodes(self, match_xt=None, ignore_first=False, ignore_chain=False):
+        """return all nodes that are mutable (non fixed)
+        sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!"""
         node_list = []
-        if not self.is_fix:  # requirement for mutability
-            # crossover requires excluding types that are not matching, and excludes the root node
-            # sfeh:open in anderer klasse
-            if (xt_out is None or xt_out == self.get_xtype_out()) \
-                    and (allow_root or not self.is_root()) \
-                    and (allow_chain or not self.is_chain):
-                node_list.append(self)
-        if self.is_operator():
+        if not any([self.is_fix, ignore_first, ignore_chain and self.is_chain]) and match_xt is None or match_xt == self.get_xtype_out():
+            node_list.append(self)  # must be reference
+
+        if self.is_operator():  # sfeh:chain-operators discuss
             for cc in self.childs:
-                node_list.extend(cc.eval_mutable_nodes(xt_out=xt_out, allow_root=allow_root, allow_chain=allow_chain))
+                node_list.extend(cc.eval_mutable_nodes(match_xt=match_xt, ignore_first=False, ignore_chain=ignore_chain))
         return node_list
 
-    def evolve_mutate_filter_branch(self, precision=6):
+    def evolve_mutate_filter_gauss(self):
         """
         Recursively filter the nodes in the branch of fintree
         sfeh:   random filter all terminal nodes /
@@ -248,13 +253,19 @@ class Node:
                 intelligent filtering
         """
         # self.state = STATE_BUILDING  #  ==>state
-        if isinstance(self.get_label(), Operator):
+        if self.is_operator():
             for cc in self.childs:
-                cc.evolve_mutate_filter_branch(precision=precision)
+                cc.evolve_mutate_filter_gauss()
         else:
-            # self.label.mutate_self_filter(filter_type='gaussian_filter', precision=precision)
-            # sfeh:xxx
-            pass
+            if issubclass(self.label, Float):
+                self.childs[0] = round(random.gauss(self.childs[0], 0.1), FLOAT_PRECISION)  # sfeh: ->no symbols ->userspecific
+
+    def mutate_self_filter_index(self):
+
+        # new_index = int(max(min(round(random.gauss(self.time_index, 1)), self.index_minmax[1]), 0))
+        # self.time_index = new_index
+        # self.name = f'{self.fam}_{new_index}'
+        pass
 
 
 def sympy_to_nsted(expr, allow_chain=False):
@@ -283,7 +294,7 @@ def sympy_to_nsted(expr, allow_chain=False):
                 return Node(Boolean, [bool(expr_eval)])
             elif expr.is_number:  # is_float does not match int
                 # return Nested(Float(float(expr_eval)), [])  # sfeh round
-                return Node(Float, [float(expr_eval)])  # sfeh round
+                return Node(Float, [round(float(expr_eval), FLOAT_PRECISION)])  # sfeh round
                 # "TypeError: Cannot convert complex to float" -> ignore the whole expression, let it fail
             else:
                 print(f'XXX What happened here? {expr}')
@@ -317,10 +328,13 @@ def sympy_to_nsted(expr, allow_chain=False):
             childnstd = [sympy_to_nsted(x, allow_chain=allow_chain) for x in expr.args]
             return Node(_r, childnstd)
 
-        elif isinstance(expr, stn_keys):
+        elif isinstance(expr, sympy.Function('Rounddummy')):
+            return Node(Round, [sympy_to_nsted(expr.args[0], allow_chain=allow_chain)])
 
-            clss = sptonode[type(expr)]
-            args = [sympy_to_nsted(x, allow_chain=allow_chain) for x in expr.args]
+        elif isinstance(expr, tuple(sym_nodes)):
+
+            clss = sym_nodes[type(expr)]
+            args = [sympy_to_nsted(ar, allow_chain=allow_chain) for ar in expr.args]
 
             if len(expr.args) > len(clss.xtype[0]):
                 if issubclass(clss, ChainableOp):
@@ -338,6 +352,13 @@ def sympy_to_nsted(expr, allow_chain=False):
             else:
                 return Node(clss, args)  # same as in allow_chain
 
+        elif isinstance(expr, sympy.re):
+            # We assume, that these Functions occur due to assumptions.
+            # (for now: sympy.re, the Real-part of a number)
+            # hence, we can skip this function while rebuilding without loosing any information
+            # as Symbols match their assumptions when they are rebuilt aswell
+            # sfeh:debug: When does sympy.re occur? Are there other cases?
+            return sympy_to_nsted(expr.args[0])
         else:
             # sfeh:discuss
             # NotImplementedError: Expr missing: ITE(p > 13, tan(p - v) >= 2.578643, tan(p - v) >= 1)
@@ -349,6 +370,6 @@ if __name__ == '__main__':
     # x = Nested(Add(), depth=0, childs=[Symbol('a'), Float(2.2)])
     # # x = Nested(Symbol(), childs=['a'])
     # print(x)
-    for x in stn_keys:
+    for x in sym_nodes.keys():
         lel = 4.5
         print(x, isinstance(lel, x))

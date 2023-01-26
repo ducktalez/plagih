@@ -70,11 +70,11 @@ def _test_random_pop():
 
             samples = [i for i in itertools.chain.from_iterable(df[['cartVel', 'cartPos']].sample(n=50).values) if
                        i != 0]
-            pick_constant = {float: [[lambda: round(random.normalvariate(0, 1), PRECISION), 0.2],
-                                     [lambda: round(random.normalvariate(1, 1), PRECISION), 0.1],
-                                     [lambda: round(random.normalvariate(10, 5), PRECISION), 0.1],
-                                     [lambda: round(random.randint(1, 20), PRECISION), 0.1],  # int fails in Float node
-                                     [lambda: round(random.choice(samples), PRECISION), 0.5]],
+            pick_constant = {float: [[lambda: round(random.normalvariate(0, 1), FLOAT_PRECISION), 0.2],
+                                     [lambda: round(random.normalvariate(1, 1), FLOAT_PRECISION), 0.1],
+                                     [lambda: round(random.normalvariate(10, 5), FLOAT_PRECISION), 0.1],
+                                     [lambda: round(random.randint(1, 20), FLOAT_PRECISION), 0.1],  # int fails in Float
+                                     [lambda: round(random.choice(samples), FLOAT_PRECISION), 0.5]],
                              bool: [[lambda: random.choice((True, False)), 1]]}
             self.pick_constant = {float: make_choices(pick_constant[float]),
                                   bool: make_choices(pick_constant[bool])}
@@ -92,38 +92,32 @@ def _test_random_pop():
             if np.random.random() > p_observation:
                 try:
                     _v = self.choose_symbol(xt)
-                    if not as_node:
-                        return _v
-                    else:
+                    if as_node:
                         return Node(Symbol, [_v])
+                    else:
+                        return _v
                 except (TypeError, IndexError):
                     pass  # return a constant (E.g. because there are no boolean observations)
 
-            _v = self.choose_constant(xt)
-            if not as_node:
-                return _v
-            else:
-                if xt == float:
-                    return Node(Float, [_v])
-                else:
-                    return Node(Boolean, [_v])
+            _v = self.choose_constant(xt, as_node=as_node)
+            return _v
 
         def choose_constant(self, xt, as_node=False):
             _v = np.random.choice(self.pick_constant[xt][0], p=self.pick_constant[xt][1])()  # only dist. must be ()
-            if not as_node:
-                return _v
-            else:
+            if as_node:
                 if xt == float:
-                    return Node(Float, [_v])
+                    return Node(Float, [round(_v, FLOAT_PRECISION)])
                 else:
                     return Node(Boolean, [_v])
+            else:
+                return _v
 
         def choose_symbol(self, xt, as_node=False):
             _v = np.random.choice(self.pick_symbol[xt][0], p=self.pick_symbol[xt][1])
-            if not as_node:
-                return _v
-            else:
+            if as_node:
                 return Node(Symbol, [_v])
+            else:
+                return _v
 
     nc = Nodemaker()
 
@@ -162,7 +156,4 @@ if __name__ == "__main__":
 #         latex = f'\\text{{{self.fam}}}_{{{self.time_index}}}'  # remove this {self.preexpr}
 #         self.latex = (latex, latex)  # remove this {self.preexpr}
 #
-#     def mutate_self_filter(self):
-#         new_index = int(max(min(round(random.gauss(self.time_index, 1)), self.index_minmax[1]), 0))
-#         self.time_index = new_index
-#         self.name = f'{self.fam}_{new_index}'
+

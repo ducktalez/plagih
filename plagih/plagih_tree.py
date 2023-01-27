@@ -234,13 +234,11 @@ class Float(TerminalNode):
 
 
 class Symbol(TerminalNode):
-    """
-    sfeh:discuss: should labels have a sign (-pos); can appear in observations
+    """sfeh:discuss: should labels have a sign (-pos); can appear in observations
     This was used to deal with negative labels
         self.name = nlabl if nlabl[0] != '-' else nlabl[1:]
         sfeh:xxx option here for type float/bool
-    sfeh:xxx how to set assumptions, Provide information such as real, integer, positive, range/interval
-    """
+    sfeh:xxx how to set assumptions, Provide information such as real, integer, positive, range/interval"""
     # as_sym = sympy.Symbol
     symfun = lambda *a: sympy.Symbol(a[0], real=True, imaginary=False)  # sfeh: real=/imaginary= faster.
     tflow = lambda a: tf.constant(a, dtype=tf.float32 if isinstance(a, float) else tf.bool)
@@ -461,22 +459,13 @@ class Sub(MathOperator):
 
 
 class Ifte(Operator, ChainableOp):
-    """Also class Piecewise"""
     tflow = tf.where
     xtype = ((bool, float, float), float)
-    # symfun = lambda c, a, b: sympy.Piecewise((a, c), (b, True))
     symfun = lambda *args: sympy.Piecewise((args[1], args[0]), (args[2], True))
     chain_xtype = (float, bool)
 
 
 Piecewise = Ifte
-
-
-# def round_sympy(sexpr: sympy.Expr):
-#     if sexpr.is_number:
-#         return sympy.Float(sexpr, 1)
-#     else:
-#         return None  # XXX
 
 
 class Round(MathOperator):
@@ -498,8 +487,7 @@ class Round(MathOperator):
 
 class Powrounded(Operator):
     tflow = lambda a, b: tf.pow(a, tf.round(b))
-    # symfun = lambda a, b: a**Round.symfun(b)  # todo sympy.Pow(a, Round(b))
-    symfun = lambda a, b: sympy.Pow(a, Round.symfun(b))  # todo sympy.Pow(a, Round(b))
+    symfun = lambda a, b: sympy.Pow(a, Round.symfun(b))  # was a**Round(b)
     # sympy.lambdify  # sfeh:XXX
     xtype = ((float, float), float)
 
@@ -532,20 +520,19 @@ class Sqrt(MathOperator):
 
 
 class Usub(MathOperator, sympy.Function):
-    # todo
     xtype = ((float,), float)
     tflow = tf.negative
-    symfun = lambda a: sympy.Mul(a, -1)
+    symfun = lambda a: sympy.Mul(-1, a)
 
 
 class Clip(MinMaxBase, CustomOperator):
-    # sfeh:open use this
+    # sfeh:open use this. (maybe parameterized
     tflow = tf.clip_by_value
     symfun = lambda a, b, c: sympy.Min(sympy.Max(a, b), c)
     xtype = ((float, float, float), float)
 
 
-class exp(MathOperator):
+class Exp(MathOperator):
     tflow = tf.exp
     symfun = sympy.exp
     xtype = ((float,), float)

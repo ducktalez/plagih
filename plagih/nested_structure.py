@@ -14,7 +14,7 @@ sym_nodes = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, s
              sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
              sympy.GreaterThan: Ge, sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos,
              sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
-             sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: exp}
+             sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: Exp}
 # , sympy.Equality: Eq
 # sfeh:open = {sympy.Unequality: Ne, sympy.Equality: Eq}
 sym_assumption_nodes = (sympy.re,)
@@ -43,10 +43,7 @@ class Node:
                 childstr = ', '.join([str(cc) for cc in self.childs])
                 label_str = f'{label_str}, {childstr}'
             else:
-                try:  # todo this should not happen?
-                    label_str = f'{self.childs[0]}'  # sfeh:hmmm
-                except Exception as ex:
-                    print(f'sfeh:debug, delete if no occurs. IndexError: invalid index to scalar variable? {ex}')
+                label_str = f'{self.childs[0]}'  # sfeh:hmmm
 
         return f"[{label_str}]"
 
@@ -54,27 +51,12 @@ class Node:
         if self.childs and issubclass(self.label, Operator):
             _sym = self.label.symfun
             _cs = [cc.get_sympy_expr() for cc in self.childs]
-            # if self.label == Ifte:
             try:
                 return _sym(*_cs)
             except RecursionError as ex:
                 print(f'sfeh:RecursionError, maybe Piecewise?: {self}, {ex}')
                 raise RecursionError
-            except AttributeError as ex:
-                # KeyError: '[Mul, [313.9173583984375], [Max, [Ifte, [Xor, [False], [Not, [False]]], [cartVel], [Sin, [False]]], [cartVel]]]'
-                # During handling of the above exception, another exception occurred:
-                # AttributeError: 'BooleanFalse' object has no attribute 'as_coefficient'
-                # ->???
-                print(_sym(*_cs))
-                raise
-            # except ValueError as ex:
-            #     raise ex
-            # except Exception as ex:
-            #     print(f'sfeh:XXX this still occurs. {ex}')
-            #     # The argument '-2.05444 + I*pi' is not comparable.
-            #     # <lambda>() missing 1 required positional argument: 'b'
-            #     #   -> Probably in Sub-class lambda-function
-            #     raise ex
+
         elif self.childs and issubclass(self.label, TerminalNode):
             _sym = self.label.get_sym()  # _sym = self.label.symfun
             _cs = self.childs[0]
@@ -305,8 +287,6 @@ def sympy_to_tree(expr, allow_chain=False) -> Node:
                 raise NotImplementedError(f'What happened here? {expr}')
 
     else:
-        # try:
-        #     if isinstance(expr, sympy.Mul) and   # sfeh check div here?:
 
         cc_nodes = [sympy_to_tree(ar, allow_chain=allow_chain) for ar in expr.args]
         # sfeh: computational improvement when ability to ignore args?
@@ -321,12 +301,12 @@ def sympy_to_tree(expr, allow_chain=False) -> Node:
                 for x in _reversed[1:]:
                     otherwise = Node(Ifte, [x[1], x[0], otherwise])
                 return otherwise
-
-        # todo include Usub, ignore usub in tree len()
-        # elif isinstance(expr, sympy.Mul) and expr.args[0] == -1 and expr.args[1].is_Atom:
-        #     node = sympy_to_tree(expr.args[1], allow_chain=allow_chain)
         #
-        #     return node
+        # todo include Usub, ignore usub in tree len()
+        elif isinstance(expr, sympy.Mul) and expr.args[0] == -1 and expr.args[1].is_Atom:  # negativeOne check!!
+            node = sympy_to_tree(expr.args[1], allow_chain=allow_chain)
+
+            return node
 
         elif isinstance(expr, sympy.Pow):
             if expr.args[1] == -1:  # sympy.S.NegativeOne= sfeh:check if assumptions are available

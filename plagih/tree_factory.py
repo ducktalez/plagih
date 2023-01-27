@@ -96,7 +96,7 @@ def evolve_reduce_simplify(tree: Node, completely=True, force=False):
         return tree
     else:
         if len(tree_copy) < len(tree):
-            print_warning('w', f'sfeh Trees get larger during simplification? {tree_copy} < {tree}')  # todo usub!
+            print_warning('w', f'sfeh Trees get larger during simplification? {tree_copy} < {tree}')
             return tree_copy
         else:
             return tree
@@ -207,12 +207,12 @@ class TreeBuildRestrictions:
 
         return nsted
 
-    def mutate_point(self, nsted):
+    def mutate_point(self, tree: Node) -> Node:
         """Mutate a single mutable point in any Tree.
         sfeh:debug is the fintree a fintree copy or the same fintree?"""
-        evostruc = node_deepcopy(nsted)
+        evotree = node_deepcopy(tree)
 
-        _nd = np.random.choice(evostruc.eval_mutable_nodes())
+        _nd = np.random.choice(evotree.eval_mutable_nodes())
         xtype = _nd.get_xtype()
 
         if _nd.get_arity() > 0:
@@ -222,7 +222,7 @@ class TreeBuildRestrictions:
         else:
             new_node = self.nc.choose_terminal(xtype[1], as_node=True)
             _nd.set_new_nested(new_node)
-        return evostruc
+        return evotree
 
     def _prune(self, tree: Node):
         """prune depth
@@ -323,9 +323,6 @@ class TreeBuildRestrictions:
             b_nd = np.random.choice(b_nds)
             a_nds = aa.eval_mutable_nodes(ignore_first=True, match_xt=xt_out)
             a_nd = np.random.choice(a_nds)
-        except Exception as ex:
-            print('TODO ysdfgysrdfg')
-            raise ex
 
         cpy = copy.deepcopy(a_nd)  # sfeh deepcopy required??
 

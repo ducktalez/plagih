@@ -70,7 +70,7 @@ def tree_simplification(tree):
         # new_node: [sign, [Min, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.56921]]]
     """
     expr_sym = tree.get_sympy_expr()
-    nsted_rebuilt = sympy_to_nsted(expr_sym)
+    nsted_rebuilt = sympy_to_tree(expr_sym)
     # node_rebuilt = node_rebuilt.update_fixed_nodes(node)  # this is not our problem
 
     return nsted_rebuilt
@@ -79,7 +79,7 @@ def tree_simplification(tree):
 def evolve_reduce_simplify(tree: Node, completely=True, force=False):
     """Reducing a fintree to its most basic form with sympify.
     (completely = False: reduce just one branch. if you wanted to have more complexity)"""
-
+    # todo random where do non-rounded floats come from?
     tree_copy = copy.deepcopy(tree)
     if completely:  # reduce the complete tree
         nodes_lv0 = tree.get_nodes_at_depth(0, allow_fixed=False)  # only required for fixed-core trees
@@ -87,13 +87,16 @@ def evolve_reduce_simplify(tree: Node, completely=True, force=False):
             cc.set_new_nested(tree_simplification(cc))
     else:
         node_list = [n for n in tree.eval_mutable_nodes() if issubclass(n.label, Operator)]  # ignoring leaf nodes...
+        if len(node_list) == 0:
+            print_warning('wwww', f'Tree for simplification does not provide operators: {tree}')
+            return tree
         node = np.random.choice(node_list)
         node.set_new_nested(tree_simplification(node))  # sfeh chosen must be set again? or not? test it at least.
     if force:
         return tree
     else:
         if len(tree_copy) < len(tree):
-            print_warning('w', f'sfeh Trees get larger during simplification?')
+            print_warning('w', f'sfeh Trees get larger during simplification? {tree_copy} < {tree}')  # todo usub!
             return tree_copy
         else:
             return tree
@@ -105,8 +108,7 @@ def node_deepcopy(tree: Node):
 
 
 class TreeBuildRestrictions:
-    """functions to build trees, with the advantage of being able to use general build restrictions.
-    """
+    """functions to build trees, with the advantage of being able to use general build restrictions."""
 
     def __init__(self, root_xt_out, nc, build_restrictions, complexity_metric, origin_tree=None):
         self.root_xt_out = root_xt_out
@@ -169,7 +171,7 @@ class TreeBuildRestrictions:
 
         return node
 
-    def random_tree_num(self, xt_out, nodes_num, depth=0, p_term=0.0):
+    def random_tree_num(self, xt_out, nodes_num, depth=0):
         """
         This version counts the amount of operators as construction limit!
         sfeh:idea nodes are now about being operators...
@@ -284,7 +286,7 @@ class TreeBuildRestrictions:
         _nd = np.random.choice(tree.eval_mutable_nodes())
         xtype_out = _nd.get_xtype_out()
         nodes_goal = min(self.nodes_max-(_nodes_init-len(_nd)), nodes_goal)
-        branch = self.random_tree_num(xtype_out, nodes_goal, depth=_nd.depth, p_term=p_term)
+        branch = self.random_tree_num(xtype_out, nodes_goal, depth=_nd.depth)
         _nd.set_new_nested(branch)
         return tree
 
@@ -298,30 +300,32 @@ class TreeBuildRestrictions:
             - select aa node in aa (and crossover here, no matter what)
         - delete a_parent branch and pareto_insert b_parent branch (which tactic?)
         sfeh:idea into main fintree?"""
+
         aa = node_deepcopy(tree1)
         bb = node_deepcopy(tree2)
 
         a_nds = aa.eval_mutable_nodes(ignore_first=True)  # ignore root node
+        if len(a_nds) == 0:
+            raise ValueError(f'Crossover tree 1 has no mutable nodes')
+
         a_nd = np.random.choice(a_nds)
         xt_out = a_nd.get_xtype_out()
 
         b_nds = bb.eval_mutable_nodes(match_xt=xt_out)
-        if len(b_nds) > 0:
+        try:
             b_nd = np.random.choice(b_nds)
-        else:
-            try:
-                xt_out = float if xt_out == bool else bool  # the other swap type now
-                b_nds = bb.eval_mutable_nodes(match_xt=xt_out)
-                b_nd = np.random.choice(b_nds)
-                a_nds = aa.eval_mutable_nodes(ignore_first=True, match_xt=xt_out)
-                a_nd = np.random.choice(a_nds)
-            except Exception as TODO:
+        except ValueError:
 
-                xt_out = float if xt_out == bool else bool  # the other swap type now
-                b_nds = bb.eval_mutable_nodes(match_xt=xt_out)
-                b_nd = np.random.choice(b_nds)
-                a_nds = aa.eval_mutable_nodes(ignore_first=True, match_xt=xt_out)
-                a_nd = np.random.choice(a_nds)
+            # if len(b_nds) > 0:
+            # else:
+            xt_out = float if xt_out == bool else bool  # the other swap type now sfeh:open
+            b_nds = bb.eval_mutable_nodes(match_xt=xt_out)
+            b_nd = np.random.choice(b_nds)
+            a_nds = aa.eval_mutable_nodes(ignore_first=True, match_xt=xt_out)
+            a_nd = np.random.choice(a_nds)
+        except Exception as ex:
+            print('TODO ysdfgysrdfg')
+            raise ex
 
         cpy = copy.deepcopy(a_nd)  # sfeh deepcopy required??
 
@@ -569,13 +573,13 @@ if __name__ == '__main__':
     tr = Node(Ifte, [Node(Gt, [Node(Symbol('a'), []), Node(Float(1.2), [])]), Node(Float(3.), []), Node(Float(2.), [])])
     tr = Node(Max, [Node(Symbol('a'), []), Node(Float(1.2), [])])
     x = tr.get_sympy_expr()
-    tr2 = sympy_to_nsted(x)
+    tr2 = sympy_to_tree(x)
     print(tr, tr2)
     for _ in range(10):
         tr = tb.pop_random_depth(3, float, p_term=0.3)
         x = tr.get_sympy_expr()
         print('First sym success')
-        tr_new = sympy_to_nsted(x)
+        tr_new = sympy_to_tree(x)
         x2 = tr_new.get_sympy_expr()
         print(tr)
         print(tr_new)

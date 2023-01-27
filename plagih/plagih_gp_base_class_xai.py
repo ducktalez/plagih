@@ -231,10 +231,12 @@ class ExplainableGP:
 
                 except (ValueError, ArithmeticError, TypeError) as ex:
                     n_fails += 1  # sfeh:use this for something?
-                    print_warning('www', f'failed because: {ex}')
+                    print_warning('www', f'\'{tag}\' failed: {ex}')
                     if n_fails > n_success + 5:  # allow more fails: n_fails > n
                         print_e(f'Evolution "{tag}" fails too often: {n_fails}x. {n_success}.')
                         return  # sfeh raise?
+                except AttributeError as ex:
+                    print(f'Probably sympy.im in expr {ex}')
         return loop
 
     def pop_append(self, evotree, tag=None):
@@ -351,8 +353,7 @@ class ExplainableGP:
         # sfeh:debug
 
     def backup_load(self, path_load_custom_backup=None):
-        """
-        Load/safe backup of a run
+        """Load/safe backup of a run
         """
 
         path_backup = path_load_custom_backup or self.rootdir / 'backup/backup.pkl'

@@ -2,6 +2,8 @@ import itertools
 import random
 from dataclasses import dataclass
 
+import sympy.core.numbers
+
 from plagih.plagih_tree import *
 
 # For conversion from sympy into node
@@ -41,7 +43,7 @@ class Node:
                 childstr = ', '.join([str(cc) for cc in self.childs])
                 label_str = f'{label_str}, {childstr}'
             else:
-                try:
+                try:  # todo this should not happen?
                     label_str = f'{self.childs[0]}'  # sfeh:hmmm
                 except Exception as ex:
                     print(f'sfeh:debug, delete if no occurs. IndexError: invalid index to scalar variable? {ex}')
@@ -106,7 +108,7 @@ class Node:
             label_str += ':fix'
 
         if self.childs:
-            childstr = ', '.join([repr(x) for x in self.childs])
+            childstr = ', '.join([repr(cc) for cc in self.childs])
             label_str = f"{label_str}, {childstr}"
         return f"[{label_str}]"
 
@@ -224,7 +226,10 @@ class Node:
         self.depth = depth
         if self.is_operator():
             for cc in self.childs:
-                cc.repair_depth(depth=depth + 1)
+                try:
+                    cc.repair_depth(depth=depth + 1)
+                except Exception as TODO:
+                    cc.repair_depth(depth=depth + 1)
 
     def set_new_nested(self, new_node: 'Node'):
         self.set_label(new_node.label)  # sfeh remove childs, is_fix...
@@ -268,20 +273,20 @@ class Node:
         pass
 
 
-def sympy_to_nsted(expr, allow_chain=False):
+def sympy_to_tree(expr, allow_chain=False) -> Node:
+    """Important: start with the most specific rule
+    todo: check is expr is an accepted operator, otherwise reconstruction probably fails"""
     if isinstance(expr, bool):
-        # return Nested(Boolean(expr), [])
         return Node(Boolean, [expr])
+
     elif isinstance(expr, sympy.logic.boolalg.BooleanAtom):
         expr = True if isinstance(expr, (bool, sympy.logic.boolalg.BooleanTrue)) else False
-        # return Nested(Boolean(expr), [])
         return Node(Boolean, [expr])
 
     # the following two lines are not required, if sympy filters for bad expressions earlier
     # if expr.is_imaginary or expr.is_infinite:
     #     raise ValueError(f'Cannot convert this to Tensorflow: {expr}')
 
-    # ==Terminal nodes==
     elif expr.is_Atom:
         if expr.is_Symbol:
             # _r = Symbol  # sfeh str VERY important!! Symbol type input is not accepted
@@ -297,73 +302,91 @@ def sympy_to_nsted(expr, allow_chain=False):
                 return Node(Float, [round(float(expr_eval), FLOAT_PRECISION)])  # sfeh round
                 # "TypeError: Cannot convert complex to float" -> ignore the whole expression, let it fail
             else:
-                print(f'XXX What happened here? {expr}')
-                raise
+                raise NotImplementedError(f'What happened here? {expr}')
 
     else:
+        # try:
+        #     if isinstance(expr, sympy.Mul) and   # sfeh check div here?:
+
+        cc_nodes = [sympy_to_tree(ar, allow_chain=allow_chain) for ar in expr.args]
+        # sfeh: computational improvement when ability to ignore args?
 
         if isinstance(expr, sympy.Piecewise):
             if allow_chain:
                 raise NotImplementedError
             else:
-                _ccinv = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
-                _ccinv = [[sympy_to_nsted(xx, allow_chain=allow_chain) for xx in list(i)] for i in _ccinv]
-                otherwise = _ccinv[0][0]  # the last "True" condition
-                for x in _ccinv[1:]:
+                _reversed = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
+                _reversed = [[sympy_to_tree(xx, allow_chain=allow_chain) for xx in list(i)] for i in _reversed]
+                otherwise = _reversed[0][0]  # the last "True" condition
+                for x in _reversed[1:]:
                     otherwise = Node(Ifte, [x[1], x[0], otherwise])
                 return otherwise
+
+        # todo include Usub, ignore usub in tree len()
+        # elif isinstance(expr, sympy.Mul) and expr.args[0] == -1 and expr.args[1].is_Atom:
+        #     node = sympy_to_tree(expr.args[1], allow_chain=allow_chain)
+        #
+        #     return node
+
         elif isinstance(expr, sympy.Pow):
-            if expr.args[1] in (-1, 2):
-                if expr.args[1] == -1:  # sympy.S.NegativeOne= sfeh:check if assumptions are available
-                    _r = InverseFraction
-                elif expr.args[1] == 2:
-                    _r = Square
-                elif expr.args[1] == sympy.S.Half:
-                    _r = Sqrt
-                else:
-                    raise
-                return Node(_r, [sympy_to_nsted(expr.args[0], allow_chain=allow_chain)])  # can ignore args[1] now
+            if expr.args[1] == -1:  # sympy.S.NegativeOne= sfeh:check if assumptions are available
+                _r = InverseFraction
+                cc_nodes.pop(1)  # second arg was identified and must now be ignored
+            elif expr.args[1] == 2:
+                _r = Square
+                cc_nodes.pop(1)
+            elif expr.args[1] == sympy.S.Half:
+                _r = Sqrt
+                cc_nodes.pop(1)
+            elif type(expr.args[1]) == RoundDummy:
+                _r = Powrounded
+                cc_nodes[1] = cc_nodes[1].childs[0]
+            else:
+                _r = Pow
+            return Node(_r, cc_nodes)
 
-            _r = Pow
-            childnstd = [sympy_to_nsted(x, allow_chain=allow_chain) for x in expr.args]
-            return Node(_r, childnstd)
-
-        elif isinstance(expr, sympy.Function('Rounddummy')):
-            return Node(Round, [sympy_to_nsted(expr.args[0], allow_chain=allow_chain)])
+        elif isinstance(expr, RoundDummy):
+            return Node(Round, [cc_nodes[0]])
 
         elif isinstance(expr, tuple(sym_nodes)):
 
             clss = sym_nodes[type(expr)]
-            args = [sympy_to_nsted(ar, allow_chain=allow_chain) for ar in expr.args]
+
+            if isinstance(expr, sympy.Mul):
+                for ii, cn in enumerate(cc_nodes):
+                    if cn.label == InverseFraction:
+                        divisor_node = cc_nodes.pop(ii)
+                        divisor_node = divisor_node.childs[0]
+                        dividend_node = cc_nodes[0]
+                        return Node(Div, [dividend_node, divisor_node])
 
             if len(expr.args) > len(clss.xtype[0]):
                 if issubclass(clss, ChainableOp):
                     if allow_chain:
-                        return Node(clss, args, is_chain=True)
+                        # todo actually do this at the very top
+                        return Node(clss, cc_nodes, is_chain=True)
                     else:
-                        # All have arity-2
-                        childnstd = [sympy_to_nsted(x, allow_chain=allow_chain) for x in expr.args]
-                        _cc = childnstd[0]
-                        for _c2 in childnstd[1:]:
+                        _cc = cc_nodes[0]
+                        for _c2 in cc_nodes[1:]:
                             _cc = Node(clss, [_cc, _c2])
                         return _cc
                 else:
                     raise TypeError(f"{clss} takes exactly {len(clss.xtype[0])} arguments ({len(expr.args)} given)")
             else:
-                return Node(clss, args)  # same as in allow_chain
+                return Node(clss, cc_nodes)
 
-        elif isinstance(expr, sympy.re):
+        elif isinstance(expr, (sympy.re, sympy.functions.elementary.piecewise.ExprCondPair)):
             # We assume, that these Functions occur due to assumptions.
             # (for now: sympy.re, the Real-part of a number)
             # hence, we can skip this function while rebuilding without loosing any information
             # as Symbols match their assumptions when they are rebuilt aswell
             # sfeh:debug: When does sympy.re occur? Are there other cases?
-            return sympy_to_nsted(expr.args[0])
-        else:
-            # sfeh:discuss
-            # NotImplementedError: Expr missing: ITE(p > 13, tan(p - v) >= 2.578643, tan(p - v) >= 1)
-            # this should not have occured, because it evaluates to bool, not to float
-            raise NotImplementedError(f'Expr missing: {expr}')
+            return sympy_to_tree(expr.args[0], allow_chain=allow_chain)
+
+    # sfeh:discuss
+    # NotImplementedError: Expr missing: ITE(p > 13, tan(p - v) >= 2.578643, tan(p - v) >= 1)
+    # this should not have occured, because it evaluates to bool, not to float
+    raise NotImplementedError(f'Expr missing: {expr}')
 
 
 if __name__ == '__main__':

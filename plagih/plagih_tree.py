@@ -56,7 +56,8 @@ Custom Operators /Functions/Nodes/Terminals/Nested:
 import os
 
 import sympy
-import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
+# import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
+from sympy.functions.elementary.piecewise import ExprCondPair
 
 from plagih.util import get_subclasses, PRECISION, DEBUG_DUMMY  # noqa
 
@@ -66,6 +67,13 @@ import tensorflow as tf  # noqa (check if still required, tensorflow sends endle
 
 # sfeh:check if this leads to tf warnings
 tf.compat.v1.enable_eager_execution()  # sfeh possibly faster with disable
+
+
+class RoundDummy(sympy.Function):
+    pass
+
+
+# ROUNDDUMMY = sympy.Function('Rounddummy')
 
 
 class NodeBase:
@@ -484,13 +492,14 @@ class Round(MathOperator):
     """
     # sfeh:xxx check conversion
     xtype = ((float,), float)
-    symfun = lambda a: a.round(0) if a.is_number else sympy.Function('Rounddummy')(a)
+    symfun = lambda a: a.round(0) if a.is_number else RoundDummy(a)
     tflow = lambda a: tf.math.round(a, 1)
 
 
 class Powrounded(Operator):
     tflow = lambda a, b: tf.pow(a, tf.round(b))
-    symfun = lambda a, b: a**Round.symfun(b)  # todo sympy.Pow(a, Round(b))
+    # symfun = lambda a, b: a**Round.symfun(b)  # todo sympy.Pow(a, Round(b))
+    symfun = lambda a, b: sympy.Pow(a, Round.symfun(b))  # todo sympy.Pow(a, Round(b))
     # sympy.lambdify  # sfeh:XXX
     xtype = ((float, float), float)
 
@@ -522,10 +531,11 @@ class Sqrt(MathOperator):
 #     xtype = ((float, float), float)
 
 
-# class Usub(MathOperator, sympy.Function):
-#     xtype = ((float,), float)
-#     tflow = tf.negative
-#     symfun = lambda a: sympy.Mul(a, -1)
+class Usub(MathOperator, sympy.Function):
+    # todo
+    xtype = ((float,), float)
+    tflow = tf.negative
+    symfun = lambda a: sympy.Mul(a, -1)
 
 
 class Clip(MinMaxBase, CustomOperator):
@@ -661,9 +671,7 @@ totf = {
     sympy.sign: tf.sign,
     # The real Part
     sympy.re: lambda a: tf.convert_to_tensor(a, dtype=tf.dtypes.float32),  # sfeh sympy-gotcha, comes up randomly
-    # todo sfeh, shouldnt this automatically be acccepted as Round class?
-    sympy.Function('Rounddummy'): tf.round,
-    # Round: 'todo_OMGGOAWAYYY',
+    RoundDummy: tf.round,
     sympy.exp: tf.exp,  # sfeh this occurs randomly...
     sympy.ITE: tf.cond
 }
@@ -736,7 +744,7 @@ def sympy_to_tensorflow(expr, tensor_dict):
         except KeyError:
             # sfeh:debug can this work??
             #   - im(Rounddummy(cartVel))
-            tf_fun = type(expr).tflow
+            tf_fun = type(expr).tflow  # todo why does im come up here? (mut_br) im(Rounddummy(cartPos))
             # sfeh:idea exception, try to map sympy to tf function with same name (sympy.cos -> tf.cos)
 
         tf_args = [sympy_to_tensorflow(a, tensor_dict) for a in expr.args]

@@ -60,7 +60,7 @@ def _test_random_pop():
             operator_pool = {Add: 2, Sub: 1, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
                              Sin: 0.5, Tan: 0.1, Cos: 0.33, Min: 1, Max: 1, And: 1, Or: 1, Not: 0.5, Xor: 1, Lt: 0.5,
                              Le: 0.5, Ifte: 2,
-                             Powrounded: 2}  # todo was 0.1 sfeh: Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.5, Usub: 1,
+                             Powrounded: 0.5}  # sfeh: Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.5, Usub: 1,
             # Round: 0.5, Eq: 1,  # Ne: 0.5, #  # Log1p: 0.1, Gt: 0.1, Ge: 0.1,
             self.pick_op, self.pick_op_match = xtdict_operators(operator_pool)
 
@@ -81,7 +81,6 @@ def _test_random_pop():
 
         def choose_operator(self, xt):
             _op = np.random.choice(self.pick_op[xt][0], p=self.pick_op[xt][1])  # no (), which would evaluate the op
-            # return _op
             return _op
 
         def choose_operator_match(self, xtype):

@@ -26,6 +26,8 @@
 - If no float-symbols found, return (1) true or (2) an operator? 
 - sympy exprtools abchecken
 - sfeh:discussion especially with mc: there can be more than one pareto entry with the same parsimony/fitness!
+- build trees like sympy.factor() structure?
+- Division-multiplicator node as non-len() chain input?
 
 ### Semi-interesting
 

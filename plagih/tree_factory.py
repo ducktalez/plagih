@@ -266,16 +266,15 @@ class TreeBuildRestrictions:
         #     _node.set_label(tb.choose_terminal(xtype_out))  # sfeh update _node nlabel
         # else:
         #     _node.childs = [Node(tb.choose_any(xt, p=1)) for xt in _node.get_xtype()[0]
-
         # etree.finalize()
         return tree
 
     def finalize_tree(self, tree):
-        """When an evolution is done, this function...:
-        - inserts node with input data, if tree has none yet
-        - prunes tree (...should be handled in the respected evolution, as the pruning will affect random nodes)
-        - sets depth in all nodes correctly
-        - (currently) does not perform any checks (depth set correctly? )"""
+        """When an evolution is done, this function...
+        ...inserts node with input data, if tree has none yet
+        ...prunes tree (...should be handled in the respected evolution, as the pruning will affect random nodes)
+        ...sets depth in all nodes correctly
+        ...(currently) does not perform any checks (depth set correctly? )"""
         pass
 
     def evolve_mutate_branch_nodes(self, tree, nodes_goal, p_term=0.0):

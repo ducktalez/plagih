@@ -305,7 +305,6 @@ def sympy_to_tree(expr, allow_chain=False) -> Node:
         # todo include Usub, ignore usub in tree len()
         elif isinstance(expr, sympy.Mul) and expr.args[0] == -1 and expr.args[1].is_Atom:  # negativeOne check!!
             node = sympy_to_tree(expr.args[1], allow_chain=allow_chain)
-
             return node
 
         elif isinstance(expr, sympy.Pow):

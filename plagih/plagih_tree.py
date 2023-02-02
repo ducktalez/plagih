@@ -54,6 +54,7 @@ Custom Operators /Functions/Nodes/Terminals/Nested:
     Also, make a case in sympy_to_nested to reconstruct trees from sympy expressions.
 """
 import os
+from abc import ABC, abstractmethod
 
 import sympy
 # import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
@@ -63,45 +64,37 @@ from plagih.util import get_subclasses, PRECISION, DEBUG_DUMMY  # noqa
 
 os.environ["KMP_WARNINGS"] = "FALSE"
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # https://github.com/tensorflow/tensorflow/issues/27023
-import tensorflow as tf  # noqa (check if still required, tensorflow sends endless warnings)
+import tensorflow as tf  # noqa check if ignoring warnings still required (tensorflow sends endless warnings)
 
-# sfeh:check if this leads to tf warnings
-tf.compat.v1.enable_eager_execution()  # sfeh possibly faster with disable
+tf.compat.v1.disable_eager_execution()
+# tf.compat.v1.enable_eager_execution()  # sfeh possibly faster with disable
 
 
 class RoundDummy(sympy.Function):
     pass
 
 
-# ROUNDDUMMY = sympy.Function('Rounddummy')
-
-
-class NodeBase:
+class Label:
     symfun = None
     tflow = None
-    xtype = None  # sfeh: will this b deprecated?
+    xtype = None
 
     def __new__(cls, *args, **kwargs):
-        # if isinstance(cls, TerminalNode):
-        #     cls.args = args
+        """Why use new as init method? -> Allows returning an instance of a different class"""
+
         obj = object.__new__(cls)
-        # sfeh:open there are no instances of operator nodes
-        # if args:
-        #     obj.args = args
-        # else:
         obj.args = args
-        if issubclass(cls, TerminalNode):
+        if issubclass(cls, Terminal):
             pass
 
         return obj
 
     def __str__(self):
         _str = self.__class__.__name__
-        # if self.args:
         if issubclass(self.__class__, Operator):
             _childstr = ', '.join([str(a) for a in self.args])
             _str = f'{_str}({_childstr})'
-        elif issubclass(type(self), TerminalNode):
+        elif issubclass(type(self), Terminal):
             pass  # _str = f'{self.value}'
         else:
             raise
@@ -109,7 +102,7 @@ class NodeBase:
 
     def __len__(self):
         """ONLY works, when args are there"""
-        if issubclass(self.__class__, TerminalNode):
+        if issubclass(self.__class__, Terminal):
             return 1
         else:
             return 1 + sum([len(cc) for cc in self.args])
@@ -125,7 +118,7 @@ class NodeBase:
         #     _sym = _sym(*childstr)
         #
         # elif isinstance(self, TerminalNode):
-        #     return self.as_sym(self.args[0])
+        #     return self.symfun(self.args[0])
         #
         # else:
         #     raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
@@ -140,6 +133,21 @@ class NodeBase:
     def get_symstr(self):
         return self.symfun.__name__
 
+    @classmethod
+    def get_child_xts(cls):
+        return cls.xtype[0]
+
+
+class RegularNode(Label):
+    pass
+
+
+class ChainOp(Label):
+    # no xtype, only input type
+    # no tflow, separate handling in totf-function
+    # Piecewise, AddChain, MulChain, MinChain, MaxChain, AndChain, OrChain
+    pass
+
 
 class CustomOperator:
     # sfeh:xxx make an abstract class + mark all classes
@@ -148,7 +156,7 @@ class CustomOperator:
     xtype = ((None, None), None)
 
 
-class Operator(NodeBase):  # sfeh:xxx sympy.Function was here, also is_Function = True
+class Operator(RegularNode):  # sfeh:xxx sympy.Function was here, also is_Function = True
     pass
 
 
@@ -190,9 +198,13 @@ class MinMaxBase(MathOperator):
     pass
 
 
-class TerminalNode(NodeBase):  # sfeh sympy.Atom
-    """
-    Terminal nodes are leaf nodes which can not have children. e.g.:
+class NoSymCapitalized:
+    """Does nothing, but maybe its good to know, which OG-sympy classes are lower case"""
+    pass
+
+
+class Terminal(RegularNode):  # sfeh sympy.Atom
+    """Terminal nodes are leaf nodes which can not have children. e.g.:
     - constants (e.g. 2.3)
     - observations (e.g. b, aka data input)
     - user-functions (sfeh:open)
@@ -207,7 +219,7 @@ class TerminalNode(NodeBase):  # sfeh sympy.Atom
     #     return self.value
 
 
-class Boolean(TerminalNode):
+class Boolean(Terminal):
     # sfeh:discuss just for True/False?
     xtype = ((), bool)
     symfun = lambda *a: sympy.S.true if a[0] else ~sympy.S.true  # sympy.logic.boolalg.Boolean  # sfeh:discuss
@@ -220,7 +232,7 @@ class Boolean(TerminalNode):
     #     return self.value
 
 
-class Float(TerminalNode):
+class Float(Terminal):
     xtype = ((), float)
     symfun = lambda *a: sympy.Float(float(a[0]), PRECISION)
     tflow = lambda a: tf.constant(a, dtype=tf.float32)
@@ -229,13 +241,14 @@ class Float(TerminalNode):
     #     self.value = sympy.Float(value, PRECISION)
 
 
-class Symbol(TerminalNode):
-    """sfeh:discuss: should labels have a sign (-pos); can appear in observations
+class Symbol(Terminal):
+    """
+    sfeh:discuss: should labels have a sign (-pos); can appear in observations
     This was used to deal with negative labels
         self.name = nlabl if nlabl[0] != '-' else nlabl[1:]
         sfeh:xxx option here for type float/bool
-    sfeh:xxx how to set assumptions, Provide information such as real, integer, positive, range/interval"""
-    # as_sym = sympy.Symbol
+    sfeh:xxx how to set assumptions, Provide information such as real, integer, positive, range/interval
+    """
     symfun = lambda *a: sympy.Symbol(a[0], real=True, imaginary=False)  # sfeh: real=/imaginary= faster.
     tflow = lambda a: tf.constant(a, dtype=tf.float32 if isinstance(a, float) else tf.bool)
     xtype = ((), float)
@@ -245,16 +258,6 @@ class Symbol(TerminalNode):
     #
     # def get_sym(self):
     #     return self.value
-
-
-# class ExprCondPair(ChainableOp):
-#     as_sym = sympy.functions.elementary.piecewise.ExprCondPair
-#
-#     # tflow = tf.where
-#
-#     def __init__(self, val, cond):
-#         self.cond = cond
-#         self.val = val
 
 
 class Add(MathOperator, ChainableOp):
@@ -282,32 +285,32 @@ class Abs(MathOperator):
     xtype = ((float,), float)
 
 
-class Sign(MathOperator):
+class Sign(MathOperator, NoSymCapitalized):
     # does not work in string, but irrelevant. sympy.simplify('sign(-a)') -> -sign(a)
     symfun = sympy.sign
     tflow = tf.sign
     xtype = ((float,), float)
 
 
-class Log(MathOperator):
+class Log(MathOperator, NoSymCapitalized):
     symfun = sympy.log  # sfeh: Log isactually Ln (base e)
     tflow = tf.math.log
     xtype = ((float,), float)
 
 
-class Cos(AngleOperator):
+class Cos(AngleOperator, NoSymCapitalized):
     symfun = sympy.cos
     tflow = tf.cos
     xtype = ((float,), float)
 
 
-class Sin(AngleOperator):
+class Sin(AngleOperator, NoSymCapitalized):
     symfun = sympy.sin
     tflow = tf.sin
     xtype = ((float,), float)
 
 
-class Tan(AngleOperator):
+class Tan(AngleOperator, NoSymCapitalized):
     # sfeh:discuss actually rename classes.
     # they do not have to match sympy expressions/classes
     symfun = sympy.tan
@@ -315,43 +318,43 @@ class Tan(AngleOperator):
     xtype = ((float,), float)
 
 
-class Acos(AngleOperator):
+class Acos(AngleOperator, NoSymCapitalized):
     symfun = sympy.acos
     tflow = tf.acos
     xtype = ((float,), float)
 
 
-class Asin(AngleOperator):
+class Asin(AngleOperator, NoSymCapitalized):
     symfun = sympy.asin
     tflow = tf.asin
     xtype = ((float,), float)
 
 
-class Atan(AngleOperator):
+class Atan(AngleOperator, NoSymCapitalized):
     symfun = sympy.atan
     tflow = tf.atan
     xtype = ((float,), float)
 
 
-class tanh(AngleOperator):
+class tanh(AngleOperator, NoSymCapitalized):
     symfun = sympy.tanh
     tflow = tf.tanh
     xtype = ((float,), float)
 
 
-class Sinh(AngleOperator):
+class Sinh(AngleOperator, NoSymCapitalized):
     symfun = sympy.sinh
     tflow = tf.sinh  # sfeh sinh, asinh
     xtype = ((float,), float)
 
 
-class Cosh(AngleOperator):
+class Cosh(AngleOperator, NoSymCapitalized):
     symfun = sympy.cosh
     tflow = tf.cosh  # sfeh acosh
     xtype = ((float,), float)
 
 
-class Xor(LogicOperator):
+class Xor(LogicOperator, NoSymCapitalized):
     symfun = sympy.Xor
     tflow = tf.math.logical_xor
     xtype = ((bool, bool), bool)
@@ -455,13 +458,11 @@ class Sub(MathOperator):
 
 
 class Ifte(Operator, ChainableOp):
+    """Also class Piecewise"""
     tflow = tf.where
     xtype = ((bool, float, float), float)
     symfun = lambda *args: sympy.Piecewise((args[1], args[0]), (args[2], True))
     chain_xtype = (float, bool)
-
-
-Piecewise = Ifte
 
 
 class Round(MathOperator):
@@ -470,9 +471,9 @@ class Round(MathOperator):
     - sympy.Float(x, 1)  <-- sfeh:open
     - sympy.Integer(x)
     - sympy.N(x, 1)
-        as_sym(Symbol('a'))
-        as_sym(1.23)
-        as_sym(sympy.Add(a, Symbol('a'))
+        symfun(Symbol('a'))
+        symfun(1.23)
+        symfun(sympy.Add(a, Symbol('a'))
     -> Write custom round function that evaluates only when is_number
     """
     # sfeh:xxx check conversion
@@ -483,15 +484,14 @@ class Round(MathOperator):
 
 class Powrounded(Operator):
     tflow = lambda a, b: tf.pow(a, tf.round(b))
-    symfun = lambda a, b: sympy.Pow(a, Round.symfun(b))  # was a**Round(b)
-    # sympy.lambdify  # sfeh:XXX
+    symfun = lambda a, b: sympy.Pow(a, Round.symfun(b))  # symfun = lambda a, b: a**Round.symfun(b)
     xtype = ((float, float), float)
 
 
 class Log1p(MathOperator):
     # https://docs.sympy.org/latest/modules/codegen.html#sympy.codegen.cfunctions.log1p
     xtype = ((float,), float)
-    tflow = tf.math.log1p
+    tflow = tf.math.log1p  # sfeh: tflow is actually never used...
     symfun = lambda a: sympy.log(a + 1)
 
 
@@ -511,27 +511,108 @@ class Sqrt(MathOperator):
 # class Divide_no_nan(Operator):
 #     # class-name = 'Divide_no_nan'  # sfeh??
 #     tflow = tf.math.divide_no_nan
-#     as_sym = lambda a, b: sympy.Mul(a, )
+#     symfun = lambda a, b: sympy.Mul(a, )
 #     xtype = ((float, float), float)
 
 
-class Usub(MathOperator):
+class Usub(MathOperator, sympy.Function):
+    # todo
     xtype = ((float,), float)
     tflow = tf.negative
-    symfun = lambda a: sympy.Mul(-1, a)
+    symfun = lambda a: sympy.Mul(a, -1)
+
+    def __len__(self):
+        """sfeh:currently not used"""
+        return 0
 
 
 class Clip(MinMaxBase, CustomOperator):
-    # sfeh:open use this. (maybe parameterized
+    # sfeh:open use this
     tflow = tf.clip_by_value
     symfun = lambda a, b, c: sympy.Min(sympy.Max(a, b), c)
     xtype = ((float, float, float), float)
 
 
-class Exp(MathOperator):
+class exp(MathOperator):
     tflow = tf.exp
     symfun = sympy.exp
     xtype = ((float,), float)
+
+
+"""SFEH the following are operators that are to be handled completely different"""
+
+
+class LabelDummy(Label):
+    @classmethod
+    def get_child_xts(cls):
+        return cls.xtype[0]
+
+
+class ExprCondPair(LabelDummy):
+    """sfeh:discuss
+    The only purpose is to wrap the results for a Node-structure, where every Node has childs with other nodes"""
+    symfun = sympy.functions.elementary.piecewise.ExprCondPair
+    xtype = ((float, bool), float)
+    # tflow = tf.where
+
+
+class Piecewise(ChainOp):
+    """sfeh:discuss: the only Operator, which has tuples as input"""
+    symfun = sympy.Piecewise
+    # ogclass = Ifte
+    # xtype = ((float, bool), float)
+    xtype = ((ExprCondPair,), float)
+
+
+# sfeh:discuss: there should probably be structural nodes and Operator nodes
+
+
+class AddChain(ChainOp):
+    symfun = sympy.Add
+    xtype = ((float,), float)
+    # ogclass = Add
+
+
+class MulChain(ChainOp):
+    # sfeh:discuss: if sympy is
+    xtype = ((float,), float)
+    # ogclass = Mul
+
+
+# todo discuss: Min/Max is just a ordeded list, taking element 1, -1, ...
+
+
+class MinChain(ChainOp):
+    xtype = ((float,), float)
+    # ogclass = Min
+
+
+class MaxChain(ChainOp):
+    xtype = ((float,), float)
+    # ogclass = Max
+
+
+class OrderedSelector(ChainOp):
+    """sfeh:Orders Elements with < and picks the (1, -1 or even -2, 'median')-element?"""
+    xtype = ((float,), float)
+
+
+class ConditionalChain(ChainOp):
+    """
+    sfeh:sum the factors (maybe even weighted as function)? -> 5 elements, '>=4' is sufficient for a condition?
+    sfeh:just a piecewise with two main options?"""
+    pass
+
+
+class AndChain(ChainOp):
+    xtype = ((bool,), bool)
+    # ogclass = And
+
+
+class OrChain(ChainOp):
+    xtype = ((bool,), bool)
+    # ogclass = Or
+
 
 
 def expr_sympify(expr):
@@ -592,7 +673,6 @@ def expr_sympify(expr):
         return expr_sym
 
     except ValueError as ex:
-        # return 'nan'  # 'nan' always evaluates to nan. ALl nan bugs should be solved.
         raise ValueError(f'NaN in {ex}')
     except AttributeError as ex:
         # print(f'sfeh: This sympy bug happens, when sympifying "True": {ex}')
@@ -712,7 +792,7 @@ def sympy_to_tensorflow(expr, tensor_dict):
             elif expr.is_number:  # is_float does not match int
                 return tf.constant(float(expr_eval), dtype=tf.dtypes.float32)
             else:
-                print(f'XXX What happened here? {expr}')
+                raise NotImplementedError(f'Atom, but no bool or number? {expr}')
 
     else:  # Operator # len(expr.args) > 0:  # sfeh: line can be removed or replaced
         if isinstance(expr, sympy.Piecewise):
@@ -722,13 +802,15 @@ def sympy_to_tensorflow(expr, tensor_dict):
             for cet in args_reversed[1:]:
                 otherwise = tf.where(cet[1], cet[0], otherwise)
             return otherwise
-        try:
-            tf_fun = totf[type(expr)]
-        except KeyError:
-            # sfeh:debug can this work??
-            #   - im(Rounddummy(cartVel))
-            tf_fun = type(expr).tflow  # todo why does im come up here? (mut_br) im(Rounddummy(cartPos))
-            # sfeh:idea exception, try to map sympy to tf function with same name (sympy.cos -> tf.cos)
+
+        tf_fun = totf[type(expr)]
+        # try:
+        #     tf_fun = totf[type(expr)]
+        # except KeyError:
+        #     # sfeh:debug can this work??
+        #     #   - im(Rounddummy(cartVel))
+        #     tf_fun = type(expr).tflow  # sfeh:debug-01.02 why does im come up here? (mut_br) im(Rounddummy(cartPos))
+        #     # sfeh:idea exception, try to map sympy to tf function with same name (sympy.cos -> tf.cos)
 
         tf_args = [sympy_to_tensorflow(a, tensor_dict) for a in expr.args]
         # SFEH:Missing and Problems:
@@ -742,7 +824,7 @@ def sympy_to_tensorflow(expr, tensor_dict):
                 # sfeh:optimization
                 result = tf_fun(result, tf_args.pop())
         return result
-    raise NotImplementedError(f'Cannot convert {expr}')
+    raise NotImplementedError(f'Cannot convert {expr}')  # noqa: unreachable code, but was reached often while dev
 
 
 # class ExperimentalBaseTree(NodeBase):

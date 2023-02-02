@@ -14,7 +14,9 @@ sym_nodes = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, s
              sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
              sympy.GreaterThan: Ge, sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos,
              sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
-             sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: Exp}
+             sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: exp}
+sym_nodes_chain = {sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChain, sympy.Max: MaxChain,
+                   sympy.And: AndChain, sympy.Or: OrChain, sympy.Piecewise: Piecewise}  # todo Piecewise
 # , sympy.Equality: Eq
 # sfeh:open = {sympy.Unequality: Ne, sympy.Equality: Eq}
 sym_assumption_nodes = (sympy.re,)
@@ -43,7 +45,13 @@ class Node:
                 childstr = ', '.join([str(cc) for cc in self.childs])
                 label_str = f'{label_str}, {childstr}'
             else:
-                label_str = f'{self.childs[0]}'  # sfeh:hmmm
+                try:
+                    if issubclass(self.label, Float):
+                        label_str = f'{self.childs[0]:.2g}'  # 2 decimals, no trailing zeros, but rare (ugly) "E+04"
+                    else:
+                        label_str = f'{self.childs[0]}'
+                except Exception as ex:
+                    print(f'sfeh:debug, delete if no occurs. "IndexError: invalid index to scalar variable"? {ex}')
 
         return f"[{label_str}]"
 
@@ -51,27 +59,34 @@ class Node:
         if self.childs and issubclass(self.label, Operator):
             _sym = self.label.symfun
             _cs = [cc.get_sympy_expr() for cc in self.childs]
+            # if self.label == Ifte:
             try:
                 return _sym(*_cs)
             except RecursionError as ex:
                 print(f'sfeh:RecursionError, maybe Piecewise?: {self}, {ex}')
                 raise RecursionError
-
-        elif self.childs and issubclass(self.label, TerminalNode):
+            # except ValueError as ex:
+            #     raise ex
+            # except Exception as ex:
+            #     print(f'sfeh:XXX this still occurs. {ex}')
+            #     # The argument '-2.05444 + I*pi' is not comparable.
+            #     # <lambda>() missing 1 required positional argument: 'b'
+            #     #   -> Probably in Sub-class lambda-function
+            #     raise ex
+        elif self.childs and issubclass(self.label, Terminal):
             _sym = self.label.get_sym()  # _sym = self.label.symfun
             _cs = self.childs[0]
             return _sym(_cs)
         print(len(self.childs), type(self.label), issubclass(self.label, Operator),
-              issubclass(self.label, TerminalNode))
+              issubclass(self.label, Terminal))
         raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.label)}')
-        # sfeh [Max, [Log, [-0.017988000065088272]], [Ifte, [False], [-0.015212000347673893], [7]]], <class 'type'>
 
     def get_tf_expr(self):
         if self.childs and issubclass(self.label, Operator):
             _tf = self.label.tflow
             _cs = [cc.get_tf_expr() for cc in self.childs]
             return _tf(_cs)
-        elif self.childs and issubclass(self.label, TerminalNode):
+        elif self.childs and issubclass(self.label, Terminal):
             _tf = self.label.tflow
             _cs = self.childs[0]
             return _tf(_cs)
@@ -96,7 +111,7 @@ class Node:
 
     def __len__(self):
         """counting the amount of nodes recursively"""
-        if issubclass(self.label, TerminalNode):
+        if issubclass(self.label, Terminal):
             return 1  # childs can currently be floats
         else:
             return 1 + sum([len(cc) for cc in self.childs])
@@ -105,22 +120,18 @@ class Node:
         return self.label
 
     def get_arity(self):
-        return len(self.label.xtype[0])
+        return len(self.label.get_child_xts())
 
     def get_xtype(self):
         return self.label.xtype
 
-    def get_xtype_in(self):
+    def get_xtype_childs(self):
         return self.label.xtype[0]
 
-    def get_xtype_out(self):
+    def get_xtype_self(self):
         return self.label.xtype[1]
 
-    def is_root(self):
-        """does this work while building a fintree?"""
-        return self.depth == 0
-
-    def set_label(self, label: 'NodeBase'):
+    def set_label(self, label: 'Label'):
         """all other values are automatically set by assigning the respected node"""
         self.label = label
 
@@ -162,20 +173,21 @@ class Node:
         else:
             return [self] + [cc.get_all_nodes() for cc in self.childs]
 
-    def get_nodes_at_depth(self, goal_depth, allow_fixed=False, expand_depth=False):
-        """
-        Returns a list with mutable ids which are *goal_depth* layers away from non-modifiable nodes
+    def get_nodes_at_depth(self, goal_depth, allow_fixed=False, earliest_nonfix=False):
+        """Returns a list with mutable ids which are *goal_depth* layers away from non-modifiable nodes
         last_leaves: if you want so save all leave nodes aswell
-        sum_layers=False, get_closest=True, return_all_layers=False
-        """
+        sum_layers=False, get_closest=True, return_all_layers=False"""
         nodes = []
         if (not self.is_fix or allow_fixed) and (
-                self.depth == goal_depth or (self.depth > goal_depth and expand_depth)):
+                self.depth == goal_depth or (self.depth > goal_depth and earliest_nonfix)):
             return [self]
-        elif self.depth <= goal_depth or expand_depth:
-            nodes.extend(list(itertools.chain(
-                *[cc.get_nodes_at_depth(goal_depth, allow_fixed=allow_fixed, expand_depth=expand_depth) for cc in
-                  self.childs])))
+        elif self.depth <= goal_depth or earliest_nonfix:
+            for cc in self.childs:
+                res = cc.get_nodes_at_depth(goal_depth, allow_fixed=allow_fixed, earliest_nonfix=earliest_nonfix)
+                nodes.extend(res)
+            # nodes.extend(list(itertools.chain(
+            #     *[cc.get_nodes_at_depth(goal_depth, allow_fixed=allow_fixed, expand_depth=expand_depth) for cc in
+            #       self.childs])))
             return nodes
         else:
             return []
@@ -191,12 +203,19 @@ class Node:
         else:
             return max(cc.get_max_depth(depth=depth + 1) for cc in self.childs)
 
+    def is_regular(self):
+        return issubclass(self.label, RegularNode)
+
+    def is_chainop(self):
+        return issubclass(self.label, ChainOp)
+
     def is_operator(self):
-        try:
-            return issubclass(self.label, Operator)
-        except Exception as ex:
-            print(f'whats this? {self}; {self.label} {ex}')
-            return False
+        # todo allow_chain check all
+        return issubclass(self.label, Operator)
+
+    def is_term(self):
+        # sfeh:discuss is_atom, rename all to atom?
+        return issubclass(self.label, Terminal)
 
     def repair_depth(self, depth=0):
         """
@@ -208,44 +227,43 @@ class Node:
         self.depth = depth
         if self.is_operator():
             for cc in self.childs:
-                try:
-                    cc.repair_depth(depth=depth + 1)
-                except Exception as TODO:
-                    cc.repair_depth(depth=depth + 1)
+                cc.repair_depth(depth=depth + 1)
+        return
 
-    def set_new_nested(self, new_node: 'Node'):
+    def set_new_node(self, new_node: 'Node'):
         self.set_label(new_node.label)  # sfeh remove childs, is_fix...
         self.childs = new_node.childs  # sfeh maybe must be updated recursively
         self.repair_depth(self.depth)  # Especially required for crossover or branches
 
-    def eval_mutable_nodes(self, match_xt=None, ignore_first=False, ignore_chain=False):
+    def eval_mutable_nodes(self, match_xt=None, ignore_first=False, ignore_chain=False) -> ['Node']:  # sfeh is this correct?
         """return all nodes that are mutable (non fixed)
         sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!"""
         node_list = []
-        if not any([self.is_fix, ignore_first, ignore_chain and self.is_chain]) and match_xt is None or match_xt == self.get_xtype_out():
+        if not any([self.is_fix, ignore_first, ignore_chain and self.is_chain]) and match_xt is None or match_xt == self.get_xtype_self():
             node_list.append(self)  # must be reference
 
-        if self.is_operator():  # sfeh:chain-operators discuss
-            for cc in self.childs:
-                node_list.extend(cc.eval_mutable_nodes(match_xt=match_xt, ignore_first=False, ignore_chain=ignore_chain))
+        if self.is_regular():
+
+            if self.is_operator():  # sfeh:chain-operators discuss
+                for cc in self.childs:
+                    node_list.extend(cc.eval_mutable_nodes(match_xt=match_xt, ignore_first=False, ignore_chain=ignore_chain))
         return node_list
 
     def evolve_mutate_filter_gauss(self):
-        """
-        Recursively filter the nodes in the branch of fintree
+        """Recursively filter the nodes in the branch of fintree
         sfeh:   random filter all terminal nodes /
                 single node /
                 nodes in a branch /
                 random nodes in a branch /
                 intelligent filtering
         """
-        # self.state = STATE_BUILDING  #  ==>state
-        if self.is_operator():
+        if self.is_term():
+            if issubclass(self.label, Float):
+                self.childs[0] = round(random.gauss(self.childs[0], 0.1), FLOAT_PRECISION)   # sfeh: ->no symbols ->userspecific
+        else:
             for cc in self.childs:
                 cc.evolve_mutate_filter_gauss()
-        else:
-            if issubclass(self.label, Float):
-                self.childs[0] = round(random.gauss(self.childs[0], 0.1), FLOAT_PRECISION)  # sfeh: ->no symbols ->userspecific
+        return
 
     def mutate_self_filter_index(self):
 
@@ -271,7 +289,7 @@ def sympy_to_tree(expr, allow_chain=False) -> Node:
 
     elif expr.is_Atom:
         if expr.is_Symbol:
-            # _r = Symbol  # sfeh str VERY important!! Symbol type input is not accepted
+            # _r = Symbol  # sfeh str VERY important!! "Symbol type input" is not accepted
             # return Nested(Symbol(str(expr)), [])
             return Node(Symbol, [str(expr)])
         else:
@@ -287,27 +305,48 @@ def sympy_to_tree(expr, allow_chain=False) -> Node:
                 raise NotImplementedError(f'What happened here? {expr}')
 
     else:
+        # try:
+        #     if isinstance(expr, sympy.Mul) and   # sfeh check div here?:
 
         cc_nodes = [sympy_to_tree(ar, allow_chain=allow_chain) for ar in expr.args]
-        # sfeh: computational improvement when ability to ignore args?
+        # sfeh:discuss computational improvement when ability to ignore args? do "raises" in args save time?
 
-        if isinstance(expr, sympy.Piecewise):
+        if allow_chain:
+            if isinstance(expr, tuple(sym_nodes_chain)):
+                clss = sym_nodes_chain[type(expr)]
+                return Node(clss, cc_nodes, is_chain=True)
+
+        if isinstance(expr, sympy.functions.elementary.piecewise.ExprCondPair):
+            return Node(ExprCondPair, cc_nodes)
+
+        elif isinstance(expr, sympy.Piecewise):
+            # todo todotodo
             if allow_chain:
-                raise NotImplementedError
+                return Node(Piecewise, cc_nodes)
             else:
-                _reversed = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
-                _reversed = [[sympy_to_tree(xx, allow_chain=allow_chain) for xx in list(i)] for i in _reversed]
-                otherwise = _reversed[0][0]  # the last "True" condition
-                for x in _reversed[1:]:
-                    otherwise = Node(Ifte, [x[1], x[0], otherwise])
+                reversed_pairs = list(expr.args[::-1])  # tuples to list, reversed: tuple must be nested the deepest
+                reversed_pairs = [[sympy_to_tree(xx, allow_chain=allow_chain) for xx in list(i)] for i in reversed_pairs]  # noqa
+                otherwise = reversed_pairs[0][0]  # the last "True" condition
+                for pairs in reversed_pairs[1:]:
+                    otherwise = Node(Ifte, [pairs[1], pairs[0], otherwise])
                 return otherwise
-        #
+
+                # cc_nodes = cc_nodes[::-1]  # reversed: tuple, which is nested the deepest
+                # otherwise = cc_nodes[0]  # the last "True" condition
+                # # TypeError: cannot unpack non-iterable Node object
+                # for ec in cc_nodes[1:]:
+                #     otherwise = Node(Ifte, [ec[0], ec[1], otherwise])
+                #
+                # return otherwise
+
         # todo include Usub, ignore usub in tree len()
-        elif isinstance(expr, sympy.Mul) and expr.args[0] == -1 and expr.args[1].is_Atom:  # negativeOne check!!
-            node = sympy_to_tree(expr.args[1], allow_chain=allow_chain)
-            return node
+        # elif isinstance(expr, sympy.Mul) and expr.args[0] == -1 and expr.args[1].is_Atom:
+        #     node = sympy_to_tree(expr.args[1], allow_chain=allow_chain)
+        #
+        #     return node
 
         elif isinstance(expr, sympy.Pow):
+            # todo match nodes to simplified nodes in a different function
             if expr.args[1] == -1:  # sympy.S.NegativeOne= sfeh:check if assumptions are available
                 _r = InverseFraction
                 cc_nodes.pop(1)  # second arg was identified and must now be ignored
@@ -318,6 +357,7 @@ def sympy_to_tree(expr, allow_chain=False) -> Node:
                 _r = Sqrt
                 cc_nodes.pop(1)
             elif type(expr.args[1]) == RoundDummy:
+                # todo check this BEFORE possibly the round operator is matched.
                 _r = Powrounded
                 cc_nodes[1] = cc_nodes[1].childs[0]
             else:
@@ -339,7 +379,7 @@ def sympy_to_tree(expr, allow_chain=False) -> Node:
                         dividend_node = cc_nodes[0]
                         return Node(Div, [dividend_node, divisor_node])
 
-            if len(expr.args) > len(clss.xtype[0]):
+            if len(expr.args) > len(clss.get_child_xts()):
                 if issubclass(clss, ChainableOp):
                     if allow_chain:
                         # todo actually do this at the very top
@@ -350,17 +390,19 @@ def sympy_to_tree(expr, allow_chain=False) -> Node:
                             _cc = Node(clss, [_cc, _c2])
                         return _cc
                 else:
-                    raise TypeError(f"{clss} takes exactly {len(clss.xtype[0])} arguments ({len(expr.args)} given)")
+                    raise TypeError(f"{clss} takes exactly {len(clss.get_child_xts())} arguments ({len(expr.args)} given)")
             else:
                 return Node(clss, cc_nodes)
 
-        elif isinstance(expr, (sympy.re, sympy.functions.elementary.piecewise.ExprCondPair)):
+        elif isinstance(expr, sympy.re):
             # We assume, that these Functions occur due to assumptions.
             # (for now: sympy.re, the Real-part of a number)
             # hence, we can skip this function while rebuilding without loosing any information
             # as Symbols match their assumptions when they are rebuilt aswell
             # sfeh:debug: When does sympy.re occur? Are there other cases?
-            return sympy_to_tree(expr.args[0], allow_chain=allow_chain)
+            # todo reintroduce piecewise? discuss: ignore trees which have real/complex numbers
+            # return sympy_to_tree(expr.args[0], allow_chain=allow_chain)
+            return cc_nodes
 
     # sfeh:discuss
     # NotImplementedError: Expr missing: ITE(p > 13, tan(p - v) >= 2.578643, tan(p - v) >= 1)
@@ -369,9 +411,7 @@ def sympy_to_tree(expr, allow_chain=False) -> Node:
 
 
 if __name__ == '__main__':
-    # x = Nested(Add(), depth=0, childs=[Symbol('a'), Float(2.2)])
-    # # x = Nested(Symbol(), childs=['a'])
-    # print(x)
+
     for x in sym_nodes.keys():
         lel = 4.5
         print(x, isinstance(lel, x))

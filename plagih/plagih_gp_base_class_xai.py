@@ -17,8 +17,7 @@ np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before
 
 
 def printpl(message_type, message_str):
-    """
-    Lightweight print function.
+    """Lightweight print function.
     Instead of checking if you should print every time, this is done here.
     message_type options can be found in config
     """
@@ -194,11 +193,11 @@ class ExplainableGP:
         else:
             @self.create_trees(rate=0.5)
             def init_rand1():
-                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3.0, 1.0)), 2, 3), p_term=0)
+                return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.0, 1.0)), 2, 3), p_term=0)
 
             @self.create_trees(rate=0.5)
             def init_rand2():
-                return self.tb.pop_random_depth(np.clip(int(random.normalvariate(2.5, 1.0)), 2, 3), p_term=0)
+                return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(2.5, 1.0)), 2, 3), p_term=0)
         return
 
     def create_trees(self, rate=0.0, select_n=0, crossover=False):
@@ -279,7 +278,7 @@ class ExplainableGP:
 
         @self.create_trees(rate=0.1, select_n=1)
         def mut_pt(tree):
-            return self.tb.mutate_point(tree)
+            return self.tb.evolve_mutate_point(tree)
 
         # @self.create_trees(rate=0.1)
         # def mxPointXXX():
@@ -288,7 +287,7 @@ class ExplainableGP:
 
         @self.create_trees(rate=0.1, select_n=1)
         def mx_ranch_d(tree):
-            return self.tb.mutate_branch_depth(tree, 4, p_term=0.5)
+            return self.tb.evolve_mutate_branch_depth(tree, 4, p_term=0.5)
 
         @self.create_trees(rate=0.1, select_n=1)
         def mx_branch_n(tree):
@@ -297,7 +296,7 @@ class ExplainableGP:
 
         @self.create_trees(rate=0.1, select_n=1)
         def filter_optimize(tree):
-            return self.tb.mutate_filter(tree)
+            return self.tb.evolve_mutate_filter(tree)
 
         @self.create_trees(rate=0.1)
         def pareto_revive():
@@ -306,12 +305,12 @@ class ExplainableGP:
 
         @self.create_trees(rate=0.1)
         def rand1():
-            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3, 1)), 2, 4), p_term=0)
+            return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3, 1)), 2, 4), p_term=0)
 
         @self.create_trees(rate=0.1)
         def rand2():
             # sfeh float? nope
-            return self.tb.pop_random_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 4), p_term=0)
+            return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 4), p_term=0)
 
         return
 
@@ -391,7 +390,7 @@ class ExplainableGP:
     # def plot_evolve_performance(self):
     #     """
     #     Plots for each tag in the evolution list
-    #     (too much, i guess)
+    #     (too much, I guess)
     #     sfeh: this should be saved within the trees. Everything else is a waste of memory!
     #     sfeh:open
     #     """

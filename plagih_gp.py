@@ -80,10 +80,12 @@ def _test_random_pop():
                                   bool: make_choices(pick_constant[bool])}
 
         def choose_operator(self, xt):
+            # todo allow_chain
             _op = np.random.choice(self.pick_op[xt][0], p=self.pick_op[xt][1])  # no (), which would evaluate the op
             return _op
 
         def choose_operator_match(self, xtype):
+            # todo allow_chain
             _op = np.random.choice(self.pick_op_match[xtype][0], p=self.pick_op_match[xtype][1])
             return _op
 

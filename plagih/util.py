@@ -5,12 +5,13 @@ import yaml
 from pathlib import Path
 
 from distutils.spawn import find_executable
+import numpy as np
 
 
 DEBUG_DUMMY = True  # Use this to find codeblocks that are just interesting during development
 TEST_DUMMY = True  # sfeh: actually use this later! check trees, check if all ops are usable,
 DELETE_ME = True  # sfeh:delete this when development phase is over
-PRINT_DUMMY = 'wwwaaagggggiiifff'
+PRINT_DUMMY = 'wwwaaagggggiiifff'  # noqa: dummy for print-policy
 PRECISION = 6
 FLOAT_PRECISION = 6  # sfeh use this
 
@@ -49,6 +50,18 @@ class BColors:
     RED2 = '\033[41m'
 
 
+def rnd_choice(a):
+    return np.random.choice(a)
+
+
+def xt_self(xtype):
+    return xtype[1]
+
+
+def xt_childs(xtype):
+    return xtype[0]
+
+
 def get_subclasses(cls):
     for subclass in cls.__subclasses__():
         yield from get_subclasses(subclass)
@@ -68,10 +81,8 @@ def pickle_dump(path, data):
 
 
 def yaml_dump(path, data, default_flow_style=True):
-    """
-    saves prepared plagih data to pickle file
-    - default_flow_style=False for dumping in a block style
-    """
+    """saves data to pickle file
+    - default_flow_style=False for dumping in a block style"""
     path = path_make_dir(path)
     with Path.open(path, 'w') as file:
         _ = yaml.dump(data, file, default_flow_style=default_flow_style, sort_keys=False)
@@ -250,9 +261,7 @@ def print_e(txt):
 
 
 def pickle_load(path: Path):
-    """
-    loads a pickle file (usually .p or .pkl)
-    """
+    """loads a pickle file (usually .p or .pkl)"""
     with Path.open(path, 'rb') as file:
         pickle_data = pickle.load(file)
 
@@ -260,9 +269,7 @@ def pickle_load(path: Path):
 
 
 def printez(message_type, text):
-    """
-    giving prints colours, accessable from everywhere
-    """
+    """giving prints colours, accessable from everywhere"""
     if message_type not in PRINT_DUMMY:
         return
 
@@ -284,10 +291,8 @@ def printez(message_type, text):
 
 
 def yaml_load(path: Path):
-    """
-    .yaml-file loader (saves two lines that I had to look up all the time)
-    Especially the Loader has to be specified.
-    """
+    """.yaml-file loader (saves two lines that I had to look up all the time)
+    Especially the Loader has to be specified."""
     with Path.open(path, 'r') as file:
         loaded_yaml = yaml.load(file, Loader=yaml.FullLoader)  # yaml.safe_load sfeh?
 

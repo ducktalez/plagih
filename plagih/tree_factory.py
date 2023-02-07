@@ -211,11 +211,11 @@ class TreeBuildRestrictions:
             # todo allow_chain
             label = self.nc.choose_operator(xt_out)
             child_xts = label.get_child_xts()
-            n_ch = len(child_xts)
+            num = len(child_xts)
             childs = []
 
             if num_rest > 0:
-                nums = randomly_split_range(num_rest-1, n_ch)
+                nums = randomly_split_range(num_rest-1, num)
                 for ii, xt in enumerate(child_xts):
                     cc = self.evolve_create_random(xt, depth_goal, num_rest=nums[ii], depth=depth + 1, p_term=p_term)
                     childs.append(cc)
@@ -229,7 +229,6 @@ class TreeBuildRestrictions:
 
     def evolve_new(self, xt_out, depth_goal, num_rest=-1, depth=0, p_term=0.0):
         # todo todotodo
-        xt_out = xt_out or self.root_xt_out
 
         if self.origin_tree is not None:
 
@@ -239,12 +238,13 @@ class TreeBuildRestrictions:
             for ii, nodes0 in enumerate(layer0):  # -> get layer every time (nsted ids might have changed)
                 nd_list = nodes0.eval_mutable_nsteds()
                 lvl0_nodes = np.random.choice(nd_list)
-                new_subbranch = self.evolve_create_random(lvl0_nodes.get_xtype_self(), depth_goal, num_rest=-1,
-                                                          depth=lvl0_nodes.depth, p_term=p_term)
+                new_subbranch = self.evolve_new(lvl0_nodes.get_xtype_self(), depth_goal, num_rest=-1,
+                                                depth=lvl0_nodes.depth, p_term=p_term)
                 lvl0_nodes.set_new_node(new_subbranch)
 
         else:
-            evotree = self.evolve_create_random(xt_out, depth_goal, depth=0, num_rest=-1, p_term=p_term)
+            xt_out = xt_out or self.root_xt_out
+            evotree = self.evolve_new(xt_out, depth_goal, depth=0, num_rest=-1, p_term=p_term)
 
         if depth == self.depth_max or depth == depth_goal or num_rest == 0 or random.random() < p_term:
             node = self.nc.choose_terminal(xt_out, as_node=True)
@@ -259,11 +259,11 @@ class TreeBuildRestrictions:
             if num_rest > 0:
                 nums = randomly_split_range(num_rest-1, n_ch)
                 for ii, xt in enumerate(child_xts):
-                    cc = self.evolve_create_random(xt, depth_goal, num_rest=nums[ii], depth=depth + 1, p_term=p_term)
+                    cc = self.evolve_new(xt, depth_goal, num_rest=nums[ii], depth=depth + 1, p_term=p_term)
                     childs.append(cc)
             else:
                 for xt in child_xts:
-                    cc = self.evolve_create_random(xt, depth_goal, num_rest=-1, depth=depth + 1, p_term=p_term)
+                    cc = self.evolve_new(xt, depth_goal, num_rest=-1, depth=depth + 1, p_term=p_term)
                     childs.append(cc)
 
             node = Node(label, childs, depth=depth)

@@ -190,10 +190,6 @@ class MinMaxBase(MathOperator):
     pass
 
 
-class NoSymCapitalized:
-    pass
-
-
 class TerminalNode(NodeBase):  # sfeh sympy.Atom
     """
     Terminal nodes are leaf nodes which can not have children. e.g.:
@@ -286,32 +282,32 @@ class Abs(MathOperator):
     xtype = ((float,), float)
 
 
-class Sign(MathOperator, NoSymCapitalized):
+class Sign(MathOperator):
     # does not work in string, but irrelevant. sympy.simplify('sign(-a)') -> -sign(a)
     symfun = sympy.sign
     tflow = tf.sign
     xtype = ((float,), float)
 
 
-class Log(MathOperator, NoSymCapitalized):
+class Log(MathOperator):
     symfun = sympy.log  # sfeh: Log isactually Ln (base e)
     tflow = tf.math.log
     xtype = ((float,), float)
 
 
-class Cos(AngleOperator, NoSymCapitalized):
+class Cos(AngleOperator):
     symfun = sympy.cos
     tflow = tf.cos
     xtype = ((float,), float)
 
 
-class Sin(AngleOperator, NoSymCapitalized):
+class Sin(AngleOperator):
     symfun = sympy.sin
     tflow = tf.sin
     xtype = ((float,), float)
 
 
-class Tan(AngleOperator, NoSymCapitalized):
+class Tan(AngleOperator):
     # sfeh:discuss actually rename classes.
     # they do not have to match sympy expressions/classes
     symfun = sympy.tan
@@ -319,43 +315,43 @@ class Tan(AngleOperator, NoSymCapitalized):
     xtype = ((float,), float)
 
 
-class Acos(AngleOperator, NoSymCapitalized):
+class Acos(AngleOperator):
     symfun = sympy.acos
     tflow = tf.acos
     xtype = ((float,), float)
 
 
-class Asin(AngleOperator, NoSymCapitalized):
+class Asin(AngleOperator):
     symfun = sympy.asin
     tflow = tf.asin
     xtype = ((float,), float)
 
 
-class Atan(AngleOperator, NoSymCapitalized):
+class Atan(AngleOperator):
     symfun = sympy.atan
     tflow = tf.atan
     xtype = ((float,), float)
 
 
-class tanh(AngleOperator, NoSymCapitalized):
+class tanh(AngleOperator):
     symfun = sympy.tanh
     tflow = tf.tanh
     xtype = ((float,), float)
 
 
-class Sinh(AngleOperator, NoSymCapitalized):
+class Sinh(AngleOperator):
     symfun = sympy.sinh
     tflow = tf.sinh  # sfeh sinh, asinh
     xtype = ((float,), float)
 
 
-class Cosh(AngleOperator, NoSymCapitalized):
+class Cosh(AngleOperator):
     symfun = sympy.cosh
     tflow = tf.cosh  # sfeh acosh
     xtype = ((float,), float)
 
 
-class Xor(LogicOperator, NoSymCapitalized):
+class Xor(LogicOperator):
     symfun = sympy.Xor
     tflow = tf.math.logical_xor
     xtype = ((bool, bool), bool)
@@ -519,7 +515,7 @@ class Sqrt(MathOperator):
 #     xtype = ((float, float), float)
 
 
-class Usub(MathOperator, sympy.Function):
+class Usub(MathOperator):
     xtype = ((float,), float)
     tflow = tf.negative
     symfun = lambda a: sympy.Mul(-1, a)

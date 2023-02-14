@@ -273,6 +273,118 @@ class Node:
         pass
 
 
+def s_tree(branch: Node, allow_chain=False) -> Node:
+    """
+    Check, if node can be simplified anyhow. 
+    :param branch:
+    :param allow_chain:
+    :return:
+    """
+    if branch.is_term():
+        return branch
+    else:
+
+        cc_nodes = [s_tree(cc, allow_chain=allow_chain) for cc in branch.childs]
+
+        if allow_chain:
+            if isinstance(nnnn, tuple(sym_nodes_chain)):
+                clss = sym_nodes_chain[type(nnnn)]
+                return Node(clss, cc_nodes, is_chain=True)
+
+        if isinstance(nnnn, sympy.functions.elementary.piecewise.ExprCondPair):
+            return Node(ExprCondPair, cc_nodes)
+
+        elif isinstance(nnnn, sympy.Piecewise):
+            # todo todotodo
+            if allow_chain:
+                return Node(Piecewise, cc_nodes)
+            else:
+                reversed_pairs = list(nnnn.args[::-1])  # tuples to list, reversed: tuple must be nested the deepest
+                reversed_pairs = [[s_tree(xx, allow_chain=allow_chain) for xx in list(i)] for i in reversed_pairs]  # noqa
+                otherwise = reversed_pairs[0][0]  # the last "True" condition
+                for pairs in reversed_pairs[1:]:
+                    otherwise = Node(Ifte, [pairs[1], pairs[0], otherwise])
+                return otherwise
+
+                # cc_nodes = cc_nodes[::-1]  # reversed: tuple, which is nested the deepest
+                # otherwise = cc_nodes[0]  # the last "True" condition
+                # # TypeError: cannot unpack non-iterable Node object
+                # for ec in cc_nodes[1:]:
+                #     otherwise = Node(Ifte, [ec[0], ec[1], otherwise])
+                #
+                # return otherwise
+
+        # todo include Usub, ignore usub in tree len()
+        # elif isinstance(expr, sympy.Mul) and expr.args[0] == -1 and expr.args[1].is_Atom:
+        #     node = sympy_to_tree(expr.args[1], allow_chain=allow_chain)
+        #
+        #     return node
+
+        elif isinstance(nnnn, sympy.Pow):
+            # todo match nodes to simplified nodes in a different function
+            if nnnn.args[1] == -1:  # sympy.S.NegativeOne= sfeh:check if assumptions are available
+                _r = InverseFraction
+                cc_nodes.pop(1)  # second arg was identified and must now be ignored
+            elif nnnn.args[1] == 2:
+                _r = Square
+                cc_nodes.pop(1)
+            elif nnnn.args[1] == sympy.S.Half:
+                _r = Sqrt
+                cc_nodes.pop(1)
+            elif type(nnnn.args[1]) == RoundDummy:
+                # todo check this BEFORE possibly the round operator is matched.
+                _r = Powrounded
+                cc_nodes[1] = cc_nodes[1].childs[0]
+            else:
+                _r = Pow
+            return Node(_r, cc_nodes)
+
+        elif isinstance(nnnn, RoundDummy):
+            return Node(Round, [cc_nodes[0]])
+
+        elif isinstance(nnnn, tuple(sym_nodes)):
+
+            clss = sym_nodes[type(nnnn)]
+
+            if isinstance(nnnn, sympy.Mul):
+                for ii, cn in enumerate(cc_nodes):
+                    if cn.label == InverseFraction:
+                        divisor_node = cc_nodes.pop(ii)
+                        divisor_node = divisor_node.childs[0]
+                        dividend_node = cc_nodes[0]
+                        return Node(Div, [dividend_node, divisor_node])
+
+            if len(nnnn.args) > len(clss.get_child_xts()):
+                if issubclass(clss, ChainableOp):
+                    if allow_chain:
+                        # todo actually do this at the very top
+                        return Node(clss, cc_nodes, is_chain=True)
+                    else:
+                        _cc = cc_nodes[0]
+                        for _c2 in cc_nodes[1:]:
+                            _cc = Node(clss, [_cc, _c2])
+                        return _cc
+                else:
+                    raise TypeError(f"{clss} takes exactly {len(clss.get_child_xts())} arguments ({len(nnnn.args)} given)")
+            else:
+                return Node(clss, cc_nodes)
+
+        elif isinstance(nnnn, sympy.re):
+            # We assume, that these Functions occur due to assumptions.
+            # (for now: sympy.re, the Real-part of a number)
+            # hence, we can skip this function while rebuilding without loosing any information
+            # as Symbols match their assumptions when they are rebuilt aswell
+            # sfeh:debug: When does sympy.re occur? Are there other cases?
+            # todo reintroduce piecewise? discuss: ignore trees which have real/complex numbers
+            # return sympy_to_tree(expr.args[0], allow_chain=allow_chain)
+            return cc_nodes
+
+    # sfeh:discuss
+    # NotImplementedError: Expr missing: ITE(p > 13, tan(p - v) >= 2.578643, tan(p - v) >= 1)
+    # this should not have occured, because it evaluates to bool, not to float
+    raise NotImplementedError(f'Expr missing: {nnnn}')
+
+
 def sympy_to_tree(expr, allow_chain=False) -> Node:
     """Important: start with the most specific rule
     todo: check is expr is an accepted operator, otherwise reconstruction probably fails"""

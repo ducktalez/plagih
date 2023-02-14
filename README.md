@@ -1,7 +1,7 @@
 # Familiar Genetic Programming with TensorFlow
 
-- Lightning fast. Believe me.
-- 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
+- Fast
+- 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
 
 ## Ablage/Todos
 

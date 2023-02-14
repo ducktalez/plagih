@@ -203,9 +203,7 @@ class ExplainableGP:
     def create_trees(self, rate=0.0, select_n=0, crossover=False):
         """Safely append a tree to the population.
         Even though the raw trees should have everything to display their expression,
-        they have gone through a process of changes. Here, the fintree is refurbished.
-        - Enrich the raw fintree for the next generation
-        - check if the fintree is actually valid"""
+        they have gone through a process of changes. Here, the final tree (fintree) is refurbished."""
 
         def loop(create_tree_func):
             n = int(rate * self.pop_max)
@@ -482,6 +480,5 @@ if __name__ == '__main__':
     #     t1, t2 = tb.evolve_crossover(t1, t2)
     #     print('x~D', t1, '===', t2)
 
-    # nstr = "['Ifte', ['<', ['*', [2.85], ['vel']], ['Square', ['vel']]], ['*', ['pos'], ['*', ['pos'], [0.014]]], ['/', [2.0], ['pos']]]"
     # nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
     nstr = '["+:fix",["-:fix",["Ifte",["True"],["sin",["2"]],["/",["2.043"],["4"]]],["cartVel"]],["-1.3"]]'

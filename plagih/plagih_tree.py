@@ -268,8 +268,9 @@ class Add(MathOperator, ChainableOp):
 
 
 class InverseFraction(MathOperator):
+    """x**-1"""
     xtype = ((float, float), float)
-    symfun = lambda a: sympy.Pow(a, sympy.S.NegativeOne)  # aka x**-1
+    symfun = lambda a: sympy.Pow(a, sympy.S.NegativeOne)
     tflow = lambda a: tf.pow(a, -1)
 
 
@@ -612,7 +613,6 @@ class AndChain(ChainOp):
 class OrChain(ChainOp):
     xtype = ((bool,), bool)
     # ogclass = Or
-
 
 
 def expr_sympify(expr):

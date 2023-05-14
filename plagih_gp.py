@@ -57,12 +57,12 @@ def _test_random_pop():
 
     class Nodemaker(NodeCreator):
         def __init__(self):
-            operator_pool = {Add: 2, Sub: 1, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
+            dict_operator_pool = {Add: 2, Sub: 1, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
                              Sin: 0.5, Tan: 0.1, Cos: 0.33, Min: 1, Max: 1, And: 1, Or: 1, Not: 0.5, Xor: 1, Lt: 0.5,
                              Le: 0.5, Ifte: 2,
                              Powrounded: 0.5}  # sfeh: Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.5, Usub: 1,
             # Round: 0.5, Eq: 1,  # Ne: 0.5, #  # Log1p: 0.1, Gt: 0.1, Ge: 0.1,
-            self.pick_op, self.pick_op_match = xtdict_operators(operator_pool)
+            self.pick_op, self.pick_op_match = xtdict_operators(dict_operator_pool)
 
             pick_symbol = {float: [[_n, 1] for _n in input_names]}  # sfeh:discuss
             self.pick_symbol = {float: make_choices(pick_symbol[float]),

@@ -9,14 +9,16 @@ from plagih.plagih_tree import *
 # For conversion from sympy into node
 from plagih.util import FLOAT_PRECISION
 
-sym_nodes = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul,
-             sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,
-             sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
-             sympy.GreaterThan: Ge, sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos,
-             sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
-             sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: exp}
-sym_ops_chain = {sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChain, sympy.Max: MaxChain,
-                 sympy.And: AndChain, sympy.Or: OrChain, sympy.Piecewise: Piecewise}  # todo Piecewise
+dict_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul,
+                 sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,
+                 sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
+                 sympy.GreaterThan: Ge, sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos,
+                 sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
+                 sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: exp}
+dict_op2chain = {Add: AddChain, Mul: MulChain, Min: MinChain, Max: MaxChain, And: AndChain, Or: OrChain,
+                       Piecewise: Piecewise}  # todo Piecewise
+dict_sym2node_chain = {sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChain, sympy.Max: MaxChain,
+                       sympy.And: AndChain, sympy.Or: OrChain, sympy.Piecewise: Piecewise}  # todo Piecewise
 # , sympy.Equality: Eq
 # sfeh:open = {sympy.Unequality: Ne, sympy.Equality: Eq}
 sym_assumption_nodes = (sympy.re,)
@@ -92,9 +94,6 @@ class Node:
             return _tf(_cs)
         raise NotImplementedError(f'get_tf_expr no match for {self}, {type(self.label)}')
 
-    def eval_str(self):
-        return self.get_label()  # sfeh open
-
     def __repr__(self):
         """Printing the nodes as nested array structure such that it can be saved/loaded
         very closely related to str(), but adds the following information:
@@ -118,6 +117,11 @@ class Node:
 
     def get_label(self):
         return self.label
+
+    def get_value(self):
+        """sfeh: only usable, when terminal node?"""
+        if self.is_term():
+            return self.childs[0]
 
     def get_arity(self):
         return len(self.label.get_child_xts())
@@ -272,72 +276,83 @@ class Node:
         # self.name = f'{self.fam}_{new_index}'
         pass
 
+    def tree_node_grouping(self, allow_chain=False):
+        """
+        If possible, this groups nodes to a simpler expression (if possible).
+        E.g. a ** 2 -> square(a)
+             a + b + c -> sum(a, b, c)  (chaining)
 
-def tree_node_grouping(branch: Node, allow_chain=False) -> Node:
-    """
-    If possible, this groups nodes to a simpler expression (if possible).
-    E.g. a ** 2 -> square(a)
-         a + b + c -> sum(a, b, c)  (chaining)
+        branch = nnnn
+        """
+        if self.is_term():  # runtime
+            return
 
-    branch = nnnn
-    """
-    if branch.is_term():  # runtime
-        return branch
-    else:
-
-        cc_nodes = [tree_node_grouping(cc, allow_chain=allow_chain) for cc in branch.childs]
-        label = branch.label
-        if allow_chain:
-            if isinstance(label, tuple(sym_ops_chain)):
-                clss = sym_ops_chain[label]
-                return Node(clss, cc_nodes, is_chain=True)
-
-        if label == sympy.functions.elementary.piecewise.ExprCondPair:
-            return Node(ExprCondPair, cc_nodes)
-
-        elif label == sympy.Piecewise:
+        else:
+            cc_nodes = [cc.tree_node_grouping(allow_chain=allow_chain) for cc in self.childs]
             if allow_chain:
-                return Node(Piecewise, cc_nodes)
-            else:
-                reversed_pairs = list(branch.childs[::-1])  # tuples to list, reversed: tuple must be nested the deepest
+                # todo todotodo match the chaining functions into one
+                if isinstance(self.label, tuple(dict_op2chain)):
+                    self.label = dict_sym2node_chain[self.label]
+                    self.childs = cc_nodes, is_chain=True)
+
+            if self.label == ExprCondPair:  # sympy.functions.elementary.piecewise.ExprCondPair
+                self.set_label(ExprCondPair), cc_nodes)
+
+            elif label == Piecewise:
+
+                reversed_pairs = list(self.childs[::-1])  # tuples to list, reversed: tuple must be nested the deepest
+                # sfeh todo cc_nodes irrelevant?
                 reversed_pairs = [[tree_node_grouping(xx, allow_chain=allow_chain) for xx in list(i)] for i in reversed_pairs]  # noqa
                 otherwise = reversed_pairs[0][0]  # the last "True" condition
                 for pairs in reversed_pairs[1:]:
                     otherwise = Node(Ifte, [pairs[1], pairs[0], otherwise])
                 return otherwise
 
-        # todo include Usub, ignore usub in tree len()
-        # elif isinstance(expr, sympy.Mul) and expr.args[0] == -1 and expr.args[1].is_Atom:
-        #     node = sympy_to_tree(expr.args[1], allow_chain=allow_chain)
-        #
-        #     return node
+            # todo include Usub, ignore usub in tree len()
+            # elif isinstance(expr, sympy.Mul) and expr.args[0] == -1 and expr.args[1].is_Atom:
+            #     node = sympy_to_tree(expr.args[1], allow_chain=allow_chain)
+            #
+            #     return node
 
-        elif label == sympy.Pow:
-            # todo match nodes to simplified nodes in a different function
-            if branch.childs[1].label == -1:  # sympy.S.NegativeOne= sfeh:check if assumptions are available
-                _r = InverseFraction
-                cc_nodes.pop(1)  # second arg was identified and must now be ignored
-            elif branch.childs[1].label == 2:
-                _r = Square
-                cc_nodes.pop(1)
-            elif branch.childs[1].label == sympy.S.Half:  # todo debug or 0.5??
-                _r = Sqrt
-                cc_nodes.pop(1)
-            elif branch.childs[1].label == RoundDummy:
-                # todo check this BEFORE possibly the round operator is matched.
-                _r = Powrounded
-                cc_nodes[1] = cc_nodes[1].childs[0]
-            else:
-                _r = Pow
-            return Node(_r, cc_nodes)
+            elif label == Pow:
+                # todo match nodes to simplified nodes in a different function
+                child1 = tree.childs[1]
+                if child1.label == Float:
+                    value = child1.get_value()
+                    if value == -1:  # sympy.S.NegativeOne= sfeh:check if assumptions are available
+                        _r = InverseFraction
+                        cc_nodes = [cc_nodes[0]]  # .pop(1)  # second arg was identified and must now be ignored
+                    elif value == 2:
+                        _r = Square
+                        cc_nodes = [cc_nodes[0]]  # cc_nodes.pop(1)
+                    elif value == 0.5:  # todo debug, sympy.S.Half
+                        _r = Sqrt
+                        cc_nodes = [cc_nodes[0]]  # cc_nodes.pop(1)
+                    else:
+                        _r = Pow
 
-        elif label == RoundDummy:
-            return Node(Round, [cc_nodes[0]])
+                elif tree.childs[1].get_label() == RoundDummy:
+                    # todo check this BEFORE possibly the round operator is matched.
+                    _r = Powrounded
+                    cc_nodes[1] = cc_nodes[1].childs[0]
+                else:
+                    _r = Pow
+                return Node(_r, cc_nodes)
 
-        # elif label in tuple(sym_nodes):
-        # all this is done during transformation
+            if isinstance(label, Mul):
+                for ii, cn in enumerate(cc_nodes):
+                    if cn.label == InverseFraction:
+                        divisor_node = cc_nodes.pop(ii)
+                        divisor_node = divisor_node.childs[0]
+                        dividend_node = cc_nodes[0]
+                        return Node(Div, [dividend_node, divisor_node])
+            elif label == RoundDummy:
+                return Node(Round, [cc_nodes[0]])
 
-    raise NotImplementedError(f'Label missing: {label}')
+            elif tree.is_operator():
+                return tree
+
+        raise NotImplementedError(f'Label missing: {label}')
 
 
 def sympy_to_tree(expr, allow_chain=False) -> Node:
@@ -357,108 +372,55 @@ def sympy_to_tree(expr, allow_chain=False) -> Node:
 
     elif expr.is_Atom:
         if expr.is_Symbol:
-            # _r = Symbol  # sfeh str VERY important!! "Symbol type input" is not accepted
-            # return Nested(Symbol(str(expr)), [])
-            return Node(Symbol, [str(expr)])
+            return Node(Symbol, [str(expr)])  # sfeh str VERY important!! "Symbol type input" is not accepted
         else:
-            expr_eval = expr.evalf()  # standard 15 digits, sfeh prec=FLOAT_PRECISION?
+            expr_eval = expr.evalf(FLOAT_PRECISION)  # standard 15 digits
             if expr.is_Boolean:
-                # return Nested(Boolean(bool(expr_eval)), [])
                 return Node(Boolean, [bool(expr_eval)])
             elif expr.is_number:  # is_float does not match int
-                # return Nested(Float(float(expr_eval)), [])  # sfeh round
-                return Node(Float, [round(float(expr_eval), FLOAT_PRECISION)])  # sfeh round
+                return Node(Float, [round(float(expr_eval), FLOAT_PRECISION)])
                 # "TypeError: Cannot convert complex to float" -> ignore the whole expression, let it fail
             else:
                 raise NotImplementedError(f'What happened here? {expr}')
 
     else:
-        # try:
-        #     if isinstance(expr, sympy.Mul) and   # sfeh check div here?:
 
         cc_nodes = [sympy_to_tree(ar, allow_chain=allow_chain) for ar in expr.args]
         # sfeh:discuss computational improvement when ability to ignore args? do "raises" in args save time?
 
-        if allow_chain:
-            if isinstance(expr, tuple(sym_ops_chain)):
-                clss = sym_ops_chain[type(expr)]
-                return Node(clss, cc_nodes, is_chain=True)
+        # if allow_chain:  # if issubclass(clss, ChainableOp):
+        #     if isinstance(expr, tuple(dict_sym2node_chain)):
+        #         clss = dict_sym2node_chain[type(expr)]
+        #         return Node(clss, cc_nodes, is_chain=True)
 
         if isinstance(expr, sympy.functions.elementary.piecewise.ExprCondPair):
             return Node(ExprCondPair, cc_nodes)
 
         elif isinstance(expr, sympy.Piecewise):
-            # todo todotodo
-            if allow_chain:
-                return Node(Piecewise, cc_nodes)
-            else:
-                reversed_pairs = list(expr.args[::-1])  # tuples to list, reversed: tuple must be nested the deepest
-                reversed_pairs = [[sympy_to_tree(xx, allow_chain=allow_chain) for xx in list(i)] for i in reversed_pairs]  # noqa
-                otherwise = reversed_pairs[0][0]  # the last "True" condition
-                for pairs in reversed_pairs[1:]:
-                    otherwise = Node(Ifte, [pairs[1], pairs[0], otherwise])
-                return otherwise
-
-                # cc_nodes = cc_nodes[::-1]  # reversed: tuple, which is nested the deepest
-                # otherwise = cc_nodes[0]  # the last "True" condition
-                # # TypeError: cannot unpack non-iterable Node object
-                # for ec in cc_nodes[1:]:
-                #     otherwise = Node(Ifte, [ec[0], ec[1], otherwise])
-                #
-                # return otherwise
+            # "Chained" version is handled above
+            reversed_pairs = list(expr.args[::-1])  # tuples to list, reversed: tuple must be nested the deepest
+            reversed_pairs = [[sympy_to_tree(xx, allow_chain=allow_chain) for xx in list(i)] for i in reversed_pairs]  # noqa
+            otherwise = reversed_pairs[0][0]  # the last "True" condition
+            for pairs in reversed_pairs[1:]:
+                otherwise = Node(Ifte, [pairs[1], pairs[0], otherwise])
+            return otherwise
 
         # todo include Usub, ignore usub in tree len()
-        # elif isinstance(expr, sympy.Mul) and expr.args[0] == -1 and expr.args[1].is_Atom:
-        #     node = sympy_to_tree(expr.args[1], allow_chain=allow_chain)
-        #
-        #     return node
-
-        elif isinstance(expr, sympy.Pow):
-            # todo match nodes to simplified nodes in a different function
-            if expr.args[1] == -1:  # sympy.S.NegativeOne= sfeh:check if assumptions are available
-                _r = InverseFraction
-                cc_nodes.pop(1)  # second arg was identified and must now be ignored
-            elif expr.args[1] == 2:
-                _r = Square
-                cc_nodes.pop(1)
-            elif expr.args[1] == sympy.S.Half:
-                _r = Sqrt
-                cc_nodes.pop(1)
-            elif type(expr.args[1]) == RoundDummy:
-                # todo check this BEFORE possibly the round operator is matched.
-                _r = Powrounded
-                cc_nodes[1] = cc_nodes[1].childs[0]
-            else:
-                _r = Pow
-            return Node(_r, cc_nodes)
 
         elif isinstance(expr, RoundDummy):
             return Node(Round, [cc_nodes[0]])
 
-        elif isinstance(expr, tuple(sym_nodes)):
+        elif isinstance(expr, tuple(dict_sym2node)):
 
-            clss = sym_nodes[type(expr)]
-
-            if isinstance(expr, sympy.Mul):
-                for ii, cn in enumerate(cc_nodes):
-                    if cn.label == InverseFraction:
-                        divisor_node = cc_nodes.pop(ii)
-                        divisor_node = divisor_node.childs[0]
-                        dividend_node = cc_nodes[0]
-                        return Node(Div, [dividend_node, divisor_node])
+            clss = dict_sym2node[type(expr)]
 
             if len(expr.args) > len(clss.get_child_xts()):
-                if issubclass(clss, ChainableOp):
-                    if allow_chain:
-                        # todo actually do this at the very top
-                        return Node(clss, cc_nodes, is_chain=True)
-                    else:
-                        _cc = cc_nodes[0]
-                        for _c2 in cc_nodes[1:]:
-                            _cc = Node(clss, [_cc, _c2])
-                        return _cc
-                else:
-                    raise TypeError(f"{clss} takes exactly {len(clss.get_child_xts())} arguments ({len(expr.args)} given)")
+
+                _cc = cc_nodes[0]
+                for _c2 in cc_nodes[1:]:
+                    _cc = Node(clss, [_cc, _c2])
+                return _cc
+                # raise TypeError(f"{clss} takes exactly {len(clss.get_child_xts())} args ({len(expr.args)} given)")
             else:
                 return Node(clss, cc_nodes)
 
@@ -480,6 +442,6 @@ def sympy_to_tree(expr, allow_chain=False) -> Node:
 
 if __name__ == '__main__':
 
-    for x in sym_nodes.keys():
+    for x in dict_sym2node.keys():
         lel = 4.5
         print(x, isinstance(lel, x))

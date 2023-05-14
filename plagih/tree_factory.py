@@ -24,7 +24,7 @@ def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
         raise Exception(f'Complexity measurement not available: {complexity_measure}')
 
 
-def randomly_split_range(range_max, num_splits):
+def randomly_split_range(range_max: int, num_splits: int):
     """split integer range randomly into num_splits parts
     [1..100] -> [33, 15, 52]
     used for building trees
@@ -62,9 +62,10 @@ def tree_simplification(tree):
     #   map power fractal - to sqrt?
     """
     expr_sym = tree.get_sympy_expr()
-    nsted_rebuilt = sympy_to_tree(expr_sym)
+    tree = sympy_to_tree(expr_sym)
+    tree = tree_node_grouping(tree)
 
-    return nsted_rebuilt
+    return tree
 
 
 def evolve_reduce_simplify(tree: Node, completely=True, force=False):
@@ -610,12 +611,14 @@ if __name__ == '__main__':
     tr = Node(Max, [Node(Symbol('a'), []), Node(Float(1.2), [])])
     x = tr.get_sympy_expr()
     tr2 = sympy_to_tree(x)
+    tr2 = tree_node_grouping(tr2)
     print(tr, tr2)
     for _ in range(10):
         tr = tb.evolve_new_tree_depth(3, float, p_term=0.3)
         x = tr.get_sympy_expr()
         print('First sym success')
         tr_new = sympy_to_tree(x)
+        tr_new = tree_node_grouping(tr_new)
         x2 = tr_new.get_sympy_expr()
         print(tr)
         print(tr_new)

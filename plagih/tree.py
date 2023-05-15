@@ -17,8 +17,8 @@ dict_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sig
                  sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: exp}
 dict_op2chain = {Add: AddChain, Mul: MulChain, Min: MinChain, Max: MaxChain, And: AndChain, Or: OrChain,
                        Piecewise: Piecewise}  # todo Piecewise
-dict_sym2node_chain = {sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChain, sympy.Max: MaxChain,
-                       sympy.And: AndChain, sympy.Or: OrChain, sympy.Piecewise: Piecewise}  # todo Piecewise
+d_sym2node_chain = {sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChain, sympy.Max: MaxChain,
+                    sympy.And: AndChain, sympy.Or: OrChain, sympy.Piecewise: Piecewise}  # todo Piecewise
 # , sympy.Equality: Eq
 # sfeh:open = {sympy.Unequality: Ne, sympy.Equality: Eq}
 sym_assumption_nodes = (sympy.re,)
@@ -292,13 +292,13 @@ class Node:
             if allow_chain:
                 # todo todotodo match the chaining functions into one
                 if isinstance(self.label, tuple(dict_op2chain)):
-                    self.label = dict_sym2node_chain[self.label]
+                    self.label = d_sym2node_chain[self.label]  # + + ... -> Add
                     self.childs = cc_nodes, is_chain=True)
 
             if self.label == ExprCondPair:  # sympy.functions.elementary.piecewise.ExprCondPair
                 self.set_label(ExprCondPair), cc_nodes)
 
-            elif label == Piecewise:
+            elif self.label == Piecewise:
 
                 reversed_pairs = list(self.childs[::-1])  # tuples to list, reversed: tuple must be nested the deepest
                 # sfeh todo cc_nodes irrelevant?

@@ -70,11 +70,11 @@ def _test_random_pop():
 
             samples = [i for i in itertools.chain.from_iterable(df[['cartVel', 'cartPos']].sample(n=50).values) if
                        i != 0]
-            pick_constant = {float: [[lambda: round(random.normalvariate(0, 1), FLOAT_PRECISION), 0.2],
-                                     [lambda: round(random.normalvariate(1, 1), FLOAT_PRECISION), 0.1],
-                                     [lambda: round(random.normalvariate(10, 5), FLOAT_PRECISION), 0.1],
-                                     [lambda: round(random.randint(1, 20), FLOAT_PRECISION), 0.1],  # int fails in Float
-                                     [lambda: round(random.choice(samples), FLOAT_PRECISION), 0.5]],
+            pick_constant = {float: [[lambda: round(random.normalvariate(0, 1), FLOAT_FLOAT_PRECISION), 0.2],
+                                     [lambda: round(random.normalvariate(1, 1), FLOAT_FLOAT_PRECISION), 0.1],
+                                     [lambda: round(random.normalvariate(10, 5), FLOAT_FLOAT_PRECISION), 0.1],
+                                     [lambda: round(random.randint(1, 20), FLOAT_FLOAT_PRECISION), 0.1],  # int fails in Float
+                                     [lambda: round(random.choice(samples), FLOAT_FLOAT_PRECISION), 0.5]],
                              bool: [[lambda: random.choice((True, False)), 1]]}
             self.pick_constant = {float: make_choices(pick_constant[float]),
                                   bool: make_choices(pick_constant[bool])}
@@ -107,7 +107,7 @@ def _test_random_pop():
             _v = np.random.choice(self.pick_constant[xt][0], p=self.pick_constant[xt][1])()  # only dist. must be ()
             if as_node:
                 if xt == float:
-                    return Node(Float, [round(_v, FLOAT_PRECISION)])
+                    return Node(Float, [round(_v, FLOAT_FLOAT_PRECISION)])
                 else:
                     return Node(Boolean, [_v])
             else:

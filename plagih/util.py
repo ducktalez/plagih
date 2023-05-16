@@ -12,8 +12,8 @@ DEBUG_DUMMY = True  # Use this to find codeblocks that are just interesting duri
 TEST_DUMMY = True  # sfeh: actually use this later! check trees, check if all ops are usable,
 DELETE_ME = True  # sfeh:delete this when development phase is over
 PRINT_DUMMY = 'wwwaaagggggiiifff'  # noqa: dummy for print-policy
-PRECISION = 6
-FLOAT_PRECISION = 6  # sfeh use this
+FLOAT_PRECISION = 6
+FLOAT_FLOAT_PRECISION = 6  # sfeh use this
 
 
 def printyeah(message_type, message_str):

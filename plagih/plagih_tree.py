@@ -60,7 +60,7 @@ import sympy
 # import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
 from sympy.functions.elementary.piecewise import ExprCondPair
 
-from plagih.util import get_subclasses, PRECISION, DEBUG_DUMMY  # noqa
+from plagih.util import get_subclasses, FLOAT_PRECISION, DEBUG_DUMMY  # noqa
 
 os.environ["KMP_WARNINGS"] = "FALSE"
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # https://github.com/tensorflow/tensorflow/issues/27023
@@ -234,11 +234,11 @@ class Boolean(Terminal):
 
 class Float(Terminal):
     xtype = ((), float)
-    symfun = lambda *a: sympy.Float(float(a[0]), PRECISION)
+    symfun = lambda *a: sympy.Float(float(a[0]), FLOAT_PRECISION)
     tflow = lambda a: tf.constant(a, dtype=tf.float32)
 
     # def __init__(self, value):
-    #     self.value = sympy.Float(value, PRECISION)
+    #     self.value = sympy.Float(value, FLOAT_PRECISION)
 
 
 class Symbol(Terminal):
@@ -420,6 +420,10 @@ class Max(MinMaxBase, ChainableOp):
     tflow = tf.maximum
     xtype = ((float, float), float)
     chain_xtype = float
+    #
+    # sfeh
+    # def __new__(cls, *args, **kwargs):
+    #     return Node(cls, args)
 
 
 class Lt(RelationalOperator):

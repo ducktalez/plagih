@@ -105,7 +105,7 @@ class Regression(OfflineKernel):
         fitness = tf_results['mean_error']
         if fitness != fitness or fitness == float('inf'):
             raise ValueError(f"fitness evaluation failed ('{fitness}')")  # sfeh: so bad, they leave the float-range. delete this?
-        tf_results['mean_error'] = round(float(tf_results['mean_error']), PRECISION)
+        tf_results['mean_error'] = round(float(tf_results['mean_error']), FLOAT_PRECISION)
 
         return tf_results
 
@@ -164,7 +164,7 @@ class Regression(OfflineKernel):
 
         if not return_results:
             fitness = np.sqrt(np.mean((results-action)**2))
-            return np.round(fitness, PRECISION)
+            return np.round(fitness, FLOAT_PRECISION)
         else:
             return results
 

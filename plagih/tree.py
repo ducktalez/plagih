@@ -7,16 +7,16 @@ import sympy.core.numbers
 from plagih.plagih_tree import *
 
 # For conversion from sympy into node
-from plagih.util import FLOAT_PRECISION
+from plagih.util import FLOAT_FLOAT_PRECISION
 
-dict_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul,
-                 sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,
-                 sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
-                 sympy.GreaterThan: Ge, sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos,
-                 sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
-                 sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: exp}
-dict_op2chain = {Add: AddChain, Mul: MulChain, Min: MinChain, Max: MaxChain, And: AndChain, Or: OrChain,
-                       Piecewise: Piecewise}  # todo Piecewise
+d_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul,
+              sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,
+              sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.StrictGreaterThan: Gt,
+              sympy.GreaterThan: Ge, sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos,
+              sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
+              sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: exp}
+d_op2chain = {Add: AddChain, Mul: MulChain, Min: MinChain, Max: MaxChain, And: AndChain, Or: OrChain,
+              Piecewise: Piecewise}  # todo Piecewise
 d_sym2node_chain = {sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChain, sympy.Max: MaxChain,
                     sympy.And: AndChain, sympy.Or: OrChain, sympy.Piecewise: Piecewise}  # todo Piecewise
 # , sympy.Equality: Eq
@@ -28,9 +28,9 @@ sym_assumption_nodes = (sympy.re,)
 class Node:
     """Recursively holds the nodes of a tree"""
 
-    def __init__(self, label, childs, depth=None, is_fix=False, is_chain=False):
+    def __init__(self, label, childs: iter, depth=None, is_fix=False, is_chain=False):
         self.label = label
-        self.childs = childs
+        self.childs = childs[:]
 
         self.is_fix = is_fix
         self.depth = depth
@@ -40,6 +40,7 @@ class Node:
         try:
             label_str = self.label.__name__  # sfeh: can str(label) work? -> str with args recursively?
         except AttributeError as ex:
+            # todo debug me
             label_str = self.label  # because Terminals are obj -> 'Symbol' obj has no attr __name__
 
         if self.childs:
@@ -234,23 +235,34 @@ class Node:
                 cc.repair_depth(depth=depth + 1)
         return
 
-    def set_new_node(self, new_node: 'Node'):
-        self.set_label(new_node.label)  # sfeh remove childs, is_fix...
-        self.childs = new_node.childs  # sfeh maybe must be updated recursively
-        self.repair_depth(self.depth)  # Especially required for crossover or branches
+    def set_new_node(self, nd_new: 'Node'):
+        """Replacing oneself with another node"""
+        self.set_label(nd_new.label)  # sfeh remove childs, is_fix...
+        self.childs = nd_new.childs  # sfeh maybe must be updated recursively
+        self.repair_depth(self.depth)  # Especially required for crossover or branchesnd_new
+        # sfeh check fixed or if type matches?
 
-    def eval_mutable_nodes(self, match_xt=None, ignore_first=False, ignore_chain=False) -> ['Node']:  # sfeh is this correct?
+    def replace_with_node(self, nd_new: 'Node'):
+        """Replacing oneself with another node"""
+        self.set_label(nd_new.label)
+        self.childs = nd_new.childs
+        # self.repair_depth(self.depth)  # todo, failed inside TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'
+        # no checks
+
+    def eval_mutable_nodes(self, xt_match=None, ignore_first=False, ignore_chain=False) -> ['Node']:
         """return all nodes that are mutable (non fixed)
         sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!"""
         node_list = []
-        if not any([self.is_fix, ignore_first, ignore_chain and self.is_chain]) and match_xt is None or match_xt == self.get_xtype_self():
+        if not any([self.is_fix, ignore_first,
+                    ignore_chain and self.is_chain]) and xt_match is None or xt_match == self.get_xtype_self():
             node_list.append(self)  # must be reference
 
         if self.is_regular():
 
             if self.is_operator():  # sfeh:chain-operators discuss
                 for cc in self.childs:
-                    node_list.extend(cc.eval_mutable_nodes(match_xt=match_xt, ignore_first=False, ignore_chain=ignore_chain))
+                    node_list.extend(
+                        cc.eval_mutable_nodes(xt_match=xt_match, ignore_first=False, ignore_chain=ignore_chain))
         return node_list
 
     def evolve_mutate_filter_gauss(self):
@@ -263,7 +275,8 @@ class Node:
         """
         if self.is_term():
             if issubclass(self.label, Float):
-                self.childs[0] = round(random.gauss(self.childs[0], 0.1), FLOAT_PRECISION)   # sfeh: ->no symbols ->userspecific
+                self.childs[0] = round(random.gauss(self.childs[0], 0.1),
+                                       FLOAT_FLOAT_PRECISION)  # sfeh: ->no symbols ->userspecific
         else:
             for cc in self.childs:
                 cc.evolve_mutate_filter_gauss()
@@ -276,130 +289,97 @@ class Node:
         # self.name = f'{self.fam}_{new_index}'
         pass
 
-    def tree_node_grouping(self, allow_chain=False):
+    def tree_node_grouping(self):
         """
         If possible, this groups nodes to a simpler expression (if possible).
         E.g. a ** 2 -> square(a)
              a + b + c -> sum(a, b, c)  (chaining)
 
-        branch = nnnn
+        # todo idea Heavyside function. input a val, input b threshold
         """
         if self.is_term():  # runtime
             return
 
-        else:
-            cc_nodes = [cc.tree_node_grouping(allow_chain=allow_chain) for cc in self.childs]
-            if allow_chain:
-                # todo todotodo match the chaining functions into one
-                if isinstance(self.label, tuple(dict_op2chain)):
-                    self.label = d_sym2node_chain[self.label]  # + + ... -> Add
-                    self.childs = cc_nodes, is_chain=True)
+        for cc in self.childs:
+            # todo: check, if this actually alters the content
+            cc.tree_node_grouping()
 
-            if self.label == ExprCondPair:  # sympy.functions.elementary.piecewise.ExprCondPair
-                self.set_label(ExprCondPair), cc_nodes)
+        if self.label == Pow:
+            n_exp = self.childs[1].childs[0]  # must exist
+            if n_exp == -1:
+                self.replace_with_node(Node(InverseFraction, childs=[self.childs[0]]))
+            elif n_exp == 2:
+                self.replace_with_node(Node(Square, childs=[self.childs[0]]))
+            elif n_exp == 0.5:
+                self.replace_with_node(Node(Sqrt, childs=[self.childs[0]]))
+            elif n_exp == 0:
+                self.replace_with_node(Node(Float, childs=[1]))
+            elif self.childs[1].label == Round:
+                self.replace_with_node(Node(Powrounded, childs=[self.childs[0], n_exp]))
+            elif self.childs[1].label == Float and n_exp % 1 == 0:
+                self.label = Powrounded
 
-            elif self.label == Piecewise:
-
-                reversed_pairs = list(self.childs[::-1])  # tuples to list, reversed: tuple must be nested the deepest
-                # sfeh todo cc_nodes irrelevant?
-                reversed_pairs = [[tree_node_grouping(xx, allow_chain=allow_chain) for xx in list(i)] for i in reversed_pairs]  # noqa
-                otherwise = reversed_pairs[0][0]  # the last "True" condition
-                for pairs in reversed_pairs[1:]:
-                    otherwise = Node(Ifte, [pairs[1], pairs[0], otherwise])
-                return otherwise
-
-            # todo include Usub, ignore usub in tree len()
-            # elif isinstance(expr, sympy.Mul) and expr.args[0] == -1 and expr.args[1].is_Atom:
-            #     node = sympy_to_tree(expr.args[1], allow_chain=allow_chain)
-            #
-            #     return node
-
-            elif label == Pow:
-                # todo match nodes to simplified nodes in a different function
-                child1 = tree.childs[1]
-                if child1.label == Float:
-                    value = child1.get_value()
-                    if value == -1:  # sympy.S.NegativeOne= sfeh:check if assumptions are available
-                        _r = InverseFraction
-                        cc_nodes = [cc_nodes[0]]  # .pop(1)  # second arg was identified and must now be ignored
-                    elif value == 2:
-                        _r = Square
-                        cc_nodes = [cc_nodes[0]]  # cc_nodes.pop(1)
-                    elif value == 0.5:  # todo debug, sympy.S.Half
-                        _r = Sqrt
-                        cc_nodes = [cc_nodes[0]]  # cc_nodes.pop(1)
+        elif self.label == Mul:
+            if self.childs[0].label == Float:
+                mult_faktor = self.childs[0].childs[0]
+                if mult_faktor == -1:
+                    if self.childs[1].is_term():
+                        self.replace_with_node(Node(Float, childs=[-1 * self.childs[1]]))
                     else:
-                        _r = Pow
-
-                elif tree.childs[1].get_label() == RoundDummy:
-                    # todo check this BEFORE possibly the round operator is matched.
-                    _r = Powrounded
-                    cc_nodes[1] = cc_nodes[1].childs[0]
-                else:
-                    _r = Pow
-                return Node(_r, cc_nodes)
-
-            if isinstance(label, Mul):
-                for ii, cn in enumerate(cc_nodes):
-                    if cn.label == InverseFraction:
-                        divisor_node = cc_nodes.pop(ii)
-                        divisor_node = divisor_node.childs[0]
-                        dividend_node = cc_nodes[0]
-                        return Node(Div, [dividend_node, divisor_node])
-            elif label == RoundDummy:
-                return Node(Round, [cc_nodes[0]])
-
-            elif tree.is_operator():
-                return tree
-
-        raise NotImplementedError(f'Label missing: {label}')
+                        # todo only replace, when Usub is available? include Usub, ignore usub in tree len()
+                        self.replace_with_node(Node(Usub, childs=self.childs))
+                elif 0 < mult_faktor < 1:
+                    todo_div_by_test = 1/mult_faktor
+                    print(f'asd todo {todo_div_by_test}')
 
 
-def sympy_to_tree(expr, allow_chain=False) -> Node:
+def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
     """
     Important: start with the most specific rule
-    todo: check is expr is an accepted operator, otherwise reconstruction probably fails"""
-    if isinstance(expr, bool):
-        return Node(Boolean, [expr])
+    # sfeh:discuss computational improvement when option to ignore args? do "raises" in args save time?
+    # check is expr is an accepted operator, otherwise reconstruction probably fails"""
+    if isinstance(s_expr, bool):
+        return Node(Boolean, [s_expr])
 
-    elif isinstance(expr, sympy.logic.boolalg.BooleanAtom):
-        expr = True if isinstance(expr, (bool, sympy.logic.boolalg.BooleanTrue)) else False
-        return Node(Boolean, [expr])
+    elif isinstance(s_expr, sympy.logic.boolalg.BooleanAtom):
+        s_expr = True if isinstance(s_expr, (bool, sympy.logic.boolalg.BooleanTrue)) else False
+        return Node(Boolean, [s_expr])
 
     # the following two lines are not required, if sympy filters for bad expressions earlier
     # if expr.is_imaginary or expr.is_infinite:
     #     raise ValueError(f'Cannot convert this to Tensorflow: {expr}')
 
-    elif expr.is_Atom:
-        if expr.is_Symbol:
-            return Node(Symbol, [str(expr)])  # sfeh str VERY important!! "Symbol type input" is not accepted
+    elif s_expr.is_Atom:
+        if s_expr.is_Symbol:
+            return Node(Symbol, [str(s_expr)])  # sfeh str VERY important!! "Symbol type input" is not accepted
         else:
-            expr_eval = expr.evalf(FLOAT_PRECISION)  # standard 15 digits
-            if expr.is_Boolean:
+            expr_eval = s_expr.evalf(FLOAT_FLOAT_PRECISION)  # standard 15 digits
+            if s_expr.is_Boolean:
                 return Node(Boolean, [bool(expr_eval)])
-            elif expr.is_number:  # is_float does not match int
-                return Node(Float, [round(float(expr_eval), FLOAT_PRECISION)])
+            elif s_expr.is_number:  # is_float does not match int
+                return Node(Float, [round(float(expr_eval), FLOAT_FLOAT_PRECISION)])
                 # "TypeError: Cannot convert complex to float" -> ignore the whole expression, let it fail
             else:
-                raise NotImplementedError(f'What happened here? {expr}')
+                raise NotImplementedError(f'What happened here? {s_expr}')
 
-    else:
+    else:  # **Operators**
 
-        cc_nodes = [sympy_to_tree(ar, allow_chain=allow_chain) for ar in expr.args]
-        # sfeh:discuss computational improvement when ability to ignore args? do "raises" in args save time?
+        cc_nodes = []
+        for arg in s_expr.args:
+            cc_nodes.append(sympy_to_tree(arg, allow_chain=allow_chain))
 
-        # if allow_chain:  # if issubclass(clss, ChainableOp):
-        #     if isinstance(expr, tuple(dict_sym2node_chain)):
-        #         clss = dict_sym2node_chain[type(expr)]
-        #         return Node(clss, cc_nodes, is_chain=True)
+        if allow_chain:
+            op = d_sym2node[s_expr]  # if issubclass(clss, ChainableOp):
+            return Node(op, childs=cc_nodes)
 
-        if isinstance(expr, sympy.functions.elementary.piecewise.ExprCondPair):
+        if isinstance(s_expr, sympy.functions.elementary.piecewise.ExprCondPair):
             return Node(ExprCondPair, cc_nodes)
 
-        elif isinstance(expr, sympy.Piecewise):
-            # "Chained" version is handled above
-            reversed_pairs = list(expr.args[::-1])  # tuples to list, reversed: tuple must be nested the deepest
-            reversed_pairs = [[sympy_to_tree(xx, allow_chain=allow_chain) for xx in list(i)] for i in reversed_pairs]  # noqa
+        elif isinstance(s_expr, sympy.Piecewise):
+            # "Chained" version is handled before
+            reversed_pairs = list(s_expr.args[::-1])  # tuples to list, reversed: tuple must be nested the deepest
+            reversed_pairs = [[sympy_to_tree(xx, allow_chain=allow_chain) for xx in list(i)] for i in
+                              reversed_pairs]  # noqa
             otherwise = reversed_pairs[0][0]  # the last "True" condition
             for pairs in reversed_pairs[1:]:
                 otherwise = Node(Ifte, [pairs[1], pairs[0], otherwise])
@@ -407,15 +387,17 @@ def sympy_to_tree(expr, allow_chain=False) -> Node:
 
         # todo include Usub, ignore usub in tree len()
 
-        elif isinstance(expr, RoundDummy):
+        elif isinstance(s_expr, RoundDummy):
             return Node(Round, [cc_nodes[0]])
 
-        elif isinstance(expr, tuple(dict_sym2node)):
+        elif isinstance(s_expr, Mul):
+            if s_expr.args[0].is_Rational:
+                div_by = 1/s_expr
+                print(f'TODO TODO div by {div_by}')
 
-            clss = dict_sym2node[type(expr)]
-
-            if len(expr.args) > len(clss.get_child_xts()):
-
+        elif isinstance(s_expr, tuple(d_sym2node)):
+            clss = d_sym2node[type(s_expr)]
+            if len(s_expr.args) > len(clss.get_child_xts()):
                 _cc = cc_nodes[0]
                 for _c2 in cc_nodes[1:]:
                     _cc = Node(clss, [_cc, _c2])
@@ -424,7 +406,7 @@ def sympy_to_tree(expr, allow_chain=False) -> Node:
             else:
                 return Node(clss, cc_nodes)
 
-        elif isinstance(expr, sympy.re):
+        elif isinstance(s_expr, sympy.re):
             # We assume, that these Functions occur due to assumptions.
             # (for now: sympy.re, the Real-part of a number)
             # hence, we can skip this function while rebuilding without loosing any information
@@ -437,11 +419,11 @@ def sympy_to_tree(expr, allow_chain=False) -> Node:
     # sfeh:discuss
     # NotImplementedError: Expr missing: ITE(p > 13, tan(p - v) >= 2.578643, tan(p - v) >= 1)
     # this should not have occured, because it evaluates to bool, not to float
-    raise NotImplementedError(f'Expr missing: {expr}')
+    raise NotImplementedError(f'Expr missing: {s_expr}')
 
 
 if __name__ == '__main__':
 
-    for x in dict_sym2node.keys():
+    for x in d_sym2node.keys():
         lel = 4.5
         print(x, isinstance(lel, x))

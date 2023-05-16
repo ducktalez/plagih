@@ -61,9 +61,12 @@ def tree_simplification(tree):
     #   map piecewise to if-then-else
     #   map power fractal - to sqrt?
     """
+    tree_copy = copy.deepcopy(tree)
     expr_sym = tree.get_sympy_expr()
     tree = sympy_to_tree(expr_sym)
-    tree = tree_node_grouping(tree)
+    tree.tree_node_grouping()
+    if len(tree_copy) < len(tree):
+        print(f'WHATTPPENDED SFEH TODO\n\t{tree_copy}\n\t{tree}')
 
     return tree
 
@@ -87,7 +90,7 @@ def evolve_reduce_simplify(tree: Node, completely=True, force=False):
         return tree
     else:
         if len(tree_copy) < len(tree):
-            print_warning('w', f'Tree grew larger during simplification: {tree_copy} < {tree}')
+            print_warning('w', f'Tree grew larger during simplification:\n\t{tree_copy}\n\t{tree}')
             # [Square, [Powrounded, [-0.91], [cartPos]]] < [Pow, [-0.91], [Mul, [2], [Round, [cartPos]]]]
             return tree_copy
         else:
@@ -349,15 +352,15 @@ class TreeBuildRestrictions:
         a_nd = np.random.choice(a_nds)
         xt_out = a_nd.get_xtype_self()
 
-        b_nds = bb.eval_mutable_nodes(match_xt=xt_out)
+        b_nds = bb.eval_mutable_nodes(xt_match=xt_out)
 
         if len(b_nds) > 0:
             b_nd = np.random.choice(b_nds)
         else:
             xt_out = float if xt_out == bool else bool  # the other swap type now sfeh:open
-            b_nds = bb.eval_mutable_nodes(match_xt=xt_out)
+            b_nds = bb.eval_mutable_nodes(xt_match=xt_out)
             b_nd = np.random.choice(b_nds)
-            a_nds = aa.eval_mutable_nodes(ignore_first=True, match_xt=xt_out)
+            a_nds = aa.eval_mutable_nodes(ignore_first=True, xt_match=xt_out)
             if len(a_nds) == 0:
                 raise ValueError(f'Crossover cant find matching nodes')
             a_nd = np.random.choice(a_nds)

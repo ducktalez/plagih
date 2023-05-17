@@ -232,7 +232,7 @@ class Boolean(Terminal):
     #     return self.value
 
 
-class Float(Terminal):
+class Number(Terminal):
     xtype = ((), float)
     symfun = lambda *a: sympy.Float(float(a[0]), FLOAT_PRECISION)
     tflow = lambda a: tf.constant(a, dtype=tf.float32)
@@ -249,7 +249,12 @@ class Symbol(Terminal):
         sfeh:xxx option here for type float/bool
     sfeh:xxx how to set assumptions, Provide information such as real, integer, positive, range/interval
     """
-    symfun = lambda *a: sympy.Symbol(a[0], real=True, imaginary=False)  # sfeh: real=/imaginary= faster.
+    try:
+        symfun = lambda *a: a[0]  # todo todotodo
+        # symfun = lambda *a: sympy.Symbol(a[0], real=True, imaginary=False)  # sfeh: real=/imaginary= faster.
+    except Exception as ex:
+        symfun = lambda *a: a[0]  # todo todotodo
+
     tflow = lambda a: tf.constant(a, dtype=tf.float32 if isinstance(a, float) else tf.bool)
     xtype = ((), float)
 
@@ -267,8 +272,18 @@ class Add(MathOperator, ChainableOp):
     chain_xtype = float
 
 
-class InverseFraction(MathOperator):
-    """x**-1"""
+# todo sfeh expr.as_coeff_Mul() expr.as_numer_denom()
+#     import sympy as sp
+#     x, eps = sp.symbols('x E')
+#     expr = eps * x**3 - x**2 + 2 + 3 * x * eps**(-2)
+#     a = sp.Poly(expr, eps).coeffs()
+#     b = sp.Poly(expr, eps).coeffs()
+#     c = sp.Poly(expr, eps).coeffs()
+
+
+class DivFraction(MathOperator):
+    """x**-1
+    aka InverseFraction"""
     xtype = ((float, float), float)
     symfun = lambda a: sympy.Pow(a, sympy.S.NegativeOne)
     tflow = lambda a: tf.pow(a, -1)
@@ -487,6 +502,17 @@ class Round(MathOperator):
     tflow = lambda a: tf.math.round(a, 1)
 
 
+class Reversable:
+    """All the Operators which
+    eg:
+    Powrounded (If Pow + (child1 is round .../or child1 % 1)) -> """
+    def revert_when(self):
+        # sfeh:idea
+        # something like
+        # reverse_me = lambda labl, chld: Powrounded if (labl==Pow and chld[1]==Round) else Round
+        pass
+
+
 class Powrounded(Operator):
     tflow = lambda a, b: tf.pow(a, tf.round(b))
     symfun = lambda a, b: sympy.Pow(a, Round.symfun(b))  # symfun = lambda a, b: a**Round.symfun(b)
@@ -619,6 +645,12 @@ class OrChain(ChainOp):
     # ogclass = Or
 
 
+def sym_control(expr_sym):
+    if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im):  # sfeh:discuss sympy.re
+        raise ArithmeticError(f'Simplification failed: {expr_sym}')
+    return expr_sym
+
+
 def expr_sympify(expr):
     """
     Returns a simplified expression using sympify.
@@ -672,8 +704,7 @@ def expr_sympify(expr):
         #             print(f'COMPARE EXTEND:\n{expr_sym}\n{expr_sym3}')
         #     except Exception as ex:
         #         print(f'sympify-factor ex: {expr_sym} {ex}')
-        if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im):  # sfeh:discuss sympy.re
-            raise ArithmeticError(f'Simplification failed: {expr_sym}')
+        sym_control(expr_sym)
         return expr_sym
 
     except ValueError as ex:
@@ -744,7 +775,7 @@ totf = {
 }
 
 
-def sympy_to_tensorflow(expr, tensor_dict):
+def sympy_to_tensorflow(expr_sy, tensor_dict):
     """
     - check terminal-node
     -- check symbol
@@ -769,45 +800,45 @@ def sympy_to_tensorflow(expr, tensor_dict):
     # shape = tensors[list(tensors.keys())[0]].get_shape()  # sfeh:open:workaround:
 
     # ==Bug-handling==  sympy.sympify('True')->True is no sympy expression anymore
-    if isinstance(expr, bool):  # e.g. '1'
-        return tf.constant(expr, dtype=tf.dtypes.bool)
-    if isinstance(expr, (bool, sympy.logic.boolalg.BooleanAtom)):
-        expr = True if isinstance(expr, sympy.logic.boolalg.BooleanTrue) else False  # sfeh:collect sympy bug gotcha bug
-        return tf.constant(expr, dtype=tf.dtypes.bool)
+    if isinstance(expr_sy, bool):  # e.g. '1'
+        return tf.constant(expr_sy, dtype=tf.dtypes.bool)
+    if isinstance(expr_sy, (bool, sympy.logic.boolalg.BooleanAtom)):
+        expr_sy = True if isinstance(expr_sy, sympy.logic.boolalg.BooleanTrue) else False  # sfeh:collect sympy bug gotcha bug
+        return tf.constant(expr_sy, dtype=tf.dtypes.bool)
 
     # the following lines are not required, if sympy filters for bad expressions earlier
-    # if expr.is_imaginary or expr.is_infinite:
-    #     raise ValueError(f'Cannot convert this to Tensorflow: {expr}')
+    if expr_sy.is_imaginary or expr_sy.is_infinite:
+        raise ValueError(f'Cannot convert this to Tensorflow: {expr_sy}')
 
     # ==Terminal nodes==
-    elif expr.is_Atom:
-        if expr.is_Symbol:
+    elif expr_sy.is_Atom:
+        if expr_sy.is_Symbol:
             # result = feed_dict[expr.name]  # sfeh:discuss placeholder
 
             # result = tf.compat.v1.placeholder(tf.bool, name=str(expr))
             # sfeh:runtime?
-            result = tf.constant(tensor_dict[str(expr)], dtype=tf.bool if expr.assumptions0.get('bool') else tf.float32)
+            result = tf.constant(tensor_dict[str(expr_sy)], dtype=tf.bool if expr_sy.assumptions0.get('bool') else tf.float32)
             return result
 
         else:
-            expr_eval = expr.evalf()  # standard 15 digits
-            if expr.is_Boolean:
-                return tf.constant(expr_eval, dtype=tf.dtypes.bool)
-            elif expr.is_number:  # is_float does not match int
+            expr_eval = expr_sy.evalf()  # standard 15 digits
+            if expr_sy.is_Boolean:
+                return tf.constant(bool(expr_eval), dtype=tf.dtypes.bool)
+            elif expr_sy.is_number:  # is_float does not match int
                 return tf.constant(float(expr_eval), dtype=tf.dtypes.float32)
             else:
-                raise NotImplementedError(f'Atom, but no bool or number? {expr}')
+                raise NotImplementedError(f'Atom, but no bool or number? {expr_sy}')
 
     else:  # Operator # len(expr.args) > 0:  # sfeh: line can be removed or replaced
-        if isinstance(expr, sympy.Piecewise):
-            args_reversed = list(expr.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
+        if isinstance(expr_sy, sympy.Piecewise):
+            args_reversed = list(expr_sy.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
             args_reversed = [[sympy_to_tensorflow(xx, tensor_dict) for xx in list(i)] for i in args_reversed]
             otherwise = args_reversed[0][0]  # the last "True" condition
             for cet in args_reversed[1:]:
                 otherwise = tf.where(cet[1], cet[0], otherwise)
             return otherwise
 
-        tf_fun = totf[type(expr)]
+        tf_fun = totf[type(expr_sy)]
         # try:
         #     tf_fun = totf[type(expr)]
         # except KeyError:
@@ -816,7 +847,7 @@ def sympy_to_tensorflow(expr, tensor_dict):
         #     tf_fun = type(expr).tflow  # sfeh:debug-01.02 why does im come up here? (mut_br) im(Rounddummy(cartPos))
         #     # sfeh:idea exception, try to map sympy to tf function with same name (sympy.cos -> tf.cos)
 
-        tf_args = [sympy_to_tensorflow(a, tensor_dict) for a in expr.args]
+        tf_args = [sympy_to_tensorflow(a, tensor_dict) for a in expr_sy.args]
         # SFEH:Missing and Problems:
         #   - Exception: eval-ex: type object 'cosh' has no attribute 'tflow'
         #   - AttributeError: type object 'Rounddummy' has no attribute 'tflow'
@@ -828,7 +859,7 @@ def sympy_to_tensorflow(expr, tensor_dict):
                 # sfeh:optimization
                 result = tf_fun(result, tf_args.pop())
         return result
-    raise NotImplementedError(f'Cannot convert {expr}')  # noqa: unreachable code, but was reached often while dev
+    raise NotImplementedError(f'Cannot convert {expr_sy}')  # noqa: unreachable code, but was reached often while dev
 
 
 # class ExperimentalBaseTree(NodeBase):
@@ -1004,16 +1035,29 @@ if __name__ == '__main__':
         print(f'sympy_to_node = {{{st}}}')
 
 
+    def check_subclasses():
+
+        for x in get_subclasses(Operator):
+            if len(x.__subclasses__()) > 0:
+                # print('vdsfg', x)
+                pass
+            else:
+                print(x.__name__)
+                # pass
+
+
+    check_subclasses()
+
     # test_basic_tfconversion()  # sfeh all tests
     # test_sympify()
 
-    x = Add(childs=[Symbol('a'), Mul(childs=[2, 3])])
-    n1 = Float
-    n2 = Symbol
-    n3 = Boolean
-    n4 = Add()
-    # print(n1, n2, n3, n4)
-    print(len(n1), len(n4))
+    # x = Add(childs=[Symbol('a'), Mul(childs=[2, 3])])
+    # n1 = Float
+    # n2 = Symbol
+    # n3 = Boolean
+    # n4 = Add()
+    # # print(n1, n2, n3, n4)
+    # print(len(n1), len(n4))
 
     # for _subc in get_subclasses(BaseTree):
     #     if  in _subc.__bases__:
@@ -1024,3 +1068,39 @@ if __name__ == '__main__':
     #
     # print(type(RelationalOperator))
     # print_relevant_subclasses()
+
+
+#######################################
+# todo check these options
+#     import sympy
+#     a, b = sp.symbols('a b')
+#     expr = b - a**2 * a**3 + 2 + 3 * a * b**(-2)
+#     [expr,
+#      expr.as_expr(),
+#      expr.as_poly(),
+#      expr.as_base_exp(),
+#      expr.as_coeff_add(),
+#      expr.as_coeff_Add(),
+#      expr.as_coeff_mul(),
+#      expr.as_coeff_Mul(),
+#      # expr.as_coeff_exponent(),
+#      # expr.leadterm(),  # not working
+#      # expr.subs(),
+#      expr.as_coefficients_dict(),
+#      expr.as_content_primitive(),
+#      expr.as_dummy(),
+#      expr.as_expr(),
+#      expr.as_leading_term(),
+#      expr.as_numer_denom(),
+#      expr.as_two_terms(),
+#      expr.as_independent(),
+#      expr.expand(),
+#      expr.factor(),
+#      expr.assumptions0,
+#      expr.normal(),
+#      expr.nsimplify(),
+#      # expr.extract_multiplicatively(),
+#      # USEFUL
+#      expr.atoms(),  # for leaf nodes
+#      ]
+###########################

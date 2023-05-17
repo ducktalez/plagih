@@ -13,7 +13,6 @@ TEST_DUMMY = True  # sfeh: actually use this later! check trees, check if all op
 DELETE_ME = True  # sfeh:delete this when development phase is over
 PRINT_DUMMY = 'wwwaaagggggiiifff'  # noqa: dummy for print-policy
 FLOAT_PRECISION = 6
-FLOAT_FLOAT_PRECISION = 6  # sfeh use this
 
 
 def printyeah(message_type, message_str):

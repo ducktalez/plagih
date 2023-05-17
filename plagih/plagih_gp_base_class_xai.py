@@ -186,6 +186,8 @@ class ExplainableGP:
 
         return paretofront
 
+    # sfeh:idea sympy.NumberSy,bol
+
     def gen_create_initial(self):
 
         if self.origintree is not None:
@@ -226,14 +228,17 @@ class ExplainableGP:
                         self.pop_append(t2, tag=tag)
                         n_success += 1
 
-                except (ValueError, ArithmeticError, TypeError) as ex:
+                except (ValueError, ArithmeticError) as ex:
                     n_fails += 1  # sfeh:use this for something?
                     print_warning('www', f'\'{tag}\' failed: {ex}')
                     if n_fails > n_success + 5:  # allow more fails: n_fails > n
                         print_e(f'Evolution "{tag}" fails too often: {n_fails}x. {n_success}.')
                         return  # sfeh raise?
+                # except TypeError as ex:
+                #     print(f'Typeerror - why? {ex}')
                 except AttributeError as ex:
-                    print(f'Probably sympy.im in expr {ex}')
+                    raise AttributeError(f'Probably sympy.im in expr {ex}')
+                    # print(f'Probably sympy.im in expr {ex}')
         return loop
 
     def pop_append(self, evotree, tag=None):
@@ -426,13 +431,19 @@ class ExplainableGP:
         if parsimony > self.tb.nodes_max:
             raise ValueError(f'Tree too complex: {parsimony} > {self.tb.nodes_max}')
 
-        expr_sym = tree.get_sympy_expr()
+        sy_expr = tree.get_sympy_expr()
+        sym_control(sy_expr)  # raise if "weird" stuff in it
+        # expr_raw = tree.get_expr_raw()
+        # with sympy.evaluate(False):
+        #     expr_raw = tree.get_sympy_expr()  # todo
+        # v2_sym = expr_sympify(expr_raw)  # todo delete
+        # sfeh:discuss sympy real=True might allow imaginary results
 
-        fitness = self.kernel.eval_tf(expr_sym)['mean_error']
-        # if DEBUG_DUMMY or fitness != self.kernel.eval_sym_experimental(expr_sym):
-        #     print(f'FAILED: {fitness} vs. {self.kernel.eval_sym_experimental(expr_sym)}')
+        fitness = self.kernel.eval_tf(sy_expr)['mean_error']
+        # if DEBUG_DUMMY or fitness != self.kernel.eval_sym_experimental(sy_expr):
+        #     print(f'FAILED: {fitness} vs. {self.kernel.eval_sym_experimental(sy_expr)}')
 
-        meta = TreeMeta(fitness=fitness, parsimony=parsimony, expr_sym=expr_sym, tag=tag)
+        meta = TreeMeta(fitness=fitness, parsimony=parsimony, expr_sym=sy_expr, tag=tag)
         self.lut[str(tree)] = meta  # sfeh:discuss: lut update in finalize_tree_get_meta()?
         return meta
 

@@ -77,7 +77,7 @@ class Regression(OfflineKernel):
 
         return
 
-    def eval_tf(self, expr):
+    def eval_tf(self, sy_expr: sympy.Basic) -> dict:
         """
         Evaluates an expression using TensorFlow (TF)
         - receives a (string) expression in numpy-style that was reduced with pythons "sympy" (for simplification)
@@ -88,7 +88,7 @@ class Regression(OfflineKernel):
         """
         # tf.compat.v1.reset_default_graph()  # sfeh:discuss is this really required to do? legacy code
 
-        results_raw = sympy_to_tensorflow(expr, self.data_dict)  # self.data_train
+        results_raw = sympy_to_tensorflow(sy_expr, self.data_dict)  # self.data_train
         results = results_raw  # The ids change in the next lines! {id(results)} vs. {id(results_raw)}
         results = self.tf_sanitize_results(results)
         pairwise_diff = self.solution_train - results

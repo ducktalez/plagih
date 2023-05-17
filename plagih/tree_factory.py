@@ -53,6 +53,9 @@ def randomly_split_range(range_max: int, num_splits: int):
     return sample_dist
 
 
+# todo idea print(sympy.parsing.sympy_parser.transformations)
+
+
 def tree_simplification(tree):
     """
     (Tries to) simplify/mathematically-reduce a tree. It is quite experimental
@@ -63,10 +66,16 @@ def tree_simplification(tree):
     """
     tree_copy = copy.deepcopy(tree)
     expr_sym = tree.get_sympy_expr()
+    # expr_raw = tree.get_expr_raw()
+    # v2_sym = expr_sympify(expr_raw)
     tree = sympy_to_tree(expr_sym)
     tree.tree_node_grouping()
     if len(tree_copy) < len(tree):
-        print(f'WHATTPPENDED SFEH TODO\n\t{tree_copy}\n\t{tree}')
+        print(f'WHATTPPENDED SFEH TODO'
+              f'\n\t{tree_copy}'
+              f'\n\t{tree}'
+              f'\n\t{tree_copy.get_sympy_expr()}'
+              f'\n\t{tree.get_sympy_expr()}')
 
     return tree
 
@@ -609,9 +618,9 @@ if __name__ == '__main__':
                       '["Ifte", ["Not", [False]], [0.0], [2.0]]']
 
     tb = TreeBuildRestrictions(['a', 'b'], 10, 30, float, origin_tree=None)
-    tr = Node(Add, [Node(Symbol('a'), []), Node(Float(1.23), [])])
-    tr = Node(Ifte, [Node(Gt, [Node(Symbol('a'), []), Node(Float(1.2), [])]), Node(Float(3.), []), Node(Float(2.), [])])
-    tr = Node(Max, [Node(Symbol('a'), []), Node(Float(1.2), [])])
+    tr = Node(Add, [Node(Symbol('a'), []), Node(Number(1.23), [])])
+    tr = Node(Ifte, [Node(Gt, [Node(Symbol('a'), []), Node(Number(1.2), [])]), Node(Number(3.), []), Node(Number(2.), [])])
+    tr = Node(Max, [Node(Symbol('a'), []), Node(Number(1.2), [])])
     x = tr.get_sympy_expr()
     tr2 = sympy_to_tree(x)
     tr2 = tree_node_grouping(tr2)

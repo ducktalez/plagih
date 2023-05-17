@@ -7,7 +7,7 @@ import sympy.core.numbers
 from plagih.plagih_tree import *
 
 # For conversion from sympy into node
-from plagih.util import FLOAT_FLOAT_PRECISION
+from plagih.util import FLOAT_PRECISION
 
 d_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul,
               sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,
@@ -34,7 +34,14 @@ class Node:
 
         self.is_fix = is_fix
         self.depth = depth
-        self.is_chain = is_chain  # sfeh:xxx check update required
+        # self.is_chain = is_chain  # sfeh:xxx check update required
+
+    def is_chain(self):
+        """is the node in chain mode?
+        -> when there are more childs than input-xtypes
+        ...if there are less. its weird, maybe node in construction?"""
+        if len(self.label.xtype[0]) < len(self.childs):
+            return False
 
     def __str__(self):
         try:
@@ -49,40 +56,49 @@ class Node:
                 label_str = f'{label_str}, {childstr}'
             else:
                 try:
-                    if issubclass(self.label, Float):
+                    if issubclass(self.label, Number):
                         label_str = f'{self.childs[0]:.2g}'  # 2 decimals, no trailing zeros, but rare (ugly) "E+04"
                     else:
                         label_str = f'{self.childs[0]}'
+                except TypeError as ex:
+                    label_str = str(self.childs[0].evalf())
+                    # sfeh:open
                 except Exception as ex:
-                    print(f'sfeh:debug, delete if no occurs. "IndexError: invalid index to scalar variable"? {ex}')
+                    print(f'SUCCESS sfeh:debug, delete? KEEP? {ex}')
 
         return f"[{label_str}]"
 
     def get_sympy_expr(self):
-        if self.childs and issubclass(self.label, Operator):
+        if issubclass(self.label, Operator):
             _sym = self.label.symfun
             _cs = [cc.get_sympy_expr() for cc in self.childs]
-            # if self.label == Ifte:
-            try:
-                return _sym(*_cs)
-            except RecursionError as ex:
-                print(f'sfeh:RecursionError, maybe Piecewise?: {self}, {ex}')
-                raise RecursionError
-            # except ValueError as ex:
-            #     raise ex
-            # except Exception as ex:
-            #     print(f'sfeh:XXX this still occurs. {ex}')
-            #     # The argument '-2.05444 + I*pi' is not comparable.
-            #     # <lambda>() missing 1 required positional argument: 'b'
-            #     #   -> Probably in Sub-class lambda-function
-            #     raise ex
-        elif self.childs and issubclass(self.label, Terminal):
+            return _sym(*_cs)
+            # try:
+            #     return _sym(*_cs)
+            # except RecursionError as ex:
+            #     print(f'sfeh:RecursionError, maybe Piecewise?: {self}, {ex}')
+            #     raise RecursionError
+            # # except Exception as ex:
+            # #     print(f'sfeh:XXX this still occurs. {ex}')
+            # #     # The argument '-2.05444 + I*pi' is not comparable.
+            # #     # <lambda>() missing 1 required positional argument: 'b'
+            # #     #   -> Probably in Sub-class lambda-function
+            # #     raise ex
+        elif issubclass(self.label, Terminal):
             _sym = self.label.get_sym()  # _sym = self.label.symfun
             _cs = self.childs[0]
             return _sym(_cs)
-        print(len(self.childs), type(self.label), issubclass(self.label, Operator),
-              issubclass(self.label, Terminal))
+        print(len(self.childs), type(self.label), issubclass(self.label, Operator), issubclass(self.label, Terminal))
         raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.label)}')
+
+    def get_expr_raw(self):
+        if issubclass(self.label, Operator):
+            expr = [cc.get_expr_raw() for cc in self.childs]
+            expr = ', '.join(expr)
+            expr = f'{self.label.__name__}({expr})'
+        elif issubclass(self.label, Terminal):
+            expr = f'{self.childs[0]}'
+        return expr
 
     def get_tf_expr(self):
         if self.childs and issubclass(self.label, Operator):
@@ -114,7 +130,10 @@ class Node:
         if issubclass(self.label, Terminal):
             return 1  # childs can currently be floats
         else:
-            return 1 + sum([len(cc) for cc in self.childs])
+            try:
+                return 1 + sum([len(cc) for cc in self.childs])
+            except Exception as TODO:
+                return 1 + sum([len(cc) for cc in self.childs])
 
     def get_label(self):
         return self.label
@@ -242,10 +261,12 @@ class Node:
         self.repair_depth(self.depth)  # Especially required for crossover or branchesnd_new
         # sfeh check fixed or if type matches?
 
-    def replace_with_node(self, nd_new: 'Node'):
-        """Replacing oneself with another node"""
-        self.set_label(nd_new.label)
-        self.childs = nd_new.childs
+    def replace_with(self, label, childs):
+        if label is not None:
+            self.set_label(label)
+        if childs is not None:
+            self.set_childs(childs)
+
         # self.repair_depth(self.depth)  # todo, failed inside TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'
         # no checks
 
@@ -274,9 +295,8 @@ class Node:
                 intelligent filtering
         """
         if self.is_term():
-            if issubclass(self.label, Float):
-                self.childs[0] = round(random.gauss(self.childs[0], 0.1),
-                                       FLOAT_FLOAT_PRECISION)  # sfeh: ->no symbols ->userspecific
+            if issubclass(self.label, Number):
+                self.childs[0] = round(random.gauss(self.childs[0], 0.1), FLOAT_PRECISION)  # sfeh: -> no symbols -> userspecific
         else:
             for cc in self.childs:
                 cc.evolve_mutate_filter_gauss()
@@ -295,7 +315,7 @@ class Node:
         E.g. a ** 2 -> square(a)
              a + b + c -> sum(a, b, c)  (chaining)
 
-        # todo idea Heavyside function. input a val, input b threshold
+        # sfeh:idea Heavyside function. input a val, input b threshold
         """
         if self.is_term():  # runtime
             return
@@ -304,33 +324,44 @@ class Node:
             # todo: check, if this actually alters the content
             cc.tree_node_grouping()
 
-        if self.label == Pow:
+        if self.label in (Pow, Powrounded):
             n_exp = self.childs[1].childs[0]  # must exist
             if n_exp == -1:
-                self.replace_with_node(Node(InverseFraction, childs=[self.childs[0]]))
+                self.replace_with(DivFraction, childs=[self.childs[0]])
             elif n_exp == 2:
-                self.replace_with_node(Node(Square, childs=[self.childs[0]]))
+                self.replace_with(Square, childs=[self.childs[0]])
             elif n_exp == 0.5:
-                self.replace_with_node(Node(Sqrt, childs=[self.childs[0]]))
+                self.replace_with(Sqrt, childs=[self.childs[0]])
             elif n_exp == 0:
-                self.replace_with_node(Node(Float, childs=[1]))
+                self.replace_with(Number, childs=[1])
             elif self.childs[1].label == Round:
-                self.replace_with_node(Node(Powrounded, childs=[self.childs[0], n_exp]))
-            elif self.childs[1].label == Float and n_exp % 1 == 0:
-                self.label = Powrounded
+                self.replace_with(Powrounded, childs=[self.childs[0], n_exp])
+            elif self.childs[1].label == Number and n_exp % 1 == 0:
+                self.set_label(Powrounded)
 
         elif self.label == Mul:
-            if self.childs[0].label == Float:
-                mult_faktor = self.childs[0].childs[0]
-                if mult_faktor == -1:
-                    if self.childs[1].is_term():
-                        self.replace_with_node(Node(Float, childs=[-1 * self.childs[1]]))
-                    else:
-                        # todo only replace, when Usub is available? include Usub, ignore usub in tree len()
-                        self.replace_with_node(Node(Usub, childs=self.childs))
-                elif 0 < mult_faktor < 1:
-                    todo_div_by_test = 1/mult_faktor
-                    print(f'asd todo {todo_div_by_test}')
+            if not self.is_chain():  # div only for
+                if self.childs[0].label == DivFraction:
+                    self.replace_with(Div, childs=[self.childs[1], self.childs[0].childs[0]])
+                elif self.childs[1].label == DivFraction:
+                    self.replace_with(Div, childs=[self.childs[0], self.childs[1].childs[0]])
+
+                elif self.childs[0].label == Number:
+                    mul1 = self.childs[0].childs[0]
+                    if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
+                        self.replace_with(Usub, childs=[self.childs[1]])  # todo Usub ONLY option, ignore usub tree len
+                    elif 0 < mul1 < 1:
+                        self.replace_with(Div, childs=[self.childs[1], Node(Number, 1 / mul1)])  # todo keep "div" as option
+                        print(f'asd todo {1 / mul1}')
+
+                elif self.childs[1].label == Number:
+                    mul1 = self.childs[1].childs[0]
+                    if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
+                        self.replace_with(Usub, childs=[self.childs[0]])  # todo Usub ONLY option, ignore usub tree len
+                    elif 0 < mul1 < 1:
+                        self.replace_with(Div, childs=[self.childs[0], 1 / mul1])
+                        todo_div_by_test = 1 / mul1  # todo keep "div" as option
+                        print(f'asd todo {todo_div_by_test}')
 
 
 def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
@@ -342,7 +373,8 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
         return Node(Boolean, [s_expr])
 
     elif isinstance(s_expr, sympy.logic.boolalg.BooleanAtom):
-        s_expr = True if isinstance(s_expr, (bool, sympy.logic.boolalg.BooleanTrue)) else False
+        # s_expr = True if isinstance(s_expr, (bool, sympy.logic.boolalg.BooleanTrue)) else False
+        s_expr = True if isinstance(s_expr, (bool, sympy.logic.boolalg.BooleanTrue)) else False  # todo todotodo
         return Node(Boolean, [s_expr])
 
     # the following two lines are not required, if sympy filters for bad expressions earlier
@@ -351,13 +383,16 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
 
     elif s_expr.is_Atom:
         if s_expr.is_Symbol:
-            return Node(Symbol, [str(s_expr)])  # sfeh str VERY important!! "Symbol type input" is not accepted
+            # return Node(Symbol, [str(s_expr)])  # sfeh str VERY important!! "Symbol type input" is not accepted
+            return Node(Symbol, [s_expr])  # todo todotodo str VERY important!! "Symbol type input" is not accepted
         else:
-            expr_eval = s_expr.evalf(FLOAT_FLOAT_PRECISION)  # standard 15 digits
+            expr_eval = s_expr  # todo check if this can be worked with .evalf(FLOAT_PRECISION)  # 15 digits
             if s_expr.is_Boolean:
-                return Node(Boolean, [bool(expr_eval)])
+                # return Node(Boolean, [bool(expr_eval)])
+                return Node(Boolean, [expr_eval])  # todo todotodo
             elif s_expr.is_number:  # is_float does not match int
-                return Node(Float, [round(float(expr_eval), FLOAT_FLOAT_PRECISION)])
+                # return Node(Float, [round(float(expr_eval), FLOAT_PRECISION)])
+                return Node(Number, [expr_eval])  # todo todotodo check
                 # "TypeError: Cannot convert complex to float" -> ignore the whole expression, let it fail
             else:
                 raise NotImplementedError(f'What happened here? {s_expr}')
@@ -392,7 +427,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
 
         elif isinstance(s_expr, Mul):
             if s_expr.args[0].is_Rational:
-                div_by = 1/s_expr
+                div_by = 1 / s_expr
                 print(f'TODO TODO div by {div_by}')
 
         elif isinstance(s_expr, tuple(d_sym2node)):

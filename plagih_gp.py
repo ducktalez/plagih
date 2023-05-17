@@ -7,6 +7,7 @@ import sys
 import random
 
 # import multiprocessing as mp
+import sympy
 from sklearn.model_selection import train_test_split
 
 from plagih.fitness_kernel import Regression
@@ -70,11 +71,11 @@ def _test_random_pop():
 
             samples = [i for i in itertools.chain.from_iterable(df[['cartVel', 'cartPos']].sample(n=50).values) if
                        i != 0]
-            pick_constant = {float: [[lambda: round(random.normalvariate(0, 1), FLOAT_FLOAT_PRECISION), 0.2],
-                                     [lambda: round(random.normalvariate(1, 1), FLOAT_FLOAT_PRECISION), 0.1],
-                                     [lambda: round(random.normalvariate(10, 5), FLOAT_FLOAT_PRECISION), 0.1],
-                                     [lambda: round(random.randint(1, 20), FLOAT_FLOAT_PRECISION), 0.1],  # int fails in Float
-                                     [lambda: round(random.choice(samples), FLOAT_FLOAT_PRECISION), 0.5]],
+            pick_constant = {float: [[lambda: round(random.normalvariate(0, 1), FLOAT_PRECISION), 0.2],
+                                     [lambda: round(random.normalvariate(1, 1), FLOAT_PRECISION), 0.1],
+                                     [lambda: round(random.normalvariate(10, 5), FLOAT_PRECISION), 0.1],
+                                     [lambda: round(random.randint(1, 20), FLOAT_PRECISION), 0.1],  # int fails in Float
+                                     [lambda: round(random.choice(samples), FLOAT_PRECISION), 0.5]],
                              bool: [[lambda: random.choice((True, False)), 1]]}
             self.pick_constant = {float: make_choices(pick_constant[float]),
                                   bool: make_choices(pick_constant[bool])}
@@ -93,6 +94,7 @@ def _test_random_pop():
             if np.random.random() > p_observation:
                 try:
                     _v = self.choose_symbol(xt)
+                    _v = sympy.Symbol(_v)  # todo todotodo remove?
                     if as_node:
                         return Node(Symbol, [_v])
                     else:
@@ -101,17 +103,25 @@ def _test_random_pop():
                     pass  # return a constant (E.g. because there are no boolean observations)
 
             _v = self.choose_constant(xt, as_node=as_node)
+            # sfeh expected str|int|long|float|Decimal|Number object but got 'Node'
+
             return _v
 
         def choose_constant(self, xt, as_node=False):
             _v = np.random.choice(self.pick_constant[xt][0], p=self.pick_constant[xt][1])()  # only dist. must be ()
-            if as_node:
-                if xt == float:
-                    return Node(Float, [round(_v, FLOAT_FLOAT_PRECISION)])
+            if xt == float:
+                _v = sympy.Float(_v)
+                # todo allow rational
+                if as_node:
+                    return Node(Number, [_v])  # round FLOAT_PRECISION was here
                 else:
-                    return Node(Boolean, [_v])
+                    return _v
             else:
-                return _v
+                _v = sympy.logic.boolalg.BooleanAtom(_v)  # sfeh:discuss: vs. Boolean
+                if as_node:
+                    return Node(Boolean, [_v])
+                else:
+                    return _v
 
         def choose_symbol(self, xt, as_node=False):
             _v = np.random.choice(self.pick_symbol[xt][0], p=self.pick_symbol[xt][1])

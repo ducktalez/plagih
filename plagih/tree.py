@@ -337,7 +337,7 @@ class Node:
             elif self.childs[1].label == Round:
                 self.replace_with(Powrounded, childs=[self.childs[0], n_exp])
             elif self.childs[1].label == Number and n_exp % 1 == 0:
-                self.set_label(Powrounded)
+                self.set_label(Powrounded, [])
 
         elif self.label == Mul:
             if not self.is_chain():  # div only for

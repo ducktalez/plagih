@@ -57,12 +57,12 @@ class Node:
             else:
                 try:
                     if issubclass(self.label, Number):
-                        label_str = f'{self.childs[0]:.2g}'  # 2 decimals, no trailing zeros, but rare (ugly) "E+04"
+                        label_str = f'{self.childs[0]:.2f}'  # '.2g'->2 decimals, trailing zeros, but rare (ugly) "E+04"
                     else:
                         label_str = f'{self.childs[0]}'
                 except TypeError as ex:
                     label_str = str(self.childs[0].evalf())
-                    # sfeh:open
+                    # sfeh:open int, non-floats are handeled badly
                 except Exception as ex:
                     print(f'SUCCESS sfeh:debug, delete? KEEP? {ex}')
 

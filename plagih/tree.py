@@ -228,7 +228,8 @@ class Node:
             return max(cc.get_max_depth(depth=depth + 1) for cc in self.childs)
 
     def is_regular(self):
-        return issubclass(self.label, RegularNode)
+        # Nodes that are notchained-nodes
+        return issubclass(self.label, ArityNode)
 
     def is_chainop(self):
         return issubclass(self.label, ChainOp)
@@ -270,20 +271,28 @@ class Node:
         # self.repair_depth(self.depth)  # todo, failed inside TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'
         # no checks
 
-    def eval_mutable_nodes(self, xt_match=None, ignore_first=False, ignore_chain=False) -> ['Node']:
-        """return all nodes that are mutable (non fixed)
+    def eval_mutable_nodes(self, xt_match=None, ignore_first=False, allow_chain=False) -> ['Node']:
+        """return all nodes that are mutable, aka suite for point- or branchmutation
         sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!"""
-        node_list = []
-        if not any([self.is_fix, ignore_first,
-                    ignore_chain and self.is_chain]) and xt_match is None or xt_match == self.get_xtype_self():
-            node_list.append(self)  # must be reference
 
-        if self.is_regular():
+        # -> Check, if this node should be added
+        if self.is_fix:
+            node_list = []
+        elif ignore_first:
+            node_list = []  # ignore_first is automatically set to false during recursion
+        elif allow_chain or self.is_chain():
+            node_list = []
+        else:
+            if xt_match is None or xt_match == self.get_xtype_self():
+                node_list = [self]
+            else:
+                node_list = []
 
-            if self.is_operator():  # sfeh:chain-operators discuss
-                for cc in self.childs:
-                    node_list.extend(
-                        cc.eval_mutable_nodes(xt_match=xt_match, ignore_first=False, ignore_chain=ignore_chain))
+        # -> recursively add the other nodes
+        if self.is_regular() and self.is_operator():  # sfeh:chain-operators discuss
+            for cc in self.childs:
+                node_list.extend(cc.eval_mutable_nodes(xt_match=xt_match, ignore_first=False, allow_chain=allow_chain))
+
         return node_list
 
     def evolve_mutate_filter_gauss(self):

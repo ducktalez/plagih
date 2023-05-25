@@ -138,7 +138,7 @@ class Label:
         return cls.xtype[0]
 
 
-class RegularNode(Label):
+class ArityNode(Label):
     pass
 
 
@@ -156,7 +156,7 @@ class CustomOperator:
     xtype = ((None, None), None)
 
 
-class Operator(RegularNode):  # sfeh:xxx sympy.Function was here, also is_Function = True
+class Operator(ArityNode):  # sfeh:xxx sympy.Function was here, also is_Function = True
     pass
 
 
@@ -203,7 +203,7 @@ class NoSymCapitalized:
     pass
 
 
-class Terminal(RegularNode):  # sfeh sympy.Atom
+class Terminal(ArityNode):  # sfeh sympy.Atom
     """Terminal nodes are leaf nodes which can not have children. e.g.:
     - constants (e.g. 2.3)
     - observations (e.g. b, aka data input)

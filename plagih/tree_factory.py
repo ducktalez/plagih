@@ -217,7 +217,7 @@ class TreeBuildRestrictions:
         sfeh:open make depth_goal -> depth_rest"""
 
         if depth == self.depth_max or depth == depth_goal or num_rest == 0 or random.random() < p_term:
-            node = self.nc.choose_terminal(xt_out, as_node=True)
+            node = self.nc.choose_terminal(xt_out)
             node.depth = depth
 
         else:
@@ -260,7 +260,7 @@ class TreeBuildRestrictions:
             evotree = self.evolve_new(xt_out, depth_goal, depth=0, num_rest=-1, p_term=p_term)
 
         if depth == self.depth_max or depth == depth_goal or num_rest == 0 or random.random() < p_term:
-            node = self.nc.choose_terminal(xt_out, as_node=True)
+            node = self.nc.choose_terminal(xt_out)
             node.depth = depth
 
         else:
@@ -301,7 +301,7 @@ class TreeBuildRestrictions:
         sfeh:debug is the fintree a fintree copy or the same fintree?"""
         evotree = copy.deepcopy(tree)
 
-        _nd = rnd_choice(evotree.eval_mutable_nodes(ignore_chain=True))  # debug if ignores chains
+        _nd = rnd_choice(evotree.eval_mutable_nodes(allow_chain=False))  # debug if ignores chains
         xtype = _nd.get_xtype()
 
         if _nd.is_operator():
@@ -310,7 +310,7 @@ class TreeBuildRestrictions:
             new_label = self.nc.choose_operator_match(xtype)  # Function is same type, same arity
             _nd.set_label(new_label)
         elif _nd.is_term:
-            new_node = self.nc.choose_terminal(xt_self(xtype), as_node=True)
+            new_node = self.nc.choose_terminal(xt_self(xtype))
             _nd.set_new_node(new_node)
         else:
             raise NotImplementedError
@@ -409,7 +409,7 @@ class TreeBuildRestrictions:
         for dnode in nodelist:
             if dnode.depth == self.nodes_max and dnode.get_arity() > 0:
                 print_warning('wwww', f'Node in fintree is too deep: {dnode.depth}')
-                new_node = self.nc.choose_terminal(dnode.get_xtype_self(), as_node=True)
+                new_node = self.nc.choose_terminal(dnode.get_xtype_self())
                 new_node.depth = dnode.depth
                 dnode.set_new_node(new_node)
 
@@ -421,7 +421,7 @@ class TreeBuildRestrictions:
 
             nodelist = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
             tree = np.random.choice(nodelist)
-            new_node = self.nc.choose_terminal(tree.get_xtype_self(), as_node=True)
+            new_node = self.nc.choose_terminal(tree.get_xtype_self())
             new_node.depth = tree.depth
             tree.set_new_node(new_node)
             prune_amount = len(tree) - self.nodes_max

@@ -70,10 +70,6 @@ tf.compat.v1.disable_eager_execution()
 # tf.compat.v1.enable_eager_execution()  # sfeh possibly faster with disable
 
 
-class RoundDummy(sympy.Function):
-    pass
-
-
 class Label:
     symfun = None
     tflow = None
@@ -485,6 +481,11 @@ class Ifte(Operator, ChainableOp):
     chain_xtype = (float, bool)
 
 
+class RoundDummy(sympy.Function):
+    """Exists, as the Round-class """
+    pass
+
+
 class Round(MathOperator):
     """sfeh:XXX this does not work
     discuss:
@@ -775,7 +776,7 @@ totf = {
 }
 
 
-def sympy_to_tensorflow(expr_sy, tensor_dict):
+def sympy_to_tensorflow(expr_sy, d_tensors):
     """
     - check terminal-node
     -- check symbol
@@ -817,7 +818,7 @@ def sympy_to_tensorflow(expr_sy, tensor_dict):
 
             # result = tf.compat.v1.placeholder(tf.bool, name=str(expr))
             # sfeh:runtime?
-            result = tf.constant(tensor_dict[str(expr_sy)], dtype=tf.bool if expr_sy.assumptions0.get('bool') else tf.float32)
+            result = tf.constant(d_tensors[str(expr_sy)], dtype=tf.bool if expr_sy.assumptions0.get('bool') else tf.float32)
             return result
 
         else:
@@ -831,8 +832,10 @@ def sympy_to_tensorflow(expr_sy, tensor_dict):
 
     else:  # Operator # len(expr.args) > 0:  # sfeh: line can be removed or replaced
         if isinstance(expr_sy, sympy.Piecewise):
-            args_reversed = list(expr_sy.args[::-1])  # tuples to list, reverse: last tuple must be nested the deepest
-            args_reversed = [[sympy_to_tensorflow(xx, tensor_dict) for xx in list(i)] for i in args_reversed]
+            args_reversed = list(expr_sy.args[::-1])  # tuples to list
+            # todo whY WOULD ONE    reverse the args? --> NOT REVERSER
+            # reverse: most specific (/last) to lowest,  tuple must be nested the deepest node:
+            args_reversed = [[sympy_to_tensorflow(xx, d_tensors) for xx in list(ii)] for ii in args_reversed]
             otherwise = args_reversed[0][0]  # the last "True" condition
             for cet in args_reversed[1:]:
                 otherwise = tf.where(cet[1], cet[0], otherwise)
@@ -847,7 +850,7 @@ def sympy_to_tensorflow(expr_sy, tensor_dict):
         #     tf_fun = type(expr).tflow  # sfeh:debug-01.02 why does im come up here? (mut_br) im(Rounddummy(cartPos))
         #     # sfeh:idea exception, try to map sympy to tf function with same name (sympy.cos -> tf.cos)
 
-        tf_args = [sympy_to_tensorflow(a, tensor_dict) for a in expr_sy.args]
+        tf_args = [sympy_to_tensorflow(a, d_tensors) for a in expr_sy.args]
         # SFEH:Missing and Problems:
         #   - Exception: eval-ex: type object 'cosh' has no attribute 'tflow'
         #   - AttributeError: type object 'Rounddummy' has no attribute 'tflow'

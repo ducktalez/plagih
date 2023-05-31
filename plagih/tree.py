@@ -57,7 +57,7 @@ class Node:
             else:
                 try:
                     if issubclass(self.label, Number):
-                        label_str = f'{self.childs[0]:.2f}'  # '.2g'->2 decimals, trailing zeros, but rare (ugly) "E+04"
+                        label_str = f'{self.childs[0]:.5g}'  # '.5g'->5 decimals, trailing zeros, but rare (ugly) "E+04"
                     else:
                         label_str = f'{self.childs[0]}'
                 except TypeError as ex:
@@ -78,12 +78,12 @@ class Node:
             # except RecursionError as ex:
             #     print(f'sfeh:RecursionError, maybe Piecewise?: {self}, {ex}')
             #     raise RecursionError
-            # # except Exception as ex:
-            # #     print(f'sfeh:XXX this still occurs. {ex}')
-            # #     # The argument '-2.05444 + I*pi' is not comparable.
-            # #     # <lambda>() missing 1 required positional argument: 'b'
-            # #     #   -> Probably in Sub-class lambda-function
-            # #     raise ex
+            # except Exception as ex:
+            #     print(f'sfeh:XXX this still occurs. {ex}')
+            #     # The argument '-2.05444 + I*pi' is not comparable. <- that should be okay, just raise
+            #     # <lambda>() missing 1 required positional argument: 'b'
+            #     #   -> Probably in Sub-class lambda-function
+            #     raise ex
         elif issubclass(self.label, Terminal):
             _sym = self.label.get_sym()  # _sym = self.label.symfun
             _cs = self.childs[0]
@@ -346,7 +346,10 @@ class Node:
             elif self.childs[1].label == Round:
                 self.replace_with(Powrounded, childs=[self.childs[0], n_exp])
             elif self.childs[1].label == Number and n_exp % 1 == 0:
-                self.set_label(Powrounded, [])
+                self.set_label(Powrounded)
+
+            # todo sub, usub replace
+            # todo tree prints
 
         elif self.label == Mul:
             if not self.is_chain():  # div only for
@@ -360,8 +363,7 @@ class Node:
                     if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
                         self.replace_with(Usub, childs=[self.childs[1]])  # todo Usub ONLY option, ignore usub tree len
                     elif 0 < mul1 < 1:
-                        self.replace_with(Div, childs=[self.childs[1], Node(Number, 1 / mul1)])  # todo keep "div" as option
-                        print(f'asd todo {1 / mul1}')
+                        self.replace_with(Div, childs=[self.childs[1], Node(Number, childs=[1 / mul1])])  # todo keep "div" as option
 
                 elif self.childs[1].label == Number:
                     mul1 = self.childs[1].childs[0]

@@ -245,7 +245,7 @@ class ExplainableGP:
 
     def pop_append(self, evotree, tag=None):
         try:
-            meta = self.lut[str(evotree)]  # fixed nodes not relevant
+            meta = self.lut[evotree.str_as_list()]  # fixed nodes not relevant
         except KeyError:
             meta = self.tree_eval_meta(evotree, tag=tag)
 

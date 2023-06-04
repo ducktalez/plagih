@@ -43,7 +43,7 @@ class Node:
         if len(self.label.xtype[0]) < len(self.childs):
             return False
 
-    def __str__(self):
+    def str_as_list(self):
         try:
             label_str = self.label.__name__  # sfeh: can str(label) work? -> str with args recursively?
         except AttributeError as ex:
@@ -52,12 +52,12 @@ class Node:
 
         if self.childs:
             if issubclass(self.label, Operator):
-                childstr = ', '.join([str(cc) for cc in self.childs])
+                childstr = ', '.join([cc.str_as_list() for cc in self.childs])
                 label_str = f'{label_str}, {childstr}'
             else:
                 try:
                     if issubclass(self.label, Number):
-                        label_str = f'{self.childs[0]:.5g}'  # '.5g'->5 decimals, trailing zeros, but rare (ugly) "E+04"
+                        label_str = f'{self.childs[0]:.3g}'  # '.5g'->5 decimals, trailing zeros, but rare (ugly) "E+04"
                     else:
                         label_str = f'{self.childs[0]}'
                 except TypeError as ex:
@@ -67,6 +67,12 @@ class Node:
                     print(f'SUCCESS sfeh:debug, delete? KEEP? {ex}')
 
         return f"[{label_str}]"
+
+    def str_as_expr(self):
+        self.get_sympy_expr()
+
+    def __str__(self):
+        return str(self.str_as_expr())
 
     def get_sympy_expr(self):
         if issubclass(self.label, Operator):
@@ -125,15 +131,18 @@ class Node:
             label_str = f"{label_str}, {childstr}"
         return f"[{label_str}]"
 
-    def __len__(self):
+    def len_nodecount(self):
         """counting the amount of nodes recursively"""
         if issubclass(self.label, Terminal):
             return 1  # childs can currently be floats
         else:
             try:
-                return 1 + sum([len(cc) for cc in self.childs])
+                return 1 + sum([cc.len_nodecount() for cc in self.childs])
             except Exception as TODO:
-                return 1 + sum([len(cc) for cc in self.childs])
+                return 1 + sum([cc.len_nodecount() for cc in self.childs])
+
+    def __len__(self):
+        return self.len_nodecount()
 
     def get_label(self):
         return self.label

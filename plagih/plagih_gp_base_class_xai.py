@@ -170,7 +170,7 @@ class ExplainableGP:
                     if _symtree_fin.get_parsimony() < fintree.get_parsimony():
                         printyeah('a', f'Paretofront: Even further simplified! '
                                        f'{_symtree_fin.get_parsimony()} < {fintree.get_parsimony()}')
-
+                    print_blue(f'{_symtree_fin.get_parsimony()}: {symtree}')
                     self.pop_append(symtree)  # sfeh:open , tag='sfeh-sympifyed_pareto'
 
                 except KeyError as ex:
@@ -239,6 +239,8 @@ class ExplainableGP:
                 except AttributeError as ex:
                     raise AttributeError(f'Probably sympy.im in expr {ex}')
                     # print(f'Probably sympy.im in expr {ex}')
+                except NotImplementedError as nie:
+                    print_e(f'Notimplemented? {nie}')
         return loop
 
     def pop_append(self, evotree, tag=None):

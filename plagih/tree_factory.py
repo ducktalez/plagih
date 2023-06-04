@@ -24,7 +24,7 @@ def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
         raise Exception(f'Complexity measurement not available: {complexity_measure}')
 
 
-def randomly_split_range(range_max: int, num_splits: int):
+def randomly_split_range(range_max: int, num_splits: int) -> list[int]:
     """split integer range randomly into num_splits parts
     [1..100] -> [33, 15, 52]
     used for building trees
@@ -56,7 +56,7 @@ def randomly_split_range(range_max: int, num_splits: int):
 # todo idea print(sympy.parsing.sympy_parser.transformations)
 
 
-def tree_simplification(tree):
+def tree_simplification(tree) -> Node:
     """
     (Tries to) simplify/mathematically-reduce a tree. It is quite experimental
     # sfeh sympy-reconstruct patterns
@@ -72,15 +72,15 @@ def tree_simplification(tree):
     tree.tree_node_grouping()
     if len(tree_copy) < len(tree):
         print(f'WHATTPPENDED SFEH TODO'
-              f'\n\t{tree_copy}'
-              f'\n\t{tree}'
+              f'\n\t{tree_copy.str_as_list()}'
+              f'\n\t{tree.str_as_list()}'
               f'\n\t{tree_copy.get_sympy_expr()}'
               f'\n\t{tree.get_sympy_expr()}')
 
     return tree
 
 
-def evolve_reduce_simplify(tree: Node, completely=True, force=False):
+def evolve_reduce_simplify(tree: Node, completely=True, force=False) -> Node:
     """Reducing a fintree to its most basic form with sympify.
     (completely = False: reduce just one branch. if you wanted to have more complexity)"""
     tree_copy = copy.deepcopy(tree)
@@ -162,7 +162,7 @@ class TreeBuildRestrictions:
     #     #         obs_prop.pop_append_evotree(1)  # just one value
     #     pass
 
-    def evolve_new_tree_depth(self, depth_goal, xt_out=None, p_term=0.0):
+    def evolve_new_tree_depth(self, depth_goal, xt_out=None, p_term=0.0) -> Node:
         # todo non-recursive version
         xt_out = xt_out or self.root_xt_out
 

@@ -28,6 +28,7 @@
 - sfeh:discussion especially with mc: there can be more than one pareto entry with the same parsimony/fitness!
 - build trees like sympy.factor() structure?
 - Division-multiplicator node as non-len() chain input?
+- print(sympy.parsing.sympy_parser.transformations)
 
 ### Semi-interesting
 

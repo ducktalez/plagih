@@ -13,8 +13,10 @@ import numpy as np
 
 
 def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
-    if complexity_measure == 'tree_node_count':  # number of nodes
-        return len(tree)  # returns the number of nodes  # sfeh weights
+    if complexity_measure == 'tree_node_count_raw':  # number of nodes
+        return tree.len_nodecount_raw()  # returns the number of nodes  # sfeh weights
+    elif complexity_measure == 'tree_node_count':
+        return tree.len_nodecount_fair()  # returns the number of nodes  # sfeh weights todo
     elif complexity_measure == 'tree_edit_distance':  # tree_edit_distance, fintree-edit-distance
         apted1 = tree.eval_apted_notation()
         apted2 = origin_tree.eval_apted_notation()
@@ -51,9 +53,6 @@ def randomly_split_range(range_max: int, num_splits: int) -> list[int]:
             raise
 
     return sample_dist
-
-
-# todo idea print(sympy.parsing.sympy_parser.transformations)
 
 
 def tree_simplification(tree) -> Node:
@@ -99,7 +98,7 @@ def evolve_reduce_simplify(tree: Node, completely=True, force=False) -> Node:
         return tree
     else:
         if len(tree_copy) < len(tree):
-            print_warning('w', f'Tree grew larger during simplification:\n\t{tree_copy}\n\t{tree}')
+            print_warning('w', f'Tree grew larger during simplification:\n\t{tree_copy.str_as_list()}\n\t{tree.str_as_list()}')
             # [Square, [Powrounded, [-0.91], [cartPos]]] < [Pow, [-0.91], [Mul, [2], [Round, [cartPos]]]]
             return tree_copy
         else:
@@ -238,49 +237,27 @@ class TreeBuildRestrictions:
                     childs.append(cc)
 
             node = Node(label, childs, depth=depth)
+
         return node
 
     def evolve_new(self, xt_out, depth_goal, num_rest=-1, depth=0, p_term=0.0):
         # todo todotodo
 
-        if self.origin_tree is not None:
+        if self.origin_tree is None:
+            xt_out = xt_out or self.root_xt_out
+            evotree = self.evolve_new(xt_out, depth_goal, depth=depth, num_rest=num_rest, p_term=p_term)
 
+        else:
             evotree = self.origin_tree.origin_tree_copy()
             layer0 = evotree.get_nodes_at_depth(0, allow_fixed=False, earliest_nonfix=True)
 
             for ii, nodes0 in enumerate(layer0):  # -> get layer every time (nsted ids might have changed)
                 nd_list = nodes0.eval_mutable_nsteds()
                 lvl0_nodes = np.random.choice(nd_list)
-                new_subbranch = self.evolve_new(lvl0_nodes.get_xtype_self(), depth_goal, num_rest=-1,
+                new_subbranch = self.evolve_new(lvl0_nodes.get_xtype_self(), depth_goal, num_rest=num_rest,
                                                 depth=lvl0_nodes.depth, p_term=p_term)
                 lvl0_nodes.set_new_node(new_subbranch)
-
-        else:
-            xt_out = xt_out or self.root_xt_out
-            evotree = self.evolve_new(xt_out, depth_goal, depth=0, num_rest=-1, p_term=p_term)
-
-        if depth == self.depth_max or depth == depth_goal or num_rest == 0 or random.random() < p_term:
-            node = self.nc.choose_terminal(xt_out)
-            node.depth = depth
-
-        else:
-            label = self.nc.choose_operator(xt_out)
-            child_xts = label.get_child_xts()
-            n_ch = len(child_xts)
-            childs = []
-
-            if num_rest > 0:
-                nums = randomly_split_range(num_rest-1, n_ch)
-                for ii, xt in enumerate(child_xts):
-                    cc = self.evolve_new(xt, depth_goal, num_rest=nums[ii], depth=depth + 1, p_term=p_term)
-                    childs.append(cc)
-            else:
-                for xt in child_xts:
-                    cc = self.evolve_new(xt, depth_goal, num_rest=-1, depth=depth + 1, p_term=p_term)
-                    childs.append(cc)
-
-            node = Node(label, childs, depth=depth)
-        return node
+        return evotree
 
     def evolve_mutate_filter(self, tree):
         """Mutates a number of float terminal of a fintree
@@ -333,7 +310,7 @@ class TreeBuildRestrictions:
         _nodes_init = len(tree)
         if tree is None:
             raise NotImplementedError('SFEH:open Implement standard selection mechanism')
-        nd = np.random.choice(tree.eval_mutable_nodes())
+        nd = rnd_choice(tree.eval_mutable_nodes())
         xt_out = nd.get_xtype_self()
         nodes_goal = min(self.nodes_max - (_nodes_init - len(nd)), nodes_goal)
         branch = self.evolve_create_random(xt_out, -1, num_rest=nodes_goal, depth=nd.depth, p_term=p_term)

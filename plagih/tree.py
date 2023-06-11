@@ -68,8 +68,31 @@ class Node:
 
         return f"[{label_str}]"
 
+    def get_id(self):
+        try:
+            label_str = self.label.__name__  # sfeh: can str(label) work? -> str with args recursively?
+        except AttributeError as ex:
+            # todo debug me
+            label_str = self.label  # because Terminals are obj -> 'Symbol' obj has no attr __name__
+
+        if self.childs:
+            if issubclass(self.label, Operator):
+                childstr = ', '.join([cc.str_as_list() for cc in self.childs])
+                label_str = f'{label_str}, {childstr}'
+            else:
+                try:
+                    label_str = f'{self.childs[0]}'
+                except TypeError as ex:
+                    label_str = str(self.childs[0].evalf())
+                    # sfeh:open int, non-floats are handeled badly
+                except Exception as ex:
+                    print(f'SUCCESS sfeh:debug, delete? KEEP? {ex}')
+
+        return f"[{label_str}]"
+
     def str_as_expr(self):
-        self.get_sympy_expr()
+        s = self.get_sympy_expr()
+        return s
 
     def __str__(self):
         return str(self.str_as_expr())
@@ -94,7 +117,7 @@ class Node:
             _sym = self.label.get_sym()  # _sym = self.label.symfun
             _cs = self.childs[0]
             return _sym(_cs)
-        print(len(self.childs), type(self.label), issubclass(self.label, Operator), issubclass(self.label, Terminal))
+        print('asddsa', len(self.childs), type(self.label), issubclass(self.label, Operator), issubclass(self.label, Terminal))
         raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.label)}')
 
     def get_expr_raw(self):
@@ -131,18 +154,26 @@ class Node:
             label_str = f"{label_str}, {childstr}"
         return f"[{label_str}]"
 
-    def len_nodecount(self):
+    def len_nodecount_raw(self):
         """counting the amount of nodes recursively"""
         if issubclass(self.label, Terminal):
             return 1  # childs can currently be floats
         else:
-            try:
-                return 1 + sum([cc.len_nodecount() for cc in self.childs])
-            except Exception as TODO:
-                return 1 + sum([cc.len_nodecount() for cc in self.childs])
+            return 1 + sum([cc.len_nodecount_raw() for cc in self.childs])
+
+    def len_nodecount_fair(self):
+        """counting the amount of nodes, but
+            - ignoring "Usub!
+        """
+        if issubclass(self.label, Terminal):
+            return 1
+        elif issubclass(self.label, Usub):
+            return sum([cc.len_nodecount_fair() for cc in self.childs])
+        else:
+            return 1 + sum([cc.len_nodecount_fair() for cc in self.childs])
 
     def __len__(self):
-        return self.len_nodecount()
+        return self.len_nodecount_fair()
 
     def get_label(self):
         return self.label
@@ -354,8 +385,9 @@ class Node:
                 self.replace_with(Number, childs=[1])
             elif self.childs[1].label == Round:
                 self.replace_with(Powrounded, childs=[self.childs[0], n_exp])
-            elif self.childs[1].label == Number and n_exp % 1 == 0:
-                self.set_label(Powrounded)
+            # sfeh:discuss, powrounded here? not clear
+            # elif self.childs[1].label == Number and n_exp % 1 == 0:
+            #     self.set_label(Powrounded)
 
             # todo sub, usub replace
             # todo tree prints

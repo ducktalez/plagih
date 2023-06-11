@@ -121,8 +121,7 @@ def _test_random_pop():
     build_restrictions = {'depth_max': 7, 'nodes_max': 50}
     tb = TreeBuildRestrictions(root_xt_out, nc, build_restrictions, 'tree_node_count')
 
-    gp = ExplainableGP(name, pop_max, gen_max, rootdir, kernel, origin_tree, tb,
-                       selection_default=lambda p: selection_tournament(p, tournsize=3))
+    gp = ExplainableGP(name, pop_max, gen_max, rootdir, kernel, origin_tree, tb)
     # gp.pop_kill()  # optional, maybe restart pop between runs?
     try:
         gp.backup_load(path_load_custom_backup=rootdir)

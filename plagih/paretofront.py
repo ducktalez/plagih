@@ -77,7 +77,7 @@ def pareto_insert_again_simplified(self, fintree):
     pass
 
 
-def pareto_plot(paretofront, path, name, parsimony_max):
+def pareto_plot(paretofront, path, name, parsimony_max) -> []:
     """
     Write pyplot with paretofront candidates
     """

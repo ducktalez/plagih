@@ -232,8 +232,8 @@ class ExplainableGP:
                     if n_fails > n_success + 5:  # allow more fails: n_fails > n
                         print_e(f'Evolution "{tag}" fails too often: {n_fails}x. {n_success}.')
                         return  # sfeh raise?
-                except TypeError as ex:
-                    print(f'Typeerror, but why? {ex}')
+                # except TypeError as ex:
+                #     print(f'Typeerror, but why? {ex}')
                 except AttributeError as ex:
                     raise AttributeError(f'Probably sympy.im in expr {ex}')
                     # print(f'Probably sympy.im in expr {ex}')

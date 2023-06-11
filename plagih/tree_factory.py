@@ -278,17 +278,17 @@ class TreeBuildRestrictions:
         sfeh:debug is the fintree a fintree copy or the same fintree?"""
         evotree = copy.deepcopy(tree)
 
-        _nd = rnd_choice(evotree.eval_mutable_nodes(allow_chain=False))  # debug if ignores chains
-        xtype = _nd.get_xtype()
+        node = rnd_choice(evotree.eval_mutable_nodes(allow_chain=False))  # debug if ignores chains
+        xtype = node.get_xtype()
 
-        if _nd.is_operator():
+        if node.is_operator():
             # todo allow_chain
             # sfeh:what if its the same function?
             new_label = self.nc.choose_operator_match(xtype)  # Function is same type, same arity
-            _nd.set_label(new_label)
-        elif _nd.is_term:
+            node.set_label(new_label)
+        elif node.is_term:
             new_node = self.nc.choose_terminal(xt_self(xtype))
-            _nd.set_new_node(new_node)
+            node.set_new_node(new_node)
         else:
             raise NotImplementedError
 

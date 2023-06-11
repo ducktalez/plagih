@@ -386,8 +386,8 @@ class Node:
             elif self.childs[1].label == Round:
                 self.replace_with(Powrounded, childs=[self.childs[0], n_exp])
             # sfeh:discuss, powrounded here? not clear
-            # elif self.childs[1].label == Number and n_exp % 1 == 0:
-            #     self.set_label(Powrounded)
+            elif self.childs[1].label == Number and n_exp % 1 == 0:
+                self.set_label(Powrounded)
 
             # todo sub, usub replace
             # todo tree prints

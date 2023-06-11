@@ -52,24 +52,24 @@ def operatorpool_to_picks(d_operator_pool):
     return pick_op, pick_op_match
 
 
-class NodeCreatorBase(ABC):
-
-    @abstractmethod
-    def choose_operator(self, xt):
-        pass
-
-    @abstractmethod
-    def choose_operator_match(self, xtype):
-        pass
-
-    @abstractmethod
-    def choose_terminal(self, xt):
-        pass
-
-    @abstractmethod
-    def choose_constant(self, xt):
-        pass
-
-    @abstractmethod
-    def choose_symbol(self, xt):
-        pass
+# class NodeCreatorBase(ABC):
+#
+#     @abstractmethod
+#     def choose_operator(self, xt):
+#         pass
+#
+#     @abstractmethod
+#     def choose_operator_match(self, xtype):
+#         pass
+#
+#     @abstractmethod
+#     def choose_terminal(self, xt):
+#         pass
+#
+#     @abstractmethod
+#     def choose_constant(self, xt):
+#         pass
+#
+#     @abstractmethod
+#     def choose_symbol(self, xt):
+#         pass

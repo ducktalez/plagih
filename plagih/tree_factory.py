@@ -18,8 +18,8 @@ def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
     elif complexity_measure == 'tree_node_count':
         return tree.len_nodecount_fair()  # returns the number of nodes  # sfeh weights todo
     elif complexity_measure == 'tree_edit_distance':  # tree_edit_distance, fintree-edit-distance
-        apted1 = tree.eval_apted_notation()
-        apted2 = origin_tree.eval_apted_notation()
+        apted1 = tree.get_apted_notation()
+        apted2 = origin_tree.get_apted_notation()
         distance, mapping = apted_distance(apted1, apted2)  # sfeh the mapping could be useful somewhere
         return distance
     else:
@@ -84,7 +84,7 @@ def evolve_reduce_simplify(tree: Node, completely=True, force=False) -> Node:
     (completely = False: reduce just one branch. if you wanted to have more complexity)"""
     tree_copy = copy.deepcopy(tree)
     if completely:  # reduce the complete tree
-        nodes_lv0 = tree.get_nodes_at_depth(0, allow_fixed=False)  # only required for fixed-core trees
+        nodes_lv0 = tree.get_nodes_at_depth(0, get_fixed=False)  # only required for fixed-core trees
         for cc in nodes_lv0:
             cc.set_new_node(tree_simplification(cc))
     else:
@@ -113,12 +113,11 @@ def node_deepcopy(tree: Node):
 class TreeBuildRestrictions:
     """functions to build trees, with the advantage of being able to use general build restrictions."""
 
-    def __init__(self, root_xt_out, nc, build_restrictions, complexity_metric, origin_tree=None):
-        self.root_xt_out = root_xt_out
+    def __init__(self, origin_root, nc, build_restrictions, complexity_metric):
+        self.origin_root = origin_root
         self.nc = nc
 
         self.complexity_metric = complexity_metric
-        self.origin_tree = origin_tree
 
         self.depth_max = build_restrictions.get('depth_max', 10)
         self.nodes_max = build_restrictions.get('nodes_max', 100)
@@ -163,12 +162,12 @@ class TreeBuildRestrictions:
 
     def evolve_new_tree_depth(self, depth_goal, xt_out=None, p_term=0.0) -> Node:
         # todo non-recursive version
-        xt_out = xt_out or self.root_xt_out
+        xt_out = xt_out or self.origin_root
 
-        if self.origin_tree is not None:
+        if isinstance(self.origin_root, RootNode_Dummy):
 
-            evotree = self.origin_tree.origin_tree_copy()
-            layer0 = evotree.get_nodes_at_depth(0, allow_fixed=False, earliest_nonfix=True)
+            evotree = self.origin_root.origin_tree_copy()
+            layer0 = evotree.get_nodes_at_depth(0, get_fixed=False, extend=True)
 
             for ii, nodes0 in enumerate(layer0):  # -> get layer every time (nsted ids might have changed)
                 nd_list = nodes0.eval_mutable_nsteds()
@@ -182,32 +181,30 @@ class TreeBuildRestrictions:
 
         return evotree
 
-    def new_tree_nodes(self, nodeamount, p_term, xtype=None):
+    def new_tree_nodes(self, nn, depth):
+        """insert a (random) number of branches at the first possible "layer" (not necessary depth)
+        (If all nodes are modifiable, it is the root node. Otherwise, it is the first layer of modifiable nodes
+        - get these nodes, randomly choose a subset of those
+        - get the amount of nodes allowed to add. (max nodes without the core-fintree + the nodes about to delete)
+        - split the amount of nodes up (randomly) and add these new branches to the fintree
+        sfeh:idea mutate only the childs of a node! The label stays the same"""
 
-        xtype = xtype or self.root_xt_out
+        # if not isinstance(self.origin_tree, RootNode_Dummy):
+        # 
+        # else:
+        # layer0_nodes = self.origin_root
+        # evotree = self.evolve_create_random(xtype, -1, num_rest=nodeamount, depth=0, p_term=p_term)
+        
+        evotree = node_deepcopy(self.origin_root)
+        layer0_nodes = evotree.get_nodes_at_depth(0, if_fixed=False, extend=True)
+        layer0_splits = randomly_split_range(nn, len(layer0_nodes))
 
-        if self.origin_tree is not None:
-            """pareto_insert a (random) number of branches at the first possible "layer"
-            (If all nodes are modifiable, it is the root node. Otherwise, it is the first modifiable nodes
-            - get these nodes, randomly choose a subset of those
-            - get the amount of nodes allowed to add. (max nodes without the core-fintree + the nodes about to delete)
-            - split the amount of nodes up (randomly) and add these new branches to the fintree
-            sfeh:idea mutate only the childs of a node! The label stays the same"""
-            evotree = node_deepcopy(self.origin_tree)
-            layer0_nodes = evotree.get_nodes_at_depth(0, allow_fixed=False, earliest_nonfix=True)
-
-            layer0_splits = randomly_split_range(nodeamount, len(layer0_nodes))
-
-            for ii, node0 in enumerate(
-                    layer0_nodes):  # pareto_insert branches! get layer every time (node ids might have changed)
-                lvl0_node = np.random.choice(node0.eval_mutable_nodes())  # layer0_branch =
-                # branch_size = layer0_nodes[ii]  # sfeh:idea + len(lvl0_node)
-                new_subbranch = self.evolve_create_random(lvl0_node.get_xtype_self(), -1, depth=lvl0_node.depth,
-                                                          num_rest=layer0_splits[ii], p_term=p_term)
-                lvl0_node.set_new_node(new_subbranch)
-
-        else:
-            evotree = self.evolve_create_random(xtype, -1, num_rest=nodeamount, depth=0, p_term=p_term)
+        for ii, node0 in enumerate(layer0_nodes):  # pareto_insert branches! get layer always, node ids might change
+            lvl0_node = np.random.choice(node0.eval_mutable_nodes())  # layer0_branch =
+            # branch_size = layer0_nodes[ii]  # sfeh:idea + len(lvl0_node)
+            new_subbranch = self.new_tree_nodes(lvl0_node.get_xtype_self(), -1, depth=lvl0_node.depth,
+                                                      num_rest=layer0_splits[ii], p_term=p_term)
+            lvl0_node.set_new_node(new_subbranch)
 
         return evotree
 
@@ -240,22 +237,22 @@ class TreeBuildRestrictions:
 
         return node
 
-    def evolve_new(self, xt_out, depth_goal, num_rest=-1, depth=0, p_term=0.0):
+    def evolve_new_endrecursive(self, depth_goal, num_rest=-1, depth=0):
         # todo todotodo
 
-        if self.origin_tree is None:
-            xt_out = xt_out or self.root_xt_out
-            evotree = self.evolve_new(xt_out, depth_goal, depth=depth, num_rest=num_rest, p_term=p_term)
+        if isinstance(self.origin_root, RootNode_Dummy):
+            xt_out = self.origin_root.get_xtype_self()
+            evotree = self.evolve_new_endrecursive(xt_out, depth_goal, depth=depth, num_rest=num_rest, p_term=p_term)
 
         else:
-            evotree = self.origin_tree.origin_tree_copy()
-            layer0 = evotree.get_nodes_at_depth(0, allow_fixed=False, earliest_nonfix=True)
+            evotree = self.origin_root.origin_tree_copy()
+            layer0 = evotree.get_nodes_at_depth(0, get_fixed=False, extend=True)
 
             for ii, nodes0 in enumerate(layer0):  # -> get layer every time (nsted ids might have changed)
                 nd_list = nodes0.eval_mutable_nsteds()
                 lvl0_nodes = np.random.choice(nd_list)
-                new_subbranch = self.evolve_new(lvl0_nodes.get_xtype_self(), depth_goal, num_rest=num_rest,
-                                                depth=lvl0_nodes.depth, p_term=p_term)
+                new_subbranch = self.evolve_new_endrecursive(lvl0_nodes.get_xtype_self(), depth_goal, num_rest=num_rest,
+                                                             depth=lvl0_nodes.depth, p_term=p_term)
                 lvl0_nodes.set_new_node(new_subbranch)
         return evotree
 

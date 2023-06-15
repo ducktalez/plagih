@@ -27,7 +27,7 @@ def _test_random_pop():
     df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv')
     df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P design pattern #YOLO
     data_train, data_control = train_test_split(df, test_size=0.2, random_state=0)
-    root_xt_out = float
+    origin_root = RootNode_Dummy(Number)
     outcome = sympy.Symbol('outcome')
     tree_base = Clip(Round(outcome), 0, 2)  # sfeh:open
 
@@ -52,8 +52,6 @@ def _test_random_pop():
     # '["Ifte",["<",["cartVel"],["0"]],["0"],["2"]]'
     # '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]'
     # origin_tree = Ifte(Le(Symbol('cartVel'), Float(0)), Float(0), Float(2))
-
-    origin_tree = None
 
     class Node_creator(NodeCreatorBase):
         def __init__(self):
@@ -119,9 +117,9 @@ def _test_random_pop():
     nc = Node_creator()
 
     build_restrictions = {'depth_max': 7, 'nodes_max': 50}
-    tb = TreeBuildRestrictions(root_xt_out, nc, build_restrictions, 'tree_node_count')
+    tb = TreeBuildRestrictions(origin_root, nc, build_restrictions, 'tree_node_count')
 
-    gp = ExplainableGP(name, pop_max, gen_max, rootdir, kernel, origin_tree, tb)
+    gp = ExplainableGP(name, pop_max, gen_max, rootdir, kernel, tb)
     # gp.pop_kill()  # optional, maybe restart pop between runs?
     try:
         gp.backup_load(path_load_custom_backup=rootdir)

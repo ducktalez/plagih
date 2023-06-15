@@ -245,20 +245,11 @@ class Symbol(Terminal):
         sfeh:xxx option here for type float/bool
     sfeh:xxx how to set assumptions, Provide information such as real, integer, positive, range/interval
     """
-    try:
-        symfun = lambda *a: a[0]  # todo todotodo
-        # symfun = lambda *a: sympy.Symbol(a[0], real=True, imaginary=False)  # sfeh: real=/imaginary= faster.
-    except Exception as ex:
-        symfun = lambda *a: a[0]  # todo todotodo
+    symfun = lambda *a: a[0]
+    # symfun = lambda *a: sympy.Symbol(a[0], real=True, imaginary=False)  # sfeh: real=/imaginary= faster.
 
     tflow = lambda a: tf.constant(a, dtype=tf.float32 if isinstance(a, float) else tf.bool)
     xtype = ((), float)
-
-    # def __init__(self, value, **assumptions):
-    #     self.value = sympy.Symbol(value, real=True, imaginary=False, **assumptions)
-    #
-    # def get_sym(self):
-    #     return self.value
 
 
 class Add(MathOperator, ChainableOp):

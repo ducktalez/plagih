@@ -27,10 +27,10 @@ def printpl(message_type, message_str):
 
 class ExplainableGP:
 
-    def __init__(self, name, pop_max, gen_max, rootdir, kernel, origintree, tb: TreeBuildRestrictions):
+    def __init__(self, name, pop_max, gen_max, rootdir, kernel, tb: TreeBuildRestrictions):
         self.time_start = time.perf_counter()
         self.kernel = kernel
-        self.origintree = origintree
+        self.origintree = origin_root
         self.name = name
         self.tb = tb
         self.pop_max = pop_max
@@ -189,8 +189,8 @@ class ExplainableGP:
 
     def gen_create_initial(self):
 
-        if self.origintree is not None:
-            self.pop_next.append(self.origintree)  # the origin fintree is the only candidate (automatically added)
+        if self.tb.origin_root is not None:
+            self.pop_next.append(self.tb.origin_root)  # the origin fintree is the only candidate (automatically added)
         else:
             @self.create_trees(rate=0.5)
             def init_rand1():
@@ -440,7 +440,7 @@ class ExplainableGP:
             - 'nan' when dividing by zero or
             - 'inf' when 20**1234
         """
-        parsimony = eval_parsimony(tree, self.tb.complexity_metric, origin_tree=self.origintree)
+        parsimony = eval_parsimony(tree, self.tb.complexity_metric, origin_tree=self.tb.origin_root)
         if parsimony > self.tb.nodes_max:
             raise ValueError(f'Tree too complex: {parsimony} > {self.tb.nodes_max}')
 

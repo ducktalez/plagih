@@ -28,7 +28,7 @@ sym_assumption_nodes = (sympy.re,)
 class Node:
     """Recursively holds the nodes of a tree"""
 
-    def __init__(self, label, childs: iter, depth=None, is_fix=False, is_chain=False):
+    def __init__(self, label: Label, childs: iter, depth=None, is_fix=False, is_chain=False):
         self.label = label
         self.childs = childs[:]
 
@@ -216,49 +216,30 @@ class Node:
             for ii, cc in enumerate(self.childs):
                 cc.update_fixed_nodes(origin.childs[ii])
 
-    def get_nodes_to_depth(self, goal_depth, only_mutable=False, get_closest_depth=False):
-        """sum_layers=False, get_closest=True, return_all_layers=False"""
-        child_results = []
-        if self.depth < goal_depth:
-            child_results = sum(
-                [child.get_nodes_to_depth(goal_depth, only_mutable=only_mutable, force_depth=get_closest_depth) for
-                 child in self.childs], [])
-
-        if only_mutable and self.is_fix or get_closest_depth and self.depth != goal_depth:
-            my_result = []
-        else:
-            my_result = [self]
-
-        return my_result + child_results
-
     def get_all_nodes(self):
         if len(self.childs) == 0:
             return [self]
         else:
             return [self] + [cc.get_all_nodes() for cc in self.childs]
 
-    def get_nodes_at_depth(self, goal_depth, allow_fixed=False, earliest_nonfix=False):
+    def get_nodes_at_depth(self, nn, get_fixed=False, extend=False):
         """Returns a list with mutable ids which are *goal_depth* layers away from non-modifiable nodes
         last_leaves: if you want so save all leave nodes aswell
         sum_layers=False, get_closest=True, return_all_layers=False"""
-        nodes = []
-        if (not self.is_fix or allow_fixed) and (
-                self.depth == goal_depth or (self.depth > goal_depth and earliest_nonfix)):
+        if (not self.is_fix or get_fixed) and (self.depth == nn or (self.depth > nn and extend)):
             return [self]
-        elif self.depth <= goal_depth or earliest_nonfix:
+        elif self.depth <= nn or extend:
+            nodes = []
             for cc in self.childs:
-                res = cc.get_nodes_at_depth(goal_depth, allow_fixed=allow_fixed, earliest_nonfix=earliest_nonfix)
+                res = cc.get_nodes_at_depth(nn, get_fixed=get_fixed, extend=extend)
                 nodes.extend(res)
-            # nodes.extend(list(itertools.chain(
-            #     *[cc.get_nodes_at_depth(goal_depth, allow_fixed=allow_fixed, expand_depth=expand_depth) for cc in
-            #       self.childs])))
             return nodes
         else:
             return []
 
-    def eval_apted_notation(self):
+    def get_apted_notation(self):
         """Calculating the TED requires this (weird) representation"""
-        return f"{{{self.get_label()}{''.join([cc.eval_apted_notation() for cc in self.childs])}}}"
+        return f"{{{self.get_label()}{''.join([cc.get_apted_notation() for cc in self.childs])}}}"
 
     def get_max_depth(self, depth=0):
         """Go through all nodes, save depth"""
@@ -414,6 +395,13 @@ class Node:
                         self.replace_with(Div, childs=[self.childs[0], 1 / mul1])
                         todo_div_by_test = 1 / mul1  # todo keep "div" as option
                         print(f'asd todo {todo_div_by_test}')
+
+
+class RootNode_Dummy(Node):
+    """Sfeh:discuss
+    this node can be used as dummy and is used to mimic a root type"""
+    def __init__(self, *args, **kwargs):
+        super.__init__(*args, **kwargs)
 
 
 def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:

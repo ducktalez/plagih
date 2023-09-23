@@ -18,7 +18,7 @@ d_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, 
 d_op2chain = {Add: AddChain, Mul: MulChain, Min: MinChain, Max: MaxChain, And: AndChain, Or: OrChain,
               Piecewise: Piecewise}  # todo Piecewise
 d_sym2node_chain = {sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChain, sympy.Max: MaxChain,
-                    sympy.And: AndChain, sympy.Or: OrChain, sympy.Piecewise: Piecewise}  # todo Piecewise
+                    sympy.And: AndChain, sympy.Or: OrChain, sympy.Piecewise: Piecewise}
 # , sympy.Equality: Eq
 # sfeh:open = {sympy.Unequality: Ne, sympy.Equality: Eq}
 sym_assumption_nodes = (sympy.re,)
@@ -30,7 +30,7 @@ class Node:
 
     def __init__(self, label: Label, childs: iter, depth=None, is_fix=False, is_chain=False):
         self.label = label
-        self.childs = childs[:]
+        self.childs = childs[:]  # ...usually a list, but can also ne 'None'
 
         self.is_fix = is_fix
         self.depth = depth
@@ -62,6 +62,7 @@ class Node:
                         label_str = f'{self.childs[0]}'
                 except TypeError as ex:
                     label_str = str(self.childs[0].evalf())
+                    # sympy.ONE -> 1.0000000...
                     # sfeh:open int, non-floats are handeled badly
                 except Exception as ex:
                     print(f'SUCCESS sfeh:debug, delete? KEEP? {ex}')
@@ -347,7 +348,7 @@ class Node:
 
         # sfeh:idea Heavyside function. input a val, input b threshold
         """
-        if self.is_term():  # runtime
+        if self.is_term():  # good for runtime
             return
 
         for cc in self.childs:
@@ -401,7 +402,7 @@ class RootNode_Dummy(Node):
     """Sfeh:discuss
     this node can be used as dummy and is used to mimic a root type"""
     def __init__(self, *args, **kwargs):
-        super.__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:

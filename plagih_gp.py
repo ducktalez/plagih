@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 
 from plagih.fitness_kernel import Regression
 from plagih.plagih_gp_base_class_xai import *
-from plagih.random_nodes_generator import NodeCreatorBase, norm_choices, operatorpool_to_picks
+from plagih.random_nodes_generator import norm_choices, operatorpool_to_picks
 from plagih.util import *
 
 
@@ -25,9 +25,10 @@ def _test_random_pop():
 
     # ## Load the training data into Kernel-class(...only offline training in this run).
     df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv')
-    df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P design pattern #YOLO
+    df = df.astype('float32')  # sfeh: this will NOT work with bool or int data :P design pattern #YOLO
     data_train, data_control = train_test_split(df, test_size=0.2, random_state=0)
-    origin_root = RootNode_Dummy(Number)
+    # origin_tree_root = Number()  # todo
+    origin_xtype = float
     outcome = sympy.Symbol('outcome')
     tree_base = Clip(Round(outcome), 0, 2)  # sfeh:open
 
@@ -53,7 +54,7 @@ def _test_random_pop():
     # '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]'
     # origin_tree = Ifte(Le(Symbol('cartVel'), Float(0)), Float(0), Float(2))
 
-    class Node_creator(NodeCreatorBase):
+    class Node_creator:
         def __init__(self):
             """make all probabilities sum to 1 for each categoray (Add: 2, Mul: 1, Tan: 0.5) in"""
 
@@ -70,9 +71,7 @@ def _test_random_pop():
             # -> Choosing 50 random numeric values from the dataset for building trees ...just not zeros)
             samples = [ii for ii in itertools.chain.from_iterable(df[INPUT_NAMES].sample(n=50).values) if ii != 0]
             self.pick_constant = {float: norm_choices([
-                [lambda: round(random.normalvariate(0, 1), FLOAT_PRECISION), 0.2],
                 [lambda: round(random.normalvariate(1, 1), FLOAT_PRECISION), 0.1],
-                [lambda: round(random.normalvariate(10, 5), FLOAT_PRECISION), 0.1],
                 [lambda: round(random.randint(1, 20), FLOAT_PRECISION), 0.1],
                 [lambda: round(random.choice(samples), FLOAT_PRECISION), 0.5]]),
                                   bool: norm_choices([[lambda: random.choice((True, False)), 1]])}
@@ -117,7 +116,7 @@ def _test_random_pop():
     nc = Node_creator()
 
     build_restrictions = {'depth_max': 7, 'nodes_max': 50}
-    tb = TreeBuildRestrictions(origin_root, nc, build_restrictions, 'tree_node_count')
+    tb = TreeBuildRestrictions(origin_xtype, None, nc, build_restrictions, 'tree_node_count')
 
     gp = ExplainableGP(name, pop_max, gen_max, rootdir, kernel, tb)
     # gp.pop_kill()  # optional, maybe restart pop between runs?

@@ -30,7 +30,6 @@ class ExplainableGP:
     def __init__(self, name, pop_max, gen_max, rootdir, kernel, tb: TreeBuildRestrictions):
         self.time_start = time.perf_counter()
         self.kernel = kernel
-        self.origintree = origin_root
         self.name = name
         self.tb = tb
         self.pop_max = pop_max
@@ -189,16 +188,16 @@ class ExplainableGP:
 
     def gen_create_initial(self):
 
-        if self.tb.origin_root is not None:
-            self.pop_next.append(self.tb.origin_root)  # the origin fintree is the only candidate (automatically added)
+        if self.tb.origin_tree is not None:
+            self.pop_next.append(self.tb.origin_tree)  # the origin fintree is the only candidate (automatically added)
         else:
             @self.create_trees(rate=0.5)
             def init_rand1():
-                return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.0, 1.0)), 2, 3), p_term=0)
+                return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.0, 1.0)), 2, 3), float, p_term=0)  # sfeh: xtype not always float
 
             @self.create_trees(rate=0.5)
             def init_rand2():
-                return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(2.5, 1.0)), 2, 3), p_term=0)
+                return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(2.5, 1.0)), 2, 3), float, p_term=0)
         return
 
     def create_trees(self, rate=0.0, crossover=False):
@@ -322,12 +321,12 @@ class ExplainableGP:
 
         @self.create_trees(rate=0.1)
         def rand1():
-            return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3, 1)), 2, 4), p_term=0)
+            return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3, 1)), 2, 4), float, p_term=0)
 
         @self.create_trees(rate=0.1)
         def rand2():
             # sfeh float? nope
-            return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 4), p_term=0)
+            return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 4), float, p_term=0)
 
         return
 
@@ -440,7 +439,7 @@ class ExplainableGP:
             - 'nan' when dividing by zero or
             - 'inf' when 20**1234
         """
-        parsimony = eval_parsimony(tree, self.tb.complexity_metric, origin_tree=self.tb.origin_root)
+        parsimony = eval_parsimony(tree, self.tb.complexity_metric, origin_tree=self.tb.origin_tree)
         if parsimony > self.tb.nodes_max:
             raise ValueError(f'Tree too complex: {parsimony} > {self.tb.nodes_max}')
 

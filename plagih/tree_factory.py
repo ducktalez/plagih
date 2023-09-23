@@ -75,7 +75,12 @@ def tree_simplification(tree) -> Node:
               f'\n\t{tree.str_as_list()}'
               f'\n\t{tree_copy.get_sympy_expr()}'
               f'\n\t{tree.get_sympy_expr()}')
-
+        # --->
+        # WHATTPPENDED SFEH
+        # 	[Mul, [Add, [cartPos], [Square, [cartPos]]], [-0.0130]]
+        # 	[Add, [Mul, [-0.0130], [cartPos]], [Mul, [-0.0130], [Square, [cartPos]]]]
+        # 	-0.013017*cartPos**2 - 0.013017*cartPos
+        # 	-0.013017*cartPos**2 - 0.013017*cartPos
     return tree
 
 
@@ -113,8 +118,12 @@ def node_deepcopy(tree: Node):
 class TreeBuildRestrictions:
     """functions to build trees, with the advantage of being able to use general build restrictions."""
 
-    def __init__(self, origin_root, nc, build_restrictions, complexity_metric):
-        self.origin_root = origin_root
+    def __init__(self, origin_xtype, origin_tree, nc, build_restrictions, complexity_metric):
+        """
+        origin_tree: A tree, which
+        """
+        self.origin_xtype = origin_xtype
+        self.origin_tree = origin_tree
         self.nc = nc
 
         self.complexity_metric = complexity_metric
@@ -160,13 +169,12 @@ class TreeBuildRestrictions:
     #     #         obs_prop.pop_append_evotree(1)  # just one value
     #     pass
 
-    def evolve_new_tree_depth(self, depth_goal, xt_out=None, p_term=0.0) -> Node:
+    def evolve_new_tree_depth(self, depth_goal, xt_out, p_term=0.0) -> Node:
         # todo non-recursive version
-        xt_out = xt_out or self.origin_root
 
-        if isinstance(self.origin_root, RootNode_Dummy):
+        if isinstance(self.origin_tree, RootNode_Dummy):
 
-            evotree = self.origin_root.origin_tree_copy()
+            evotree = self.origin_tree.origin_tree_copy()
             layer0 = evotree.get_nodes_at_depth(0, get_fixed=False, extend=True)
 
             for ii, nodes0 in enumerate(layer0):  # -> get layer every time (nsted ids might have changed)
@@ -195,7 +203,7 @@ class TreeBuildRestrictions:
         # layer0_nodes = self.origin_root
         # evotree = self.evolve_create_random(xtype, -1, num_rest=nodeamount, depth=0, p_term=p_term)
         
-        evotree = node_deepcopy(self.origin_root)
+        evotree = node_deepcopy(self.origin_tree)
         layer0_nodes = evotree.get_nodes_at_depth(0, if_fixed=False, extend=True)
         layer0_splits = randomly_split_range(nn, len(layer0_nodes))
 
@@ -237,15 +245,13 @@ class TreeBuildRestrictions:
 
         return node
 
-    def evolve_new_endrecursive(self, depth_goal, num_rest=-1, depth=0):
-        # todo todotodo
+    def evolve_new_endrecursive(self, depth_goal, num_rest=-1, depth=0, p_term=0):
+        """Evolve, creating a new branch in this node
+        """
+        # todo This is currently unused
 
-        if isinstance(self.origin_root, RootNode_Dummy):
-            xt_out = self.origin_root.get_xtype_self()
-            evotree = self.evolve_new_endrecursive(xt_out, depth_goal, depth=depth, num_rest=num_rest, p_term=p_term)
-
-        else:
-            evotree = self.origin_root.origin_tree_copy()
+        if self.origin_tree is not None:
+            evotree = copy.deepcopy(self.origin_tree)
             layer0 = evotree.get_nodes_at_depth(0, get_fixed=False, extend=True)
 
             for ii, nodes0 in enumerate(layer0):  # -> get layer every time (nsted ids might have changed)
@@ -254,6 +260,9 @@ class TreeBuildRestrictions:
                 new_subbranch = self.evolve_new_endrecursive(lvl0_nodes.get_xtype_self(), depth_goal, num_rest=num_rest,
                                                              depth=lvl0_nodes.depth, p_term=p_term)
                 lvl0_nodes.set_new_node(new_subbranch)
+
+        else:
+            evotree = self.evolve_new_endrecursive(self.origin_xtype, depth_goal, depth=depth, num_rest=num_rest, p_term=p_term)
         return evotree
 
     def evolve_mutate_filter(self, tree):
@@ -591,23 +600,23 @@ if __name__ == '__main__':
                       '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]',
                       '["Ifte", ["Not", [False]], [0.0], [2.0]]']
 
-    tb = TreeBuildRestrictions(['a', 'b'], 10, 30, float, origin_tree=None)
-    tr = Node(Add, [Node(Symbol('a'), []), Node(Number(1.23), [])])
-    tr = Node(Ifte, [Node(Gt, [Node(Symbol('a'), []), Node(Number(1.2), [])]), Node(Number(3.), []), Node(Number(2.), [])])
-    tr = Node(Max, [Node(Symbol('a'), []), Node(Number(1.2), [])])
-    x = tr.get_sympy_expr()
-    tr2 = sympy_to_tree(x)
-    tr2 = tree_node_grouping(tr2)
-    print(tr, tr2)
-    for _ in range(10):
-        tr = tb.evolve_new_tree_depth(3, float, p_term=0.3)
-        x = tr.get_sympy_expr()
-        print('First sym success')
-        tr_new = sympy_to_tree(x)
-        tr_new = tree_node_grouping(tr_new)
-        x2 = tr_new.get_sympy_expr()
-        print(tr)
-        print(tr_new)
-        if str(x) != str(x2):
-            print()
-            raise Exception(f'sympy process failed {x}, <-->, {x2}')
+    # tb = TreeBuildRestrictions(['a', 'b'], 10, 30, float, origin_tree=None)
+    # tr = Node(Add, [Node(Symbol('a'), []), Node(Number(1.23), [])])
+    # tr = Node(Ifte, [Node(Gt, [Node(Symbol('a'), []), Node(Number(1.2), [])]), Node(Number(3.), []), Node(Number(2.), [])])
+    # tr = Node(Max, [Node(Symbol('a'), []), Node(Number(1.2), [])])
+    # x = tr.get_sympy_expr()
+    # tr2 = sympy_to_tree(x)
+    # tr2 = tree_node_grouping(tr2)
+    # print(tr, tr2)
+    # for _ in range(10):
+    #     tr = tb.evolve_new_tree_depth(3, float, p_term=0.3)
+    #     x = tr.get_sympy_expr()
+    #     print('First sym success')
+    #     tr_new = sympy_to_tree(x)
+    #     tr_new = tree_node_grouping(tr_new)
+    #     x2 = tr_new.get_sympy_expr()
+    #     print(tr)
+    #     print(tr_new)
+    #     if str(x) != str(x2):
+    #         print()
+    #         raise Exception(f'sympy process failed {x}, <-->, {x2}')

@@ -193,11 +193,11 @@ class ExplainableGP:
         else:
             @self.create_trees(rate=0.5)
             def init_rand1():
-                return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.0, 1.0)), 2, 3), float, p_term=0)  # sfeh: xtype not always float
+                return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.0, 1.0)), 2, 5), float, p_term=0)  # sfeh: xtype not always float
 
             @self.create_trees(rate=0.5)
             def init_rand2():
-                return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(2.5, 1.0)), 2, 3), float, p_term=0)
+                return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(2.5, 1.0)), 2, 5), float, p_term=0)
         return
 
     def create_trees(self, rate=0.0, crossover=False):
@@ -250,7 +250,7 @@ class ExplainableGP:
             meta = self.tree_eval_meta(evotree, tag=tag)
 
         fintree = FinalizedTree(evotree, meta)
-        printpl('ggg', f'|-> {evotree.str_as_expr()}')
+        printpl('ggg', f'|->{evotree.len_nodecount_fair():2.0f}: {evotree.str_as_expr()}')
         self.pop_next.append(fintree)
 
     def gen_create_next(self):

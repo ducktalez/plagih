@@ -102,18 +102,22 @@ class Node:
         if issubclass(self.label, Operator):
             _sym = self.label.symfun
             _cs = [cc.get_sympy_expr() for cc in self.childs]
-            return _sym(*_cs)
-            # try:
-            #     return _sym(*_cs)
-            # except RecursionError as ex:
-            #     print(f'sfeh:RecursionError, maybe Piecewise?: {self}, {ex}')
-            #     raise RecursionError
-            # except Exception as ex:
-            #     print(f'sfeh:XXX this still occurs. {ex}')
-            #     # The argument '-2.05444 + I*pi' is not comparable. <- that should be okay, just raise
-            #     # <lambda>() missing 1 required positional argument: 'b'
-            #     #   -> Probably in Sub-class lambda-function
-            #     raise ex
+            # return _sym(*_cs)
+            # sfeh:debug TypeError: <lambda>() missing 1 required positional argument: 'b'
+            try:
+                return _sym(*_cs)
+            except RecursionError as ex:
+                print(f'sfeh:RecursionError, maybe Piecewise?: {self}, {ex}')
+                raise RecursionError
+            except TypeError as ex:
+                print(f'sfeh:TypeError?: {self}, {ex}')
+                raise TypeError(ex)
+            except Exception as ex:
+                print(f'sfeh:XXX this still occurs. {ex}')
+                # The argument '-2.05444 + I*pi' is not comparable. <- that should be okay, just raise
+                # <lambda>() missing 1 required positional argument: 'b'
+                #   -> Probably in Sub-class lambda-function
+                raise ex
         elif issubclass(self.label, Terminal):
             _sym = self.label.get_sym()  # _sym = self.label.symfun
             _cs = self.childs[0]

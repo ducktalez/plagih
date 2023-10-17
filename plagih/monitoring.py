@@ -4,10 +4,11 @@ from matplotlib import pyplot as plt
 from plagih.util import print_e
 
 
-def plot_gen_performance(monitor_df, name, path_monitoring: Path):
+def plot_performance(monitor_df, name, path_monitoring: Path):
     """
     All monitoring infos
     sfeh den shit in Funktionen aufteilen
+    # fit_best is not necessari
     """
     with plt.rc_context(rc={'axes.grid': True}):
         fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]},
@@ -16,13 +17,13 @@ def plot_gen_performance(monitor_df, name, path_monitoring: Path):
         xx = list(monitor_df.index)
 
         axs0 = axs[0]
-        axs0.plot(monitor_df['fit_avg'], marker='', label='Regression error (average)')
+        axs0.plot(monitor_df['fit_avg'], marker='', label='regression error (average)')
         # sfeh:improvement not just the stderr on both sides...
         try:
             avg = monitor_df['fit_avg']
             std = monitor_df['fit_var']
             axs0.fill_between(xx, avg - std, avg + std, alpha=0.2)
-            # axs0.set_title('Regression Error (average)')  # sfeh not stderr... upper/lower bound?
+            # axs0.set_title('regression Error (average)')  # sfeh not stderr... upper/lower bound?
         except Exception as ex:
             raise Exception(f'Delete this. were there any problems? {ex}')
         # sfeh: the best candidate is the best one in the current population. discussion: best overall?

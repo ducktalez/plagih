@@ -77,7 +77,7 @@ def pareto_insert_again_simplified(self, fintree):
     pass
 
 
-def pareto_plot(paretofront, path, name, parsimony_max) -> []:
+def plot_paretofront(paretofront, path, name, parsimony_max) -> []:
     """
     Write pyplot with paretofront candidates
     """
@@ -91,7 +91,7 @@ def pareto_plot(paretofront, path, name, parsimony_max) -> []:
 
     with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots()
-        right = max(max(xx), tb.parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
+        right = max(max(xx), parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
 
         # beyond_lines:  # adding a point to the edges to imply that there are no more values (paretofront-plot)
         # xx = np.concatenate([[xx[0]-1.05], xx, [right + 1]])

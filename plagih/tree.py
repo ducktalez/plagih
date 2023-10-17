@@ -30,7 +30,7 @@ class Node:
 
     def __init__(self, label: Label, childs: iter, depth=None, is_fix=False, is_chain=False):
         self.label = label
-        self.childs = childs[:]  # ...usually a list, but can also ne 'None'
+        self.childs = childs[:]  # ...usually a list, but can also be 'None'
 
         self.is_fix = is_fix
         self.depth = depth
@@ -114,7 +114,10 @@ class Node:
                 raise TypeError(ex)
             except Exception as ex:
                 print(f'sfeh:XXX this still occurs. {ex}')
+                # The argument 'zoo' is not comparable.
+                # The argument '0.801*I' is not comparable.
                 # The argument '-2.05444 + I*pi' is not comparable. <- that should be okay, just raise
+                # sfeh should sympify not raise these cases already?
                 # <lambda>() missing 1 required positional argument: 'b'
                 #   -> Probably in Sub-class lambda-function
                 raise ex
@@ -191,7 +194,7 @@ class Node:
     def get_arity(self):
         return len(self.label.get_child_xts())
 
-    def get_xtype(self):
+    def get_xtype_tuple(self):
         return self.label.xtype
 
     def get_xtype_childs(self):
@@ -227,20 +230,23 @@ class Node:
         else:
             return [self] + [cc.get_all_nodes() for cc in self.childs]
 
-    def get_nodes_at_depth(self, nn, get_fixed=False, extend=False):
-        """Returns a list with mutable ids which are *goal_depth* layers away from non-modifiable nodes
+    def get_mutable_rootnodes(self, extend_lvls=2):
+        """Returns the list of first mutable nodes
         last_leaves: if you want so save all leave nodes aswell
-        sum_layers=False, get_closest=True, return_all_layers=False"""
-        if (not self.is_fix or get_fixed) and (self.depth == nn or (self.depth > nn and extend)):
-            return [self]
-        elif self.depth <= nn or extend:
-            nodes = []
-            for cc in self.childs:
-                res = cc.get_nodes_at_depth(nn, get_fixed=get_fixed, extend=extend)
-                nodes.extend(res)
-            return nodes
-        else:
-            return []
+        sum_layers=False, get_closest=True, return_all_layers=False
+        sfeh: option
+        """
+        res = []
+        if not self.is_fix:
+            res = [self]
+            extend_lvls -= 1
+
+        if extend_lvls >= 0:
+            if self.is_operator():
+                for cc in self.childs:
+                    res.extend(cc.get_mutable_rootnodes(extend_lvls=extend_lvls))
+
+        return res
 
     def get_apted_notation(self):
         """Calculating the TED requires this (weird) representation"""
@@ -297,8 +303,9 @@ class Node:
         # self.repair_depth(self.depth)  # todo, failed inside TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'
         # no checks
 
-    def eval_mutable_nodes(self, xt_match=None, ignore_first=False, allow_chain=False) -> ['Node']:
-        """return all nodes that are mutable, aka suite for point- or branchmutation
+    def list_mutable_nodes(self, xt_match=None, ignore_first=False, allow_chain=False) -> ['Node']:
+        """was eval_mutable_nodes,
+        return all nodes that are mutable, aka suite for point- or branchmutation
         sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!"""
 
         # -> Check, if this node should be added
@@ -317,7 +324,7 @@ class Node:
         # -> recursively add the other nodes
         if self.is_regular() and self.is_operator():  # sfeh:chain-operators discuss
             for cc in self.childs:
-                node_list.extend(cc.eval_mutable_nodes(xt_match=xt_match, ignore_first=False, allow_chain=allow_chain))
+                node_list.extend(cc.list_mutable_nodes(xt_match=xt_match, ignore_first=False, allow_chain=allow_chain))
 
         return node_list
 
@@ -354,10 +361,6 @@ class Node:
         """
         if self.is_term():  # good for runtime
             return
-
-        for cc in self.childs:
-            # todo: check, if this actually alters the content
-            cc.tree_node_grouping()
 
         if self.label in (Pow, Powrounded):
             n_exp = self.childs[1].childs[0]  # must exist
@@ -400,6 +403,13 @@ class Node:
                         self.replace_with(Div, childs=[self.childs[0], 1 / mul1])
                         todo_div_by_test = 1 / mul1  # todo keep "div" as option
                         print(f'asd todo {todo_div_by_test}')
+
+        for cc in self.childs:
+            # todo: check, if this actually alters the content
+            try:
+                cc.tree_node_grouping()
+            except Exception as DELETE_TODO:
+                cc.tree_node_grouping()
 
 
 class RootNode_Dummy(Node):

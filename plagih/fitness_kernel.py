@@ -21,32 +21,10 @@ import numpy as np
 tf.compat.v1.disable_eager_execution()
 
 
-class EvalAction:
-    """
-    no nlabel; the action is not part of the evotree
-    - minmax for histograms
-    - minmax for regression-bounded
-    """
-    xtype = (None, float)
-
-    def __init__(self, name, minmax=None):
-        self.minmax = minmax
-        self.data_column_name = name
-
-
 class Kernel(ABC):
-    pass
-
-
-class OnlineKernel(Kernel, ABC):
-    pass
-
-
-class OfflineKernel(Kernel, ABC):
     """
-    sfeh:OfflineKernel? Also: online kernels here?
-    The "abstract" Kernel class for the GP process.
-    idea: supporting multiple Kernels?
+    The "abstract" Kernel class for calculating the fitness based on pre-collected data.
+    This is an "offline"-kernel
     """
 
     def __init__(self, data_train, action_name, tf_error_metric, tf_sanitize_results,
@@ -70,8 +48,10 @@ class OfflineKernel(Kernel, ABC):
         return float('nan')
 
 
-class Regression(OfflineKernel):
-
+class Regression(Kernel):
+    """
+    Sums up the difference of all y (the data-solution) and y-hat (the candidates solution) in the data
+    """
     def __init__(self, data_train, action_name, tf_error_metric, tf_sanitize_results, *args, **kwargs):
         super().__init__(data_train, action_name, tf_error_metric, tf_sanitize_results, *args, **kwargs)
 

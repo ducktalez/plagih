@@ -54,7 +54,6 @@ Custom Operators /Functions/Nodes/Terminals/Nested:
     Also, make a case in sympy_to_nested to reconstruct trees from sympy expressions.
 """
 import os
-from abc import ABC, abstractmethod
 
 import sympy
 # import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
@@ -473,7 +472,7 @@ class Ifte(Operator, ChainableOp):
 
 
 class RoundDummy(sympy.Function):
-    """Exists, as the Round-class """
+    """Exists, as the Round-class must not be simplified"""
     pass
 
 
@@ -826,7 +825,16 @@ def sympy_to_tensorflow(expr_sy, d_tensors):
             args_reversed = list(expr_sy.args[::-1])  # tuples to list
             # todo whY WOULD ONE    reverse the args? --> NOT REVERSER
             # reverse: most specific (/last) to lowest,  tuple must be nested the deepest node:
-            args_reversed = [[sympy_to_tensorflow(xx, d_tensors) for xx in list(ii)] for ii in args_reversed]
+            try:
+                args_reversed = [[sympy_to_tensorflow(xx, d_tensors) for xx in list(ii)] for ii in args_reversed]
+            except TypeError as ex:
+                # todo bug
+                # [(2.07, True), (8.0, ITE(cartVel <= 0.34, 0.755*cartPos > 2.0, cartPos/(cartVel**2*sign(cartVel) + 0.866) > 2.0))]
+                # (8.0, ITE(cartVel <= 0.34, 0.755*cartPos > 2.0, cartPos/(cartVel**2*sign(cartVel) + 0.866) > 2.0))
+                # args_reversed = [[sympy_to_tensorflow(xx, d_tensors) for xx in list(ii)] for ii in args_reversed]
+                # args_reversed = [[sympy_to_tensorflow(xx, d_tensors) for xx in list(ii)] for ii in args_reversed]
+                raise
+
             otherwise = args_reversed[0][0]  # the last "True" condition
             for cet in args_reversed[1:]:
                 otherwise = tf.where(cet[1], cet[0], otherwise)

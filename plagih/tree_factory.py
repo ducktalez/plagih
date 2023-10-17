@@ -89,11 +89,11 @@ def evolve_reduce_simplify(tree: Node, completely=True, force=False) -> Node:
     (completely = False: reduce just one branch. if you wanted to have more complexity)"""
     tree_copy = copy.deepcopy(tree)
     if completely:  # reduce the complete tree
-        nodes_lv0 = tree.get_nodes_at_depth(0, get_fixed=False)  # only required for fixed-core trees
+        nodes_lv0 = tree.get_mutable_rootnodes(extend_lvls=0)  # only required for fixed-core trees
         for cc in nodes_lv0:
             cc.set_new_node(tree_simplification(cc))
     else:
-        node_list = [n for n in tree.eval_mutable_nodes() if issubclass(n.label, Operator)]  # ignoring leaf nodes...
+        node_list = [n for n in tree.list_mutable_nodes() if issubclass(n.label, Operator)]  # ignoring leaf nodes...
         if len(node_list) == 0:
             print_warning('wwww', f'Tree for simplification does not provide operators: {tree}')
             return tree
@@ -105,6 +105,11 @@ def evolve_reduce_simplify(tree: Node, completely=True, force=False) -> Node:
         if len(tree_copy) < len(tree):
             print_warning('w', f'Tree grew larger during simplification:\n\t{tree_copy.str_as_list()}\n\t{tree.str_as_list()}')
             # [Square, [Powrounded, [-0.91], [cartPos]]] < [Pow, [-0.91], [Mul, [2], [Round, [cartPos]]]]
+            ######
+            # sfeh:open simplify usub in front of terminal nodes
+            # Warning (w): Tree grew larger during simplification:
+            # 	[Add, [Sub, [1.06], [cartPos]], [Div, [Mul, [Add, [cartVel], [Mul, [9.00], [Add, [Max, [-0.341], [cartPos]], [Abs, [cartPos]]]]], [Sin, [cartVel]]], [0.0420]]]
+            # 	[Add, [Add, [1.06], [Usub, [cartPos]]], [Mul, [Mul, [23.8], [Add, [Add, [cartVel], [Mul, [9.00], [Abs, [cartPos]]]], [Mul, [9.00], [Max, [-0.341], [cartPos]]]]], [Sin, [cartVel]]]]
             return tree_copy
         else:
             return tree
@@ -124,6 +129,7 @@ class TreeBuildRestrictions:
         """
         self.origin_xtype = origin_xtype
         self.origin_tree = origin_tree
+
         self.nc = nc
 
         self.complexity_metric = complexity_metric
@@ -172,24 +178,23 @@ class TreeBuildRestrictions:
     def evolve_new_tree_depth(self, depth_goal, xt_out, p_term=0.0) -> Node:
         # todo non-recursive version
 
-        if isinstance(self.origin_tree, RootNode_Dummy):
+        if self.origin_tree is not None:
 
-            evotree = self.origin_tree.origin_tree_copy()
-            layer0 = evotree.get_nodes_at_depth(0, get_fixed=False, extend=True)
+            evotree = copy.deepcopy(self.origin_tree)
+            layer0 = evotree.get_mutable_rootnodes(extend_lvls=0)
+            # sfeh:debug more, also... takes time, just define the nodes in tree for mutation once?
 
-            for ii, nodes0 in enumerate(layer0):  # -> get layer every time (nsted ids might have changed)
-                nd_list = nodes0.eval_mutable_nsteds()
-                lvl0_nodes = np.random.choice(nd_list)
-                new_subbranch = self.evolve_create_random(lvl0_nodes.get_xtype_self(), depth_goal, num_rest=-1,
-                                                          depth=lvl0_nodes.depth, p_term=p_term)
-                lvl0_nodes.set_new_node(new_subbranch)
+            for ii, nd in enumerate(layer0):  # -> get layer every time (nsted ids might have changed)
+                new_subbranch = self.evolve_create_random(nd.get_xtype_self(), depth_goal, num_rest=-1,
+                                                          depth=nd.depth, p_term=p_term)
+                nd.set_new_node(new_subbranch)
 
         else:
             evotree = self.evolve_create_random(xt_out, depth_goal, depth=0, num_rest=-1, p_term=p_term)
 
         return evotree
 
-    def new_tree_nodes(self, nn, depth):
+    def new_tree_nodes(self, nn, p_term=0):
         """insert a (random) number of branches at the first possible "layer" (not necessary depth)
         (If all nodes are modifiable, it is the root node. Otherwise, it is the first layer of modifiable nodes
         - get these nodes, randomly choose a subset of those
@@ -204,14 +209,13 @@ class TreeBuildRestrictions:
         # evotree = self.evolve_create_random(xtype, -1, num_rest=nodeamount, depth=0, p_term=p_term)
         
         evotree = node_deepcopy(self.origin_tree)
-        layer0_nodes = evotree.get_nodes_at_depth(0, if_fixed=False, extend=True)
+        layer0_nodes = evotree.get_mutable_rootnodes()
         layer0_splits = randomly_split_range(nn, len(layer0_nodes))
 
         for ii, node0 in enumerate(layer0_nodes):  # pareto_insert branches! get layer always, node ids might change
-            lvl0_node = np.random.choice(node0.eval_mutable_nodes())  # layer0_branch =
+            lvl0_node = np.random.choice(node0.list_mutable_nodes())  # layer0_branch =
             # branch_size = layer0_nodes[ii]  # sfeh:idea + len(lvl0_node)
-            new_subbranch = self.new_tree_nodes(lvl0_node.get_xtype_self(), -1, depth=lvl0_node.depth,
-                                                      num_rest=layer0_splits[ii], p_term=p_term)
+            new_subbranch = self.new_tree_nodes(lvl0_node.get_xtype_self(), p_term=p_term)
             lvl0_node.set_new_node(new_subbranch)
 
         return evotree
@@ -252,7 +256,7 @@ class TreeBuildRestrictions:
 
         if self.origin_tree is not None:
             evotree = copy.deepcopy(self.origin_tree)
-            layer0 = evotree.get_nodes_at_depth(0, get_fixed=False, extend=True)
+            layer0 = evotree.get_mutable_rootnodes()
 
             for ii, nodes0 in enumerate(layer0):  # -> get layer every time (nsted ids might have changed)
                 nd_list = nodes0.eval_mutable_nsteds()
@@ -272,7 +276,7 @@ class TreeBuildRestrictions:
         - filter terminals
         - filter with which filter?"""
 
-        _nd = np.random.choice(tree.eval_mutable_nodes())
+        _nd = np.random.choice(tree.list_mutable_nodes())
         # sfeh: does nothing if no float values are in this tree
         _nd.evolve_mutate_filter_gauss()
 
@@ -284,8 +288,8 @@ class TreeBuildRestrictions:
         sfeh:debug is the fintree a fintree copy or the same fintree?"""
         evotree = copy.deepcopy(tree)
 
-        node = rnd_choice(evotree.eval_mutable_nodes(allow_chain=False))  # debug if ignores chains
-        xtype = node.get_xtype()
+        node = rnd_choice(evotree.list_mutable_nodes(allow_chain=False))  # debug if ignores chains
+        xtype = node.get_xtype_tuple()
 
         if node.is_operator():
             # todo allow_chain
@@ -301,29 +305,30 @@ class TreeBuildRestrictions:
         return evotree
 
     def evolve_mutate_branch_depth(self, tree, depth_goal, p_term=0.0):
-        _nodes_init = len(tree)
-        _node = np.random.choice(tree.eval_mutable_nodes())
-        xtype_out = _node.get_xtype_self()
-        branch = self.evolve_create_random(xtype_out, depth_goal, num_rest=self.nodes_max - _nodes_init, depth=0,
+        n_init = len(tree)
+        node = np.random.choice(tree.list_mutable_nodes())
+        xtype_out = node.get_xtype_self()
+        branch = self.evolve_create_random(xtype_out, depth_goal, num_rest=self.nodes_max - n_init, depth=0,
                                            p_term=p_term)
-        _node.set_new_node(branch)
+        node.set_new_node(branch)
 
-        # etree.finalize()
         return tree
 
     def evolve_mutate_branch_nodes(self, tree, nodes_goal, p_term=0.0):
-        """currently only one branch"""
-        _nodes_init = len(tree)
+        """currently only one branch
+        p_term: probability terminating the tree in a node
+        """
+        nodes_init = len(tree)
         if tree is None:
             raise NotImplementedError('SFEH:open Implement standard selection mechanism')
-        nd = rnd_choice(tree.eval_mutable_nodes())
+        nd = rnd_choice(tree.list_mutable_nodes())
         xt_out = nd.get_xtype_self()
-        nodes_goal = min(self.nodes_max - (_nodes_init - len(nd)), nodes_goal)
+        nodes_goal = min(self.nodes_max - (nodes_init - len(nd)), nodes_goal)
         branch = self.evolve_create_random(xt_out, -1, num_rest=nodes_goal, depth=nd.depth, p_term=p_term)
         nd.set_new_node(branch)
         return tree
 
-    def evolve_crossover(self, tree1: Node, tree2: Node):
+    def evolve_crossover(self, aa: Node, bb: Node):
         """Evolution with crossover of branches between two trees
         currently only one branch
 
@@ -334,40 +339,30 @@ class TreeBuildRestrictions:
         - delete a_parent branch and pareto_insert b_parent branch (which tactic?)
         sfeh:idea into main fintree?"""
 
-        aa = node_deepcopy(tree1)
-        bb = node_deepcopy(tree2)
+        # aa = node_deepcopy(tree1)
+        # bb = node_deepcopy(tree2)
 
-        a_nds = aa.eval_mutable_nodes(ignore_first=True)  # why actually ignore root node
+        a_nds = aa.list_mutable_nodes(ignore_first=True)  # why actually ignore root node
+        a_nds = [x for x in a_nds if len(x) > 1]
+
         if len(a_nds) == 0:
             raise ValueError(f'Crossover tree 1 has no mutable nodes')
 
         a_nd = np.random.choice(a_nds)
         xt_out = a_nd.get_xtype_self()
 
-        b_nds = bb.eval_mutable_nodes(xt_match=xt_out)
+        b_nds = bb.list_mutable_nodes(xt_match=xt_out)
 
         if len(b_nds) > 0:
             b_nd = np.random.choice(b_nds)
         else:
-            xt_out = float if xt_out == bool else bool  # the other swap type now sfeh:open
-            b_nds = bb.eval_mutable_nodes(xt_match=xt_out)
+            xt_out = float if xt_out == bool else bool  # switching to the other swap type
+            b_nds = bb.list_mutable_nodes(xt_match=xt_out)
             b_nd = np.random.choice(b_nds)
-            a_nds = aa.eval_mutable_nodes(ignore_first=True, xt_match=xt_out)
+            a_nds = [x for x in a_nds if x.get_xtype_self() == xt_out]
             if len(a_nds) == 0:
-                raise ValueError(f'Crossover cant find matching nodes')
+                raise ValueError(f'Crossover cant find matching nodes. This Should always be possible.')
             a_nd = np.random.choice(a_nds)
-
-        # try:
-        #     b_nd = np.random.choice(b_nds)
-        # except ValueError:
-        #
-        #     # if len(b_nds) > 0:
-        #     # else:
-        #     xt_out = float if xt_out == bool else bool  # the other swap type now sfeh:open
-        #     b_nds = bb.eval_mutable_nodes(match_xt=xt_out)
-        #     b_nd = np.random.choice(b_nds)
-        #     a_nds = aa.eval_mutable_nodes(ignore_first=True, match_xt=xt_out)
-        #     a_nd = np.random.choice(a_nds)
 
         cpy = copy.deepcopy(a_nd)  # sfeh deepcopy required??
 
@@ -388,7 +383,7 @@ class TreeBuildRestrictions:
         sfeh:discussion there is a difference between parsimony and complexity...
         sfeh:discuss analyze the amount of trees that have to be pruned?
         sfeh:open add labelweight_max to"""
-        nodelist = tree.eval_mutable_nodes()
+        nodelist = tree.list_mutable_nodes()
         for dnode in nodelist:
             if dnode.depth == self.nodes_max and dnode.get_arity() > 0:
                 print_warning('wwww', f'Node in fintree is too deep: {dnode.depth}')
@@ -399,7 +394,7 @@ class TreeBuildRestrictions:
         prune_amount = len(tree) - self.nodes_max
         while prune_amount > 0:
             print_warning('wwww', f'Tree too complex: {len(tree)} > {self.nodes_max}, pruning {prune_amount}.')
-            nodelist = tree.eval_mutable_nodes()
+            nodelist = tree.list_mutable_nodes()
             prune_now = 1 + np.random.randint(prune_amount)  # 19 -> prune branch with 1 to max. 19 nodes
 
             nodelist = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
@@ -581,12 +576,12 @@ class FinalizedTree:
 #     return tree
 
 
-def selection_tournament(individuals, tournsize=3):
+def selection_tournament(pop, tournsize=3):
     """
     SFEH's tournament selection
     sfeh: discuss extracting & deepcopying the inner tree
     """
-    tree_list = [np.random.choice(individuals) for _ in range(tournsize)]
+    tree_list = [np.random.choice(pop) for _ in range(tournsize)]
     fintree: 'FinalizedTree' = min(tree_list, key=lambda tree: tree.get_fitness())
     evotree = fintree.get_evotree()
     evotree = copy.deepcopy(evotree)

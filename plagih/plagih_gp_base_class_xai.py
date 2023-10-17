@@ -4,7 +4,7 @@ The main class of a gp run. It holds the following functionalities
 - population (pop_base, pop_next)
 -
 """
-from plagih.monitoring import plot_gen_performance
+from plagih.monitoring import plot_performance
 from plagih.paretofront import *
 from plagih.tree_factory import *
 
@@ -47,8 +47,8 @@ class ExplainableGP:
               f'\t{rootdir}\n')
 
         self.paretofront = []  # not a separate class; requires too much information
+        self.pop_genepool = []  # sfeh:discuss maybe better names?
         self.pop_next = []
-        self.population = []  # sfeh:discuss maybe better names?
 
         self.lut = {}  # Lookup-table for tree(-expressions) and tits fitness/parsimony. Improving runtime a lot!
 
@@ -60,98 +60,34 @@ class ExplainableGP:
                                                 'parsim_avg', 'parsim_var', 'parsim_best',
                                                 'gens_since_last_pareto'])
 
-    def pop_kill(self):
-        """Delets the current population"""
-        self.population = []
-        self.pop_next = []
-
-    # self.printpl('i', 'Using evolve rates from config')
-
-    def evoloop(self, period_plots=10, period_save=10, gen_additionally=0):
-        """
-        Start a regular GP run.
-        The only other option is to analyze a loaded run.
-        """
-        if gen_additionally:
-            printdummy = copy.deepcopy(self.gen_max)
-            self.gen_max = max(self.gen_max, self.gen_id + gen_additionally)
-            printpl('i', f'Adding {gen_additionally} more generations in gen {self.gen_id}, '
-                         f'increasing gen_max from {printdummy} to {self.gen_max}.')
-
-        # sfeh check if any roots
-        # yaml_dump(self.rootdir / 'used_config.yaml', self.conf)
-
-        while self.gen_id <= self.gen_max and not self.run_custom_exit_condition():
-            self.time_genstart = time.perf_counter()  # sfeh here?
-
-            if self.gen_id == 0:
-                printpl('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')  # sfeh debug
-                self.gen_create_initial()  # sfeh check if last pop is empty? +info/warnung: neue generation?
-                self.gen_id += 1
-            else:
-                # This might be a solution for multiprocessing: You can avoid this situation by calling
-                # multiprocessing.Process before you load your huge data. Then the additional memory allocations will
-                # not be reflected in the child process when you load the data in the parent. sfeh: In python 3.8,
-                # this might be availably: multiprocessing.shared_memory
-                # https://docs.python.org/3/library/multiprocessing.shared_memory.html sfeh: check memory usage!
-                # should not scale with the number of processes, only one pop_base is required, it does not change.
-
-                self.gen_create_next()
-
-            if len(self.paretofront) == 0:
-                self.paretofront = [self.pop_next[0]]  # initialize
-                printez('a', f'Starting a new paretofront with parsimony: {self.pop_next[0].get_parsimony()} '
-                             f'fitness: {self.paretofront[0].get_fitness():6.4f}')
-
-            # tmp_pareto = pareto_from_pop(self.pop_next)  # sfeh:idea paretofront in each generation?
-            self.paretofront = self.run_update_paretofront(self.paretofront)
-
-            gen_time = time.perf_counter() - self.time_genstart
-            pop_analysis_dict = pop_analyze(self.pop_next, gen_time, self.gens_since_last_pareto)
-            self.monitor_df.loc[self.gen_id] = pop_analysis_dict
-            printpl('gg', f"Created {len(self.pop_next)}/{self.pop_max} ({pop_analysis_dict['pop_unique']}"
-                          f" unique) in generation {self.gen_id}. Gen took {gen_time:4.2f}s")
-
-            self.population = self.pop_next[:]
-            self.pop_next = []
-
-            printpl('ggg', f'--- Gen {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}. ---')
-            self.monitoring_scheduled_io(self.gen_id, period_plots, period_save)
-            self.gen_id += 1  # sfeh y duoes hash lut trees not work
-
-        printpl('g', f'Done after Generation {self.gen_id}.\n'
-                     f'Time since start: {time.perf_counter() - self.time_start:4.2f}s')
-
-        self.backup_save()
-
-        return
-
-    def run_update_paretofront(self, paretofront):
+    def run_update_paretofront(self, pop):
         """
         CAUTION: This Function was tried to be separated many times now. it never worked.
         This was tried =3= times now. Please increase the counter when you try.
         Reason: The paretocandidates should be simplified if possible and gens_since_last_pareto is reset.
-        sfeh:debug, might be faulty
+
         sfeh:discuss pareto-efficient, but different pareto entries?
+
+
         """
-        pop_parcandidates = pareto_from_pop(self.pop_next)  # pareto-candidates in the pop, renamed to be clear
+        pop_parcandidates = pareto_from_pop(pop)  # pareto-candidates in the pop, renamed to be clear
 
         for fintree in pop_parcandidates:
             success = False
             fit = fintree.get_fitness()
             par = fintree.get_parsimony()
 
-            if par < paretofront[0].get_parsimony():
+            if par < self.paretofront[0].get_parsimony():
                 printyeah('a', f'Paretofront: New simplest entry. parsimony: {par} fitness: {fit:6.4f}, '
-                               f'old simplest entry had {paretofront[0].get_parsimony()}')
+                               f'old simplest entry had {self.paretofront[0].get_parsimony()}')
                 success = True
 
-            # if all([self.fitness_compare(fit, p.get_fitness()) for p in paretofront]):  # sfeh-kernel
-            elif fit < paretofront[-1].get_fitness():
+            # if all([self.fitness_compare(fit, p.get_fitness()) for p in self.paretofront]):  # sfeh-kernel
+            elif fit < self.paretofront[-1].get_fitness():
                 printyeah('a', f'Paretofront: New fittest entry. parsimony: {par} fitness: {fit:6.4f}')
                 success = True
             else:
-                for p in paretofront:
+                for p in self.paretofront:
                     if par >= p.get_parsimony():
                         continue
                     else:
@@ -168,28 +104,31 @@ class ExplainableGP:
                     if _symtree_fin.get_parsimony() < fintree.get_parsimony():
                         printyeah('a', f'Paretofront: Even further simplified! '
                                        f'{_symtree_fin.get_parsimony()} < {fintree.get_parsimony()}')
-                    print_blue(f'{_symtree_fin.get_parsimony()}: {symtree}')
+                    print_blue(f'Simplified symtree: {_symtree_fin.get_parsimony()}: {symtree}')
                     self.pop_append(symtree)  # sfeh:open , tag='sfeh-sympifyed_pareto'
 
                 except KeyError as ex:
                     print_e(f'SFEH: this tree could whatever {ex}')  # -> piecewise function, mostly
 
-                _obsoletes = [i for i in paretofront if
+                _obsoletes = [i for i in self.paretofront if
                               i.get_fitness() > fintree.get_fitness() and i.get_parsimony() >= fintree.get_parsimony()]
                 if _obsoletes:
                     printyeah('a', f'Paretofront: Removing obsolete entries {[str(i) for i in _obsoletes]}')
-                paretofront = [ftree for ftree in paretofront if ftree not in _obsoletes]
-                paretofront.append(fintree)
-                paretofront = pareto_sort(paretofront)
+                self.paretofront = [ftree for ftree in self.paretofront if ftree not in _obsoletes]
+                self.paretofront.append(fintree)
+                self.paretofront = pareto_sort(self.paretofront)
 
-        return paretofront
+        return
 
     # sfeh:idea sympy.NumberSy,bol
 
     def gen_create_initial(self):
 
+        printpl('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')  # sfeh debug
+
         if self.tb.origin_tree is not None:
-            self.pop_next.append(self.tb.origin_tree)  # the origin fintree is the only candidate (automatically added)
+            self.pop_append(self.tb.origin_tree, tag='origin')
+
         else:
             @self.create_trees(rate=0.5)
             def init_rand1():
@@ -198,6 +137,11 @@ class ExplainableGP:
             @self.create_trees(rate=0.5)
             def init_rand2():
                 return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(2.5, 1.0)), 2, 5), float, p_term=0)
+
+        self.paretofront = pareto_from_pop(self.pop_next)  # initialize
+        self.pop_genepool = self.pop_next[:]
+        self.pop_next = []
+        self.gen_id = 1
         return
 
     def create_trees(self, rate=0.0, crossover=False):
@@ -229,15 +173,26 @@ class ExplainableGP:
                     n_fails += 1  # sfeh:use this for something?
                     print_warning('www', f'\'{tag}\' failed: {ex}')
                     if n_fails > n_success + 5:  # allow more fails: n_fails > n
-                        print_e(f'Evolution "{tag}" fails too often: {n_fails}x. {n_success}.')
+                        print_e(f'Evolution fails too often: {tag}, {n_fails}x. {n_success}.')
                         return  # sfeh raise?
-                # except TypeError as ex:
-                #     print(f'Typeerror, but why? {ex}')
+                except TypeError as ex:
+                    print(f'Typeerror, but why? {ex}')
+                    # raise ex
+                    # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
+                    # sfeh probably this error: cond(): 'false_fn' argument required
+                    # Happens, when ITE is coming up. Ignoring for now.
                 except AttributeError as ex:
-                    raise AttributeError(f'Probably sympy.im in expr {ex}')
+                    # raise AttributeError(f'Probably sympy.im in expr {ex}')
+                    # AttributeError: Probably sympy.im in expr 'int' object
+                    print(f'AttributeError: {ex}')
+                    # f'\n\tint object has no attribute get_nodes_at_depth has no attribute get_nodes_at_depth
+                    # f'\n\tProbably sympy.im in expr has no attribute get_nodes_at_depth
                     # print(f'Probably sympy.im in expr {ex}')
+                    #  AttributeError: 'Xor' object has no attribute '_eval_as_set'
+                    #    |--AttributeError: Probably sympy.im in expr 'Xor' object has no attribute '_eval_as_set'
                 except NotImplementedError as nie:
                     print_e(f'Notimplemented? {nie}')
+
         return loop
 
     def pop_append(self, evotree, tag=None):
@@ -250,109 +205,18 @@ class ExplainableGP:
             meta = self.tree_eval_meta(evotree, tag=tag)
 
         fintree = FinalizedTree(evotree, meta)
-        printpl('ggg', f'|->{evotree.len_nodecount_fair():2.0f}: {evotree.str_as_expr()}')
+        printpl('gggg', f'|->{evotree.len_nodecount_fair():2.0f}: {evotree.str_as_expr()}')
         self.pop_next.append(fintree)
-
-    def gen_create_next(self):
-        """Creates all new Generations by applying the evolutions in the evolve-loop.
-
-        brainstorm:
-        - the fintree can be reproduced (selection), random/new, olymp-reproduction
-        - (1 fintree) mutations can affect a point, branch, terminal nodes
-        - (2 trees) can make a crossover"""
-
-        @self.create_trees(rate=0.1)
-        def repro1():
-            tree = selection_tournament(self.population, tournsize=3)
-            return tree
-
-        @self.create_trees(rate=0.1)
-        def mut_br():
-            tree = selection_tournament(self.population, tournsize=3)
-            return self.tb.evolve_mutate_branch_nodes(tree, 4, p_term=0)
-
-        @self.create_trees(rate=0.2, crossover=True)
-        def xover():
-            tree_a = selection_tournament(self.population, tournsize=3)
-            tree_b = selection_tournament(self.population, tournsize=3)
-            evo1, evo2 = self.tb.evolve_crossover(tree_a, tree_b)
-            return evo1, evo2
-
-        @self.create_trees(rate=0.1)
-        def re_sym_all():
-            tree = selection_tournament(self.population, tournsize=3)
-            return evolve_reduce_simplify(tree, completely=True)
-
-        @self.create_trees(rate=0.1)
-        def re_sym():
-            tree = selection_tournament(self.population, tournsize=3)
-            return evolve_reduce_simplify(tree, completely=False)
-
-        @self.create_trees(rate=0.1)
-        def mut_pt():
-            tree = selection_tournament(self.population, tournsize=3)
-            return self.tb.evolve_mutate_point(tree)
-
-        # @self.create_trees(rate=0.1)
-        # def mxPointXXX():
-        #     evotree = selection_tournament(self.pop_base, tournsize=3)
-        #     return self.tb.evolve_mutate_pointxxx(evotree)
-
-        @self.create_trees(rate=0.1)
-        def mx_ranch_d():
-            tree = selection_tournament(self.population, tournsize=3)
-            return self.tb.evolve_mutate_branch_depth(tree, 4, p_term=0.5)
-
-        @self.create_trees(rate=0.1)
-        def mx_branch_n():
-            tree = selection_tournament(self.population, tournsize=3)
-            nodeamount_goal = np.clip(int(random.normalvariate(12, 4)), 0, 20)
-            return self.tb.evolve_mutate_branch_nodes(tree, nodeamount_goal)
-
-        @self.create_trees(rate=0.1)
-        def filter_optimize():
-            tree = selection_tournament(self.population, tournsize=3)
-            return self.tb.evolve_mutate_filter(tree)
-
-        @self.create_trees(rate=0.1)
-        def pareto_revive():
-            fintree = np.random.choice(self.paretofront)
-            return fintree.tree
-
-        @self.create_trees(rate=0.1)
-        def rand1():
-            return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3, 1)), 2, 4), float, p_term=0)
-
-        @self.create_trees(rate=0.1)
-        def rand2():
-            # sfeh float? nope
-            return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 2, 4), float, p_term=0)
-
-        return
 
     def evoloop_monitoring_plots(self):
         """
         Create all run-related analysis plots in the root directory
         """
         try:
-            path_monitoring = self.rootdir / 'monitoring.png'
-            plot_gen_performance(self.monitor_df, self.name, path_monitoring)  # largest plot analysing the
-            printpl('f', f"monitoring: {path_monitoring}")
-            pareto_plot(self.paretofront, self.rootdir, self.name, self.tb.nodes_max)
+            plot_performance(self.monitor_df, self.name, self.rootdir / 'monitoring.png')
+            plot_paretofront(self.paretofront, self.rootdir, self.name, self.tb.nodes_max)
         except Exception as ex:
             printpl("e", f'Could not create plots: {ex}\n')
-
-    def monitoring_scheduled_io(self, gen_id, period_plots, period_save):
-        """
-        Every x generations, save a backup and/or save plots
-        """
-        plot_gen = period_plots
-        if gen_id >= plot_gen and gen_id % plot_gen == 0:
-            self.evoloop_monitoring_plots()
-
-        save_gen = period_save
-        if gen_id >= save_gen and gen_id % save_gen == 0 or gen_id == 10:
-            self.backup_save()
 
     def backup_save(self):
         """
@@ -362,7 +226,7 @@ class ExplainableGP:
         path_backup = self.rootdir / 'backup/backup.pkl'
 
         # {} is the help_dict; include this, even if empty, to store/load successfully after future updates
-        run_backup_data = {}, self.gen_id, self.population, self.paretofront, self.monitor_df
+        run_backup_data = {}, self.gen_id, self.pop_genepool, self.paretofront, self.monitor_df
         path_backup = path_make_dir(path_backup)
         pickle_dump(path_backup, run_backup_data)
         # sfeh:debug
@@ -382,11 +246,30 @@ class ExplainableGP:
             except EOFError as ex:
                 raise Exception(f'EOFError: \n{ex}')
 
-            help_dict, self.gen_id, self.population, self.paretofront, self.monitor_df = run_data
+            help_dict, self.gen_id, self.pop_genepool, self.paretofront, self.monitor_df = run_data
             printpl('g', f'Successfully loaded backup file. Generation: {self.gen_id}')
 
         else:
             raise FileNotFoundError(f'No backup-file found at {path_backup}')  # sfeh:beautify occurs 2x
+
+    def analysis(self):
+        gen_time = time.perf_counter() - self.time_genstart
+        tmp_dict = pop_analyze(self.pop_genepool, gen_time, self.gens_since_last_pareto)
+        self.monitor_df.loc[self.gen_id] = tmp_dict
+        printpl('gg', f"Created {len(self.pop_genepool)}/{self.pop_max} ({tmp_dict['pop_unique']} unique) in "
+                      f"generation {self.gen_id}. Gen took {gen_time:4.2f}s")
+
+        printpl('ggg', f'--- Gen {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}. ---')
+
+        # def monitoring_scheduled_io(self, gen_id, plots_interval=10, backup_interval=10):
+        """
+        Every x generations, save a backup and/or save plots
+        """
+        if self.gen_id >= PLOTS_INTERVAL and self.gen_id % PLOTS_INTERVAL == 0:
+            self.evoloop_monitoring_plots()
+
+        if self.gen_id >= BACKUP_INTERVAL and self.gen_id % BACKUP_INTERVAL == 0 or self.gen_id == 10:
+            self.backup_save()
 
     def run_custom_exit_condition(self):
         """

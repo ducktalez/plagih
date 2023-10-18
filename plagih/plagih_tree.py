@@ -472,7 +472,9 @@ class Ifte(Operator, ChainableOp):
 
 
 class RoundDummy(sympy.Function):
-    """Exists, as the Round-class must not be simplified"""
+    """Exists, as the Round-class must not be simplified
+    Only used, if a symbol (aka variable) is rounded (see class Round)
+    """
     pass
 
 
@@ -489,7 +491,8 @@ class Round(MathOperator):
     """
     # sfeh:xxx check conversion
     xtype = ((float,), float)
-    symfun = lambda a: a.round(0) if a.is_number else RoundDummy(a)
+    # symfun = lambda a: a.round(0) if a.is_number else RoundDummy(a)
+    symfun = lambda a: a.round(0) if a.is_number else Round(a)
     tflow = lambda a: tf.math.round(a, 1)
 
 
@@ -636,7 +639,7 @@ class OrChain(ChainOp):
     # ogclass = Or
 
 
-def sym_control(expr_sym):
+def sym_check(expr_sym):
     if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im):  # sfeh:discuss sympy.re
         raise ArithmeticError(f'Simplification failed: {expr_sym}')
     return expr_sym
@@ -695,7 +698,7 @@ def expr_sympify(expr):
         #             print(f'COMPARE EXTEND:\n{expr_sym}\n{expr_sym3}')
         #     except Exception as ex:
         #         print(f'sympify-factor ex: {expr_sym} {ex}')
-        sym_control(expr_sym)
+        sym_check(expr_sym)
         return expr_sym
 
     except ValueError as ex:

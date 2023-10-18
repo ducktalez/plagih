@@ -98,7 +98,7 @@ class Node:
     def __str__(self):
         return str(self.str_as_expr())
 
-    def get_sympy_expr(self):
+    def get_sympy_expr(self) -> sympy.Basic:
         if issubclass(self.label, Operator):
             _sym = self.label.symfun
             _cs = [cc.get_sympy_expr() for cc in self.childs]

@@ -327,14 +327,19 @@ class ExplainableGP:
             raise ValueError(f'Tree too complex: {parsimony} > {self.tb.nodes_max}')
 
         sy_expr = tree.get_sympy_expr()
-        sym_control(sy_expr)  # raise if "weird" stuff in it
+        sym_check(sy_expr)  # raise if "weird" stuff in it
+
         # expr_raw = tree.get_expr_raw()
         # with sympy.evaluate(False):
         #     expr_raw = tree.get_sympy_expr()  #
         # v2_sym = expr_sympify(expr_raw)  # sfeh delete
         # sfeh:discuss sympy real=True might allow imaginary results
-
+        # t0 = time.perf_counter()
+        # fitness2 = self.kernel.eval_sym_experimental(sy_expr)
+        # t1 = time.perf_counter()
         fitness = self.kernel.eval_tf(sy_expr)['mean_error']
+        # t2 = time.perf_counter()
+        # print(f'asd {t1-t0:4.4f} {t2-t1:4.4f} ({(t1-t0)-(t2-t1):4.2f}) {fitness:4.2f} {fitness2:4.2f}')
         # if DEBUG_DUMMY or fitness != self.kernel.eval_sym_experimental(sy_expr):
         #     print(f'FAILED: {fitness} vs. {self.kernel.eval_sym_experimental(sy_expr)}')
 

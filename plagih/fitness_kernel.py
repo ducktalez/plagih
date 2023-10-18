@@ -7,7 +7,7 @@ import sympy
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 
-from plagih.plagih_tree import sympy_to_tensorflow
+from plagih.plagih_tree import sympy_to_tensorflow, RoundDummy
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -129,13 +129,37 @@ class Regression(Kernel):
 
     def eval_sym_experimental(self, expr, return_results=False):
         """
+        todo this is faster than TF?...
         Not stable and only working with mountaincar
+
+        def eval_sym_experimental(self, expr, return_results=False):
+            # Not stable and only working with mountaincar
+
+            _inputs = self.data_dict
+
+            cartVel, cartPos = sympy.symbols('cartVel cartPos')
+            ex = sympy.sympify(str(expr))
+            f = sympy.lambdify([cartVel, cartPos], ex, 'numpy')
+            cartVel = np.array(_inputs['cartVel'])
+            cartPos = np.array(_inputs['cartPos'])
+            action = np.array(_inputs['action'])
+            raw_results = f(cartVel, cartPos)
+            results = np.round(np.clip(raw_results, 0, 2), 0)
+
+            if not return_results:
+                fitness = np.sqrt(np.mean((results-action)**2))
+                return np.round(fitness, FLOAT_PRECISION)
+            else:
+                return results
         """
         _inputs = self.data_dict
 
-        cartVel, cartPos = sympy.symbols('cartVel cartPos')
+        a, b = sympy.symbols('cartVel cartPos')
+        x = sympy.sympify(expr, locals={RoundDummy: sympy.N})
+        if 'RoundDummy' in str(expr):
+            expr = expr.subs({RoundDummy: sympy.N, RoundDummy: sympy.N})  # todo check
         ex = sympy.sympify(str(expr))
-        f = sympy.lambdify([cartVel, cartPos], ex, 'numpy')
+        f = sympy.lambdify([a, b], ex, 'numpy')
         cartVel = np.array(_inputs['cartVel'])
         cartPos = np.array(_inputs['cartPos'])
         action = np.array(_inputs['action'])

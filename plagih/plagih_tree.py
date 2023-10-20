@@ -54,6 +54,7 @@ Custom Operators /Functions/Nodes/Terminals/Nested:
     Also, make a case in sympy_to_nested to reconstruct trees from sympy expressions.
 """
 import os
+from typing import Callable
 
 import sympy
 # import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
@@ -85,9 +86,13 @@ class Label:
         return obj
 
     def __str__(self):
+        _str = self.as_str()
+        return _str
+
+    def as_str(self):
         _str = self.__class__.__name__
         if issubclass(self.__class__, Operator):
-            _childstr = ', '.join([str(a) for a in self.args])
+            _childstr = ', '.join([a.as_str() for a in self.args])
             _str = f'{_str}({_childstr})'
         elif issubclass(type(self), Terminal):
             pass  # _str = f'{self.value}'
@@ -492,7 +497,9 @@ class Round(MathOperator):
     # sfeh:xxx check conversion
     xtype = ((float,), float)
     # symfun = lambda a: a.round(0) if a.is_number else RoundDummy(a)
-    symfun = lambda a: a.round(0) if a.is_number else Round(a)
+    symfun: Callable[[sympy.Expr], sympy.Expr] = lambda a: a.round(0) if a.is_number else Round(a)  # sfeh (next line)
+    # this is here to hint the type, as sympy will throw a warning otherwise, leading to this
+    # https://docs.sympy.org/latest/explanation/active-deprecations.html#non-expr-args-deprecated
     tflow = lambda a: tf.math.round(a, 1)
 
 
@@ -843,6 +850,9 @@ def sympy_to_tensorflow(expr_sy, d_tensors):
                 otherwise = tf.where(cet[1], cet[0], otherwise)
             return otherwise
 
+        elif isinstance(expr_sy, sympy.ITE):
+            raise NotImplementedError(f'Sfeh: sympy.ITE not yet implemented, occurs as side-effect of boolean logic')
+
         tf_fun = totf[type(expr_sy)]
         # try:
         #     tf_fun = totf[type(expr)]
@@ -862,7 +872,10 @@ def sympy_to_tensorflow(expr_sy, d_tensors):
             result = tf_args.pop()  # only commutative arity-2 functions here (Add, Mul, Max, Min)
             while tf_args:
                 # sfeh:optimization
-                result = tf_fun(result, tf_args.pop())
+                try:
+                    result = tf_fun(result, tf_args.pop())
+                except Exception as ex:
+                    result = tf_fun(result, tf_args.pop())  # todo todotodo
         return result
     raise NotImplementedError(f'Cannot convert {expr_sy}')  # noqa: unreachable code, but was reached often while dev
 

@@ -107,10 +107,10 @@ class Node:
             try:
                 return _sym(*_cs)
             except RecursionError as ex:
-                print(f'sfeh:RecursionError, maybe Piecewise?: {self}, {ex}')
+                print(f'sfeh:RecursionError, maybe Piecewise?: {self.label}, {self.childs}, {ex}')
                 raise RecursionError
             except TypeError as ex:
-                print(f'sfeh:TypeError?: {self}, {ex}')
+                print(f'sfeh:TypeError?: {self.label}, {self.childs}: {ex}')
                 raise TypeError(ex)
             except Exception as ex:
                 print(f'sfeh:XXX this still occurs. {ex}')

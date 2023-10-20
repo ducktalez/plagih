@@ -177,7 +177,6 @@ class ExplainableGP:
                         return  # sfeh raise?
                 except TypeError as ex:
                     print(f'Typeerror, but why? {ex}')
-                    # raise ex
                     # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
                     # sfeh probably this error: cond(): 'false_fn' argument required
                     # Happens, when ITE is coming up. Ignoring for now.
@@ -362,7 +361,8 @@ def pop_analyze(popul, gen_time, gens_since_last_pareto):
     pop_parsim = [tree.get_parsimony() for tree in popul]
     pop_treelen = [len(fintree.tree) for fintree in popul]
     pop_fitness_best = np.min(pop_fitness)
-    pop_unique = len(set([hash(x) for x in popul]))  # sfeh:analyze this?
+    # todo = set([str(x.tree) for x in popul])
+    pop_unique = len(set([str(x.tree) for x in popul]))  # sfeh:analyze this?
     result = {'pop_len': len(popul),
               'pop_unique': pop_unique,
               'fit_avg': np.average(pop_fitness),

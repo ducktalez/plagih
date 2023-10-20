@@ -58,11 +58,11 @@ def _test_random_pop():
             """make all probabilities sum to 1 for each categoray (Add: 2, Mul: 1, Tan: 0.5) in"""
 
             self.pick_op, self.pick_op_match = operatorpool_to_picks(
-                {Add: 2, Sub: 1, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
-                 Sin: 0.5, Tan: 0.1, Cos: 0.33, Min: 1, Max: 1, And: 1, Or: 1, Not: 0.5, Xor: 1, Lt: 0.5,
-                 Le: 0.5, Ifte: 2,
-                 Powrounded: 0.5})  # sfeh: Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.5, Usub: 1,
-            # Round: 0.5, Eq: 1,  # Ne: 0.5, #  # Log1p: 0.1, Gt: 0.1, Ge: 0.1,
+                {Add: 2, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
+                 Sin: 0.5, Min: 1, Max: 1, And: 1, Or: 1, Not: 0.5, Lt: 0.5, Le: 0.5, Ifte: 2})
+            # sfeh: Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.5, Usub: 1, Xor: 1
+            # Round: 0.5, Eq: 1,  # Ne: 0.5, #  # Log1p: 0.1, Gt: 0.1, Ge: 0.1,, Tan: 0.1, Sub: 1, Cos: 0.33
+            # Powrounded: 0.5
 
             self.pick_symbol = {
                 float: norm_choices([[sympy.Symbol(ii, real=True, imaginary=False), 1] for ii in INPUT_NAMES]),
@@ -177,16 +177,16 @@ def _test_random_pop():
             tree = selection_tournament(gp.pop_genepool, tournsize=3)
             return gp.tb.evolve_mutate_branch_depth(tree, 4, p_term=0.5)
 
-        @gp.create_trees(rate=0.15)
+        @gp.create_trees(rate=0.25)
         def mx_branch_n():
             tree = selection_tournament(gp.pop_genepool, tournsize=3)
             n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
             return gp.tb.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
 
-        @gp.create_trees(rate=0.1)
-        def mut_br():
-            tree = selection_tournament(gp.pop_genepool, tournsize=3)
-            return gp.tb.evolve_mutate_branch_nodes(tree, 4, p_term=0)
+        # @gp.create_trees(rate=0.1)  # todo error source?
+        # def mut_br():
+        #     tree = selection_tournament(gp.pop_genepool, tournsize=3)
+        #     return gp.tb.evolve_mutate_branch_nodes(tree, 4, p_term=0)
 
         @gp.create_trees(rate=0.1)
         def filter_optimize():

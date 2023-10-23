@@ -96,7 +96,7 @@ class Node:
         return s
 
     def __str__(self):
-        return str(self.str_as_expr())
+        return self.get_expr_raw()
 
     def get_sympy_expr(self) -> sympy.Basic:
         if issubclass(self.label, Operator):
@@ -110,7 +110,7 @@ class Node:
                 print(f'sfeh:RecursionError, maybe Piecewise?: {self.label}, {self.childs}, {ex}')
                 raise RecursionError
             except TypeError as ex:
-                print(f'sfeh:TypeError?: {self.label}, {self.childs}: {ex}')
+                # print(f'sfeh:TypeError?: {self.label}, {self.childs}: {ex}')
                 raise TypeError(ex)
             except Exception as ex:
                 print(f'sfeh:XXX this still occurs. {ex}')
@@ -429,7 +429,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
 
     elif isinstance(s_expr, sympy.logic.boolalg.BooleanAtom):
         # s_expr = True if isinstance(s_expr, (bool, sympy.logic.boolalg.BooleanTrue)) else False
-        s_expr = True if isinstance(s_expr, (bool, sympy.logic.boolalg.BooleanTrue)) else False  # todo todotodo
+        s_expr = True if isinstance(s_expr, (bool, sympy.logic.boolalg.BooleanTrue)) else False
         return Node(Boolean, [s_expr])
 
     # the following two lines are not required, if sympy filters for bad expressions earlier
@@ -439,15 +439,15 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
     elif s_expr.is_Atom:
         if s_expr.is_Symbol:
             # return Node(Symbol, [str(s_expr)])  # sfeh str VERY important!! "Symbol type input" is not accepted
-            return Node(Symbol, [s_expr])  # todo todotodo str VERY important!! "Symbol type input" is not accepted
+            return Node(Symbol, [s_expr])  # str VERY important!! "Symbol type input" is not accepted
         else:
             expr_eval = s_expr  # todo check if this can be worked with .evalf(FLOAT_PRECISION)  # 15 digits
             if s_expr.is_Boolean:
                 # return Node(Boolean, [bool(expr_eval)])
-                return Node(Boolean, [expr_eval])  # todo todotodo
+                return Node(Boolean, [expr_eval])
             elif s_expr.is_number:  # is_float does not match int
                 # return Node(Float, [round(float(expr_eval), FLOAT_PRECISION)])
-                return Node(Number, [expr_eval])  # todo todotodo check
+                return Node(Number, [expr_eval])
                 # "TypeError: Cannot convert complex to float" -> ignore the whole expression, let it fail
             else:
                 raise NotImplementedError(f'What happened here? {s_expr}')
@@ -477,8 +477,8 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
 
         # todo include Usub, ignore usub in tree len()
 
-        elif isinstance(s_expr, RoundDummy):
-            return Node(Round, [cc_nodes[0]])
+        # elif isinstance(s_expr, RoundDummy):
+        #     return Node(Round, [cc_nodes[0]])
 
         elif isinstance(s_expr, Mul):
             if s_expr.args[0].is_Rational:

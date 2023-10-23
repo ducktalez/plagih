@@ -52,14 +52,16 @@ def _test_random_pop():
     #     def __init__(self, *args):
     #         super(N, self).__init__(*args, is_fix=True)
 
-    class Node_randomizer:
+    class NodeRandomizer:
 
         def __init__(self):
             """make all probabilities sum to 1 for each categoray (Add: 2, Mul: 1, Tan: 0.5) in"""
+            opsss = {Add: 2, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
+                     Sin: 0.5, Not: 0.5, Lt: 0.5, Le: 0.5, And: 1, Or: 1, Min: 1, Max: 1}
+            ops_arity = {Ifte: 2}  # operators that contradict with fixed arity
+            opsss.update(ops_arity)
 
-            self.pick_op, self.pick_op_match = operatorpool_to_picks(
-                {Add: 2, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
-                 Sin: 0.5, Min: 1, Max: 1, And: 1, Or: 1, Not: 0.5, Lt: 0.5, Le: 0.5, Ifte: 2})
+            self.pick_op, self.pick_op_match = operatorpool_to_picks(opsss)
             # sfeh: Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.5, Usub: 1, Xor: 1
             # Round: 0.5, Eq: 1,  # Ne: 0.5, #  # Log1p: 0.1, Gt: 0.1, Ge: 0.1,, Tan: 0.1, Sub: 1, Cos: 0.33
             # Powrounded: 0.5
@@ -113,7 +115,7 @@ def _test_random_pop():
             _v = np.random.choice(self.pick_symbol[xt][0], p=self.pick_symbol[xt][1])
             return _v
 
-    nc = Node_randomizer()
+    nc = NodeRandomizer()
 
     build_restrictions = {'depth_max': 7, 'nodes_max': 50}
 
@@ -150,9 +152,6 @@ def _test_random_pop():
 
     while gp.gen_id <= gp.gen_max and not gp.run_custom_exit_condition():
         # def evoloop(self):
-        """
-        Loop of a gp-run a regular GP run.
-        """
 
         # def gen_create_next(self):
         """Creates all new Generations by applying the evolutions in the evolve-loop.
@@ -236,7 +235,7 @@ def _test_random_pop():
 
         gp.pop_genepool = gp.pop_next[:]
         gp.pop_next = []
-        gp.gen_id += 1  # sfeh why does hash lut trees not work?
+        gp.gen_id += 1
 
         gp.analysis()
 

@@ -334,15 +334,15 @@ class ExplainableGP:
         # v2_sym = expr_sympify(expr_raw)  # sfeh delete
         # sfeh:discuss sympy real=True might allow imaginary results
         # t0 = time.perf_counter()
-        # fitness2 = self.kernel.eval_sym_experimental(sy_expr)
+        fitness2 = self.kernel.eval_sym_experimental(sy_expr)
         # t1 = time.perf_counter()
-        fitness = self.kernel.eval_tf(sy_expr)['mean_error']
+        # fitness = self.kernel.eval_tf(sy_expr)['mean_error']
         # t2 = time.perf_counter()
         # print(f'asd {t1-t0:4.4f} {t2-t1:4.4f} ({(t1-t0)-(t2-t1):4.2f}) {fitness:4.2f} {fitness2:4.2f}')
         # if DEBUG_DUMMY or fitness != self.kernel.eval_sym_experimental(sy_expr):
         #     print(f'FAILED: {fitness} vs. {self.kernel.eval_sym_experimental(sy_expr)}')
 
-        meta = TreeMeta(fitness=fitness, parsimony=parsimony, expr_sym=sy_expr, tag=tag)
+        meta = TreeMeta(fitness=fitness2, parsimony=parsimony, expr_sym=sy_expr, tag=tag)
         self.lut[tree.get_id()] = meta  # sfeh:discuss: lut update in finalize_tree_get_meta()?
         return meta
 

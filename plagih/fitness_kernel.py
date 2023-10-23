@@ -7,7 +7,7 @@ import sympy
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 
-from plagih.plagih_tree import sympy_to_tensorflow, RoundDummy
+from plagih.plagih_tree import sympy_to_tensorflow  # , RoundDummy
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -155,19 +155,19 @@ class Regression(Kernel):
         _inputs = self.data_dict
 
         a, b = sympy.symbols('cartVel cartPos')
-        x = sympy.sympify(expr, locals={RoundDummy: sympy.N})
-        if 'RoundDummy' in str(expr):
-            expr = expr.subs({RoundDummy: sympy.N, RoundDummy: sympy.N})  # todo check
+        # x = sympy.sympify(expr, locals={RoundDummy: sympy.N})
+        # if 'RoundDummy' in str(expr):
+        #     expr = expr.subs({RoundDummy: sympy.N, RoundDummy: sympy.N})  # todo check
         ex = sympy.sympify(str(expr))
+        cartVels = np.array(_inputs['cartVel'])
+        cartPoss = np.array(_inputs['cartPos'])
+        actions = np.array(_inputs['action'])
         f = sympy.lambdify([a, b], ex, 'numpy')
-        cartVel = np.array(_inputs['cartVel'])
-        cartPos = np.array(_inputs['cartPos'])
-        action = np.array(_inputs['action'])
-        raw_results = f(cartVel, cartPos)
+        raw_results = f(cartVels, cartPoss)
         results = np.round(np.clip(raw_results, 0, 2), 0)
 
         if not return_results:
-            fitness = np.sqrt(np.mean((results-action)**2))
+            fitness = np.sqrt(np.mean((results-actions)**2))
             return np.round(fitness, FLOAT_PRECISION)
         else:
             return results

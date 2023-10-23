@@ -476,11 +476,12 @@ class Ifte(Operator, ChainableOp):
     chain_xtype = (float, bool)
 
 
-class RoundDummy(sympy.Function):
-    """Exists, as the Round-class must not be simplified
-    Only used, if a symbol (aka variable) is rounded (see class Round)
-    """
-    pass
+# class RoundDummy(sympy.Function):
+#     """Exists, as the Round-class must not be simplified
+#     Only used, if a symbol (aka variable) is rounded (see class Round)
+#     todo check if this is required
+#     """
+#     pass
 
 
 class Round(MathOperator):
@@ -770,7 +771,7 @@ totf = {
     sympy.sign: tf.sign,
     # The real Part
     sympy.re: lambda a: tf.convert_to_tensor(a, dtype=tf.dtypes.float32),  # sfeh sympy-gotcha, comes up randomly
-    RoundDummy: tf.round,
+    # RoundDummy: tf.round,
     sympy.exp: tf.exp,  # sfeh this occurs randomly...
     sympy.ITE: tf.cond
 }

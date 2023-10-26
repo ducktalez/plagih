@@ -647,10 +647,10 @@ class OrChain(ChainOp):
     # ogclass = Or
 
 
-def sym_check(expr_sym):
-    if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im):  # sfeh:discuss sympy.re
-        raise ArithmeticError(f'Simplification failed: {expr_sym}')
-    return expr_sym
+# def sym_check(expr_sym):
+#     if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im):  # sfeh:discuss sympy.re
+#         raise ArithmeticError(f'Simplification failed: {expr_sym}')
+#     return expr_sym
 
 
 def expr_sympify(expr):

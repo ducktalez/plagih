@@ -125,7 +125,7 @@ class Node:
             _sym = self.label.get_sym()  # _sym = self.label.symfun
             _cs = self.childs[0]
             return _sym(_cs)
-        print('asddsa', len(self.childs), type(self.label), issubclass(self.label, Operator), issubclass(self.label, Terminal))
+        # print('asddsa', len(self.childs), type(self.label), issubclass(self.label, Operator), issubclass(self.label, Terminal))
         raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.label)}')
 
     def get_expr_raw(self):

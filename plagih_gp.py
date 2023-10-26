@@ -141,7 +141,7 @@ def _test_random_pop():
 
     gp = ExplainableGP(name, pop_max, gen_max, rootdir, kernel, tb)
     try:
-        gp.backup_load(path_load_custom_backup=rootdir)
+        gp.backup_load()
     except FileNotFoundError as ex:
         printpl('i', f'No backup file found at {ex}. Starting a new run.')
 

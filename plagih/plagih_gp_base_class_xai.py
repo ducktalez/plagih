@@ -4,6 +4,8 @@ The main class of a gp run. It holds the following functionalities
 - population (pop_base, pop_next)
 -
 """
+import sympy
+
 from plagih.monitoring import plot_performance
 from plagih.paretofront import *
 from plagih.tree_factory import *
@@ -50,7 +52,9 @@ class ExplainableGP:
         self.pop_genepool = []  # sfeh:discuss maybe better names?
         self.pop_next = []
 
-        self.lut = {}  # Lookup-table for tree(-expressions) and tits fitness/parsimony. Improving runtime a lot!
+        self.lut_sym = {}
+        self.lut_parsim = {}
+        self.lut_fitness = {}  # Lookup-table for tree(-expressions) and tits fitness/parsimony. Improving runtime a lot!
 
         # monitoring
         self.time_genstart = time.perf_counter()
@@ -72,10 +76,10 @@ class ExplainableGP:
         """
         pop_parcandidates = pareto_from_pop(pop)  # pareto-candidates in the pop, renamed to be clear
 
-        for fintree in pop_parcandidates:
+        for candidate_tree in pop_parcandidates:
             success = False
-            fit = fintree.get_fitness()
-            par = fintree.get_parsimony()
+            fit = candidate_tree.get_fitness()
+            par = candidate_tree.get_parsimony()
 
             if par < self.paretofront[0].get_parsimony():
                 printyeah('a', f'Paretofront: New simplest entry. parsimony: {par} fitness: {fit:6.4f}, '
@@ -96,26 +100,28 @@ class ExplainableGP:
 
             if success:
                 self.gens_since_last_pareto = 0
-                try:
-                    # sfeh: trying to simplify the tree for a even improved pareto # sfeh:open
-                    symtree = evolve_reduce_simplify(fintree.get_evotree(), force=True)
-                    symmeta = self.tree_eval_meta(symtree, tag='sfeh:sym')
-                    _symtree_fin = FinalizedTree(symtree, symmeta)
-                    if _symtree_fin.get_parsimony() < fintree.get_parsimony():
+                try:  # sfeh: trying to simplify the tree for improved pareto
+                    symtree = evolve_reduce_simplify(candidate_tree.get_evotree(), force=True)
+                    sym_candidate = self.tree_to_candidate(symtree, tag='sfeh:sym')
+                    if sym_candidate.get_parsimony() < candidate_tree.get_parsimony():
                         printyeah('a', f'Paretofront: Even further simplified! '
-                                       f'{_symtree_fin.get_parsimony()} < {fintree.get_parsimony()}')
-                    print_blue(f'Simplified symtree: {_symtree_fin.get_parsimony()}: {symtree}')
-                    self.pop_append(symtree)  # sfeh:open , tag='sfeh-sympifyed_pareto'
+                                       f'{sym_candidate.get_parsimony()} < {candidate_tree.get_parsimony()}')
+                        self.pop_next_append(sym_candidate)
+
+                    print_blue(f'Simplified symtree: {sym_candidate.get_parsimony()}: {symtree}')
 
                 except KeyError as ex:
                     print_e(f'SFEH: this tree could whatever {ex}')  # -> piecewise function, mostly
 
+                except Exception as TODO:
+                    print(f'sfeh how can a tree like this fail: {TODO}')
+
                 _obsoletes = [i for i in self.paretofront if
-                              i.get_fitness() > fintree.get_fitness() and i.get_parsimony() >= fintree.get_parsimony()]
+                              i.get_fitness() > candidate_tree.get_fitness() and i.get_parsimony() >= candidate_tree.get_parsimony()]
                 if _obsoletes:
                     printyeah('a', f'Paretofront: Removing obsolete entries {[str(i) for i in _obsoletes]}')
                 self.paretofront = [ftree for ftree in self.paretofront if ftree not in _obsoletes]
-                self.paretofront.append(fintree)
+                self.paretofront.append(candidate_tree)
                 self.paretofront = pareto_sort(self.paretofront)
 
         return
@@ -127,8 +133,8 @@ class ExplainableGP:
         printpl('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')  # sfeh debug
 
         if self.tb.origin_tree is not None:
-            self.pop_append(self.tb.origin_tree, tag='origin')
-
+            cand_origin = self.tree_to_candidate(self.tb.origin_tree, raise_if_useless=False, tag='origin')
+            self.pop_next_append(cand_origin)
         else:
             @self.create_trees(rate=0.5)
             def init_rand1():
@@ -144,10 +150,15 @@ class ExplainableGP:
         self.gen_id = 1
         return
 
+    def pop_next_append(self, ct: Candidate):
+        evotree = ct.get_evotree()
+        printpl('gggg', f'|->{evotree.len_nodecount_fair():2.0f}: {evotree.str_as_expr()}')
+        self.pop_next.append(ct)
+
     def create_trees(self, rate=0.0, crossover=False):
         """Safely append a tree to the population.
         Even though the raw trees should have everything to display their expression,
-        they have gone through a process of changes. Here, the final tree (fintree) is refurbished."""
+        they have gone through a process of changes. Here, the final tree (candidate_tree) is refurbished."""
 
         def loop(create_tree_func):
             n = int(rate * self.pop_max)
@@ -160,13 +171,16 @@ class ExplainableGP:
                 try:
                     if not crossover:
                         evotree = create_tree_func()
-                        self.pop_append(evotree, tag=tag)
+                        ctree = self.tree_to_candidate(evotree, tag=tag)
+                        self.pop_next_append(ctree)
                         n_success += 1
                     else:
                         t1, t2 = create_tree_func()
-                        self.pop_append(t1, tag=tag)
+                        ctree1 = self.tree_to_candidate(t1, tag=tag)
+                        self.pop_next_append(ctree1)
                         n_success += 1
-                        self.pop_append(t2, tag=tag)
+                        ctree2 = self.tree_to_candidate(t2, tag=tag)
+                        self.pop_next_append(ctree2)
                         n_success += 1
 
                 except (ValueError, ArithmeticError) as ex:
@@ -194,18 +208,48 @@ class ExplainableGP:
 
         return loop
 
-    def pop_append(self, evotree, tag=None):
+    def tree_to_candidate(self, evotree: Node, tag=None, raise_if_useless=True):
         """the "fixed" node information is not relevant"""
+
         tree_id = evotree.get_id()
 
-        if tree_id in self.lut:
-            meta = self.lut[tree_id]
+        if tree_id in self.lut_sym:
+            sy_expr = self.lut_sym[tree_id]
         else:
-            meta = self.tree_eval_meta(evotree, tag=tag)
+            sy_expr = evotree.get_sympy_expr()
+            # sy_expr = sym_check(sy_expr)  # raise if "weird" stuff in it
+            self.lut_sym[tree_id] = sy_expr
+            if sy_expr.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im):  # sfeh:discuss sympy.re
+                # always raise, as tree can not be evaluated
+                raise ArithmeticError(f'Simplification failed: {sy_expr}')
 
-        fintree = FinalizedTree(evotree, meta)
-        printpl('gggg', f'|->{evotree.len_nodecount_fair():2.0f}: {evotree.str_as_expr()}')
-        self.pop_next.append(fintree)
+        if tree_id in self.lut_parsim:
+            parsimony = self.lut_parsim[tree_id]
+        else:
+            parsimony = eval_parsimony(evotree, self.tb.complexity_metric, origin_tree=self.tb.origin_tree)
+            self.lut_parsim[tree_id] = parsimony
+            if raise_if_useless and parsimony > self.tb.nodes_max:  # sfeh:open
+                raise ValueError(f'Tree too complex: {parsimony} > {self.tb.nodes_max}')
+
+        if sy_expr in self.lut_fitness:
+            fitness = self.lut_fitness[sy_expr]
+        else:
+            # sfeh:discuss sympy real=True might allow imaginary results
+            # t0 = time.perf_counter()
+            fitness = self.kernel.eval_sym_experimental(sy_expr)
+            # t1 = time.perf_counter()
+            # fitness2 = self.kernel.eval_tf(sy_expr)['mean_error']
+            # t2 = time.perf_counter()
+            # print(f'asd {t1-t0:4.4f} {t2-t1:4.4f} ({(t1-t0)-(t2-t1):4.2f}) {fitness:4.2f} {fitness2:4.2f}')
+            # if DEBUG_DUMMY or fitness != self.kernel.eval_sym_experimental(sy_expr):
+            #     print(f'FAILED: {fitness} vs. {self.kernel.eval_sym_experimental(sy_expr)}')
+            self.lut_fitness[sy_expr] = fitness  # sfeh:discuss: lut update in finalize_tree_get_meta()?
+        
+        # return fitness, parsimony, sy_expr
+        
+        candidate = Candidate(evotree, fitness=fitness, parsimony=parsimony, tag=tag)
+        
+        return candidate
 
     def evoloop_monitoring_plots(self):
         """
@@ -217,12 +261,12 @@ class ExplainableGP:
         except Exception as ex:
             printpl("e", f'Could not create plots: {ex}\n')
 
-    def backup_save(self):
+    def backup_save(self, opt_path_backup=None):
         """
         Load/safe backup of a run
         """
 
-        path_backup = self.rootdir / 'backup/backup.pkl'
+        path_backup = opt_path_backup or self.rootdir / 'backup/backup.pkl'
 
         # {} is the help_dict; include this, even if empty, to store/load successfully after future updates
         run_backup_data = {}, self.gen_id, self.pop_genepool, self.paretofront, self.monitor_df
@@ -230,10 +274,10 @@ class ExplainableGP:
         pickle_dump(path_backup, run_backup_data)
         # sfeh:debug
 
-    def backup_load(self, path_load_custom_backup=None):
+    def backup_load(self, opt_path_backup=None):
         """Load/safe backup of a run"""
 
-        path_backup = path_load_custom_backup or self.rootdir / 'backup/backup.pkl'
+        path_backup = opt_path_backup or self.rootdir / 'backup/backup.pkl'
 
         if Path.is_file(path_backup):
             printpl('g', f'Loading data from backup-file {path_backup}')
@@ -246,8 +290,8 @@ class ExplainableGP:
                 raise Exception(f'EOFError: \n{ex}')
 
             help_dict, self.gen_id, self.pop_genepool, self.paretofront, self.monitor_df = run_data
+            self.backup_save(opt_path_backup=self.rootdir / f'backup/backup-{self.gen_id}.pkl')  # sfeh:dis date?
             printpl('g', f'Successfully loaded backup file. Generation: {self.gen_id}')
-
         else:
             raise FileNotFoundError(f'No backup-file found at {path_backup}')  # sfeh:beautify occurs 2x
 
@@ -311,41 +355,6 @@ class ExplainableGP:
     #     except Exception as ex:
     #         print_e(f'plot_evolution_analysis failed because of: {ex}')
 
-    def tree_eval_meta(self, tree: Node, tag):
-        """Evaluating the fitness of a tree.
-        - extract the expression
-        - try to simplify the expression (sympy)
-        - create tensorflow-graph from sympy-expr and evaluate it
-
-        Fitness values might evaluate to
-            - 'nan' when dividing by zero or
-            - 'inf' when 20**1234
-        """
-        parsimony = eval_parsimony(tree, self.tb.complexity_metric, origin_tree=self.tb.origin_tree)
-        if parsimony > self.tb.nodes_max:
-            raise ValueError(f'Tree too complex: {parsimony} > {self.tb.nodes_max}')
-
-        sy_expr = tree.get_sympy_expr()
-        sym_check(sy_expr)  # raise if "weird" stuff in it
-
-        # expr_raw = tree.get_expr_raw()
-        # with sympy.evaluate(False):
-        #     expr_raw = tree.get_sympy_expr()  #
-        # v2_sym = expr_sympify(expr_raw)  # sfeh delete
-        # sfeh:discuss sympy real=True might allow imaginary results
-        # t0 = time.perf_counter()
-        fitness2 = self.kernel.eval_sym_experimental(sy_expr)
-        # t1 = time.perf_counter()
-        # fitness = self.kernel.eval_tf(sy_expr)['mean_error']
-        # t2 = time.perf_counter()
-        # print(f'asd {t1-t0:4.4f} {t2-t1:4.4f} ({(t1-t0)-(t2-t1):4.2f}) {fitness:4.2f} {fitness2:4.2f}')
-        # if DEBUG_DUMMY or fitness != self.kernel.eval_sym_experimental(sy_expr):
-        #     print(f'FAILED: {fitness} vs. {self.kernel.eval_sym_experimental(sy_expr)}')
-
-        meta = TreeMeta(fitness=fitness2, parsimony=parsimony, expr_sym=sy_expr, tag=tag)
-        self.lut[tree.get_id()] = meta  # sfeh:discuss: lut update in finalize_tree_get_meta()?
-        return meta
-
 
 def pop_analyze(popul, gen_time, gens_since_last_pareto):
     """Analysing the population (in each generation)
@@ -359,10 +368,11 @@ def pop_analyze(popul, gen_time, gens_since_last_pareto):
 
     pop_fitness = [tree.get_fitness() for tree in popul]
     pop_parsim = [tree.get_parsimony() for tree in popul]
-    pop_treelen = [len(fintree.tree) for fintree in popul]
+    pop_treelen = [len(candidate_tree.tree) for candidate_tree in popul]
     pop_fitness_best = np.min(pop_fitness)
     # todo = set([str(x.tree) for x in popul])
     pop_unique = len(set([str(x.tree) for x in popul]))  # sfeh:analyze this?
+    # todo add the amount of actually new trees (compare with the LUT tree_ids)
     result = {'pop_len': len(popul),
               'pop_unique': pop_unique,
               'fit_avg': np.average(pop_fitness),

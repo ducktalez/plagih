@@ -4,6 +4,10 @@ from abc import ABC
 
 import pandas as pd
 import sympy
+
+from sympy.utilities.exceptions import ignore_warnings
+import warnings
+
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 
@@ -158,12 +162,16 @@ class Regression(Kernel):
         # x = sympy.sympify(expr, locals={RoundDummy: sympy.N})
         # if 'RoundDummy' in str(expr):
         #     expr = expr.subs({RoundDummy: sympy.N, RoundDummy: sympy.N})  # todo check
-        ex = sympy.sympify(str(expr))
+        # ex = sympy.sympify(str(expr))
         cartVels = np.array(_inputs['cartVel'])
         cartPoss = np.array(_inputs['cartPos'])
         actions = np.array(_inputs['action'])
-        f = sympy.lambdify([a, b], ex, 'numpy')
+        f = sympy.lambdify([a, b], expr, 'numpy')
         raw_results = f(cartVels, cartPoss)
+        # with warnings.catch_warnings():  # reset warnings in doctest
+        #     with ignore_warnings(RuntimeWarning):
+        #         warnings.warn('deprecated', RuntimeWarning)
+
         results = np.round(np.clip(raw_results, 0, 2), 0)
 
         if not return_results:

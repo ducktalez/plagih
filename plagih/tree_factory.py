@@ -414,12 +414,35 @@ class TreeBuildRestrictions:
         pass
 
 
-class TreeMeta:
+# class TreeMeta:
+#
+#     def __init__(self, fitness, parsimony):
+#         self.fitness = fitness
+#         self.parsimony = parsimony
+#
+#     def get_fitness(self):
+#         return self.fitness
+#
+#     def get_parsimony(self):
+#         return self.parsimony
+#
+#     # ...should this mean the size or fitness? not clear at all
+#     # def __lt__(self, other):
+#     #     return self.get_fitness() < other.get_fitness()
+#     #
+#     # def __eq__(self, other):
+#     #     return self.get_fitness() <= other.get_fitness()
 
-    def __init__(self, fitness, parsimony, expr_sym, tag):
+
+class Candidate:
+    """
+    WAS: class FinalizedTree
+    An actual individual (Tree + meta-infos/phenotypes)"""
+
+    def __init__(self, tree: Node, fitness, parsimony, tag: str):
+        self.tree = tree
         self.fitness = fitness
         self.parsimony = parsimony
-        self.expr_sym = expr_sym
         self.last_evolution = deque([tag], maxlen=10)  # sfeh:open
 
     def append_tag(self, tag):
@@ -427,27 +450,6 @@ class TreeMeta:
 
     def get_last_tag(self):
         return self.last_evolution[-1]
-
-    def get_fitness(self):
-        return self.fitness
-
-    def get_parsimony(self):
-        return self.parsimony
-
-    # ...should this mean the size or fitness? not clear at all
-    # def __lt__(self, other):
-    #     return self.get_fitness() < other.get_fitness()
-    #
-    # def __eq__(self, other):
-    #     return self.get_fitness() <= other.get_fitness()
-
-
-class FinalizedTree:
-    """An actual individual (Tree + meta-infos/phenotypes)"""
-
-    def __init__(self, tree: Node, meta: TreeMeta):
-        self.tree = tree
-        self.meta = meta
 
     def __str__(self):
         """Show the Parsimony and Fitness of a tree"""
@@ -460,10 +462,12 @@ class FinalizedTree:
         self.meta.append_tag(tag)
 
     def get_fitness(self):
-        return self.meta.fitness
+        # return self.meta.fitness
+        return self.fitness
 
     def get_parsimony(self):
-        return self.meta.parsimony
+        # return self.meta.parsimony
+        return self.parsimony
 
     def set_fitness(self, fitness):
         self.meta.fitness = fitness
@@ -582,7 +586,7 @@ def selection_tournament(pop, tournsize=3):
     sfeh: discuss extracting & deepcopying the inner tree
     """
     tree_list = [np.random.choice(pop) for _ in range(tournsize)]
-    fintree: 'FinalizedTree' = min(tree_list, key=lambda tree: tree.get_fitness())
+    fintree: 'Candidate' = min(tree_list, key=lambda tree: tree.get_fitness())
     evotree = fintree.get_evotree()
     evotree = copy.deepcopy(evotree)
     return evotree

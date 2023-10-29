@@ -263,7 +263,7 @@ class Add(MathOperator, ChainableOp):
     chain_xtype = float
 
 
-# todo sfeh expr.as_coeff_Mul() expr.as_numer_denom()
+# sfeh:idea expr.as_coeff_Mul() expr.as_numer_denom()
 #     import sympy as sp
 #     x, eps = sp.symbols('x E')
 #     expr = eps * x**3 - x**2 + 2 + 3 * x * eps**(-2)
@@ -612,7 +612,7 @@ class MulChain(ChainOp):
     # ogclass = Mul
 
 
-# todo discuss: Min/Max is just a ordeded list, taking element 1, -1, ...
+# sfeh:discuss: Min/Max is just a ordeded list. ->taking element 1, -1, ...
 
 
 class MinChain(ChainOp):
@@ -839,7 +839,7 @@ def sympy_to_tensorflow(expr_sy, d_tensors):
             try:
                 args_reversed = [[sympy_to_tensorflow(xx, d_tensors) for xx in list(ii)] for ii in args_reversed]
             except TypeError as ex:
-                # todo bug
+                print(f'lolololol {ex}')
                 # [(2.07, True), (8.0, ITE(cartVel <= 0.34, 0.755*cartPos > 2.0, cartPos/(cartVel**2*sign(cartVel) + 0.866) > 2.0))]
                 # (8.0, ITE(cartVel <= 0.34, 0.755*cartPos > 2.0, cartPos/(cartVel**2*sign(cartVel) + 0.866) > 2.0))
                 # args_reversed = [[sympy_to_tensorflow(xx, d_tensors) for xx in list(ii)] for ii in args_reversed]
@@ -875,8 +875,9 @@ def sympy_to_tensorflow(expr_sy, d_tensors):
                 # sfeh:optimization
                 try:
                     result = tf_fun(result, tf_args.pop())
-                except Exception as ex:
-                    result = tf_fun(result, tf_args.pop())  # todo todotodo
+                except Exception as todo:
+                    print(f'XXXXXX\nX\nX\nXWTFFFFFFFFFFFFFFFFF {todo}')
+                    result = tf_fun(result, tf_args.pop())
         return result
     raise NotImplementedError(f'Cannot convert {expr_sy}')  # noqa: unreachable code, but was reached often while dev
 
@@ -1090,7 +1091,7 @@ if __name__ == '__main__':
 
 
 #######################################
-# todo check these options
+# sfeh:idea check these options
 #     import sympy
 #     a, b = sp.symbols('a b')
 #     expr = b - a**2 * a**3 + 2 + 3 * a * b**(-2)

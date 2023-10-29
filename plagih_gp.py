@@ -104,8 +104,7 @@ def _test_random_pop():
         def choose_constant(self, xt):
             _v = np.random.choice(self.pick_constant[xt][0], p=self.pick_constant[xt][1])()  # only dist. must be ()
             if xt == float:
-                _v = sympy.Float(_v)
-                # todo allow rational
+                _v = sympy.Float(_v)  # sfeh:discuss allow "rational" inputs? 1/3, 3/4, ...
                 return Node(Number, [_v])  # round FLOAT_PRECISION was here
             else:
                 _v = sympy.logic.boolalg.BooleanAtom(_v)  # sfeh:discuss: vs. Boolean
@@ -115,7 +114,7 @@ def _test_random_pop():
             _v = np.random.choice(self.pick_symbol[xt][0], p=self.pick_symbol[xt][1])
             return _v
 
-    nc = NodeRandomizer()
+    node_selector = NodeRandomizer()
 
     build_restrictions = {'depth_max': 7, 'nodes_max': 50}
 
@@ -137,11 +136,12 @@ def _test_random_pop():
     print(origin_tree)
     print(origin_tree.get_sympy_expr())
     # tb = TreeBuildRestrictions(origin_xtype, None, nc, build_restrictions, 'tree_node_count')
-    tb = TreeBuildRestrictions(None, origin_tree, nc, build_restrictions, 'tree_node_count')
+    tb = TreeBuildRestrictions(None, origin_tree, node_selector, build_restrictions, 'tree_node_count')
 
     gp = ExplainableGP(name, pop_max, gen_max, rootdir, kernel, tb)
     try:
-        gp.backup_load()
+        # gp.backup_load()
+        printpl('i', 'Ignore loading backup!')
     except FileNotFoundError as ex:
         printpl('i', f'No backup file found at {ex}. Starting a new run.')
 
@@ -151,15 +151,6 @@ def _test_random_pop():
     gp.time_genstart = time.perf_counter()  # sfeh here?
 
     while gp.gen_id <= gp.gen_max and not gp.run_custom_exit_condition():
-        # def evoloop(self):
-
-        # def gen_create_next(self):
-        """Creates all new Generations by applying the evolutions in the evolve-loop.
-
-        brainstorm:
-        - the fintree can be reproduced (selection), random/new, olymp-reproduction
-        - (1 fintree) mutations can affect a point, branch, terminal nodes
-        - (2 trees) can make a crossover"""
 
         @gp.create_trees(rate=0.1)
         def repro1():
@@ -176,16 +167,16 @@ def _test_random_pop():
             tree = selection_tournament(gp.pop_genepool, tournsize=3)
             return gp.tb.evolve_mutate_branch_depth(tree, 4, p_term=0.5)
 
-        @gp.create_trees(rate=0.25)
+        @gp.create_trees(rate=0.15)
         def mx_branch_n():
             tree = selection_tournament(gp.pop_genepool, tournsize=3)
             n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
             return gp.tb.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
 
-        # @gp.create_trees(rate=0.1)  # todo error source?
-        # def mut_br():
-        #     tree = selection_tournament(gp.pop_genepool, tournsize=3)
-        #     return gp.tb.evolve_mutate_branch_nodes(tree, 4, p_term=0)
+        @gp.create_trees(rate=0.1)  # was error source?
+        def mut_br():
+            tree = selection_tournament(gp.pop_genepool, tournsize=3)
+            return gp.tb.evolve_mutate_branch_nodes(tree, 4, p_term=0)
 
         @gp.create_trees(rate=0.1)
         def filter_optimize():
@@ -235,9 +226,8 @@ def _test_random_pop():
 
         gp.pop_genepool = gp.pop_next[:]
         gp.pop_next = []
+        gp.analyze_generation()
         gp.gen_id += 1
-
-        gp.analysis()
 
         gp.time_genstart = time.perf_counter()
 

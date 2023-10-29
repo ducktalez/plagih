@@ -70,7 +70,7 @@ def tree_simplification(tree) -> Node:
     tree = sympy_to_tree(expr_sym)
     tree.tree_node_grouping()
     if len(tree_copy) < len(tree):
-        print(f'WHATTPPENDED SFEH TODO'
+        print(f'WHATTPPENDED SFEH'
               f'\n\t{tree_copy.str_as_list()}'
               f'\n\t{tree.str_as_list()}'
               f'\n\t{tree_copy.get_sympy_expr()}'
@@ -104,6 +104,7 @@ def evolve_reduce_simplify(tree: Node, completely=True, force=False) -> Node:
     else:
         if len(tree_copy) < len(tree):
             print_warning('w', f'Tree grew larger during simplification:\n\t{tree_copy.str_as_list()}\n\t{tree.str_as_list()}')
+            print_warning('ww', f'tree_copy: {len(tree_copy)} vs. {len(tree)}')
             # [Square, [Powrounded, [-0.91], [cartPos]]] < [Pow, [-0.91], [Mul, [2], [Round, [cartPos]]]]
             ######
             # sfeh:open simplify usub in front of terminal nodes
@@ -123,14 +124,14 @@ def node_deepcopy(tree: Node):
 class TreeBuildRestrictions:
     """functions to build trees, with the advantage of being able to use general build restrictions."""
 
-    def __init__(self, origin_xtype, origin_tree, nc, build_restrictions, complexity_metric):
+    def __init__(self, origin_xtype, origin_tree, node_selector, build_restrictions, complexity_metric):
         """
         origin_tree: A tree, which
         """
         self.origin_xtype = origin_xtype
         self.origin_tree = origin_tree
 
-        self.nc = nc
+        self.node_selector = node_selector
 
         self.complexity_metric = complexity_metric
 
@@ -225,12 +226,12 @@ class TreeBuildRestrictions:
         sfeh:open make depth_goal -> depth_rest"""
 
         if depth == self.depth_max or depth == depth_goal or num_rest == 0 or random.random() < p_term:
-            node = self.nc.choose_terminal(xt_out)
+            node = self.node_selector.choose_terminal(xt_out)
             node.depth = depth
 
         else:
             # todo allow_chain
-            label = self.nc.choose_operator(xt_out)
+            label = self.node_selector.choose_operator(xt_out)
             child_xts = label.get_child_xts()
             num = len(child_xts)
             childs = []
@@ -283,7 +284,6 @@ class TreeBuildRestrictions:
         return tree
 
     def evolve_mutate_point(self, tree):
-        # todo mutate a child?
         """Mutate a single mutable point in any Tree.
         sfeh:debug is the fintree a fintree copy or the same fintree?"""
         evotree = copy.deepcopy(tree)
@@ -294,10 +294,10 @@ class TreeBuildRestrictions:
         if node.is_operator():
             # todo allow_chain
             # sfeh:what if its the same function?
-            new_label = self.nc.choose_operator_match(xtype)  # Function is same type, same arity
+            new_label = self.node_selector.choose_operator_match(xtype)  # Function is same type, same arity
             node.set_label(new_label)
         elif node.is_term:
-            new_node = self.nc.choose_terminal(xt_self(xtype))
+            new_node = self.node_selector.choose_terminal(xt_self(xtype))
             node.set_new_node(new_node)
         else:
             raise NotImplementedError
@@ -387,7 +387,7 @@ class TreeBuildRestrictions:
         for dnode in nodelist:
             if dnode.depth == self.nodes_max and dnode.get_arity() > 0:
                 print_warning('wwww', f'Node in fintree is too deep: {dnode.depth}')
-                new_node = self.nc.choose_terminal(dnode.get_xtype_self())
+                new_node = self.node_selector.choose_terminal(dnode.get_xtype_self())
                 new_node.depth = dnode.depth
                 dnode.set_new_node(new_node)
 
@@ -399,7 +399,7 @@ class TreeBuildRestrictions:
 
             nodelist = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
             tree = np.random.choice(nodelist)
-            new_node = self.nc.choose_terminal(tree.get_xtype_self())
+            new_node = self.node_selector.choose_terminal(tree.get_xtype_self())
             new_node.depth = tree.depth
             tree.set_new_node(new_node)
             prune_amount = len(tree) - self.nodes_max

@@ -16,7 +16,7 @@ d_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, 
               sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
               sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: exp}
 d_op2chain = {Add: AddChain, Mul: MulChain, Min: MinChain, Max: MaxChain, And: AndChain, Or: OrChain,
-              Piecewise: Piecewise}  # todo Piecewise
+              Piecewise: Piecewise}
 d_sym2node_chain = {sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChain, sympy.Max: MaxChain,
                     sympy.And: AndChain, sympy.Or: OrChain, sympy.Piecewise: Piecewise}
 # , sympy.Equality: Eq
@@ -44,10 +44,12 @@ class Node:
             return False
 
     def str_as_list(self):
+        # label_str = self.label.__name__  # sfeh: can str(label) work? -> str with args recursively?
+        # sfeh:delete_me if no error after 27-11-2023
         try:
             label_str = self.label.__name__  # sfeh: can str(label) work? -> str with args recursively?
         except AttributeError as ex:
-            # todo debug me
+            print(f'XXXxxx DELETE ME if i do not come up')
             label_str = self.label  # because Terminals are obj -> 'Symbol' obj has no attr __name__
 
         if self.childs:
@@ -73,7 +75,8 @@ class Node:
         try:
             label_str = self.label.__name__  # sfeh: can str(label) work? -> str with args recursively?
         except AttributeError as ex:
-            # todo debug me
+            print('XXX DEBUG delete me if you do not remember me :)')
+            # sfeh debug me
             label_str = self.label  # because Terminals are obj -> 'Symbol' obj has no attr __name__
 
         if self.childs:
@@ -113,7 +116,7 @@ class Node:
                 # print(f'sfeh:TypeError?: {self.label}, {self.childs}: {ex}')
                 raise TypeError(ex)
             except Exception as ex:
-                print(f'sfeh:XXX this still occurs. {ex}')
+                print(f'sfeh:XXX this still occurs. {ex}')  # What is this kind of error?
                 # The argument 'zoo' is not comparable.
                 # The argument '0.801*I' is not comparable.
                 # The argument '-2.05444 + I*pi' is not comparable. <- that should be okay, just raise
@@ -379,7 +382,6 @@ class Node:
                 self.set_label(Powrounded)
 
             # todo sub, usub replace
-            # todo tree prints
 
         elif self.label == Mul:
             if not self.is_chain():  # div only for

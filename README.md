@@ -29,6 +29,8 @@
 - build trees like sympy.factor() structure?
 - Division-multiplicator node as non-len() chain input?
 - print(sympy.parsing.sympy_parser.transformations)
+- "Ban" trees, if they are too dominant
+- Different print types for trees, also visualization
 
 ### Semi-interesting
 

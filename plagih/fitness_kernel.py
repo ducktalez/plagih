@@ -133,7 +133,7 @@ class Regression(Kernel):
 
     def eval_sym_experimental(self, expr, return_results=False):
         """
-        todo this is faster than TF?...
+        This is seemingly faster than TF?...
         Not stable and only working with mountaincar
 
         def eval_sym_experimental(self, expr, return_results=False):
@@ -159,18 +159,18 @@ class Regression(Kernel):
         _inputs = self.data_dict
 
         a, b = sympy.symbols('cartVel cartPos')
-        # x = sympy.sympify(expr, locals={RoundDummy: sympy.N})
-        # if 'RoundDummy' in str(expr):
-        #     expr = expr.subs({RoundDummy: sympy.N, RoundDummy: sympy.N})  # todo check
-        # ex = sympy.sympify(str(expr))
         cartVels = np.array(_inputs['cartVel'])
         cartPoss = np.array(_inputs['cartPos'])
         actions = np.array(_inputs['action'])
+        # print(f'asdasdasd {expr}')
         f = sympy.lambdify([a, b], expr, 'numpy')
-        raw_results = f(cartVels, cartPoss)
-        # with warnings.catch_warnings():  # reset warnings in doctest
-        #     with ignore_warnings(RuntimeWarning):
-        #         warnings.warn('deprecated', RuntimeWarning)
+        # except ValueError as err:
+        #     print_warning('ww', f'Expression could not be evaluated: {expr}. Error: {err}')
+
+        with warnings.catch_warnings():
+            with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
+                with ignore_warnings(DeprecationWarning):  # something like use "**" instead of "Pow"
+                    raw_results = f(cartVels, cartPoss)
 
         results = np.round(np.clip(raw_results, 0, 2), 0)
 

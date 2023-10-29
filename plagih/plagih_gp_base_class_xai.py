@@ -113,9 +113,6 @@ class ExplainableGP:
                 except KeyError as ex:
                     print_e(f'SFEH: this tree could whatever {ex}')  # -> piecewise function, mostly
 
-                except Exception as TODO:
-                    print(f'sfeh how can a tree like this fail: {TODO}')
-
                 _obsoletes = [i for i in self.paretofront if
                               i.get_fitness() > candidate_tree.get_fitness() and i.get_parsimony() >= candidate_tree.get_parsimony()]
                 if _obsoletes:
@@ -147,6 +144,7 @@ class ExplainableGP:
         self.paretofront = pareto_from_pop(self.pop_next)  # initialize
         self.pop_genepool = self.pop_next[:]
         self.pop_next = []
+        self.analyze_generation()
         self.gen_id = 1
         return
 
@@ -203,6 +201,8 @@ class ExplainableGP:
                     # print(f'Probably sympy.im in expr {ex}')
                     #  AttributeError: 'Xor' object has no attribute '_eval_as_set'
                     #    |--AttributeError: Probably sympy.im in expr 'Xor' object has no attribute '_eval_as_set'
+                except KeyError as ex:
+                    print(f'Keyerror, probably sympy.lambdify expression not evaluable: {ex}')
                 except NotImplementedError as nie:
                     print_e(f'Notimplemented? {nie}')
 
@@ -295,7 +295,7 @@ class ExplainableGP:
         else:
             raise FileNotFoundError(f'No backup-file found at {path_backup}')  # sfeh:beautify occurs 2x
 
-    def analysis(self):
+    def analyze_generation(self):
         gen_time = time.perf_counter() - self.time_genstart
         tmp_dict = pop_analyze(self.pop_genepool, gen_time, self.gens_since_last_pareto)
         self.monitor_df.loc[self.gen_id] = tmp_dict
@@ -370,9 +370,8 @@ def pop_analyze(popul, gen_time, gens_since_last_pareto):
     pop_parsim = [tree.get_parsimony() for tree in popul]
     pop_treelen = [len(candidate_tree.tree) for candidate_tree in popul]
     pop_fitness_best = np.min(pop_fitness)
-    # todo = set([str(x.tree) for x in popul])
     pop_unique = len(set([str(x.tree) for x in popul]))  # sfeh:analyze this?
-    # todo add the amount of actually new trees (compare with the LUT tree_ids)
+    # sfeh:idea add the amount of actually new trees (compare with the LUT tree_ids)
     result = {'pop_len': len(popul),
               'pop_unique': pop_unique,
               'fit_avg': np.average(pop_fitness),

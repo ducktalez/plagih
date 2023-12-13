@@ -115,6 +115,10 @@ class Node:
             except TypeError as ex:
                 # print(f'sfeh:TypeError?: {self.label}, {self.childs}: {ex}')
                 raise TypeError(ex)
+            except sympy.polys.polyerrors.CoercionFailed as ex:
+                # sympy.polys.polyerrors.CoercionFailed: expected an integer, got 0.000564
+                print(f'XXX Sympy error? Changing to TypError: {ex}')
+                raise TypeError(ex)
             except Exception as ex:
                 print(f'sfeh:XXX this still occurs. {ex}')  # What is this kind of error?
                 # The argument 'zoo' is not comparable.

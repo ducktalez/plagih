@@ -11,7 +11,7 @@ import warnings
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 
-from plagih.plagih_tree import sympy_to_tensorflow  # , RoundDummy
+from plagih.tree_labels import sympy_to_tensorflow  # , RoundDummy
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 

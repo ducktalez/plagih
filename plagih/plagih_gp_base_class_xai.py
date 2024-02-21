@@ -4,6 +4,8 @@ The main class of a gp run. It holds the following functionalities
 - population (pop_base, pop_next)
 -
 """
+from collections import deque
+
 import sympy
 
 from plagih.monitoring import plot_performance
@@ -27,9 +29,54 @@ def printpl(message_type, message_str):
     return
 
 
+class Candidate:
+    """
+    WAS: class FinalizedTree
+    An actual individual (Tree + meta-infos/phenotypes)"""
+
+    def __init__(self, tree: Node, fitness, parsimony, tag: str):
+        self.tree = tree
+        self.fitness = fitness
+        self.parsimony = parsimony
+        self.last_evolution = deque([tag], maxlen=10)  # sfeh:open
+
+    def append_tag(self, tag):
+        self.last_evolution.append(tag)
+
+    def get_last_tag(self):
+        return self.last_evolution[-1]
+
+    def __str__(self):
+        """Show the Parsimony and Fitness of a tree"""
+        return f'[{self.get_parsimony():2.1f}: fit {self.get_fitness():4.2f}]'
+
+    def get_evotree(self):
+        return self.tree
+
+    def append_tag(self, tag):
+        self.meta.append_tag(tag)
+
+    def get_fitness(self):
+        # return self.meta.fitness
+        return self.fitness
+
+    def get_parsimony(self):
+        # return self.meta.parsimony
+        return self.parsimony
+
+    def set_fitness(self, fitness):
+        self.meta.fitness = fitness
+
+    def set_parsimony(self, parsimony):
+        self.meta.parsimony = parsimony
+
+    def get_last_evolution(self):
+        return self.meta.get_last_tag()  # sfeh same name?
+
+
 class ExplainableGP:
 
-    def __init__(self, name, pop_max, gen_max, rootdir, kernel, tb: TreeBuildRestrictions):
+    def __init__(self, name, pop_max, gen_max, rootdir, kernel, tb: Evolution):
         self.time_start = time.perf_counter()
         self.kernel = kernel
         self.name = name
@@ -133,13 +180,26 @@ class ExplainableGP:
             cand_origin = self.tree_to_candidate(self.tb.origin_tree, raise_if_useless=False, tag='origin')
             self.pop_next_append(cand_origin)
         else:
-            @self.create_trees(rate=0.5)
-            def init_rand1():
-                return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.0, 1.0)), 2, 5), float, p_term=0)  # sfeh: xtype not always float
+            if CHAINED_VERION:
+                @self.create_trees(rate=0.5)
+                def init_rand1():
+                    tree = self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.0, 1.0)), 2, 5), float, p_term=0)
+                    tree = tree_simplification(tree, allow_chain=True)
+                    return tree
 
-            @self.create_trees(rate=0.5)
-            def init_rand2():
-                return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(2.5, 1.0)), 2, 5), float, p_term=0)
+                @self.create_trees(rate=0.5)
+                def init_rand2():
+                    tree = self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(2.5, 1.0)), 2, 5), float, p_term=0)
+                    tree = tree_simplification(tree, allow_chain=True)
+                    return tree
+            else:
+                @self.create_trees(rate=0.5)
+                def init_rand1():
+                    return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.0, 1.0)), 2, 5), float, p_term=0)  # sfeh: xtype not always float
+
+                @self.create_trees(rate=0.5)
+                def init_rand2():
+                    return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(2.5, 1.0)), 2, 5), float, p_term=0)
 
         self.paretofront = pareto_from_pop(self.pop_next)  # initialize
         self.pop_genepool = self.pop_next[:]
@@ -188,6 +248,8 @@ class ExplainableGP:
                         print_e(f'Evolution fails too often: {tag}, {n_fails}x. {n_success}.')
                         return  # sfeh raise?
                 except TypeError as ex:
+                    # todo todotodo
+                    raise TypeError(f'Typeerror, but why? {ex}')  # ok-errors: TypeError: Cannot convert complex to float
                     print(f'Typeerror, but why? {ex}')
                     # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
                     # sfeh probably this error: cond(): 'false_fn' argument required
@@ -195,14 +257,14 @@ class ExplainableGP:
                 except AttributeError as ex:
                     # raise AttributeError(f'Probably sympy.im in expr {ex}')
                     # AttributeError: Probably sympy.im in expr 'int' object
-                    print(f'AttributeError: {ex}')
+                    raise AttributeError(f'AttributeError: {ex}')  # todo todotodo
                     # f'\n\tint object has no attribute get_nodes_at_depth has no attribute get_nodes_at_depth
                     # f'\n\tProbably sympy.im in expr has no attribute get_nodes_at_depth
                     # print(f'Probably sympy.im in expr {ex}')
                     #  AttributeError: 'Xor' object has no attribute '_eval_as_set'
                     #    |--AttributeError: Probably sympy.im in expr 'Xor' object has no attribute '_eval_as_set'
                 except KeyError as ex:
-                    print(f'Keyerror, probably sympy.lambdify expression not evaluable: {ex}')
+                    raise KeyError(f'Keyerror, probably sympy.lambdify expression not evaluable: {ex}')
                 except NotImplementedError as nie:
                     print_e(f'Notimplemented? {nie}')
 

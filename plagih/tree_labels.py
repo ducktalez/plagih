@@ -67,12 +67,14 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # https://github.com/tensorflow/tensor
 import tensorflow as tf  # noqa check if ignoring warnings still required (tensorflow sends endless warnings)
 
 tf.compat.v1.disable_eager_execution()
+
+
 # tf.compat.v1.enable_eager_execution()  # sfeh possibly faster with disable
 
 
 class Label:
     symfun = None
-    tflow = None
+    # tflow = None  # Not required anymore
     xtype = None
 
     def __new__(cls, *args, **kwargs):
@@ -91,7 +93,7 @@ class Label:
 
     def as_str(self):
         _str = self.__class__.__name__
-        if issubclass(self.__class__, Operator):
+        if issubclass(self.__class__, (OperatorArity, OperatorChained)):
             _childstr = ', '.join([a.as_str() for a in self.args])
             _str = f'{_str}({_childstr})'
         elif issubclass(type(self), Terminal):
@@ -138,15 +140,8 @@ class Label:
         return cls.xtype[0]
 
 
-class ArityNode(Label):
-    pass
-
-
-class ChainOp(Label):
-    # no xtype, only input type
-    # no tflow, separate handling in totf-function
-    # Piecewise, AddChain, MulChain, MinChain, MaxChain, AndChain, OrChain
-    pass
+# class ArityNode(Label):
+#     pass
 
 
 class CustomOperator:
@@ -156,7 +151,11 @@ class CustomOperator:
     xtype = ((None, None), None)
 
 
-class Operator(ArityNode):  # sfeh:xxx sympy.Function was here, also is_Function = True
+class BaseOperator(Label):
+    pass
+
+
+class OperatorArity(BaseOperator):  # sfeh:xxx sympy.Function was here, also is_Function = True
     pass
 
 
@@ -173,20 +172,20 @@ class ChainableOp:
     chain_xtype = None
 
 
-class MathOperator(Operator):
+class MathOperator(OperatorArity):
     # is_real = True
     # is_Boolean = False
     pass
 
 
-class LogicOperator(Operator):
+class LogicOperator(OperatorArity):
     # And, Or, Xor, Not
     # is_real/real = False
     # is_Boolean/bool = True
     pass
 
 
-class RelationalOperator(Operator):
+class RelationalOperator(OperatorArity):
     pass
 
 
@@ -203,7 +202,7 @@ class NoSymCapitalized:
     pass
 
 
-class Terminal(ArityNode):  # sfeh sympy.Atom
+class Terminal(Label):  # sfeh sympy.Atom
     """Terminal nodes are leaf nodes which can not have children. e.g.:
     - constants (e.g. 2.3)
     - observations (e.g. b, aka data input)
@@ -468,7 +467,7 @@ class Sub(MathOperator):
     symfun = lambda a, b: sympy.Add(a, -b)
 
 
-class Ifte(Operator, ChainableOp):
+class Ifte(OperatorArity, ChainableOp):
     """Also class Piecewise"""
     tflow = tf.where
     xtype = ((bool, float, float), float)
@@ -508,6 +507,7 @@ class Reversable:
     """All the Operators which
     eg:
     Powrounded (If Pow + (child1 is round .../or child1 % 1)) -> """
+
     def revert_when(self):
         # sfeh:idea
         # something like
@@ -515,7 +515,7 @@ class Reversable:
         pass
 
 
-class Powrounded(Operator):
+class Powrounded(OperatorArity):
     tflow = lambda a, b: tf.pow(a, tf.round(b))
     symfun = lambda a, b: sympy.Pow(a, Round.symfun(b))  # symfun = lambda a, b: a**Round.symfun(b)
     xtype = ((float, float), float)
@@ -575,76 +575,31 @@ class exp(MathOperator):
 """SFEH the following are operators that are to be handled completely different"""
 
 
-class LabelDummy(Label):
+class TerminalDummy(Label):
     @classmethod
     def get_child_xts(cls):
         return cls.xtype[0]
 
 
-class ExprCondPair(LabelDummy):
+class ExprCondPair(TerminalDummy):
     """sfeh:discuss
     The only purpose is to wrap the results for a Node-structure, where every Node has childs with other nodes"""
     symfun = sympy.functions.elementary.piecewise.ExprCondPair
     xtype = ((float, bool), float)
     # tflow = tf.where
+    expr_dmy = 'ExprCondPair'
 
-
-class Piecewise(ChainOp):
-    """sfeh:discuss: the only Operator, which has tuples as input"""
-    symfun = sympy.Piecewise
-    # ogclass = Ifte
-    # xtype = ((float, bool), float)
-    xtype = ((ExprCondPair,), float)
+# sfeh: remove?
+# class Piecewise(ChainableOp):
+#     """sfeh:discuss: the only Operator, which has tuples as input"""
+#     symfun = sympy.Piecewise
+#     # ogclass = Ifte
+#     # xtype = ((float, bool), float)
+#     xtype = ((ExprCondPair,), float)
 
 
 # sfeh:discuss: there should probably be structural nodes and Operator nodes
-
-
-class AddChain(ChainOp):
-    symfun = sympy.Add
-    xtype = ((float,), float)
-    # ogclass = Add
-
-
-class MulChain(ChainOp):
-    # sfeh:discuss: if sympy is
-    xtype = ((float,), float)
-    # ogclass = Mul
-
-
 # sfeh:discuss: Min/Max is just a ordeded list. ->taking element 1, -1, ...
-
-
-class MinChain(ChainOp):
-    xtype = ((float,), float)
-    # ogclass = Min
-
-
-class MaxChain(ChainOp):
-    xtype = ((float,), float)
-    # ogclass = Max
-
-
-class OrderedSelector(ChainOp):
-    """sfeh:Orders Elements with < and picks the (1, -1 or even -2, 'median')-element?"""
-    xtype = ((float,), float)
-
-
-class ConditionalChain(ChainOp):
-    """
-    sfeh:sum the factors (maybe even weighted as function)? -> 5 elements, '>=4' is sufficient for a condition?
-    sfeh:just a piecewise with two main options?"""
-    pass
-
-
-class AndChain(ChainOp):
-    xtype = ((bool,), bool)
-    # ogclass = And
-
-
-class OrChain(ChainOp):
-    xtype = ((bool,), bool)
-    # ogclass = Or
 
 
 # def sym_check(expr_sym):
@@ -715,6 +670,7 @@ def expr_sympify(expr):
         # print(f'sfeh: This sympy bug happens, when sympifying "True": {ex}')
         raise
         # return sympy.true if expr else sympy.false
+
 
 # sfeh:RANDOM IDEA when loading the data, check for every possible assupmtion. Better: load them manually.
 
@@ -805,7 +761,8 @@ def sympy_to_tensorflow(expr_sy, d_tensors):
     if isinstance(expr_sy, bool):  # e.g. '1'
         return tf.constant(expr_sy, dtype=tf.dtypes.bool)
     if isinstance(expr_sy, (bool, sympy.logic.boolalg.BooleanAtom)):
-        expr_sy = True if isinstance(expr_sy, sympy.logic.boolalg.BooleanTrue) else False  # sfeh:collect sympy bug gotcha bug
+        expr_sy = True if isinstance(expr_sy,
+                                     sympy.logic.boolalg.BooleanTrue) else False  # sfeh:collect sympy bug gotcha bug
         return tf.constant(expr_sy, dtype=tf.dtypes.bool)
 
     # the following lines are not required, if sympy filters for bad expressions earlier
@@ -819,7 +776,8 @@ def sympy_to_tensorflow(expr_sy, d_tensors):
 
             # result = tf.compat.v1.placeholder(tf.bool, name=str(expr))
             # sfeh:runtime?
-            result = tf.constant(d_tensors[str(expr_sy)], dtype=tf.bool if expr_sy.assumptions0.get('bool') else tf.float32)
+            result = tf.constant(d_tensors[str(expr_sy)],
+                                 dtype=tf.bool if expr_sy.assumptions0.get('bool') else tf.float32)
             return result
 
         else:
@@ -1044,7 +1002,7 @@ if __name__ == '__main__':
     def print_relevant_subclasses():
 
         st = {}
-        for x in get_subclasses(Operator):
+        for x in get_subclasses(OperatorArity):
             try:
                 st[f'sympy.{x.symfun.__name__}'] = x.__name__  # x.tflow.__name__
             except AttributeError as ex:
@@ -1057,7 +1015,7 @@ if __name__ == '__main__':
 
     def check_subclasses():
 
-        for x in get_subclasses(Operator):
+        for x in get_subclasses(OperatorArity):
             if len(x.__subclasses__()) > 0:
                 # print('vdsfg', x)
                 pass
@@ -1088,7 +1046,6 @@ if __name__ == '__main__':
     #
     # print(type(RelationalOperator))
     # print_relevant_subclasses()
-
 
 #######################################
 # sfeh:idea check these options

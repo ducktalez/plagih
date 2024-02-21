@@ -24,7 +24,7 @@ funny_limits = (-15000, -4000)
 
 def mp_evall(arow):
     """
-    Use mp (multiprocessing) to evaluate parallelized
+    Use mp (multiprocessing) to paralleliz
     """
     parsims = arow['parsims']
     regress_sum = arow['regress_sum']
@@ -37,7 +37,12 @@ def mp_evall(arow):
         ibx_safe = eval_combined_agents(codes, complete=False)
         ibx_r50 = eval_combined_agents(codes, randomize=50, repeat_avg=10)
         ibx_safe_r50 = eval_combined_agents(codes, complete=False, randomize=50, repeat_avg=10)
-        print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {regress_sum:.4f}. \t({parsims})\tcomplete: {ibx:0.1f} \tsafe: {ibx_safe:0.1f} \tall_r50: {ibx_r50:0.1f} \tsafe_r50: {ibx_safe_r50:0.1f}')
+        print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {regress_sum:.4f}. '
+              f'\t({parsims})'
+              f'\tcomplete: {ibx:0.1f} '
+              f'\tsafe: {ibx_safe:0.1f} '
+              f'\tall_r50: {ibx_r50:0.1f} '
+              f'\tsafe_r50: {ibx_safe_r50:0.1f}')
         return [lut_hash, ibx, ibx_safe, ibx_r50, ibx_safe_r50]
     except Exception as ex:
         print(f'WARNING: Something failed in the evaluation process: {ex}')

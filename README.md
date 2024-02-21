@@ -5,8 +5,12 @@
 
 ## Ablage/Todos
 
-- tree evaluate nodes for best improvement 
-- population cluster / races
+- remove TODOTODO
+- get it running
+- remove TODOs
+- remove sfeh:...
+- tree -> evaluate nodes for best improvement 
+- population cluster/races
 - Make regular Function Classes Sympy Functions
 - replacing
   - replace x**2 with Squared(x)
@@ -19,6 +23,7 @@
 - separate monitoring class
 - introduce NN in alpha-tree, at well-mutable nodes
 - evaluate one very large TF-graph containing the whole population
+- use sympy.count_ops() to count operators
 - parallelisation
 - evolve-operatoren: werte runden, runden einbauen,
 - test-cases with notation, docstring

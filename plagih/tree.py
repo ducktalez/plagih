@@ -4,10 +4,12 @@ from dataclasses import dataclass
 
 import sympy.core.numbers
 
-from plagih.plagih_tree import *
+from plagih.tree_labels import *
+from plagih.tree_labels_chained import *
 
 # For conversion from sympy into node
-from plagih.util import FLOAT_PRECISION
+from plagih.tree_complexity.tree_edit_distance import apted_distance
+from plagih.util import FLOAT_PRECISION, CHAINED_VERION
 
 d_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul,
               sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,
@@ -15,10 +17,11 @@ d_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, 
               sympy.GreaterThan: Ge, sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos,
               sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
               sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: exp}
-d_op2chain = {Add: AddChain, Mul: MulChain, Min: MinChain, Max: MaxChain, And: AndChain, Or: OrChain,
+d_op2chain = {Add: AddChain, Mul: MulChain, Min: MinChained, Max: MaxChained, And: AndChained, Or: OrChained,
               Piecewise: Piecewise}
-d_sym2node_chain = {sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChain, sympy.Max: MaxChain,
-                    sympy.And: AndChain, sympy.Or: OrChain, sympy.Piecewise: Piecewise}
+d_sym2node_chain = {sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChained, sympy.Max: MaxChained,
+                    sympy.And: AndChained, sympy.Or: OrChained, sympy.Piecewise: Piecewise,
+                    sympy.functions.elementary.piecewise.ExprCondPair: ExprCondPair}  # todo, does this solve the missing dict-element problem?
 # , sympy.Equality: Eq
 # sfeh:open = {sympy.Unequality: Ne, sympy.Equality: Eq}
 sym_assumption_nodes = (sympy.re,)
@@ -53,7 +56,7 @@ class Node:
             label_str = self.label  # because Terminals are obj -> 'Symbol' obj has no attr __name__
 
         if self.childs:
-            if issubclass(self.label, Operator):
+            if issubclass(self.label, BaseOperator):
                 childstr = ', '.join([cc.str_as_list() for cc in self.childs])
                 label_str = f'{label_str}, {childstr}'
             else:
@@ -67,7 +70,7 @@ class Node:
                     # sympy.ONE -> 1.0000000...
                     # sfeh:open int, non-floats are handeled badly
                 except Exception as ex:
-                    print(f'SUCCESS sfeh:debug, delete? KEEP? {ex}')
+                    print(f'SUCCESS sfeh:debug, delete?2 KEEP? {ex}')
 
         return f"[{label_str}]"
 
@@ -80,9 +83,15 @@ class Node:
             label_str = self.label  # because Terminals are obj -> 'Symbol' obj has no attr __name__
 
         if self.childs:
-            if issubclass(self.label, Operator):
+            if issubclass(self.label, OperatorArity):
                 childstr = ', '.join([cc.str_as_list() for cc in self.childs])
                 label_str = f'{label_str}, {childstr}'
+            elif issubclass(self.label, OperatorChained):
+                childstr = ', '.join([cc.str_as_list() for cc in self.childs])
+                label_str = f'{label_str}, {childstr}'
+            elif issubclass(self.label, TerminalDummy):
+                childstr = ', '.join([cc.str_as_list() for cc in self.childs])  # those are actual childs
+                label_str = f'({childstr})'
             else:
                 try:
                     label_str = f'{self.childs[0]}'
@@ -90,7 +99,7 @@ class Node:
                     label_str = str(self.childs[0].evalf())
                     # sfeh:open int, non-floats are handeled badly
                 except Exception as ex:
-                    print(f'SUCCESS sfeh:debug, delete? KEEP? {ex}')
+                    print(f'sfeh:debug, delete? KEEP? {ex}')
 
         return f"[{label_str}]"
 
@@ -102,11 +111,28 @@ class Node:
         return self.get_expr_raw()
 
     def get_sympy_expr(self) -> sympy.Basic:
-        if issubclass(self.label, Operator):
-            _sym = self.label.symfun
+        """Converts directly into a sympy expr
+        from node-class, go to a sympy expression
+        """
+        if issubclass(self.label, Terminal):
+            _sym = self.label.get_sym()  # _sym = self.label.symfun
+            _cs = self.childs[0]
+            return _sym(_cs)
+        else:
             _cs = [cc.get_sympy_expr() for cc in self.childs]
-            # return _sym(*_cs)
-            # sfeh:debug TypeError: <lambda>() missing 1 required positional argument: 'b'
+            if issubclass(self.label, OperatorArity):
+                _sym = self.label.symfun
+                # return _sym(*_cs)
+                # sfeh:debug TypeError: <lambda>() missing 1 required positional argument: 'b'
+            elif issubclass(self.label, OperatorChained):
+                _sym = self.label.symfun
+            elif isinstance(self.label, ExprCondPair):
+                # _sym = sympy.functions.elementary.piecewise.ExprCondPair  # todo
+                _sym = tuple  # todo
+                return _sym(*_cs)
+            elif CHAINED_VERION:
+                _sym = self.label.symfun
+
             try:
                 return _sym(*_cs)
             except RecursionError as ex:
@@ -114,6 +140,7 @@ class Node:
                 raise RecursionError
             except TypeError as ex:
                 # print(f'sfeh:TypeError?: {self.label}, {self.childs}: {ex}')
+                # TypeError: Argument must be a Basic object, not `Node`
                 raise TypeError(ex)
             except sympy.polys.polyerrors.CoercionFailed as ex:
                 # sympy.polys.polyerrors.CoercionFailed: expected an integer, got 0.000564
@@ -121,6 +148,9 @@ class Node:
                 raise TypeError(ex)
             except Exception as ex:
                 print(f'sfeh:XXX this still occurs. {ex}')  # What is this kind of error?
+                # PROBLEM
+                # The argument '(1.0, -0.013*cartPos)' is not comparable.
+                # OK
                 # The argument 'zoo' is not comparable.
                 # The argument '0.801*I' is not comparable.
                 # The argument '-2.05444 + I*pi' is not comparable. <- that should be okay, just raise
@@ -128,24 +158,27 @@ class Node:
                 # <lambda>() missing 1 required positional argument: 'b'
                 #   -> Probably in Sub-class lambda-function
                 raise ex
-        elif issubclass(self.label, Terminal):
-            _sym = self.label.get_sym()  # _sym = self.label.symfun
-            _cs = self.childs[0]
-            return _sym(_cs)
-        # print('asddsa', len(self.childs), type(self.label), issubclass(self.label, Operator), issubclass(self.label, Terminal))
-        raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.label)}')
+
+            # print('asddsa', len(self.childs), type(self.label), issubclass(self.label, Operator), issubclass(self.label, Terminal))
+            raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.label)}')
+
 
     def get_expr_raw(self):
-        if issubclass(self.label, Operator):
+        if issubclass(self.label, Terminal):
+            expr = f'{self.childs[0]}'
+        else:
             expr = [cc.get_expr_raw() for cc in self.childs]
             expr = ', '.join(expr)
-            expr = f'{self.label.__name__}({expr})'
-        elif issubclass(self.label, Terminal):
-            expr = f'{self.childs[0]}'
+            if issubclass(self.label, OperatorArity):
+                expr = f'{self.label.__name__}({expr})'
+            elif CHAINED_VERION:
+                expr = f'{self.label.expr_dmy}({expr})'
+        # Sfeh:notimplementederror here?
         return expr
 
+
     def get_tf_expr(self):
-        if self.childs and issubclass(self.label, Operator):
+        if self.childs and issubclass(self.label, OperatorArity):
             _tf = self.label.tflow
             _cs = [cc.get_tf_expr() for cc in self.childs]
             return _tf(_cs)
@@ -268,14 +301,19 @@ class Node:
 
     def is_regular(self):
         # Nodes that are notchained-nodes
-        return issubclass(self.label, ArityNode)
+        return issubclass(self.label, (OperatorArity, Terminal))
 
     def is_chainop(self):
-        return issubclass(self.label, ChainOp)
+        return issubclass(self.label, OperatorChained)
 
     def is_operator(self):
-        # todo allow_chain check all
-        return issubclass(self.label, Operator)
+        return issubclass(self.label, BaseOperator)
+
+    def is_operator_chained(self):
+        return issubclass(self.label, OperatorChained)
+
+    def is_operator_true(self):
+        return issubclass(self.label, OperatorArity)
 
     def is_term(self):
         # sfeh:discuss is_atom, rename all to atom?
@@ -298,7 +336,7 @@ class Node:
         """Replacing oneself with another node"""
         self.set_label(nd_new.label)  # sfeh remove childs, is_fix...
         self.childs = nd_new.childs  # sfeh maybe must be updated recursively
-        self.repair_depth(self.depth)  # Especially required for crossover or branchesnd_new
+        self.repair_depth(depth=self.depth)  # Especially required for crossover or branchesnd_new
         # sfeh check fixed or if type matches?
 
     def replace_with(self, label, childs):
@@ -418,6 +456,20 @@ class Node:
                 cc.tree_node_grouping()
 
 
+def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
+    if complexity_measure == 'tree_node_count_raw':  # number of nodes
+        return tree.len_nodecount_raw()  # returns the number of nodes  # sfeh weights
+    elif complexity_measure == 'tree_node_count':
+        return tree.len_nodecount_fair()  # returns the number of nodes  # sfeh weights todo
+    elif complexity_measure == 'tree_edit_distance':  # tree_edit_distance, fintree-edit-distance
+        apted1 = tree.get_apted_notation()
+        apted2 = origin_tree.get_apted_notation()
+        distance, mapping = apted_distance(apted1, apted2)  # sfeh the mapping could be useful somewhere
+        return distance
+    else:
+        raise Exception(f'Complexity measurement not available: {complexity_measure}')
+
+
 class RootNode_Dummy(Node):
     """Sfeh:discuss
     this node can be used as dummy and is used to mimic a root type"""
@@ -465,8 +517,15 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
             cc_nodes.append(sympy_to_tree(arg, allow_chain=allow_chain))
 
         if allow_chain:
-            op = d_sym2node[s_expr]  # if issubclass(clss, ChainableOp):
-            return Node(op, childs=cc_nodes)
+            try:
+                # op = d_sym2node_chain[s_expr]  # if issubclass(clss, ChainableOp):
+                print(f'{s_expr}: {type(s_expr)}')
+                todo = d_sym2node | d_sym2node_chain  # todo remove
+                op = todo[type(s_expr)]
+                return Node(op, childs=cc_nodes)
+            except Exception as TODO_DeBUG:
+                print(TODO_DeBUG)
+                raise
 
         if isinstance(s_expr, sympy.functions.elementary.piecewise.ExprCondPair):
             return Node(ExprCondPair, cc_nodes)

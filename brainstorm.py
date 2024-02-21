@@ -1,24 +1,50 @@
-import tkinter as tk
+# import tkinter as tk
+#
+# # Funktion, die aufgerufen wird, wenn der Button geklickt wird
+# def button_click():
+#     label.config(text="Hallo")
+#
+# # Erstellen des Hauptfensters
+# root = tk.Tk()
+# root.title("Button Beispiel")
+#
+# # Erstellen eines Labels, das den Text anzeigt
+# label = tk.Label(root, text="")
+# label.pack()
+#
+# # Erstellen eines Buttons
+# button = tk.Button(root, text="Klick mich", command=button_click)
+# button.pack()
+#
+# # Starten der Tkinter-Schleife
+# root.mainloop()
 
-# Funktion, die aufgerufen wird, wenn der Button geklickt wird
-def button_click():
-    label.config(text="Hallo")
+import os
+from itunesLibrary import library
 
-# Erstellen des Hauptfensters
-root = tk.Tk()
-root.title("Button Beispiel")
+path = os.path.join(os.getenv("HOME"), "Music/iTunes/iTunes Music Library.xml")
 
-# Erstellen eines Labels, das den Text anzeigt
-label = tk.Label(root, text="")
-label.pack()
+# must first parse...
+lib = library.parse(path)
 
-# Erstellen eines Buttons
-button = tk.Button(root, text="Klick mich", command=button_click)
-button.pack()
+print(len(lib))    # number of items stored
 
-# Starten der Tkinter-Schleife
-root.mainloop()
+for playlist in lib.playlists:
+    for item in playlist.items:
+        print(item)          # perform function on each item in the playlist
 
-0100000101110000
-0110000101100011
-0110100001100101
+# get a single playlist
+playlist = lib.getPlaylist("Gray")
+
+# check the playlist type
+assert(not playlist.is_smart())
+assert(not playlist.is_folder())
+
+# get a list of all of the David Bowie songs
+bowie_items = lib.getItemsForArtist("David Bowie")
+
+# get a single song
+single_song = lib.getItemsById("16116")
+
+# get the iTunes application version
+print(lib.applicationVersion)

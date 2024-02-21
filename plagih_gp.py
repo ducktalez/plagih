@@ -16,7 +16,20 @@ from plagih.random_nodes_generator import norm_choices, operatorpool_to_picks
 from plagih.util import *
 
 
+def selection_tournament(pop, tournsize=3):
+    """
+    SFEH's tournament selection
+    sfeh: discuss extracting & deepcopying the inner tree
+    """
+    tree_list = [np.random.choice(pop) for _ in range(tournsize)]
+    fintree: 'Candidate' = min(tree_list, key=lambda tree: tree.get_fitness())
+    evotree = fintree.get_evotree()
+    evotree = copy.deepcopy(evotree)
+    return evotree
+
+
 def _test_random_pop():
+    """Testrun"""
     name = 'MTC200_RMSE_scratch'
     rootdir = Path.cwd() / f'{name}'
 
@@ -107,7 +120,9 @@ def _test_random_pop():
                 _v = sympy.Float(_v)  # sfeh:discuss allow "rational" inputs? 1/3, 3/4, ...
                 return Node(Number, [_v])  # round FLOAT_PRECISION was here
             else:
-                _v = sympy.logic.boolalg.BooleanAtom(_v)  # sfeh:discuss: vs. Boolean
+                # _v = sympy.logic.boolalg.BooleanAtom(_v)  # sfeh:discuss: vs. Boolean
+                # -> sympy.sympify('And(True, BooleanAtom(False))')
+                _v = _v  # BooleanAtom was here - why? Any purpose?
                 return Node(Boolean, [_v])
 
         def choose_symbol(self, xt):
@@ -125,18 +140,20 @@ def _test_random_pop():
     # origin_tree = Node(Add, [Node(Number, [sympy.Float(1)]), Node(Symbol, [sympy.Symbol('cartVel')])], is_fix=True)
     # origin_tree = '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]'
 
-    origin_tree = Node(Ifte,
-                       [Node(Lt,
-                             [Node(Symbol, [sympy.Symbol('cartVel')]),
-                              Node(Number, [0])]),
-                        Node(Number, [0], is_fix=True),
-                        Node(Number, [2], is_fix=True)], is_fix=True)
-    origin_tree.repair_depth()  # sfeh:discuss
+    # origin_tree = Node(Ifte,
+    #                    [Node(Lt,
+    #                          [Node(Symbol, [sympy.Symbol('cartVel')]),
+    #                           Node(Number, [0])]),
+    #                     Node(Number, [0], is_fix=True),
+    #                     Node(Number, [2], is_fix=True)], is_fix=True)
+    # origin_tree.repair_depth()  # sfeh:discuss
+    # print(origin_tree)
+    # print(origin_tree.get_sympy_expr())
 
-    print(origin_tree)
-    print(origin_tree.get_sympy_expr())
+    origin_tree = None
+
     # tb = TreeBuildRestrictions(origin_xtype, None, nc, build_restrictions, 'tree_node_count')
-    tb = TreeBuildRestrictions(None, origin_tree, node_selector, build_restrictions, 'tree_node_count')
+    tb = Evolution(None, origin_tree, node_selector, build_restrictions, 'tree_node_count')
 
     gp = ExplainableGP(name, pop_max, gen_max, rootdir, kernel, tb)
     try:
@@ -157,68 +174,95 @@ def _test_random_pop():
             tree = selection_tournament(gp.pop_genepool, tournsize=3)
             return tree
 
-        @gp.create_trees(rate=0.05)
-        def re_sym_all():
-            tree = selection_tournament(gp.pop_genepool, tournsize=3)
-            return evolve_reduce_simplify(tree, completely=True)
+        if CHAINED_VERION:
 
-        @gp.create_trees(rate=0.10)
-        def mx_ranch_d():
-            tree = selection_tournament(gp.pop_genepool, tournsize=3)
-            return gp.tb.evolve_mutate_branch_depth(tree, 4, p_term=0.5)
+            @gp.create_trees(rate=0.30)
+            def mx_branch_d_CHAIN():
+                tree = selection_tournament(gp.pop_genepool, tournsize=3)
+                tree = gp.tb.evolve_mutate_branch_depth(tree, 4, p_term=0.5)
+                tree = tree_simplification(tree, allow_chain=True)
+                return tree
 
-        @gp.create_trees(rate=0.15)
-        def mx_branch_n():
-            tree = selection_tournament(gp.pop_genepool, tournsize=3)
-            n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
-            return gp.tb.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
+            @gp.create_trees(rate=0.1)
+            def rand2_CHAIN():
+                # sfeh float? nope
+                # sfeh:discuss: deep random trees have a tendency to also allow weird-ass looking nonsense
+                tree = gp.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+                tree = tree_simplification(tree, allow_chain=True)
+                return tree
 
-        @gp.create_trees(rate=0.1)  # was error source?
-        def mut_br():
-            tree = selection_tournament(gp.pop_genepool, tournsize=3)
-            return gp.tb.evolve_mutate_branch_nodes(tree, 4, p_term=0)
+            @gp.create_trees(rate=0.3, crossover=True)
+            def xover_CHAIN():
+                tree_a = selection_tournament(gp.pop_genepool, tournsize=3)
+                tree_b = selection_tournament(gp.pop_genepool, tournsize=3)
+                evo1, evo2 = gp.tb.evolve_crossover(tree_a, tree_b)
+                evo1 = tree_simplification(evo1, allow_chain=True)
+                evo2 = tree_simplification(evo2, allow_chain=True)
+                return evo1, evo2
 
-        @gp.create_trees(rate=0.1)
-        def filter_optimize():
-            tree = selection_tournament(gp.pop_genepool, tournsize=3)
-            return gp.tb.evolve_mutate_filter(tree)
+        else:
+            @gp.create_trees(rate=0.05)
+            def re_sym_all():
+                tree = selection_tournament(gp.pop_genepool, tournsize=3)
+                return evolve_reduce_simplify(tree, completely=True)
 
-        @gp.create_trees(rate=0.1)
-        def rand2():
-            # sfeh float? nope
-            # sfeh:discuss: deep random trees have a tendency to also allow weird-ass looking nonsense
-            return gp.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+            @gp.create_trees(rate=0.10)
+            def mx_branch_d():
+                tree = selection_tournament(gp.pop_genepool, tournsize=3)
+                return gp.tb.evolve_mutate_branch_depth(tree, 4, p_term=0.5)
 
-        @gp.create_trees(rate=0.3, crossover=True)
-        def xover():
-            tree_a = selection_tournament(gp.pop_genepool, tournsize=3)
-            tree_b = selection_tournament(gp.pop_genepool, tournsize=3)
-            evo1, evo2 = gp.tb.evolve_crossover(tree_a, tree_b)
-            return evo1, evo2
+            @gp.create_trees(rate=0.15)
+            def mx_branch_n():
+                tree = selection_tournament(gp.pop_genepool, tournsize=3)
+                n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
+                return gp.tb.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
 
-        # @gp.create_trees(rate=0.15)
-        # def rand1():
-        #     return gp.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3, 1)), 2, 4), float, p_term=0)
+            @gp.create_trees(rate=0.1)  # was error source?
+            def mut_br():
+                tree = selection_tournament(gp.pop_genepool, tournsize=3)
+                return gp.tb.evolve_mutate_branch_nodes(tree, 4, p_term=0)
 
-        # @self.create_trees(rate=0.01)
-        # def pareto_revive():
-        #     fintree = np.random.choice(self.paretofront)
-        #     return fintree.tree
+            @gp.create_trees(rate=0.1)
+            def filter_optimize():
+                tree = selection_tournament(gp.pop_genepool, tournsize=3)
+                return gp.tb.evolve_mutate_filter(tree)
 
-        # @gp.create_trees(rate=0.1)
-        # def re_sym():
-        #     tree = selection_tournament(gp.population, tournsize=3)
-        #     return evolve_reduce_simplify(tree, completely=False)
-        #
-        # @gp.create_trees(rate=0.1)
-        # def mut_pt():
-        #     tree = selection_tournament(gp.population, tournsize=3)
-        #     return gp.tb.evolve_mutate_point(tree)
-        #
-        # @gp.create_trees(rate=0.1)
-        # def mxPointXXX():
-        #     evotree = selection_tournament(gp.pop_base, tournsize=3)
-        #     return gp.tb.evolve_mutate_pointxxx(evotree)
+            @gp.create_trees(rate=0.1)
+            def rand2():
+                # sfeh float? nope
+                # sfeh:discuss: deep random trees have a tendency to also allow weird-ass looking nonsense
+                return gp.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+
+            @gp.create_trees(rate=0.3, crossover=True)
+            def xover():
+                tree_a = selection_tournament(gp.pop_genepool, tournsize=3)
+                tree_b = selection_tournament(gp.pop_genepool, tournsize=3)
+                evo1, evo2 = gp.tb.evolve_crossover(tree_a, tree_b)
+                return evo1, evo2
+
+            # @gp.create_trees(rate=0.15)
+            # def rand1():
+            #     return gp.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3, 1)), 2, 4), float, p_term=0)
+
+            # @self.create_trees(rate=0.01)
+            # def pareto_revive():
+            #     fintree = np.random.choice(self.paretofront)
+            #     return fintree.tree
+
+            # @gp.create_trees(rate=0.1)
+            # def re_sym():
+            #     tree = selection_tournament(gp.population, tournsize=3)
+            #     return evolve_reduce_simplify(tree, completely=False)
+            #
+            # @gp.create_trees(rate=0.1)
+            # def mut_pt():
+            #     tree = selection_tournament(gp.population, tournsize=3)
+            #     return gp.tb.evolve_mutate_point(tree)
+            #
+            # @gp.create_trees(rate=0.1)
+            # def mxPointXXX():
+            #     evotree = selection_tournament(gp.pop_base, tournsize=3)
+            #     return gp.tb.evolve_mutate_pointxxx(evotree)
 
         # tmp_pareto = pareto_from_pop(gp.pop_next)  # sfeh:idea paretofront in each generation?
 

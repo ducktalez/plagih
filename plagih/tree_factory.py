@@ -2,28 +2,12 @@
 The factory to create trees
 """
 from plagih.tree import *
-from plagih.plagih_tree import *
+from plagih.tree_labels import *
 from plagih.util import *
-from plagih.tree_complexity.tree_edit_distance import apted_distance
 
 import random
-from collections import deque
 import copy
 import numpy as np
-
-
-def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
-    if complexity_measure == 'tree_node_count_raw':  # number of nodes
-        return tree.len_nodecount_raw()  # returns the number of nodes  # sfeh weights
-    elif complexity_measure == 'tree_node_count':
-        return tree.len_nodecount_fair()  # returns the number of nodes  # sfeh weights todo
-    elif complexity_measure == 'tree_edit_distance':  # tree_edit_distance, fintree-edit-distance
-        apted1 = tree.get_apted_notation()
-        apted2 = origin_tree.get_apted_notation()
-        distance, mapping = apted_distance(apted1, apted2)  # sfeh the mapping could be useful somewhere
-        return distance
-    else:
-        raise Exception(f'Complexity measurement not available: {complexity_measure}')
 
 
 def randomly_split_range(range_max: int, num_splits: int) -> list[int]:
@@ -55,7 +39,7 @@ def randomly_split_range(range_max: int, num_splits: int) -> list[int]:
     return sample_dist
 
 
-def tree_simplification(tree) -> Node:
+def tree_simplification(tree, allow_chain=False) -> Node:
     """
     (Tries to) simplify/mathematically-reduce a tree. It is quite experimental
     # sfeh sympy-reconstruct patterns
@@ -67,14 +51,15 @@ def tree_simplification(tree) -> Node:
     expr_sym = tree.get_sympy_expr()
     # expr_raw = tree.get_expr_raw()
     # v2_sym = expr_sympify(expr_raw)
-    tree = sympy_to_tree(expr_sym)
-    tree.tree_node_grouping()
-    if len(tree_copy) < len(tree):
-        print(f'WHATTPPENDED SFEH'
-              f'\n\t{tree_copy.str_as_list()}'
-              f'\n\t{tree.str_as_list()}'
-              f'\n\t{tree_copy.get_sympy_expr()}'
-              f'\n\t{tree.get_sympy_expr()}')
+    tree = sympy_to_tree(expr_sym, allow_chain=allow_chain)
+    if not CHAINED_VERION:
+        tree.tree_node_grouping()
+        if len(tree_copy) < len(tree):
+            print(f'WHATTPPENDED SFEH'
+                  f'\n\t{tree_copy.str_as_list()}'
+                  f'\n\t{tree.str_as_list()}'
+                  f'\n\t{tree_copy.get_sympy_expr()}'
+                  f'\n\t{tree.get_sympy_expr()}')
         # --->
         # WHATTPPENDED SFEH
         # 	[Mul, [Add, [cartPos], [Square, [cartPos]]], [-0.0130]]
@@ -93,7 +78,7 @@ def evolve_reduce_simplify(tree: Node, completely=True, force=False) -> Node:
         for cc in nodes_lv0:
             cc.set_new_node(tree_simplification(cc))
     else:
-        node_list = [n for n in tree.list_mutable_nodes() if issubclass(n.label, Operator)]  # ignoring leaf nodes...
+        node_list = [n for n in tree.list_mutable_nodes() if issubclass(n.label, OperatorArity)]  # ignoring leaf nodes...
         if len(node_list) == 0:
             print_warning('wwww', f'Tree for simplification does not provide operators: {tree}')
             return tree
@@ -121,8 +106,10 @@ def node_deepcopy(tree: Node):
     return _cpy
 
 
-class TreeBuildRestrictions:
-    """functions to build trees, with the advantage of being able to use general build restrictions."""
+class Evolution:
+    """
+    was "TreeBuildRestrictions"
+    functions to build trees, with the advantage of being able to use general build restrictions."""
 
     def __init__(self, origin_xtype, origin_tree, node_selector, build_restrictions, complexity_metric):
         """
@@ -137,6 +124,37 @@ class TreeBuildRestrictions:
 
         self.depth_max = build_restrictions.get('depth_max', 10)
         self.nodes_max = build_restrictions.get('nodes_max', 100)
+
+    def evolve_prune_tree(self, tree: Node):
+        """prune depth
+        -> prune everything below a certain level... (should not happen in the first place)
+        prune nodes
+        -> get node difference, get nodelist, untill small enough: split the difference, prune nodes until
+
+        sfeh:discussion there is a difference between parsimony and complexity...
+        sfeh:discuss analyze the amount of trees that have to be pruned?
+        sfeh:open add labelweight_max to"""
+        nodelist = tree.list_mutable_nodes()
+        for dnode in nodelist:
+            if dnode.depth == self.nodes_max and dnode.get_arity() > 0:
+                print_warning('wwww', f'Node in fintree is too deep: {dnode.depth}')
+                new_node = self.node_selector.choose_terminal(dnode.get_xtype_self())
+                new_node.depth = dnode.depth
+                dnode.set_new_node(new_node)
+
+        prune_amount = len(tree) - self.nodes_max
+        while prune_amount > 0:
+            print_warning('wwww', f'Tree too complex: {len(tree)} > {self.nodes_max}, pruning {prune_amount}.')
+            nodelist = tree.list_mutable_nodes()
+            prune_now = 1 + np.random.randint(prune_amount)  # 19 -> prune branch with 1 to max. 19 nodes
+
+            nodelist = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
+            tree = np.random.choice(nodelist)
+            new_node = self.node_selector.choose_terminal(tree.get_xtype_self())
+            new_node.depth = tree.depth
+            tree.set_new_node(new_node)
+            prune_amount = len(tree) - self.nodes_max
+        return tree
 
     # def observations_add(self, obs_names):
     #     """
@@ -192,6 +210,12 @@ class TreeBuildRestrictions:
 
         else:
             evotree = self.evolve_create_random(xt_out, depth_goal, depth=0, num_rest=-1, p_term=p_term)
+
+        return evotree
+
+    def evolve_chained_new_tree_depth(self, depth_goal, xt_out, p_term=0.0) -> Node:
+
+        evotree = self.evolve_create_random(xt_out, depth_goal, depth=0, num_rest=-1, p_term=p_term)
 
         return evotree
 
@@ -305,6 +329,7 @@ class TreeBuildRestrictions:
         return evotree
 
     def evolve_mutate_branch_depth(self, tree, depth_goal, p_term=0.0):
+        """"""
         n_init = len(tree)
         node = np.random.choice(tree.list_mutable_nodes())
         xtype_out = node.get_xtype_self()
@@ -374,37 +399,6 @@ class TreeBuildRestrictions:
 
         return aa, bb
 
-    def evolve_prune_tree(self, tree: Node):
-        """prune depth
-        -> prune everything below a certain level... (should not happen in the first place)
-        prune nodes
-        -> get node difference, get nodelist, untill small enough: split the difference, prune nodes until
-
-        sfeh:discussion there is a difference between parsimony and complexity...
-        sfeh:discuss analyze the amount of trees that have to be pruned?
-        sfeh:open add labelweight_max to"""
-        nodelist = tree.list_mutable_nodes()
-        for dnode in nodelist:
-            if dnode.depth == self.nodes_max and dnode.get_arity() > 0:
-                print_warning('wwww', f'Node in fintree is too deep: {dnode.depth}')
-                new_node = self.node_selector.choose_terminal(dnode.get_xtype_self())
-                new_node.depth = dnode.depth
-                dnode.set_new_node(new_node)
-
-        prune_amount = len(tree) - self.nodes_max
-        while prune_amount > 0:
-            print_warning('wwww', f'Tree too complex: {len(tree)} > {self.nodes_max}, pruning {prune_amount}.')
-            nodelist = tree.list_mutable_nodes()
-            prune_now = 1 + np.random.randint(prune_amount)  # 19 -> prune branch with 1 to max. 19 nodes
-
-            nodelist = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
-            tree = np.random.choice(nodelist)
-            new_node = self.node_selector.choose_terminal(tree.get_xtype_self())
-            new_node.depth = tree.depth
-            tree.set_new_node(new_node)
-            prune_amount = len(tree) - self.nodes_max
-        return tree
-
     def finalize_tree(self, tree):
         """When an evolution is done, this function...:
         - inserts node with input data, if tree has none yet
@@ -432,51 +426,6 @@ class TreeBuildRestrictions:
 #     #
 #     # def __eq__(self, other):
 #     #     return self.get_fitness() <= other.get_fitness()
-
-
-class Candidate:
-    """
-    WAS: class FinalizedTree
-    An actual individual (Tree + meta-infos/phenotypes)"""
-
-    def __init__(self, tree: Node, fitness, parsimony, tag: str):
-        self.tree = tree
-        self.fitness = fitness
-        self.parsimony = parsimony
-        self.last_evolution = deque([tag], maxlen=10)  # sfeh:open
-
-    def append_tag(self, tag):
-        self.last_evolution.append(tag)
-
-    def get_last_tag(self):
-        return self.last_evolution[-1]
-
-    def __str__(self):
-        """Show the Parsimony and Fitness of a tree"""
-        return f'[{self.get_parsimony():2.1f}: fit {self.get_fitness():4.2f}]'
-
-    def get_evotree(self):
-        return self.tree
-
-    def append_tag(self, tag):
-        self.meta.append_tag(tag)
-
-    def get_fitness(self):
-        # return self.meta.fitness
-        return self.fitness
-
-    def get_parsimony(self):
-        # return self.meta.parsimony
-        return self.parsimony
-
-    def set_fitness(self, fitness):
-        self.meta.fitness = fitness
-
-    def set_parsimony(self, parsimony):
-        self.meta.parsimony = parsimony
-
-    def get_last_evolution(self):
-        return self.meta.get_last_tag()  # sfeh same name?
 
 
 # class OriginTree(FinalizedTree):
@@ -578,18 +527,6 @@ class Candidate:
 #     tree.finalize_set_depth()
 #
 #     return tree
-
-
-def selection_tournament(pop, tournsize=3):
-    """
-    SFEH's tournament selection
-    sfeh: discuss extracting & deepcopying the inner tree
-    """
-    tree_list = [np.random.choice(pop) for _ in range(tournsize)]
-    fintree: 'Candidate' = min(tree_list, key=lambda tree: tree.get_fitness())
-    evotree = fintree.get_evotree()
-    evotree = copy.deepcopy(evotree)
-    return evotree
 
 
 if __name__ == '__main__':

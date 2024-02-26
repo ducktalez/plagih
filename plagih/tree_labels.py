@@ -159,6 +159,14 @@ class OperatorArity(BaseOperator):  # sfeh:xxx sympy.Function was here, also is_
     pass
 
 
+class OperatorChained(BaseOperator):
+    # no xtype, only input type
+    # no tflow, separate handling in totf-function
+    # Piecewise, AddChain, MulChain, MinChain, MaxChain, AndChain, OrChain
+    # childs_min_max = [1, 5]
+    pass
+
+
 class ChainableOp:
     """(Abstract) class for operators, that allow flexible arity (1-n args).
     Used e.g. while reconstructing trees from sympy expressions,

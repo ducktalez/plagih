@@ -118,11 +118,16 @@ tensorflow
 sklearn
 pandas
 sympy
+scipy
+pyYAML
 tikzplotlib (optional)
 gym (optional)
+distutils (optional)
 
-`conda install matplotlib pathlib sympy apted tensorflow tensorflow-gpu pandas sympy gym`
-`pip install sklearn gym apted tikzplotlib`
+`conda install -c matplotlib pathlib sympy tensorflow tensorflow-gpu pandas sympy scipy pyYAML`
+
+`pip install scikit-learn scipy gym apted tikzplotlib`
+
 
 non-conda packages:
 apted

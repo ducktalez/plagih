@@ -63,7 +63,7 @@ class Regression(Kernel):
 
     def eval_tf(self, sy_expr: sympy.Basic) -> dict:
         """
-        Evaluates an expression using TensorFlow (TF)
+        SFEH_UNUSED: Evaluates an expression using TensorFlow (TF)
         - receives a (string) expression in numpy-style that was reduced with pythons "sympy" (for simplification)
         - uses "ast" to generate a, kind of, python-intern-executable-fintree
         - creating a tensorflow graph that is evaluated in an isolated TF session

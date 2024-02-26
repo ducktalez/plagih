@@ -170,6 +170,17 @@ class ExplainableGP:
 
         return
 
+    def todo_end_generation(self):
+
+        self.run_update_paretofront(self.pop_next)
+
+        self.pop_genepool = self.pop_next[:]
+        self.pop_next = []
+        self.analyze_generation()
+        self.gen_id += 1
+
+        self.time_genstart = time.perf_counter()
+
     # sfeh:idea sympy.NumberSy,bol
 
     def gen_create_initial(self):
@@ -205,7 +216,7 @@ class ExplainableGP:
         self.pop_genepool = self.pop_next[:]
         self.pop_next = []
         self.analyze_generation()
-        self.gen_id = 1
+        self.gen_id += 1
         return
 
     def pop_next_append(self, ct: Candidate):
@@ -249,8 +260,9 @@ class ExplainableGP:
                         return  # sfeh raise?
                 except TypeError as ex:
                     # todo todotodo
-                    raise TypeError(f'Typeerror, but why? {ex}')  # ok-errors: TypeError: Cannot convert complex to float
+                    # raise TypeError(f'Typeerror, but why? {ex}')  # ok-errors: TypeError: Cannot convert complex to float
                     print(f'Typeerror, but why? {ex}')
+                    # Problem: TypeError: Typeerror, but why? expecting bool or Boolean, not `(cartPos - 0.53 <= -0.361, cartPos - 0.801 < cartVel/cartPos**1.0)`
                     # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
                     # sfeh probably this error: cond(): 'false_fn' argument required
                     # Happens, when ITE is coming up. Ignoring for now.

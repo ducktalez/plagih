@@ -307,7 +307,7 @@ class Evolution:
 
         return tree
 
-    def evolve_mutate_point(self, tree):
+    def evolve_mutate_point(self, tree: Node):
         """Mutate a single mutable point in any Tree.
         sfeh:debug is the fintree a fintree copy or the same fintree?"""
         evotree = copy.deepcopy(tree)
@@ -328,7 +328,7 @@ class Evolution:
 
         return evotree
 
-    def evolve_mutate_branch_depth(self, tree, depth_goal, p_term=0.0):
+    def evolve_mutate_branch_depth(self, tree: Node, depth_goal, p_term=0.0):
         """"""
         n_init = len(tree)
         node = np.random.choice(tree.list_mutable_nodes())
@@ -339,7 +339,7 @@ class Evolution:
 
         return tree
 
-    def evolve_mutate_branch_nodes(self, tree, nodes_goal, p_term=0.0):
+    def evolve_mutate_branch_nodes(self, tree: Node, nodes_goal, p_term=0.0):
         """currently only one branch
         p_term: probability terminating the tree in a node
         """

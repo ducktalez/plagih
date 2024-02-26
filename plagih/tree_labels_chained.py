@@ -8,7 +8,7 @@ import sympy
 # import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
 from sympy.functions.elementary.piecewise import ExprCondPair
 
-from plagih.tree_labels import BaseOperator
+from plagih.tree_labels import OperatorChained
 from plagih.util import get_subclasses, FLOAT_PRECISION, DEBUG_DUMMY  # noqa
 
 os.environ["KMP_WARNINGS"] = "FALSE"
@@ -22,14 +22,6 @@ tf.compat.v1.disable_eager_execution()
 
 
 # sfeh:discuss: Min/Max is just a ordeded list. ->taking element 1, -1, ...
-
-
-class OperatorChained(BaseOperator):
-    # no xtype, only input type
-    # no tflow, separate handling in totf-function
-    # Piecewise, AddChain, MulChain, MinChain, MaxChain, AndChain, OrChain
-    # childs_min_max = [1, 5]
-    pass
 
 
 class AddChain(OperatorChained):

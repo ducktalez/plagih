@@ -2,6 +2,7 @@
 This starts the whole genetic programming.
 This (extra) file was added to have a file in the root directory that can be started.
 """
+import copy
 import itertools
 import sys
 import random
@@ -16,25 +17,72 @@ from plagih.random_nodes_generator import norm_choices, operatorpool_to_picks
 from plagih.util import *
 
 
-def selection_tournament(pop, tournsize=3):
-    """
-    SFEH's tournament selection
-    sfeh: discuss extracting & deepcopying the inner tree
-    """
-    tree_list = [np.random.choice(pop) for _ in range(tournsize)]
-    fintree: 'Candidate' = min(tree_list, key=lambda tree: tree.get_fitness())
-    evotree = fintree.get_evotree()
-    evotree = copy.deepcopy(evotree)
-    return evotree
+INPUT_NAMES = ['cartVel', 'cartPos']
 
 
-def _test_random_pop():
-    """Testrun"""
-    name = 'MTC200_RMSE_scratch'
-    rootdir = Path.cwd() / f'{name}'
+class NodeRandomizer:
 
-    INPUT_NAMES = ['cartVel', 'cartPos']
-    action_name = 'action'
+    def __init__(self, build_operator_dict, build_variables_list):
+        """make all probabilities sum to 1 for each categoray (Add: 2, Mul: 1, Tan: 0.5) in"""
+
+        self.pick_op, self.pick_op_match = operatorpool_to_picks(build_operator_dict)
+        # sfeh: Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.5, Usub: 1, Xor: 1
+        # Round: 0.5, Eq: 1,  # Ne: 0.5, #  # Log1p: 0.1, Gt: 0.1, Ge: 0.1,, Tan: 0.1, Sub: 1, Cos: 0.33
+        # Powrounded: 0.5
+
+        self.pick_symbol = {
+            float: norm_choices([[sympy.Symbol(ii, real=True, imaginary=False), 1] for ii in build_variables_list]),
+            bool: []}  # NotImplementedError
+
+        # -> Choosing 50 random numeric values from the dataset for building trees ...just not zeros)
+        # samples = [ii for ii in itertools.chain.from_iterable(df[build_variables_list].sample(n=50).values) if ii != 0]
+        self.pick_constant = {float: norm_choices([
+            [lambda: round(random.normalvariate(1, 1), FLOAT_PRECISION), 0.1],
+            [lambda: round(random.randint(1, 20), FLOAT_PRECISION), 0.1],
+            # [lambda: round(random.choice(samples), FLOAT_PRECISION), 0.5]
+        ]),
+            bool: norm_choices([[lambda: random.choice((True, False)), 1]])}
+
+    def choose_operator(self, xt):
+        # todo allow_chain
+        op = np.random.choice(self.pick_op[xt][0], p=self.pick_op[xt][1])  # no (), which would evaluate the op
+        return op
+
+    def choose_operator_match(self, xtype):
+        # todo allow_chain
+        op = np.random.choice(self.pick_op_match[xtype][0], p=self.pick_op_match[xtype][1])
+        return op
+
+    def choose_terminal(self, xt, p_observation=0.5):
+        if np.random.random() > p_observation:
+            try:
+                _v = self.choose_symbol(xt)
+                return Node(Symbol, [_v])
+            except (TypeError, IndexError):
+                pass  # return a constant (E.g. because there are no boolean observations)
+
+        _v = self.choose_constant(xt)
+        # sfeh expected str|int|long|float|Decimal|Number object but got 'Node'
+
+        return _v
+
+    def choose_constant(self, xt):
+        _v = np.random.choice(self.pick_constant[xt][0], p=self.pick_constant[xt][1])()  # only dist. must be ()
+        if xt == float:
+            _v = sympy.Float(_v)  # sfeh:discuss allow "rational" inputs? 1/3, 3/4, ...
+            return Node(Number, [_v])  # round FLOAT_PRECISION was here
+        else:
+            # _v = sympy.logic.boolalg.BooleanAtom(_v)  # sfeh:discuss: vs. Boolean
+            # -> sympy.sympify('And(True, BooleanAtom(False))')
+            _v = _v  # BooleanAtom was here - why? Any purpose?
+            return Node(Boolean, [_v])
+
+    def choose_symbol(self, xt):
+        _v = np.random.choice(self.pick_symbol[xt][0], p=self.pick_symbol[xt][1])
+        return _v
+
+
+def kernel_for_mtc():
 
     # ## Load the training data into Kernel-class(...only offline training in this run).
     df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv')
@@ -47,8 +95,80 @@ def _test_random_pop():
     tf_sanitize_results = lambda res: tf.round(tf.clip_by_value(res, 0, 2))
     tf_error_metric = lambda pw_diffs: tf.sqrt(tf.reduce_mean(tf.square(pw_diffs)))
     # tf.reduce_mean(tf.abs(pairwise_diff))  # sfeh:open
-    kernel = Regression(data_train, action_name, tf_error_metric, tf_sanitize_results)
+    kernel = Regression(data_train, 'action', tf_error_metric, tf_sanitize_results)
 
+    return df, kernel
+
+
+def selection_tournament(pop, tournsize=3):
+    """
+    SFEH's tournament selection
+    sfeh: discuss extracting & deepcopying the inner tree
+    """
+    tree_list = [np.random.choice(pop) for _ in range(tournsize)]
+    fintree: 'Candidate' = min(tree_list, key=lambda tree: tree.get_fitness())
+    evotree = fintree.get_evotree()
+    evotree = copy.deepcopy(evotree)
+    return evotree
+
+
+def _test_simple():
+    """SIMPLE"""
+    df, kernel = kernel_for_mtc()
+
+    build_operator_dict = {Add: 2, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
+                     Sin: 0.5, Not: 0.5, Lt: 0.5, Le: 0.5, And: 1, Or: 1, Min: 1, Max: 1}
+    node_selector = NodeRandomizer(build_operator_dict, INPUT_NAMES)
+    tb = Evolution(None, None, node_selector, {'depth_max': 7, 'nodes_max': 50}, 'tree_node_count')
+    gp = ExplainableGP('TEST', 100, 10, Path.cwd() / f'MTC200_RMSE_scratch', kernel, tb)
+
+    gp.gen_create_initial()
+    for _ in range(1):
+        @gp.create_trees(rate=1)
+        def rand2():
+            return gp.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+        gp.todo_end_generation()
+
+    for _ in range(2):
+        @gp.create_trees(rate=1)
+        def rand2_CHAIN():
+            tree = gp.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+            tree = tree_simplification(tree, allow_chain=True)
+            aaatodo = copy.deepcopy(tree)
+            tree.repair_depth()  # todo
+            return tree
+        gp.todo_end_generation()
+
+    for _ in range(10):
+        @gp.create_trees(rate=1)
+        def mx_branch_n():
+            tree = selection_tournament(gp.pop_genepool, tournsize=3)
+            n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
+            return gp.tb.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
+        gp.todo_end_generation()
+
+    for _ in range(10):
+        @gp.create_trees(rate=1, crossover=True)
+        def xover_CHAIN():
+            tree_a = selection_tournament(gp.pop_genepool, tournsize=3)
+            tree_b = selection_tournament(gp.pop_genepool, tournsize=3)
+            evo1, evo2 = gp.tb.evolve_crossover(tree_a, tree_b)
+            evo1 = tree_simplification(evo1, allow_chain=True)
+            evo2 = tree_simplification(evo2, allow_chain=True)
+            return evo1, evo2
+        gp.evoloop_monitoring_plots()
+
+    print('***Program ending***\n'
+          '********************\n\n')
+    sys.exit()
+
+
+def _test_random_pop():
+    """Testrun"""
+    name = 'MTC200_RMSE_scratch'
+    rootdir = Path.cwd() / f'{name}'
+
+    df, kernel = kernel_for_mtc()
     # sfeh:idea track total trees in lut and matches, maybe even check diversity?
 
     # ## Run/Computation restrictions
@@ -65,71 +185,11 @@ def _test_random_pop():
     #     def __init__(self, *args):
     #         super(N, self).__init__(*args, is_fix=True)
 
-    class NodeRandomizer:
-
-        def __init__(self):
-            """make all probabilities sum to 1 for each categoray (Add: 2, Mul: 1, Tan: 0.5) in"""
-            opsss = {Add: 2, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
+    build_operator_dict = {Add: 2, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
                      Sin: 0.5, Not: 0.5, Lt: 0.5, Le: 0.5, And: 1, Or: 1, Min: 1, Max: 1}
-            ops_arity = {Ifte: 2}  # operators that contradict with fixed arity
-            opsss.update(ops_arity)
-
-            self.pick_op, self.pick_op_match = operatorpool_to_picks(opsss)
-            # sfeh: Acos: 0.33, Asin: 0.33, Atan: 0.33, Tanh: 0.5, Usub: 1, Xor: 1
-            # Round: 0.5, Eq: 1,  # Ne: 0.5, #  # Log1p: 0.1, Gt: 0.1, Ge: 0.1,, Tan: 0.1, Sub: 1, Cos: 0.33
-            # Powrounded: 0.5
-
-            self.pick_symbol = {
-                float: norm_choices([[sympy.Symbol(ii, real=True, imaginary=False), 1] for ii in INPUT_NAMES]),
-                bool: []}  # NotImplementedError
-
-            # -> Choosing 50 random numeric values from the dataset for building trees ...just not zeros)
-            samples = [ii for ii in itertools.chain.from_iterable(df[INPUT_NAMES].sample(n=50).values) if ii != 0]
-            self.pick_constant = {float: norm_choices([
-                [lambda: round(random.normalvariate(1, 1), FLOAT_PRECISION), 0.1],
-                [lambda: round(random.randint(1, 20), FLOAT_PRECISION), 0.1],
-                [lambda: round(random.choice(samples), FLOAT_PRECISION), 0.5]]),
-                bool: norm_choices([[lambda: random.choice((True, False)), 1]])}
-
-        def choose_operator(self, xt):
-            # todo allow_chain
-            op = np.random.choice(self.pick_op[xt][0], p=self.pick_op[xt][1])  # no (), which would evaluate the op
-            return op
-
-        def choose_operator_match(self, xtype):
-            # todo allow_chain
-            op = np.random.choice(self.pick_op_match[xtype][0], p=self.pick_op_match[xtype][1])
-            return op
-
-        def choose_terminal(self, xt, p_observation=0.5):
-            if np.random.random() > p_observation:
-                try:
-                    _v = self.choose_symbol(xt)
-                    return Node(Symbol, [_v])
-                except (TypeError, IndexError):
-                    pass  # return a constant (E.g. because there are no boolean observations)
-
-            _v = self.choose_constant(xt)
-            # sfeh expected str|int|long|float|Decimal|Number object but got 'Node'
-
-            return _v
-
-        def choose_constant(self, xt):
-            _v = np.random.choice(self.pick_constant[xt][0], p=self.pick_constant[xt][1])()  # only dist. must be ()
-            if xt == float:
-                _v = sympy.Float(_v)  # sfeh:discuss allow "rational" inputs? 1/3, 3/4, ...
-                return Node(Number, [_v])  # round FLOAT_PRECISION was here
-            else:
-                # _v = sympy.logic.boolalg.BooleanAtom(_v)  # sfeh:discuss: vs. Boolean
-                # -> sympy.sympify('And(True, BooleanAtom(False))')
-                _v = _v  # BooleanAtom was here - why? Any purpose?
-                return Node(Boolean, [_v])
-
-        def choose_symbol(self, xt):
-            _v = np.random.choice(self.pick_symbol[xt][0], p=self.pick_symbol[xt][1])
-            return _v
-
-    node_selector = NodeRandomizer()
+    ops_arity = {Ifte: 2}  # operators that contradict with fixed arity
+    build_operator_dict.update(ops_arity)
+    node_selector = NodeRandomizer(build_operator_dict, INPUT_NAMES)
 
     build_restrictions = {'depth_max': 7, 'nodes_max': 50}
 
@@ -266,14 +326,7 @@ def _test_random_pop():
 
         # tmp_pareto = pareto_from_pop(gp.pop_next)  # sfeh:idea paretofront in each generation?
 
-        gp.run_update_paretofront(gp.pop_next)
-
-        gp.pop_genepool = gp.pop_next[:]
-        gp.pop_next = []
-        gp.analyze_generation()
-        gp.gen_id += 1
-
-        gp.time_genstart = time.perf_counter()
+        gp.todo_end_generation()
 
     printpl('g', f'Done after Generation {gp.gen_id}.\nTime since start: {time.perf_counter() - gp.time_start:4.2f}s')
 
@@ -287,7 +340,8 @@ def _test_random_pop():
 
 if __name__ == "__main__":
     # mp.set_start_method('spawn')
-    _test_random_pop()
+    # _test_simple()
+    _test_random_pop()  # todo todotodo
 
 # class ObservationIndex(Observation):
 #     """

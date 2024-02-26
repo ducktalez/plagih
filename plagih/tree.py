@@ -114,25 +114,40 @@ class Node:
         """Converts directly into a sympy expr
         from node-class, go to a sympy expression
         """
+        # todo = type(self.label)
+        # print(f'fosdf {todo}')
         if issubclass(self.label, Terminal):
             _sym = self.label.get_sym()  # _sym = self.label.symfun
             _cs = self.childs[0]
             return _sym(_cs)
+        elif isinstance(self.label, (Piecewise, sympy.Piecewise)):
+            _sym = sympy.Piecewise
+            # sympy.Piecewise(sympy.functions.elementary.piecewise.ExprCondPair(1, True))
+            _cs = [sympy.functions.elementary.piecewise.ExprCondPair(cc.childs[0], cc.childs[1]) for cc in self.childs]
+            return _sym(*_cs)
         else:
             _cs = [cc.get_sympy_expr() for cc in self.childs]
             if issubclass(self.label, OperatorArity):
-                _sym = self.label.symfun
+                _sym = self.label.get_sym()
                 # return _sym(*_cs)
                 # sfeh:debug TypeError: <lambda>() missing 1 required positional argument: 'b'
-            elif issubclass(self.label, OperatorChained):
-                _sym = self.label.symfun
-            elif isinstance(self.label, ExprCondPair):
+            elif isinstance(self.label, Piecewise):
+                _sym = self.label.get_sym()
+            # elif self.label == Piecewise:
+            #     _sym = self.label.get_sym()
+            elif self.label == ExprCondPair:
                 # _sym = sympy.functions.elementary.piecewise.ExprCondPair  # todo
                 _sym = tuple  # todo
-                return _sym(*_cs)
+                try:
+                    todo = _sym(_cs)
+                except Exception as ex:
+                    todo = _sym(*_cs)
+                return todo
             elif CHAINED_VERION:
-                _sym = self.label.symfun
-
+                try:
+                    _sym = self.label.get_sym()
+                except Exception as ex:
+                    pass  # todotodo todo
             try:
                 return _sym(*_cs)
             except RecursionError as ex:
@@ -141,6 +156,11 @@ class Node:
             except TypeError as ex:
                 # print(f'sfeh:TypeError?: {self.label}, {self.childs}: {ex}')
                 # TypeError: Argument must be a Basic object, not `Node`
+                # !! TypeError('expecting bool or Boolean, not `(cartPos > 18.0, cartPos < 14.0)`.')
+                try:
+                    return _sym(_cs)  # todo todotodo todoztodotodo TypeError("ExprCondPair.__new__() missing 1 required positional argument: 'cond'")
+                except Exception as sdfTODO:
+                    raise Exception(sdfTODO)
                 raise TypeError(ex)
             except sympy.polys.polyerrors.CoercionFailed as ex:
                 # sympy.polys.polyerrors.CoercionFailed: expected an integer, got 0.000564
@@ -329,13 +349,17 @@ class Node:
         self.depth = depth
         if self.is_operator():
             for cc in self.childs:
-                cc.repair_depth(depth=depth + 1)
+                try:
+                    cc.repair_depth(depth=depth + 1)
+                except Exception as TODO:
+                    cc.repair_depth(depth=0 + 1)
+
         return
 
     def set_new_node(self, nd_new: 'Node'):
         """Replacing oneself with another node"""
         self.set_label(nd_new.label)  # sfeh remove childs, is_fix...
-        self.childs = nd_new.childs  # sfeh maybe must be updated recursively
+        self.set_childs(nd_new.childs)  # sfeh maybe must be updated recursively
         self.repair_depth(depth=self.depth)  # Especially required for crossover or branchesnd_new
         # sfeh check fixed or if type matches?
 
@@ -519,9 +543,10 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
         if allow_chain:
             try:
                 # op = d_sym2node_chain[s_expr]  # if issubclass(clss, ChainableOp):
-                print(f'{s_expr}: {type(s_expr)}')
+                # print(f'todo{s_expr}: {type(s_expr)}')
                 todo = d_sym2node | d_sym2node_chain  # todo remove
                 op = todo[type(s_expr)]
+                # print(f'sydfg {op}')
                 return Node(op, childs=cc_nodes)
             except Exception as TODO_DeBUG:
                 print(TODO_DeBUG)

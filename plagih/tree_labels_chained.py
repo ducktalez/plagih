@@ -79,14 +79,14 @@ class AndChained(OperatorChained):
     expr_dmy = 'And'
     xtype = ((bool,), bool)
     xtype_chain = bool
-    symfun = lambda *a: sympy.And(a)
+    symfun = sympy.And
 
 
 class OrChained(OperatorChained):
     xtype = ((bool,), bool)
     xtype_chain = bool
     expr_dmy = 'Or'
-    symfun = lambda *a: sympy.Or(a)
+    symfun = sympy.Or
 
 # def sympy_to_tensorflow(expr_sy, d_tensors):
 #     pass

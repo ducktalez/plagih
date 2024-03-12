@@ -19,9 +19,11 @@ d_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, 
               sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: exp}
 d_op2chain = {Add: AddChain, Mul: MulChain, Min: MinChained, Max: MaxChained, And: AndChained, Or: OrChained,
               Piecewise: Piecewise}
-d_sym2node_chain = {sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChained, sympy.Max: MaxChained,
-                    sympy.And: AndChained, sympy.Or: OrChained, sympy.Piecewise: Piecewise,
-                    sympy.functions.elementary.piecewise.ExprCondPair: ExprCondPair}  # todo, does this solve the missing dict-element problem?
+# The chained version is the regular version, plus the following operators
+d_sym2node_chain = d_sym2node | {sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChained, sympy.Max: MaxChained,
+                                 sympy.And: AndChained, sympy.Or: OrChained, sympy.Piecewise: Piecewise,
+                                 sympy.functions.elementary.piecewise.ExprCondPair: ExprCondPair}
+
 # , sympy.Equality: Eq
 # sfeh:open = {sympy.Unequality: Ne, sympy.Equality: Eq}
 sym_assumption_nodes = (sympy.re,)
@@ -114,40 +116,57 @@ class Node:
         """Converts directly into a sympy expr
         from node-class, go to a sympy expression
         """
-        # todo = type(self.label)
-        # print(f'fosdf {todo}')
         if issubclass(self.label, Terminal):
             _sym = self.label.get_sym()  # _sym = self.label.symfun
             _cs = self.childs[0]
             return _sym(_cs)
-        elif isinstance(self.label, (Piecewise, sympy.Piecewise)):
+        # elif isinstance(self.label, (Piecewise, sympy.Piecewise)):
+        #     _sym = sympy.Piecewise
+        #     # sympy.Piecewise(sympy.functions.elementary.piecewise.ExprCondPair(1, True))
+        #     # PW((a, b), (c, True))
+        #     _cs = self.childs
+        #     _cs = [(cc.childs[0], cc.childs[1]) for cc in _cs]
+        #     _cs = [sympy.functions.elementary.piecewise.ExprCondPair(cc.childs[0], cc.childs[1]) for cc in _cs]
+        #     # _cs = [cc.get_sympy_expr() for cc in self.childs]
+        #     todo = _sym(*_cs)
+        #     return todo
+        elif self.label in (Piecewise, sympy.Piecewise):
             _sym = sympy.Piecewise
             # sympy.Piecewise(sympy.functions.elementary.piecewise.ExprCondPair(1, True))
-            _cs = [sympy.functions.elementary.piecewise.ExprCondPair(cc.childs[0], cc.childs[1]) for cc in self.childs]
-            return _sym(*_cs)
+            # PW((a, b), (c, True))
+            _cs = self.childs
+            _cs = [(cc.childs[0], cc.childs[1]) for cc in _cs]
+            _cs = [(cc[0].get_sympy_expr(), cc[1].get_sympy_expr()) for cc in _cs]
+            _cs = [sympy.functions.elementary.piecewise.ExprCondPair(cc[0], cc[1]) for cc in _cs]
+            # _cs = [cc.get_sympy_expr() for cc in self.childs]
+            todo = _sym(*_cs)
+            return todo
         else:
             _cs = [cc.get_sympy_expr() for cc in self.childs]
             if issubclass(self.label, OperatorArity):
                 _sym = self.label.get_sym()
                 # return _sym(*_cs)
                 # sfeh:debug TypeError: <lambda>() missing 1 required positional argument: 'b'
-            elif isinstance(self.label, Piecewise):
-                _sym = self.label.get_sym()
-            # elif self.label == Piecewise:
+            # elif isinstance(self.label, Piecewise):
             #     _sym = self.label.get_sym()
+            # # elif self.label == Piecewise:
+            # #     _sym = self.label.get_sym()
             elif self.label == ExprCondPair:
-                # _sym = sympy.functions.elementary.piecewise.ExprCondPair  # todo
-                _sym = tuple  # todo
-                try:
-                    todo = _sym(_cs)
-                except Exception as ex:
-                    todo = _sym(*_cs)
-                return todo
+                # # _sym = sympy.functions.elementary.piecewise.ExprCondPair  # todo
+                # _sym = tuple  # todo
+                # try:
+                #     todo = _sym(_cs)
+                # except Exception as ex:
+                #     todo = _sym(*_cs)
+                # xxx = sympy.functions.elementary.piecewise.ExprCondPair(todo)
+                # return xxx
+                raise Exception(f'asddfassdfdfgdrtgdtgedrtg')
             elif CHAINED_VERION:
-                try:
-                    _sym = self.label.get_sym()
-                except Exception as ex:
-                    pass  # todotodo todo
+                _sym = self.label.get_sym()
+                # try:
+                #     _sym = self.label.get_sym()
+                # except Exception as ex:
+                #     raise ex
             try:
                 return _sym(*_cs)
             except RecursionError as ex:
@@ -157,19 +176,25 @@ class Node:
                 # print(f'sfeh:TypeError?: {self.label}, {self.childs}: {ex}')
                 # TypeError: Argument must be a Basic object, not `Node`
                 # !! TypeError('expecting bool or Boolean, not `(cartPos > 18.0, cartPos < 14.0)`.')
-                try:
-                    return _sym(_cs)  # todo todotodo todoztodotodo TypeError("ExprCondPair.__new__() missing 1 required positional argument: 'cond'")
-                except Exception as sdfTODO:
-                    raise Exception(sdfTODO)
-                raise TypeError(ex)
+                return _sym(*_cs)
+                # raise TypeError(ex)  # todo
             except sympy.polys.polyerrors.CoercionFailed as ex:
                 # sympy.polys.polyerrors.CoercionFailed: expected an integer, got 0.000564
                 print(f'XXX Sympy error? Changing to TypError: {ex}')
                 raise TypeError(ex)
+            except IndexError as ex:
+                print(f'sfeh:asddsaasd. {ex}')  # What is this kind of error?
+                raise ex
             except Exception as ex:
                 print(f'sfeh:XXX this still occurs. {ex}')  # What is this kind of error?
+                # try:
+                #     return _sym(*tuple(_cs))
+                # except Exception as sdfTODO:
+                #     # raise Exception(sdfTODO)
+                #     pass
                 # PROBLEM
                 # The argument '(1.0, -0.013*cartPos)' is not comparable.
+                # Exception: The argument '-sin(0.65 - I*pi)' is not comparable.
                 # OK
                 # The argument 'zoo' is not comparable.
                 # The argument '0.801*I' is not comparable.
@@ -182,8 +207,8 @@ class Node:
             # print('asddsa', len(self.childs), type(self.label), issubclass(self.label, Operator), issubclass(self.label, Terminal))
             raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.label)}')
 
-
     def get_expr_raw(self):
+        """"""
         if issubclass(self.label, Terminal):
             expr = f'{self.childs[0]}'
         else:
@@ -192,10 +217,13 @@ class Node:
             if issubclass(self.label, OperatorArity):
                 expr = f'{self.label.__name__}({expr})'
             elif CHAINED_VERION:
-                expr = f'{self.label.expr_dmy}({expr})'
+                try:
+                    expr = f'{self.label.expr_dmy}({expr})'
+                except Exception as todo:
+                    expr = f'({expr})'
+
         # Sfeh:notimplementederror here?
         return expr
-
 
     def get_tf_expr(self):
         if self.childs and issubclass(self.label, OperatorArity):
@@ -352,6 +380,7 @@ class Node:
                 try:
                     cc.repair_depth(depth=depth + 1)
                 except Exception as TODO:
+                    # TypeError("unsupported operand type(s) for +: 'NoneType' and 'int'")
                     cc.repair_depth(depth=0 + 1)
 
         return
@@ -542,17 +571,15 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
 
         if allow_chain:
             try:
-                # op = d_sym2node_chain[s_expr]  # if issubclass(clss, ChainableOp):
-                # print(f'todo{s_expr}: {type(s_expr)}')
-                todo = d_sym2node | d_sym2node_chain  # todo remove
-                op = todo[type(s_expr)]
-                # print(f'sydfg {op}')
+                op = d_sym2node_chain[type(s_expr)]
                 return Node(op, childs=cc_nodes)
             except Exception as TODO_DeBUG:
                 print(TODO_DeBUG)
+                # Problem: KeyError(re) -> Real Part of complex number... ignore
                 raise
 
         if isinstance(s_expr, sympy.functions.elementary.piecewise.ExprCondPair):
+            raise Exception(f'NOFUCKINGWAY')
             return Node(ExprCondPair, cc_nodes)
 
         elif isinstance(s_expr, sympy.Piecewise):

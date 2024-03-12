@@ -149,7 +149,7 @@ def _test_simple():
 
     for _ in range(10):
         @gp.create_trees(rate=1, crossover=True)
-        def xover_CHAIN():
+        def xover_CHAINA():
             tree_a = selection_tournament(gp.pop_genepool, tournsize=3)
             tree_b = selection_tournament(gp.pop_genepool, tournsize=3)
             evo1, evo2 = gp.tb.evolve_crossover(tree_a, tree_b)
@@ -341,7 +341,7 @@ def _test_random_pop():
 if __name__ == "__main__":
     # mp.set_start_method('spawn')
     # _test_simple()
-    _test_random_pop()  # todo todotodo
+    _test_random_pop()
 
 # class ObservationIndex(Observation):
 #     """

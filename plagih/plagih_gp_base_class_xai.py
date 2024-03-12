@@ -256,27 +256,26 @@ class ExplainableGP:
                     n_fails += 1  # sfeh:use this for something?
                     print_warning('www', f'\'{tag}\' failed: {ex}')
                     if n_fails > n_success + 5:  # allow more fails: n_fails > n
-                        print_e(f'Evolution fails too often: {tag}, {n_fails}x. {n_success}.')
+                        print_e(f'Evolution fails too often: {tag}, {n_fails}x. ({n_success}x successful).')
                         return  # sfeh raise?
                 except TypeError as ex:
-                    # todo todotodo
                     # raise TypeError(f'Typeerror, but why? {ex}')  # ok-errors: TypeError: Cannot convert complex to float
                     print(f'Typeerror, but why? {ex}')
                     # Problem: TypeError: Typeerror, but why? expecting bool or Boolean, not `(cartPos - 0.53 <= -0.361, cartPos - 0.801 < cartVel/cartPos**1.0)`
                     # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
                     # sfeh probably this error: cond(): 'false_fn' argument required
                     # Happens, when ITE is coming up. Ignoring for now.
-                except AttributeError as ex:
-                    # raise AttributeError(f'Probably sympy.im in expr {ex}')
-                    # AttributeError: Probably sympy.im in expr 'int' object
-                    raise AttributeError(f'AttributeError: {ex}')  # todo todotodo
-                    # f'\n\tint object has no attribute get_nodes_at_depth has no attribute get_nodes_at_depth
-                    # f'\n\tProbably sympy.im in expr has no attribute get_nodes_at_depth
-                    # print(f'Probably sympy.im in expr {ex}')
-                    #  AttributeError: 'Xor' object has no attribute '_eval_as_set'
-                    #    |--AttributeError: Probably sympy.im in expr 'Xor' object has no attribute '_eval_as_set'
+                # except AttributeError as ex:
+                #     # raise AttributeError(f'Probably sympy.im in expr {ex}')
+                #     # AttributeError: Probably sympy.im in expr 'int' object
+                #     raise AttributeError(f'AttributeError: {ex}')
+                #     # f'\n\tint object has no attribute get_nodes_at_depth has no attribute get_nodes_at_depth
+                #     # f'\n\tProbably sympy.im in expr has no attribute get_nodes_at_depth
+                #     # print(f'Probably sympy.im in expr {ex}')
+                #     #  AttributeError: 'Xor' object has no attribute '_eval_as_set'
+                #     #    |--AttributeError: Probably sympy.im in expr 'Xor' object has no attribute '_eval_as_set'
                 except KeyError as ex:
-                    raise KeyError(f'Keyerror, probably sympy.lambdify expression not evaluable: {ex}')
+                    print(f'Keyerror, (probably sympy.lambdify expression not evaluable): {ex}')
                 except NotImplementedError as nie:
                     print_e(f'Notimplemented? {nie}')
 

@@ -172,12 +172,11 @@ class Node:
             except RecursionError as ex:
                 print(f'sfeh:RecursionError, maybe Piecewise?: {self.label}, {self.childs}, {ex}')
                 raise RecursionError
-            except TypeError as ex:
-                # print(f'sfeh:TypeError?: {self.label}, {self.childs}: {ex}')
-                # TypeError: Argument must be a Basic object, not `Node`
-                # !! TypeError('expecting bool or Boolean, not `(cartPos > 18.0, cartPos < 14.0)`.')
-                return _sym(*_cs)
-                # raise TypeError(ex)  # todo
+            # except TypeError as ex:
+            #     # print(f'sfeh:TypeError?: {self.label}, {self.childs}: {ex}')
+            #     # TypeError: Argument must be a Basic object, not `Node`
+            #     # !! TypeError('expecting bool or Boolean, not `(cartPos > 18.0, cartPos < 14.0)`.')
+            #     return _sym(*_cs)  # todo
             except sympy.polys.polyerrors.CoercionFailed as ex:
                 # sympy.polys.polyerrors.CoercionFailed: expected an integer, got 0.000564
                 print(f'XXX Sympy error? Changing to TypError: {ex}')
@@ -186,15 +185,13 @@ class Node:
                 print(f'sfeh:asddsaasd. {ex}')  # What is this kind of error?
                 raise ex
             except Exception as ex:
-                print(f'sfeh:XXX this still occurs. {ex}')  # What is this kind of error?
+                # print(f'sfeh:XXX this still occurs. {ex}')  # What is this kind of error?
                 # try:
                 #     return _sym(*tuple(_cs))
                 # except Exception as sdfTODO:
                 #     # raise Exception(sdfTODO)
                 #     pass
                 # PROBLEM
-                # The argument '(1.0, -0.013*cartPos)' is not comparable.
-                # Exception: The argument '-sin(0.65 - I*pi)' is not comparable.
                 # OK
                 # The argument 'zoo' is not comparable.
                 # The argument '0.801*I' is not comparable.
@@ -208,7 +205,7 @@ class Node:
             raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.label)}')
 
     def get_expr_raw(self):
-        """"""
+        """Add (1 + a)"""
         if issubclass(self.label, Terminal):
             expr = f'{self.childs[0]}'
         else:
@@ -579,7 +576,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
                 raise
 
         if isinstance(s_expr, sympy.functions.elementary.piecewise.ExprCondPair):
-            raise Exception(f'NOFUCKINGWAY')
+            # raise Exception(f'NOFUCKINGWAY todo')
             return Node(ExprCondPair, cc_nodes)
 
         elif isinstance(s_expr, sympy.Piecewise):

@@ -92,7 +92,9 @@ class Label:
         return _str
 
     def as_str(self):
+        """"""
         _str = self.__class__.__name__
+        _str = self.__class__
         if issubclass(self.__class__, (OperatorArity, OperatorChained)):
             _childstr = ', '.join([a.as_str() for a in self.args])
             _str = f'{_str}({_childstr})'

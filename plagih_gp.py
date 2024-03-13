@@ -69,6 +69,7 @@ class NodeRandomizer:
     def choose_constant(self, xt):
         _v = np.random.choice(self.pick_constant[xt][0], p=self.pick_constant[xt][1])()  # only dist. must be ()
         if xt == float:
+            # _v = sympy.Float(_v)  # sfeh:discuss allow "rational" inputs? 1/3, 3/4, ...
             _v = sympy.Float(_v)  # sfeh:discuss allow "rational" inputs? 1/3, 3/4, ...
             return Node(Number, [_v])  # round FLOAT_PRECISION was here
         else:

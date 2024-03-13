@@ -253,7 +253,6 @@ class ExplainableGP:
                         n_success += 1
 
                 except (ValueError, ArithmeticError) as ex:
-                    # todo ValueError('setting an array element with a sequence. The requested array has an inhomogeneous shape after 1 dimensions. The detected shape was (2,) + inhomogeneous part.')
                     n_fails += 1  # sfeh:use this for something?
                     print_warning('www', f'\'{tag}\' failed: {ex}')
                     if n_fails > n_success + 5:  # allow more fails: n_fails > n
@@ -322,7 +321,6 @@ class ExplainableGP:
         # return fitness, parsimony, sy_expr
         
         candidate = Candidate(evotree, fitness=fitness, parsimony=parsimony, tag=tag)
-        
         return candidate
 
     def evoloop_monitoring_plots(self):

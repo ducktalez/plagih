@@ -19,14 +19,14 @@ d_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, 
               sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: exp}
 d_op2chain = {Add: AddChain, Mul: MulChain, Min: MinChained, Max: MaxChained, And: AndChained, Or: OrChained,
               Piecewise: Piecewise}
-# The chained version is the regular version, plus the following operators
+# The chained version is the regular version updated with the following operators
 d_sym2node_chain = d_sym2node | {sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChained, sympy.Max: MaxChained,
                                  sympy.And: AndChained, sympy.Or: OrChained, sympy.Piecewise: Piecewise,
                                  sympy.functions.elementary.piecewise.ExprCondPair: ExprCondPair}
 
 # , sympy.Equality: Eq
 # sfeh:open = {sympy.Unequality: Ne, sympy.Equality: Eq}
-sym_assumption_nodes = (sympy.re,)
+# sym_assumption_nodes = (sympy.re,)
 
 
 @dataclass
@@ -51,11 +51,11 @@ class Node:
     def str_as_list(self):
         # label_str = self.label.__name__  # sfeh: can str(label) work? -> str with args recursively?
         # sfeh:delete_me if no error after 27-11-2023
-        try:
-            label_str = self.label.__name__  # sfeh: can str(label) work? -> str with args recursively?
-        except AttributeError as ex:
-            print(f'XXXxxx DELETE ME if i do not come up')
-            label_str = self.label  # because Terminals are obj -> 'Symbol' obj has no attr __name__
+        label_str = self.label.__name__  # sfeh: can str(label) work? -> str with args recursively?
+        # try:
+        # except AttributeError as ex:
+        #     print(f'XXXxxx DELETE ME if i do not come up')
+        #     label_str = self.label  # because Terminals are obj -> 'Symbol' obj has no attr __name__
 
         if self.childs:
             if issubclass(self.label, BaseOperator):
@@ -120,16 +120,6 @@ class Node:
             _sym = self.label.get_sym()  # _sym = self.label.symfun
             _cs = self.childs[0]
             return _sym(_cs)
-        # elif isinstance(self.label, (Piecewise, sympy.Piecewise)):
-        #     _sym = sympy.Piecewise
-        #     # sympy.Piecewise(sympy.functions.elementary.piecewise.ExprCondPair(1, True))
-        #     # PW((a, b), (c, True))
-        #     _cs = self.childs
-        #     _cs = [(cc.childs[0], cc.childs[1]) for cc in _cs]
-        #     _cs = [sympy.functions.elementary.piecewise.ExprCondPair(cc.childs[0], cc.childs[1]) for cc in _cs]
-        #     # _cs = [cc.get_sympy_expr() for cc in self.childs]
-        #     todo = _sym(*_cs)
-        #     return todo
         elif self.label in (Piecewise, sympy.Piecewise):
             _sym = sympy.Piecewise
             # sympy.Piecewise(sympy.functions.elementary.piecewise.ExprCondPair(1, True))
@@ -147,26 +137,11 @@ class Node:
                 _sym = self.label.get_sym()
                 # return _sym(*_cs)
                 # sfeh:debug TypeError: <lambda>() missing 1 required positional argument: 'b'
-            # elif isinstance(self.label, Piecewise):
-            #     _sym = self.label.get_sym()
-            # # elif self.label == Piecewise:
-            # #     _sym = self.label.get_sym()
-            elif self.label == ExprCondPair:
-                # # _sym = sympy.functions.elementary.piecewise.ExprCondPair  # todo
-                # _sym = tuple  # todo
-                # try:
-                #     todo = _sym(_cs)
-                # except Exception as ex:
-                #     todo = _sym(*_cs)
-                # xxx = sympy.functions.elementary.piecewise.ExprCondPair(todo)
-                # return xxx
-                raise Exception(f'asddfassdfdfgdrtgdtgedrtg')
+            # elif self.label == ExprCondPair:
+            #     raise Exception(f'asddfassdfdfgdrtgdtgedrtg')
             elif CHAINED_VERION:
                 _sym = self.label.get_sym()
-                # try:
-                #     _sym = self.label.get_sym()
-                # except Exception as ex:
-                #     raise ex
+
             try:
                 return _sym(*_cs)
             except RecursionError as ex:
@@ -185,12 +160,7 @@ class Node:
                 print(f'sfeh:asddsaasd. {ex}')  # What is this kind of error?
                 raise ex
             except Exception as ex:
-                # print(f'sfeh:XXX this still occurs. {ex}')  # What is this kind of error?
-                # try:
-                #     return _sym(*tuple(_cs))
-                # except Exception as sdfTODO:
-                #     # raise Exception(sdfTODO)
-                #     pass
+                # print(f'sfeh:XXX this still occurs. {ex}')  # sfeh What is this kind of error?
                 # PROBLEM
                 # OK
                 # The argument 'zoo' is not comparable.
@@ -216,8 +186,8 @@ class Node:
             elif CHAINED_VERION:
                 try:
                     expr = f'{self.label.expr_dmy}({expr})'
-                except Exception as todo:
-                    expr = f'({expr})'
+                except Exception as ex:
+                    expr = f'({expr})'  # sfeh catching ExprCondPair here
 
         # Sfeh:notimplementederror here?
         return expr
@@ -233,19 +203,21 @@ class Node:
             return _tf(_cs)
         raise NotImplementedError(f'get_tf_expr no match for {self}, {type(self.label)}')
 
-    def __repr__(self):
-        """Printing the nodes as nested array structure such that it can be saved/loaded
-        very closely related to str(), but adds the following information:
-        - ":fix", when nodes are fixed"""
-        label_str = self.label
-
-        if self.is_fix:
-            label_str += ':fix'
-
-        if self.childs:
-            childstr = ', '.join([repr(cc) for cc in self.childs])
-            label_str = f"{label_str}, {childstr}"
-        return f"[{label_str}]"
+    # def __repr__(self):
+    #     """
+    #     sfeh:currently not used. automatically using __str__ instead
+    #     Printing the nodes as nested array structure such that it can be saved/loaded
+    #     very closely related to str(), but adds the following information:
+    #     - ":fix", when nodes are fixed"""
+    #     label_str = self.label
+    #
+    #     if self.is_fix:
+    #         label_str += ':fix'
+    #
+    #     if self.childs:
+    #         childstr = ', '.join([repr(cc) for cc in self.childs])
+    #         label_str = f"{label_str}, {childstr}"
+    #     return f"[{label_str}]"
 
     def len_nodecount_raw(self):
         """counting the amount of nodes recursively"""
@@ -371,14 +343,10 @@ class Node:
         The depth is written inevery node (for whatever reason), and instead of having to propagate
         the depth through every crossover/branch mutation function, instead, we call it when replacing nodes
         """
-        self.depth = depth
+        depth = depth or 0  # sfeh: "None" was set as depth somewhere. Could not find it.
         if self.is_operator():
             for cc in self.childs:
-                try:
-                    cc.repair_depth(depth=depth + 1)
-                except Exception as TODO:
-                    # TypeError("unsupported operand type(s) for +: 'NoneType' and 'int'")
-                    cc.repair_depth(depth=0 + 1)
+                cc.repair_depth(depth=depth + 1)
 
         return
 
@@ -395,7 +363,7 @@ class Node:
         if childs is not None:
             self.set_childs(childs)
 
-        # self.repair_depth(self.depth)  # todo, failed inside TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'
+        # self.repair_depth(self.depth)  # sfeh:discuss not required
         # no checks
 
     def list_mutable_nodes(self, xt_match=None, ignore_first=False, allow_chain=False) -> ['Node']:
@@ -487,19 +455,20 @@ class Node:
                     if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
                         self.replace_with(Usub, childs=[self.childs[1]])  # todo Usub ONLY option, ignore usub tree len
                     elif 0 < mul1 < 1:
-                        self.replace_with(Div, childs=[self.childs[1], Node(Number, childs=[1 / mul1])])  # todo keep "div" as option
+                        self.replace_with(Div, childs=[self.childs[1], Node(Number, childs=[1 / mul1])])  # sfeh keep "div" as option
 
                 elif self.childs[1].label == Number:
+                    # sfeh this code can be simplified
                     mul1 = self.childs[1].childs[0]
                     if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
-                        self.replace_with(Usub, childs=[self.childs[0]])  # todo Usub ONLY option, ignore usub tree len
+                        self.replace_with(Usub, childs=[self.childs[0]])  # sfeh Usub ONLY option, ignore usub tree len
                     elif 0 < mul1 < 1:
                         self.replace_with(Div, childs=[self.childs[0], 1 / mul1])
-                        todo_div_by_test = 1 / mul1  # todo keep "div" as option
+                        todo_div_by_test = 1 / mul1  # sfeh keep "div" as option
                         print(f'asd todo {todo_div_by_test}')
 
         for cc in self.childs:
-            # todo: check, if this actually alters the content
+            # sfehxxxx: check, if this actually alters the content
             try:
                 cc.tree_node_grouping()
             except Exception as DELETE_TODO:
@@ -510,7 +479,7 @@ def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
     if complexity_measure == 'tree_node_count_raw':  # number of nodes
         return tree.len_nodecount_raw()  # returns the number of nodes  # sfeh weights
     elif complexity_measure == 'tree_node_count':
-        return tree.len_nodecount_fair()  # returns the number of nodes  # sfeh weights todo
+        return tree.len_nodecount_fair()  # returns the number of nodes  # sfehxx weights
     elif complexity_measure == 'tree_edit_distance':  # tree_edit_distance, fintree-edit-distance
         apted1 = tree.get_apted_notation()
         apted2 = origin_tree.get_apted_notation()
@@ -536,7 +505,6 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
         return Node(Boolean, [s_expr])
 
     elif isinstance(s_expr, sympy.logic.boolalg.BooleanAtom):
-        # s_expr = True if isinstance(s_expr, (bool, sympy.logic.boolalg.BooleanTrue)) else False
         s_expr = True if isinstance(s_expr, (bool, sympy.logic.boolalg.BooleanTrue)) else False
         return Node(Boolean, [s_expr])
 
@@ -567,23 +535,24 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
             cc_nodes.append(sympy_to_tree(arg, allow_chain=allow_chain))
 
         if allow_chain:
-            try:
-                op = d_sym2node_chain[type(s_expr)]
-                return Node(op, childs=cc_nodes)
-            except Exception as TODO_DeBUG:
-                print(TODO_DeBUG)
-                # Problem: KeyError(re) -> Real Part of complex number... ignore
-                raise
+            op = d_sym2node_chain[type(s_expr)]
+            return Node(op, childs=cc_nodes)
+            # try:
+            #     op = d_sym2node_chain[type(s_expr)]
+            #     return Node(op, childs=cc_nodes)
+            # except Exception as TODO_DeBUG:
+            #     print(TODO_DeBUG)
+            #     # Problem: KeyError(re) -> Real Part of complex number... ignore
+            #     raise
 
         if isinstance(s_expr, sympy.functions.elementary.piecewise.ExprCondPair):
-            # raise Exception(f'NOFUCKINGWAY todo')
+            # raise Exception(f'sfeh')
             return Node(ExprCondPair, cc_nodes)
 
         elif isinstance(s_expr, sympy.Piecewise):
-            # "Chained" version is handled before
+            # "Chained_VERSION" version is handled before
             reversed_pairs = list(s_expr.args[::-1])  # tuples to list, reversed: tuple must be nested the deepest
-            reversed_pairs = [[sympy_to_tree(xx, allow_chain=allow_chain) for xx in list(i)] for i in
-                              reversed_pairs]  # noqa
+            reversed_pairs = [[sympy_to_tree(xx, allow_chain=allow_chain) for xx in list(i)] for i in reversed_pairs]  # noqa
             otherwise = reversed_pairs[0][0]  # the last "True" condition
             for pairs in reversed_pairs[1:]:
                 otherwise = Node(Ifte, [pairs[1], pairs[0], otherwise])
@@ -597,7 +566,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
         elif isinstance(s_expr, Mul):
             if s_expr.args[0].is_Rational:
                 div_by = 1 / s_expr
-                print(f'TODO TODO div by {div_by}')
+                print(f'TODO div by {div_by}')
 
         elif isinstance(s_expr, tuple(d_sym2node)):
             clss = d_sym2node[type(s_expr)]

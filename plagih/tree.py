@@ -129,8 +129,8 @@ class Node:
             _cs = [(cc[0].get_sympy_expr(), cc[1].get_sympy_expr()) for cc in _cs]
             _cs = [sympy.functions.elementary.piecewise.ExprCondPair(cc[0], cc[1]) for cc in _cs]
             # _cs = [cc.get_sympy_expr() for cc in self.childs]
-            todo = _sym(*_cs)
-            return todo
+            _cs = _sym(*_cs)
+            return _cs
         else:
             _cs = [cc.get_sympy_expr() for cc in self.childs]
             if issubclass(self.label, OperatorArity):
@@ -151,7 +151,7 @@ class Node:
             #     # print(f'sfeh:TypeError?: {self.label}, {self.childs}: {ex}')
             #     # TypeError: Argument must be a Basic object, not `Node`
             #     # !! TypeError('expecting bool or Boolean, not `(cartPos > 18.0, cartPos < 14.0)`.')
-            #     return _sym(*_cs)  # todo
+            #     return _sym(*_cs)
             except sympy.polys.polyerrors.CoercionFailed as ex:
                 # sympy.polys.polyerrors.CoercionFailed: expected an integer, got 0.000564
                 print(f'XXX Sympy error? Changing to TypError: {ex}')
@@ -310,8 +310,9 @@ class Node:
         return f"{{{self.get_label()}{''.join([cc.get_apted_notation() for cc in self.childs])}}}"
 
     def get_max_depth(self, depth=0):
-        """Go through all nodes, save depth"""
-        if len(self.childs) == 0:
+        """Go through all nodes, save depth
+        sfeh: this computes the depth and does not take advantage of saved depths"""
+        if len(self.childs) <= 1:
             return depth
         else:
             return max(cc.get_max_depth(depth=depth + 1) for cc in self.childs)
@@ -441,7 +442,7 @@ class Node:
             elif self.childs[1].label == Number and n_exp % 1 == 0:
                 self.set_label(Powrounded)
 
-            # todo sub, usub replace
+            # sfehxxx sub, usub replace
 
         elif self.label == Mul:
             if not self.is_chain():  # div only for
@@ -453,7 +454,7 @@ class Node:
                 elif self.childs[0].label == Number:
                     mul1 = self.childs[0].childs[0]
                     if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
-                        self.replace_with(Usub, childs=[self.childs[1]])  # todo Usub ONLY option, ignore usub tree len
+                        self.replace_with(Usub, childs=[self.childs[1]])  # sfeh Usub ONLY option, ignore usub tree len
                     elif 0 < mul1 < 1:
                         self.replace_with(Div, childs=[self.childs[1], Node(Number, childs=[1 / mul1])])  # sfeh keep "div" as option
 
@@ -464,15 +465,12 @@ class Node:
                         self.replace_with(Usub, childs=[self.childs[0]])  # sfeh Usub ONLY option, ignore usub tree len
                     elif 0 < mul1 < 1:
                         self.replace_with(Div, childs=[self.childs[0], 1 / mul1])
-                        todo_div_by_test = 1 / mul1  # sfeh keep "div" as option
-                        print(f'asd todo {todo_div_by_test}')
+                        sfeh_div_by_test = 1 / mul1  # sfeh keep "div" as option
+                        print(f'asd this needs testing when reached in future {sfeh_div_by_test}')
 
         for cc in self.childs:
             # sfehxxxx: check, if this actually alters the content
-            try:
-                cc.tree_node_grouping()
-            except Exception as DELETE_TODO:
-                cc.tree_node_grouping()
+            cc.tree_node_grouping()
 
 
 def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
@@ -517,13 +515,15 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
             # return Node(Symbol, [str(s_expr)])  # sfeh str VERY important!! "Symbol type input" is not accepted
             return Node(Symbol, [s_expr])  # str VERY important!! "Symbol type input" is not accepted
         else:
-            expr_eval = s_expr  # todo check if this can be worked with .evalf(FLOAT_PRECISION)  # 15 digits
+            # expr_eval = s_expr.evalf(FLOAT_PRECISION)  # sfeh
+            # if abs(s_expr - expr_eval) > 0.001:  # sfeh use float recision here 0.1**FLOAT_PRECISION
+            #     expr_eval = s_expr
             if s_expr.is_Boolean:
                 # return Node(Boolean, [bool(expr_eval)])
-                return Node(Boolean, [expr_eval])
+                return Node(Boolean, [s_expr])
             elif s_expr.is_number:  # is_float does not match int
                 # return Node(Float, [round(float(expr_eval), FLOAT_PRECISION)])
-                return Node(Number, [expr_eval])
+                return Node(Number, [s_expr])
                 # "TypeError: Cannot convert complex to float" -> ignore the whole expression, let it fail
             else:
                 raise NotImplementedError(f'What happened here? {s_expr}')
@@ -537,13 +537,6 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
         if allow_chain:
             op = d_sym2node_chain[type(s_expr)]
             return Node(op, childs=cc_nodes)
-            # try:
-            #     op = d_sym2node_chain[type(s_expr)]
-            #     return Node(op, childs=cc_nodes)
-            # except Exception as TODO_DeBUG:
-            #     print(TODO_DeBUG)
-            #     # Problem: KeyError(re) -> Real Part of complex number... ignore
-            #     raise
 
         if isinstance(s_expr, sympy.functions.elementary.piecewise.ExprCondPair):
             # raise Exception(f'sfeh')
@@ -558,7 +551,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
                 otherwise = Node(Ifte, [pairs[1], pairs[0], otherwise])
             return otherwise
 
-        # todo include Usub, ignore usub in tree len()
+        # sfehx include Usub, ignore usub in tree len()
 
         # elif isinstance(s_expr, RoundDummy):
         #     return Node(Round, [cc_nodes[0]])
@@ -566,7 +559,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
         elif isinstance(s_expr, Mul):
             if s_expr.args[0].is_Rational:
                 div_by = 1 / s_expr
-                print(f'TODO div by {div_by}')
+                print(f'sfeh:open div by {div_by}')
 
         elif isinstance(s_expr, tuple(d_sym2node)):
             clss = d_sym2node[type(s_expr)]
@@ -585,7 +578,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
             # hence, we can skip this function while rebuilding without loosing any information
             # as Symbols match their assumptions when they are rebuilt aswell
             # sfeh:debug: When does sympy.re occur? Are there other cases?
-            # todo reintroduce piecewise? discuss: ignore trees which have real/complex numbers
+            # sfehxxx reintroduce piecewise? discuss: ignore trees which have real/complex numbers
             # return sympy_to_tree(expr.args[0], allow_chain=allow_chain)
             return cc_nodes
 

@@ -244,6 +244,7 @@ class Boolean(Terminal):
 class Number(Terminal):
     xtype = ((), float)
     symfun = lambda *a: sympy.Float(float(a[0]), FLOAT_PRECISION)
+    # symfun = lambda *a: sympy.Rational(float(a[0]), FLOAT_PRECISION)
     tflow = lambda a: tf.constant(a, dtype=tf.float32)
 
     # def __init__(self, value):

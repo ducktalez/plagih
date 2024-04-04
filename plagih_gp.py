@@ -44,12 +44,12 @@ class NodeRandomizer:
             bool: norm_choices([[lambda: random.choice((True, False)), 1]])}
 
     def choose_operator(self, xt):
-        # todo allow_chain
+        # sfehxxxx allow_chain
         op = np.random.choice(self.pick_op[xt][0], p=self.pick_op[xt][1])  # no (), which would evaluate the op
         return op
 
     def choose_operator_match(self, xtype):
-        # todo allow_chain
+        # sfehxxx allow_chain
         op = np.random.choice(self.pick_op_match[xtype][0], p=self.pick_op_match[xtype][1])
         return op
 
@@ -67,10 +67,10 @@ class NodeRandomizer:
         return _v
 
     def choose_constant(self, xt):
-        _v = np.random.choice(self.pick_constant[xt][0], p=self.pick_constant[xt][1])()  # only dist. must be ()
+        _v = np.random.choice(self.pick_constant[xt][0], p=self.pick_constant[xt][1])()  # just dist. must be ()
         if xt == float:
-            # _v = sympy.Float(_v)  # sfeh:discuss allow "rational" inputs? 1/3, 3/4, ...
             _v = sympy.Float(_v)  # sfeh:discuss allow "rational" inputs? 1/3, 3/4, ...
+            # _v = sympy.Rational(_v)  # sfeh:discuss allow "rational" inputs? 1/3, 3/4, ...
             return Node(Number, [_v])  # round FLOAT_PRECISION was here
         else:
             # _v = sympy.logic.boolalg.BooleanAtom(_v)  # sfeh:discuss: vs. Boolean
@@ -105,6 +105,7 @@ def selection_tournament(pop, tournsize=3):
     """
     SFEH's tournament selection
     sfeh: discuss extracting & deepcopying the inner tree
+        -> Use complete candidate for saving the last evolution?
     """
     tree_list = [np.random.choice(pop) for _ in range(tournsize)]
     fintree: 'Candidate' = min(tree_list, key=lambda tree: tree.get_fitness())
@@ -135,8 +136,7 @@ def _test_simple():
         def rand2_CHAIN():
             tree = gp.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
             tree = tree_simplification(tree, allow_chain=True)
-            aaatodo = copy.deepcopy(tree)
-            tree.repair_depth()  # todo
+            tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
             return tree
         gp.todo_end_generation()
 

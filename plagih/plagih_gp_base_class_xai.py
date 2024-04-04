@@ -194,22 +194,25 @@ class ExplainableGP:
             if CHAINED_VERION:
                 @self.create_trees(rate=0.5)
                 def init_rand1():
-                    tree = self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.0, 1.0)), 2, 5), float, p_term=0)
+                    tree = self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(4.0, 1.0)), 2, 5), float, p_term=0)
                     tree = tree_simplification(tree, allow_chain=True)
+                    # sfeh trees can shrink to single-noded trees
+                    if tree.get_max_depth() <= 1:
+                        raise ValueError(f'Tree did not get complex enough')
                     return tree
 
                 @self.create_trees(rate=0.5)
                 def init_rand2():
-                    tree = self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(2.5, 1.0)), 2, 5), float, p_term=0)
+                    tree = self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1.0)), 2, 5), float, p_term=0)
                     tree = tree_simplification(tree, allow_chain=True)
                     return tree
             else:
                 @self.create_trees(rate=0.5)
-                def init_rand1():
+                def init_rand1a():
                     return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.0, 1.0)), 2, 5), float, p_term=0)  # sfeh: xtype not always float
 
                 @self.create_trees(rate=0.5)
-                def init_rand2():
+                def init_rand2a():
                     return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(2.5, 1.0)), 2, 5), float, p_term=0)
 
         self.paretofront = pareto_from_pop(self.pop_next)  # initialize

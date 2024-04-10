@@ -129,7 +129,7 @@ def _test_simple():
         @gp.create_trees(rate=1)
         def rand2():
             return gp.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
-        gp.todo_end_generation()
+        gp.end_generation()
 
     for _ in range(2):
         @gp.create_trees(rate=1)
@@ -138,7 +138,7 @@ def _test_simple():
             tree = tree_simplification(tree, allow_chain=True)
             tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
             return tree
-        gp.todo_end_generation()
+        gp.end_generation()
 
     for _ in range(10):
         @gp.create_trees(rate=1)
@@ -146,7 +146,7 @@ def _test_simple():
             tree = selection_tournament(gp.pop_genepool, tournsize=3)
             n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
             return gp.tb.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
-        gp.todo_end_generation()
+        gp.end_generation()
 
     for _ in range(10):
         @gp.create_trees(rate=1, crossover=True)
@@ -327,7 +327,7 @@ def _test_random_pop():
 
         # tmp_pareto = pareto_from_pop(gp.pop_next)  # sfeh:idea paretofront in each generation?
 
-        gp.todo_end_generation()
+        gp.end_generation()
 
     printpl('g', f'Done after Generation {gp.gen_id}.\nTime since start: {time.perf_counter() - gp.time_start:4.2f}s')
 

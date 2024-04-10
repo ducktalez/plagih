@@ -17,6 +17,7 @@ FLOAT_PRECISION = 3
 PLOTS_INTERVAL = 10
 BACKUP_INTERVAL = 10
 CHAINED_VERION = True  # sfeh:not here?
+TREE_MIN_PARSIMONY = 3
 
 # # GP Evolution
 # period = {'gen_plots': 5, 'gen_save': 5}

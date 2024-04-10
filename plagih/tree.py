@@ -99,9 +99,9 @@ class Node:
                     label_str = f'{self.childs[0]}'
                 except TypeError as ex:
                     label_str = str(self.childs[0].evalf())
-                    # sfeh:open int, non-floats are handeled badly
+                    # sfeh:open int? rational?, non-floats are handled badly
                 except Exception as ex:
-                    print(f'sfeh:debug, delete? KEEP? {ex}')
+                    print(f'sfeh:debug, delete? KEEP? {ex}')  # InvalidOperation([<class 'decimal.InvalidOperation'>])
 
         return f"[{label_str}]"
 

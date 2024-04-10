@@ -88,9 +88,3 @@ class OrChained(OperatorChained):
     expr_dmy = 'Or'
     symfun = sympy.Or
 
-# def sympy_to_tensorflow(expr_sy, d_tensors):
-#     pass
-#     # todo
-
-
-###

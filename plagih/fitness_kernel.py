@@ -11,7 +11,7 @@ import warnings
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 
-from plagih.tree_labels import sympy_to_tensorflow  # , RoundDummy
+# from plagih.tree_labels import sympy_to_tensorflow  # , RoundDummy
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -61,37 +61,37 @@ class Regression(Kernel):
 
         return
 
-    def eval_tf(self, sy_expr: sympy.Basic) -> dict:
-        """
-        SFEH_UNUSED: Evaluates an expression using TensorFlow (TF)
-        - receives a (string) expression in numpy-style that was reduced with pythons "sympy" (for simplification)
-        - uses "ast" to generate a, kind of, python-intern-executable-fintree
-        - creating a tensorflow graph that is evaluated in an isolated TF session
-
-        sfeh: data_control missing
-        """
-        # tf.compat.v1.reset_default_graph()  # sfeh:discuss is this really required to do? legacy code
-
-        results_raw = sympy_to_tensorflow(sy_expr, self.data_dict)  # self.data_train
-        results = results_raw  # The ids change in the next lines! {id(results)} vs. {id(results_raw)}
-        results = self.tf_sanitize_results(results)
-        pairwise_diff = self.solution_train - results
-        mean_error = self.tf_error_metric(pairwise_diff)
-
-        # sfeh:discuss: calculate more than one complexity? or let the user specify the dict below?
-        with tf.compat.v1.Session(config=self.tf_config) as sess:
-            with sess.graph.device(self.tf_device):  # GPU evaluation in tensorflow
-                tf_results = sess.run(
-                    {'pairwise_diff': pairwise_diff,
-                     'results': results,
-                     'mean_error': mean_error})  # no feed_dict
-
-        fitness = tf_results['mean_error']
-        if fitness != fitness or fitness == float('inf'):
-            raise ValueError(f"fitness evaluation failed ('{fitness}')")  # sfeh: so bad, they leave the float-range. delete this?
-        tf_results['mean_error'] = round(float(tf_results['mean_error']), FLOAT_PRECISION)
-
-        return tf_results
+    # def eval_tf(self, sy_expr: sympy.Basic) -> dict:
+    #     """
+    #     SFEH_UNUSED: Evaluates an expression using TensorFlow (TF)
+    #     - receives a (string) expression in numpy-style that was reduced with pythons "sympy" (for simplification)
+    #     - uses "ast" to generate a, kind of, python-intern-executable-fintree
+    #     - creating a tensorflow graph that is evaluated in an isolated TF session
+    #
+    #     sfeh: data_control missing
+    #     """
+    #     # tf.compat.v1.reset_default_graph()  # sfeh:discuss is this really required to do? legacy code
+    #
+    #     results_raw = sympy_to_tensorflow(sy_expr, self.data_dict)  # self.data_train
+    #     results = results_raw  # The ids change in the next lines! {id(results)} vs. {id(results_raw)}
+    #     results = self.tf_sanitize_results(results)
+    #     pairwise_diff = self.solution_train - results
+    #     mean_error = self.tf_error_metric(pairwise_diff)
+    #
+    #     # sfeh:discuss: calculate more than one complexity? or let the user specify the dict below?
+    #     with tf.compat.v1.Session(config=self.tf_config) as sess:
+    #         with sess.graph.device(self.tf_device):  # GPU evaluation in tensorflow
+    #             tf_results = sess.run(
+    #                 {'pairwise_diff': pairwise_diff,
+    #                  'results': results,
+    #                  'mean_error': mean_error})  # no feed_dict
+    #
+    #     fitness = tf_results['mean_error']
+    #     if fitness != fitness or fitness == float('inf'):
+    #         raise ValueError(f"fitness evaluation failed ('{fitness}')")  # sfeh: so bad, they leave the float-range. delete this?
+    #     tf_results['mean_error'] = round(float(tf_results['mean_error']), FLOAT_PRECISION)
+    #
+    #     return tf_results
 
     # def histogram_bins(self):
     #     act_range = self.action_clip[1] - self.action_clip[0]  # max value - min value

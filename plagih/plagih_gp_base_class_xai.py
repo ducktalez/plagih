@@ -170,8 +170,8 @@ class ExplainableGP:
 
         return
 
-    def todo_end_generation(self):
-
+    def end_generation(self):
+        # sfeh:open end generation in every generation
         self.run_update_paretofront(self.pop_next)
 
         self.pop_genepool = self.pop_next[:]
@@ -194,7 +194,7 @@ class ExplainableGP:
             if CHAINED_VERION:
                 @self.create_trees(rate=0.5)
                 def init_rand1():
-                    tree = self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(4.0, 1.0)), 2, 5), float, p_term=0)
+                    tree = self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(4.0, 1.0)), 3, 6), float, p_term=0)
                     tree = tree_simplification(tree, allow_chain=True)
                     # sfeh trees can shrink to single-noded trees
                     if tree.get_max_depth() <= 1:
@@ -203,17 +203,17 @@ class ExplainableGP:
 
                 @self.create_trees(rate=0.5)
                 def init_rand2():
-                    tree = self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1.0)), 2, 5), float, p_term=0)
+                    tree = self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1.0)), 3, 6), float, p_term=0)
                     tree = tree_simplification(tree, allow_chain=True)
                     return tree
             else:
                 @self.create_trees(rate=0.5)
                 def init_rand1a():
-                    return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.0, 1.0)), 2, 5), float, p_term=0)  # sfeh: xtype not always float
+                    return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.0, 1.0)), 3, 5), float, p_term=0)  # sfeh: xtype not always float
 
                 @self.create_trees(rate=0.5)
                 def init_rand2a():
-                    return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(2.5, 1.0)), 2, 5), float, p_term=0)
+                    return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(2.5, 1.0)), 3, 5), float, p_term=0)
 
         self.paretofront = pareto_from_pop(self.pop_next)  # initialize
         self.pop_genepool = self.pop_next[:]
@@ -224,6 +224,8 @@ class ExplainableGP:
 
     def pop_next_append(self, ct: Candidate):
         evotree = ct.get_evotree()
+        if ct.get_parsimony() < TREE_MIN_PARSIMONY:
+            raise ValueError(f'Tree not complex enough for population, sfeh')
         printpl('gggg', f'|->{evotree.len_nodecount_fair():2.0f}: {evotree.str_as_expr()}')
         self.pop_next.append(ct)
 
@@ -256,13 +258,13 @@ class ExplainableGP:
                         n_success += 1
 
                 except (ValueError, ArithmeticError) as ex:
-                    n_fails += 1  # sfeh:use this for something?
+                    n_fails += 1
                     print_warning('www', f'\'{tag}\' failed: {ex}')
-                    if n_fails > n_success + 5:  # allow more fails: n_fails > n
+                    if n_fails > 2*n_success + 5:  # allow more fails: n_fails > n
                         print_e(f'Evolution fails too often: {tag}, {n_fails}x. ({n_success}x successful).')
                         return  # sfeh raise?
                 except TypeError as ex:
-                    # raise TypeError(f'Typeerror, but why? {ex}')  # ok-errors: TypeError: Cannot convert complex to float
+                    # raise TypeError(f'Typeerror, but why? {ex}')  # ok: TypeError: Cannot convert complex to float
                     print(f'Typeerror, but why? {ex}')
                     # Problem: TypeError: Typeerror, but why? expecting bool or Boolean, not `(cartPos - 0.53 <= -0.361, cartPos - 0.801 < cartVel/cartPos**1.0)`
                     # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
@@ -278,7 +280,10 @@ class ExplainableGP:
                 #     #  AttributeError: 'Xor' object has no attribute '_eval_as_set'
                 #     #    |--AttributeError: Probably sympy.im in expr 'Xor' object has no attribute '_eval_as_set'
                 except KeyError as ex:
+                    # KeyError(re) -> okay?, real part implies complex numbers, ignoring is okay
                     print(f'Keyerror, (probably sympy.lambdify expression not evaluable): {ex}')
+                except RecursionError as ex:
+                    print(f'RecursionError (probably Piecewise/relational combination?): {ex}')
                 except NotImplementedError as nie:
                     print_e(f'Notimplemented? {nie}')
 

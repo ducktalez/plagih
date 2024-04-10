@@ -195,7 +195,6 @@ class Evolution:
     #     pass
 
     def evolve_new_tree_depth(self, depth_goal, xt_out, p_term=0.0) -> Node:
-        # todo non-recursive version
 
         if self.origin_tree is not None:
 
@@ -254,7 +253,7 @@ class Evolution:
             node.depth = depth
 
         else:
-            # todo allow_chain
+            # sfeh:allowchain?
             label = self.node_selector.choose_operator(xt_out)
             child_xts = label.get_child_xts()
             num = len(child_xts)
@@ -277,7 +276,7 @@ class Evolution:
     def evolve_new_endrecursive(self, depth_goal, num_rest=-1, depth=0, p_term=0):
         """Evolve, creating a new branch in this node
         """
-        # todo This is currently unused
+        # sfeh:open This is currently unused
 
         if self.origin_tree is not None:
             evotree = copy.deepcopy(self.origin_tree)
@@ -316,7 +315,7 @@ class Evolution:
         xtype = node.get_xtype_tuple()
 
         if node.is_operator():
-            # todo allow_chain
+            # sfeh:allow_chain
             # sfeh:what if its the same function?
             new_label = self.node_selector.choose_operator_match(xtype)  # Function is same type, same arity
             node.set_label(new_label)
@@ -536,23 +535,3 @@ if __name__ == '__main__':
                       '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]',
                       '["Ifte", ["Not", [False]], [0.0], [2.0]]']
 
-    # tb = TreeBuildRestrictions(['a', 'b'], 10, 30, float, origin_tree=None)
-    # tr = Node(Add, [Node(Symbol('a'), []), Node(Number(1.23), [])])
-    # tr = Node(Ifte, [Node(Gt, [Node(Symbol('a'), []), Node(Number(1.2), [])]), Node(Number(3.), []), Node(Number(2.), [])])
-    # tr = Node(Max, [Node(Symbol('a'), []), Node(Number(1.2), [])])
-    # x = tr.get_sympy_expr()
-    # tr2 = sympy_to_tree(x)
-    # tr2 = tree_node_grouping(tr2)
-    # print(tr, tr2)
-    # for _ in range(10):
-    #     tr = tb.evolve_new_tree_depth(3, float, p_term=0.3)
-    #     x = tr.get_sympy_expr()
-    #     print('First sym success')
-    #     tr_new = sympy_to_tree(x)
-    #     tr_new = tree_node_grouping(tr_new)
-    #     x2 = tr_new.get_sympy_expr()
-    #     print(tr)
-    #     print(tr_new)
-    #     if str(x) != str(x2):
-    #         print()
-    #         raise Exception(f'sympy process failed {x}, <-->, {x2}')

@@ -489,7 +489,7 @@ class Ifte(OperatorArity, ChainableOp):
 # class RoundDummy(sympy.Function):
 #     """Exists, as the Round-class must not be simplified
 #     Only used, if a symbol (aka variable) is rounded (see class Round)
-#     todo check if this is required
+#     sfeh check if this is required
 #     """
 #     pass
 
@@ -560,7 +560,6 @@ class Sqrt(MathOperator):
 
 
 class Usub(MathOperator, sympy.Function):
-    # todo
     xtype = ((float,), float)
     tflow = tf.negative
     symfun = lambda a: sympy.Mul(a, -1)
@@ -613,10 +612,10 @@ class ExprCondPair(TerminalDummy):
 # sfeh:discuss: Min/Max is just a ordeded list. ->taking element 1, -1, ...
 
 
-# def sym_check(expr_sym):
-#     if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im):  # sfeh:discuss sympy.re
-#         raise ArithmeticError(f'Simplification failed: {expr_sym}')
-#     return expr_sym
+def sym_check(expr_sym):
+    if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im):  # sfeh:discuss sympy.re
+        raise ArithmeticError(f'Simplification failed: {expr_sym}')
+    return expr_sym
 
 
 def expr_sympify(expr):
@@ -744,111 +743,110 @@ totf = {
 }
 
 
-def sympy_to_tensorflow(expr_sy, d_tensors):
-    """
-    - check terminal-node
-    -- check symbol
-    --
-
-    Bugs/gotchas:
-
-    sympify('True')             -> True
-    sympify('1')==True          ->
-    sympify('~(True)')          -> -2
-    sympify('~(False)')         -> -1
-    sympify('a <= Min(a, b)')   ->
-
-    sympy.logic.boolalg.ITE has only boolean inputs
-    evaluate=None/false
-
-    sympy.logic.boolalg.ITE is not If-then-else
-    sympy.cosh can emerge out of sin-stuff
-    sympy.sympify('True')->True is no sympy expression anymore
-    # sfeh:bug gotcha sympy.re comes up randomly
-    """
-    # shape = tensors[list(tensors.keys())[0]].get_shape()  # sfeh:open:workaround:
-
-    # ==Bug-handling==  sympy.sympify('True')->True is no sympy expression anymore
-    if isinstance(expr_sy, bool):  # e.g. '1'
-        return tf.constant(expr_sy, dtype=tf.dtypes.bool)
-    if isinstance(expr_sy, (bool, sympy.logic.boolalg.BooleanAtom)):
-        expr_sy = True if isinstance(expr_sy,
-                                     sympy.logic.boolalg.BooleanTrue) else False  # sfeh:collect sympy bug gotcha bug
-        return tf.constant(expr_sy, dtype=tf.dtypes.bool)
-
-    # the following lines are not required, if sympy filters for bad expressions earlier
-    if expr_sy.is_imaginary or expr_sy.is_infinite:
-        raise ValueError(f'Cannot convert this to Tensorflow: {expr_sy}')
-
-    # ==Terminal nodes==
-    elif expr_sy.is_Atom:
-        if expr_sy.is_Symbol:
-            # result = feed_dict[expr.name]  # sfeh:discuss placeholder
-
-            # result = tf.compat.v1.placeholder(tf.bool, name=str(expr))
-            # sfeh:runtime?
-            result = tf.constant(d_tensors[str(expr_sy)],
-                                 dtype=tf.bool if expr_sy.assumptions0.get('bool') else tf.float32)
-            return result
-
-        else:
-            expr_eval = expr_sy.evalf()  # standard 15 digits
-            if expr_sy.is_Boolean:
-                return tf.constant(bool(expr_eval), dtype=tf.dtypes.bool)
-            elif expr_sy.is_number:  # is_float does not match int
-                return tf.constant(float(expr_eval), dtype=tf.dtypes.float32)
-            else:
-                raise NotImplementedError(f'Atom, but no bool or number? {expr_sy}')
-
-    else:  # Operator # len(expr.args) > 0:  # sfeh: line can be removed or replaced
-        if isinstance(expr_sy, sympy.Piecewise):
-            args_reversed = list(expr_sy.args[::-1])  # tuples to list
-            # todo whY WOULD ONE    reverse the args? --> NOT REVERSER
-            # reverse: most specific (/last) to lowest,  tuple must be nested the deepest node:
-            try:
-                args_reversed = [[sympy_to_tensorflow(xx, d_tensors) for xx in list(ii)] for ii in args_reversed]
-            except TypeError as ex:
-                print(f'lolololol {ex}')
-                # [(2.07, True), (8.0, ITE(cartVel <= 0.34, 0.755*cartPos > 2.0, cartPos/(cartVel**2*sign(cartVel) + 0.866) > 2.0))]
-                # (8.0, ITE(cartVel <= 0.34, 0.755*cartPos > 2.0, cartPos/(cartVel**2*sign(cartVel) + 0.866) > 2.0))
-                # args_reversed = [[sympy_to_tensorflow(xx, d_tensors) for xx in list(ii)] for ii in args_reversed]
-                # args_reversed = [[sympy_to_tensorflow(xx, d_tensors) for xx in list(ii)] for ii in args_reversed]
-                raise
-
-            otherwise = args_reversed[0][0]  # the last "True" condition
-            for cet in args_reversed[1:]:
-                otherwise = tf.where(cet[1], cet[0], otherwise)
-            return otherwise
-
-        elif isinstance(expr_sy, sympy.ITE):
-            raise NotImplementedError(f'Sfeh: sympy.ITE not yet implemented, occurs as side-effect of boolean logic')
-
-        tf_fun = totf[type(expr_sy)]
-        # try:
-        #     tf_fun = totf[type(expr)]
-        # except KeyError:
-        #     # sfeh:debug can this work??
-        #     #   - im(Rounddummy(cartVel))
-        #     tf_fun = type(expr).tflow  # sfeh:debug-01.02 why does im come up here? (mut_br) im(Rounddummy(cartPos))
-        #     # sfeh:idea exception, try to map sympy to tf function with same name (sympy.cos -> tf.cos)
-
-        tf_args = [sympy_to_tensorflow(a, d_tensors) for a in expr_sy.args]
-        # SFEH:Missing and Problems:
-        #   - Exception: eval-ex: type object 'cosh' has no attribute 'tflow'
-        #   - AttributeError: type object 'Rounddummy' has no attribute 'tflow'
-        try:
-            result = tf_fun(*tf_args)  # fits, if the arguments match the expected arguments exactly Add(a, b)
-        except TypeError:
-            result = tf_args.pop()  # only commutative arity-2 functions here (Add, Mul, Max, Min)
-            while tf_args:
-                # sfeh:optimization
-                try:
-                    result = tf_fun(result, tf_args.pop())
-                except Exception as todo:
-                    print(f'XXXXXX\nX\nX\nXWTFFFFFFFFFFFFFFFFF {todo}')
-                    result = tf_fun(result, tf_args.pop())
-        return result
-    raise NotImplementedError(f'Cannot convert {expr_sy}')  # noqa: unreachable code, but was reached often while dev
+# def sympy_to_tensorflow(expr_sy, d_tensors):
+#     """
+#     - check terminal-node
+#     -- check symbol
+#     --
+#
+#     Bugs/gotchas:
+#
+#     sympify('True')             -> True
+#     sympify('1')==True          ->
+#     sympify('~(True)')          -> -2
+#     sympify('~(False)')         -> -1
+#     sympify('a <= Min(a, b)')   ->
+#
+#     sympy.logic.boolalg.ITE has only boolean inputs
+#     evaluate=None/false
+#
+#     sympy.logic.boolalg.ITE is not If-then-else
+#     sympy.cosh can emerge out of sin-stuff
+#     sympy.sympify('True')->True is no sympy expression anymore
+#     # sfeh:bug gotcha sympy.re comes up randomly
+#     """
+#     # shape = tensors[list(tensors.keys())[0]].get_shape()  # sfeh:open:workaround:
+#
+#     # ==Bug-handling==  sympy.sympify('True')->True is no sympy expression anymore
+#     if isinstance(expr_sy, bool):  # e.g. '1'
+#         return tf.constant(expr_sy, dtype=tf.dtypes.bool)
+#     if isinstance(expr_sy, (bool, sympy.logic.boolalg.BooleanAtom)):
+#         expr_sy = True if isinstance(expr_sy,
+#                                      sympy.logic.boolalg.BooleanTrue) else False  # sfeh:collect sympy bug gotcha bug
+#         return tf.constant(expr_sy, dtype=tf.dtypes.bool)
+#
+#     # the following lines are not required, if sympy filters for bad expressions earlier
+#     if expr_sy.is_imaginary or expr_sy.is_infinite:
+#         raise ValueError(f'Cannot convert this to Tensorflow: {expr_sy}')
+#
+#     # ==Terminal nodes==
+#     elif expr_sy.is_Atom:
+#         if expr_sy.is_Symbol:
+#             # result = feed_dict[expr.name]  # sfeh:discuss placeholder
+#
+#             # result = tf.compat.v1.placeholder(tf.bool, name=str(expr))
+#             # sfeh:runtime?
+#             result = tf.constant(d_tensors[str(expr_sy)],
+#                                  dtype=tf.bool if expr_sy.assumptions0.get('bool') else tf.float32)
+#             return result
+#
+#         else:
+#             expr_eval = expr_sy.evalf()  # standard 15 digits
+#             if expr_sy.is_Boolean:
+#                 return tf.constant(bool(expr_eval), dtype=tf.dtypes.bool)
+#             elif expr_sy.is_number:  # is_float does not match int
+#                 return tf.constant(float(expr_eval), dtype=tf.dtypes.float32)
+#             else:
+#                 raise NotImplementedError(f'Atom, but no bool or number? {expr_sy}')
+#
+#     else:  # Operator # len(expr.args) > 0:  # sfeh: line can be removed or replaced
+#         if isinstance(expr_sy, sympy.Piecewise):
+#             args_reversed = list(expr_sy.args[::-1])  # tuples to list
+#             # whY WOULD ONE    reverse the args? --> NOT REVERSER
+#             # reverse: most specific (/last) to lowest,  tuple must be nested the deepest node:
+#             try:
+#                 args_reversed = [[sympy_to_tensorflow(xx, d_tensors) for xx in list(ii)] for ii in args_reversed]
+#             except TypeError as ex:
+#                 print(f'lolololol {ex}')
+#                 # [(2.07, True), (8.0, ITE(cartVel <= 0.34, 0.755*cartPos > 2.0, cartPos/(cartVel**2*sign(cartVel) + 0.866) > 2.0))]
+#                 # (8.0, ITE(cartVel <= 0.34, 0.755*cartPos > 2.0, cartPos/(cartVel**2*sign(cartVel) + 0.866) > 2.0))
+#                 # args_reversed = [[sympy_to_tensorflow(xx, d_tensors) for xx in list(ii)] for ii in args_reversed]
+#                 # args_reversed = [[sympy_to_tensorflow(xx, d_tensors) for xx in list(ii)] for ii in args_reversed]
+#                 raise
+#
+#             otherwise = args_reversed[0][0]  # the last "True" condition
+#             for cet in args_reversed[1:]:
+#                 otherwise = tf.where(cet[1], cet[0], otherwise)
+#             return otherwise
+#
+#         elif isinstance(expr_sy, sympy.ITE):
+#             raise NotImplementedError(f'Sfeh: sympy.ITE not yet implemented, occurs as side-effect of boolean logic')
+#
+#         tf_fun = totf[type(expr_sy)]
+#         # try:
+#         #     tf_fun = totf[type(expr)]
+#         # except KeyError:
+#         #     # sfeh:debug can this work??
+#         #     #   - im(Rounddummy(cartVel))
+#         #     tf_fun = type(expr).tflow  # sfeh:debug-01.02 why does im come up here? (mut_br) im(Rounddummy(cartPos))
+#         #     # sfeh:idea exception, try to map sympy to tf function with same name (sympy.cos -> tf.cos)
+#
+#         tf_args = [sympy_to_tensorflow(a, d_tensors) for a in expr_sy.args]
+#         # SFEH:Missing and Problems:
+#         #   - Exception: eval-ex: type object 'cosh' has no attribute 'tflow'
+#         #   - AttributeError: type object 'Rounddummy' has no attribute 'tflow'
+#         try:
+#             result = tf_fun(*tf_args)  # fits, if the arguments match the expected arguments exactly Add(a, b)
+#         except TypeError:
+#             result = tf_args.pop()  # only commutative arity-2 functions here (Add, Mul, Max, Min)
+#             while tf_args:
+#                 # sfeh:optimization
+#                 try:
+#                     result = tf_fun(result, tf_args.pop())
+#                 except Exception as ex:
+#                     result = tf_fun(result, tf_args.pop())
+#         return result
+#     raise NotImplementedError(f'Cannot convert {expr_sy}')  # noqa: unreachable code, but was reached often while dev
 
 
 # class ExperimentalBaseTree(NodeBase):
@@ -991,15 +989,14 @@ if __name__ == '__main__':
     ]
     xxx_problems = ['Ifte(Lt(Ifte(Eq(Min(b, 1), 3), Max(a, b), b), 0), 0, 2)']
 
-
-    def test_basic_tfconversion():
-        # sfeh:open tests
-
-        for t in tst:
-            x = sympy.sympify(t, locals=ns)
-            x = sympy_to_tensorflow(x, tensors)
-
-            print(f'{t} \t{x}')
+    # def test_basic_tfconversion():
+    #     # sfeh:open tests
+    #
+    #     for t in tst:
+    #         x = sympy.sympify(t, locals=ns)
+    #         x = sympy_to_tensorflow(x, tensors)
+    #
+    #         print(f'{t} \t{x}')
 
 
     def test_sympify():

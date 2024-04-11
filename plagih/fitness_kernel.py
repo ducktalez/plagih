@@ -133,6 +133,8 @@ class Regression(Kernel):
 
     def eval_sym_experimental(self, expr, return_results=False):
         """
+        Returns the fitness (float)
+        todo
         This is seemingly faster than TF?...
         Not stable and only working with mountaincar
 
@@ -176,7 +178,11 @@ class Regression(Kernel):
 
         if not return_results:
             fitness = np.sqrt(np.mean((results-actions)**2))
-            return np.round(fitness, FLOAT_PRECISION)
+            if 'nan' in str(fitness):  # sfeh:runtime (checking the str()? nan-check should be easier)
+                # rounding 'nan' does not raise an Exception. (round(sympy.nan))
+                raise ArithmeticError(f'Fitness can not be nan. expr: {expr}')
+            fitness = round(fitness, FLOAT_PRECISION)
+            return fitness
         else:
             return results
 

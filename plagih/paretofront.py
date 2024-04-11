@@ -86,7 +86,7 @@ def plot_paretofront(paretofront, path, name, parsimony_max) -> []:
     xx, yy = np.array(tuples).T
 
     if len(xx) == 0:
-        print_e(f'Plotting empty array is not possible! Data={xx, yy}')
+        print_caution(f'Plotting empty array is not possible! Data={xx, yy}')
         return
 
     with plt.rc_context(rc=pyplot_rc_tex):
@@ -114,7 +114,7 @@ def plot_paretofront(paretofront, path, name, parsimony_max) -> []:
             fig.savefig(path_png)
             printez('f', f"paretofront (.png): {path_png}")
         except PermissionError as perm_error:
-            print_e(f'Could not save plot: {perm_error}')  # sfeh for everything?
+            print_caution(f'Could not save plot: {perm_error}')  # sfeh for everything?
         except Exception as ex:
             raise ex
     return

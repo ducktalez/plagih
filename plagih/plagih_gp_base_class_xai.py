@@ -1,18 +1,15 @@
 """
 The main class of a gp run. It holds the following functionalities
-- run informations (config, evolution-specifications for the loop, success monitoring])
+- run information (config, evolution-specifications for the loop, success monitoring])
 - population (pop_base, pop_next)
 -
 """
 from collections import deque
 
-import sympy
-
 from plagih.monitoring import plot_performance
 from plagih.paretofront import *
 from plagih.tree_factory import *
 
-import copy
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -48,7 +45,10 @@ class Candidate:
 
     def __str__(self):
         """Show the Parsimony and Fitness of a tree"""
-        return f'[{self.get_parsimony():2.1f}: fit {self.get_fitness():4.2f}]'
+        return f'[{self.get_parsimony():2.0f}: fit {self.get_fitness():4.2f}]'
+
+    def full_string(self):
+        return f'{self.__str__()}: {self.get_evotree().get_sympy_expr()}'
 
     def get_evotree(self):
         return self.tree
@@ -101,7 +101,7 @@ class ExplainableGP:
 
         self.lut_sym = {}
         self.lut_parsim = {}
-        self.lut_fitness = {}  # Lookup-table for tree(-expressions) and tits fitness/parsimony. Improving runtime a lot!
+        self.lut_fitness = {}  # Lookup-table for tree(-expressions) and its fitness/parsimony. Improving runtime a lot!
 
         # monitoring
         self.time_genstart = time.perf_counter()
@@ -110,6 +110,13 @@ class ExplainableGP:
                                                 'fit_avg', 'fit_var', 'fit_best',
                                                 'parsim_avg', 'parsim_var', 'parsim_best',
                                                 'gens_since_last_pareto'])
+
+    def pop_print(self):
+        """Print the expressions of all trees in a population"""
+        for c in self.pop_next:
+            # t = c.get_evotree()
+            print(f'\t{c.full_string()}')
+        pass
 
     def run_update_paretofront(self, pop):
         """
@@ -158,7 +165,7 @@ class ExplainableGP:
                     print_blue(f'Simplified symtree: {sym_candidate.get_parsimony()}: {symtree}')
 
                 except KeyError as ex:
-                    print_e(f'SFEH: this tree could whatever {ex}')  # -> piecewise function, mostly
+                    print_caution(f'SFEH: this tree could whatever {ex}')  # -> piecewise function, mostly
 
                 _obsoletes = [i for i in self.paretofront if
                               i.get_fitness() > candidate_tree.get_fitness() and i.get_parsimony() >= candidate_tree.get_parsimony()]
@@ -175,6 +182,7 @@ class ExplainableGP:
         self.run_update_paretofront(self.pop_next)
 
         self.pop_genepool = self.pop_next[:]
+        self.pop_print()  # todo
         self.pop_next = []
         self.analyze_generation()
         self.gen_id += 1
@@ -224,6 +232,7 @@ class ExplainableGP:
 
     def pop_next_append(self, ct: Candidate):
         evotree = ct.get_evotree()
+        # render_pygraphviz(evotree)  # todo
         if ct.get_parsimony() < TREE_MIN_PARSIMONY:
             raise ValueError(f'Tree not complex enough for population, sfeh')
         printpl('gggg', f'|->{evotree.len_nodecount_fair():2.0f}: {evotree.str_as_expr()}')
@@ -261,7 +270,7 @@ class ExplainableGP:
                     n_fails += 1
                     print_warning('www', f'\'{tag}\' failed: {ex}')
                     if n_fails > 2*n_success + 5:  # allow more fails: n_fails > n
-                        print_e(f'Evolution fails too often: {tag}, {n_fails}x. ({n_success}x successful).')
+                        print_caution(f'Evolution fails too often: {tag}, {n_fails}x. ({n_success}x successful).')
                         return  # sfeh raise?
                 except TypeError as ex:
                     # raise TypeError(f'Typeerror, but why? {ex}')  # ok: TypeError: Cannot convert complex to float
@@ -285,7 +294,7 @@ class ExplainableGP:
                 except RecursionError as ex:
                     print(f'RecursionError (probably Piecewise/relational combination?): {ex}')
                 except NotImplementedError as nie:
-                    print_e(f'Notimplemented? {nie}')
+                    print_caution(f'Notimplemented? {nie}')
 
         return loop
 
@@ -300,9 +309,7 @@ class ExplainableGP:
             sy_expr = evotree.get_sympy_expr()
             # sy_expr = sym_check(sy_expr)  # raise if "weird" stuff in it
             self.lut_sym[tree_id] = sy_expr
-            if sy_expr.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im):  # sfeh:discuss sympy.re
-                # always raise, as tree can not be evaluated
-                raise ArithmeticError(f'Simplification failed: {sy_expr}')
+            sym_check(sy_expr)
 
         if tree_id in self.lut_parsim:
             parsimony = self.lut_parsim[tree_id]
@@ -324,6 +331,7 @@ class ExplainableGP:
             # print(f'asd {t1-t0:4.4f} {t2-t1:4.4f} ({(t1-t0)-(t2-t1):4.2f}) {fitness:4.2f} {fitness2:4.2f}')
             # if DEBUG_DUMMY or fitness != self.kernel.eval_sym_experimental(sy_expr):
             #     print(f'FAILED: {fitness} vs. {self.kernel.eval_sym_experimental(sy_expr)}')
+
             self.lut_fitness[sy_expr] = fitness  # sfeh:discuss: lut update in finalize_tree_get_meta()?
         
         # return fitness, parsimony, sy_expr

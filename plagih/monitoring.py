@@ -3,7 +3,7 @@ from pathlib import Path
 from matplotlib import pyplot as plt
 from matplotlib.ticker import StrMethodFormatter
 
-from plagih.util import print_e
+from plagih.util import print_caution
 
 
 def plot_performance(monitor_df, name, path_monitoring: Path):

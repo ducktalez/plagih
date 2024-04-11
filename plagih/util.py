@@ -262,12 +262,12 @@ def print_blue(txt):
     return
 
 
-def print_e(txt):
+def print_caution(txt):
     """
     Printing errors that are not worth stopping by raising an exception
     BColors.FAIL
     """
-    print(f'{BColors.RED}ERROR! {BColors.WARNING}{txt}{BColors.RESET}')
+    print(f'{BColors.RED}CAUTION! {BColors.WARNING}{txt}{BColors.RESET}')
 
 
 def pickle_load(path: Path):

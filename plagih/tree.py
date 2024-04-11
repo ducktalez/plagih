@@ -77,6 +77,11 @@ class Node:
         return f"[{label_str}]"
 
     def get_id(self):
+        """
+        todo same node multiple times in tree, this is not "ID!"°!!
+        returns string Identificator
+        sfeh:discuss is this just repr?
+        ID=Identificator, which"""
         try:
             label_str = self.label.__name__  # sfeh: can str(label) work? -> str with args recursively?
         except AttributeError as ex:
@@ -203,21 +208,24 @@ class Node:
             return _tf(_cs)
         raise NotImplementedError(f'get_tf_expr no match for {self}, {type(self.label)}')
 
-    # def __repr__(self):
-    #     """
-    #     sfeh:currently not used. automatically using __str__ instead
-    #     Printing the nodes as nested array structure such that it can be saved/loaded
-    #     very closely related to str(), but adds the following information:
-    #     - ":fix", when nodes are fixed"""
-    #     label_str = self.label
-    #
-    #     if self.is_fix:
-    #         label_str += ':fix'
-    #
-    #     if self.childs:
-    #         childstr = ', '.join([repr(cc) for cc in self.childs])
-    #         label_str = f"{label_str}, {childstr}"
-    #     return f"[{label_str}]"
+    def represent(self):
+        """
+        Printing the nodes as nested array structure such that it can be saved/loaded
+        very closely related to str(), but adds the following information:
+        - ":fix", when nodes are fixed"""
+        label_str = self.label
+
+        if self.is_fix:
+            label_str += ':fix'
+
+        if self.childs:
+            childstr = ', '.join([self.represent(cc) for cc in self.childs])
+            label_str = f"{label_str}, {childstr}"
+        return f"[{label_str}]"
+
+    def __repr__(self):
+        """sfeh:WRONG! Do NOT use __str__!"""
+        return self.__str__()
 
     def len_nodecount_raw(self):
         """counting the amount of nodes recursively"""
@@ -281,11 +289,39 @@ class Node:
             for ii, cc in enumerate(self.childs):
                 cc.update_fixed_nodes(origin.childs[ii])
 
-    def get_all_nodes(self):
-        if len(self.childs) == 0:
-            return [self]
+    def get_all_nodes_visualize(self, setid: str):
+        """returns all nodes in a tree as list
+        a+1 -> [+a1, a, 1]"""
+        # if len(self.childs) == 0:
+        try:
+            showme = f'{self.childs[0]}' if self.is_term() else f'{self.get_label().showme}'
+        except Exception as ex:
+            showme = f'ExCP'  # todo
+
+        res = {setid: {'node': self,
+                       'showme': showme}}
+        edges = []
+
+        if self.is_term():  # todo is_term instead of operator due to fuckin exprCondPairs
+            pass
         else:
-            return [self] + [cc.get_all_nodes() for cc in self.childs]
+            for ii, cc in enumerate(self.childs):
+                cid = f'{setid}-{ii}'
+                cr, ce = cc.get_all_nodes_visualize(cid)
+                res.update(cr)
+                edges.append((setid, cid))
+                edges.extend(ce)
+
+        return res, edges
+
+    # def get_enum(self, parent_id='root'):
+    #     res = parent_id
+    #
+    #     if self.is_operator():
+    #         for cc in self.childs:
+    #             res.extend(cc.get_all_nodes())
+    #
+    #     return res
 
     def get_mutable_rootnodes(self, extend_lvls=2):
         """Returns the list of first mutable nodes
@@ -586,6 +622,34 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
     # NotImplementedError: Expr missing: ITE(p > 13, tan(p - v) >= 2.578643, tan(p - v) >= 1)
     # this should not have occured, because it evaluates to bool, not to float
     raise NotImplementedError(f'Expr missing: {s_expr}')
+
+
+# todo AttributeError: type object 'ExprCondPair' has no attribute 'symfun'
+#   This also causes recusrion errors. rename maybe?
+
+
+def render_pygraphviz(tree: Node):
+    import pygraphviz as pgv
+    node_dict, edges = tree.get_all_nodes_visualize('0')
+    vnodes = node_dict.keys()
+    vlabels = {}
+    for k, v in node_dict.items():
+        vlabels[k] = v['showme']
+
+    g = pgv.AGraph()
+    g.add_nodes_from(vnodes)
+    g.add_edges_from(edges)
+
+    for i in vnodes:
+        n = g.get_node(i)
+        n.attr["label"] = vlabels[i]
+    g.layout(prog="dot")
+
+    # for i in nodes2:
+    #     n = g.get_node(i)
+    #     n.attr["label"] = labels2[i]
+
+    g.draw("tree.png")
 
 
 if __name__ == '__main__':

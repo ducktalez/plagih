@@ -28,6 +28,7 @@ class AddChain(OperatorChained):
     symfun = sympy.Add
     # symfun = lambda *a: sympy.Add(a)
     expr_dmy = 'Add'
+    showme = '+'
     xtype = ((float,), float)
     xtype_chain = float
 
@@ -35,6 +36,7 @@ class AddChain(OperatorChained):
 class MulChain(OperatorChained):
     # sfeh:discuss: if sympy is
     expr_dmy = 'Mul'
+    showme = '*'
     symfun = sympy.Mul
     xtype = ((float,), float)
     xtype_chain = float
@@ -43,6 +45,7 @@ class MulChain(OperatorChained):
 class MinChained(OperatorChained):
     symfun = sympy.Min
     expr_dmy = 'Min'
+    showme = 'Min'
     tflow = tf.minimum
     xtype = ((float, float), float)
     chain_xtype = float
@@ -52,6 +55,7 @@ class MaxChained(OperatorChained):
     symfun = sympy.Max
     # symfun = lambda *a: sympy.Max(a)
     expr_dmy = 'Max'
+    showme = 'Max'
     tflow = tf.maximum
     xtype = ((float, float), float)
     chain_xtype = float
@@ -69,6 +73,7 @@ class Piecewise(OperatorChained):
     # ogclass = Ifte
     # xtype = ((float, bool), float)
     expr_dmy = 'Piecewise'
+    showme = 'Piecewise'
     xtype = ((ExprCondPair,), float)
     xtype_chain = ExprCondPair
     # symfun = sympy.Piecewise
@@ -77,6 +82,7 @@ class Piecewise(OperatorChained):
 
 class AndChained(OperatorChained):
     expr_dmy = 'And'
+    showme = 'and'
     xtype = ((bool,), bool)
     xtype_chain = bool
     symfun = sympy.And
@@ -86,5 +92,6 @@ class OrChained(OperatorChained):
     xtype = ((bool,), bool)
     xtype_chain = bool
     expr_dmy = 'Or'
+    showme = 'or'
     symfun = sympy.Or
 

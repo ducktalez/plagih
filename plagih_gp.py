@@ -2,14 +2,14 @@
 This starts the whole genetic programming.
 This (extra) file was added to have a file in the root directory that can be started.
 """
-import copy
-import itertools
+# import copy
+# import itertools
 import sys
-import random
+# import random
 
 # import multiprocessing as mp
-import sympy
-from sklearn.model_selection import train_test_split
+# import sympy
+# from sklearn.model_selection import train_test_split
 
 from plagih.fitness_kernel import *
 from plagih.plagih_gp_base_class_xai import *
@@ -145,7 +145,8 @@ def _test_simple():
         def mx_branch_n():
             tree = selection_tournament(gp.pop_genepool, tournsize=3)
             n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
-            return gp.tb.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
+            tree = gp.tb.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
+            return tree
         gp.end_generation()
 
     for _ in range(10):
@@ -276,12 +277,14 @@ def _test_random_pop():
             def mx_branch_n():
                 tree = selection_tournament(gp.pop_genepool, tournsize=3)
                 n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
-                return gp.tb.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
+                tree = gp.tb.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
+                return tree
 
             @gp.create_trees(rate=0.1)  # was error source?
             def mut_br():
                 tree = selection_tournament(gp.pop_genepool, tournsize=3)
-                return gp.tb.evolve_mutate_branch_nodes(tree, 4, p_term=0)
+                tree = gp.tb.evolve_mutate_branch_nodes(tree, 4, p_term=0)
+                return tree
 
             @gp.create_trees(rate=0.1)
             def filter_optimize():

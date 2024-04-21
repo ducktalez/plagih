@@ -7,3 +7,9 @@ run_examples/
 /benchmarks/#lol MTC200_MAE_simonBest/
 *.p
 *.pkl
+*.idea
+*.xml
+*.iml
+*.png
+/venv/
+/MTC200_RMSE_scratch/

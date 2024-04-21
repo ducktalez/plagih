@@ -13,9 +13,8 @@ from plagih.util import get_subclasses, FLOAT_PRECISION, DEBUG_DUMMY  # noqa
 
 os.environ["KMP_WARNINGS"] = "FALSE"
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # https://github.com/tensorflow/tensorflow/issues/27023
-import tensorflow as tf  # noqa check if ignoring warnings still required (tensorflow sends endless warnings)
-
-tf.compat.v1.disable_eager_execution()
+# import tensorflow as tf  # noqa check if ignoring warnings still required (tensorflow sends endless warnings)
+# tf.compat.v1.disable_eager_execution()
 
 
 # tf.compat.v1.enable_eager_execution()  # sfeh possibly faster with disable

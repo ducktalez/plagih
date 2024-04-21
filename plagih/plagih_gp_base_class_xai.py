@@ -4,6 +4,7 @@ The main class of a gp run. It holds the following functionalities
 - population (pop_base, pop_next)
 -
 """
+import re
 from collections import deque
 
 from plagih.monitoring import plot_performance
@@ -111,12 +112,23 @@ class ExplainableGP:
                                                 'parsim_avg', 'parsim_var', 'parsim_best',
                                                 'gens_since_last_pareto'])
 
+    # todo
+    # WHATTPPENDED
+    # SFEH
+    # [Div, [2.81], [cartVel]]
+    # [Mul, [2.81], [DivFraction, [cartVel]]]
+    # 2.81 / cartVel
+    # 2.81 / cartVel
+
     def pop_print(self):
         """Print the expressions of all trees in a population"""
-        for c in self.pop_next:
-            # t = c.get_evotree()
-            print(f'\t{c.full_string()}')
-        pass
+        n = [f'{k.full_string()}' for k in self.pop_next]
+        n = [f'{BColors.BLUE}{x}' if ii % 2 == 0 else f'{BColors.YELLOW}{x}' for ii, x in enumerate(n)]
+        n = [f'{k}\n' if ii % 10 == 9 else f'{k}\t' for ii, k in enumerate(n)]  # stop \n in line 0
+        n = ''.join(n)
+        n = re.sub(r'\n$', '', n)  # remove trailing \n (\t irrelevant)
+        n = f'{n}{BColors.RESET}'
+        print(n)
 
     def run_update_paretofront(self, pop):
         """
@@ -170,7 +182,7 @@ class ExplainableGP:
                 _obsoletes = [i for i in self.paretofront if
                               i.get_fitness() > candidate_tree.get_fitness() and i.get_parsimony() >= candidate_tree.get_parsimony()]
                 if _obsoletes:
-                    printyeah('a', f'Paretofront: Removing obsolete entries {[str(i) for i in _obsoletes]}')
+                    printyeah('a', f'Paretofront: Removing obsolete entries {[f'{i.full_string()}' for i in _obsoletes]}')
                 self.paretofront = [ftree for ftree in self.paretofront if ftree not in _obsoletes]
                 self.paretofront.append(candidate_tree)
                 self.paretofront = pareto_sort(self.paretofront)
@@ -182,7 +194,7 @@ class ExplainableGP:
         self.run_update_paretofront(self.pop_next)
 
         self.pop_genepool = self.pop_next[:]
-        self.pop_print()  # todo
+        self.pop_print()
         self.pop_next = []
         self.analyze_generation()
         self.gen_id += 1
@@ -220,7 +232,8 @@ class ExplainableGP:
                 @self.create_trees(rate=0.5)
                 def init_rand1a():
                     n = np.clip(int(random.normalvariate(3.0, 1.0)), 3, 5)
-                    return self.tb.evolve_new_tree_depth(n, float, p_term=0)  # sfeh: xtype not always float
+                    tree = self.tb.evolve_new_tree_depth(n, float, p_term=0)  # sfeh: xtype not always float
+                    return tree
 
                 @self.create_trees(rate=0.5)
                 def init_rand2a():
@@ -238,7 +251,8 @@ class ExplainableGP:
         evotree = ct.get_evotree()
         # from visualization.pygraphviz import render_pygraphviz
         if force and ct.get_parsimony() < TREE_MIN_PARSIMONY:
-            raise ValueError(f'Tree not complex enough for population, sfeh')
+            # sfeh raise ValueError(f'Tree not complex enough for population, sfeh')
+            return
         printpl('gggg', f'|->{evotree.len_nodecount_fair():2.0f}: {evotree.str_as_expr()}')
         self.pop_next.append(ct)
 
@@ -277,8 +291,8 @@ class ExplainableGP:
                         print_caution(f'Evolution fails too often: {tag}, {n_fails}x. ({n_success}x successful).')
                         return  # sfeh raise?
                 except TypeError as ex:
-                    raise TypeError(f'Typeerror, but why? {ex}')  # ok: TypeError: Cannot convert complex to float
-                    # print(f'Typeerror, but why? {ex}')
+                    # raise TypeError(f'Typeerror, but why? {ex}')  # ok: TypeError: Cannot convert complex to float
+                    print(f'Typeerror, but why? {ex}')
                     # Problem: TypeError: Typeerror, but why? expecting bool or Boolean, not `(a - 0.53 <= -0.361, a - 0.801 < v/a**1.0)`
                     # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
                     # sfeh probably this error: cond(): 'false_fn' argument required
@@ -304,6 +318,8 @@ class ExplainableGP:
 
     def tree_to_candidate(self, evotree: Node, tag=None, raise_if_useless=True):
         """the "fixed" node information is not relevant"""
+
+        evotree.repair_depth()
 
         tree_id = evotree.get_id()
 

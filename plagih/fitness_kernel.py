@@ -1,6 +1,6 @@
-import copy
 import os
 from abc import ABC
+from plagih.util import *
 
 import pandas as pd
 import sympy
@@ -12,14 +12,13 @@ from sklearn.model_selection import train_test_split
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-from plagih.util import *
 
-import tensorflow as tf
+# import tensorflow as tf
+# tf.compat.v1.disable_eager_execution()
 import numpy as np
 
 # Eager execution used to be not possible in tf v1, in tf v2, this is the standard
 # however, we need to build a complete graph before inserting the data in the leaf nodes.
-tf.compat.v1.disable_eager_execution()
 
 
 class Kernel(ABC):
@@ -33,14 +32,14 @@ class Kernel(ABC):
         """
         sfeh: tf_device_log is set automatically to false
         """
-        self.solution_train = tf.constant(data_train[action_name])  # tensors[self.action.name],
-        self.tf_error_metric = tf_error_metric
-        self.tf_sanitize_results = tf_sanitize_results
+        # self.solution_train = tf.constant(data_train[action_name])  # tensors[self.action.name],
+        # self.tf_error_metric = tf_error_metric
+        # self.tf_sanitize_results = tf_sanitize_results
 
-        self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=tf_device_log,
-                                                  allow_soft_placement=True)  # check if GPU is actually used
-        self.tf_config.gpu_options.allow_growth = tf_gpu_allow_growth  # sfeh:use optional args?
-        self.tf_device = tf_device
+        # self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=tf_device_log,
+        #                                           allow_soft_placement=True)  # check if GPU is actually used
+        # self.tf_config.gpu_options.allow_growth = tf_gpu_allow_growth  # sfeh:use optional args?
+        # self.tf_device = tf_device
 
         self.data_dict = data_train.to_dict('list')
         # self.data_control = data_control  # sfeh: currently not used

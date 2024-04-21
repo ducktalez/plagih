@@ -5,10 +5,8 @@
 
 ## Ablage/Todos
 
-- remove TODOTODO
-- get it running
-- remove TODOs
-- remove sfeh:...
+- double linked tree (root node, parent node)
+- histogram for tree complexity 
 - tree -> evaluate nodes for best improvement 
 - population cluster/races
 - Make regular Function Classes Sympy Functions
@@ -20,6 +18,11 @@
   - Auto-testruns: loop/reload through [random, origin, origin_fixed] [MC, IB]
   - TF-evaluation equals python-evaluation equals sympy evaluation
 - BackPropagation through nodes, rank value for whole tree 
+- generell
+  - remove TODOTODO
+  - get it running
+  - remove TODOs
+  - remove sfeh:...
 - separate monitoring class
 - introduce NN in alpha-tree, at well-mutable nodes
 - evaluate one very large TF-graph containing the whole population
@@ -124,7 +127,9 @@ tikzplotlib (optional)
 gym (optional)
 distutils (optional)
 
-`conda install -c matplotlib pathlib sympy tensorflow tensorflow-gpu pandas sympy scipy pyYAML`
+All packages: `matplotlib pathlib sympy tensorflow pandas sympy scipy pyYAML scikit-learn scipy gym apted tikzplotlib`
+
+`conda install -c matplotlib pathlib sympy tensorflow pandas sympy scipy pyYAML`
 
 `pip install scikit-learn scipy gym apted tikzplotlib`
 

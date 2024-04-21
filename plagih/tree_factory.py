@@ -254,7 +254,10 @@ class Evolution:
             if num_rest > 0:
                 nums = randomly_split_range(num_rest-1, num)
                 for ii, xt in enumerate(child_xts):
-                    cc = self.evolve_create_random(xt, depth_goal, num_rest=nums[ii], depth=depth + 1, p_term=p_term)
+                    try:
+                        cc = self.evolve_create_random(xt, depth_goal, num_rest=nums[ii], depth=depth + 1, p_term=p_term)
+                    except Exception as todo:
+                        cc = self.evolve_create_random(xt, depth_goal, num_rest=nums[ii], depth=depth + 1, p_term=p_term)
                     childs.append(cc)
             else:
                 for xt in child_xts:
@@ -340,7 +343,7 @@ class Evolution:
         nd = rnd_choice(tree.list_mutable_nodes())
         xt_out = nd.get_xtype_self()
         nodes_goal = min(self.nodes_max - (nodes_init - len(nd)), nodes_goal)
-        print(f'asdasd{nodes_goal}')
+
         branch = self.evolve_create_random(xt_out, -1, num_rest=nodes_goal, depth=nd.depth, p_term=p_term)
         nd.set_new_node(branch)
         return tree

@@ -1,4 +1,3 @@
-import itertools
 import random
 from dataclasses import dataclass
 
@@ -282,7 +281,7 @@ class Node:
                        'showme': showme}}
         edges = []
 
-        if self.is_term():  # todo is_term instead of operator due to fuckin exprCondPairs
+        if self.is_term():  # sfeh is_term instead of operator due to fuckin exprCondPairs
             pass
         else:
             for ii, cc in enumerate(self.childs):
@@ -365,6 +364,7 @@ class Node:
         the depth through every crossover/branch mutation function, instead, we call it when replacing nodes
         """
         depth = depth or 0  # sfeh: "None" was set as depth somewhere. Could not find it.
+        self.depth = depth
         if self.has_childs():
             for cc in self.childs:
                 cc.repair_depth(depth=depth + 1)
@@ -531,7 +531,6 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
 
     elif s_expr.is_Atom:
         if s_expr.is_Symbol:
-            # return Node(Symbol, [str(s_expr)])  # sfeh str VERY important!! "Symbol type input" is not accepted
             return Node(Symbol, [s_expr])  # str VERY important!! "Symbol type input" is not accepted
         else:
             # expr_eval = s_expr.evalf(FLOAT_PRECISION)  # sfeh

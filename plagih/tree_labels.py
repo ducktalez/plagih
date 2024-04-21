@@ -63,9 +63,8 @@ from plagih.util import get_subclasses, FLOAT_PRECISION, DEBUG_DUMMY  # noqa
 
 os.environ["KMP_WARNINGS"] = "FALSE"
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # https://github.com/tensorflow/tensorflow/issues/27023
-import tensorflow as tf  # noqa check if ignoring warnings still required (tensorflow sends endless warnings)
-
-tf.compat.v1.disable_eager_execution()
+# import tensorflow as tf  # noqa check if ignoring warnings still required (tensorflow sends endless warnings)
+# tf.compat.v1.disable_eager_execution()
 
 
 # tf.compat.v1.enable_eager_execution()  # sfeh possibly faster with disable
@@ -544,7 +543,10 @@ class Round(MathOperator):
 
 class Powrounded(OperatorArity):
     # tflow = lambda a, b: tf.pow(a, tf.round(b))
-    symfun = lambda a, b: sympy.Pow(a, Round.symfun(b))  # symfun = lambda a, b: a**Round.symfun(b)
+    try:
+        symfun = lambda a, b: sympy.Pow(a, Round.symfun(b))  # symfun = lambda a, b: a**Round.symfun(b)
+    except Exception as todo:
+        symfun = lambda a, b: sympy.Pow(a, Round.symfun(b))  # symfun = lambda a, b: a**Round.symfun(b)
     showme = 'x^((y))'
     xtype = ((float, float), float)
 
@@ -728,44 +730,44 @@ def expr_sympify(expr):
 #  sympy.numbers.Catalan: tensorflow.constant(sympy.numbers.Catalan),
 #  sympy.numbers.NaN: tensorflow.constant(sympy.numbers.NaN),
 
-totf = {
-    # sympy.Symbol: 'tf': lambda x: tf.cons
-    sympy.Min: tf.minimum,
-    sympy.Max: tf.maximum,
-    sympy.Add: tf.add,
-    sympy.Mul: tf.multiply,
-    sympy.Pow: tf.pow,
-    sympy.Abs: tf.abs,
-
-    sympy.Not: tf.logical_not,
-    sympy.And: tf.logical_and,
-    sympy.Or: tf.logical_or,
-    sympy.Xor: tf.math.logical_xor,
-
-    sympy.Equality: tf.equal,
-    sympy.Unequality: tf.not_equal,
-    sympy.GreaterThan: tf.greater_equal,
-    sympy.StrictGreaterThan: tf.greater,
-    sympy.LessThan: tf.less_equal,
-    sympy.StrictLessThan: tf.less,
-    # sympy.N: tf.math.round,  # incorrect, sympy.N(x, 1) is right
-    sympy.log: tf.math.log,
-    sympy.cos: tf.cos,
-    sympy.cosh: tf.cosh,
-    sympy.sin: tf.sin,
-    sympy.sinh: tf.sinh,
-    sympy.tan: tf.tan,
-    sympy.tanh: tf.tanh,
-    sympy.acos: tf.acos,
-    sympy.asin: tf.asin,
-    sympy.atan: tf.atan,
-    sympy.sign: tf.sign,
-    # The real Part
-    sympy.re: lambda a: tf.convert_to_tensor(a, dtype=tf.dtypes.float32),  # sfeh sympy-gotcha, comes up randomly
-    # RoundDummy: tf.round,
-    sympy.exp: tf.exp,  # sfeh this occurs randomly...
-    sympy.ITE: tf.cond
-}
+# totf = {
+#     # sympy.Symbol: 'tf': lambda x: tf.cons
+#     sympy.Min: tf.minimum,
+#     sympy.Max: tf.maximum,
+#     sympy.Add: tf.add,
+#     sympy.Mul: tf.multiply,
+#     sympy.Pow: tf.pow,
+#     sympy.Abs: tf.abs,
+#
+#     sympy.Not: tf.logical_not,
+#     sympy.And: tf.logical_and,
+#     sympy.Or: tf.logical_or,
+#     sympy.Xor: tf.math.logical_xor,
+#
+#     sympy.Equality: tf.equal,
+#     sympy.Unequality: tf.not_equal,
+#     sympy.GreaterThan: tf.greater_equal,
+#     sympy.StrictGreaterThan: tf.greater,
+#     sympy.LessThan: tf.less_equal,
+#     sympy.StrictLessThan: tf.less,
+#     # sympy.N: tf.math.round,  # incorrect, sympy.N(x, 1) is right
+#     sympy.log: tf.math.log,
+#     sympy.cos: tf.cos,
+#     sympy.cosh: tf.cosh,
+#     sympy.sin: tf.sin,
+#     sympy.sinh: tf.sinh,
+#     sympy.tan: tf.tan,
+#     sympy.tanh: tf.tanh,
+#     sympy.acos: tf.acos,
+#     sympy.asin: tf.asin,
+#     sympy.atan: tf.atan,
+#     sympy.sign: tf.sign,
+#     # The real Part
+#     sympy.re: lambda a: tf.convert_to_tensor(a, dtype=tf.dtypes.float32),  # sfeh sympy-gotcha, comes up randomly
+#     # RoundDummy: tf.round,
+#     sympy.exp: tf.exp,  # sfeh this occurs randomly...
+#     sympy.ITE: tf.cond
+# }
 
 # def sympy_to_tensorflow(expr_sy, d_tensors):
 #     """

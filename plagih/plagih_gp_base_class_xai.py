@@ -160,7 +160,7 @@ class ExplainableGP:
                     if sym_candidate.get_parsimony() < candidate_tree.get_parsimony():
                         printyeah('a', f'Paretofront: Even further simplified! '
                                        f'{sym_candidate.get_parsimony()} < {candidate_tree.get_parsimony()}')
-                        self.pop_next_append(sym_candidate)
+                        self.pop_next_append(sym_candidate, force=True)
 
                     print_blue(f'Simplified symtree: {sym_candidate.get_parsimony()}: {symtree}')
 
@@ -202,7 +202,8 @@ class ExplainableGP:
             if CHAINED_VERION:
                 @self.create_trees(rate=0.5)
                 def init_rand1():
-                    tree = self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(4.0, 1.0)), 3, 6), float, p_term=0)
+                    n = np.clip(int(random.normalvariate(4.0, 1.0)), 3, 6)
+                    tree = self.tb.evolve_new_tree_depth(n, float, p_term=0)
                     tree = tree_simplification(tree, allow_chain=True)
                     # sfeh trees can shrink to single-noded trees
                     if tree.get_max_depth() <= 1:
@@ -211,17 +212,20 @@ class ExplainableGP:
 
                 @self.create_trees(rate=0.5)
                 def init_rand2():
-                    tree = self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1.0)), 3, 6), float, p_term=0)
+                    n = np.clip(int(random.normalvariate(3.5, 1.0)), 3, 6)
+                    tree = self.tb.evolve_new_tree_depth(n, float, p_term=0)
                     tree = tree_simplification(tree, allow_chain=True)
                     return tree
             else:
                 @self.create_trees(rate=0.5)
                 def init_rand1a():
-                    return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.0, 1.0)), 3, 5), float, p_term=0)  # sfeh: xtype not always float
+                    n = np.clip(int(random.normalvariate(3.0, 1.0)), 3, 5)
+                    return self.tb.evolve_new_tree_depth(n, float, p_term=0)  # sfeh: xtype not always float
 
                 @self.create_trees(rate=0.5)
                 def init_rand2a():
-                    return self.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(2.5, 1.0)), 3, 5), float, p_term=0)
+                    n = np.clip(int(random.normalvariate(2.5, 1.0)), 3, 5)
+                    return self.tb.evolve_new_tree_depth(n, float, p_term=0)
 
         self.paretofront = pareto_from_pop(self.pop_next)  # initialize
         self.pop_genepool = self.pop_next[:]
@@ -230,10 +234,10 @@ class ExplainableGP:
         self.gen_id += 1
         return
 
-    def pop_next_append(self, ct: Candidate):
+    def pop_next_append(self, ct: Candidate, force=False):
         evotree = ct.get_evotree()
-        # render_pygraphviz(evotree)  # todo
-        if ct.get_parsimony() < TREE_MIN_PARSIMONY:
+        # from visualization.pygraphviz import render_pygraphviz
+        if force and ct.get_parsimony() < TREE_MIN_PARSIMONY:
             raise ValueError(f'Tree not complex enough for population, sfeh')
         printpl('gggg', f'|->{evotree.len_nodecount_fair():2.0f}: {evotree.str_as_expr()}')
         self.pop_next.append(ct)
@@ -273,9 +277,9 @@ class ExplainableGP:
                         print_caution(f'Evolution fails too often: {tag}, {n_fails}x. ({n_success}x successful).')
                         return  # sfeh raise?
                 except TypeError as ex:
-                    # raise TypeError(f'Typeerror, but why? {ex}')  # ok: TypeError: Cannot convert complex to float
-                    print(f'Typeerror, but why? {ex}')
-                    # Problem: TypeError: Typeerror, but why? expecting bool or Boolean, not `(cartPos - 0.53 <= -0.361, cartPos - 0.801 < cartVel/cartPos**1.0)`
+                    raise TypeError(f'Typeerror, but why? {ex}')  # ok: TypeError: Cannot convert complex to float
+                    # print(f'Typeerror, but why? {ex}')
+                    # Problem: TypeError: Typeerror, but why? expecting bool or Boolean, not `(a - 0.53 <= -0.361, a - 0.801 < v/a**1.0)`
                     # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
                     # sfeh probably this error: cond(): 'false_fn' argument required
                     # Happens, when ITE is coming up. Ignoring for now.

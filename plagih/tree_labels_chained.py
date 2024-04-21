@@ -21,7 +21,7 @@ tf.compat.v1.disable_eager_execution()
 # tf.compat.v1.enable_eager_execution()  # sfeh possibly faster with disable
 
 
-# sfeh:discuss: Min/Max is just a ordeded list. ->taking element 1, -1, ...
+# sfeh:discuss: Min/Max is just an ordered list. ->taking element 1, -1, ...
 
 
 class AddChain(OperatorChained):
@@ -46,7 +46,7 @@ class MinChained(OperatorChained):
     symfun = sympy.Min
     expr_dmy = 'Min'
     showme = 'Min'
-    tflow = tf.minimum
+    # tflow = tf.minimum
     xtype = ((float, float), float)
     chain_xtype = float
 
@@ -56,7 +56,7 @@ class MaxChained(OperatorChained):
     # symfun = lambda *a: sympy.Max(a)
     expr_dmy = 'Max'
     showme = 'Max'
-    tflow = tf.maximum
+    # tflow = tf.maximum
     xtype = ((float, float), float)
     chain_xtype = float
 

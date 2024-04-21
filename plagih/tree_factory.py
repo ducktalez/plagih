@@ -49,8 +49,6 @@ def tree_simplification(tree, allow_chain=False) -> Node:
     """
     tree_copy = copy.deepcopy(tree)
     expr_sym = tree.get_sympy_expr()
-    # expr_raw = tree.get_expr_raw()
-    # v2_sym = expr_sympify(expr_raw)
     tree = sympy_to_tree(expr_sym, allow_chain=allow_chain)
     if not CHAINED_VERION:
         tree.tree_node_grouping()
@@ -60,12 +58,6 @@ def tree_simplification(tree, allow_chain=False) -> Node:
                   f'\n\t{tree.str_as_list()}'
                   f'\n\t{tree_copy.get_sympy_expr()}'
                   f'\n\t{tree.get_sympy_expr()}')
-        # --->
-        # WHATTPPENDED SFEH
-        # 	[Mul, [Add, [cartPos], [Square, [cartPos]]], [-0.0130]]
-        # 	[Add, [Mul, [-0.0130], [cartPos]], [Mul, [-0.0130], [Square, [cartPos]]]]
-        # 	-0.013017*cartPos**2 - 0.013017*cartPos
-        # 	-0.013017*cartPos**2 - 0.013017*cartPos
     return tree
 
 
@@ -78,7 +70,7 @@ def evolve_reduce_simplify(tree: Node, completely=True, force=False) -> Node:
         for cc in nodes_lv0:
             cc.set_new_node(tree_simplification(cc))
     else:
-        node_list = [n for n in tree.list_mutable_nodes() if issubclass(n.label, OperatorArity)]  # ignoring leaf nodes...
+        node_list = [n for n in tree.list_mutable_nodes() if issubclass(n.typus, OperatorArity)]  # ignoring leaf nodes...
         if len(node_list) == 0:
             print_warning('wwww', f'Tree for simplification does not provide operators: {tree}')
             return tree
@@ -203,7 +195,7 @@ class Evolution:
             # sfeh:debug more, also... takes time, just define the nodes in tree for mutation once?
 
             for ii, nd in enumerate(layer0):  # -> get layer every time (nsted ids might have changed)
-                new_subbranch = self.evolve_create_random(nd.get_xtype_self(), depth_goal, num_rest=-1,
+                new_subbranch = self.  evolve_create_random(nd.get_xtype_self(), depth_goal, num_rest=-1,
                                                           depth=nd.depth, p_term=p_term)
                 nd.set_new_node(new_subbranch)
 
@@ -318,7 +310,7 @@ class Evolution:
             # sfeh:allow_chain
             # sfeh:what if its the same function?
             new_label = self.node_selector.choose_operator_match(xtype)  # Function is same type, same arity
-            node.set_label(new_label)
+            node.set_typus(new_label)
         elif node.is_term:
             new_node = self.node_selector.choose_terminal(xt_self(xtype))
             node.set_new_node(new_node)
@@ -348,6 +340,7 @@ class Evolution:
         nd = rnd_choice(tree.list_mutable_nodes())
         xt_out = nd.get_xtype_self()
         nodes_goal = min(self.nodes_max - (nodes_init - len(nd)), nodes_goal)
+        print(f'asdasd{nodes_goal}')
         branch = self.evolve_create_random(xt_out, -1, num_rest=nodes_goal, depth=nd.depth, p_term=p_term)
         nd.set_new_node(branch)
         return tree

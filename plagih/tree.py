@@ -33,8 +33,8 @@ d_sym2node_chain = d_sym2node | {sympy.Add: AddChain, sympy.Mul: MulChain, sympy
 class Node:
     """Recursively holds the nodes of a tree"""
 
-    def __init__(self, label: Label, childs: iter, depth=None, is_fix=False, is_chain=False):
-        self.label = label
+    def __init__(self, typus: Typus, childs: iter, depth=None, is_fix=False, is_chain=False):
+        self.typus = typus
         self.childs = childs[:]  # ...usually a list, but can also be 'None'
 
         self.is_fix = is_fix
@@ -45,36 +45,36 @@ class Node:
         """is the node in chain mode?
         -> when there are more childs than input-xtypes
         ...if there are less. its weird, maybe node in construction?"""
-        if len(self.label.xtype[0]) < len(self.childs):
+        if len(self.typus.xtype[0]) < len(self.childs):
             return False
 
     def str_as_list(self):
-        # label_str = self.label.__name__  # sfeh: can str(label) work? -> str with args recursively?
+        # typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
         # sfeh:delete_me if no error after 27-11-2023
-        label_str = self.label.__name__  # sfeh: can str(label) work? -> str with args recursively?
+        typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
         # try:
         # except AttributeError as ex:
         #     print(f'XXXxxx DELETE ME if i do not come up')
-        #     label_str = self.label  # because Terminals are obj -> 'Symbol' obj has no attr __name__
+        #     typus_str = self.typus  # because Terminals are obj -> 'Symbol' obj has no attr __name__
 
         if self.childs:
-            if issubclass(self.label, BaseOperator):
+            if issubclass(self.typus, BaseOperator):
                 childstr = ', '.join([cc.str_as_list() for cc in self.childs])
-                label_str = f'{label_str}, {childstr}'
+                typus_str = f'{typus_str}, {childstr}'
             else:
                 try:
-                    if issubclass(self.label, Number):
-                        label_str = f'{self.childs[0]:.3g}'  # '.5g'->5 decimals, trailing zeros, but rare (ugly) "E+04"
+                    if issubclass(self.typus, Number):
+                        typus_str = f'{self.childs[0]:.3g}'  # '.5g'->5 decimals, trailing zeros, but rare (ugly) "E+04"
                     else:
-                        label_str = f'{self.childs[0]}'
+                        typus_str = f'{self.childs[0]}'
                 except TypeError as ex:
-                    label_str = str(self.childs[0].evalf())
+                    typus_str = str(self.childs[0].evalf())
                     # sympy.ONE -> 1.0000000...
                     # sfeh:open int, non-floats are handeled badly
                 except Exception as ex:
                     print(f'SUCCESS sfeh:debug, delete?2 KEEP? {ex}')
 
-        return f"[{label_str}]"
+        return f"[{typus_str}]"
 
     def get_id(self):
         """
@@ -83,49 +83,49 @@ class Node:
         sfeh:discuss is this just repr?
         ID=Identificator, which"""
         try:
-            label_str = self.label.__name__  # sfeh: can str(label) work? -> str with args recursively?
+            typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
         except AttributeError as ex:
             print('XXX DEBUG delete me if you do not remember me :)')
             # sfeh debug me
-            label_str = self.label  # because Terminals are obj -> 'Symbol' obj has no attr __name__
+            typus_str = self.typus  # because Terminals are obj -> 'Symbol' obj has no attr __name__
 
         if self.childs:
-            if issubclass(self.label, OperatorArity):
+            if issubclass(self.typus, OperatorArity):
                 childstr = ', '.join([cc.str_as_list() for cc in self.childs])
-                label_str = f'{label_str}, {childstr}'
-            elif issubclass(self.label, OperatorChained):
+                typus_str = f'{typus_str}, {childstr}'
+            elif issubclass(self.typus, OperatorChained):
                 childstr = ', '.join([cc.str_as_list() for cc in self.childs])
-                label_str = f'{label_str}, {childstr}'
-            elif issubclass(self.label, TerminalDummy):
+                typus_str = f'{typus_str}, {childstr}'
+            elif issubclass(self.typus, TerminalDummy):
                 childstr = ', '.join([cc.str_as_list() for cc in self.childs])  # those are actual childs
-                label_str = f'({childstr})'
+                typus_str = f'({childstr})'
             else:
                 try:
-                    label_str = f'{self.childs[0]}'
+                    typus_str = f'{self.childs[0]}'
                 except TypeError as ex:
-                    label_str = str(self.childs[0].evalf())
+                    typus_str = str(self.childs[0].evalf())
                     # sfeh:open int? rational?, non-floats are handled badly
                 except Exception as ex:
                     print(f'sfeh:debug, delete? KEEP? {ex}')  # InvalidOperation([<class 'decimal.InvalidOperation'>])
 
-        return f"[{label_str}]"
+        return f"[{typus_str}]"
 
     def str_as_expr(self):
         s = self.get_sympy_expr()
         return s
 
     def __str__(self):
-        return self.get_expr_raw()
+        return self.get_expr_raw_fstring()
 
     def get_sympy_expr(self) -> sympy.Basic:
         """Converts directly into a sympy expr
         from node-class, go to a sympy expression
         """
-        if issubclass(self.label, Terminal):
-            _sym = self.label.get_sym()  # _sym = self.label.symfun
+        if issubclass(self.typus, Terminal):
+            _sym = self.typus.get_sym()  # _sym = self.typus.symfun
             _cs = self.childs[0]
             return _sym(_cs)
-        elif self.label in (Piecewise, sympy.Piecewise):
+        elif self.typus in (Piecewise, sympy.Piecewise):
             _sym = sympy.Piecewise
             # sympy.Piecewise(sympy.functions.elementary.piecewise.ExprCondPair(1, True))
             # PW((a, b), (c, True))
@@ -133,95 +133,80 @@ class Node:
             _cs = [(cc.childs[0], cc.childs[1]) for cc in _cs]
             _cs = [(cc[0].get_sympy_expr(), cc[1].get_sympy_expr()) for cc in _cs]
             _cs = [sympy.functions.elementary.piecewise.ExprCondPair(cc[0], cc[1]) for cc in _cs]
-            # _cs = [cc.get_sympy_expr() for cc in self.childs]
             _cs = _sym(*_cs)
             return _cs
         else:
             _cs = [cc.get_sympy_expr() for cc in self.childs]
-            if issubclass(self.label, OperatorArity):
-                _sym = self.label.get_sym()
-                # return _sym(*_cs)
-                # sfeh:debug TypeError: <lambda>() missing 1 required positional argument: 'b'
-            # elif self.label == ExprCondPair:
-            #     raise Exception(f'asddfassdfdfgdrtgdtgedrtg')
+            if issubclass(self.typus, OperatorArity):
+                _sym = self.typus.get_sym()
             elif CHAINED_VERION:
-                _sym = self.label.get_sym()
+                _sym = self.typus.get_sym()
 
             try:
                 return _sym(*_cs)
             except RecursionError as ex:
-                print(f'sfeh:RecursionError, maybe Piecewise?: {self.label}, {self.childs}, {ex}')
+                print(f'sfeh:RecursionError, maybe Piecewise?: {self.typus}, {self.childs}, {ex}')
                 raise RecursionError
             # except TypeError as ex:
-            #     # print(f'sfeh:TypeError?: {self.label}, {self.childs}: {ex}')
+            #     # print(f'sfeh:TypeError?: {self.typus}, {self.childs}: {ex}')
             #     # TypeError: Argument must be a Basic object, not `Node`
             #     # !! TypeError('expecting bool or Boolean, not `(cartPos > 18.0, cartPos < 14.0)`.')
             #     return _sym(*_cs)
             except sympy.polys.polyerrors.CoercionFailed as ex:
                 # sympy.polys.polyerrors.CoercionFailed: expected an integer, got 0.000564
                 print(f'XXX Sympy error? Changing to TypError: {ex}')
-                raise TypeError(ex)
+                raise sympy.polys.polyerrors.CoercionFailed(ex)
             except IndexError as ex:
                 print(f'sfeh:asddsaasd. {ex}')  # What is this kind of error?
                 raise ex
             except Exception as ex:
-                # print(f'sfeh:XXX this still occurs. {ex}')  # sfeh What is this kind of error?
-                # PROBLEM
-                # OK
-                # The argument 'zoo' is not comparable.
-                # The argument '0.801*I' is not comparable.
-                # The argument '-2.05444 + I*pi' is not comparable. <- that should be okay, just raise
-                # sfeh should sympify not raise these cases already?
-                # <lambda>() missing 1 required positional argument: 'b'
-                #   -> Probably in Sub-class lambda-function
                 raise ex
 
-            # print('asddsa', len(self.childs), type(self.label), issubclass(self.label, Operator), issubclass(self.label, Terminal))
-            raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.label)}')
+            raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.typus)}')
 
-    def get_expr_raw(self):
+    def get_expr_raw_fstring(self):
         """Add (1 + a)"""
-        if issubclass(self.label, Terminal):
+        if issubclass(self.typus, Terminal):
             expr = f'{self.childs[0]}'
         else:
-            expr = [cc.get_expr_raw() for cc in self.childs]
+            expr = [cc.get_expr_raw_fstring() for cc in self.childs]
             expr = ', '.join(expr)
-            if issubclass(self.label, OperatorArity):
-                expr = f'{self.label.__name__}({expr})'
+            if issubclass(self.typus, OperatorArity):
+                expr = f'{self.typus.__name__}({expr})'
             elif CHAINED_VERION:
                 try:
-                    expr = f'{self.label.expr_dmy}({expr})'
+                    expr = f'{self.typus.expr_dmy}({expr})'
                 except Exception as ex:
                     expr = f'({expr})'  # sfeh catching ExprCondPair here
 
         # Sfeh:notimplementederror here?
         return expr
 
-    def get_tf_expr(self):
-        if self.childs and issubclass(self.label, OperatorArity):
-            _tf = self.label.tflow
-            _cs = [cc.get_tf_expr() for cc in self.childs]
-            return _tf(_cs)
-        elif self.childs and issubclass(self.label, Terminal):
-            _tf = self.label.tflow
-            _cs = self.childs[0]
-            return _tf(_cs)
-        raise NotImplementedError(f'get_tf_expr no match for {self}, {type(self.label)}')
+    # def get_tf_expr(self):
+    #     if self.childs and issubclass(self.typus, OperatorArity):
+    #         _tf = self.typus.tflow
+    #         _cs = [cc.get_tf_expr() for cc in self.childs]
+    #         return _tf(_cs)
+    #     elif self.childs and issubclass(self.typus, Terminal):
+    #         _tf = self.typus.tflow
+    #         _cs = self.childs[0]
+    #         return _tf(_cs)
+    #     raise NotImplementedError(f'get_tf_expr no match for {self}, {type(self.typus)}')
 
     def represent(self):
         """
         Printing the nodes as nested array structure such that it can be saved/loaded
         very closely related to str(), but adds the following information:
         - ":fix", when nodes are fixed"""
-        label_str = self.label
+        typus_str = self.typus
 
         if self.is_fix:
-            label_str += ':fix'
+            typus_str += ':fix'
 
         if self.childs:
             childstr = ', '.join([self.represent(cc) for cc in self.childs])
-            label_str = f"{label_str}, {childstr}"
-        return f"[{label_str}]"
+            typus_str = f"{typus_str}, {childstr}"
+        return f"[{typus_str}]"
 
     def __repr__(self):
         """sfeh:WRONG! Do NOT use __str__!"""
@@ -229,7 +214,7 @@ class Node:
 
     def len_nodecount_raw(self):
         """counting the amount of nodes recursively"""
-        if issubclass(self.label, Terminal):
+        if issubclass(self.typus, Terminal):
             return 1  # childs can currently be floats
         else:
             return 1 + sum([cc.len_nodecount_raw() for cc in self.childs])
@@ -238,9 +223,9 @@ class Node:
         """counting the amount of nodes, but
             - ignoring "Usub!
         """
-        if issubclass(self.label, Terminal):
+        if issubclass(self.typus, Terminal):
             return 1
-        elif issubclass(self.label, Usub):
+        elif issubclass(self.typus, Usub):
             return sum([cc.len_nodecount_fair() for cc in self.childs])
         else:
             return 1 + sum([cc.len_nodecount_fair() for cc in self.childs])
@@ -248,29 +233,24 @@ class Node:
     def __len__(self):
         return self.len_nodecount_fair()
 
-    def get_label(self):
-        return self.label
-
-    def get_value(self):
-        """sfeh: only usable, when terminal node?"""
-        if self.is_term():
-            return self.childs[0]
+    def get_typus(self):
+        return self.typus
 
     def get_arity(self):
-        return len(self.label.get_child_xts())
+        return len(self.typus.get_child_xts())
 
     def get_xtype_tuple(self):
-        return self.label.xtype
+        return self.typus.xtype
 
     def get_xtype_childs(self):
-        return self.label.xtype[0]
+        return self.typus.xtype[0]
 
     def get_xtype_self(self):
-        return self.label.xtype[1]
+        return self.typus.xtype[1]
 
-    def set_label(self, label: 'Label'):
+    def set_typus(self, t: 'Typus'):
         """all other values are automatically set by assigning the respected node"""
-        self.label = label
+        self.typus = t
 
     def set_childs(self, child_list):
         if isinstance(child_list, (list, tuple)):
@@ -283,7 +263,7 @@ class Node:
         This should never be the case! But it happened during development of recreating a tree from expression.
         This might also be useful in tree checks"""
         if origin.is_fix:
-            if str(self.label) != str(origin.label):
+            if str(self.typus) != str(origin.typus):
                 raise
             self.is_fix = True
             for ii, cc in enumerate(self.childs):
@@ -294,7 +274,7 @@ class Node:
         a+1 -> [+a1, a, 1]"""
         # if len(self.childs) == 0:
         try:
-            showme = f'{self.childs[0]}' if self.is_term() else f'{self.get_label().showme}'
+            showme = f'{self.childs[0]}' if self.is_term() else f'{self.get_typus().showme}'
         except Exception as ex:
             showme = f'ExCP'  # todo
 
@@ -329,21 +309,21 @@ class Node:
         sum_layers=False, get_closest=True, return_all_layers=False
         sfeh: option
         """
-        res = []
+        n = []
         if not self.is_fix:
-            res = [self]
+            n = [self]
             extend_lvls -= 1
 
         if extend_lvls >= 0:
-            if self.is_operator():
+            if self.has_childs():
                 for cc in self.childs:
-                    res.extend(cc.get_mutable_rootnodes(extend_lvls=extend_lvls))
+                    n.extend(cc.get_mutable_rootnodes(extend_lvls=extend_lvls))
 
-        return res
+        return n
 
     def get_apted_notation(self):
         """Calculating the TED requires this (weird) representation"""
-        return f"{{{self.get_label()}{''.join([cc.get_apted_notation() for cc in self.childs])}}}"
+        return f"{{{self.get_typus()}{''.join([cc.get_apted_notation() for cc in self.childs])}}}"
 
     def get_max_depth(self, depth=0):
         """Go through all nodes, save depth
@@ -355,23 +335,27 @@ class Node:
 
     def is_regular(self):
         # Nodes that are notchained-nodes
-        return issubclass(self.label, (OperatorArity, Terminal))
+        return issubclass(self.typus, (OperatorArity, Terminal))
 
     def is_chainop(self):
-        return issubclass(self.label, OperatorChained)
+        return issubclass(self.typus, OperatorChained)
 
     def is_operator(self):
-        return issubclass(self.label, BaseOperator)
+        return issubclass(self.typus, BaseOperator)
 
     def is_operator_chained(self):
-        return issubclass(self.label, OperatorChained)
+        return issubclass(self.typus, OperatorChained)
 
     def is_operator_true(self):
-        return issubclass(self.label, OperatorArity)
+        return issubclass(self.typus, OperatorArity)
 
     def is_term(self):
         # sfeh:discuss is_atom, rename all to atom?
-        return issubclass(self.label, Terminal)
+        return issubclass(self.typus, Terminal)
+
+    def has_childs(self):
+        # better to check for recursive use, as e.g. ExprCondPair is not a regular operator
+        return not self.is_term()
 
     def repair_depth(self, depth=0):
         """
@@ -381,7 +365,7 @@ class Node:
         the depth through every crossover/branch mutation function, instead, we call it when replacing nodes
         """
         depth = depth or 0  # sfeh: "None" was set as depth somewhere. Could not find it.
-        if self.is_operator():
+        if self.has_childs():
             for cc in self.childs:
                 cc.repair_depth(depth=depth + 1)
 
@@ -389,14 +373,14 @@ class Node:
 
     def set_new_node(self, nd_new: 'Node'):
         """Replacing oneself with another node"""
-        self.set_label(nd_new.label)  # sfeh remove childs, is_fix...
+        self.set_typus(nd_new.typus)  # sfeh remove childs, is_fix...
         self.set_childs(nd_new.childs)  # sfeh maybe must be updated recursively
         self.repair_depth(depth=self.depth)  # Especially required for crossover or branchesnd_new
         # sfeh check fixed or if type matches?
 
-    def replace_with(self, label, childs):
-        if label is not None:
-            self.set_label(label)
+    def replace_with(self, typus, childs):
+        if typus is not None:
+            self.set_typus(typus)
         if childs is not None:
             self.set_childs(childs)
 
@@ -437,7 +421,7 @@ class Node:
                 intelligent filtering
         """
         if self.is_term():
-            if issubclass(self.label, Number):
+            if issubclass(self.typus, Number):
                 self.childs[0] = round(random.gauss(self.childs[0], 0.1), FLOAT_PRECISION)  # sfeh: -> no symbols -> userspecific
         else:
             for cc in self.childs:
@@ -462,7 +446,7 @@ class Node:
         if self.is_term():  # good for runtime
             return
 
-        if self.label in (Pow, Powrounded):
+        if self.typus in (Pow, Powrounded):
             n_exp = self.childs[1].childs[0]  # must exist
             if n_exp == -1:
                 self.replace_with(DivFraction, childs=[self.childs[0]])
@@ -472,29 +456,29 @@ class Node:
                 self.replace_with(Sqrt, childs=[self.childs[0]])
             elif n_exp == 0:
                 self.replace_with(Number, childs=[1])
-            elif self.childs[1].label == Round:
+            elif self.childs[1].typus == Round:
                 self.replace_with(Powrounded, childs=[self.childs[0], n_exp])
             # sfeh:discuss, powrounded here? not clear
-            elif self.childs[1].label == Number and n_exp % 1 == 0:
-                self.set_label(Powrounded)
+            elif self.childs[1].typus == Number and n_exp % 1 == 0:
+                self.set_typus(Powrounded)
 
             # sfehxxx sub, usub replace
 
-        elif self.label == Mul:
+        elif self.typus == Mul:
             if not self.is_chain():  # div only for
-                if self.childs[0].label == DivFraction:
+                if self.childs[0].typus == DivFraction:
                     self.replace_with(Div, childs=[self.childs[1], self.childs[0].childs[0]])
-                elif self.childs[1].label == DivFraction:
+                elif self.childs[1].typus == DivFraction:
                     self.replace_with(Div, childs=[self.childs[0], self.childs[1].childs[0]])
 
-                elif self.childs[0].label == Number:
+                elif self.childs[0].typus == Number:
                     mul1 = self.childs[0].childs[0]
                     if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
                         self.replace_with(Usub, childs=[self.childs[1]])  # sfeh Usub ONLY option, ignore usub tree len
                     elif 0 < mul1 < 1:
                         self.replace_with(Div, childs=[self.childs[1], Node(Number, childs=[1 / mul1])])  # sfeh keep "div" as option
 
-                elif self.childs[1].label == Number:
+                elif self.childs[1].typus == Number:
                     # sfeh this code can be simplified
                     mul1 = self.childs[1].childs[0]
                     if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
@@ -505,7 +489,6 @@ class Node:
                         print(f'asd this needs testing when reached in future {sfeh_div_by_test}')
 
         for cc in self.childs:
-            # sfehxxxx: check, if this actually alters the content
             cc.tree_node_grouping()
 
 
@@ -626,30 +609,6 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
 
 # todo AttributeError: type object 'ExprCondPair' has no attribute 'symfun'
 #   This also causes recusrion errors. rename maybe?
-
-
-def render_pygraphviz(tree: Node):
-    import pygraphviz as pgv
-    node_dict, edges = tree.get_all_nodes_visualize('0')
-    vnodes = node_dict.keys()
-    vlabels = {}
-    for k, v in node_dict.items():
-        vlabels[k] = v['showme']
-
-    g = pgv.AGraph()
-    g.add_nodes_from(vnodes)
-    g.add_edges_from(edges)
-
-    for i in vnodes:
-        n = g.get_node(i)
-        n.attr["label"] = vlabels[i]
-    g.layout(prog="dot")
-
-    # for i in nodes2:
-    #     n = g.get_node(i)
-    #     n.attr["label"] = labels2[i]
-
-    g.draw("tree.png")
 
 
 if __name__ == '__main__':

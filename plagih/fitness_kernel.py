@@ -8,10 +8,7 @@ import sympy
 from sympy.utilities.exceptions import ignore_warnings
 import warnings
 
-from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
-
-# from plagih.tree_labels import sympy_to_tensorflow  # , RoundDummy
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -56,6 +53,7 @@ class Regression(Kernel):
     """
     Sums up the difference of all y (the data-solution) and y-hat (the candidates solution) in the data
     """
+
     def __init__(self, data_train, action_name, tf_error_metric, tf_sanitize_results, *args, **kwargs):
         super().__init__(data_train, action_name, tf_error_metric, tf_sanitize_results, *args, **kwargs)
 
@@ -164,7 +162,6 @@ class Regression(Kernel):
         cartVels = np.array(_inputs['cartVel'])
         cartPoss = np.array(_inputs['cartPos'])
         actions = np.array(_inputs['action'])
-        # print(f'asdasdasd {expr}')
         f = sympy.lambdify([a, b], expr, 'numpy')
         # except ValueError as err:
         #     print_warning('ww', f'Expression could not be evaluated: {expr}. Error: {err}')
@@ -177,7 +174,7 @@ class Regression(Kernel):
         results = np.round(np.clip(raw_results, 0, 2), 0)
 
         if not return_results:
-            fitness = np.sqrt(np.mean((results-actions)**2))
+            fitness = np.sqrt(np.mean((results - actions) ** 2))
             if 'nan' in str(fitness):  # sfeh:runtime (checking the str()? nan-check should be easier)
                 # rounding 'nan' does not raise an Exception. (round(sympy.nan))
                 raise ArithmeticError(f'Fitness can not be nan. expr: {expr}')
@@ -314,7 +311,6 @@ class Regression(Kernel):
 
 
 if __name__ == "__main__":
-
     # ['cos(1.69234081*Max(0.024077, cartPos + 12.726454)**2) + sign(cartVel)',
     #  '1.527033*cartVel + sign(cartVel) + Max(cartPos, cartVel)',
     #  'sign(cartVel) + 1.476507']

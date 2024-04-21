@@ -16,7 +16,7 @@ PRINT_DUMMY = 'wwaaagggiiifff'  # noqa: dummy for print-policy wwaaaggggggiiifff
 FLOAT_PRECISION = 3
 PLOTS_INTERVAL = 10
 BACKUP_INTERVAL = 10
-CHAINED_VERION = True  # sfeh:not here?
+CHAINED_VERION = False  # sfeh:not here?
 TREE_MIN_PARSIMONY = 3
 
 # # GP Evolution

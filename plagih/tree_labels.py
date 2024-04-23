@@ -543,10 +543,9 @@ class Round(MathOperator):
 
 class Powrounded(OperatorArity):
     # tflow = lambda a, b: tf.pow(a, tf.round(b))
-    try:
-        symfun = lambda a, b: sympy.Pow(a, Round.symfun(b))  # symfun = lambda a, b: a**Round.symfun(b)
-    except Exception as todo:
-        symfun = lambda a, b: sympy.Pow(a, Round.symfun(b))  # symfun = lambda a, b: a**Round.symfun(b)
+    # todo: error coming up, when the power of an exponent has a variable in it: Round.symfun fails to work.
+    #   AttributeError: 'function' object has no attribute 'is_Symbol
+    symfun = lambda a, b: sympy.Pow(a, Round.symfun(b))  # symfun = lambda a, b: a**Round.symfun(b)
     showme = 'x^((y))'
     xtype = ((float, float), float)
 
@@ -605,9 +604,6 @@ class exp(MathOperator):
     symfun = sympy.exp
     showme = 'x^e'
     xtype = ((float,), float)
-
-
-"""SFEH the following are operators that are to be handled completely different"""
 
 
 class TerminalDummy(Typus):

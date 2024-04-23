@@ -23,6 +23,7 @@ def plot_performance(monitor_df, name, path_monitoring: Path):
         # sfeh:improvement not just the stderr on both sides...
         avg = monitor_df['fit_avg']
         std = monitor_df['fit_var']
+        # std = monitor_df['fit-average of better/worse half?']  # sfeh:OPEN
         axs0.fill_between(xx, avg - std, avg + std, alpha=0.2)  # do not use avg in both directions...
         # axs0.set_title('regression Error (average)')  # sfeh not stderr... upper/lower bound?
         # sfeh: the best candidate is the best one in the current population. discussion: best overall?

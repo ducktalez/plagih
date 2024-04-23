@@ -7,9 +7,11 @@
 
 - double linked tree (root node, parent node)
 - histogram for tree complexity 
+- gen_create_initial -> create random pop if pop empty? with leftovers?
 - tree -> evaluate nodes for best improvement 
 - population cluster/races
 - Make regular Function Classes Sympy Functions
+- SFEHASD: Keep all same-quality Pareto-entries!! 
 - replacing
   - replace x**2 with Squared(x)
   - replace -1*x, coming from sympy functions
@@ -25,7 +27,7 @@
   - remove sfeh:...
 - separate monitoring class
 - introduce NN in alpha-tree, at well-mutable nodes
-- evaluate one very large TF-graph containing the whole population
+- evaluate one very large graph (TF?) containing the whole population
 - use sympy.count_ops() to count operators
 - parallelisation
 - evolve-operatoren: werte runden, runden einbauen,

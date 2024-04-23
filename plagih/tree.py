@@ -30,14 +30,17 @@ d_sym2node_chain = d_sym2node | {sympy.Add: AddChain, sympy.Mul: MulChain, sympy
 
 @dataclass
 class Node:
-    """Recursively holds the nodes of a tree"""
+    """Recursively holds the nodes of a tree
+    parent: pointer to parent node, 'None' implies root-node
+        parent-parameter added for pseudo-backprop
+    """
 
     def __init__(self, typus: Typus, childs: iter, depth=None, is_fix=False, is_chain=False):
         self.typus = typus
         self.childs = childs[:]  # ...usually a list, but can also be 'None'
-
         self.is_fix = is_fix
         self.depth = depth
+        self.parent_node = None
         # self.is_chain = is_chain  # sfeh:xxx check update required
 
     def is_chain(self):
@@ -69,15 +72,16 @@ class Node:
                 except TypeError as ex:
                     typus_str = str(self.childs[0].evalf())
                     # sympy.ONE -> 1.0000000...
-                    # sfeh:open int, non-floats are handeled badly
+                    # sfeh:open int, non-floats are handled badly
                 except Exception as ex:
                     print(f'SUCCESS sfeh:debug, delete?2 KEEP? {ex}')
 
         return f"[{typus_str}]"
 
-    def get_id(self):
+    def get_lut_id(self):
         """
         todo same node multiple times in tree, this is not "ID!"°!!
+        Unique+simple representation of a tree (to check in a lut if it was calculated already)
         returns string Identificator
         sfeh:discuss is this just repr?
         ID=Identificator, which"""
@@ -142,10 +146,12 @@ class Node:
                 _sym = self.typus.get_sym()
 
             try:
-                return _sym(*_cs)
+                return _sym(*_cs)  # noqa (_sym is definitely assigned)
             except RecursionError as ex:
                 print(f'sfeh:RecursionError, maybe Piecewise?: {self.typus}, {self.childs}, {ex}')
                 raise RecursionError
+            # except AttributeError as todo:
+            #     return _sym(*_cs)
             # except TypeError as ex:
             #     # print(f'sfeh:TypeError?: {self.typus}, {self.childs}: {ex}')
             #     # TypeError: Argument must be a Basic object, not `Node`
@@ -376,7 +382,10 @@ class Node:
         self.set_typus(nd_new.typus)  # sfeh remove childs, is_fix...
         self.set_childs(nd_new.childs)  # sfeh maybe must be updated recursively
         self.repair_depth(depth=self.depth)  # Especially required for crossover or branchesnd_new
+        # sfeh: depth is repaired at the end, as some bug leads to wrong depths somewhere (depth=None)
         # sfeh check fixed or if type matches?
+
+    # todo:Do links to parents lead to problems when crossover/etc happens?
 
     def replace_with(self, typus, childs):
         if typus is not None:

@@ -18,12 +18,12 @@ import pandas as pd
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
 
-def printpl(message_type, message_str):
+def printpl(msg_type, message_str):
     """Lightweight print function.
     Instead of checking if you should print every time, this is done here.
     message_type options can be found in config
     """
-    printez(message_type, message_str)
+    printez(msg_type, message_str)
     return
 
 
@@ -182,7 +182,8 @@ class ExplainableGP:
                 _obsoletes = [i for i in self.paretofront if
                               i.get_fitness() > candidate_tree.get_fitness() and i.get_parsimony() >= candidate_tree.get_parsimony()]
                 if _obsoletes:
-                    printyeah('a', f'Paretofront: Removing obsolete entries {[f'{i.full_string()}' for i in _obsoletes]}')
+                    x = [f'{i.full_string()}' for i in _obsoletes]
+                    printyeah('a', f'Paretofront: Removing obsolete entries {x}')
                 self.paretofront = [ftree for ftree in self.paretofront if ftree not in _obsoletes]
                 self.paretofront.append(candidate_tree)
                 self.paretofront = pareto_sort(self.paretofront)
@@ -321,7 +322,7 @@ class ExplainableGP:
 
         evotree.repair_depth()
 
-        tree_id = evotree.get_id()
+        tree_id = evotree.get_lut_id()
 
         if tree_id in self.lut_sym:
             sy_expr = self.lut_sym[tree_id]
@@ -407,8 +408,8 @@ class ExplainableGP:
         gen_time = time.perf_counter() - self.time_genstart
         tmp_dict = pop_analyze(self.pop_genepool, gen_time, self.gens_since_last_pareto)
         self.monitor_df.loc[self.gen_id] = tmp_dict
-        printpl('gg', f"Created {len(self.pop_genepool)}/{self.pop_max} ({tmp_dict['pop_unique']} unique) in "
-                      f"generation {self.gen_id}. Gen took {gen_time:4.2f}s")
+        printpl('gg', f"Created {len(self.pop_genepool)}/{self.pop_max} ({tmp_dict['pop_unique']} unique) in generation {self.gen_id}. "
+                      f"Trees in LUT: {len(self.lut_fitness)} Gen took {gen_time:4.2f}s")
 
         printpl('ggg', f'--- Gen {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}. ---')
 
@@ -425,7 +426,7 @@ class ExplainableGP:
     def run_custom_exit_condition(self):
         """
         Special condition to exit the evolve-loop
-        1. when >100 generations, no new paretofront paretofront were found
+        1. when >100 generations, no new paretofront were found
         """
         try:
             if self.gens_since_last_pareto > 100:  # .iloc[-1] > 100:  # sfeh discussion

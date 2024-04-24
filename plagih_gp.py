@@ -5,6 +5,9 @@ This (extra) file was added to have a file in the root directory that can be sta
 # import copy
 # import itertools
 import sys
+
+import numpy as np
+
 # import random
 
 # import multiprocessing as mp
@@ -93,10 +96,13 @@ def kernel_for_mtc():
     outcome = sympy.Symbol('outcome')
     tree_base = Clip(Round(outcome), 0, 2)  # sfeh:open
 
-    tf_sanitize_results = lambda res: tf.round(tf.clip_by_value(res, 0, 2))
-    tf_error_metric = lambda pw_diffs: tf.sqrt(tf.reduce_mean(tf.square(pw_diffs)))
+    # tf_sanitize_results = lambda res: tf.round(tf.clip_by_value(res, 0, 2))
+    # tf_error_metric = lambda pw_diffs: tf.sqrt(tf.reduce_mean(tf.square(pw_diffs)))
+    # todo
+    sanitize_results = lambda res: np.round(np.clip(res, 0, 2))
+    error_metric = lambda pw_diffs: np.sqrt(np.mean(np.square(pw_diffs)))
     # tf.reduce_mean(tf.abs(pairwise_diff))  # sfeh:open
-    kernel = Regression(data_train, 'action', tf_error_metric, tf_sanitize_results)
+    kernel = Regression(data_train, 'action', error_metric, sanitize_results)
 
     return df, kernel
 
@@ -118,7 +124,7 @@ def _test_simple():
     """SIMPLE"""
     df, kernel = kernel_for_mtc()
 
-    build_operator_dict = {Add: 2, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
+    build_operator_dict = {Add: 2, Mul: 2, Div: 1, Square: 0.75, Sqrt: 0.1, Log: 0.1, Abs: 0.5, Sign: 0.5,
                      Sin: 0.5, Not: 0.5, Lt: 0.5, Le: 0.5, And: 1, Or: 1, Min: 1, Max: 1}
     node_selector = NodeRandomizer(build_operator_dict, INPUT_NAMES)
     tb = Evolution(None, None, node_selector, {'depth_max': 7, 'nodes_max': 50}, 'tree_node_count')
@@ -135,14 +141,14 @@ def _test_simple():
         @gp.create_trees(rate=1)
         def rand2_CHAIN():
             tree = gp.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
-            tree = tree_simplification(tree, allow_chain=True)
+            tree = tree_simplification(tree, allow_chain=CHAINED_VERION)
             tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
             return tree
         gp.end_generation()
 
     for _ in range(10):
         @gp.create_trees(rate=1)
-        def mx_branch_n():
+        def mx_branch_n1():
             tree = selection_tournament(gp.pop_genepool, tournsize=3)
             n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
             tree = gp.tb.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
@@ -155,10 +161,11 @@ def _test_simple():
             tree_a = selection_tournament(gp.pop_genepool, tournsize=3)
             tree_b = selection_tournament(gp.pop_genepool, tournsize=3)
             evo1, evo2 = gp.tb.evolve_crossover(tree_a, tree_b)
-            evo1 = tree_simplification(evo1, allow_chain=True)
-            evo2 = tree_simplification(evo2, allow_chain=True)
+            evo1 = tree_simplification(evo1, allow_chain=CHAINED_VERION)
+            evo2 = tree_simplification(evo2, allow_chain=CHAINED_VERION)
             return evo1, evo2
-        gp.evoloop_monitoring_plots()
+        gp.end_generation()
+    gp.evoloop_monitoring_plots()
 
     print('***Program ending***\n'
           '********************\n\n')
@@ -242,7 +249,7 @@ def _test_random_pop():
             def mx_branch_d_CHAIN():
                 tree = selection_tournament(gp.pop_genepool, tournsize=3)
                 tree = gp.tb.evolve_mutate_branch_depth(tree, 4, p_term=0.5)
-                tree = tree_simplification(tree, allow_chain=True)
+                tree = tree_simplification(tree, allow_chain=CHAINED_VERION)
                 return tree
 
             @gp.create_trees(rate=0.1)
@@ -250,7 +257,7 @@ def _test_random_pop():
                 # sfeh float? nope
                 # sfeh:discuss: deep random trees have a tendency to also allow weird-ass looking nonsense
                 tree = gp.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
-                tree = tree_simplification(tree, allow_chain=True)
+                tree = tree_simplification(tree, allow_chain=CHAINED_VERION)
                 return tree
 
             @gp.create_trees(rate=0.3, crossover=True)
@@ -258,8 +265,8 @@ def _test_random_pop():
                 tree_a = selection_tournament(gp.pop_genepool, tournsize=3)
                 tree_b = selection_tournament(gp.pop_genepool, tournsize=3)
                 evo1, evo2 = gp.tb.evolve_crossover(tree_a, tree_b)
-                evo1 = tree_simplification(evo1, allow_chain=True)
-                evo2 = tree_simplification(evo2, allow_chain=True)
+                evo1 = tree_simplification(evo1, allow_chain=CHAINED_VERION)
+                evo2 = tree_simplification(evo2, allow_chain=CHAINED_VERION)
                 return evo1, evo2
 
         else:
@@ -274,7 +281,7 @@ def _test_random_pop():
                 return gp.tb.evolve_mutate_branch_depth(tree, 4, p_term=0.5)
 
             @gp.create_trees(rate=0.15)
-            def mx_branch_n():
+            def mx_branch_n2():
                 tree = selection_tournament(gp.pop_genepool, tournsize=3)
                 n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
                 tree = gp.tb.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
@@ -344,8 +351,8 @@ def _test_random_pop():
 
 if __name__ == "__main__":
     # mp.set_start_method('spawn')
-    # _test_simple()
-    _test_random_pop()
+    _test_simple()
+    # _test_random_pop()
 
 # class ObservationIndex(Observation):
 #     """

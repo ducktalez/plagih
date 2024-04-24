@@ -39,7 +39,7 @@ def randomly_split_range(range_max: int, num_splits: int) -> list[int]:
     return sample_dist
 
 
-def tree_simplification(tree, allow_chain=False) -> Node:
+def tree_simplification(tree, allow_chain=CHAINED_VERION) -> Node:
     """
     (Tries to) simplify/mathematically-reduce a tree. It is quite experimental
     # sfeh sympy-reconstruct patterns
@@ -54,8 +54,8 @@ def tree_simplification(tree, allow_chain=False) -> Node:
         tree.tree_node_grouping()
         if len(tree_copy) < len(tree):
             print(f'WHATTPPENDED SFEH'
-                  f'\n\t{tree_copy.str_as_list()}'
-                  f'\n\t{tree.str_as_list()}'
+                  f'\n\told: {tree_copy.str_as_list()}'
+                  f'\n\tsym: {tree.str_as_list()}'
                   f'\n\t{tree_copy.get_sympy_expr()}'
                   f'\n\t{tree.get_sympy_expr()}')
     return tree
@@ -254,10 +254,7 @@ class Evolution:
             if num_rest > 0:
                 nums = randomly_split_range(num_rest-1, num)
                 for ii, xt in enumerate(child_xts):
-                    try:
-                        cc = self.evolve_create_random(xt, depth_goal, num_rest=nums[ii], depth=depth + 1, p_term=p_term)
-                    except Exception as todo:
-                        cc = self.evolve_create_random(xt, depth_goal, num_rest=nums[ii], depth=depth + 1, p_term=p_term)
+                    cc = self.evolve_create_random(xt, depth_goal, num_rest=nums[ii], depth=depth + 1, p_term=p_term)
                     childs.append(cc)
             else:
                 for xt in child_xts:
@@ -272,6 +269,7 @@ class Evolution:
         """Evolve, creating a new branch in this node
         """
         # sfeh:open This is currently unused
+        num_rest -= 1  # sfeh i guess
 
         if self.origin_tree is not None:
             evotree = copy.deepcopy(self.origin_tree)
@@ -290,7 +288,7 @@ class Evolution:
 
     def evolve_mutate_filter(self, tree):
         """Mutates a number of float terminal of a fintree
-        - filter point/branch/all, branch can also affect a point only aswell as all nodes
+        - filter point/branch/all, branch can also affect a point only as well as all nodes
         - filter observations?
         - filter terminals
         - filter with which filter?"""
@@ -306,7 +304,7 @@ class Evolution:
         sfeh:debug is the fintree a fintree copy or the same fintree?"""
         evotree = copy.deepcopy(tree)
 
-        node = rnd_choice(evotree.list_mutable_nodes(allow_chain=False))  # debug if ignores chains
+        node = rnd_choice(evotree.list_mutable_nodes(allow_chain=CHAINED_VERION))  # debug if ignores chains
         xtype = node.get_xtype_tuple()
 
         if node.is_operator():
@@ -340,7 +338,8 @@ class Evolution:
         nodes_init = len(tree)
         if tree is None:
             raise NotImplementedError('SFEH:open Implement standard selection mechanism')
-        nd = rnd_choice(tree.list_mutable_nodes())
+        nd = tree.list_mutable_nodes()
+        nd = rnd_choice(nd)
         xt_out = nd.get_xtype_self()
         nodes_goal = min(self.nodes_max - (nodes_init - len(nd)), nodes_goal)
 
@@ -362,7 +361,7 @@ class Evolution:
         # aa = node_deepcopy(tree1)
         # bb = node_deepcopy(tree2)
 
-        a_nds = aa.list_mutable_nodes(ignore_first=True)  # why actually ignore root node
+        a_nds = aa.list_mutable_nodes(skip_first=True)  # why actually ignore root node
         a_nds = [x for x in a_nds if len(x) > 1]
 
         if len(a_nds) == 0:
@@ -371,13 +370,13 @@ class Evolution:
         a_nd = np.random.choice(a_nds)
         xt_out = a_nd.get_xtype_self()
 
-        b_nds = bb.list_mutable_nodes(xt_match=xt_out)
+        b_nds = bb.list_mutable_nodes(xtype=xt_out)
 
         if len(b_nds) > 0:
             b_nd = np.random.choice(b_nds)
         else:
             xt_out = float if xt_out == bool else bool  # switching to the other swap type
-            b_nds = bb.list_mutable_nodes(xt_match=xt_out)
+            b_nds = bb.list_mutable_nodes(xtype=xt_out)
             b_nd = np.random.choice(b_nds)
             a_nds = [x for x in a_nds if x.get_xtype_self() == xt_out]
             if len(a_nds) == 0:

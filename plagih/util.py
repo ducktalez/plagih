@@ -8,7 +8,6 @@ from pathlib import Path
 # from distutils.spawn import find_executable
 import numpy as np
 
-
 DEBUG_DUMMY = True  # Use this to find codeblocks that are just interesting during development
 TEST_DUMMY = True  # sfeh: actually use this later! check trees, check if all ops are usable,
 DELETE_ME = True  # sfeh:delete this when development phase is over
@@ -18,6 +17,7 @@ PLOTS_INTERVAL = 10
 BACKUP_INTERVAL = 10
 CHAINED_VERION = False  # sfeh:not here?
 TREE_MIN_PARSIMONY = 3
+
 
 # # GP Evolution
 # period = {'gen_plots': 5, 'gen_save': 5}
@@ -31,6 +31,7 @@ def printyeah(message_type, message_str):
     Instead of checking if you should print every time, this is done here.
     message_type options can be found in config
     """
+    # todo pretty printer
     printez(message_type, message_str)
     return
 
@@ -98,17 +99,17 @@ def yaml_dump(path, data, default_flow_style=True):
         return
 
 
-def print_warning(message_type, text):
+def print_warning(msg_type, text):
     """
     Printing warnings
     """
     try:
-        if message_type not in PRINT_DUMMY:
+        if msg_type not in PRINT_DUMMY:
             return
-        if message_type == 'w':
-            print(f'{BColors.WARNING}Warning ({message_type}): {text}{BColors.RESET}')  # completely yellow
+        if msg_type == 'w':
+            print(f'{BColors.WARNING}Warning ({msg_type}): {text}{BColors.RESET}')  # completely yellow
         else:
-            print(f'{BColors.WARNING}Warning ({message_type}): {text}{BColors.RESET}')  # only "Warning" yellow
+            print(f'{BColors.WARNING}Warning ({msg_type}): {text}{BColors.RESET}')  # only "Warning" yellow
     except Exception as ex:
         print_warning('w', f'Could not print warning: {ex}')
     return
@@ -125,8 +126,6 @@ def path_make_dir(p: Path):
 
 pyplot_size = (3.6, 2.7)  # default: (6.4, 4.8) S: (4, 3)  XXL: (16, 9)  M: (4.8, 3.6) (4.4, 3.3)
 plplot_size_up = (3.6, 3.6)
-
-
 
 pyplot_rc_tex = {'figure.autolayout': True,
                  'text.usetex': shutil.which('latex') or False,  # check if 'latex' is available
@@ -313,8 +312,9 @@ if __name__ == '__main__':
     print(f'Testing the plot style')
     import matplotlib.pyplot as plt
     import numpy as np
+
     x = range(10)
-    y = np.sin(np.arange(10)/10) + np.arange(10)/10
+    y = np.sin(np.arange(10) / 10) + np.arange(10) / 10
     with plt.rc_context(rc=pyplot_rc_two_column):
         fig, ax = plt.subplots()
         ax.plot(x, y, marker='x', label='random values (idk)')

@@ -85,7 +85,7 @@ class Regression(Kernel):
     #
     #     fitness = tf_results['mean_error']
     #     if fitness != fitness or fitness == float('inf'):
-    #         raise ValueError(f"fitness evaluation failed ('{fitness}')")  # sfeh: so bad, they leave the float-range. delete this?
+    #         raise ValueError(f"fitness eval failed ('{}')")  # sfeh: so bad, they leave  float-range. delete this?
     #     tf_results['mean_error'] = round(float(tf_results['mean_error']), FLOAT_PRECISION)
     #
     #     return tf_results
@@ -165,6 +165,10 @@ class Regression(Kernel):
         # except ValueError as err:
         #     print_warning('ww', f'Expression could not be evaluated: {expr}. Error: {err}')
 
+        # try:
+        #     raw_results = f(cartVels, cartPoss)
+        # except Exception as TODO:
+        #     x = expr.evalf(subs={'cartVel': cartVels, 'cartPos': cartPoss, 'action': actions})
         with warnings.catch_warnings():
             with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
                 with ignore_warnings(DeprecationWarning):  # something like use "**" instead of "Pow"

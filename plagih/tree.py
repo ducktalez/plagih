@@ -1,5 +1,6 @@
 import random
 from dataclasses import dataclass
+from typing import Type
 
 import sympy.core.numbers
 
@@ -16,8 +17,8 @@ d_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, 
               sympy.GreaterThan: Ge, sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos,
               sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
               sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: exp}
-d_op2chain = {Add: AddChain, Mul: MulChain, Min: MinChained, Max: MaxChained, And: AndChained, Or: OrChained,
-              Piecewise: Piecewise}
+# d_op2chain = {Add: AddChain, Mul: MulChain, Min: MinChained, Max: MaxChained, And: AndChained, Or: OrChained,
+#               Piecewise: Piecewise}
 # The chained version is the regular version updated with the following operators
 d_sym2node_chain = d_sym2node | {sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChained, sympy.Max: MaxChained,
                                  sympy.And: AndChained, sympy.Or: OrChained, sympy.Piecewise: Piecewise,
@@ -35,12 +36,13 @@ class Node:
         parent-parameter added for pseudo-backprop
     """
 
-    def __init__(self, typus: Typus, childs: iter, depth=None, is_fix=False, is_chain=False):
+    def __init__(self, typus: Type[Typus], childs: iter, depth=None, is_fix=False, is_chain=False):
         self.typus = typus
-        self.childs = childs[:]  # ...usually a list, but can also be 'None'
-        self.is_fix = is_fix
-        self.depth = depth
-        self.parent_node = None
+        self.childs = childs[:]  # ...usually a list, (??>) but can also be 'None' (<??)
+        self.is_fix = is_fix  # only for trees with a "fixed" root structure
+        self.depth = depth  # requires repair after changes
+        self.parent_node = None  # pointer to parent, requires repair after changes
+        self.root_node = None  # pointer to the one root-node, requires repair after changes
         # self.is_chain = is_chain  # sfeh:xxx check update required
 
     def is_chain(self):
@@ -49,6 +51,10 @@ class Node:
         ...if there are less. its weird, maybe node in construction?"""
         if len(self.typus.xtype[0]) < len(self.childs):
             return False
+
+    def is_number_sfeh(self):
+        x = issubclass(self.typus, Number)
+        return x
 
     def str_as_list(self):
         # typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
@@ -65,7 +71,7 @@ class Node:
                 typus_str = f'{typus_str}, {childstr}'
             else:
                 try:
-                    if issubclass(self.typus, Number):
+                    if self.is_number_sfeh():
                         typus_str = f'{self.childs[0]:.3g}'  # '.5g'->5 decimals, trailing zeros, but rare (ugly) "E+04"
                     else:
                         typus_str = f'{self.childs[0]}'
@@ -82,6 +88,7 @@ class Node:
         """
         todo same node multiple times in tree, this is not "ID!"°!!
         Unique+simple representation of a tree (to check in a lut if it was calculated already)
+        regular print/string option should look better, this is just for getting a unique identifier
         returns string Identificator
         sfeh:discuss is this just repr?
         ID=Identificator, which"""
@@ -93,13 +100,12 @@ class Node:
             typus_str = self.typus  # because Terminals are obj -> 'Symbol' obj has no attr __name__
 
         if self.childs:
-            if issubclass(self.typus, OperatorArity):
+            # if self.has_childs():
+            if self.is_operator():  # self.is_arity_operator() n
                 childstr = ', '.join([cc.str_as_list() for cc in self.childs])
                 typus_str = f'{typus_str}, {childstr}'
-            elif issubclass(self.typus, OperatorChained):
-                childstr = ', '.join([cc.str_as_list() for cc in self.childs])
-                typus_str = f'{typus_str}, {childstr}'
-            elif issubclass(self.typus, TerminalDummy):
+            elif self.is_ExprCdPair():
+                # elif issubclass(self.typus, TerminalDummy):
                 childstr = ', '.join([cc.str_as_list() for cc in self.childs])  # those are actual childs
                 typus_str = f'({childstr})'
             else:
@@ -140,16 +146,22 @@ class Node:
             return _cs
         else:
             _cs = [cc.get_sympy_expr() for cc in self.childs]
-            if issubclass(self.typus, OperatorArity):
+            if 'ExprCondPair' in str(_cs):
+                print('sfeh never reached?')
+            if self.is_operator():
+                _sym = self.typus.get_sym()
+            elif self.is_ExprCdPair():
                 _sym = self.typus.get_sym()
             elif CHAINED_VERION:
                 _sym = self.typus.get_sym()
+            else:
+                raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.typus)}')
 
             try:
                 return _sym(*_cs)  # noqa (_sym is definitely assigned)
-            except RecursionError as ex:
-                print(f'sfeh:RecursionError, maybe Piecewise?: {self.typus}, {self.childs}, {ex}')
-                raise RecursionError
+            # except RecursionError as ex:
+            #     print(f'sfeh:RecursionError, maybe Piecewise?: {self.typus}, {self.childs}, {ex}')
+            #     raise RecursionError
             # except AttributeError as todo:
             #     return _sym(*_cs)
             # except TypeError as ex:
@@ -167,11 +179,9 @@ class Node:
             except Exception as ex:
                 raise ex
 
-            raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.typus)}')
-
     def get_expr_raw_fstring(self):
         """Add (1 + a)"""
-        if issubclass(self.typus, Terminal):
+        if self.is_term():
             expr = f'{self.childs[0]}'
         else:
             expr = [cc.get_expr_raw_fstring() for cc in self.childs]
@@ -182,7 +192,7 @@ class Node:
                 try:
                     expr = f'{self.typus.expr_dmy}({expr})'
                 except Exception as ex:
-                    expr = f'({expr})'  # sfeh catching ExprCondPair here
+                    expr = f'({expr})'
 
         # Sfeh:notimplementederror here?
         return expr
@@ -203,15 +213,16 @@ class Node:
         Printing the nodes as nested array structure such that it can be saved/loaded
         very closely related to str(), but adds the following information:
         - ":fix", when nodes are fixed"""
-        typus_str = self.typus
+        s = self.typus
 
         if self.is_fix:
-            typus_str += ':fix'
+            s += ':fix'
 
-        if self.childs:
-            childstr = ', '.join([self.represent(cc) for cc in self.childs])
-            typus_str = f"{typus_str}, {childstr}"
-        return f"[{typus_str}]"
+        if self.has_childs():
+            cs = [self.represent(cc) for cc in self.childs]
+            childstr = ', '.join(cs)
+            s = f"{s}, {childstr}"
+        return f"[{s}]"
 
     def __repr__(self):
         """sfeh:WRONG! Do NOT use __str__!"""
@@ -219,18 +230,22 @@ class Node:
 
     def len_nodecount_raw(self):
         """counting the amount of nodes recursively"""
-        if issubclass(self.typus, Terminal):
-            return 1  # childs can currently be floats
-        else:
+        if self.has_childs():
             return 1 + sum([cc.len_nodecount_raw() for cc in self.childs])
+        else:
+            return 1  # childs can currently be floats
+
+    def is_typus(self, t: Type[Typus]):
+        r = issubclass(self.typus, t)
+        return r
 
     def len_nodecount_fair(self):
         """counting the amount of nodes, but
             - ignoring "Usub!
         """
-        if issubclass(self.typus, Terminal):
+        if self.is_term():
             return 1
-        elif issubclass(self.typus, Usub):
+        elif self.is_typus(Usub):
             return sum([cc.len_nodecount_fair() for cc in self.childs])
         else:
             return 1 + sum([cc.len_nodecount_fair() for cc in self.childs])
@@ -253,13 +268,23 @@ class Node:
     def get_xtype_self(self):
         return self.typus.xtype[1]
 
-    def set_typus(self, t: 'Typus'):
+    def set_typus(self, t: Type[Typus]):
         """all other values are automatically set by assigning the respected node"""
         self.typus = t
+
+    def set_parent(self, n: 'Node'):
+        self.parent_node = n
+
+    def set_root(self, n: 'Node'):
+        self.root_node = n
 
     def set_childs(self, child_list):
         if isinstance(child_list, (list, tuple)):
             self.childs = child_list
+            if self.has_childs():
+                for cc in self.childs:
+                    cc.set_parent(self)  # set pointer in child-nodes
+                    cc.set_root(self)
         else:
             raise TypeError(f'childs must be set as list, not {type(child_list)}: {child_list}')
 
@@ -278,10 +303,12 @@ class Node:
         """returns all nodes in a tree as list
         a+1 -> [+a1, a, 1]"""
         # if len(self.childs) == 0:
-        try:
-            showme = f'{self.childs[0]}' if self.is_term() else f'{self.get_typus().showme}'
-        except Exception as ex:
-            showme = f'ExCP'  # todo
+        showme = f'{self.childs[0]}' if self.is_term() else f'{self.get_typus().showme}'
+
+        # try:
+        #     showme = f'{self.childs[0]}' if self.is_term() else f'{self.get_typus().showme}'
+        # except Exception as ex:
+        #     showme = f'ExprCondPr'  # todo
 
         res = {setid: {'node': self,
                        'showme': showme}}
@@ -338,21 +365,20 @@ class Node:
         else:
             return max(cc.get_max_depth(depth=depth + 1) for cc in self.childs)
 
-    def is_regular(self):
+    def is_arity_operator(self):
         # Nodes that are notchained-nodes
-        return issubclass(self.typus, (OperatorArity, Terminal))
-
-    def is_chainop(self):
-        return issubclass(self.typus, OperatorChained)
+        return issubclass(self.typus, OperatorArity)  # sfeh check? Terminal?
 
     def is_operator(self):
         return issubclass(self.typus, BaseOperator)
 
-    def is_operator_chained(self):
-        return issubclass(self.typus, OperatorChained)
-
-    def is_operator_true(self):
-        return issubclass(self.typus, OperatorArity)
+    def is_ExprCdPair(self):
+        if 'ExprCondPair' in str(self):
+            print('TODO')
+        a = isinstance(self.typus, ExprCondPair)
+        b = issubclass(self.typus, ExprCondPair)
+        todo = (a or b)
+        return todo
 
     def is_term(self):
         # sfeh:discuss is_atom, rename all to atom?
@@ -385,39 +411,50 @@ class Node:
         # sfeh: depth is repaired at the end, as some bug leads to wrong depths somewhere (depth=None)
         # sfeh check fixed or if type matches?
 
-    # todo:Do links to parents lead to problems when crossover/etc happens?
+    # sfeh:Do links to parents lead to problems when crossover/etc happens?
+
+    def repair_backlink(self, parent: 'Node', root: 'Node'):
+        """backlink was introduced on 23.04.2024, linking the tree"""
+        self.root_node = root
+        self.parent_node = parent
+        for cc in self.childs:
+            cc.repair_backlink(self, root)
+        # self.repair_depth()
+        # todo crossover with pointers CRAZY. ALWAYS COPY TREE FIRST
 
     def replace_with(self, typus, childs):
         if typus is not None:
             self.set_typus(typus)
         if childs is not None:
             self.set_childs(childs)
+        # self.repair()
 
         # self.repair_depth(self.depth)  # sfeh:discuss not required
         # no checks
 
-    def list_mutable_nodes(self, xt_match=None, ignore_first=False, allow_chain=False) -> ['Node']:
+    def list_mutable_nodes(self, xtype=None, skip_first=False, allow_chain=False) -> ['Node']:
         """was eval_mutable_nodes,
+        "skip_layers"
         return all nodes that are mutable, aka suite for point- or branchmutation
         sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!"""
 
         # -> Check, if this node should be added
         if self.is_fix:
             node_list = []
-        elif ignore_first:
+        elif skip_first:
             node_list = []  # ignore_first is automatically set to false during recursion
-        elif allow_chain or self.is_chain():
+        elif self.is_ExprCdPair():
             node_list = []
         else:
-            if xt_match is None or xt_match == self.get_xtype_self():
+            if xtype is None or xtype == self.get_xtype_self() or (allow_chain and self.is_chain()):
                 node_list = [self]
             else:
                 node_list = []
 
         # -> recursively add the other nodes
-        if self.is_regular() and self.is_operator():  # sfeh:chain-operators discuss
+        if self.has_childs():  # sfeh:chain-operators discuss
             for cc in self.childs:
-                node_list.extend(cc.list_mutable_nodes(xt_match=xt_match, ignore_first=False, allow_chain=allow_chain))
+                node_list.extend(cc.list_mutable_nodes(xtype=xtype, skip_first=False, allow_chain=allow_chain))
 
         return node_list
 
@@ -429,12 +466,14 @@ class Node:
                 random nodes in a branch /
                 intelligent filtering
         """
-        if self.is_term():
-            if issubclass(self.typus, Number):
-                self.childs[0] = round(random.gauss(self.childs[0], 0.1), FLOAT_PRECISION)  # sfeh: -> no symbols -> userspecific
-        else:
+        if self.has_childs():
             for cc in self.childs:
                 cc.evolve_mutate_filter_gauss()
+
+        else:
+            if self.is_number_sfeh():
+                self.childs[0] = round(random.gauss(self.childs[0], 0.1), FLOAT_PRECISION)  # sfeh: -> no symbols -> userspecific
+
         return
 
     def mutate_self_filter_index(self):
@@ -522,7 +561,7 @@ class RootNode_Dummy(Node):
         super().__init__(*args, **kwargs)
 
 
-def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
+def sympy_to_tree(s_expr: sympy.Basic, allow_chain=CHAINED_VERION) -> Node:
     """
     Important: start with the most specific rule
     # sfeh:discuss computational improvement when option to ignore args? do "raises" in args save time?
@@ -559,20 +598,19 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=False) -> Node:
 
         cc_nodes = []
         for arg in s_expr.args:
-            cc_nodes.append(sympy_to_tree(arg, allow_chain=allow_chain))
+            cc_nodes.append(sympy_to_tree(arg, allow_chain=CHAINED_VERION))
 
-        if allow_chain:
+        if CHAINED_VERION:
             op = d_sym2node_chain[type(s_expr)]
             return Node(op, childs=cc_nodes)
 
         if isinstance(s_expr, sympy.functions.elementary.piecewise.ExprCondPair):
-            # raise Exception(f'sfeh')
             return Node(ExprCondPair, cc_nodes)
 
         elif isinstance(s_expr, sympy.Piecewise):
             # "Chained_VERSION" version is handled before
             reversed_pairs = list(s_expr.args[::-1])  # tuples to list, reversed: tuple must be nested the deepest
-            reversed_pairs = [[sympy_to_tree(xx, allow_chain=allow_chain) for xx in list(i)] for i in reversed_pairs]  # noqa
+            reversed_pairs = [[sympy_to_tree(xx, allow_chain=CHAINED_VERION) for xx in list(i)] for i in reversed_pairs]  # noqa
             otherwise = reversed_pairs[0][0]  # the last "True" condition
             for pairs in reversed_pairs[1:]:
                 otherwise = Node(Ifte, [pairs[1], pairs[0], otherwise])

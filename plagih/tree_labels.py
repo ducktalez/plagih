@@ -62,7 +62,7 @@ from sympy.functions.elementary.piecewise import ExprCondPair
 from plagih.util import get_subclasses, FLOAT_PRECISION, DEBUG_DUMMY  # noqa
 
 os.environ["KMP_WARNINGS"] = "FALSE"
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # https://github.com/tensorflow/tensorflow/issues/27023
+# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # https://github.com/tensorflow/tensorflow/issues/27023
 # import tensorflow as tf  # noqa check if ignoring warnings still required (tensorflow sends endless warnings)
 # tf.compat.v1.disable_eager_execution()
 
@@ -612,7 +612,7 @@ class TerminalDummy(Typus):
         return cls.xtype[0]
 
 
-class ExprCondPair(TerminalDummy):
+class ExprCondPair_Dummy(TerminalDummy):
     """sfeh:discuss
     The only purpose is to wrap the results for a Node-structure, where every Node has childs with other nodes"""
     symfun = sympy.functions.elementary.piecewise.ExprCondPair

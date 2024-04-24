@@ -5,14 +5,16 @@ Separate file to NOT confuse anything, even though there might be some redundanc
 import os
 
 import sympy
-# import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
-from sympy.functions.elementary.piecewise import ExprCondPair
 
-from plagih.tree_labels import OperatorChained
+from plagih.tree_labels import OperatorChained, ExprCondPair_Dummy
+# import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
+# from sympy.functions.elementary.piecewise import ExprCondPair
+
+# from plagih.tree_labels import OperatorChained, ExprCondPair
 from plagih.util import get_subclasses, FLOAT_PRECISION, DEBUG_DUMMY  # noqa
 
 os.environ["KMP_WARNINGS"] = "FALSE"
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # https://github.com/tensorflow/tensorflow/issues/27023
+# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # https://github.com/tensorflow/tensorflow/issues/27023
 # import tensorflow as tf  # noqa check if ignoring warnings still required (tensorflow sends endless warnings)
 # tf.compat.v1.disable_eager_execution()
 
@@ -73,8 +75,9 @@ class Piecewise(OperatorChained):
     # xtype = ((float, bool), float)
     expr_dmy = 'Piecewise'
     showme = 'Piecewise'
-    xtype = ((ExprCondPair,), float)
-    xtype_chain = ExprCondPair
+    # these must be handeled differently, so commented out
+    # xtype = ((ExprCondPair,), float)
+    # xtype_chain = ExprCondPair_Dummy
     # symfun = sympy.Piecewise
     symfun = lambda *a: sympy.Piecewise(a)
 

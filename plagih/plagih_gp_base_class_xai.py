@@ -62,7 +62,6 @@ class Candidate:
         return self.fitness
 
     def get_parsimony(self):
-        # return self.meta.parsimony
         return self.parsimony
 
     def set_fitness(self, fitness):
@@ -217,7 +216,7 @@ class ExplainableGP:
                 def init_rand1():
                     n = np.clip(int(random.normalvariate(4.0, 1.0)), 3, 6)
                     tree = self.tb.evolve_new_tree_depth(n, float, p_term=0)
-                    tree = tree_simplification(tree, allow_chain=True)
+                    tree = tree_simplification(tree, allow_chain=CHAINED_VERION)
                     # sfeh trees can shrink to single-noded trees
                     if tree.get_max_depth() <= 1:
                         raise ValueError(f'Tree did not get complex enough')
@@ -227,7 +226,7 @@ class ExplainableGP:
                 def init_rand2():
                     n = np.clip(int(random.normalvariate(3.5, 1.0)), 3, 6)
                     tree = self.tb.evolve_new_tree_depth(n, float, p_term=0)
-                    tree = tree_simplification(tree, allow_chain=True)
+                    tree = tree_simplification(tree, allow_chain=CHAINED_VERION)
                     return tree
             else:
                 @self.create_trees(rate=0.5)
@@ -271,12 +270,7 @@ class ExplainableGP:
 
             while n_success < n:
                 try:
-                    if not crossover:
-                        evotree = create_tree_func()
-                        ctree = self.tree_to_candidate(evotree, tag=tag)
-                        self.pop_next_append(ctree)
-                        n_success += 1
-                    else:
+                    if crossover:
                         t1, t2 = create_tree_func()
                         ctree1 = self.tree_to_candidate(t1, tag=tag)
                         self.pop_next_append(ctree1)
@@ -284,6 +278,12 @@ class ExplainableGP:
                         ctree2 = self.tree_to_candidate(t2, tag=tag)
                         self.pop_next_append(ctree2)
                         n_success += 1
+                    else:
+                        evotree = create_tree_func()
+                        ctree = self.tree_to_candidate(evotree, tag=tag)
+                        self.pop_next_append(ctree)
+                        n_success += 1
+                        # todo force at least one imput variable
 
                 except (ValueError, ArithmeticError) as ex:
                     n_fails += 1
@@ -298,7 +298,8 @@ class ExplainableGP:
                     # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
                     # sfeh probably this error: cond(): 'false_fn' argument required
                     # Happens, when ITE is coming up. Ignoring for now.
-                # except AttributeError as ex:
+                except AttributeError as ex:
+                    print(f'("Okay", if sympy.im in expr) {ex}')
                 #     # raise AttributeError(f'Probably sympy.im in expr {ex}')
                 #     # AttributeError: Probably sympy.im in expr 'int' object
                 #     raise AttributeError(f'AttributeError: {ex}')

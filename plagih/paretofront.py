@@ -15,14 +15,14 @@ def pareto_from_pop(pop_list):
     pop_list = pareto_sort(pop_list)
 
     try:
-        ref = pop_list[0]
+        xx = pop_list[0]
     except Exception as ex:
         raise Exception(f'The list is empty, i guess: {pop_list}. {ex}')
 
-    ref_par = ref.get_parsimony()
-    ref_fit = ref.get_fitness()
+    ref_par = xx.get_parsimony()
+    ref_fit = xx.get_fitness()
 
-    pop_pareto = [ref]
+    pop_pareto = [xx]
 
     for tree in pop_list:
         parsim = tree.get_parsimony()
@@ -78,9 +78,7 @@ def pareto_insert_again_simplified(self, fintree):
 
 
 def plot_paretofront(paretofront, path, name, parsimony_max) -> []:
-    """
-    Write pyplot with paretofront candidates
-    """
+    """Write pyplot with paretofront candidates"""
 
     tuples = [[tree.get_parsimony(), tree.get_fitness()] for tree in paretofront]
     xx, yy = np.array(tuples).T

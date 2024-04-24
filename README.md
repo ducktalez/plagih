@@ -6,6 +6,8 @@
 ## Ablage/Todos
 
 - double linked tree (root node, parent node)
+  - implemented!
+  - use for tree-visualisation
 - histogram for tree complexity 
 - gen_create_initial -> create random pop if pop empty? with leftovers?
 - tree -> evaluate nodes for best improvement 

@@ -54,7 +54,6 @@ class BColors:
     CYAN = '\033[36m'
     WHITE = '\033[37m'
     RESET = '\033[39m'
-
     BLACK2 = '\033[40m'
     RED2 = '\033[41m'
 
@@ -78,9 +77,7 @@ def get_subclasses(cls):
 
 
 def pickle_dump(path, data):
-    """
-
-    """
+    """Saving python data (probably run) in a very small pickle file"""
     path = path_make_dir(path)
 
     with Path.open(path, 'wb') as file:
@@ -90,7 +87,7 @@ def pickle_dump(path, data):
 
 
 def yaml_dump(path, data, default_flow_style=True):
-    """saves data to pickle file
+    """saves data to yaml file (better than xml/Json)
     - default_flow_style=False for dumping in a block style"""
     path = path_make_dir(path)
     with Path.open(path, 'w') as file:
@@ -106,10 +103,10 @@ def print_warning(msg_type, text):
     try:
         if msg_type not in PRINT_DUMMY:
             return
-        if msg_type == 'w':
-            print(f'{BColors.WARNING}Warning ({msg_type}): {text}{BColors.RESET}')  # completely yellow
+        if 'w' in msg_type:
+            print(f'{BColors.WARNING}Warning ({msg_type}): {text}{BColors.RESET}')  # all yellow
         else:
-            print(f'{BColors.WARNING}Warning ({msg_type}): {text}{BColors.RESET}')  # only "Warning" yellow
+            print(f'{BColors.WARNING}Warning ({msg_type}):{BColors.RESET} {text}')  # only "Warning" yellow
     except Exception as ex:
         print_warning('w', f'Could not print warning: {ex}')
     return

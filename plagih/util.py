@@ -1,4 +1,5 @@
 import pickle
+import re
 import shutil
 import time
 
@@ -15,7 +16,7 @@ PRINT_DUMMY = 'wwaaagggiiifff'  # noqa: dummy for print-policy wwaaaggggggiiifff
 FLOAT_PRECISION = 3
 PLOTS_INTERVAL = 10
 BACKUP_INTERVAL = 10
-CHAINED_VERION = False  # sfeh:not here?
+CHAINED_VERION = True  # sfeh:not here?
 TREE_MIN_PARSIMONY = 3
 
 
@@ -37,14 +38,11 @@ def printyeah(message_type, message_str):
 
 
 class BColors:
-    HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKGREEN = '\033[92m'
     WARNING = '\033[93m'
+    HEADER = '\033[95m'
     FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
     BLACK = '\033[30m'
     RED = '\033[31m'
     GREEN = '\033[32m'
@@ -53,9 +51,60 @@ class BColors:
     MAGENTA = '\033[35m'
     CYAN = '\033[36m'
     WHITE = '\033[37m'
-    RESET = '\033[39m'
     BLACK2 = '\033[40m'
     RED2 = '\033[41m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    UNDERLINE_RESET = '\033[0m'
+    ITALIC = '\x1B[3m'
+    ITALIC_RESET = '\x1B[0m'
+    RESET_COLOR = '\033[39m'
+    RESET = '\033[0m'
+
+    # Reset
+    Color_Off = '\033[0m'  # Text Reset
+
+    # Regular Colors
+    Black = '\033[0;30m'  # Black
+    Red = '\033[0;31m'  # Red
+    Cyan = '\033[0;36m'  # Cyan
+    White = '\033[0;37m'  # White
+
+    # Bold
+    BBlack = '\033[1;30m'  # Black
+    BRed = '\033[1;31m'  # Red
+    BCyan = '\033[1;36m'  # Cyan
+    BWhite = '\033[1;37m'  # White
+
+    # Underline
+    UBlack = '\033[4;30m'  # Black
+    URed = '\033[4;31m'  # Red
+    UCyan = '\033[4;36m'  # Cyan
+    UWhite = '\033[4;37m'  # White
+
+    # Background
+    On_Black = '\033[40m'  # Black
+    On_Red = '\033[41m'  # Red
+    On_Cyan = '\033[46m'  # Cyan
+    On_White = '\033[47m'  # White
+
+    # High Intensty
+    IBlack = '\033[0;90m'  # Black
+    IRed = '\033[0;91m'  # Red
+    ICyan = '\033[0;96m'  # Cyan
+    IWhite = '\033[0;97m'  # White
+
+    # Bold High Intensty
+    BIBlack = '\033[1;90m'  # Black
+    BIRed = '\033[1;91m'  # Red
+    BICyan = '\033[1;96m'  # Cyan
+    BIWhite = '\033[1;97m'  # White
+
+    # High Intensty backgrounds
+    On_IBlack = '\033[0;100m'  # Black
+    On_IRed = '\033[0;101m'  # Red
+    On_ICyan = '\033[0;106m'  # Cyan
+    On_IWhite = '\033[0;107m'  # White
 
 
 def rnd_choice(a):
@@ -96,6 +145,11 @@ def yaml_dump(path, data, default_flow_style=True):
         return
 
 
+def remove_trailing_zeroes(x):
+    x = re.sub(r'0+$', '', x)
+    return x
+
+
 def print_warning(msg_type, text):
     """
     Printing warnings
@@ -104,9 +158,9 @@ def print_warning(msg_type, text):
         if msg_type not in PRINT_DUMMY:
             return
         if 'w' in msg_type:
-            print(f'{BColors.WARNING}Warning ({msg_type}): {text}{BColors.RESET}')  # all yellow
+            print(f'{BColors.WARNING}Warning ({msg_type}): {text}{BColors.RESET_COLOR}')  # all yellow
         else:
-            print(f'{BColors.WARNING}Warning ({msg_type}):{BColors.RESET} {text}')  # only "Warning" yellow
+            print(f'{BColors.WARNING}Warning ({msg_type}):{BColors.RESET_COLOR} {text}')  # only "Warning" yellow
     except Exception as ex:
         print_warning('w', f'Could not print warning: {ex}')
     return
@@ -253,9 +307,9 @@ with plt.rc_context(rc=rc_params):
 """
 
 
-def print_blue(txt):
-    print(f"{BColors.CYAN}{txt}{BColors.RESET}")
-    return
+def blue_string(txt):
+    """Was print_blue()"""
+    return f"{BColors.CYAN}{txt}{BColors.RESET_COLOR}"
 
 
 def print_caution(txt):
@@ -263,7 +317,7 @@ def print_caution(txt):
     Printing errors that are not worth stopping by raising an exception
     BColors.FAIL
     """
-    print(f'{BColors.RED}CAUTION! {BColors.WARNING}{txt}{BColors.RESET}')
+    print(f'{BColors.RED}CAUTION! {BColors.WARNING}{txt}{BColors.RESET_COLOR}')
 
 
 def pickle_load(path: Path):
@@ -280,11 +334,11 @@ def printez(message_type, text):
         return
 
     if 'i' in message_type:
-        print(f'{BColors.CYAN}Info: {text}{BColors.RESET}')
+        print(f'{BColors.CYAN}Info: {text}{BColors.RESET_COLOR}')
     elif 'f' in message_type:
-        print(f'{BColors.MAGENTA}Writing File: {text}{BColors.RESET}{BColors.RESET}')
+        print(f'{BColors.MAGENTA}Writing File: {text}{BColors.RESET_COLOR}{BColors.RESET_COLOR}')
     elif 'a' in message_type:
-        print(f'{BColors.GREEN}{text}{BColors.RESET}')  # Paretofront:
+        print(f'{BColors.GREEN}{text}{BColors.RESET_COLOR}')  # Paretofront:
     elif 'w' in message_type:
         print_warning(message_type, text)
     elif 'g' in message_type:

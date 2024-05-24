@@ -9,7 +9,7 @@ from plagih.tree_labels_chained import *
 
 # For conversion from sympy into node
 from plagih.tree_complexity.tree_edit_distance import apted_distance
-from plagih.util import FLOAT_PRECISION, CHAINED_VERION
+from plagih.util import FLOAT_PRECISION, CHAINED_VERION, remove_trailing_zeroes, rnd_choice, xt_self
 
 d_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul,
               sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,
@@ -49,7 +49,11 @@ class Node:
         """is the node in chain mode?
         -> when there are more childs than input-xtypes
         ...if there are less. its weird, maybe node in construction?"""
-        if len(self.typus.xtype[0]) < len(self.childs):
+        a = issubclass(self.typus, OperatorChained)
+        b = len(self.typus.xtype[0]) < len(self.childs)
+        if (a or b):
+            return True
+        else:
             return False
 
     def is_number_sfeh(self):
@@ -77,6 +81,7 @@ class Node:
                         typus_str = f'{self.childs[0]}'
                 except TypeError as ex:
                     typus_str = str(self.childs[0].evalf())
+                    typus_str = remove_trailing_zeroes(typus_str)
                     # sympy.ONE -> 1.0000000...
                     # sfeh:open int, non-floats are handled badly
                 except Exception as ex:
@@ -183,6 +188,7 @@ class Node:
         """Add (1 + a)"""
         if self.is_term():
             expr = f'{self.childs[0]}'
+            expr = remove_trailing_zeroes(expr)
         else:
             expr = [cc.get_expr_raw_fstring() for cc in self.childs]
             expr = ', '.join(expr)
@@ -192,7 +198,7 @@ class Node:
                 try:
                     expr = f'{self.typus.expr_dmy}({expr})'
                 except Exception as ex:
-                    expr = f'({expr})'
+                    expr = f'({expr})'  # todo debug
 
         # Sfeh:notimplementederror here?
         return expr
@@ -372,13 +378,26 @@ class Node:
     def is_operator(self):
         return issubclass(self.typus, BaseOperator)
 
+    def is_term_and_symbol(self):
+        if self.is_term():
+            a = issubclass(self.typus, Symbol)
+            # b = issubclass(self.typus, Number)
+            # c = issubclass(self.typus, Boolean)
+            if a:
+                return True
+        return False
+
     def is_ExprCdPair(self):
-        if 'ExprCondPair' in str(self):
-            print('TODO')
-        a = isinstance(self.typus, ExprCondPair)
-        b = issubclass(self.typus, ExprCondPair)
-        todo = (a or b)
-        return todo
+        """TODO this NEVER actually returns True? Is it even required?
+            -> This was hitting the sympy class"""
+        # todo = str(self)
+        # if ('ExprCondPair') in todo:
+        #     print('todo')   # does not work due to not stringing the expr-cond-pair
+        # a = isinstance(self.typus, ExprCondPair_Dummy)
+        # b = issubclass(self.typus, ExprCondPair_Dummy)
+        # c = isinstance(self.typus, ExprCondPair)
+        d = issubclass(self.typus, ExprCondPair)
+        return d
 
     def is_term(self):
         # sfeh:discuss is_atom, rename all to atom?
@@ -387,6 +406,22 @@ class Node:
     def has_childs(self):
         # better to check for recursive use, as e.g. ExprCondPair is not a regular operator
         return not self.is_term()
+
+    def force_input_node(self, tb):
+        """Some trees have only constants as terminals.
+        This function replaces a terminal node with an input, if the tree only has constants"""
+        node_list = self.list_terminal_nodes()
+        a = [x.is_term_and_symbol() for x in node_list]
+        if any(a):
+            return
+        else:
+            node_list = [x for x in node_list if x.typus == Number]
+            print(f'Forcing node')  # sfeh: do this in create new tree?
+            node = rnd_choice(node_list)  # debug if ignores chains
+            xtype = xt_self(node.get_xtype_tuple())
+            new_node = tb.node_selector.choose_symbol_node(xtype)
+            node.set_new_node(new_node)
+        # todo debug
 
     def repair_depth(self, depth=0):
         """
@@ -414,7 +449,8 @@ class Node:
     # sfeh:Do links to parents lead to problems when crossover/etc happens?
 
     def repair_backlink(self, parent: 'Node', root: 'Node'):
-        """backlink was introduced on 23.04.2024, linking the tree"""
+        """backlink was introduced on 23.04.2024,
+        linking the root and parent nodes"""
         self.root_node = root
         self.parent_node = parent
         for cc in self.childs:
@@ -432,6 +468,11 @@ class Node:
         # self.repair_depth(self.depth)  # sfeh:discuss not required
         # no checks
 
+    def list_terminal_nodes(self):
+        base = self.list_mutable_nodes()
+        base = [x for x in base if x.is_term()]
+        return base
+
     def list_mutable_nodes(self, xtype=None, skip_first=False, allow_chain=False) -> ['Node']:
         """was eval_mutable_nodes,
         "skip_layers"
@@ -441,20 +482,27 @@ class Node:
         # -> Check, if this node should be added
         if self.is_fix:
             node_list = []
-        elif skip_first:
-            node_list = []  # ignore_first is automatically set to false during recursion
-        elif self.is_ExprCdPair():
+        elif skip_first:  # ignore_first is automatically set to false during recursion
             node_list = []
+        elif self.is_ExprCdPair():  # It is just a dummy holding a tuple
+            node_list = []
+        elif self.is_typus(Piecewise):
+            node_list = []  # Piecewise has ambiguous xtype that can not be checked
         else:
-            if xtype is None or xtype == self.get_xtype_self() or (allow_chain and self.is_chain()):
-                node_list = [self]
+
+            if xtype is None or xtype == self.get_xtype_self():
+                if not allow_chain or (allow_chain and self.is_chain()):
+                    node_list = [self]
+                else:
+                    node_list = []
             else:
                 node_list = []
 
         # -> recursively add the other nodes
         if self.has_childs():  # sfeh:chain-operators discuss
             for cc in self.childs:
-                node_list.extend(cc.list_mutable_nodes(xtype=xtype, skip_first=False, allow_chain=allow_chain))
+                a = cc.list_mutable_nodes(xtype=xtype, skip_first=False, allow_chain=allow_chain)
+                node_list.extend(a)
 
         return node_list
 

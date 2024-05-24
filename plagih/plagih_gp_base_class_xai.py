@@ -91,7 +91,7 @@ class ExplainableGP:
 
         print(f'\n'
               f'\tInitializing Plagih UI.\n'
-              f'\tName: {BColors.CYAN}{rootdir.name}{BColors.RESET}.\n'
+              f'\tName: {BColors.CYAN}{rootdir.name}{BColors.RESET_COLOR}.\n'
               f'\tLocated in: \n'
               f'\t{rootdir}\n')
 
@@ -126,7 +126,7 @@ class ExplainableGP:
         n = [f'{k}\n' if ii % 10 == 9 else f'{k}\t' for ii, k in enumerate(n)]  # stop \n in line 0
         n = ''.join(n)
         n = re.sub(r'\n$', '', n)  # remove trailing \n (\t irrelevant)
-        n = f'{n}{BColors.RESET}'
+        n = f'{n}{BColors.RESET_COLOR}'
         print(n)
 
     def run_update_paretofront(self, pop):
@@ -173,7 +173,7 @@ class ExplainableGP:
                                        f'{sym_candidate.get_parsimony()} < {candidate_tree.get_parsimony()}')
                         self.pop_next_append(sym_candidate, force=True)
 
-                    print_blue(f'Simplified symtree: {sym_candidate.get_parsimony()}: {symtree}')
+                    print(blue_string(f'Simplified symtree: {sym_candidate.get_parsimony()}: {symtree}'))
 
                 except KeyError as ex:
                     print_caution(f'SFEH: this tree could whatever {ex}')  # -> piecewise function, mostly
@@ -283,7 +283,7 @@ class ExplainableGP:
                         ctree = self.tree_to_candidate(evotree, tag=tag)
                         self.pop_next_append(ctree)
                         n_success += 1
-                        # todo force at least one imput variable
+                        # todo force at least one input variable
 
                 except (ValueError, ArithmeticError) as ex:
                     n_fails += 1
@@ -292,8 +292,11 @@ class ExplainableGP:
                         print_caution(f'Evolution fails too often: {tag}, {n_fails}x. ({n_success}x successful).')
                         return  # sfeh raise?
                 except TypeError as ex:
-                    # raise TypeError(f'Typeerror, but why? {ex}')  # ok: TypeError: Cannot convert complex to float
-                    print(f'Typeerror, but why? {ex}')
+                    if str(ex) == "Cannot convert complex to float":
+                        pass
+                    else:
+                        print(f'Typeerror, but why? {ex}')  # ok: TypeError: Cannot convert complex to float
+                    # todo: Typeerror, but why? 'NoneType' object is not subscriptable -> ?
                     # Problem: TypeError: Typeerror, but why? expecting bool or Boolean, not `(a - 0.53 <= -0.361, a - 0.801 < v/a**1.0)`
                     # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
                     # sfeh probably this error: cond(): 'false_fn' argument required
@@ -321,6 +324,7 @@ class ExplainableGP:
     def tree_to_candidate(self, evotree: Node, tag=None, raise_if_useless=True):
         """the "fixed" node information is not relevant"""
 
+        evotree.force_input_node(self.tb)
         evotree.repair_depth()
 
         tree_id = evotree.get_lut_id()

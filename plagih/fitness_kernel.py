@@ -167,7 +167,7 @@ class Regression(Kernel):
 
         # try:
         #     raw_results = f(cartVels, cartPoss)
-        # except Exception as TODO:
+        # except Exception as xx:
         #     x = expr.evalf(subs={'cartVel': cartVels, 'cartPos': cartPoss, 'action': actions})
         with warnings.catch_warnings():
             with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur

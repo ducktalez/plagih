@@ -55,9 +55,10 @@ def tree_simplification(tree, allow_chain=CHAINED_VERION) -> Node:
         if len(tree_copy) < len(tree):
             print(f'WHATTPPENDED SFEH'
                   f'\n\told: {tree_copy.str_as_list()}'
-                  f'\n\tsym: {tree.str_as_list()}'
-                  f'\n\t{tree_copy.get_sympy_expr()}'
-                  f'\n\t{tree.get_sympy_expr()}')
+                  f'\n\tsym: {tree.str_as_list()}')
+            if tree_copy.get_sympy_expr() != tree.get_sympy_expr():
+                print_warning(f'\t{tree_copy.get_sympy_expr()}'
+                              f'\n\t{tree.get_sympy_expr()}')
     return tree
 
 
@@ -130,7 +131,7 @@ class Evolution:
         for dnode in nodelist:
             if dnode.depth == self.nodes_max and dnode.get_arity() > 0:
                 print_warning('wwww', f'Node in fintree is too deep: {dnode.depth}')
-                new_node = self.node_selector.choose_terminal(dnode.get_xtype_self())
+                new_node = self.node_selector.choose_terminal_node(dnode.get_xtype_self())
                 new_node.depth = dnode.depth
                 dnode.set_new_node(new_node)
 
@@ -142,10 +143,11 @@ class Evolution:
 
             nodelist = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
             tree = np.random.choice(nodelist)
-            new_node = self.node_selector.choose_terminal(tree.get_xtype_self())
+            new_node = self.node_selector.choose_terminal_node(tree.get_xtype_self())
             new_node.depth = tree.depth
             tree.set_new_node(new_node)
             prune_amount = len(tree) - self.nodes_max
+
         return tree
 
     # def observations_add(self, obs_names):
@@ -241,7 +243,7 @@ class Evolution:
         sfeh:open make depth_goal -> depth_rest"""
 
         if depth == self.depth_max or depth == depth_goal or num_rest == 0 or random.random() < p_term:
-            node = self.node_selector.choose_terminal(xt_out)
+            node = self.node_selector.choose_terminal_node(xt_out)
             node.depth = depth
 
         else:
@@ -313,7 +315,7 @@ class Evolution:
             new_label = self.node_selector.choose_operator_match(xtype)  # Function is same type, same arity
             node.set_typus(new_label)
         elif node.is_term:
-            new_node = self.node_selector.choose_terminal(xt_self(xtype))
+            new_node = self.node_selector.choose_terminal_node(xt_self(xtype))
             node.set_new_node(new_node)
         else:
             raise NotImplementedError
@@ -323,7 +325,8 @@ class Evolution:
     def evolve_mutate_branch_depth(self, tree: Node, depth_goal, p_term=0.0):
         """"""
         n_init = len(tree)
-        node = np.random.choice(tree.list_mutable_nodes())
+        node_list = tree.list_mutable_nodes()
+        node = np.random.choice(node_list)
         xtype_out = node.get_xtype_self()
         branch = self.evolve_create_random(xtype_out, depth_goal, num_rest=self.nodes_max - n_init, depth=0,
                                            p_term=p_term)
@@ -369,7 +372,6 @@ class Evolution:
 
         a_nd = np.random.choice(a_nds)
         xt_out = a_nd.get_xtype_self()
-
         b_nds = bb.list_mutable_nodes(xtype=xt_out)
 
         if len(b_nds) > 0:
@@ -400,6 +402,9 @@ class Evolution:
         - sets depth in all nodes correctly
         - (currently) does not perform any checks (depth set correctly? )"""
         pass
+
+# todo todototro hier chose, gemeint war vermutlich, dass hier die Funktion eingesetzt werden soll,
+#   die mindestens ein Symbol in einen Baum bringt.
 
 
 # class TreeMeta:

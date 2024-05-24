@@ -19,7 +19,6 @@ from plagih.plagih_gp_base_class_xai import *
 from plagih.random_nodes_generator import norm_choices, operatorpool_to_picks
 from plagih.util import *
 
-
 INPUT_NAMES = ['cartVel', 'cartPos']
 
 
@@ -56,7 +55,7 @@ class NodeRandomizer:
         op = np.random.choice(self.pick_op_match[xtype][0], p=self.pick_op_match[xtype][1])
         return op
 
-    def choose_terminal(self, xt, p_observation=0.5):
+    def choose_terminal_node(self, xt, p_observation=0.5):
         if np.random.random() > p_observation:
             try:
                 _v = self.choose_symbol(xt)
@@ -64,12 +63,12 @@ class NodeRandomizer:
             except (TypeError, IndexError):
                 pass  # return a constant (E.g. because there are no boolean observations)
 
-        _v = self.choose_constant(xt)
+        _v = self.choose_constant_node(xt)
         # sfeh expected str|int|long|float|Decimal|Number object but got 'Node'
 
         return _v
 
-    def choose_constant(self, xt):
+    def choose_constant_node(self, xt):
         _v = np.random.choice(self.pick_constant[xt][0], p=self.pick_constant[xt][1])()  # just dist. must be ()
         if xt == float:
             _v = sympy.Float(_v)  # sfeh:discuss allow "rational" inputs? 1/3, 3/4, ...
@@ -81,13 +80,17 @@ class NodeRandomizer:
             _v = _v  # BooleanAtom was here - why? Any purpose?
             return Node(Boolean, [_v])
 
+    def choose_symbol_node(self, xt):
+        """similar to choose_terminal_node()"""
+        _v = self.choose_symbol(xt)
+        return Node(Symbol, [_v])
+
     def choose_symbol(self, xt):
         _v = np.random.choice(self.pick_symbol[xt][0], p=self.pick_symbol[xt][1])
         return _v
 
 
 def kernel_for_mtc():
-
     # ## Load the training data into Kernel-class(...only offline training in this run).
     df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv')
     df = df.astype('float32')  # sfeh: this will NOT work with bool or int data :P design pattern #YOLO
@@ -125,7 +128,7 @@ def _test_simple():
     df, kernel = kernel_for_mtc()
 
     build_operator_dict = {Add: 2, Mul: 2, Div: 1, Square: 0.75, Sqrt: 0.1, Log: 0.1, Abs: 0.5, Sign: 0.5,
-                     Sin: 0.5, Not: 0.5, Lt: 0.5, Le: 0.5, And: 1, Or: 1, Min: 1, Max: 1}
+                           Sin: 0.5, Not: 0.5, Lt: 0.5, Le: 0.5, And: 1, Or: 1, Min: 1, Max: 1}
     node_selector = NodeRandomizer(build_operator_dict, INPUT_NAMES)
     tb = Evolution(None, None, node_selector, {'depth_max': 7, 'nodes_max': 50}, 'tree_node_count')
     gp = ExplainableGP('TEST', 100, 10, Path.cwd() / f'MTC200_RMSE_scratch', kernel, tb)
@@ -135,15 +138,17 @@ def _test_simple():
         @gp.create_trees(rate=1)
         def rand2():
             return gp.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+
         gp.end_generation()
 
     for _ in range(2):
         @gp.create_trees(rate=1)
-        def rand2_CHAIN():
+        def rand2_CHAINA():
             tree = gp.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
             tree = tree_simplification(tree, allow_chain=CHAINED_VERION)
             tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
             return tree
+
         gp.end_generation()
 
     for _ in range(10):
@@ -153,6 +158,7 @@ def _test_simple():
             n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
             tree = gp.tb.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
             return tree
+
         gp.end_generation()
 
     for _ in range(10):
@@ -164,12 +170,13 @@ def _test_simple():
             evo1 = tree_simplification(evo1, allow_chain=CHAINED_VERION)
             evo2 = tree_simplification(evo2, allow_chain=CHAINED_VERION)
             return evo1, evo2
+
         gp.end_generation()
     gp.evoloop_monitoring_plots()
 
     print('***Program ending***\n'
           '********************\n\n')
-    sys.exit()
+    # sys.exit()
 
 
 def _test_random_pop():
@@ -195,7 +202,7 @@ def _test_random_pop():
     #         super(N, self).__init__(*args, is_fix=True)
 
     build_operator_dict = {Add: 2, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
-                     Sin: 0.5, Not: 0.5, Lt: 0.5, Le: 0.5, And: 1, Or: 1, Min: 1, Max: 1}
+                           Sin: 0.5, Not: 0.5, Lt: 0.5, Le: 0.5, And: 1, Or: 1, Min: 1, Max: 1}
     ops_arity = {Ifte: 2}  # operators that contradict with fixed arity
     build_operator_dict.update(ops_arity)
     node_selector = NodeRandomizer(build_operator_dict, INPUT_NAMES)
@@ -253,7 +260,7 @@ def _test_random_pop():
                 return tree
 
             @gp.create_trees(rate=0.1)
-            def rand2_CHAIN():
+            def rand2_CHAINB():
                 # sfeh float? nope
                 # sfeh:discuss: deep random trees have a tendency to also allow weird-ass looking nonsense
                 tree = gp.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
@@ -346,13 +353,13 @@ def _test_random_pop():
 
     print('***Program ending***\n'
           '********************\n\n')
-    sys.exit()
+    # sys.exit()
 
 
 if __name__ == "__main__":
     # mp.set_start_method('spawn')
     _test_simple()
-    # _test_random_pop()
+    _test_random_pop()
 
 # class ObservationIndex(Observation):
 #     """

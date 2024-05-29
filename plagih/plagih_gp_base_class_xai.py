@@ -484,7 +484,11 @@ def pop_analyze(popul, gen_time, gens_since_last_pareto):
     pop_parsim = [tree.get_parsimony() for tree in popul]
     pop_treelen = [len(candidate_tree.tree) for candidate_tree in popul]
     pop_fitness_best = np.min(pop_fitness)
-    pop_unique = len(set([str(x.tree) for x in popul]))  # sfeh:analyze this?
+    try:
+        pop_unique = len(set([str(x.tree) for x in popul]))  # sfeh:analyze this?
+    except Exception as todo:
+        pop_unique = len(set([str(x.tree) for x in popul]))  # sfeh:analyze this?
+
     # sfeh:idea add the amount of actually new trees (compare with the LUT tree_ids)
     result = {'pop_len': len(popul),
               'pop_unique': pop_unique,

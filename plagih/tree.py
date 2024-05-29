@@ -416,7 +416,7 @@ class Node:
             return
         else:
             node_list = [x for x in node_list if x.typus == Number]
-            print(f'Forcing node')  # sfeh: do this in create new tree?
+            # sfeh: do this in create new tree?
             node = rnd_choice(node_list)  # debug if ignores chains
             xtype = xt_self(node.get_xtype_tuple())
             new_node = tb.node_selector.choose_symbol_node(xtype)

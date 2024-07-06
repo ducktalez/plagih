@@ -1,3 +1,6 @@
+import re
+import pandas as pd
+
 from plagih.util import blue_string, BColors
 
 x = """<?xml version="1.0" encoding="utf-8"?>
@@ -1576,275 +1579,347 @@ Erstellt: 26.05.2021 (Ralf Zeischka)</DESCRIPTION>
 </PACKAGE>
 """
 
-# # import xml.etree.ElementTree as ET
-# # # tree = ET.fromstring(x)
-# # tree = ET.parse('test.xml')
-# # root = tree.getroot()
-# # print(root)
-# # lol = root[0]
-# # print(lol)
-# # # lol = lol[0]
-# # # print(lol)
-# # for cc in lol:
-# #     print(f'\tELEMENT!!')
-# #     print(cc[0])
-#
-# # for cc in root:
-# #     for ccc in cc:
-# #         print(ccc)
-# #         for cccc in ccc:
-# #             print(f'\t{cccc}')
-# #     print(cc)
-#
-#
-# import re
-# x = x
-# x = re.sub('&gt;', '>', x)
-# x = re.sub('&lt;', '>', x)
-# x = x.replace('TESTSTEPS', 'Simon was here')  # split funktioniert sonst nicht
-# split = re.split('<TESTSTEP', x)
-# split = split[1:]
-# lel = []
-#
-#
-# def get_values(ss):
-#     e = re.findall(r'(?<=>)(.*)(?=</VALUE>)', ss)
-#     return e
-#
-#
-# def get_inside(ss):
-#     e = re.findall(r'(?<=>)(.*)(?=</)', ss)
-#     return e
-#
-#
-# def split_and_get(ss: str, get_after, get_optional=None):
-#     """get_after='binaryOpBaseExpression', get_optional='FIRST-COMPONENT'"""
-#     e = ss.split(get_after)
-#     e = e[1]
-#     if get_optional:
-#         e = e.split(get_optional)
-#         e = e[1]
-#     e = get_inside(e)
-#     return e
-#
-#
-# def get_expression(ss):
-#     pass
-#
-#
-# for i, ee in enumerate(split):
-#     s = ''
-#     toomanyhits = 0
-#
-#     if '<ENABLED ' in ee:
-#         continue  # Ignoring commented lines
-#     elif '<TIME ' in ee:
-#         # 'name="TsWait"' in ee:
-#         toomanyhits += 1
-#         continue  # ignore wait blocks
-#     # elif 'xsi:type="tsRestore"' in ee:
-#     #     continue  # Ignoring resets?
-#
-#     elif 'name="TsStartTrace"' in ee:
-#         s = f'{s}Start Trace (SFEH)'
-#     elif 'name="TsStopTrace"' in ee:
-#         # if 'RECORDING-GROUP-REF-BY-UUID' in ee:
-#         s = f'{s}Stop Trace (SFEH)'
-#
-#     elif '<ACTION xsi:type="I18NItem">' in ee:
-#         # Kommentarblock
-#         # '<ELEMENT dkey="de_DE">' in ee:
-#         e = re.split(r'(<DVALUE xsi:type="string">)', ee)
-#         e = e[2]
-#         e = re.split(r'<\/', e)[0]
-#         s = blue_string(f'{s}{e}')
-#
-#     elif '<PACKAGE-REFERENCE' in ee:
-#         # C:/HIL_AE/Packages/Packages/FuSi/EATR/../../lib/HiL Init.pkg
-#         e = re.split(r'<VALUE xsi:type="string">', ee)
-#         e = e[1]
-#         e = re.split(r'</VALUE>', e)[0]
-#         if 'HiL Init.pkg' in e or 'TerminateExecution.pkg' in e:
-#             continue
-#         else:
-#             s = f'{s}>>{BColors.HEADER}{e}{BColors.RESET}'
-#
-#     elif '<MAPPING-REF' in ee:
-#         e_name = split_and_get(ee, 'MAPPING-REF')[0]  # if '/Active/Value' in e_name:
-#         e3 = get_inside(ee)
-#         # if 'binaryOpBaseExpression>' in ee:
-#         #     b = split_and_get(ee, get_after='binaryOpBaseExpression')[0]
-#         #     b = b.replace('BINARY_ADD', '+')
-#         #     b = b.replace('BINARY_SUBTRACT', '-')
-#         #     a = split_and_get(ee, get_after='binaryOpBaseExpression', get_optional='FIRST-COMPONENT')[0]
-#         #     c = split_and_get(ee, get_after='binaryOpBaseExpression', get_optional='SECOND-COMPONENT')[0]
-#         #     e3 = f'({a} {b} {c})'
-#         # else:
-#         #     e3 = get_inside(ee)
-#         #     e3 = e3[1]
-#
-#         if '"tsWrite"' in ee:
-#             # s = s.replace('\t', '')  # force one tab only, in the following line
-#             s = f'WRITE:{e_name}\t:={e}'
-#
-#         elif '"tsRead"' in ee:
-#
-#             if 'EXPECTATION' in ee:
-#
-#                 if 'TOLERANCE' in ee:
-#                     e = split_and_get(ee, 'TOLERANCE')[0]
-#                     e_toleranz = f' (+-{e})'
-#                 else:
-#                     e_toleranz = ''
-#
-#                 if '<TIME' in ee:
-#                     e = split_and_get(ee, '<TIME')[0]
-#                     e_time = f' (Zeit {e})'
-#                 else:
-#                     e_time = ''
-#
-#                 e_rel = re.findall(r'(?<=<RELATION xsi:type="string">)(.*)(?=</)', ee)[0]
-#                 e_val = split_and_get(ee, 'valueBaseExpression')[0]
-#                 e3 = f'{BColors.GREEN}{e_rel} {e}{e_toleranz}{e_time}{BColors.RESET_COLOR}'
-#             else:
-#                 e3 = ''
-#
-#             if 'VARIABLE-NAME' in ee:
-#                 opt_saveasvar = re.findall(r'(?<=<DVALUE xsi:type="string">)(.*)(?=</DVALUE>)', ee)
-#                 opt_saveasvar = f' -> {BColors.ITALIC}{opt_saveasvar[0]}{BColors.RESET}'
-#             else:
-#                 opt_saveasvar = ''
-#             s = f'{e_name}\t{e3}{opt_saveasvar}'
-#         elif '"tsRestore"' in ee:
-#             continue
-#         else:
-#             raise NotImplementedError
-#
-#     else:
-#         raise NotImplementedError
-#
-#     s = s.replace('/Active/Value', '')
-#     s = s.replace('/Control/Value', '')
-#     s = s.replace('DME1_DDE1/', '')
-#     s = s.replace('DME1_DDE1', '')
-#     print(s)
-#     # lel.append(s)
-#
-# lel = '\n'.join(lel)
-# print(lel)
-
-# from bs4 import BeautifulSoup
-#
-# # Reading the data inside the xml
-# # file to a variable under the name
-# # data
-# with open('bmw-motorrad-delete-xml.xml', 'r') as f:
-#     data = f.read()
-#
-# # Passing the stored data inside
-# # the beautifulsoup parser, storing
-# # the returned object
-# Bs_data = BeautifulSoup(data, "xml")
-#
-# # Finding all instances of tag
-# # `unique`
-# b_unique = Bs_data.find_all('unique')
-#
-# print(b_unique)
-#
-# # Using find() to extract attributes
-# # of the first instance of the tag
-# b_name = Bs_data.find('child', {'name': 'Frank'})
-#
-# print(b_name)
-#
-# # Extracting the data stored in a
-# # specific attribute of the
-# # `child` tag
-# value = b_name.get('test')
-#
-# print(value)
-
-
 import xmltodict
 
+IGNORE_BASICS = False  # ignore e.g. hil init, Precondition, terminate execution, ...
 
-def get_all_teststeps(ee):
+hohoho = xmltodict.parse(x)
+yyy = xmltodict.parse(y)
 
-    if isinstance(ee, list):
-        for ii, x in enumerate(ee):
-            return get_all_teststeps(x)
-    elif isinstance(ee, dict):
-        name = ee.get('@name')
-        action = ee.get('ACTION')
-        enabled = ee.get('ENABLED')
-        time = ee.get('TIME')
-        action = ee.get('ACTION')
-        xsi_type = ee.get('@xsi:type')
-        mapping_ref = ee.get('MAPPING-REF')
-        package_reference = ee.get('PACKAGE-REFERENCE')
-        teststep = ee.get('TESTSTEP')
-        expression = ee.get('EXPRESSION')
-        tolerance = ee.get('TOLERANCE')
-        expr = ee.get('EXPRESSION')
-        dvalue = ee.get('DVALUE')
-        default_value = ee.get('DEFAULT-VALUE')
-        element = ee.get('ELEMENT')
-        value = ee.get('value')
-        if name == 'TsBlock':
-            action = action['MULTILANGDATA']['ELEMENT']['DVALUE']['#text']
-            print(action)
-            for t in teststep:
-                get_all_teststeps(t)
-        if package_reference:
-            package_reference = package_reference['PATH-EXPRESSION']['VALUE']['#text']
-            param_assignments = package_reference['PARAM-ASSIGNMENTS']['ASSIGNMENT']
-            print(package_reference, param_assignments)
-        # if element:
-        #     for x in element:
-        #         get_all_teststeps(x)
+package_info = yyy.get('PACKAGE')
+if package_info is not None:
+    p_desc = package_info['INFORMATION']['DESCRIPTION']['#text']
+    ee = yyy['PACKAGE']['TESTSTEPS']['TESTSTEP']
+else:
+    ee = hohoho['EIX-LIST']['ITEMS']['ELEMENT']
+    p_desc = None  # todo
 
 
-
-
+def get_TESTSTEP(teststep, nested=False):
+    s_childs = []
+    if isinstance(teststep, list):
+        for step in teststep:
+            x = to_excel(step)
+            s_childs.append(x)
+    elif isinstance(teststep, dict):
+        # just one teststep
+        x = to_excel(teststep)
+        # if not nested:
+        #     x = x[0]
+        s_childs.append(x)
     else:
         raise NotImplementedError
 
+    # if not nested:
+    #     s_childs = [x[0] for x in s_childs]
 
-hohoho = xmltodict.parse(x)
-eix_list = hohoho['EIX-LIST']
-ee = eix_list['ITEMS']
-ee = ee['ELEMENT']
-for elf in ee:
+    return s_childs
 
 
-    if t:
-        asd = get_all_teststeps(t)
-        print(asd)
+def get_VALUE_expr(value):
+    ex_type = value['@xsi:type']
+    if ex_type == 'valueBaseExpression':
+        b1 = value['VALUE']['@xsi:type']
+        b2 = value['VALUE']['#text']
+        b = f'{b2}'
+    elif ex_type == 'expressionValue':
+        # Has 'DATA'
+        data = value['DATA']
+        b = get_VALUE_expr(data)
+    elif ex_type == 'varBaseExpression':
+        b = value['NAME']['#text']
+
+    elif ex_type == 'binaryOpBaseExpression':
+        def get_component_string(c):
+            if c['@xsi:type'] == 'varBaseExpression':
+                return c['NAME']['#text']
+            elif c['@xsi:type'] == 'valueBaseExpression':
+                return c['VALUE']['#text']
+
+        b1 = value['@xsi:type']
+        b2 = value['NAME']['#text']
+        b2 = re.sub('BINARY_ADD', '+', b2)
+        b2 = re.sub('BINARY_SUB', '-', b2)
+        b3 = get_component_string(value['FIRST-COMPONENT'])
+        b4 = get_component_string(value['SECOND-COMPONENT'])
+        b = f'({b3} {b2} {b4})'
+
+    else:
+        raise NotImplementedError
+    return b
 
 
-'ENABLED': '#text': # 'False'
-'@name': 'TsBlock'
-'@name': 'TsWait'
-'TIME': 'VALUE': '#text': # 1000
-'ACTION': 'MULTILANGDATA': 'ELEMENT': 'DVALUE': '#text': # precondition
-'TESTSTEP': list
-'@xsi:type'
-    'MAPPING-REF': '#text'
-    'VALUE': 'VALUE':
-    'VALUE': 'DATA': 'VALUE':
-    'EXPECTATION': 'timelessOption'
-        '@xsi:type'
-        'EXPRESSION':
-            'RELATION': '#text'
-            '@xsi:type' 'valueBaseExpression'
-            'VALUE': 'VALUE': '#text'
-            'TOLERANCE':
-                '@style': # percentage
-                'VALUE':
-                    'VALUE': '#text'
-    'VARIABLE-REFS': 'VARIABLE-NAME': 'DVALUE': '#text'
-    'METRIC'
+def get_TOLERANCE(expression):
+    tolerance = expression.get('TOLERANCE')
+    if tolerance is not None:
+        a = tolerance['@style']  # percentage
+        a = re.sub('percentage', '%', a)
+        a = re.sub('absolute-value', '', a)
+        b = tolerance['VALUE']['VALUE']['#text']
+        s = f' [+-{b}{a}]'
+    else:
+        s = ''
+
+    return s
 
 
+def get_EXPRESSION(expectation):
+    expression = expectation.get('EXPRESSION')
+    if expression is not None:
+        xsi_type = expression['@xsi:type']
+        if xsi_type == 'builtNumericExpression':
+            rel = expression['RELATION']['#text']
+            value = expression['VALUE']
+            b = get_VALUE_expr(value)
+            tolerance = get_TOLERANCE(expression)
+            s = f'{rel} {b}{tolerance}'
+        else:
+            raise NotImplementedError
 
+        return s
+
+
+def get_EXPECTATION(x):
+    expectation = x.get('EXPECTATION')
+    if expectation is not None:
+
+        a = get_EXPRESSION(expectation)
+
+        if expectation.get('@xsi:type') == 'timelessOption':
+            s_time = ''
+        elif expectation.get('@xsi:type') == 'finallyTrueOption':
+            t0 = expectation['TIME']['@format-rev']
+            t1 = expectation['TIME']['@xsi:type']
+            # if t0 == '2' and t1 == 'valueBaseExpression':
+            #     pass  # is this ms?
+            # else:
+            #     pass
+            e_time = expectation['TIME']['VALUE']['#text']
+            s_time = f'  [t: {e_time}ms]'
+        else:
+            raise NotImplementedError
+
+        return f' {a}{s_time}'
+    else:
+        return f''
+
+
+def get_SAVETO(x):
+    s = x.get('VARIABLE-REFS')
+    if s is not None:
+        s = s['VARIABLE-NAME']['DVALUE']['#text']
+        return f' -> {s}'
+    else:
+        return ''
+
+
+def get_METRIC_expr(metric):
+    try:
+        s = metric['Z-UNIT']['#text']
+        s = f' {s}'
+    except KeyError as ex:
+        s = ''
+    s = re.sub('u_none', '', s)
+    return s
+
+
+def sanitize(ss):
+    ss = re.sub('DME1_DDE1/', '', ss)
+    ss = re.sub('/Control/Value', '', ss)
+    ss = re.sub('/Active/Value', '', ss)
+    return ss
+
+
+EXCEL_line = []
+
+
+def to_excel(ecutest):
+    EXCEL_dict = {'Aktion': '', 'Variablenname': '', 'Vorgabe/Erwartungswert': ''}
+
+    if ecutest.get('ENABLED'):
+        if ecutest['ENABLED']['#text'] != 'False':
+            raise NotImplementedError('Check if this happens?')
+        s = None
+        return
+
+    if ecutest.get('@xsi:type') == 'noEventTestStepMappingContainer':
+        s = ''
+    elif (ecutest.get('#text') or '') == '<padding>':
+        s = None
+
+    elif ecutest.get('@name') == 'TsBlock':
+        s = ecutest['ACTION']['MULTILANGDATA']['ELEMENT']['DVALUE']['#text']
+        s = f'{s}'
+        if IGNORE_BASICS and ('Precondition' in s or 'Postcondition' in s or 'Zuruecksetzen' in s):
+            return
+        EXCEL_dict['Aktion'] = ''
+        EXCEL_dict['Variablenname'] = s
+        EXCEL_dict['Vorgabe/Erwartungswert'] = f''
+        EXCEL_line.append(EXCEL_dict)
+        print(f'\t{s}')
+    elif ecutest.get('@xsi:type') == 'tsPackage':
+        try:
+            package_name = ecutest['PACKAGE-REFERENCE']['VALUE']['#text']
+        except KeyError:
+            package_name = ecutest['PACKAGE-REFERENCE']['PATH-EXPRESSION']['VALUE']['#text']
+
+        package_name = re.sub(r'.*\\', '', package_name)
+
+        if ecutest['PARAM-ASSIGNMENTS'] is not None:
+            params = ecutest['PARAM-ASSIGNMENTS']['ASSIGNMENT']
+            b = []
+            for p in params:
+                p0 = p['@dkey']
+                p1 = get_VALUE_expr(p['DVALUE'])
+                b.append(f'{p0}={p1}')
+            b = ', '.join(b)
+            b = f' ({b})'
+        else:
+            b = ''
+        EXCEL_dict['Aktion'] = 'Aufruf'
+        EXCEL_dict['Variablenname'] = package_name
+        EXCEL_dict['Vorgabe/Erwartungswert'] = f'{b}'
+        EXCEL_line.append(EXCEL_dict)
+        s = f'Call: {package_name}{b}'
+        if IGNORE_BASICS and 'HiL Init.pkg' in s:
+            pass  # put up
+        else:
+            print(s)
+    elif ecutest.get('@xsi:type') == 'tsRead':
+        package_name = ecutest['MAPPING-REF']['#text']
+        if IGNORE_BASICS and '/Active/Value' in package_name:
+            return
+        package_name = sanitize(package_name)
+        save_to = get_SAVETO(ecutest)
+        expectation = get_EXPECTATION(ecutest)
+
+        s = f'{package_name}{expectation}{save_to}'
+        if expectation is not None and save_to is not None:
+            # assuming this is also just 'prüfen'
+            EXCEL_dict['Aktion'] = 'prüfen'
+        elif expectation is not None:
+            s = f'R-Check: {s}'
+            EXCEL_dict['Aktion'] = 'prüfen'
+        elif save_to is not None:
+            s = f'R-Read:  {s}'
+            EXCEL_dict['Aktion'] = 'speichern'
+        else:
+            raise NotImplementedError('What is done here??')
+        EXCEL_dict['Variablenname'] = package_name
+        EXCEL_dict['Vorgabe/Erwartungswert'] = f'{expectation}{save_to}'
+        EXCEL_line.append(EXCEL_dict)
+        print(s)
+    elif ecutest.get('@xsi:type') == 'tsWrite':
+        package_name = ecutest['MAPPING-REF']['#text']
+        if IGNORE_BASICS and '/Active/Value' in package_name:
+            return
+        package_name = sanitize(package_name)
+        value = ecutest['VALUE']
+        b = get_VALUE_expr(value)
+        s = f'Write: {package_name} := {b}'
+        EXCEL_dict['Aktion'] = 'schreiben'
+        EXCEL_dict['Variablenname'] = package_name
+        EXCEL_dict['Vorgabe/Erwartungswert'] = f'{b}'
+        EXCEL_line.append(EXCEL_dict)
+        print(s)
+    elif ecutest.get('@xsi:type') == 'tsRestore':
+        s = f'restore'
+        # print(s)
+    elif ecutest.get('@name') == 'TsWait':
+        s = ecutest['TIME']['VALUE']['#text']
+        s = f'--wait-- {s}'
+    elif ecutest.get('@name') == 'TsStartTrace':
+        s = ecutest['NAME']['#text']
+        EXCEL_dict['Aktion'] = 'Traceanalyse (start)'
+        EXCEL_dict['Variablenname'] = s
+        EXCEL_dict['Vorgabe/Erwartungswert'] = None
+        EXCEL_line.append(EXCEL_dict)
+        s = f'StartTrace: {s}'
+        print(s)
+    elif ecutest.get('@name') == 'TsStopTrace':
+        s = ecutest['NAME']['#text']
+        EXCEL_dict['Aktion'] = 'Traceanalyse (stop)'
+        EXCEL_dict['Variablenname'] = s
+        EXCEL_dict['Vorgabe/Erwartungswert'] = None
+        EXCEL_line.append(EXCEL_dict)
+        s = f'StopTrace: {s}'
+        print(s)
+
+    # elif ecutest.get('@xsi:') == '':
+    #     s = ecutest['']
+    #     print(f': {s}')
+    elif ecutest.get('@xsi:type') == 'list':
+        s = 'DONE! (TODO check if this is last)'
+    else:
+        raise NotImplementedError
+
+    teststep = ecutest.get('TESTSTEP')
+    if teststep is not None:
+        if s is None:
+            raise NotImplementedError('Assumed that when s is empty, there are no teststeps?!')
+        if not (ecutest.get('@name') == 'TsBlock' or ecutest.get('@xsi:type') == 'noEventTestStepMappingContainer'):
+            raise NotImplementedError(f'Assumed that teststeps are only in Blocks?! Is: {ecutest.get("@name")}')
+        s_childs = get_TESTSTEP(teststep)
+        final = [s] + s_childs
+    else:
+        final = [s]
+
+    return final
+
+
+# def print_nested(nested_case):
+#     if isinstance(nested_case, list):
+
+
+all_steps = []
+for lel in ee:
+    showme = to_excel(lel)
+    all_steps.extend(showme)
+
+EXCEL_df = pd.DataFrame(EXCEL_line)
+print(EXCEL_df)
+
+
+def df_to_excel(df):
+    import openpyxl
+    import pandas as pd
+    from openpyxl import Workbook
+    from openpyxl.styles import PatternFill
+
+    # # Beispiel DataFrame erstellen
+    # data = {
+    #     'A': ['Header1', 'Header2', 'Header3'],
+    #     'B': ['Value1', 'Block', 'Value3'],
+    #     'C': ['Value4', 'Value5', 'Value6'],
+    #     'D': ['Value7', 'Value8', 'Value9']
+    # }
+    #
+    # df = pd.DataFrame(data)
+
+    # DataFrame in eine Excel-Datei speichern
+    excel_path = 'example.xlsx'
+    df.to_excel(excel_path, index=False)
+
+    # Die Excel-Datei mit openpyxl laden
+    wb = Workbook()
+    wb = openpyxl.load_workbook(excel_path)
+    ws = wb.active
+
+    # Gelbe Füllung definieren
+    yellow_fill = PatternFill(start_color='FFFFCC', end_color='FFFFCC', fill_type='solid')
+
+    # Überprüfen und Zeilen färben, wenn in Reihe 2 der Text "Block" steht
+    for row in ws.iter_rows(min_row=0, max_row=len(df), min_col=1, max_col=ws.max_column):
+        print(f'{row[0].value}: {row[0]}')
+        if row[0].value is None:  # Block, Index 1 bezieht sich auf die zweite Spalte (B)
+            for cell in row:
+                cell.fill = yellow_fill
+
+    # Änderungen speichern
+    wb.save(excel_path)
+    print(f"Excel-Datei wurde erfolgreich unter {excel_path} gespeichert und formatiert.")
+
+# df_to_excel(EXCEL_df)
+
+# print('\n\n\n\n\n')
+# print(all_steps)

@@ -1,7 +1,10 @@
 import re
 import pandas as pd
 
-from plagih.util import blue_string, BColors
+
+import openpyxl
+from openpyxl import Workbook
+from openpyxl.styles import PatternFill, Border, Side
 
 x = """<?xml version="1.0" encoding="utf-8"?>
 <EIX-LIST xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -1581,6 +1584,19 @@ Erstellt: 26.05.2021 (Ralf Zeischka)</DESCRIPTION>
 
 import xmltodict
 
+# Gelbe Füllung definieren
+yellow_fill = PatternFill(start_color='FFFFCC', end_color='FFFFCC', fill_type='solid')
+
+thin_border = Border(left=Side(style='thin'), right=Side(style='thin'),
+                     top=Side(style='thin'), bottom=Side(style='thin'))
+
+
+def row_border(row, style='thin'):
+    row[0].border = Border(left=Side(style=style), top=Side(style=style), bottom=Side(style=style))
+    row[-1].border = Border(right=Side(style=style), top=Side(style=style), bottom=Side(style=style))
+    for cell in row[1:-1]:
+        cell.border = Border(top=Side(style=style), bottom=Side(style=style))
+
 IGNORE_BASICS = False  # ignore e.g. hil init, Precondition, terminate execution, ...
 
 hohoho = xmltodict.parse(x)
@@ -1610,9 +1626,6 @@ def get_TESTSTEP(teststep, nested=False):
     else:
         raise NotImplementedError
 
-    # if not nested:
-    #     s_childs = [x[0] for x in s_childs]
-
     return s_childs
 
 
@@ -1623,7 +1636,6 @@ def get_VALUE_expr(value):
         b2 = value['VALUE']['#text']
         b = f'{b2}'
     elif ex_type == 'expressionValue':
-        # Has 'DATA'
         data = value['DATA']
         b = get_VALUE_expr(data)
     elif ex_type == 'varBaseExpression':
@@ -1734,7 +1746,8 @@ EXCEL_line = []
 
 
 def to_excel(ecutest):
-    EXCEL_dict = {'Aktion': '', 'Variablenname': '', 'Vorgabe/Erwartungswert': ''}
+    EXCEL_dict = {'Aktion': '', 'Variablenname': '', 'Vorgabe/Erwartungswert': '',
+                  'Excel_style': {}}
 
     if ecutest.get('ENABLED'):
         if ecutest['ENABLED']['#text'] != 'False':
@@ -1755,6 +1768,7 @@ def to_excel(ecutest):
         EXCEL_dict['Aktion'] = ''
         EXCEL_dict['Variablenname'] = s
         EXCEL_dict['Vorgabe/Erwartungswert'] = f''
+        EXCEL_dict['Excel_style'] = {thin_border}
         EXCEL_line.append(EXCEL_dict)
         print(f'\t{s}')
     elif ecutest.get('@xsi:type') == 'tsPackage':
@@ -1779,6 +1793,7 @@ def to_excel(ecutest):
         EXCEL_dict['Aktion'] = 'Aufruf'
         EXCEL_dict['Variablenname'] = package_name
         EXCEL_dict['Vorgabe/Erwartungswert'] = f'{b}'
+        EXCEL_dict['Excel_style'] = {thin_border}
         EXCEL_line.append(EXCEL_dict)
         s = f'Call: {package_name}{b}'
         if IGNORE_BASICS and 'HiL Init.pkg' in s:
@@ -1797,16 +1812,20 @@ def to_excel(ecutest):
         if expectation is not None and save_to is not None:
             # assuming this is also just 'prüfen'
             EXCEL_dict['Aktion'] = 'prüfen'
+            EXCEL_dict['Excel_style'] = {thin_border}
         elif expectation is not None:
             s = f'R-Check: {s}'
             EXCEL_dict['Aktion'] = 'prüfen'
+            EXCEL_dict['Excel_style'] = {thin_border}
         elif save_to is not None:
             s = f'R-Read:  {s}'
             EXCEL_dict['Aktion'] = 'speichern'
+            EXCEL_dict['Excel_style'] = {thin_border}
         else:
             raise NotImplementedError('What is done here??')
         EXCEL_dict['Variablenname'] = package_name
         EXCEL_dict['Vorgabe/Erwartungswert'] = f'{expectation}{save_to}'
+        EXCEL_dict['Excel_style'] = {thin_border}
         EXCEL_line.append(EXCEL_dict)
         print(s)
     elif ecutest.get('@xsi:type') == 'tsWrite':
@@ -1820,6 +1839,7 @@ def to_excel(ecutest):
         EXCEL_dict['Aktion'] = 'schreiben'
         EXCEL_dict['Variablenname'] = package_name
         EXCEL_dict['Vorgabe/Erwartungswert'] = f'{b}'
+        EXCEL_dict['Excel_style'] = {thin_border}
         EXCEL_line.append(EXCEL_dict)
         print(s)
     elif ecutest.get('@xsi:type') == 'tsRestore':
@@ -1833,6 +1853,7 @@ def to_excel(ecutest):
         EXCEL_dict['Aktion'] = 'Traceanalyse (start)'
         EXCEL_dict['Variablenname'] = s
         EXCEL_dict['Vorgabe/Erwartungswert'] = None
+        EXCEL_dict['Excel_style'] = {thin_border}
         EXCEL_line.append(EXCEL_dict)
         s = f'StartTrace: {s}'
         print(s)
@@ -1841,6 +1862,7 @@ def to_excel(ecutest):
         EXCEL_dict['Aktion'] = 'Traceanalyse (stop)'
         EXCEL_dict['Variablenname'] = s
         EXCEL_dict['Vorgabe/Erwartungswert'] = None
+        EXCEL_dict['Excel_style'] = {thin_border}
         EXCEL_line.append(EXCEL_dict)
         s = f'StopTrace: {s}'
         print(s)
@@ -1877,49 +1899,44 @@ for lel in ee:
     all_steps.extend(showme)
 
 EXCEL_df = pd.DataFrame(EXCEL_line)
+df_list = [EXCEL_df, EXCEL_df, EXCEL_df]
 print(EXCEL_df)
 
 
-def df_to_excel(df):
-    import openpyxl
-    import pandas as pd
-    from openpyxl import Workbook
-    from openpyxl.styles import PatternFill
+def df_to_excel(dfs):
 
-    # # Beispiel DataFrame erstellen
-    # data = {
-    #     'A': ['Header1', 'Header2', 'Header3'],
-    #     'B': ['Value1', 'Block', 'Value3'],
-    #     'C': ['Value4', 'Value5', 'Value6'],
-    #     'D': ['Value7', 'Value8', 'Value9']
-    # }
-    #
-    # df = pd.DataFrame(data)
-
-    # DataFrame in eine Excel-Datei speichern
     excel_path = 'example.xlsx'
-    df.to_excel(excel_path, index=False)
+    excel_sheet = 'Sheet1'
 
+    startrow = 0
+    with pd.ExcelWriter(excel_path) as writer:
+        for dfx in dfs:
+            dfx.to_excel(writer, engine="xlsxwriter", sheet_name='Sheet1', startrow=startrow, index=False)
+            startrow += (dfx.shape[0] + 3)
+
+
+def excel_beautify(excel_path, excel_sheet):
+    # DataFrame in eine Excel-Datei speichern
     # Die Excel-Datei mit openpyxl laden
     wb = Workbook()
     wb = openpyxl.load_workbook(excel_path)
+    wb.active = wb[excel_sheet]
     ws = wb.active
 
-    # Gelbe Füllung definieren
-    yellow_fill = PatternFill(start_color='FFFFCC', end_color='FFFFCC', fill_type='solid')
-
     # Überprüfen und Zeilen färben, wenn in Reihe 2 der Text "Block" steht
-    for row in ws.iter_rows(min_row=0, max_row=len(df), min_col=1, max_col=ws.max_column):
+    for row in ws.iter_rows(min_row=0, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
         print(f'{row[0].value}: {row[0]}')
         if row[0].value is None:  # Block, Index 1 bezieht sich auf die zweite Spalte (B)
             for cell in row:
                 cell.fill = yellow_fill
+            row_border(row)
 
     # Änderungen speichern
     wb.save(excel_path)
     print(f"Excel-Datei wurde erfolgreich unter {excel_path} gespeichert und formatiert.")
 
-# df_to_excel(EXCEL_df)
+
+df_to_excel(df_list)
 
 # print('\n\n\n\n\n')
 # print(all_steps)

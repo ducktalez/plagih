@@ -1,13 +1,10 @@
 import re
-import pandas as pd
-
-
 from pathlib import Path
 import xmltodict
 
 import openpyxl
 from openpyxl import Workbook
-from openpyxl.styles import PatternFill, Border, Side
+from openpyxl.styles import PatternFill, Border, Side, Alignment
 from openpyxl.worksheet.merge import MergeCells
 
 x = """<?xml version="1.0" encoding="utf-8"?>
@@ -1677,27 +1674,6 @@ def excel_row_border(row, style='thin'):
         cell.border = Border(top=Side(style=style), bottom=Side(style=style))
 
 
-def excel_beautify(excel_path, excel_sheet):
-    # DataFrame in eine Excel-Datei speichern
-    # Die Excel-Datei mit openpyxl laden
-    wb = Workbook()
-    wb = openpyxl.load_workbook(excel_path)
-    wb.active = wb[excel_sheet]
-    ws = wb.active
-
-    # Überprüfen und Zeilen färben, wenn in Reihe 2 der Text "Block" steht
-    for row in ws.iter_rows(min_row=0, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
-        print(f'{row[0].value}: {row[0]}')
-        if row[0].value is None:  # Block, Index 1 bezieht sich auf die zweite Spalte (B)
-            for cell in row:
-                cell.fill = ExcelStyle.yellow_fill
-            excel_row_border(row)
-
-    # Änderungen speichern
-    wb.save(excel_path)
-    print(f"Excel-Datei wurde erfolgreich unter {excel_path} gespeichert und formatiert.")
-
-
 def get_VALUE_expr(value):
     ex_type = value['@xsi:type']
     if ex_type == 'valueBaseExpression':
@@ -1962,15 +1938,49 @@ def ecu_to_excel_recursive(ecu_xml):
                 raise NotImplementedError
 
 
-# def df_to_excel(dfs):
-#     excel_path = 'example.xlsx'
-#     excel_sheet = 'Sheet1'
-#     startrow = 0
+def xls_to_excel_writer(rows):
+    excel_path = 'example.xlsx'
+    excel_sheet = 'Sheet1'
+    startrow = 0
+
+    # DataFrame in eine Excel-Datei speichern
+    # Die Excel-Datei mit openpyxl laden
+    workbook = Workbook(excel_path)
+    # wb = openpyxl.load_workbook(excel_path)
+    ws = workbook.create_sheet(excel_sheet, 0)
+    print(workbook.sheetnames)
+    workbook.active = workbook[excel_sheet]
+    ws = workbook.active
+
+    # Format all the columns.
+    my_format = workbook.add_format()
+    my_format.set_text_wrap()
+
+    ws.set_column('A:D', None, my_format)
+
+    # # Überprüfen und Zeilen färben, wenn in Reihe 2 der Text "Block" steht
+    # for row in ws.iter_rows(min_row=0, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
+    #     print(f'{row[0].value}: {row[0]}')
+    #     if row[0].value is None:  # Block, Index 1 bezieht sich auf die zweite Spalte (B)
+    #         for cell in row:
+    #             cell.fill = ExcelStyle.yellow_fill
+    #         excel_row_border(row)
+    for row in rows:
+        vs = list(row.columns.values())
+        style = row.style
+        ws.append(vs)
+
+    # Änderungen speichern
+    workbook.save(excel_path)
+    print(f"Excel-Datei wurde erfolgreich unter {excel_path} gespeichert und formatiert.")
+
+
+# def xls_to_excel_writer
 #
 #     with pd.ExcelWriter(excel_path) as writer:
-#         for dfx in dfs:
-#             dfx.ecu_to_excel_recursive(writer, engine="xlsxwriter", sheet_name='Sheet1', startrow=startrow, index=False)
-#             startrow += (dfx.shape[0] + 3)
+#         for row in rows:
+#             row.ecu_to_excel_recursive(writer, engine="xlsxwriter", sheet_name='Sheet1', startrow=startrow, index=False)
+#             startrow += (.shape[0] + 3)
 
 PATH_PROJECTS = Path('C:/Users/Simon/Documents/BMW-Motorrad/#Oktober/HIL_AE/Packages/Projects/')
 PATH_PACKAGES = Path('C:/Users/Simon/Documents/BMW-Motorrad/#Oktober/HIL_AE/Packages/')
@@ -2027,18 +2037,18 @@ def xls_from_package_file(file: Path):
     try:
         p_desc = ecu_testcase_xml['PACKAGE']['INFORMATION']['DESCRIPTION']['#text']
         # p_desc = p_desc.replace('\n', 'multiline\\015string')  # todo 'multiline\015string' is excel newline
-        p_desc = p_desc.replace('\n', '\n|')  # todo 'multiline\015string' is excel newline
     except KeyError:
         p_desc = None
 
     if file is not None:
         xls_rows = [ExcelRowBase({2: file.name}, style='TODO'),
-                    ExcelRowBase({2: p_desc}, style='TODO'),
+                    ExcelRowBase({2: p_desc}, style={'alignment': Alignment(wrapText=True)}),
                     ExcelRowBase({1: 'Aktion', 2: 'Variablenname', 3: 'Vorgabe/Erwartungswert'}, style=['bold', 'thick'])]
 
         testpkg = ecu_testcase_xml['PACKAGE']
         xls_subrows = ecu_to_excel_recursive(testpkg)
         xls_rows.extend(xls_subrows)
+
         placeholder_todo = ExcelRowBase({0: ''})
         placeholder1_todo = ExcelRowBase({0: '====================================================================='})
         xls_rows.append(placeholder1_todo)  # just clear some lines
@@ -2052,9 +2062,10 @@ def xls_from_package_file(file: Path):
 subproj_packlist_dict = get_testcase_dict()
 xlssheets_xlsdict = []
 for package_p in subproj_packlist_dict['OBD_DTCs_BMW']:
-    package_xls_dict = xls_from_package_file(package_p)
+    xls_rows = xls_from_package_file(package_p)
     print(f'\n\n')
-    for prnt in package_xls_dict:
+    for prnt in xls_rows:
         print(prnt)
-    xlssheets_xlsdict.append(package_xls_dict)
+    xlssheets_xlsdict.extend(xls_rows)
+xls_to_excel_writer(xlssheets_xlsdict)
 

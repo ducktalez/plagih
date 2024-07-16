@@ -2,9 +2,13 @@ import re
 import pandas as pd
 
 
+from pathlib import Path
+import xmltodict
+
 import openpyxl
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Border, Side
+from openpyxl.worksheet.merge import MergeCells
 
 x = """<?xml version="1.0" encoding="utf-8"?>
 <EIX-LIST xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -1582,51 +1586,116 @@ Erstellt: 26.05.2021 (Ralf Zeischka)</DESCRIPTION>
 </PACKAGE>
 """
 
-import xmltodict
 
-# Gelbe Füllung definieren
-yellow_fill = PatternFill(start_color='FFFFCC', end_color='FFFFCC', fill_type='solid')
+class ExcelStyle:
 
-thin_border = Border(left=Side(style='thin'), right=Side(style='thin'),
-                     top=Side(style='thin'), bottom=Side(style='thin'))
+    yellow_fill = PatternFill(start_color='FFFFCC', end_color='FFFFCC', fill_type='solid')
+
+    thin_border = Border(left=Side(style='thin'), right=Side(style='thin'),
+                         top=Side(style='thin'), bottom=Side(style='thin'))
+    merge_a_to_c = lambda xx: MergeCells(start_row=xx, start_column=1, end_row=xx, end_column=4)
 
 
-def row_border(row, style='thin'):
+class ExcelRowBase:
+
+    def __init__(self, columns: iter, style=None):
+        self.columns = columns
+        self.style = style
+
+    # def __repr__(self):
+    #     return f'{self.columns} {self.style}'
+
+    def __str__(self):
+        prs = self.style or ''
+        try:
+            vs = list(self.columns.values())
+            vs = [x for x in vs if x is not None]
+            vs = '\t'.join(vs)
+        except TypeError as sfeh:
+            vs = self.columns
+        return f'{vs} \t\t{prs}'
+
+
+class Excel_package:
+
+    def __init__(self, name, description, rows=None):
+        self.rows = [ExcelRowBase({2: name}, style='TODO'),
+                     ExcelRowBase({2: description}, style='TODO')]
+
+    def add_teststep(self, stepdict):
+        dc = {1: stepdict['Aktion'],
+              2: stepdict['Variablenname'],
+              3: stepdict['Vorgabe/Erwartungswert']}
+        style = None
+        row = ExcelRowBase(dc, style)
+        self.rows.append(row)
+
+    def add_testblock(self, name):
+        row = (ExcelRow_Teststep({2: name}, style=(ExcelStyle.yellow_fill, ExcelStyle.merge_a_to_c)))
+        self.rows.append(row)
+
+
+def test_triple(stepdict, style=None):
+    dc = {1: stepdict['Aktion'],
+          2: stepdict['Variablenname'],
+          3: stepdict['Vorgabe/Erwartungswert']}
+    style = None
+    row = ExcelRowBase(dc, style)
+    return row
+
+
+class ExcelRow_Teststep(ExcelRowBase):
+    def __init__(self, row, style=None):
+        style = ExcelStyle.merge_a_to_c
+        super().__init__(row, style=style)
+
+
+class Excel_Sheet:
+
+    def __init__(self, sheet_name):
+        self.sheet_name = sheet_name
+        self.rows = []
+
+    def append(self, row:ExcelRowBase):
+        self.rows.append(row)
+
+    def extend(self, rows: iter('ExcelRowBase')):
+        self.rows.extend(rows)
+
+
+class ExcelRow_Testblock(ExcelRowBase):
+    def __init__(self, description):
+        style = ExcelStyle.merge_a_to_c
+        super().__init__({2: description}, style=style)
+        
+
+
+def excel_row_border(row, style='thin'):
     row[0].border = Border(left=Side(style=style), top=Side(style=style), bottom=Side(style=style))
     row[-1].border = Border(right=Side(style=style), top=Side(style=style), bottom=Side(style=style))
     for cell in row[1:-1]:
         cell.border = Border(top=Side(style=style), bottom=Side(style=style))
 
-IGNORE_BASICS = False  # ignore e.g. hil init, Precondition, terminate execution, ...
 
-hohoho = xmltodict.parse(x)
-yyy = xmltodict.parse(y)
+def excel_beautify(excel_path, excel_sheet):
+    # DataFrame in eine Excel-Datei speichern
+    # Die Excel-Datei mit openpyxl laden
+    wb = Workbook()
+    wb = openpyxl.load_workbook(excel_path)
+    wb.active = wb[excel_sheet]
+    ws = wb.active
 
-package_info = yyy.get('PACKAGE')
-if package_info is not None:
-    p_desc = package_info['INFORMATION']['DESCRIPTION']['#text']
-    ee = yyy['PACKAGE']['TESTSTEPS']['TESTSTEP']
-else:
-    ee = hohoho['EIX-LIST']['ITEMS']['ELEMENT']
-    p_desc = None  # todo
+    # Überprüfen und Zeilen färben, wenn in Reihe 2 der Text "Block" steht
+    for row in ws.iter_rows(min_row=0, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
+        print(f'{row[0].value}: {row[0]}')
+        if row[0].value is None:  # Block, Index 1 bezieht sich auf die zweite Spalte (B)
+            for cell in row:
+                cell.fill = ExcelStyle.yellow_fill
+            excel_row_border(row)
 
-
-def get_TESTSTEP(teststep, nested=False):
-    s_childs = []
-    if isinstance(teststep, list):
-        for step in teststep:
-            x = to_excel(step)
-            s_childs.append(x)
-    elif isinstance(teststep, dict):
-        # just one teststep
-        x = to_excel(teststep)
-        # if not nested:
-        #     x = x[0]
-        s_childs.append(x)
-    else:
-        raise NotImplementedError
-
-    return s_childs
+    # Änderungen speichern
+    wb.save(excel_path)
+    print(f"Excel-Datei wurde erfolgreich unter {excel_path} gespeichert und formatiert.")
 
 
 def get_VALUE_expr(value):
@@ -1742,44 +1811,41 @@ def sanitize(ss):
     return ss
 
 
-EXCEL_line = []
+IGNORE_USELESS_LEVEL = 1
+# worksheet.set_column("A:A", 20)  # todo
 
 
-def to_excel(ecutest):
-    EXCEL_dict = {'Aktion': '', 'Variablenname': '', 'Vorgabe/Erwartungswert': '',
-                  'Excel_style': {}}
+def teststep_get_excel(ecutest):
+    # todo check if is active
 
-    if ecutest.get('ENABLED'):
-        if ecutest['ENABLED']['#text'] != 'False':
-            raise NotImplementedError('Check if this happens?')
-        s = None
+    if (ecutest.get('@xsi:type') or '') == 'noEventTestStepMappingContainer':
         return
 
-    if ecutest.get('@xsi:type') == 'noEventTestStepMappingContainer':
-        s = ''
+    elif (ecutest.get('@xsi:type') or '') == 'testCase':
+        return
+
     elif (ecutest.get('#text') or '') == '<padding>':
-        s = None
+        return
 
-    elif ecutest.get('@name') == 'TsBlock':
-        s = ecutest['ACTION']['MULTILANGDATA']['ELEMENT']['DVALUE']['#text']
-        s = f'{s}'
-        if IGNORE_BASICS and ('Precondition' in s or 'Postcondition' in s or 'Zuruecksetzen' in s):
+    elif (ecutest.get('@name') or '') == 'TsBlock':  # @xsi:type is 'utility-2752ad1e-4fef-11dc-81d4-0013728784ee'
+        bb = ecutest['ACTION']['MULTILANGDATA']['ELEMENT']['DVALUE']['#text']
+        if IGNORE_USELESS_LEVEL >= 1 and ('Zuruecksetzen' in bb):
             return
-        EXCEL_dict['Aktion'] = ''
-        EXCEL_dict['Variablenname'] = s
-        EXCEL_dict['Vorgabe/Erwartungswert'] = f''
-        EXCEL_dict['Excel_style'] = {thin_border}
-        EXCEL_line.append(EXCEL_dict)
-        print(f'\t{s}')
-    elif ecutest.get('@xsi:type') == 'tsPackage':
+        elif IGNORE_USELESS_LEVEL >= 2 and ('Precondition' in bb or 'Postcondition' in bb):
+            return
+        else:
+            EXCEL_dict = test_triple({'Aktion': '', 'Variablenname': bb, 'Vorgabe/Erwartungswert': f''},
+                                     style={'fill': None, 'row_border': None, 'is_teststep': True})
+
+    elif (ecutest.get('@xsi:type') or '') == 'tsPackage':
         try:
-            package_name = ecutest['PACKAGE-REFERENCE']['VALUE']['#text']
+            ecupath = ecutest['PACKAGE-REFERENCE']['VALUE']['#text']
         except KeyError:
-            package_name = ecutest['PACKAGE-REFERENCE']['PATH-EXPRESSION']['VALUE']['#text']
+            ecupath = ecutest['PACKAGE-REFERENCE']['PATH-EXPRESSION']['VALUE']['#text']
 
-        package_name = re.sub(r'.*\\', '', package_name)
+        ecupath = re.sub(r'.*\\', '', ecupath)
 
-        if ecutest['PARAM-ASSIGNMENTS'] is not None:
+        if ecutest.get('PARAM-ASSIGNMENTS') is not None:
             params = ecutest['PARAM-ASSIGNMENTS']['ASSIGNMENT']
             b = []
             for p in params:
@@ -1788,155 +1854,207 @@ def to_excel(ecutest):
                 b.append(f'{p0}={p1}')
             b = ', '.join(b)
             b = f' ({b})'
+            if IGNORE_USELESS_LEVEL >= 2 and ('HIL Init.pkg' in ecupath or 'TerminateExecution.pkg' in ecupath):
+                return
+            elif IGNORE_USELESS_LEVEL >= 1 and ('HIL Init.pkg' in ecupath or 'TerminateExecution.pkg' in ecupath):
+                b = ''
         else:
             b = ''
-        EXCEL_dict['Aktion'] = 'Aufruf'
-        EXCEL_dict['Variablenname'] = package_name
-        EXCEL_dict['Vorgabe/Erwartungswert'] = f'{b}'
-        EXCEL_dict['Excel_style'] = {thin_border}
-        EXCEL_line.append(EXCEL_dict)
-        s = f'Call: {package_name}{b}'
-        if IGNORE_BASICS and 'HiL Init.pkg' in s:
-            pass  # put up
-        else:
-            print(s)
+        EXCEL_dict = test_triple({'Aktion': 'Aufruf', 'Variablenname': ecupath, 'Vorgabe/Erwartungswert': f'{b}'},
+                                 style={'fill': None, 'row_border': ExcelStyle.thin_border, 'is_teststep': True})
+
     elif ecutest.get('@xsi:type') == 'tsRead':
-        package_name = ecutest['MAPPING-REF']['#text']
-        if IGNORE_BASICS and '/Active/Value' in package_name:
+        ecupath = ecutest['MAPPING-REF']['#text']
+        if IGNORE_USELESS_LEVEL >= 1 and '/Active/Value' in ecupath:
             return
-        package_name = sanitize(package_name)
+        ecupath = sanitize(ecupath)
         save_to = get_SAVETO(ecutest)
         expectation = get_EXPECTATION(ecutest)
-
-        s = f'{package_name}{expectation}{save_to}'
-        if expectation is not None and save_to is not None:
-            # assuming this is also just 'prüfen'
-            EXCEL_dict['Aktion'] = 'prüfen'
-            EXCEL_dict['Excel_style'] = {thin_border}
-        elif expectation is not None:
-            s = f'R-Check: {s}'
-            EXCEL_dict['Aktion'] = 'prüfen'
-            EXCEL_dict['Excel_style'] = {thin_border}
+        s = f'{ecupath}{expectation}{save_to}'
+        if expectation is not None:
+            aa = 'prüfen'
         elif save_to is not None:
-            s = f'R-Read:  {s}'
-            EXCEL_dict['Aktion'] = 'speichern'
-            EXCEL_dict['Excel_style'] = {thin_border}
+            aa = 'speichern'
         else:
             raise NotImplementedError('What is done here??')
-        EXCEL_dict['Variablenname'] = package_name
-        EXCEL_dict['Vorgabe/Erwartungswert'] = f'{expectation}{save_to}'
-        EXCEL_dict['Excel_style'] = {thin_border}
-        EXCEL_line.append(EXCEL_dict)
-        print(s)
+        EXCEL_dict = test_triple({'Aktion': aa, 'Variablenname': ecupath, 'Vorgabe/Erwartungswert': f'{expectation}{save_to}'},
+                                 style={'row_border': ExcelStyle.thin_border, 'is_teststep': True})
+
     elif ecutest.get('@xsi:type') == 'tsWrite':
-        package_name = ecutest['MAPPING-REF']['#text']
-        if IGNORE_BASICS and '/Active/Value' in package_name:
+        ecupath = ecutest['MAPPING-REF']['#text']
+        if IGNORE_USELESS_LEVEL >= 1 and '/Active/Value' in ecupath:
             return
-        package_name = sanitize(package_name)
+        ecupath = sanitize(ecupath)
         value = ecutest['VALUE']
         b = get_VALUE_expr(value)
-        s = f'Write: {package_name} := {b}'
-        EXCEL_dict['Aktion'] = 'schreiben'
-        EXCEL_dict['Variablenname'] = package_name
-        EXCEL_dict['Vorgabe/Erwartungswert'] = f'{b}'
-        EXCEL_dict['Excel_style'] = {thin_border}
-        EXCEL_line.append(EXCEL_dict)
-        print(s)
+        EXCEL_dict = test_triple({'Aktion': 'schreiben', 'Variablenname': ecupath, 'Vorgabe/Erwartungswert': f'{b}'},
+                      style={'fill': None, 'row_border': ExcelStyle.thin_border, 'is_teststep': True})
+
     elif ecutest.get('@xsi:type') == 'tsRestore':
-        s = f'restore'
-        # print(s)
+        # IGNORE_USELESS_LEVEL = 2
+        return
+
     elif ecutest.get('@name') == 'TsWait':
-        s = ecutest['TIME']['VALUE']['#text']
-        s = f'--wait-- {s}'
+        # s = ecutest['TIME']['VALUE']['#text']
+        # s = f'--wait-- {s}'
+        # IGNORE_USELESS_LEVEL = 3?
+        return
+
     elif ecutest.get('@name') == 'TsStartTrace':
         s = ecutest['NAME']['#text']
-        EXCEL_dict['Aktion'] = 'Traceanalyse (start)'
-        EXCEL_dict['Variablenname'] = s
-        EXCEL_dict['Vorgabe/Erwartungswert'] = None
-        EXCEL_dict['Excel_style'] = {thin_border}
-        EXCEL_line.append(EXCEL_dict)
-        s = f'StartTrace: {s}'
-        print(s)
+        EXCEL_dict = test_triple({'Aktion': 'Traceanalyse (start)', 'Variablenname': s, 'Vorgabe/Erwartungswert': None},
+                      style={'fill': None, 'row_border': ExcelStyle.thin_border, 'is_teststep': True})
+
     elif ecutest.get('@name') == 'TsStopTrace':
         s = ecutest['NAME']['#text']
-        EXCEL_dict['Aktion'] = 'Traceanalyse (stop)'
-        EXCEL_dict['Variablenname'] = s
-        EXCEL_dict['Vorgabe/Erwartungswert'] = None
-        EXCEL_dict['Excel_style'] = {thin_border}
-        EXCEL_line.append(EXCEL_dict)
-        s = f'StopTrace: {s}'
-        print(s)
+        EXCEL_dict = test_triple({'Aktion': 'Traceanalyse (stop)', 'Variablenname': f'{s}', 'Vorgabe/Erwartungswert': None},
+                      style={'row_border': ExcelStyle.thin_border, 'is_teststep': True})
 
-    # elif ecutest.get('@xsi:') == '':
-    #     s = ecutest['']
-    #     print(f': {s}')
     elif ecutest.get('@xsi:type') == 'list':
-        s = 'DONE! (TODO check if this is last)'
+        return  # 'DONE! (TODO check if this is last)'
     else:
         raise NotImplementedError
 
-    teststep = ecutest.get('TESTSTEP')
-    if teststep is not None:
-        if s is None:
-            raise NotImplementedError('Assumed that when s is empty, there are no teststeps?!')
-        if not (ecutest.get('@name') == 'TsBlock' or ecutest.get('@xsi:type') == 'noEventTestStepMappingContainer'):
-            raise NotImplementedError(f'Assumed that teststeps are only in Blocks?! Is: {ecutest.get("@name")}')
-        s_childs = get_TESTSTEP(teststep)
-        final = [s] + s_childs
+    return EXCEL_dict
+
+
+def ecu_to_excel_recursive(ecu_xml):
+
+    if ecu_xml.get('ENABLED') or False:
+        # print(f'Disabled!')
+        return
     else:
-        final = [s]
+        try:
+            ecu_xml = ecu_xml['TESTSTEPS']
+        except KeyError:
+            pass
 
-    return final
+        teststep_xml = ecu_xml.get('TESTSTEP') or None
 
+        if teststep_xml is None:  # None, if no teststeps
+            excel_teststep = teststep_get_excel(ecu_xml)
+            return [excel_teststep]
 
-# def print_nested(nested_case):
-#     if isinstance(nested_case, list):
+        else:
+            if isinstance(teststep_xml, dict):  # dict, if only one teststep
+                excel_teststep = teststep_get_excel(teststep_xml)
+                return [excel_teststep]
 
-
-all_steps = []
-for lel in ee:
-    showme = to_excel(lel)
-    all_steps.extend(showme)
-
-EXCEL_df = pd.DataFrame(EXCEL_line)
-df_list = [EXCEL_df, EXCEL_df, EXCEL_df]
-print(EXCEL_df)
-
-
-def df_to_excel(dfs):
-
-    excel_path = 'example.xlsx'
-    excel_sheet = 'Sheet1'
-
-    startrow = 0
-    with pd.ExcelWriter(excel_path) as writer:
-        for dfx in dfs:
-            dfx.to_excel(writer, engine="xlsxwriter", sheet_name='Sheet1', startrow=startrow, index=False)
-            startrow += (dfx.shape[0] + 3)
-
-
-def excel_beautify(excel_path, excel_sheet):
-    # DataFrame in eine Excel-Datei speichern
-    # Die Excel-Datei mit openpyxl laden
-    wb = Workbook()
-    wb = openpyxl.load_workbook(excel_path)
-    wb.active = wb[excel_sheet]
-    ws = wb.active
-
-    # Überprüfen und Zeilen färben, wenn in Reihe 2 der Text "Block" steht
-    for row in ws.iter_rows(min_row=0, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
-        print(f'{row[0].value}: {row[0]}')
-        if row[0].value is None:  # Block, Index 1 bezieht sich auf die zweite Spalte (B)
-            for cell in row:
-                cell.fill = yellow_fill
-            row_border(row)
-
-    # Änderungen speichern
-    wb.save(excel_path)
-    print(f"Excel-Datei wurde erfolgreich unter {excel_path} gespeichert und formatiert.")
+            elif isinstance(teststep_xml, list):  # list, if multiple teststep
+                try:
+                    excel_list = [teststep_get_excel(ecu_xml)]
+                except Exception as todo:
+                    excel_list = []
+                for tt in teststep_xml:
+                    tn = ecu_to_excel_recursive(tt)
+                    if isinstance(tn, list) and len(tn) > 0:
+                        excel_list.extend(tn)
+                    elif isinstance(tn, ExcelRowBase):
+                        excel_list.append(tn)
+                    elif tn is None:
+                        pass  # todo
+                    else:
+                        raise NotImplementedError
+                # excel_list = [x[0] if isinstance(x, list) else x for x in excel_list]
+                excel_list = [x for x in excel_list if x is not None]
+                return excel_list
+            else:
+                raise NotImplementedError
 
 
-df_to_excel(df_list)
+# def df_to_excel(dfs):
+#     excel_path = 'example.xlsx'
+#     excel_sheet = 'Sheet1'
+#     startrow = 0
+#
+#     with pd.ExcelWriter(excel_path) as writer:
+#         for dfx in dfs:
+#             dfx.ecu_to_excel_recursive(writer, engine="xlsxwriter", sheet_name='Sheet1', startrow=startrow, index=False)
+#             startrow += (dfx.shape[0] + 3)
 
-# print('\n\n\n\n\n')
-# print(all_steps)
+PATH_PROJECTS = Path('C:/Users/Simon/Documents/BMW-Motorrad/#Oktober/HIL_AE/Packages/Projects/')
+PATH_PACKAGES = Path('C:/Users/Simon/Documents/BMW-Motorrad/#Oktober/HIL_AE/Packages/')
+
+
+def proj_get_testcase(testcase):
+    if testcase['ENABLED']['#text'] == 'True':
+        if testcase['@xsi:type'] == 'subproject':
+            raise NotImplementedError
+        elif testcase['@xsi:type'] == 'packageTest':
+            if testcase['ENABLED']['#text'] == 'True':
+                p_testcase = PATH_PROJECTS / testcase['PACKAGE-REF']['PACKAGE-PATH']['#text']  # creates actual path
+                if not p_testcase.exists():
+                    raise FileNotFoundError(f'Testcase not found: {p_testcase}')
+                return p_testcase
+        else:
+            raise NotImplementedError
+    else:
+        return None
+
+
+def get_testcase_dict():
+    # C:\Users\Simon\Documents\BMW-Motorrad\#Oktober\HIL_AE\Packages\Projects\AlleDTCs.prj
+    # AlleDTCs
+    sheet_cases_dict = {}
+    with Path.open('C:/Users/Simon/Documents/BMW-Motorrad/#Oktober/HIL_AE/Packages/Projects/AlleDTCs.prj', 'r') as file:
+        data = file.read()
+        proj = xmltodict.parse(data)
+    subname = proj['PROJECT']['COMPONENTS']['COMPONENT'][3]['NAME']['#text']
+
+    sheet_cases_dict['OBD_DTCs_BMW'] = []
+    for tt in proj['PROJECT']['COMPONENTS']['COMPONENT'][3]['COMPONENTS']['COMPONENT'][0]['COMPONENTS']['COMPONENT']:
+        sheet_cases_dict['OBD_DTCs_BMW'].append(proj_get_testcase(tt))
+
+    sheet_cases_dict['OBD_DTCs_Marelli'] = []
+    for tt in proj['PROJECT']['COMPONENTS']['COMPONENT'][3]['COMPONENTS']['COMPONENT'][1]['COMPONENTS']['COMPONENT']:
+        sheet_cases_dict['OBD_DTCs_Marelli'].append(proj_get_testcase(tt))
+
+    sheet_cases_dict['Other'] = []
+    for tt in proj['PROJECT']['COMPONENTS']['COMPONENT'][3]['COMPONENTS']['COMPONENT'][2:]:
+        # name = tt['NAME']['#text']
+        sheet_cases_dict['Other'].append(proj_get_testcase(tt))
+
+    return sheet_cases_dict
+
+
+hohoho = xmltodict.parse(x)
+
+TESTCASE_INIT = 1
+
+
+def xls_from_package_file(file: Path):
+    ecu_testcase_xml = xmltodict.parse(y)
+    try:
+        p_desc = ecu_testcase_xml['PACKAGE']['INFORMATION']['DESCRIPTION']['#text']
+        # p_desc = p_desc.replace('\n', 'multiline\\015string')  # todo 'multiline\015string' is excel newline
+        p_desc = p_desc.replace('\n', '\n|')  # todo 'multiline\015string' is excel newline
+    except KeyError:
+        p_desc = None
+
+    if file is not None:
+        xls_rows = [ExcelRowBase({2: file.name}, style='TODO'),
+                    ExcelRowBase({2: p_desc}, style='TODO'),
+                    ExcelRowBase({1: 'Aktion', 2: 'Variablenname', 3: 'Vorgabe/Erwartungswert'}, style=['bold', 'thick'])]
+
+        testpkg = ecu_testcase_xml['PACKAGE']
+        xls_subrows = ecu_to_excel_recursive(testpkg)
+        xls_rows.extend(xls_subrows)
+        placeholder_todo = ExcelRowBase({0: ''})
+        placeholder1_todo = ExcelRowBase({0: '====================================================================='})
+        xls_rows.append(placeholder1_todo)  # just clear some lines
+        xls_rows.append(placeholder_todo)  # just clear some lines
+        return xls_rows
+    else:
+        placeholder1_todo = ExcelRowBase({0: '====================================================================='})
+        return [placeholder1_todo]  # todo
+
+
+subproj_packlist_dict = get_testcase_dict()
+xlssheets_xlsdict = []
+for package_p in subproj_packlist_dict['OBD_DTCs_BMW']:
+    package_xls_dict = xls_from_package_file(package_p)
+    print(f'\n\n')
+    for prnt in package_xls_dict:
+        print(prnt)
+    xlssheets_xlsdict.append(package_xls_dict)
+

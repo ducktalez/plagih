@@ -10,23 +10,23 @@ from openpyxl.worksheet.merge import MergeCells
 
 
 class Exls:
-
     yellow_fill = PatternFill(start_color='FFFFCC', end_color='FFFFCC', fill_type='solid')
 
     fill_error = PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid')
 
-    fill_ifend = PatternFill(start_color='4CCCCC', end_color='FF0000', fill_type='solid')
+    fill_ifend2 = PatternFill(start_color='FF6666', end_color='FF6666', fill_type='solid')
+    fill_ifend3 = PatternFill(start_color='FF9999', end_color='FF9999', fill_type='solid')
 
     thin_border = Border(left=Side(style='thin'), right=Side(style='thin'),
                          top=Side(style='thin'), bottom=Side(style='thin'))
     thick_border = Border(left=Side(style='thick'), right=Side(style='thick'),
-                         top=Side(style='thick'), bottom=Side(style='thick'))
+                          top=Side(style='thick'), bottom=Side(style='thick'))
     merge_a_to_c = lambda xx: MergeCells(start_row=xx, start_column=1, end_row=xx, end_column=4)
 
 
 class ExcelRowBase:
 
-    def __init__(self, columns: iter, style=None):
+    def __init__(self, columns: iter, style: 'dict' = None):
         self.columns = columns
         self.style = style
 
@@ -79,7 +79,7 @@ class Excel_Sheet:
         self.sheet_name = sheet_name
         self.rows = []
 
-    def append(self, row:ExcelRowBase):
+    def append(self, row: ExcelRowBase):
         self.rows.append(row)
 
     def extend(self, rows: iter('ExcelRowBase')):
@@ -176,7 +176,8 @@ def get_EXPECTATION(x):
         a = get_EXPRESSION(expectation)
         if expectation.get('@xsi:type') == 'timelessOption':
             s_time = ''
-        elif expectation.get('@xsi:type') == 'finallyTrueOption' or expectation.get('@xsi:type') == 'generallyTrueOption':
+        elif expectation.get('@xsi:type') == 'finallyTrueOption' or expectation.get(
+                '@xsi:type') == 'generallyTrueOption':
             e_time = expectation['TIME']['VALUE']['#text']
             try:
                 t_unit = expectation['TIME-UNIT']['#text']  # only occurs in 'generallyTrueOption'?
@@ -224,7 +225,6 @@ IGNORE_USELESS_LEVEL = 1
 
 
 def teststep_get_excel(ecutest):
-
     if (ecutest.get('@xsi:type') or '') == 'noEventTestStepMappingContainer':
         return
 
@@ -242,7 +242,8 @@ def teststep_get_excel(ecutest):
             return
         else:
             EXCEL_dict = test_triple({'Aktion': '', 'Variablenname': bb, 'Vorgabe/Erwartungswert': f''},
-                                     style={'fill': Exls.yellow_fill, 'row_border': Exls.thin_border, 'is_teststep': True})
+                                     style={'fill': Exls.yellow_fill, 'row_border': Exls.thin_border,
+                                            'is_teststep': True})
 
     elif (ecutest.get('@xsi:type') or '') == 'tsJob':
         s = ecutest['MAPPING-REF']['#text']
@@ -304,8 +305,9 @@ def teststep_get_excel(ecutest):
             aa = 'speichern'
         else:
             raise NotImplementedError('What is done here??')
-        EXCEL_dict = test_triple({'Aktion': aa, 'Variablenname': ecupath, 'Vorgabe/Erwartungswert': f'{expectation}{save_to}'},
-                                 style={'row_border': Exls.thin_border, 'is_teststep': True})
+        EXCEL_dict = test_triple(
+            {'Aktion': aa, 'Variablenname': ecupath, 'Vorgabe/Erwartungswert': f'{expectation}{save_to}'},
+            style={'row_border': Exls.thin_border, 'is_teststep': True})
 
     elif ecutest.get('@xsi:type') == 'tsDiagEdiabas':
         # Rossmann: was von Ediabas?
@@ -408,8 +410,9 @@ def teststep_get_excel(ecutest):
 
     elif ecutest.get('@name') == 'TsStopTrace':
         s = ecutest['NAME']['#text']
-        EXCEL_dict = test_triple({'Aktion': 'Traceanalyse (stop)', 'Variablenname': f'{s}', 'Vorgabe/Erwartungswert': None},
-                                 style={'row_border': Exls.thin_border, 'is_teststep': True})
+        EXCEL_dict = test_triple(
+            {'Aktion': 'Traceanalyse (stop)', 'Variablenname': f'{s}', 'Vorgabe/Erwartungswert': None},
+            style={'row_border': Exls.thin_border, 'is_teststep': True})
 
     elif ecutest.get('@xsi:type') == 'list':
         return
@@ -419,8 +422,7 @@ def teststep_get_excel(ecutest):
     return EXCEL_dict
 
 
-def ecu_to_excel_recursive(ecu_xml):
-
+def ecu_to_excel_recursive(ecu_xml, depth=0):
     if ecu_xml.get('ENABLED') or False:
         # print(f'Disabled!')
         return
@@ -436,12 +438,21 @@ def ecu_to_excel_recursive(ecu_xml):
             excel_teststep = teststep_get_excel(ecu_xml)
             if ecu_xml.get('@name') == 'TsIfThenElse':
                 a = ecu_xml['THEN']
-                a = ecu_to_excel_recursive(a)
+                a = ecu_to_excel_recursive(a, depth=depth+1)
+                for x in a:
+                    x.style['fill'] = Exls.fill_ifend2
                 b = ecu_xml['ELSE']
+                # Rossmann: ignore else-case
+                """
                 b = ecu_to_excel_recursive(b)
-                excel_teststep2 = copy.deepcopy(excel_teststep)
-                excel_teststep2.style['fill'] = Exls.fill_ifend
-                excel_teststep = [excel_teststep] + a + b + [excel_teststep2]  # Rossmann how to handle if-statements?
+                """
+                try:
+                    for x in b:
+                        x.style['fill'] = Exls.fill_ifend3
+                except Exception as ex:
+                    b = ExcelRowBase
+
+                excel_teststep = [excel_teststep] + a + b  # Rossmann how to handle if-statements?
                 return excel_teststep
             else:
                 return [excel_teststep]
@@ -457,7 +468,7 @@ def ecu_to_excel_recursive(ecu_xml):
                 except Exception as todo:
                     excel_list = []
                 for tt in teststep_xml:
-                    tn = ecu_to_excel_recursive(tt)
+                    tn = ecu_to_excel_recursive(tt, depth=depth+1)
                     if isinstance(tn, list) and len(tn) > 0:
                         excel_list.extend(tn)
                     elif isinstance(tn, ExcelRowBase):
@@ -570,7 +581,8 @@ def get_testcase_dict():
     # C:\Users\Simon\Documents\BMW-Motorrad\#Oktober\HIL_AE\Packages\Projects\AlleDTCs.prj
     # AlleDTCs
     sheet_cases_dict = {}
-    with Path.open('C:/Users/Simon/Documents/BMW-Motorrad/#Oktober/HIL_AE/Packages/Projects/AlleDTCs.prj', 'r', encoding='utf-8') as file:
+    with Path.open('C:/Users/Simon/Documents/BMW-Motorrad/#Oktober/HIL_AE/Packages/Projects/AlleDTCs.prj', 'r',
+                   encoding='utf-8') as file:
         data = file.read()
         proj = xmltodict.parse(data)
     subname = proj['PROJECT']['COMPONENTS']['COMPONENT'][3]['NAME']['#text']
@@ -595,7 +607,6 @@ TESTCASE_INIT = 1
 
 
 def xls_from_package_file(file: Path):
-
     if file is not None:
 
         with file.open('r', encoding='utf-8') as f:
@@ -613,7 +624,7 @@ def xls_from_package_file(file: Path):
                                  style={'bold': True, 'row_border': Exls.thick_border})]
 
         testpkg = ecu_testcase_xml['PACKAGE']
-        xls_subrows = ecu_to_excel_recursive(testpkg)
+        xls_subrows = ecu_to_excel_recursive(testpkg, depth=0)
         xls_rows.extend(xls_subrows)
 
         placeholder_todo = ExcelRowBase({0: ''})
@@ -632,9 +643,6 @@ subproj_packlist_dict = get_testcase_dict()
 xlssheets_xlsdict = []
 for package_p in subproj_packlist_dict['OBD_DTCs_BMW']:
     xls_rows = xls_from_package_file(package_p)
-    # print(f'\n\n')
-    # for prnt in xls_rows:
-    #     print(prnt)
+
     xlssheets_xlsdict.extend(xls_rows)
 xls_to_excel_writer(xlssheets_xlsdict)
-

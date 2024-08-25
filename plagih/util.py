@@ -145,7 +145,7 @@ def yaml_dump(path, data, default_flow_style=True):
         return
 
 
-def remove_trailing_zeroes(x):
+def string_remove_trailing_zeroes(x):
     x = re.sub(r'0+$', '', x)
     return x
 

@@ -218,13 +218,6 @@ class Terminal(Typus):  # sfeh sympy.Atom
     """
     value = None
 
-    # @abstractmethod
-    # def __init__(self):
-    #     pass
-    #
-    # def get_sym(self):
-    #     return self.value
-
 
 class Boolean(Terminal):
     # sfeh:discuss just for True/False?
@@ -256,26 +249,14 @@ class Symbol(Terminal):
     sfeh:xxx how to set assumptions, Provide information such as real, integer, positive, range/interval
     """
     symfun = lambda *a: a[0]
-    # symfun = lambda *a: sympy.Symbol(a[0], real=True, imaginary=False)  # sfeh: real=/imaginary= faster.
-    # tflow = lambda a: tf.constant(a, dtype=tf.float32 if isinstance(a, float) else tf.bool)
     xtype = ((), float)
 
 
 class Add(MathOperator, ChainableOp):
     symfun = sympy.Add
     showme = '+'
-    # tflow = tf.add
     xtype = ((float, float), float)
     chain_xtype = float
-
-
-# sfeh:idea expr.as_coeff_Mul() expr.as_numer_denom()
-#     import sympy as sp
-#     x, eps = sp.symbols('x E')
-#     expr = eps * x**3 - x**2 + 2 + 3 * x * eps**(-2)
-#     a = sp.Poly(expr, eps).coeffs()
-#     b = sp.Poly(expr, eps).coeffs()
-#     c = sp.Poly(expr, eps).coeffs()
 
 
 class DivFraction(MathOperator):
@@ -284,20 +265,17 @@ class DivFraction(MathOperator):
     xtype = ((float, float), float)
     symfun = lambda a: sympy.Pow(a, sympy.S.NegativeOne)
     showme = '1/x'
-    # tflow = lambda a: tf.pow(a, -1)
 
 
 class Pow(MathOperator):
     symfun = sympy.Pow
     showme = 'x^y'
-    # tflow = tf.pow
     xtype = ((float, float), float)
 
 
 class Abs(MathOperator):
     symfun = sympy.Abs
     showme = 'abs'
-    # tflow = tf.abs
     xtype = ((float,), float)
 
 
@@ -305,28 +283,24 @@ class Sign(MathOperator, NoSymCapitalized):
     # does not work in string, but irrelevant. sympy.simplify('sign(-a)') -> -sign(a)
     symfun = sympy.sign
     showme = 'sign'
-    # tflow = tf.sign
     xtype = ((float,), float)
 
 
 class Log(MathOperator, NoSymCapitalized):
     symfun = sympy.log  # sfeh: Log isactually Ln (base e)
     showme = 'log'
-    # tflow = tf.math.log
     xtype = ((float,), float)
 
 
 class Cos(AngleOperator, NoSymCapitalized):
     symfun = sympy.cos
     showme = 'cos'
-    # tflow = tf.cos
     xtype = ((float,), float)
 
 
 class Sin(AngleOperator, NoSymCapitalized):
     symfun = sympy.sin
     showme = 'sin'
-    # tflow = tf.sin
     xtype = ((float,), float)
 
 
@@ -335,62 +309,53 @@ class Tan(AngleOperator, NoSymCapitalized):
     # they do not have to match sympy expressions/classes
     symfun = sympy.tan
     showme = 'tan'
-    # tflow = tf.tan
     xtype = ((float,), float)
 
 
 class Acos(AngleOperator, NoSymCapitalized):
     symfun = sympy.acos
     showme = 'acos'
-    # tflow = tf.acos
     xtype = ((float,), float)
 
 
 class Asin(AngleOperator, NoSymCapitalized):
     symfun = sympy.asin
     showme = 'asin'
-    # tflow = tf.asin
     xtype = ((float,), float)
 
 
 class Atan(AngleOperator, NoSymCapitalized):
     symfun = sympy.atan
     showme = 'atan'
-    # tflow = tf.atan
     xtype = ((float,), float)
 
 
 class tanh(AngleOperator, NoSymCapitalized):
     symfun = sympy.tanh
     showme = 'tanh'
-    # tflow = tf.tanh
     xtype = ((float,), float)
 
 
 class Sinh(AngleOperator, NoSymCapitalized):
     symfun = sympy.sinh
-    # tflow = tf.sinh  # sfeh sinh, asinh
     xtype = ((float,), float)
 
 
 class Cosh(AngleOperator, NoSymCapitalized):
     symfun = sympy.cosh
     showme = 'cosh'
-    # tflow = tf.cosh  # sfeh acosh
     xtype = ((float,), float)
 
 
 class Xor(LogicOperator, NoSymCapitalized):
     symfun = sympy.Xor
     showme = 'xor'
-    # tflow = tf.math.logical_xor
     xtype = ((bool, bool), bool)
 
 
 class Not(LogicOperator):
     symfun = sympy.Not
     showme = 'not'
-    # tflow = tf.logical_not
     xtype = ((bool,), bool)
 
 
@@ -398,21 +363,18 @@ class Eq(LogicOperator):
     # sfeh:debug Eq and Ne (), which also work for boolean inputs in sympy
     symfun = sympy.Eq
     showme = '=='
-    # tflow = tf.equal
     xtype = ((float, float), bool)
 
 
 class Ne(LogicOperator):
     symfun = sympy.Ne
     showme = '!='
-    # tflow = tf.not_equal
     xtype = ((float, float), bool)
 
 
 class Mul(MathOperator, ChainableOp):
     symfun = sympy.Mul
     showme = '*'
-    # tflow = tf.multiply
     xtype = ((float, float), float)
     chain_xtype = float
 
@@ -420,7 +382,6 @@ class Mul(MathOperator, ChainableOp):
 class And(LogicOperator, ChainableOp):
     symfun = sympy.And
     showme = '&'
-    # tflow = tf.logical_and
     xtype = ((bool, bool), bool)
     chain_xtype = bool
 
@@ -428,7 +389,6 @@ class And(LogicOperator, ChainableOp):
 class Or(LogicOperator, ChainableOp):
     symfun = sympy.Or
     showme = 'or'
-    # tflow = tf.logical_or
     xtype = ((bool, bool), bool)
     chain_xtype = bool
 
@@ -444,7 +404,6 @@ class ITE(LogicOperator):
 class Min(MinMaxBase, ChainableOp):
     symfun = sympy.Min
     showme = 'min'
-    # tflow = tf.minimum
     xtype = ((float, float), float)
     chain_xtype = float
 
@@ -452,52 +411,41 @@ class Min(MinMaxBase, ChainableOp):
 class Max(MinMaxBase, ChainableOp):
     symfun = sympy.Max
     showme = 'max'
-    # tflow = tf.maximum
     xtype = ((float, float), float)
     chain_xtype = float
-    #
-    # sfeh
-    # def __new__(cls, *args, **kwargs):
-    #     return Node(cls, args)
 
 
 class Lt(RelationalOperator):
     symfun = sympy.Lt
     showme = '<'
-    # tflow = tf.less
     xtype = ((float, float), bool)
 
 
 class Le(RelationalOperator):
     symfun = sympy.Le
     showme = '<='
-    # tflow = tf.less_equal
     xtype = ((float, float), bool)
 
 
 class Gt(RelationalOperator):
     symfun = sympy.Gt
     showme = '>'
-    # tflow = tf.greater
     xtype = ((float, float), bool)
 
 
 class Ge(RelationalOperator):
     symfun = sympy.Ge
     showme = '>='
-    # tflow = tf.greater_equal
     xtype = ((float, float), bool)
 
 
 class Square(MathOperator):
     symfun = lambda a: sympy.Pow(a, 2)
     showme = 'x^2'
-    # tflow = tf.square
     xtype = ((float,), float)
 
 
 class Sub(MathOperator):
-    # tflow = tf.subtract
     xtype = ((float, float), float)
     symfun = lambda a, b: sympy.Add(a, -b)
     showme = '-'
@@ -505,19 +453,10 @@ class Sub(MathOperator):
 
 class Ifte(OperatorArity, ChainableOp):
     """Also class Piecewise"""
-    # tflow = tf.where
     xtype = ((bool, float, float), float)
     symfun = lambda *args: sympy.Piecewise((args[1], args[0]), (args[2], True))
     showme = 'If-then-else'
     chain_xtype = (float, bool)
-
-
-# class RoundDummy(sympy.Function):
-#     """Exists, as the Round-class must not be simplified
-#     Only used, if a symbol (aka variable) is rounded (see class Round)
-#     sfeh check if this is required
-#     """
-#     pass
 
 
 class Round(MathOperator):
@@ -538,7 +477,6 @@ class Round(MathOperator):
     # this is here to hint the type, as sympy will throw a warning otherwise, leading to this
     # https://docs.sympy.org/latest/explanation/active-deprecations.html#non-expr-args-deprecated
     showme = 'round'
-    # tflow = lambda a: tf.math.round(a, 1)
 
 
 class Powrounded(OperatorArity):
@@ -553,13 +491,11 @@ class Powrounded(OperatorArity):
 class Log1p(MathOperator):
     # https://docs.sympy.org/latest/modules/codegen.html#sympy.codegen.cfunctions.log1p
     xtype = ((float,), float)
-    # tflow = tf.math.log1p  # sfeh: tflow is actually never used...
     symfun = lambda a: sympy.log(a + 1)
     showme = 'log1p'
 
 
 class Div(MathOperator):
-    # tflow = tf.math.divide
     symfun = lambda a, b: sympy.Mul(a, 1 / b)
     showme = 'a/b'
     xtype = ((float, float), float)
@@ -570,7 +506,6 @@ class Sqrt(MathOperator):
     xtype = ((float,), float)
     symfun = sympy.sqrt  # same as: lambda a: sympy.Pow(a, sympy.S.Half)
     showme = 'sqrt'
-    # tflow = tf.sqrt
 
 
 # class Divide_no_nan(Operator):
@@ -582,25 +517,18 @@ class Sqrt(MathOperator):
 
 class Usub(MathOperator, sympy.Function):
     xtype = ((float,), float)
-    # tflow = tf.negative
     symfun = lambda a: sympy.Mul(a, -1)
     showme = '-(x)'  # sfeh
-
-    def __len__(self):
-        """sfeh:currently not used"""
-        return 0
 
 
 class Clip(MinMaxBase, CustomOperator):
     # sfeh:open use this
-    # tflow = tf.clip_by_value
     symfun = lambda a, b, c: sympy.Min(sympy.Max(a, b), c)
     showme = 'clip'
     xtype = ((float, float, float), float)
 
 
 class exp(MathOperator):
-    # tflow = tf.exp
     symfun = sympy.exp
     showme = 'x^e'
     xtype = ((float,), float)
@@ -618,21 +546,7 @@ class ExprCondPair_Dummy(TerminalDummy):
     symfun = sympy.functions.elementary.piecewise.ExprCondPair
     showme = 'ExprCondPair'
     xtype = ((float, bool), float)
-    # tflow = tf.where
     expr_dmy = 'ExprCondPair'
-
-
-# sfeh: remove?
-# class Piecewise(ChainableOp):
-#     """sfeh:discuss: the only Operator, which has tuples as input"""
-#     symfun = sympy.Piecewise
-#     # ogclass = Ifte
-#     # xtype = ((float, bool), float)
-#     xtype = ((ExprCondPair,), float)
-
-
-# sfeh:discuss: there should probably be structural nodes and Operator nodes
-# sfeh:discuss: Min/Max is just a ordeded list. ->taking element 1, -1, ...
 
 
 def sym_check(expr_sym):
@@ -670,8 +584,6 @@ def expr_sympify(expr):
     sfeh: more sympy bugs
     sympify option evaluate=None does not work with custom functions
     """
-
-    # loadable_ops_dict.update(eval_locals or {})  # sfeh:delete? irrelevant, cause every class defines the eval method?
 
     try:
         expr_sym = sympy.sympify(expr)

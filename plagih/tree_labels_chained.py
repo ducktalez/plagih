@@ -6,11 +6,7 @@ import os
 
 import sympy
 
-from plagih.tree_labels import OperatorChained, ExprCondPair_Dummy
-# import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
-# from sympy.functions.elementary.piecewise import ExprCondPair
-
-# from plagih.tree_labels import OperatorChained, ExprCondPair
+from plagih.tree_labels import OperatorChained
 from plagih.util import get_subclasses, FLOAT_PRECISION, DEBUG_DUMMY  # noqa
 
 os.environ["KMP_WARNINGS"] = "FALSE"

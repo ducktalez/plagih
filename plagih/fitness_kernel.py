@@ -36,7 +36,7 @@ def eval_regression_sym_experimental(expr, df):
     """
 
     a, b = sympy.symbols('cartVel cartPos')
-    cartVels = df['cartVel']  # todo was np.array
+    cartVels = df['cartVel']
     cartPoss = df['cartPos']
     f = sympy.lambdify([a, b], expr, 'numpy')
     

@@ -32,7 +32,7 @@ def printyeah(message_type, message_str):
     Instead of checking if you should print every time, this is done here.
     message_type options can be found in config
     """
-    # todo pretty printer
+    # sfeh pretty printer
     printez(message_type, message_str)
     return
 

@@ -4,8 +4,8 @@ All paretoefficient GP-candidates, aka the "best" entries for each complexity.
 
 """
 import matplotlib.pyplot as plt
-
-from plagih.tree_factory import *
+import numpy as np
+from plagih.util import *
 
 
 def pareto_from_pop(pop_list):

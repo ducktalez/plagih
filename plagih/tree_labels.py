@@ -544,9 +544,9 @@ class ExprCondPair_Dummy(TerminalDummy):
     """sfeh:discuss
     The only purpose is to wrap the results for a Node-structure, where every Node has childs with other nodes"""
     symfun = sympy.functions.elementary.piecewise.ExprCondPair
-    showme = 'ExprCondPair'
+    showme = 'ExprCondPair_Dummy'
     xtype = ((float, bool), float)
-    expr_dmy = 'ExprCondPair'
+    expr_dmy = 'ExprCondPair_Dummy'
 
 
 def sym_check(expr_sym):

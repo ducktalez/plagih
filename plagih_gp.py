@@ -8,31 +8,31 @@ from plagih.plagih_gp_base_class_xai import *
 from plagih.util import *
 
 INPUT_NAMES = ['cartVel', 'cartPos']
+df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv')
+df = df.astype('float32')
+df_train, df_control = train_test_split(df, test_size=0.2, random_state=0)
 
 
 def _test_simple():
     """SIMPLE"""
-    df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv')
-    df = df.astype('float32')
-    df_train, df_control = train_test_split(df, test_size=0.2, random_state=0)
     build_operator_dict = {Add: 2, Mul: 2, Div: 1, Square: 0.75, Sqrt: 0.1, Log: 0.1, Abs: 0.5, Sign: 0.5,
                            Sin: 0.5, Not: 0.5, Lt: 0.5, Le: 0.5, And: 1, Or: 1, Min: 1, Max: 1}
     node_selector = NodeRandomizer(build_operator_dict, INPUT_NAMES)
-    tb = Evolution(None, None, node_selector, {'depth_max': 7, 'nodes_max': 50}, 'tree_node_count')
-    gp = ExplainableGP('TEST', 100, 10, Path.cwd() / f'MTC200_RMSE_scratch', df_train, df_control, tb)
+    evolve = Evolution(None, None, node_selector, {'depth_max': 7, 'nodes_max': 50}, 'tree_node_count')
+    gp = ExplainableGP('TEST', 100, 10, Path.cwd() / f'MTC200_RMSE_scratch', df_train, df_control, evolve)
 
     gp.gen_create_initial()
     for _ in range(1):
         @gp.create_trees(rate=1)
         def rand2():
-            return gp.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+            return gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
 
         gp.end_generation()
 
     for _ in range(2):
         @gp.create_trees(rate=1)
         def rand2_CHAINA():
-            tree = gp.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+            tree = gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
             tree = tree_simplification(tree, allow_chain=CHAINED_VERION)
             tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
             return tree
@@ -44,7 +44,7 @@ def _test_simple():
         def mx_branch_n1():
             tree = selection_tournament(gp.pop_genepool, n=3)
             n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
-            tree = gp.tb.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
+            tree = gp.evolve.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
             return tree
 
         gp.end_generation()
@@ -54,7 +54,7 @@ def _test_simple():
         def xover_CHAINA():
             tree_a = selection_tournament(gp.pop_genepool, n=3)
             tree_b = selection_tournament(gp.pop_genepool, n=3)
-            evo1, evo2 = gp.tb.evolve_crossover(tree_a, tree_b)
+            evo1, evo2 = gp.evolve.evolve_crossover(tree_a, tree_b)
             evo1 = tree_simplification(evo1, allow_chain=CHAINED_VERION)
             evo2 = tree_simplification(evo2, allow_chain=CHAINED_VERION)
             return evo1, evo2
@@ -69,10 +69,7 @@ def _test_simple():
 
 def _test_random_pop():
     """Testrun"""
-    name = 'MTC200_RMSE_scratch'
-    rootdir = Path.cwd() / f'{name}'
-
-    df, kernel = kernel_for_mtc()
+    rootdir = Path.cwd() / 'MTC200_RMSE_scratch'
     # sfeh:idea track total trees in lut and matches, maybe even check diversity?
 
     # ## Run/Computation restrictions
@@ -117,9 +114,8 @@ def _test_random_pop():
     origin_tree = None
 
     # tb = TreeBuildRestrictions(origin_xtype, None, nc, build_restrictions, 'tree_node_count')
-    tb = Evolution(None, origin_tree, node_selector, build_restrictions, 'tree_node_count')
-
-    gp = ExplainableGP(name, pop_max, gen_max, rootdir, kernel, tb)
+    evolve = Evolution(None, origin_tree, node_selector, build_restrictions, 'tree_node_count')
+    gp = ExplainableGP('MTC200_RMSE_scratch', pop_max, gen_max, rootdir, df_train, df_control, evolve)
     try:
         # gp.backup_load()
         printpl('i', 'Ignore loading backup!')
@@ -143,15 +139,14 @@ def _test_random_pop():
             @gp.create_trees(rate=0.30)
             def mx_branch_d_CHAIN():
                 tree = selection_tournament(gp.pop_genepool, n=3)
-                tree = gp.tb.evolve_mutate_branch_depth(tree, 4, p_term=0.5)
+                tree = gp.evolve.evolve_mutate_branch_depth(tree, 4, p_term=0.5)
                 tree = tree_simplification(tree, allow_chain=CHAINED_VERION)
                 return tree
 
             @gp.create_trees(rate=0.1)
             def rand2_CHAINB():
-                # sfeh float? nope
                 # sfeh:discuss: deep random trees have a tendency to also allow weird-ass looking nonsense
-                tree = gp.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+                tree = gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
                 tree = tree_simplification(tree, allow_chain=CHAINED_VERION)
                 return tree
 
@@ -159,7 +154,7 @@ def _test_random_pop():
             def xover_CHAIN():
                 tree_a = selection_tournament(gp.pop_genepool, n=3)
                 tree_b = selection_tournament(gp.pop_genepool, n=3)
-                evo1, evo2 = gp.tb.evolve_crossover(tree_a, tree_b)
+                evo1, evo2 = gp.evolve.evolve_crossover(tree_a, tree_b)
                 evo1 = tree_simplification(evo1, allow_chain=CHAINED_VERION)
                 evo2 = tree_simplification(evo2, allow_chain=CHAINED_VERION)
                 return evo1, evo2
@@ -173,37 +168,37 @@ def _test_random_pop():
             @gp.create_trees(rate=0.10)
             def mx_branch_d():
                 tree = selection_tournament(gp.pop_genepool, n=3)
-                return gp.tb.evolve_mutate_branch_depth(tree, 4, p_term=0.5)
+                return gp.evolve.evolve_mutate_branch_depth(tree, 4, p_term=0.5)
 
             @gp.create_trees(rate=0.15)
             def mx_branch_n2():
                 tree = selection_tournament(gp.pop_genepool, n=3)
                 n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
-                tree = gp.tb.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
+                tree = gp.evolve.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
                 return tree
 
             @gp.create_trees(rate=0.1)  # was error source?
             def mut_br():
                 tree = selection_tournament(gp.pop_genepool, n=3)
-                tree = gp.tb.evolve_mutate_branch_nodes(tree, 4, p_term=0)
+                tree = gp.evolve.evolve_mutate_branch_nodes(tree, 4, p_term=0)
                 return tree
 
             @gp.create_trees(rate=0.1)
             def filter_optimize():
                 tree = selection_tournament(gp.pop_genepool, n=3)
-                return gp.tb.evolve_mutate_filter(tree)
+                return gp.evolve.evolve_mutate_filter(tree)
 
             @gp.create_trees(rate=0.1)
             def rand2():
                 # sfeh float? nope
                 # sfeh:discuss: deep random trees have a tendency to also allow weird-ass looking nonsense
-                return gp.tb.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+                return gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
 
             @gp.create_trees(rate=0.3, crossover=True)
             def xover():
                 tree_a = selection_tournament(gp.pop_genepool, n=3)
                 tree_b = selection_tournament(gp.pop_genepool, n=3)
-                evo1, evo2 = gp.tb.evolve_crossover(tree_a, tree_b)
+                evo1, evo2 = gp.evolve.evolve_crossover(tree_a, tree_b)
                 return evo1, evo2
 
             # @gp.create_trees(rate=0.15)
@@ -234,7 +229,8 @@ def _test_random_pop():
 
         gp.end_generation()
 
-    printpl('g', f'Done after Generation {gp.gen_id}.\nTime since start: {time.perf_counter() - gp.time_start:4.2f}s')
+    printpl('g', f'Done after Generation {gp.gen_id}.\n'
+                 f'Time since start: {time.perf_counter() - gp.time_start:4.2f}s')
 
     gp.backup_save()
     gp.evoloop_monitoring_plots()
@@ -245,18 +241,5 @@ def _test_random_pop():
 
 
 if __name__ == "__main__":
-    # mp.set_start_method('spawn')
     _test_simple()
     _test_random_pop()
-
-# class ObservationIndex(Observation):
-#     """
-#       sfeh:open
-#     """
-#
-#     def __init__(self, nlabel, xtype_out=float, obs_indizes=None):
-#         # super().__init__(nlabel, xtype_out)
-#         self.obs_indizes = obs_indizes
-#         latex = f'\\text{{{self.fam}}}_{{{self.time_index}}}'  # remove this {self.preexpr}
-#         self.latex = (latex, latex)  # remove this {self.preexpr}
-#

@@ -23,17 +23,16 @@ from plagih.tree_labels import *
 from plagih.tree_labels_chained import *
 from plagih.tree_complexity.tree_edit_distance import apted_distance
 from plagih.util import FLOAT_PRECISION, CHAINED_VERION, string_remove_trailing_zeroes, rnd_choice, xt_self
-from sklearn.model_selection import train_test_split
 
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
 
-def printpl(msg_type, message_str):
+def printpl(msg_t, message_str):
     """Lightweight print function.
     Instead of checking if you should print every time, this is done here.
     message_type options can be found in config
     """
-    printez(msg_type, message_str)
+    printez(msg_t, message_str)
     return """
 The factory to create trees
 """
@@ -84,6 +83,18 @@ class Node:
         x = issubclass(self.typus, Number)
         return x
 
+    def repr_as_list(self):
+        typus_str = self.typus.__name__  # Node-name (Mul, Symbol)
+
+        if self.is_term():
+            typus_str = self.childs[0].evalf()
+        else:
+            # if issubclass(self.typus, BaseOperator):
+            childstr = ', '.join([cc.repr_as_list() for cc in self.childs])
+            typus_str = f'{typus_str}, {childstr}'
+
+        return f"[{typus_str}]"
+
     def str_as_list(self):
         # typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
         # sfeh:delete_me if no error after 27-11-2023
@@ -115,12 +126,16 @@ class Node:
 
     def get_lut_id(self):
         """
-        todo same node multiple times in tree, this is not "ID!"°!!
+        sfeh: Do NOT use str() or str_as_list(), as values get rounded
+            Do NOT return a node-list and convert them to strings
+            -> use repr()
         Unique+simple representation of a tree (to check in a lut if it was calculated already)
         regular print/string option should look better, this is just for getting a unique identifier
         returns string Identificator
         sfeh:discuss is this just repr?
         ID=Identificator, which"""
+
+        # sfeh:xxx this whole function can be replaced with repr_as_list()
         try:
             typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
         except AttributeError as ex:
@@ -129,20 +144,19 @@ class Node:
             typus_str = self.typus  # because Terminals are obj -> 'Symbol' obj has no attr __name__
 
         if self.childs:
-            # if self.has_childs():
-            if self.is_operator():  # self.is_arity_operator() n
-                childstr = ', '.join([cc.str_as_list() for cc in self.childs])
+            # if self.is_ExprCdPair():
+            #     # elif issubclass(self.typus, TerminalDummy):
+            #     childstr = ', '.join([cc.repr_as_list() for cc in self.childs])  # those are actual childs
+            #     typus_str = f'({childstr})'
+            # el
+            if self.has_childs():  # self.is_arity_operator() n
+                childstr = ', '.join([cc.repr_as_list() for cc in self.childs])
                 typus_str = f'{typus_str}, {childstr}'
-            elif self.is_ExprCdPair():
-                # elif issubclass(self.typus, TerminalDummy):
-                childstr = ', '.join([cc.str_as_list() for cc in self.childs])  # those are actual childs
-                typus_str = f'({childstr})'
             else:
                 try:
                     typus_str = f'{self.childs[0]}'
                 except TypeError as ex:
-                    typus_str = str(self.childs[0].evalf())
-                    # sfeh:open int? rational?, non-floats are handled badly
+                    typus_str = str(self.childs[0].evalf())  # sfeh:open int? rational?, non-floats are handled badly
                 except Exception as ex:
                     print(f'sfeh:debug, delete? KEEP? {ex}')  # InvalidOperation([<class 'decimal.InvalidOperation'>])
 
@@ -165,8 +179,6 @@ class Node:
             return _sym(_cs)
         elif self.typus in (Piecewise, sympy.Piecewise):
             _sym = sympy.Piecewise
-            # sympy.Piecewise(sympy.functions.elementary.piecewise.ExprCondPair(1, True))
-            # PW((a, b), (c, True))
             _cs = self.childs
             _cs = [(cc.childs[0], cc.childs[1]) for cc in _cs]
             _cs = [(cc[0].get_sympy_expr(), cc[1].get_sympy_expr()) for cc in _cs]
@@ -175,23 +187,28 @@ class Node:
             return _cs
         else:
             _cs = [cc.get_sympy_expr() for cc in self.childs]
+            _sym = self.typus.get_sym()
+
+            asd = str(_cs)
+            todo = 'ExprCondPair' in asd
             if 'ExprCondPair' in str(_cs):
                 print('sfeh never reached?')
-            if self.is_operator():
-                _sym = self.typus.get_sym()
-            elif self.is_ExprCdPair():
-                _sym = self.typus.get_sym()
-            elif CHAINED_VERION:
-                _sym = self.typus.get_sym()
-            else:
-                raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.typus)}')
+            # # sfeh: 25.08.2024 was used for debugging
+            # if self.is_operator():
+            #     _sym = self.typus.get_sym()
+            # elif self.is_ExprCdPair():
+            #     _sym = self.typus.get_sym()
+            # elif CHAINED_VERION:
+            #     _sym = self.typus.get_sym()
+            # else:
+            #     raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.typus)}')
 
             try:
                 return _sym(*_cs)  # noqa (_sym is definitely assigned)
             # except RecursionError as ex:
             #     print(f'sfeh:RecursionError, maybe Piecewise?: {self.typus}, {self.childs}, {ex}')
             #     raise RecursionError
-            # except AttributeError as todo:
+            # except AttributeError as sfeh:
             #     return _sym(*_cs)
             # except TypeError as ex:
             #     # print(f'sfeh:TypeError?: {self.typus}, {self.childs}: {ex}')
@@ -218,11 +235,12 @@ class Node:
             expr = ', '.join(expr)
             if issubclass(self.typus, OperatorArity):
                 expr = f'{self.typus.__name__}({expr})'
+            elif issubclass(self.typus, ExprCondPair_Dummy):  # _Dummy works!
+                expr = f'({expr})'
             elif CHAINED_VERION:
-                try:
-                    expr = f'{self.typus.expr_dmy}({expr})'
-                except Exception as ex:
-                    expr = f'({expr})'  # todo debug
+                expr = f'{self.typus.expr_dmy}({expr})'
+                # except Exception as ex:
+                #      # sfeh:debug "AttributeError("type object 'ExprCondPair' has no attribute 'expr_dmy'")"
 
         # Sfeh:notimplementederror here?
         return expr
@@ -256,7 +274,7 @@ class Node:
 
     def __repr__(self):
         """sfeh:WRONG! Do NOT use __str__!"""
-        return self.__str__()
+        raise NotImplementedError
 
     def len_nodecount_raw(self):
         """counting the amount of nodes recursively"""
@@ -335,11 +353,6 @@ class Node:
         # if len(self.childs) == 0:
         showme = f'{self.childs[0]}' if self.is_term() else f'{self.get_typus().showme}'
 
-        # try:
-        #     showme = f'{self.childs[0]}' if self.is_term() else f'{self.get_typus().showme}'
-        # except Exception as ex:
-        #     showme = f'ExprCondPr'  # todo
-
         res = {setid: {'node': self,
                        'showme': showme}}
         edges = []
@@ -414,13 +427,15 @@ class Node:
     def is_ExprCdPair(self):
         """TODO this NEVER actually returns True? Is it even required?
             -> This was hitting the sympy class"""
-        # todo = str(self)
-        # if ('ExprCondPair') in todo:
-        #     print('todo')   # does not work due to not stringing the expr-cond-pair
+        todo = str(self)
+        if ('ExprCondPair') in todo:
+            print('todo')   # does not work due to not stringing the expr-cond-pair
         # a = isinstance(self.typus, ExprCondPair_Dummy)
         # b = issubclass(self.typus, ExprCondPair_Dummy)
         # c = isinstance(self.typus, ExprCondPair)
         d = issubclass(self.typus, ExprCondPair)
+        if d:
+            raise NotImplementedError('SFEH:WKASHJDBJKASHDFBJKAHSBF')
         return d
 
     def is_term(self):
@@ -445,7 +460,6 @@ class Node:
             xtype = xt_self(node.get_xtype_tuple())
             new_node = tb.node_selector.choose_symbol_node(xtype)
             node.set_new_node(new_node)
-        # todo debug
 
     def repair_depth(self, depth=0):
         """
@@ -480,7 +494,6 @@ class Node:
         for cc in self.childs:
             cc.repair_backlink(self, root)
         # self.repair_depth()
-        # todo crossover with pointers CRAZY. ALWAYS COPY TREE FIRST
 
     def replace_with(self, typus, childs):
         if typus is not None:
@@ -1191,12 +1204,8 @@ class Evolution:
         - prunes tree (...should be handled in the respected evolution, as the pruning will affect random nodes)
         - sets depth in all nodes correctly
         - (currently) does not perform any checks (depth set correctly? )"""
+        # sfeh:open
         pass
-
-
-# todo todototro hier chose,
-#  gemeint war vermutlich, dass hier die Funktion eingesetzt werden soll,
-#   die mindestens ein Symbol in einen Baum bringt.
 
 
 # class TreeMeta:
@@ -1377,12 +1386,12 @@ class Candidate:
 
 class ExplainableGP:
 
-    def __init__(self, name, pop_max, gen_max, rootdir, df_train, df_control, tb: Evolution):
+    def __init__(self, name, pop_max, gen_max, rootdir, df_train, df_control, evolve: Evolution):
         self.time_start = time.perf_counter()
         self.name = name
         self.df_train = df_train
         self.df_control = df_control
-        self.tb = tb
+        self.evolve = evolve
         self.pop_max = pop_max
         self.mp_cores = 1  # sfeh: open MP (multiprocessing)
         self.gen_max = gen_max
@@ -1413,13 +1422,14 @@ class ExplainableGP:
                                                 'parsim_avg', 'parsim_var', 'parsim_best',
                                                 'gens_since_last_pareto'])
 
-    # todo
+    # SFEH:xxx
     # WHATTPPENDED
-    # SFEH
     # [Div, [2.81], [cartVel]]
     # [Mul, [2.81], [DivFraction, [cartVel]]]
     # 2.81 / cartVel
     # 2.81 / cartVel
+    # --> 3/a =sym> Mul(3, (1/a))
+    # --> if Mul(DivFraction()) -> Divide
 
     def pop_print(self):
         """Print the expressions of all trees in a population"""
@@ -1509,15 +1519,15 @@ class ExplainableGP:
 
         printpl('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')  # sfeh debug
 
-        if self.tb.origin_tree is not None:
-            cand_origin = self.tree_to_candidate(self.tb.origin_tree, raise_if_useless=False, tag='origin')
+        if self.evolve.origin_tree is not None:
+            cand_origin = self.tree_to_candidate(self.evolve.origin_tree, raise_if_useless=False, tag='origin')
             self.pop_next_append(cand_origin)
         else:
             if CHAINED_VERION:
                 @self.create_trees(rate=0.5)
                 def init_rand1():
                     n = np.clip(int(random.normalvariate(4.0, 1.0)), 3, 6)
-                    tree = self.tb.evolve_new_tree_depth(n, float, p_term=0)
+                    tree = self.evolve.evolve_new_tree_depth(n, float, p_term=0)
                     tree = tree_simplification(tree, allow_chain=CHAINED_VERION)
                     # sfeh trees can shrink to single-noded trees
                     if tree.get_max_depth() <= 1:
@@ -1527,20 +1537,20 @@ class ExplainableGP:
                 @self.create_trees(rate=0.5)
                 def init_rand2():
                     n = np.clip(int(random.normalvariate(3.5, 1.0)), 3, 6)
-                    tree = self.tb.evolve_new_tree_depth(n, float, p_term=0)
+                    tree = self.evolve.evolve_new_tree_depth(n, float, p_term=0)
                     tree = tree_simplification(tree, allow_chain=CHAINED_VERION)
                     return tree
             else:
                 @self.create_trees(rate=0.5)
                 def init_rand1a():
                     n = np.clip(int(random.normalvariate(3.0, 1.0)), 3, 5)
-                    tree = self.tb.evolve_new_tree_depth(n, float, p_term=0)  # sfeh: xtype not always float
+                    tree = self.evolve.evolve_new_tree_depth(n, float, p_term=0)  # sfeh: xtype not always float
                     return tree
 
                 @self.create_trees(rate=0.5)
                 def init_rand2a():
                     n = np.clip(int(random.normalvariate(2.5, 1.0)), 3, 5)
-                    return self.tb.evolve_new_tree_depth(n, float, p_term=0)
+                    return self.evolve.evolve_new_tree_depth(n, float, p_term=0)
 
         self.paretofront = pareto_from_pop(self.pop_next)  # initialize
         self.pop_genepool = self.pop_next[:]
@@ -1566,7 +1576,7 @@ class ExplainableGP:
         def loop(create_tree_func):
             n = int(rate * self.pop_max)
             n_success = 0
-            n_fails = 0
+            fails_list = []
             tag = create_tree_func.__name__
             printpl('ggg', f'->Evolving {n}x \'{tag}\'...')
 
@@ -1585,20 +1595,20 @@ class ExplainableGP:
                         ctree = self.tree_to_candidate(evotree, tag=tag)
                         self.pop_next_append(ctree)
                         n_success += 1
-                        # todo force at least one input variable
 
                 except (ValueError, ArithmeticError) as ex:
-                    n_fails += 1
+                    fails_list.append(ex)
                     print_warning('www', f'\'{tag}\' failed: {ex}')
-                    if n_fails > 2 * n_success + 5:  # allow more fails: n_fails > n
-                        print_caution(f'Evolution fails too often: {tag}, {n_fails}x. ({n_success}x successful).')
+                    if len(fails_list) > 2 * n_success + 5:  # allow more fails: fails_list > n
+                        print_caution(f'Evolution fails too often: {tag}, {len(fails_list)}. ({n_success} successful).'
+                                      f'\n{fails_list}')
                         return  # sfeh raise?
                 except TypeError as ex:
                     if str(ex) == "Cannot convert complex to float":
                         pass
                     else:
                         print(f'Typeerror, but why? {ex}')  # ok: TypeError: Cannot convert complex to float
-                    # todo: Typeerror, but why? 'NoneType' object is not subscriptable -> ?
+                    # sfeh: Typeerror, but why? 'NoneType' object is not subscriptable -> ?
                     # Problem: TypeError: Typeerror, but why? expecting bool or Boolean, not `(a - 0.53 <= -0.361, a - 0.801 < v/a**1.0)`
                     # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
                     # sfeh probably this error: cond(): 'false_fn' argument required
@@ -1626,7 +1636,10 @@ class ExplainableGP:
     def tree_to_candidate(self, evotree: Node, tag=None, raise_if_useless=True):
         """the "fixed" node information is not relevant"""
 
-        evotree.force_input_node(self.tb)
+        todo = copy.deepcopy(evotree)
+        evotree.force_input_node(self.evolve)
+        if todo != evotree:
+            print('ASDASDASDASD')
         evotree.repair_depth()
 
         tree_id = evotree.get_lut_id()
@@ -1642,10 +1655,10 @@ class ExplainableGP:
         if tree_id in self.lut_parsim:
             parsimony = self.lut_parsim[tree_id]
         else:
-            parsimony = eval_parsimony(evotree, self.tb.complexity_metric, origin_tree=self.tb.origin_tree)
+            parsimony = eval_parsimony(evotree, self.evolve.complexity_metric, origin_tree=self.evolve.origin_tree)
             self.lut_parsim[tree_id] = parsimony
-            if raise_if_useless and parsimony > self.tb.nodes_max:  # sfeh:open
-                raise ValueError(f'Tree too complex: {parsimony} > {self.tb.nodes_max}')
+            if raise_if_useless and parsimony > self.evolve.nodes_max:  # sfeh:open
+                raise ValueError(f'Tree too complex: {parsimony} > {self.evolve.nodes_max}')
 
         if sy_expr in self.lut_fitness:
             fitness = self.lut_fitness[sy_expr]
@@ -1675,7 +1688,7 @@ class ExplainableGP:
         """
         try:
             plot_performance(self.monitor_df, self.name, self.rootdir / 'monitoring.png')
-            plot_paretofront(self.paretofront, self.rootdir, self.name, self.tb.nodes_max)
+            plot_paretofront(self.paretofront, self.rootdir, self.name, self.evolve.nodes_max)
         except Exception as ex:
             printpl("e", f'Could not create plots: {ex}\n')
 
@@ -1789,10 +1802,7 @@ def pop_analyze(popul, gen_time, gens_since_last_pareto):
     pop_parsim = [tree.get_parsimony() for tree in popul]
     pop_treelen = [len(candidate_tree.tree) for candidate_tree in popul]
     pop_fitness_best = np.min(pop_fitness)
-    try:
-        pop_unique = len(set([str(x.tree) for x in popul]))  # sfeh:analyze this?
-    except Exception as todo:
-        pop_unique = len(set([str(x.tree) for x in popul]))  # sfeh:analyze this?
+    pop_unique = len(set([str(x.tree) for x in popul]))  # sfeh:analyze this?
 
     # sfeh:idea add the amount of actually new trees (compare with the LUT tree_ids)
     result = {'pop_len': len(popul),

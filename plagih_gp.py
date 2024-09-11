@@ -2,8 +2,8 @@
 This starts the whole genetic programming.
 This (extra) file was added to have a file in the root directory that can be started.
 """
+from sklearn.model_selection import train_test_split
 
-from plagih.fitness_kernel import *
 from plagih.plagih_gp_base_class_xai import *
 from plagih.util import *
 
@@ -190,9 +190,8 @@ def _test_random_pop():
 
             @gp.create_trees(rate=0.1)
             def rand2():
-                # sfeh float? nope
-                # sfeh:discuss: deep random trees have a tendency to also allow weird-ass looking nonsense
-                return gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+                tree = gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+                return tree
 
             @gp.create_trees(rate=0.3, crossover=True)
             def xover():

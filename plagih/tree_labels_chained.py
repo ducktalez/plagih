@@ -10,20 +10,10 @@ from plagih.tree_labels import OperatorChained
 from plagih.util import get_subclasses, FLOAT_PRECISION, DEBUG_DUMMY  # noqa
 
 os.environ["KMP_WARNINGS"] = "FALSE"
-# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # https://github.com/tensorflow/tensorflow/issues/27023
-# import tensorflow as tf  # noqa check if ignoring warnings still required (tensorflow sends endless warnings)
-# tf.compat.v1.disable_eager_execution()
-
-
-# tf.compat.v1.enable_eager_execution()  # sfeh possibly faster with disable
-
-
-# sfeh:discuss: Min/Max is just an ordered list. ->taking element 1, -1, ...
 
 
 class AddChain(OperatorChained):
     symfun = sympy.Add
-    # symfun = lambda *a: sympy.Add(a)
     expr_dmy = 'Add'
     showme = '+'
     xtype = ((float,), float)
@@ -43,30 +33,37 @@ class MinChained(OperatorChained):
     symfun = sympy.Min
     expr_dmy = 'Min'
     showme = 'Min'
-    # tflow = tf.minimum
     xtype = ((float, float), float)
     chain_xtype = float
 
 
 class MaxChained(OperatorChained):
     symfun = sympy.Max
-    # symfun = lambda *a: sympy.Max(a)
     expr_dmy = 'Max'
     showme = 'Max'
-    # tflow = tf.maximum
     xtype = ((float, float), float)
     chain_xtype = float
 
 
 # class OrderedSelector(ChainOp):
-#     """sfeh:Orders Elements with < and picks the (1, -1 or even -2, 'median')-element?"""
+#     """sfeh:Orders Elements with < and picks the (1, -1 or even -2, 'median')-element?
+#     sfeh:idea using a function for selecting the n-th is an option!"""
 #     xtype = ((float,), float)
 #     chain_xtype = float
 #     symfun = lambda *a: sympy.Order(a)
 
 
 class Piecewise(OperatorChained):
-    """sfeh:discuss: the only Operator, which has tuples as input"""
+    """sfeh:discuss: the only Operator, which has tuples as input
+
+    sfeh:open force a (foo, True) option, restrict mutating "True"
+            CAUTION! Notimplemented?
+        A method to determine whether a multivariate conditional is consistent
+        with a complete coverage of all variables has not been implemented so
+        the rewrite is being stopped after encountering `cartPos >=
+        Max(cartPos, 10.4*cartPos*cartVel)`. This error would not occur if a
+        default expression like `(foo, True)` were given.
+"""
     # ogclass = Ifte
     # xtype = ((float, bool), float)
     expr_dmy = 'Piecewise'

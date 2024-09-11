@@ -87,9 +87,11 @@ class Node:
         typus_str = self.typus.__name__  # Node-name (Mul, Symbol)
 
         if self.is_term():
-            typus_str = self.childs[0].evalf()
+            try:
+                typus_str = self.childs[0].evalf()
+            except AttributeError as ex:
+                typus_str = self.childs[0]  # AttributeError("'bool' object has no attribute 'evalf'")
         else:
-            # if issubclass(self.typus, BaseOperator):
             childstr = ', '.join([cc.repr_as_list() for cc in self.childs])
             typus_str = f'{typus_str}, {childstr}'
 
@@ -125,42 +127,44 @@ class Node:
         return f"[{typus_str}]"
 
     def get_lut_id(self):
-        """
-        sfeh: Do NOT use str() or str_as_list(), as values get rounded
-            Do NOT return a node-list and convert them to strings
-            -> use repr()
-        Unique+simple representation of a tree (to check in a lut if it was calculated already)
-        regular print/string option should look better, this is just for getting a unique identifier
-        returns string Identificator
-        sfeh:discuss is this just repr?
-        ID=Identificator, which"""
-
-        # sfeh:xxx this whole function can be replaced with repr_as_list()
-        try:
-            typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
-        except AttributeError as ex:
-            print('XXX DEBUG delete me if you do not remember me :)')
-            # sfeh debug me
-            typus_str = self.typus  # because Terminals are obj -> 'Symbol' obj has no attr __name__
-
-        if self.childs:
-            # if self.is_ExprCdPair():
-            #     # elif issubclass(self.typus, TerminalDummy):
-            #     childstr = ', '.join([cc.repr_as_list() for cc in self.childs])  # those are actual childs
-            #     typus_str = f'({childstr})'
-            # el
-            if self.has_childs():  # self.is_arity_operator() n
-                childstr = ', '.join([cc.repr_as_list() for cc in self.childs])
-                typus_str = f'{typus_str}, {childstr}'
-            else:
-                try:
-                    typus_str = f'{self.childs[0]}'
-                except TypeError as ex:
-                    typus_str = str(self.childs[0].evalf())  # sfeh:open int? rational?, non-floats are handled badly
-                except Exception as ex:
-                    print(f'sfeh:debug, delete? KEEP? {ex}')  # InvalidOperation([<class 'decimal.InvalidOperation'>])
-
-        return f"[{typus_str}]"
+        # """
+        # sfeh: Do NOT use str() or str_as_list(), as values get rounded
+        #     Do NOT return a node-list and convert them to strings
+        #     -> use repr()
+        # Unique+simple representation of a tree (to check in a lut if it was calculated already)
+        # regular print/string option should look better, this is just for getting a unique identifier
+        # returns string Identificator
+        # sfeh:discuss is this just repr?
+        # ID=Identificator, which"""
+        #
+        # # todo this whole function can be replaced with repr_as_list()
+        # try:
+        #     typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
+        # except AttributeError as ex:
+        #     print('XXX DEBUG delete me if you do not remember me :)')
+        #     # sfeh debug me
+        #     typus_str = self.typus  # because Terminals are obj -> 'Symbol' obj has no attr __name__
+        #
+        # if self.childs:
+        #     # if self.is_ExprCdPair():
+        #     #     # elif issubclass(self.typus, TerminalDummy):
+        #     #     childstr = ', '.join([cc.repr_as_list() for cc in self.childs])  # those are actual childs
+        #     #     typus_str = f'({childstr})'
+        #     # el
+        #     if self.has_childs():  # self.is_arity_operator() n
+        #         childstr = [cc.repr_as_list() for cc in self.childs]
+        #         childstr = ', '.join(childstr)
+        #         typus_str = f'{typus_str}, {childstr}'
+        #     else:
+        #         try:
+        #             typus_str = f'{self.childs[0]}'
+        #         except TypeError as ex:
+        #             typus_str = str(self.childs[0].evalf())  # sfeh:open int? rational?, non-floats are handled badly
+        #         except Exception as ex:
+        #             print(f'sfeh:debug, delete? KEEP? {ex}')  # InvalidOperation([<class 'decimal.InvalidOperation'>])
+        #
+        # return f"[{typus_str}]"
+        return self.repr_as_list()
 
     def str_as_expr(self):
         s = self.get_sympy_expr()
@@ -188,11 +192,6 @@ class Node:
         else:
             _cs = [cc.get_sympy_expr() for cc in self.childs]
             _sym = self.typus.get_sym()
-
-            asd = str(_cs)
-            todo = 'ExprCondPair' in asd
-            if 'ExprCondPair' in str(_cs):
-                print('sfeh never reached?')
             # # sfeh: 25.08.2024 was used for debugging
             # if self.is_operator():
             #     _sym = self.typus.get_sym()
@@ -204,7 +203,9 @@ class Node:
             #     raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.typus)}')
 
             try:
-                return _sym(*_cs)  # noqa (_sym is definitely assigned)
+                r = _sym(*_cs)  # noqa (_sym is definitely assigned)
+                # NO sym.check here. Just return the final result
+                return r
             # except RecursionError as ex:
             #     print(f'sfeh:RecursionError, maybe Piecewise?: {self.typus}, {self.childs}, {ex}')
             #     raise RecursionError
@@ -222,6 +223,9 @@ class Node:
             except IndexError as ex:
                 print(f'sfeh:asddsaasd. {ex}')  # What is this kind of error?
                 raise ex
+            except (ValueError, TypeError) as ex:
+                # if complex number; sfeh:discuss keep real part with sympy.re?
+                raise ex
             except Exception as ex:
                 raise ex
 
@@ -235,12 +239,14 @@ class Node:
             expr = ', '.join(expr)
             if issubclass(self.typus, OperatorArity):
                 expr = f'{self.typus.__name__}({expr})'
-            elif issubclass(self.typus, ExprCondPair_Dummy):  # _Dummy works!
+            elif self.is_ExprCdPair():
                 expr = f'({expr})'
             elif CHAINED_VERION:
-                expr = f'{self.typus.expr_dmy}({expr})'
-                # except Exception as ex:
-                #      # sfeh:debug "AttributeError("type object 'ExprCondPair' has no attribute 'expr_dmy'")"
+                try:
+                    expr = f'{self.typus.expr_dmy}({expr})'
+                except Exception as ex:
+                    raise ex
+                    # sfeh:debug "AttributeError("type object 'ExprCondPair' has no attribute 'expr_dmy'")"
 
         # Sfeh:notimplementederror here?
         return expr
@@ -287,16 +293,34 @@ class Node:
         r = issubclass(self.typus, t)
         return r
 
+    def is_ExprCdPair(self):
+        # sfeh: Sometimes, it hits the Dummy-class, sometimes (chained?) the sympy class. Not sure, why.
+
+        a = issubclass(self.typus, ExprCondPair_Dummy)
+        b = issubclass(self.typus, sympy.functions.elementary.piecewise.ExprCondPair)
+        r = issubclass(self.typus, (sympy.functions.elementary.piecewise.ExprCondPair, ExprCondPair_Dummy))
+        if a:
+            print('SFEH:XXX 123')
+        return r
+
     def len_nodecount_fair(self):
         """counting the amount of nodes, but
-            - ignoring "Usub!
+            - ignoring "Usub"!"
+            - only biggest branch of Piecewise (aka If-then-else)
         """
         if self.is_term():
-            return 1
-        elif self.is_typus(Usub):
-            return sum([cc.len_nodecount_fair() for cc in self.childs])
+            n = 1
         else:
-            return 1 + sum([cc.len_nodecount_fair() for cc in self.childs])
+            cc_list = [cc.len_nodecount_fair() for cc in self.childs]
+
+            if self.is_typus(Usub):
+                n = sum(cc_list)
+            # elif self.is_ExprCdPair():
+            #     n = 1 + max(cc_list)  # sfeh:discuss
+            else:
+                n = 1 + sum(cc_list)
+
+        return n
 
     def __len__(self):
         return self.len_nodecount_fair()
@@ -424,20 +448,6 @@ class Node:
                 return True
         return False
 
-    def is_ExprCdPair(self):
-        """TODO this NEVER actually returns True? Is it even required?
-            -> This was hitting the sympy class"""
-        todo = str(self)
-        if ('ExprCondPair') in todo:
-            print('todo')   # does not work due to not stringing the expr-cond-pair
-        # a = isinstance(self.typus, ExprCondPair_Dummy)
-        # b = issubclass(self.typus, ExprCondPair_Dummy)
-        # c = isinstance(self.typus, ExprCondPair)
-        d = issubclass(self.typus, ExprCondPair)
-        if d:
-            raise NotImplementedError('SFEH:WKASHJDBJKASHDFBJKAHSBF')
-        return d
-
     def is_term(self):
         # sfeh:discuss is_atom, rename all to atom?
         return issubclass(self.typus, Terminal)
@@ -511,9 +521,7 @@ class Node:
         return base
 
     def list_mutable_nodes(self, xtype=None, skip_first=False, allow_chain=False) -> ['Node']:
-        """was eval_mutable_nodes,
-        "skip_layers"
-        return all nodes that are mutable, aka suite for point- or branchmutation
+        """return all nodes that are mutable, aka suite for point- or branchmutation
         sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!"""
 
         # -> Check, if this node should be added
@@ -535,7 +543,7 @@ class Node:
             else:
                 node_list = []
 
-        # -> recursively add the other nodes
+        # recursively add the other nodes
         if self.has_childs():  # sfeh:chain-operators discuss
             for cc in self.childs:
                 a = cc.list_mutable_nodes(xtype=xtype, skip_first=False, allow_chain=allow_chain)
@@ -727,7 +735,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=CHAINED_VERION) -> Node:
             # sfeh:debug: When does sympy.re occur? Are there other cases?
             # sfehxxx reintroduce piecewise? discuss: ignore trees which have real/complex numbers
             # return sympy_to_tree(expr.args[0], allow_chain=allow_chain)
-            return cc_nodes
+            return cc_nodes  # sfeh:delete? never reached? 26.08.2024
 
     # sfeh:discuss
     # NotImplementedError: Expr missing: ITE(p > 13, tan(p - v) >= 2.578643, tan(p - v) >= 1)
@@ -1597,22 +1605,27 @@ class ExplainableGP:
                         n_success += 1
 
                 except (ValueError, ArithmeticError) as ex:
-                    fails_list.append(ex)
-                    print_warning('www', f'\'{tag}\' failed: {ex}')
-                    if len(fails_list) > 2 * n_success + 5:  # allow more fails: fails_list > n
-                        print_caution(f'Evolution fails too often: {tag}, {len(fails_list)}. ({n_success} successful).'
-                                      f'\n{fails_list}')
-                        return  # sfeh raise?
+                    if 'ValueError: Tree did not get complex enough' in str(ex):
+                        fails_list.append(ex)
+                        print_warning('www', f'\'{tag}\' failed: {ex}')
+                        if len(fails_list) > 2 * n_success + 5:  # allow more fails: fails_list > n
+                            print_caution(f'Evolution fails too often: {tag}, {len(fails_list)}. ({n_success} successful).'
+                                          f'\n{fails_list}')
+                            return  # sfeh raise?
+                    else:
+                        raise
                 except TypeError as ex:
+                    # TypeError: Cannot convert complex to float
+                    # ==> Okay!
+                    # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
+                    # ==> sfeh probably this error: cond(): 'false_fn' argument required
+                    # ==> Happens, when ITE is coming up. Ignoring for now.
+                    # TypeError('Node.is_ExprCdPair() takes 1 positional argument but 2 were given')
+                    # ==>
                     if str(ex) == "Cannot convert complex to float":
                         pass
                     else:
-                        print(f'Typeerror, but why? {ex}')  # ok: TypeError: Cannot convert complex to float
-                    # sfeh: Typeerror, but why? 'NoneType' object is not subscriptable -> ?
-                    # Problem: TypeError: Typeerror, but why? expecting bool or Boolean, not `(a - 0.53 <= -0.361, a - 0.801 < v/a**1.0)`
-                    # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
-                    # sfeh probably this error: cond(): 'false_fn' argument required
-                    # Happens, when ITE is coming up. Ignoring for now.
+                        raise Exception  #  print(f'Typeerror, but why? {ex}')
                 except AttributeError as ex:
                     print(f'("Okay", if sympy.im in expr) {ex}')
                 #     # raise AttributeError(f'Probably sympy.im in expr {ex}')
@@ -1636,10 +1649,7 @@ class ExplainableGP:
     def tree_to_candidate(self, evotree: Node, tag=None, raise_if_useless=True):
         """the "fixed" node information is not relevant"""
 
-        todo = copy.deepcopy(evotree)
         evotree.force_input_node(self.evolve)
-        if todo != evotree:
-            print('ASDASDASDASD')
         evotree.repair_depth()
 
         tree_id = evotree.get_lut_id()
@@ -1648,9 +1658,8 @@ class ExplainableGP:
             sy_expr = self.lut_sym[tree_id]
         else:
             sy_expr = evotree.get_sympy_expr()
-            # sy_expr = sym_check(sy_expr)  # raise if "weird" stuff in it
+            sym_check(sy_expr)  # sfeh:discuss save bad trees in LUT aswell? Different LUT for bad trees?
             self.lut_sym[tree_id] = sy_expr
-            sym_check(sy_expr)
 
         if tree_id in self.lut_parsim:
             parsimony = self.lut_parsim[tree_id]
@@ -1665,7 +1674,11 @@ class ExplainableGP:
         else:
             # sfeh:discuss sympy real=True might allow imaginary results
             # t0 = time.perf_counter()
-            pairwise_results = eval_regression_sym_experimental(sy_expr, self.df_train)
+            try:
+                pairwise_results = eval_regression_sym_experimental(sy_expr, self.df_train)
+            except Exception as TODO:
+                pairwise_results = eval_regression_sym_experimental(sy_expr, self.df_train)
+
             fitness = regression_error(pairwise_results, self.df_train['action'])
 
             # t1 = time.perf_counter()

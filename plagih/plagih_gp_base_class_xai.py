@@ -180,7 +180,9 @@ class Node:
             return r
 
     def get_expr_raw_fstring(self):
-        """Add (1, a)"""
+        """Add (1, a)
+        self.typus.__name__ gets the class name
+        """
         if self.is_term():
             fex = f'{self.childs[0]}'
             fex = string_remove_trailing_zeroes(fex)
@@ -190,7 +192,6 @@ class Node:
             fex = ', '.join(fex)
             if issubclass(self.typus, OperatorArity):
                 fex = f'{self.typus.showme}({fex})'
-                # fex = f'{self.typus.__name__}({fex})'  todo debug
             elif self.is_ExprCdPair():
                 fex = f'({fex})'
             else:

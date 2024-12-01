@@ -151,8 +151,7 @@ class CustomOperator:
 
 
 class Node_Dummy(Typus):
-    """Terminal_Dummy, Function_Dummy now both in here
-    todo MUST also have type BaseOperator or Terminal"""
+    """Terminal_Dummy, Function_Dummy now both in here"""
     @classmethod
     def get_child_xts(cls):
         return cls.xtype[0]

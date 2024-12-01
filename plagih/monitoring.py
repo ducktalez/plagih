@@ -61,9 +61,9 @@ def plot_performance(monitor_df, name, path_monitoring: Path):
         axs3.set_ylim(ymin=0), axs3.legend(loc='lower left')
 
         # Top level style
-        axs3.set_xlim(xmin=0, xmax=max(xx)), axs3.set_xlabel('generations')
+        axs3.set_xlim(xmin=0, xmax=max(xx)), axs3.set_xlabel('generation')
         axs3.yaxis.set_major_formatter(StrMethodFormatter('{x:,.0f}'))
-        axs0.set_title(f'monitoring gp generations {name}')  # sfeh
+        axs0.set_title(f'monitoring GP generations {name}')  # sfeh
         fig.tight_layout()
         fig.savefig(path_monitoring)
         plt.close('all')

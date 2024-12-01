@@ -229,5 +229,5 @@ def _test_random_pop():
 if __name__ == "__main__":
     # _test_simple()
     # _test_random_pop()
-    # _test_simple()
-    _test_random_pop()  # todo
+    _test_simple()
+    _test_random_pop()  # sfeh:open

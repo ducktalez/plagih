@@ -19,11 +19,8 @@ build_operator_dict = {Add: 2, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5
 make_symbol_fun = lambda x: sympy.Symbol(x, real=True, imaginary=False)
 
 rootdir = Path.cwd() / 'MTC200_RMSE_scratch'
-try:
-    normalize_numpy = lambda x: np.round(np.clip(x, 0, 2), 0)
-except Exception as TODO:
-    print(f'TODO dsadsa {TODO}')
-    raise SympySimplificationError
+normalize_numpy = lambda x: np.round(np.clip(x, 0, 2), 0)
+
 pop_max = 100
 gen_max = 100
 nodes_max = 50
@@ -39,32 +36,33 @@ def _test_simple():
     gp = ExplainableGP('TEST', pop_max, gen_max, rootdir, df_train, df_control, evolve, DATA_SYMBOLS, normalize_numpy, CHAINED_VERION_main)
 
     gp.gen_create_initial()
-    for _ in range(1):
-        @gp.create_trees(rate=1)
-        def rand2():
-            return gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
 
-        gp.end_generation()
-
-    for _ in range(2):
-        @gp.create_trees(rate=1, simplify=True)
-        def rand2_CHAINA():
-            tree = gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
-            tree = tree_simplification(tree, allow_chain=CHAINED_VERION_main)
-            tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
-            return tree
-
-        gp.end_generation()
-
-    for _ in range(10):
-        @gp.create_trees(rate=1)
-        def mx_branch_n1():
-            tree = selection_tournament(gp.pop_genepool, n=3)
-            n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
-            tree = gp.evolve.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
-            return tree
-
-        gp.end_generation()
+    # for _ in range(1):
+    #     @gp.create_trees(rate=1)
+    #     def rand2():
+    #         return gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+    #
+    #     gp.end_generation()
+    #
+    # for _ in range(2):
+    #     @gp.create_trees(rate=1, simplify=True)
+    #     def rand2_CHAINA():
+    #         tree = gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+    #         tree = tree_simplification(tree, allow_chain=CHAINED_VERION_main)
+    #         tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
+    #         return tree
+    #
+    #     gp.end_generation()
+    #
+    # for _ in range(10):
+    #     @gp.create_trees(rate=1)
+    #     def mx_branch_n1():
+    #         tree = selection_tournament(gp.pop_genepool, n=3)
+    #         n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
+    #         tree = gp.evolve.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
+    #         return tree
+    #
+    #     gp.end_generation()
 
     for _ in range(10):
         @gp.create_trees(rate=1, crossover=True, simplify=True)
@@ -229,7 +227,7 @@ def _test_random_pop():
 
 
 if __name__ == "__main__":
-    _test_simple()
+    # _test_simple()
     # _test_random_pop()
     # _test_simple()
     _test_random_pop()  # todo

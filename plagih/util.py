@@ -12,7 +12,7 @@ import numpy as np
 DEBUG_DUMMY = True  # Use this to find codeblocks that are just interesting during development
 TEST_DUMMY = True  # sfeh: actually use this later! check trees, check if all ops are usable,
 DELETE_ME = True  # sfeh:delete this when development phase is over
-PRINT_DUMMY = 'wwaaagggiiifff'  # noqa: dummy for print-policy wwaaaggggggiiifff
+PRINT_DUMMY = 'wwwaaagggiiifff'  # noqa: dummy for print-policy wwaaaggggggiiifff
 FLOAT_PRECISION = 3
 PLOTS_INTERVAL = 10
 BACKUP_INTERVAL = 10

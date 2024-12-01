@@ -13,9 +13,11 @@ os.environ["KMP_WARNINGS"] = "FALSE"
 
 
 class AddChain(OperatorChained):
+    """It is Sum, but we call it chain, as vector also is taken"""
     symfun = sympy.Add
     showme = 'Add'
     sy_str = 'Add({})'
+    formulae_str = 'Add({})'
     repr_str = 'AddChain{},[{}]'
     xtype = ((float,), float)
     xtype_chain = float
@@ -26,6 +28,7 @@ class MulChain(OperatorChained):
     showme = 'Mul'
     symfun = sympy.Mul
     sy_str = 'Mul({})'
+    formulae_str = 'Mul({})'
     repr_str = 'MulChain{},[{}]'
     xtype = ((float,), float)
     xtype_chain = float
@@ -35,6 +38,7 @@ class MinChain(OperatorChained):
     symfun = sympy.Min
     showme = 'Min'
     sy_str = 'Min({})'
+    formulae_str = 'Min({})'
     repr_str = 'MinChain{},[{}]'
     xtype = ((float, float), float)
     chain_xtype = float
@@ -44,6 +48,7 @@ class MaxChain(OperatorChained):
     symfun = sympy.Max
     showme = 'Max'
     sy_str = 'Max([{}])'
+    formulae_str = 'Max({})'
     repr_str = 'MaxChain{},[{}]'
     xtype = ((float, float), float)
     chain_xtype = float
@@ -72,6 +77,7 @@ class Piecewise(OperatorChained):
     # xtype = ((float, bool), float)
     showme = 'Piecewise'
     sy_str = 'Piecewise([{}])'
+    formulae_str = 'Piecewise({})'
     repr_str = 'Piecewise{},[{}]'
     # these must be handeled differently, so commented out
     # xtype = ((ExprCondPair,), float)
@@ -83,6 +89,7 @@ class Piecewise(OperatorChained):
 class AndChain(OperatorChained):
     expr_dmy = 'And'
     sy_str = 'And([{}])'
+    formulae_str = 'And({})'
     repr_str = 'And{},[{}]'
     xtype = ((bool,), bool)
     xtype_chain = bool
@@ -94,6 +101,7 @@ class OrChained(OperatorChained):
     xtype_chain = bool
     showme = 'Or'
     sy_str = 'Or([{}])'
+    formulae_str = 'Or({})'
     repr_str = 'OrChain{},[{}]'
     symfun = sympy.Or
 

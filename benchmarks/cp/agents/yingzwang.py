@@ -29,9 +29,9 @@ class ReplayBuffer:
         self.buffer = deque(maxlen=buffer_size)
         random.seed(random_seed)
 
-    def __len__(self):
-        """Return the current size of internal memory."""
-        return len(self.buffer)
+    # def len(self):
+    #     """Return the current size of internal memory."""
+    #     return len(self.buffer)
 
     def add(self, s, a, r, done, s2):
         """Add a new experience to buffer.

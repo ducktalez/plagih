@@ -159,7 +159,7 @@ class Node:
             _cs = [cc.get_sympy_expr() for cc in self.childs]
             _sym = self.typus.get_sym()
             # _sym = Round_Dummy
-            _cs = _sym(*_cs)  # todo
+            _cs = _sym(*_cs)  # sfeh:debug2024
             return _cs
 
         elif self.typus in (Piecewise, sympy.Piecewise):  # sfeh:open delete ONE of them?
@@ -180,22 +180,37 @@ class Node:
             return r
 
     def get_expr_raw_fstring(self):
-        """Add (1 + a)"""
+        """Add (1, a)"""
+        if self.is_term():
+            fex = f'{self.childs[0]}'
+            fex = string_remove_trailing_zeroes(fex)
+            return fex
+        else:
+            fex = [cc.get_expr_raw_fstring() for cc in self.childs]
+            fex = ', '.join(fex)
+            if issubclass(self.typus, OperatorArity):
+                fex = f'{self.typus.showme}({fex})'
+                # fex = f'{self.typus.__name__}({fex})'  todo debug
+            elif self.is_ExprCdPair():
+                fex = f'({fex})'
+            else:
+                fex = f'{self.typus.showme}({fex})'
+        return f'{fex}'
+
+    def get_expr_formulae(self):
+        """(1 + a)
+        each step returns like ({} + {})
+        and then, the inputs are filled in
+        """
         if self.is_term():
             expr = f'{self.childs[0]}'
             expr = string_remove_trailing_zeroes(expr)
+            return expr
         else:
-            expr = [cc.get_expr_raw_fstring() for cc in self.childs]
-            expr = ', '.join(expr)
-            if issubclass(self.typus, OperatorArity):
-                expr = f'{self.typus.showme}({expr})'
-                # expr = f'{self.typus.__name__}({expr})'  todo debug
-            elif self.is_ExprCdPair():
-                expr = f'({expr})'
-            # elif CHAINED_VERION:
-            #     expr = f'{self.typus.__name__}({expr})'
-            #     # expr = f'{self.typus.expr_dmy}({expr})'
-        return expr
+            expr = [cc.get_expr_formulae() for cc in self.childs]
+            expr = f'{self.typus.sy_str}'.format(expr)
+
+        return f'{expr}'
 
 
     def represent(self):
@@ -212,7 +227,7 @@ class Node:
             s += ':fix'
 
         if self.has_childs():
-            cs = [self.represent(cc) for cc in self.childs]
+            cs = [self.represent() for _ in self.childs]
             childstr = ', '.join(cs)
             s = f"{s}, {childstr}"
         return f"[{s}]"
@@ -461,7 +476,11 @@ class Node:
 
     def list_mutable_nodes(self, xtype=None, skip_first=False, allow_chain=True) -> ['Node']:
         """return all nodes that are mutable, aka suite for point- or branchmutation
-        sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!"""
+        sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!
+
+        === ValueError: 'a' cannot be empty unless no samples are taken
+        ===> probably, no nodes were there to bemutated
+        """
 
         # -> Check, if this node should be added
         if self.is_fix:
@@ -646,6 +665,9 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
         for arg in s_expr.args:
             cc_nodes.append(sympy_to_tree(arg, allow_chain=allow_chain))
 
+        if isinstance(s_expr, Round_Dummy):
+            return Node(Round, cc_nodes)
+
         if allow_chain:  # sfeh:xxx do this one level above? ignore all allow_chains in here?
             op = d_sym2node_chain[type(s_expr)]
             return Node(op, childs=cc_nodes)
@@ -828,7 +850,7 @@ def evolve_reduce_simplify(tree: Node, allow_chain, completely=True, force=False
         for cc in nodes_lv0:
             cc.set_new_node(tree_simplification(cc, allow_chain))
     else:
-        node_list = [n for n in tree.list_mutable_nodes(allow_chain) if
+        node_list = [n for n in tree.list_mutable_nodes(allow_chain=allow_chain) if
                      issubclass(n.typus, OperatorArity)]  # ignoring leaf nodes...
         if len(node_list) == 0:
             print_warning('wwww', f'Tree for simplification does not provide operators: {tree}')
@@ -888,7 +910,7 @@ class Evolution:
         sfeh:discussion there is a difference between parsimony and complexity...
         sfeh:discuss analyze the amount of trees that have to be pruned?
         sfeh:open add labelweight_max to"""
-        nodelist = tree.list_mutable_nodes(allow_chain)
+        nodelist = tree.list_mutable_nodes(allow_chain=allow_chain)
         for dnode in nodelist:
             if dnode.depth == self.nodes_max and dnode.get_arity() > 0:
                 print_warning('wwww', f'Node in fintree is too deep: {dnode.depth}')
@@ -899,7 +921,7 @@ class Evolution:
         prune_amount = len(tree) - self.nodes_max
         while prune_amount > 0:
             print_warning('wwww', f'Tree too complex: {len(tree)} > {self.nodes_max}, pruning {prune_amount}.')
-            nodelist = tree.list_mutable_nodes(allow_chain)
+            nodelist = tree.list_mutable_nodes(allow_chain=allow_chain)
             prune_now = 1 + np.random.randint(prune_amount)  # 19 -> prune branch with 1 to max. 19 nodes
 
             nodelist = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
@@ -992,7 +1014,7 @@ class Evolution:
         layer0_splits = randomly_split_range(nn, len(layer0_nodes))
 
         for ii, node0 in enumerate(layer0_nodes):  # pareto_insert branches! get layer always, node ids might change
-            lvl0_node = np.random.choice(node0.list_mutable_nodes(allow_chain))  # layer0_branch =
+            lvl0_node = np.random.choice(node0.list_mutable_nodes(allow_chain=allow_chain))  # layer0_branch =
             # branch_size = layer0_nodes[ii]  # sfeh:idea + len(lvl0_node)
             new_subbranch = self.new_tree_nodes(lvl0_node.get_xtype_self(), allow_chain, p_term=p_term)
             lvl0_node.set_new_node(new_subbranch)
@@ -1061,7 +1083,7 @@ class Evolution:
         - filter terminals
         - filter with which filter?"""
 
-        _nd = np.random.choice(tree.list_mutable_nodes(allow_chain))
+        _nd = np.random.choice(tree.list_mutable_nodes(allow_chain=allow_chain))
         # sfeh: does nothing if no float values are in this tree
         _nd.evolve_mutate_filter_gauss()
 
@@ -1072,7 +1094,7 @@ class Evolution:
         sfeh:debug is the fintree a fintree copy or the same fintree?"""
         evotree = copy.deepcopy(tree)
 
-        node = rnd_choice(evotree.list_mutable_nodes(allow_chain))  # debug if ignores chains
+        node = rnd_choice(evotree.list_mutable_nodes(allow_chain=allow_chain))  # debug if ignores chains
         xtype = node.get_xtype_tuple()
 
         if node.is_operator():
@@ -1091,7 +1113,7 @@ class Evolution:
     def evolve_mutate_branch_depth(self, tree: Node, depth_goal, allow_chain, p_term=0.0):
         """"""
         n_init = len(tree)
-        node_list = tree.list_mutable_nodes(allow_chain)
+        node_list = tree.list_mutable_nodes(allow_chain=allow_chain)
         node = np.random.choice(node_list)
         xtype_out = node.get_xtype_self()  # ValueError: 'a' cannot be empty unless no samples are taken
         branch = self.evolve_create_random(xtype_out, depth_goal, num_rest=self.nodes_max - n_init, depth=0,
@@ -1107,7 +1129,7 @@ class Evolution:
         nodes_init = len(tree)
         if tree is None:
             raise NotImplementedError('SFEH:open Implement standard selection mechanism')
-        nd = tree.list_mutable_nodes(self.allow_a_chain)
+        nd = tree.list_mutable_nodes(allow_chain=self.allow_a_chain)
         nd = rnd_choice(nd)
         xt_out = nd.get_xtype_self()
         nodes_goal = min(self.nodes_max - (nodes_init - len(nd)), nodes_goal)
@@ -1367,7 +1389,7 @@ class ExplainableGP:
         printpl('gg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
         print(f'\n'
-              f'\tInitializing Plagih UI.\n'
+              f'\tInitializing Plagih.\n'
               f'\tName: {BColors.CYAN}{rootdir.name}{BColors.RESET_COLOR}.\n'
               f'\tLocated in: \n'
               f'\t{rootdir}\n')
@@ -1487,7 +1509,7 @@ class ExplainableGP:
                     tree = self.evolve.evolve_new_tree_depth(n, float, p_term=0)
                     tree = tree_simplification(tree, allow_chain=self.allow_chain)
                     # sfeh trees can shrink to single-noded trees
-                    if tree.get_max_depth() <= 1:
+                    if tree.get_max_depth() < 1:
                         raise TreeSizeError(f'Tree did not get complex enough')
                     return tree
 
@@ -1559,6 +1581,7 @@ class ExplainableGP:
                         n_success += 1
 
                 except (TreeSizeError, SympySimplificationError) as ex:
+
                     fails_list.append(ex)
                     print_warning('www', f'\'{tag}\' failed: {ex}')
                     if len(fails_list) > 2 * n_success + 5:  # allow more fails: fails_list > n
@@ -1567,11 +1590,9 @@ class ExplainableGP:
                         return  # sfeh raise?
 
                 except (ValueError, ArithmeticError) as ex:
-                    if 'Crossover tree 1 has no mutable nodes!' in str(ex):
-                        print_warning('w', f'This should not happen too often: {ex}')
-                        pass
-                    else:
-                        raise
+                    # if 'Crossover tree 1 has no mutable nodes!' in str(ex):
+                    # if "'a' cannot be empty unless no samples are taken" in str(ex):
+                    print_warning('ww', f'Value/Arithmetic: {ex}')
                 except TypeError as ex:
                     # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
                     # ==> sfeh probably this error: cond(): 'false_fn' argument required
@@ -1582,12 +1603,18 @@ class ExplainableGP:
                     print(f'("Okay", if sympy.im in expr) {ex}')
                 except KeyError as ex:
                     # KeyError(re) -> okay?, real part implies complex numbers, ignoring is okay
-                    print(f'Keyerror, (probably sympy.lambdify expression not evaluable): {ex}')
+                    # (probably sympy.lambdify expression not evaluable)
+                    print(f'Keyerror?: {ex}')
                 except RecursionError as ex:
                     print(f'RecursionError (probably Piecewise/relational combination?): {ex}')
                 except NotImplementedError as nie:
                     print_caution(f'Notimplemented? {nie}')
-
+                except ZeroDivisionError as ex:
+                    # ZeroDivisionError: 0.0 cannot be raised to a negative power | reached 01.12.2024
+                    # sfeh:q ...why was this not catched as arithmetixcerror?
+                    pass
+                except Exception as ex:
+                    print(f'Why are we not here??? {ex}')
         return loop
 
     def eval_fitness(self, sy_expr):
@@ -1687,9 +1714,9 @@ class ExplainableGP:
         self.monitor_df.loc[self.gen_id] = tmp_dict
         printpl('gg',
                 f"Created {len(self.pop_genepool)}/{self.pop_max} ({tmp_dict['pop_unique']} unique) in generation {self.gen_id}. "
-                f"Trees in LUT: {len(self.lut_fitness)} Gen took {gen_time:4.2f}s")
+                f"Trees in LUT: {len(self.lut_fitness)} Generation took {gen_time:4.2f}s")
 
-        printpl('ggg', f'--- Gen {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}. ---')
+        printpl('ggg', f'--- Generation {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}. ---')
 
         # def monitoring_scheduled_io(self, gen_id, plots_interval=10, backup_interval=10):
         """

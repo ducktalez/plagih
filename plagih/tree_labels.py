@@ -52,8 +52,9 @@ Custom Operators /Functions/Nodes/Terminals/Nested:
 import os
 from typing import Callable
 
+import numpy as np
+import pandas as pd
 import sympy
-from blib2to3.pgen2.parse import DUMMY_NODE
 # import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
 from sympy.functions.elementary.piecewise import ExprCondPair
 
@@ -106,16 +107,12 @@ class Typus:
             raise
         return _str
 
-    def __len__(self):
-        """ONLY works, when args are there"""
-        if issubclass(self.__class__, Terminal):
-            return 1
-        else:
-            try:
-                return 1 + sum([len(cc) for cc in self.args])
-            except Exception as todo:
-                print(f'TODO ASDASD {todo}')
-                return 1 + sum([len(cc) for cc in self.args])
+    # def __len__(self):
+    #     """ONLY works, when args are there"""
+    #     if issubclass(self.__class__, Terminal):
+    #         return 1
+    #     else:
+    #         return 1 + sum([len(cc) for cc in self.args])
 
     def _sympy_(self, *args):  # -> sympy.Basic:
         _sym = self.symfun
@@ -154,7 +151,8 @@ class CustomOperator:
 
 
 class Node_Dummy(Typus):
-    """Terminal_Dummy, Function_Dummy now both in here"""
+    """Terminal_Dummy, Function_Dummy now both in here
+    todo MUST also have type BaseOperator or Terminal"""
     @classmethod
     def get_child_xts(cls):
         return cls.xtype[0]
@@ -234,6 +232,8 @@ class Terminal(Typus):  # sfeh sympy.Atom
     - observations (e.g. b, aka data input)
     """
     value = None
+    def __len__(self):
+        return 1
 
 
 class Boolean(Terminal):
@@ -272,6 +272,7 @@ class Add(MathOperator, ChainableOp):
     symfun = sympy.Add
     showme = 'Add'
     sy_str = '({}+{})'
+    formulae_str = '({} + {})'
     repr_str = 'Add{},[{},{}]'
     xtype = ((float, float), float)
     chain_xtype = float
@@ -472,6 +473,12 @@ class Min(MinMaxBase, ChainableOp):
     xtype = ((float, float), float)
     chain_xtype = float
 
+    def __call__(self, a):
+        # Handle numerical evaluation (for lambdify or direct calls)
+        if isinstance(a, (int, float, np.ndarray, pd.DataFrame)):
+            return np.minimum.reduce(a)
+        raise TypeError("Unsupported type for numerical evaluation in Min(MinMaxBase, ChainableOp)")
+
 
 class Max(MinMaxBase, ChainableOp):
     symfun = sympy.Max
@@ -480,6 +487,12 @@ class Max(MinMaxBase, ChainableOp):
     repr_str = 'Max{},[{}, {}]'
     xtype = ((float, float), float)
     chain_xtype = float
+
+    def __call__(self, a):
+        # Handle numerical evaluation (for lambdify or direct calls)
+        if isinstance(a, (int, float, np.ndarray, pd.DataFrame)):
+            return np.maximum.reduce(a)
+        raise TypeError("Unsupported type for numerical evaluation in Min(MinMaxBase, ChainableOp)")
 
 
 class Lt(RelationalOperator):
@@ -493,7 +506,7 @@ class Lt(RelationalOperator):
 class Le(RelationalOperator):
     symfun = sympy.Le
     showme = 'Le='
-    sy_str = '({}<={})'
+    sy_str = '({} <= {})'
     repr_str = 'Le{},[{}, {}]'
     xtype = ((float, float), bool)
 
@@ -501,7 +514,7 @@ class Le(RelationalOperator):
 class Gt(RelationalOperator):
     symfun = sympy.Gt
     showme = 'Gt'
-    sy_str = '({}>{})'
+    sy_str = '({} > {})'
     repr_str = 'Gt{},[{}, {}]'
     xtype = ((float, float), bool)
 
@@ -510,7 +523,7 @@ class Ge(RelationalOperator):
     xtype = ((float, float), bool)
     symfun = sympy.Ge
     showme = 'Ge'
-    sy_str = '({}>={})'
+    sy_str = '({} >= {})'
     repr_str = 'Ge{},[{}, {}]'
 
 
@@ -526,7 +539,7 @@ class Sub(MathOperator):
     xtype = ((float, float), float)
     symfun = lambda a, b: sympy.Add(a, -b)
     showme = 'Sub'
-    sy_str = '({}-{})'
+    sy_str = '({} - {})'
     repr_str = 'Sub{},[{}, {}]'
 
 
@@ -563,7 +576,7 @@ class Round(MathOperator):
     repr_str = 'Round_Dummy{},[{}]'
 
 
-class Round_Dummy(sympy.Function, Node_Dummy):
+class Round_Dummy(sympy.Function, MathOperator, Node_Dummy):
     """
     Workaround for rounding exponents
     For more details, look at: plagih/discoveries/rounding_exponents.py
@@ -573,10 +586,16 @@ class Round_Dummy(sympy.Function, Node_Dummy):
         if a.is_symbol:
             return
         elif a.is_number:
-            return round(a)
+            return sympy.Integer(round(a))  # Ensure it's a SymPy Integer
 
     def _sympy_(self, a):
         return eval(self, a)
+
+    def __call__(self, a):
+        # Handle numerical evaluation (for lambdify or direct calls)
+        if isinstance(a, (int, float, np.ndarray)):
+            return np.round(a)
+        raise TypeError("Unsupported type for numerical evaluation in Round_Dummy")
 
 class PowRounded(OperatorArity):
     """Requires class Round_Dummy!"""

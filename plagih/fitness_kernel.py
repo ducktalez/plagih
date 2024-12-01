@@ -1,4 +1,4 @@
-import pandas
+import pandas as pd
 
 from plagih.sympy_extras import plagih_sympify
 from plagih.tree_labels import Round_Dummy, PowRounded
@@ -12,11 +12,11 @@ import numpy as np
 custom_functions = {
     'Min': np.minimum.reduce,
     'Max': np.maximum.reduce,
-    'Round_Dummy': Round_Dummy,
+    'Round_Dummy': np.round,
 }
 
 
-def eval_predict(expr, df: pandas.DataFrame, variable_names, normalize_numpy):
+def eval_predict(expr, df: pd.DataFrame, variable_names, normalize_numpy):
     """
     Returns the fitness (float)
 
@@ -43,7 +43,6 @@ def eval_predict(expr, df: pandas.DataFrame, variable_names, normalize_numpy):
     # a, b = sympy.symbols('cartVel cartPos')
     # cartVels = df['cartVel']
     # cartPoss = df['cartPos']
-    # print(f'HEsdfgRE TODO: {expr}')
     cartPos, cartVel = sympy.symbols('cartPos cartVel')
     variable_names = [str(var) for var in (cartPos, cartVel)]
     func = sympy.lambdify(tuple([cartPos, cartVel]), expr, modules=[custom_functions, 'numpy'])
@@ -57,24 +56,25 @@ def eval_predict(expr, df: pandas.DataFrame, variable_names, normalize_numpy):
 
     # x = expr.evalf(subs={'cartVel': cartVels, 'cartPos': cartPoss})
     # raw_results = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
-    with warnings.catch_warnings():
-        with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
-            with ignore_warnings(DeprecationWarning):  # something like use "**" instead of "Pow"
-                df['result'] = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
-                # raw_results = df.apply(lambda row: func(*[row[var] for var in variable_names]), axis=1)
+    try:
+        with warnings.catch_warnings():
+            with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
+                with ignore_warnings(DeprecationWarning):  # something like use "**" instead of "Pow"
+                    df['result'] = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
+                    # raw_results = df.apply(lambda row: func(*[row[var] for var in variable_names]), axis=1)
 
-                #     TODO YO WTF
-                # if normalize_numpy is not None:  # clip and round result
-                #     # raw_results = normalize_numpy(raw_results)
-                #     raw_results = lambda x: pd.round(np.clip(raw_results, 0, 2), 0)
+                    #     sfeh:open YO WTF
+                    # if normalize_numpy is not None:  # clip and round result
+                    #     # raw_results = normalize_numpy(raw_results)
+                    #     raw_results = lambda x: pd.round(np.clip(raw_results, 0, 2), 0)
+    except ZeroDivisionError as sfeh:
+        # df['result'] = df.fillna(np.nan)
+        pass
 
 
     if normalize_numpy is not None:  # clip and round result
         # raw_results = normalize_numpy(raw_results)
-        try:
-            raw_results = lambda x: np.round(np.clip(raw_results, 0, 2), 0)
-        except Exception as TODO:
-            raw_results = lambda x: np.round(np.clip(raw_results, 0, 2), 0)
+        raw_results = lambda x: np.round(np.clip(raw_results, 0, 2), 0)
 
     return df
 
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     ex = '0.00162*cartPos*cartVel/(cartPos + 4.23)'
     # expr = sympy.Mul(symbols[0], (2, sympy.Add(1, symbols[1])))
     expr = PowRounded.symfun(2, sympy.Add(1, symbols[1]))
-    print(f'HERE TODO22: {expr}')
+    # sfeh
     cartPos, cartVel = sympy.symbols('cartPos cartVel')
     variable_names = [str(var) for var in (cartPos, cartVel)]
     func = sympy.lambdify(tuple(symbols), expr, modules=[custom_functions, 'numpy'])

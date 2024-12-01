@@ -23,11 +23,17 @@ def plot_performance(monitor_df, name, path_monitoring: Path):
         # sfeh:improvement not just the stderr on both sides...
         avg = monitor_df['fit_avg']
         std = monitor_df['fit_var']
-        # std = monitor_df['fit-average of better/worse half?']  # sfeh:OPEN
+        fit_quantile_25 = monitor_df['fit_quantile_25']
+        fit_quantile_50 = monitor_df['fit_quantile_50']
+        fit_quantile_75 = monitor_df['fit_quantile_75']
+
         axs0.fill_between(xx, avg - std, avg + std, alpha=0.2)  # do not use avg in both directions...
+        axs0.fill_between(xx, fit_quantile_25, fit_quantile_75, color='b', alpha=0.2)  # do not use avg in both directions...
         # axs0.set_title('regression Error (average)')  # sfeh not stderr... upper/lower bound?
         # sfeh: the best candidate is the best one in the current population. discussion: best overall?
         axs0.step(x=xx, y=monitor_df['fit_best'], linestyle='dashed', marker='', where='post', color='g',
+                  label='Best candidate')  # , label=ax_label
+        axs0.step(x=xx, y=fit_quantile_50, linestyle='dashed', marker='', where='post', color='b',
                   label='Best candidate')  # , label=ax_label
         axs0.set_ylim(ymin=0), axs0.legend(loc='lower left')  # , shadow=True
 

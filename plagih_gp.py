@@ -25,15 +25,14 @@ pop_max = 100
 gen_max = 100
 nodes_max = 50
 depth_max = 10
-CHAINED_VERION_main = True
 
 
-def _test_simple():
+def _test_simple(chained_on=True):
     """SIMPLE"""
 
     node_selector = NodeRandomizer(build_operator_dict, INPUT_NAMES, make_symbol_fun)
-    evolve = Evolution(None, None, node_selector, {'depth_max': 7, 'nodes_max': 50}, 'tree_node_count', CHAINED_VERION_main)
-    gp = ExplainableGP('TEST', pop_max, gen_max, rootdir, df_train, df_control, evolve, DATA_SYMBOLS, normalize_numpy, CHAINED_VERION_main)
+    evolve = Evolution(None, None, node_selector, {'depth_max': 7, 'nodes_max': 50}, 'tree_node_count', chained_on)
+    gp = ExplainableGP('TEST', pop_max, gen_max, rootdir, df_train, df_control, evolve, DATA_SYMBOLS, normalize_numpy, chained_on)
 
     gp.gen_create_initial()
 
@@ -69,8 +68,8 @@ def _test_simple():
         def xover_CHAINA():
             tree_a = selection_tournament(gp.pop_genepool, n=3)
             tree_b = selection_tournament(gp.pop_genepool, n=3)
-            tree_a = tree_simplification(tree_a, allow_chain=CHAINED_VERION_main)
-            tree_b = tree_simplification(tree_b, allow_chain=CHAINED_VERION_main)
+            tree_a = tree_simplification(tree_a, allow_chain=chained_on)
+            tree_b = tree_simplification(tree_b, allow_chain=chained_on)
             evo1, evo2 = gp.evolve.evolve_crossover(tree_a, tree_b)
             return evo1, evo2
 
@@ -82,7 +81,7 @@ def _test_simple():
     # sys.exit()
 
 
-def _test_random_pop():
+def _test_random_pop(chained_on=True):
     """Testrun"""
 
     # class Fixed(Node):
@@ -120,8 +119,8 @@ def _test_random_pop():
     origin_tree = None
 
     # tb = TreeBuildRestrictions(origin_xtype, None, nc, build_restrictions, 'tree_node_count')
-    evolve = Evolution(None, origin_tree, node_selector, build_restrictions, 'tree_node_count', CHAINED_VERION_main)
-    gp = ExplainableGP('MTC200_RMSE_scratch', pop_max, gen_max, rootdir, df_train, df_control, evolve, DATA_SYMBOLS, normalize_numpy, CHAINED_VERION_main)
+    evolve = Evolution(None, origin_tree, node_selector, build_restrictions, 'tree_node_count', chained_on)
+    gp = ExplainableGP('MTC200_RMSE_scratch', pop_max, gen_max, rootdir, df_train, df_control, evolve, DATA_SYMBOLS, normalize_numpy, chained_on)
     try:
         # gp.backup_load()
         printpl('i', 'Ignore loading backup!')
@@ -140,12 +139,12 @@ def _test_random_pop():
             tree = selection_tournament(gp.pop_genepool, n=3)
             return tree
 
-        if CHAINED_VERION_main:
+        if chained_on:
 
             @gp.create_trees(rate=0.30, simplify=True)
             def mx_branch_d_CHAIN():
                 tree = selection_tournament(gp.pop_genepool, n=3)
-                tree = gp.evolve.evolve_mutate_branch_depth(tree, 4, CHAINED_VERION_main, p_term=0.5)
+                tree = gp.evolve.evolve_mutate_branch_depth(tree, 4, chained_on, p_term=0.5)
                 tree = tree_simplification(tree, allow_chain=gp.allow_chain)
                 return tree
 
@@ -174,7 +173,7 @@ def _test_random_pop():
             @gp.create_trees(rate=0.10)
             def mx_branch_d():
                 tree = selection_tournament(gp.pop_genepool, n=3)
-                return gp.evolve.evolve_mutate_branch_depth(tree, 4, CHAINED_VERION_main, p_term=0.5)
+                return gp.evolve.evolve_mutate_branch_depth(tree, 4, chained_on, p_term=0.5)
 
             @gp.create_trees(rate=0.15)
             def mx_branch_n2():
@@ -227,7 +226,7 @@ def _test_random_pop():
 
 
 if __name__ == "__main__":
-    # _test_simple()
-    # _test_random_pop()
-    _test_simple()
-    _test_random_pop()  # sfeh:open
+    _test_simple(chained_on=False)
+    _test_random_pop(chained_on=False)  # sfeh:open
+    _test_simple(chained_on=True)
+    _test_random_pop(chained_on=True)

@@ -276,7 +276,7 @@ class Symbol(Terminal):
 class Add(MathOperator, ChainableOp):
     symfun = sympy.Add
     showme = 'Add'
-    sy_str = '({0}+{1})'
+    sy_str = '({0} + {1})'
     formulae_str = '({} + {})'
     repr_str = 'Add{},[{},{}]'
     xtype = ((float, float), float)
@@ -289,15 +289,15 @@ class DivFraction(MathOperator):
     xtype = ((float, float), float)
     symfun = lambda a: sympy.Pow(a, sympy.S.NegativeOne)
     showme = 'DivFraction'
-    sy_str = '(1/{})'
+    sy_str = '1/({})'
     repr_str = 'DivFraction{},[{}]'
 
 
 class Pow(MathOperator):
     symfun = sympy.Pow
     showme = 'Pow'
-    sy_str = '{0}**({1})'
-    repr_str = 'Pow{},[{},{]]'
+    sy_str = '({0})**({1})'
+    repr_str = 'Pow{},[{},{}]'
     xtype = ((float, float), float)
 
 
@@ -386,8 +386,8 @@ class Tanh(AngleOperator, NoSymCapitalized):
 
 class Sinh(AngleOperator, NoSymCapitalized):
     symfun = sympy.sinh
+    showme = 'Sinh'
     sy_str = 'sinh({})'
-    Sinh = 'Abs{},[{}]'
     repr_str = 'Sinh{},[{}]'
     xtype = ((float,), float)
 
@@ -401,9 +401,11 @@ class Cosh(AngleOperator, NoSymCapitalized):
 
 
 class Xor(LogicOperator, NoSymCapitalized):
+    """
+    Caution: loading '(a ^ b)', the sympy-Xor-representation, is interpreted as a**b"""
     symfun = sympy.Xor
     showme = 'Xor'
-    sy_str = '({} ^ {})'
+    sy_str = 'Xor({}, {})'  # 'a ^ b'
     repr_str = 'Xor{},[{}, {}]'
     xtype = ((bool, bool), bool)
 
@@ -428,7 +430,7 @@ class Eq(LogicOperator):
 class Ne(LogicOperator):
     symfun = sympy.Ne
     showme = 'Ne'  # != not working in sympy
-    sy_str = 'Ne({0},{1})'
+    sy_str = 'Ne({0}, {1})'
     repr_str = 'Ne{},[{}, {}]'
     xtype = ((float, float), bool)
 
@@ -436,7 +438,7 @@ class Ne(LogicOperator):
 class Mul(MathOperator, ChainableOp):
     symfun = sympy.Mul
     showme = 'Mul'  #
-    sy_str = '({0}*{1})'
+    sy_str = '({0} * {1})'
     repr_str = 'Mul{},[{}, {}]'
     xtype = ((float, float), float)
     chain_xtype = float
@@ -445,7 +447,7 @@ class Mul(MathOperator, ChainableOp):
 class And(LogicOperator, ChainableOp):
     symfun = sympy.And
     showme = 'And'
-    sy_str = '({0}&{1})'
+    sy_str = '({0} & {1})'
     repr_str = 'And{},[{}, {}]'
     xtype = ((bool, bool), bool)
     chain_xtype = bool
@@ -464,10 +466,10 @@ class ITE(LogicOperator):
     """sfeh:is this really required? currently not in use"""
     symfun = sympy.ITE
     showme = 'ITE'
-    sy_str = 'ITE({0}{1}{2})'
+    sy_str = 'ITE({0}, {1}, {2})'
     repr_str = 'ITE{},[{}, {}, {}]'
-    # tflow = lambda *args: tf.cond(args[0], true_fn=args[1], false_fn=args[2])
     xtype = ((bool, bool, bool), bool)
+    # tflow = lambda *args: tf.cond(args[0], true_fn=args[1], false_fn=args[2])
 
 
 class Min(MinMaxBase, ChainableOp):
@@ -488,7 +490,7 @@ class Min(MinMaxBase, ChainableOp):
 class Max(MinMaxBase, ChainableOp):
     symfun = sympy.Max
     showme = 'Max'
-    sy_str = 'Max({0},{1})'
+    sy_str = 'Max({0}, {1})'
     repr_str = 'Max{},[{}, {}]'
     xtype = ((float, float), float)
     chain_xtype = float
@@ -536,7 +538,7 @@ class Square(MathOperator):
     symfun = lambda a: sympy.Pow(a, 2)
     xtype = ((float,), float)
     showme = 'Square'
-    sy_str = '({}**2)'
+    sy_str = '({})**2'
     repr_str = 'Square{},[{}]'
 
 
@@ -563,7 +565,6 @@ class Round(MathOperator):
     """
 
     """
-    # sfeh:xxx check conversion
     xtype = ((float,), float)
     # symfun = lambda a: a.round(0) if a.is_number else Round_Dummy(a)
     # symfun: Callable[[sympy.Expr], sympy.Expr] = lambda a: a.round(0) if a.is_number else Round(a)  # sfeh (next line)
@@ -656,17 +657,19 @@ class Clip(MinMaxBase, CustomOperator):
 class Exp(MathOperator):
     symfun = sympy.exp
     showme = 'Exp'
-    sy_str = '({}**E)'
+    sy_str = '{}**E'
     repr_str = 'Exp{},[{}, {}]'
     xtype = ((float,), float)
 
 
 class ExprCondPair_Dummy(Node_Dummy):
-    """sfeh:discuss
+    """
+    Named like this to differ from the sympy original (ExprCondPair)
+    sfeh:discuss
     The only purpose is to wrap the results for a Node-structure, where every Node has childs with other nodes"""
     symfun = sympy.functions.elementary.piecewise.ExprCondPair
     showme = 'ExprCondPair_Dummy'
-    sy_str = '(ExprCondPair({0}, {1}))'
+    sy_str = 'ExprCondPair({0}, {1})'
     repr_str = 'ExprCondPair_Dummy{},[{}, {}]'
     xtype = ((float, bool), float)
     expr_dmy = 'ExprCondPair_Dummy'

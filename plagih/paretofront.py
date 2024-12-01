@@ -3,8 +3,6 @@ All paretoefficient GP-candidates, aka the "best" entries for each complexity.
 -> updated after each generation
 
 """
-import matplotlib.pyplot as plt
-import numpy as np
 from plagih.util import *
 
 

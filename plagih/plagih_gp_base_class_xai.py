@@ -212,10 +212,12 @@ class Node:
             return expr
         else:
             expr = [cc.get_expr_formulae() for cc in self.childs]
+            if issubclass(self.typus, (ExprCondPair)):
+                print('TODO')
             if self.is_chain():
                 if issubclass(self.typus, (AddChain, MulChain, AndChain, OrChain)):
                     expr = self.typus.inline_sep.join(expr)
-                    # expr = f'({expr})'  # debug this
+                    expr = f'({expr})'
                 else:
                     expr = ', '.join(expr)
                     expr = self.typus.sy_str.format(expr)
@@ -569,50 +571,71 @@ class Node:
 
                 # sfeh:VERY USEFUL: strg+TribonacciConstant to go to init with useful info
             return
+        else:
 
-        if self.typus in (Pow, PowRounded):
-            n_exp = self.childs[1].childs[0]  # must exist
-            if n_exp == -1:
-                self.replace_with(DivFraction, childs=[self.childs[0]])
-            elif n_exp == 2:
-                self.replace_with(Square, childs=[self.childs[0]])
-            elif n_exp == 0.5:
-                self.replace_with(Sqrt, childs=[self.childs[0]])
-            elif n_exp == 0:
-                self.replace_with(Number, childs=[1])
-            elif self.childs[1].typus == Round:
-                self.replace_with(PowRounded, childs=[self.childs[0], n_exp])
-            # sfeh:discuss, powrounded here? not clear
-            elif self.childs[1].typus == Number and n_exp % 1 == 0:
-                self.set_typus(PowRounded)
+            for cc in self.childs:
+                # todo start with this?
+                cc.tree_node_grouping(tolerance=tolerance)
 
-        elif self.typus == Mul:
-            if not self.is_chain():  # div only for
-                if self.childs[0].typus == DivFraction:
-                    self.replace_with(Div, childs=[self.childs[1], self.childs[0].childs[0]])
-                elif self.childs[1].typus == DivFraction:
-                    self.replace_with(Div, childs=[self.childs[0], self.childs[1].childs[0]])
+            if self.typus in (Pow, PowRounded):
+                n_exp = self.childs[1].childs[0]  # must exist
+                if n_exp == -1:
+                    self.replace_with(DivFraction, childs=[self.childs[0]])
+                    # print(f'Success! 1')
+                elif n_exp == 2:
+                    self.replace_with(Square, childs=[self.childs[0]])
+                    # print(f'Success! 2')
+                elif n_exp == 0.5:
+                    self.replace_with(Sqrt, childs=[self.childs[0]])
+                    # print(f'Success! 3')
+                elif n_exp == 0:
+                    self.replace_with(Number, childs=[1])
+                    print(f'Success! 4')
+                elif self.childs[1].typus == Round_Dummy:
+                    self.replace_with(PowRounded, childs=[self.childs[0], n_exp])
+                    print(f'Success! 5')
+                elif self.childs[1].typus == Round:
+                    self.replace_with(PowRounded, childs=[self.childs[0], n_exp])
+                    # print(f'Success! 6')
+                # sfeh:discuss, powrounded here? not clear
+                elif self.childs[1].typus == Number and n_exp % 1 == 0:
+                    self.set_typus(PowRounded)
 
-                elif self.childs[0].typus == Number:
-                    mul1 = self.childs[0].childs[0]
-                    if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
-                        self.replace_with(Usub, childs=[self.childs[1]])  # sfeh Usub ONLY option, ignore usub tree len
-                    elif 0 < mul1 < 1:
-                        self.replace_with(Div, childs=[self.childs[1],
-                                                       Node(Number, childs=[1 / mul1])])  # sfeh keep "div" as option
+            elif self.typus == Mul:
+                if self.is_chain():  # div only for
+                    pass
+                else:
+                    if self.childs[0].typus == DivFraction:
+                        self.replace_with(Div, childs=[self.childs[1], self.childs[0].childs[0]])
+                        # print(f'Success! 7')
+                    elif self.childs[1].typus == DivFraction:
+                        self.replace_with(Div, childs=[self.childs[0], self.childs[1].childs[0]])
+                        # print(f'Success! 8')
 
-                elif self.childs[1].typus == Number:
-                    # sfeh this code can be simplified
-                    mul1 = self.childs[1].childs[0]
-                    if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
-                        self.replace_with(Usub, childs=[self.childs[0]])  # sfeh Usub ONLY option, ignore usub tree len
-                    elif 0 < mul1 < 1:
-                        self.replace_with(Div, childs=[self.childs[0], 1 / mul1])
-                        sfeh_div_by_test = 1 / mul1  # sfeh keep "div" as option
-                        print(f'sfeh:test this needs testing when reached in future {sfeh_div_by_test}')
+                    elif self.childs[0].typus == Number:
+                        mul1 = self.childs[0].childs[0]
+                        if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
+                            self.replace_with(Usub, childs=[self.childs[1]])  # sfeh Usub ONLY option, ignore usub tree len
+                            # print(f'Success! 9')
+                        elif 0 < mul1 < 1:
+                            self.replace_with(Div, childs=[self.childs[1], Node(Number, childs=[1 / mul1])])
+                            # print(f'Success! 10')
 
-        for cc in self.childs:
-            cc.tree_node_grouping()
+                    elif self.childs[1].typus == Number:
+                        # sfeh this code can be simplified?
+                        mul1 = self.childs[1].childs[0]
+                        if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
+                            self.replace_with(Usub, childs=[self.childs[0]])  # sfeh Usub ONLY option, ignore usub tree len
+                            print(f'Success! 11')
+                        elif 0 < mul1 < 1:
+                            self.replace_with(Div, childs=[self.childs[0], 1 / mul1])
+                            sfeh_div_by_test = 1 / mul1  # sfeh keep "div" as option
+                            print(f'Success! 12')
+                            print(f'sfeh:test this needs testing when reached in future {sfeh_div_by_test}')
+
+            # for cc in self.childs:
+            #     # todo start with this?
+            #     cc.tree_node_grouping()
 
 
 def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
@@ -842,14 +865,18 @@ def tree_simplification(tree, allow_chain) -> Node:
     tree_copy = copy.deepcopy(tree)
     expr_sym = tree.get_sympy_expr()
     tree = sympy_to_tree(expr_sym, allow_chain=allow_chain)
-    if not allow_chain:
-        tree.tree_node_grouping()
-        if len(tree_copy) < len(tree):
-            print(f'WHATTPPENDED SFEH'
-                  f'\n\told: {tree_copy.str_as_list()}'
-                  f'\n\tsym: {tree.str_as_list()}')
-            if tree_copy.get_sympy_expr() != tree.get_sympy_expr():
-                print_warning('w', f'\t{tree_copy.get_sympy_expr()}\n\t{tree.get_sympy_expr()}')
+    # if not allow_chain:
+    # todo debug
+    print(f'Copy : {len(tree_copy)}\t{tree_copy}')
+    print(f'Start: {len(tree)}\t{tree}')
+    tree.tree_node_grouping(tolerance=0)
+    print(f'End:   {len(tree)}\t{tree}')
+    if len(tree_copy) < len(tree):
+        print(f'WHATTPPENDED SFEH'
+              f'\n\told: {tree_copy.str_as_list()}'
+              f'\n\tsym: {tree.str_as_list()}')
+        if tree_copy.get_sympy_expr() != tree.get_sympy_expr():
+            print_warning('w', f'\t{tree_copy.get_sympy_expr()}\n\t{tree.get_sympy_expr()}')
     return tree
 
 
@@ -1450,13 +1477,13 @@ class ExplainableGP:
             par = candidate_tree.get_parsimony()
 
             if par < self.paretofront[0].get_parsimony():
-                printyeah('a', f'Paretofront: New simplest entry. parsimony: {par} fitness: {fit:6.4f}, '
+                printez('a', f'Paretofront: New simplest entry. parsimony: {par} fitness: {fit:6.4f}, '
                                f'old simplest entry had {self.paretofront[0].get_parsimony()}')
                 success = True
 
             # if all([self.fitness_compare(fit, p.get_fitness()) for p in self.paretofront]):  # sfeh-kernel
             elif fit < self.paretofront[-1].get_fitness():
-                printyeah('a', f'Paretofront: New fittest entry. parsimony: {par} fitness: {fit:6.4f}')
+                printez('a', f'Paretofront: New fittest entry. parsimony: {par} fitness: {fit:6.4f}')
                 success = True
             else:
                 for p in self.paretofront:
@@ -1472,7 +1499,7 @@ class ExplainableGP:
                     symtree = evolve_reduce_simplify(candidate_tree.get_evotree(), self.allow_chain, force=True)
                     sym_candidate = self.tree_to_candidate(symtree, tag='sfeh:sym')
                     if sym_candidate.get_parsimony() < candidate_tree.get_parsimony():
-                        printyeah('a', f'Paretofront: Even further simplified! '
+                        printez('a', f'Paretofront: Even further simplified! '
                                        f'{sym_candidate.get_parsimony()} < {candidate_tree.get_parsimony()}')
                         self.pop_next_append(sym_candidate, force=True)
 
@@ -1485,7 +1512,7 @@ class ExplainableGP:
                               i.get_fitness() > candidate_tree.get_fitness() and i.get_parsimony() >= candidate_tree.get_parsimony()]
                 if _obsoletes:
                     x = [f'{i.full_string()}' for i in _obsoletes]
-                    printyeah('a', f'Paretofront: Removing obsolete entries {x}')
+                    printez('a', f'Paretofront: Removing obsolete entries {x}')
                 self.paretofront = [ftree for ftree in self.paretofront if ftree not in _obsoletes]
                 self.paretofront.append(candidate_tree)
                 self.paretofront = pareto_sort(self.paretofront)
@@ -1801,6 +1828,9 @@ def pop_analyze(popul, gen_time, gens_since_last_pareto):
               'pop_unique': pop_unique,
               'fit_avg': np.average(pop_fitness),
               'fit_var': np.std(pop_fitness),
+              'fit_quantile_50': np.median(pop_fitness),
+              'fit_quantile_25': np.quantile(pop_fitness, 0.25),
+              'fit_quantile_75': np.quantile(pop_fitness, 0.75),
               'fit_best': pop_fitness_best,
               'parsim_avg': np.average(pop_parsim),
               'parsim_var': np.std(pop_parsim),

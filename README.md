@@ -54,6 +54,7 @@
   - Even whole formulae!
   - Especially! Powers x**y
 - Introduce rounding/clipping for many more functions
+- adjust tournament_size to general fitness skew
 
 ### Semi-interesting
 

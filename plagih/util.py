@@ -14,7 +14,7 @@ TEST_DUMMY = True  # sfeh: actually use this later! check trees, check if all op
 DELETE_ME = True  # sfeh:delete this when development phase is over
 PRINT_DUMMY = 'wwwaaagggiiifff'  # noqa: dummy for print-policy wwaaaggggggiiifff
 FLOAT_PRECISION = 3
-PLOTS_INTERVAL = 10
+PLOTS_INTERVAL = 1
 BACKUP_INTERVAL = 10
 CHAINED_VERION = True  # sfeh:not here?
 CHAIN_implement = CHAINED_VERION  # used as placeholder for implementation-tasks
@@ -38,18 +38,6 @@ class SympySimplificationError(Exception):
     """Non-important, but errors that often come up
     usually, when imaginary numbers accidentally come up in an expression"""
     pass
-
-
-def printyeah(message_type, message_str):
-    """
-    sfeh:open
-    Lightweight print function.
-    Instead of checking if you should print every time, this is done here.
-    message_type options can be found in config
-    """
-    # sfeh pretty printer
-    printez(message_type, message_str)
-    return
 
 
 class BColors:

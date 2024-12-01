@@ -19,6 +19,7 @@ class AddChain(OperatorChained):
     sy_str = 'Add({})'
     formulae_str = 'Add({})'
     repr_str = 'AddChain{},[{}]'
+    inline_sep = ' + '
     xtype = ((float,), float)
     xtype_chain = float
 
@@ -30,6 +31,7 @@ class MulChain(OperatorChained):
     sy_str = 'Mul({})'
     formulae_str = 'Mul({})'
     repr_str = 'MulChain{},[{}]'
+    inline_sep = ' * '
     xtype = ((float,), float)
     xtype_chain = float
 
@@ -47,7 +49,7 @@ class MinChain(OperatorChained):
 class MaxChain(OperatorChained):
     symfun = sympy.Max
     showme = 'Max'
-    sy_str = 'Max([{}])'
+    sy_str = 'Max({})'
     formulae_str = 'Max({})'
     repr_str = 'MaxChain{},[{}]'
     xtype = ((float, float), float)
@@ -76,7 +78,7 @@ class Piecewise(OperatorChained):
     # ogclass = Ifte
     # xtype = ((float, bool), float)
     showme = 'Piecewise'
-    sy_str = 'Piecewise([{}])'
+    sy_str = 'Piecewise({})'
     formulae_str = 'Piecewise({})'
     repr_str = 'Piecewise{},[{}]'
     # these must be handeled differently, so commented out
@@ -88,20 +90,22 @@ class Piecewise(OperatorChained):
 
 class AndChain(OperatorChained):
     expr_dmy = 'And'
-    sy_str = 'And([{}])'
+    sy_str = 'And({})'
     formulae_str = 'And({})'
     repr_str = 'And{},[{}]'
+    inline_sep = ' & '
     xtype = ((bool,), bool)
     xtype_chain = bool
     symfun = sympy.And
 
 
-class OrChained(OperatorChained):
+class OrChain(OperatorChained):
     xtype = ((bool,), bool)
     xtype_chain = bool
     showme = 'Or'
-    sy_str = 'Or([{}])'
+    sy_str = 'Or({})'
     formulae_str = 'Or({})'
+    inline_sep = ' | '
     repr_str = 'OrChain{},[{}]'
     symfun = sympy.Or
 

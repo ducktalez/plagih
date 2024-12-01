@@ -77,7 +77,13 @@ class Typus:
         - str() function is used only for showing infos in debugger
     """
     symfun = None
-    xtype = None
+    xtype = ((None,), None)
+    showme = 'Typus'
+    sy_str = lambda self, s: None  # 'sympy-fun'
+    formulae_str = None  # 'sympy-expr'
+    repr_str = None  # 'repr-format-{}-options'
+    chain_xtype = None
+
 
     def __new__(cls, *args, **kwargs):
         """Why use new as init method? -> Allows returning an instance of a different class"""
@@ -159,14 +165,14 @@ class Node_Dummy(Typus):
 
 class BaseOperator(Typus):
     showme = 'BaseOperator'
-    sy_str = None
+    sy_str = lambda self, s: None
     repr_str = None
     pass
 
 
 class OperatorArity(BaseOperator):
     showme = 'OperatorArity'
-    sy_str = None
+    sy_str = lambda self, s: None
     repr_str = None
     pass
 
@@ -177,7 +183,7 @@ class OperatorChained(BaseOperator):
     # Piecewise, AddChain, MulChain, MinChain, MaxChain, AndChain, OrChain
     # childs_min_max = [1, 5]
     showme = 'OperatorChained'
-    sy_str = None
+    sy_str = lambda self, s: None
     repr_str = None
     pass
 
@@ -270,7 +276,7 @@ class Symbol(Terminal):
 class Add(MathOperator, ChainableOp):
     symfun = sympy.Add
     showme = 'Add'
-    sy_str = '({}+{})'
+    sy_str = '({0}+{1})'
     formulae_str = '({} + {})'
     repr_str = 'Add{},[{},{}]'
     xtype = ((float, float), float)
@@ -290,7 +296,7 @@ class DivFraction(MathOperator):
 class Pow(MathOperator):
     symfun = sympy.Pow
     showme = 'Pow'
-    sy_str = '({}**{})'
+    sy_str = '{0}**({1})'
     repr_str = 'Pow{},[{},{]]'
     xtype = ((float, float), float)
 
@@ -380,7 +386,7 @@ class Tanh(AngleOperator, NoSymCapitalized):
 
 class Sinh(AngleOperator, NoSymCapitalized):
     symfun = sympy.sinh
-    sy_str = 'Sinh({})'
+    sy_str = 'sinh({})'
     Sinh = 'Abs{},[{}]'
     repr_str = 'Sinh{},[{}]'
     xtype = ((float,), float)
@@ -397,7 +403,7 @@ class Cosh(AngleOperator, NoSymCapitalized):
 class Xor(LogicOperator, NoSymCapitalized):
     symfun = sympy.Xor
     showme = 'Xor'
-    sy_str = '({}^{})'
+    sy_str = '({} ^ {})'
     repr_str = 'Xor{},[{}, {}]'
     xtype = ((bool, bool), bool)
 
@@ -414,7 +420,7 @@ class Eq(LogicOperator):
     # sfeh:debug Eq and Ne (), which also work for boolean inputs in sympy
     symfun = sympy.Eq
     showme = 'Eq'  # '==' not working in sympy!
-    sy_str = 'Eq({}, {})'
+    sy_str = 'Eq({0}, {1})'
     repr_str = 'Eq{},[{}, {}]'
     xtype = ((float, float), bool)
 
@@ -422,7 +428,7 @@ class Eq(LogicOperator):
 class Ne(LogicOperator):
     symfun = sympy.Ne
     showme = 'Ne'  # != not working in sympy
-    sy_str = 'Ne({},{})'
+    sy_str = 'Ne({0},{1})'
     repr_str = 'Ne{},[{}, {}]'
     xtype = ((float, float), bool)
 
@@ -430,7 +436,7 @@ class Ne(LogicOperator):
 class Mul(MathOperator, ChainableOp):
     symfun = sympy.Mul
     showme = 'Mul'  #
-    sy_str = '({}*{})'
+    sy_str = '({0}*{1})'
     repr_str = 'Mul{},[{}, {}]'
     xtype = ((float, float), float)
     chain_xtype = float
@@ -439,7 +445,7 @@ class Mul(MathOperator, ChainableOp):
 class And(LogicOperator, ChainableOp):
     symfun = sympy.And
     showme = 'And'
-    sy_str = '({}&{})'
+    sy_str = '({0}&{1})'
     repr_str = 'And{},[{}, {}]'
     xtype = ((bool, bool), bool)
     chain_xtype = bool
@@ -448,7 +454,7 @@ class And(LogicOperator, ChainableOp):
 class Or(LogicOperator, ChainableOp):
     symfun = sympy.Or
     showme = 'Or'
-    sy_str = '({}|{})'
+    sy_str = '({0}|{1})'
     repr_str = 'Or{},[{}, {}]'
     xtype = ((bool, bool), bool)
     chain_xtype = bool
@@ -458,7 +464,7 @@ class ITE(LogicOperator):
     """sfeh:is this really required? currently not in use"""
     symfun = sympy.ITE
     showme = 'ITE'
-    sy_str = 'ITE({}{}{})'
+    sy_str = 'ITE({0}{1}{2})'
     repr_str = 'ITE{},[{}, {}, {}]'
     # tflow = lambda *args: tf.cond(args[0], true_fn=args[1], false_fn=args[2])
     xtype = ((bool, bool, bool), bool)
@@ -467,7 +473,7 @@ class ITE(LogicOperator):
 class Min(MinMaxBase, ChainableOp):
     symfun = sympy.Min
     showme = 'Min'
-    sy_str = 'Min({},{})'
+    sy_str = 'Min({0},{1})'
     repr_str = 'Min{},[{}, {}]'
     xtype = ((float, float), float)
     chain_xtype = float
@@ -482,7 +488,7 @@ class Min(MinMaxBase, ChainableOp):
 class Max(MinMaxBase, ChainableOp):
     symfun = sympy.Max
     showme = 'Max'
-    sy_str = 'Max({},{})'
+    sy_str = 'Max({0},{1})'
     repr_str = 'Max{},[{}, {}]'
     xtype = ((float, float), float)
     chain_xtype = float
@@ -497,7 +503,7 @@ class Max(MinMaxBase, ChainableOp):
 class Lt(RelationalOperator):
     symfun = sympy.Lt
     showme = 'Lt'
-    sy_str = '({} < {})'
+    sy_str = '({0} < {1})'
     repr_str = 'Lt{},[{}, {}]'
     xtype = ((float, float), bool)
 
@@ -505,7 +511,7 @@ class Lt(RelationalOperator):
 class Le(RelationalOperator):
     symfun = sympy.Le
     showme = 'Le='
-    sy_str = '({} <= {})'
+    sy_str = '({0} <= {1})'
     repr_str = 'Le{},[{}, {}]'
     xtype = ((float, float), bool)
 
@@ -513,7 +519,7 @@ class Le(RelationalOperator):
 class Gt(RelationalOperator):
     symfun = sympy.Gt
     showme = 'Gt'
-    sy_str = '({} > {})'
+    sy_str = '({0} > {1})'
     repr_str = 'Gt{},[{}, {}]'
     xtype = ((float, float), bool)
 
@@ -522,7 +528,7 @@ class Ge(RelationalOperator):
     xtype = ((float, float), bool)
     symfun = sympy.Ge
     showme = 'Ge'
-    sy_str = '({} >= {})'
+    sy_str = '({0} >= {1})'
     repr_str = 'Ge{},[{}, {}]'
 
 
@@ -538,7 +544,7 @@ class Sub(MathOperator):
     xtype = ((float, float), float)
     symfun = lambda a, b: sympy.Add(a, -b)
     showme = 'Sub'
-    sy_str = '({} - {})'
+    sy_str = '({0} - {1})'
     repr_str = 'Sub{},[{}, {}]'
 
 
@@ -547,22 +553,15 @@ class Ifte(OperatorArity, ChainableOp):
     xtype = ((bool, float, float), float)
     symfun = lambda *args: sympy.Piecewise((args[1], args[0]), (args[2], True))
     showme = 'Ifte'
-    sy_str = 'Ifte({},{},{})'
+    sy_str = 'Ifte({0},{1},{2})'
     repr_str = 'Ifte{},[{}, {}, {}]'
     expr_dummy = 'Ifte'
     chain_xtype = (float, bool)
 
 
 class Round(MathOperator):
-    """sfeh:TEST this does not work
-    discuss:
-    - sympy.Float(x, 1)  <-- sfeh:open
-    - sympy.Integer(x)
-    - sympy.N(x, 1)
-        symfun(Symbol('a'))
-        symfun(1.23)
-        symfun(sympy.Add(a, Symbol('a'))
-    -> Write custom round function that evaluates only when is_number
+    """
+
     """
     # sfeh:xxx check conversion
     xtype = ((float,), float)
@@ -596,11 +595,12 @@ class Round_Dummy(sympy.Function, MathOperator, Node_Dummy):
             return np.round(a)
         raise TypeError("Unsupported type for numerical evaluation in Round_Dummy")
 
-class PowRounded(OperatorArity):
-    """Requires class Round_Dummy!"""
+class PowRounded(MathOperator):
+    """Requires class Round_Dummy!
+    Rounds the exponent; sfeh:idea clip exponent?"""
     symfun = lambda a, b: sympy.Pow(a, Round_Dummy(b))
     showme = 'PowRounded'
-    sy_str = '(({})**(Round_Dummy({})))'
+    sy_str = '{0})**Round_Dummy({1})'
     repr_str = 'PowRounded{},[{}, {}]'
     xtype = ((float, float), float)
 
@@ -615,7 +615,7 @@ class PowRounded(OperatorArity):
 class Div(MathOperator):
     symfun = lambda a, b: sympy.Mul(a, 1 / b)
     showme = 'Div'
-    sy_str = '({}/{})'
+    sy_str = '({0}/{1})'
     repr_str = 'Div{},[{}, {}]'
     xtype = ((float, float), float)
 
@@ -648,7 +648,7 @@ class Clip(MinMaxBase, CustomOperator):
     # sfeh:open use this
     symfun = lambda a, b, c: sympy.Min(sympy.Max(a, b), c)
     showme = 'Clip'
-    sy_str = '(sympy.Min(sympy.Max({}}, {}}), {}}))'
+    sy_str = '(sympy.Min(sympy.Max({0}, {1}), {2}))'
     repr_str = 'Clip{},[{}, {}]'
     xtype = ((float, float, float), float)
 
@@ -666,7 +666,7 @@ class ExprCondPair_Dummy(Node_Dummy):
     The only purpose is to wrap the results for a Node-structure, where every Node has childs with other nodes"""
     symfun = sympy.functions.elementary.piecewise.ExprCondPair
     showme = 'ExprCondPair_Dummy'
-    sy_str = '(ExprCondPair({}, {}))'
+    sy_str = '(ExprCondPair({0}, {1}))'
     repr_str = 'ExprCondPair_Dummy{},[{}, {}]'
     xtype = ((float, bool), float)
     expr_dmy = 'ExprCondPair_Dummy'

@@ -46,7 +46,7 @@ d_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, 
               sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: Exp}
 # The chained version is the regular version updated with the following operators
 d_sym2node_chain = d_sym2node | {sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChain, sympy.Max: MaxChain,
-                                 sympy.And: AndChain, sympy.Or: OrChained, sympy.Piecewise: Piecewise,
+                                 sympy.And: AndChain, sympy.Or: OrChain, sympy.Piecewise: Piecewise,
                                  sympy.functions.elementary.piecewise.ExprCondPair: ExprCondPair}
 
 
@@ -142,7 +142,10 @@ class Node:
         return s
 
     def __str__(self):
-        return self.get_expr_raw_fstring()
+        # sfeh which style for trees?
+        s = self.get_expr_formulae()  # 'Max(1.29, cartVel, 9. * cartPos**-1)**2'
+        # s = self.get_expr_raw_fstring()  # 'Pow(Max(1.29, cartVel, Mul(9., Pow(cartPos, -1))), 2)'
+        return s
 
     def get_sympy_expr(self) -> sympy.Basic:
         """Converts directly into a sympy expr
@@ -201,7 +204,7 @@ class Node:
     def get_expr_formulae(self):
         """(1 + a)
         each step returns like ({} + {})
-        and then, the inputs are filled in
+        and then, the inputs are filled in the gaps
         """
         if self.is_term():
             expr = f'{self.childs[0]}'
@@ -209,7 +212,15 @@ class Node:
             return expr
         else:
             expr = [cc.get_expr_formulae() for cc in self.childs]
-            expr = f'{self.typus.sy_str}'.format(expr)
+            if self.is_chain():
+                if issubclass(self.typus, (AddChain, MulChain, AndChain, OrChain)):
+                    expr = self.typus.inline_sep.join(expr)
+                    # expr = f'({expr})'  # debug this
+                else:
+                    expr = ', '.join(expr)
+                    expr = self.typus.sy_str.format(expr)
+            else:
+                expr = self.typus.sy_str.format(*expr)
 
         return f'{expr}'
 
@@ -240,7 +251,7 @@ class Node:
         only fixed nodes are missing
         """
         # raise NotImplementedError
-        return self.__str__()
+        return self.represent()
 
     def len_nodecount_raw(self):
         """counting the amount of nodes recursively"""
@@ -1384,7 +1395,7 @@ class ExplainableGP:
         self.rootdir = rootdir
         self.gen_id = 0
         self.symbols = symbols
-        self.normalize_numpy = 'todo'
+        self.normalize_numpy = normalize_numpy
         self.allow_chain = CHAINED_VERION_main
 
         printpl('gg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
@@ -1620,9 +1631,9 @@ class ExplainableGP:
 
     def eval_fitness(self, sy_expr):
 
-        pairwise_results = eval_predict(sy_expr, self.df_train, self.symbols, self.normalize_numpy)
-        pairwise_results = pairwise_results['result']
-        fitness = np.sqrt(np.mean((pairwise_results - self.df_train['action']) ** 2))  # discuss: np.square vs. **2: should be mainly irrelevant
+        df_results = eval_predict(sy_expr, self.df_train, self.symbols, self.normalize_numpy)
+        # pairwise_results = pairwise_results['result']
+        fitness = np.sqrt(np.mean((df_results - self.df_train['action']) ** 2))  # discuss: np.square vs. **2: should be mainly irrelevant
         fitness = round(fitness, FLOAT_PRECISION)
         return fitness
 
@@ -1659,8 +1670,6 @@ class ExplainableGP:
             fitness = self.eval_fitness(sy_expr)
 
             self.lut_fitness[sy_expr] = fitness  # sfeh:discuss: lut update in finalize_tree_get_meta()?
-
-        # return fitness, parsimony, sy_expr
 
         candidate = Candidate(evotree, fitness=fitness, parsimony=parsimony, tag=tag)
         return candidate

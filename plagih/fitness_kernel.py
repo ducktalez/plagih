@@ -60,7 +60,7 @@ def eval_predict(expr, df: pd.DataFrame, variable_names, normalize_numpy):
         with warnings.catch_warnings():
             with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
                 with ignore_warnings(DeprecationWarning):  # something like use "**" instead of "Pow"
-                    df['result'] = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
+                    df_results = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
                     # raw_results = df.apply(lambda row: func(*[row[var] for var in variable_names]), axis=1)
 
                     #     sfeh:open YO WTF
@@ -71,12 +71,11 @@ def eval_predict(expr, df: pd.DataFrame, variable_names, normalize_numpy):
         # df['result'] = df.fillna(np.nan)
         pass
 
-
     if normalize_numpy is not None:  # clip and round result
-        # raw_results = normalize_numpy(raw_results)
-        raw_results = lambda x: np.round(np.clip(raw_results, 0, 2), 0)
+        df_results = normalize_numpy(df_results)
 
-    return df
+    # df['result'] = df_results
+    return df_results
 
 
 if __name__ == '__main__':

@@ -17,12 +17,27 @@ FLOAT_PRECISION = 3
 PLOTS_INTERVAL = 10
 BACKUP_INTERVAL = 10
 CHAINED_VERION = True  # sfeh:not here?
+CHAIN_implement = CHAINED_VERION  # used as placeholder for implementation-tasks
 TREE_MIN_PARSIMONY = 3
 
 
 # # GP Evolution
 # period = {'gen_plots': 5, 'gen_save': 5}
 # mp_cores = 1
+
+
+class TreeSizeError(Exception):
+    """Non-important, but errors that often come up, e.g.
+    - tree is too small after simplification
+    - Tree has too many nodes. This should be covered somewhere though!
+    discuss:subclassing value-error?"""
+    pass
+
+
+class SympySimplificationError(Exception):
+    """Non-important, but errors that often come up
+    usually, when imaginary numbers accidentally come up in an expression"""
+    pass
 
 
 def printyeah(message_type, message_str):

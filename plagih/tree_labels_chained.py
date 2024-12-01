@@ -14,33 +14,37 @@ os.environ["KMP_WARNINGS"] = "FALSE"
 
 class AddChain(OperatorChained):
     symfun = sympy.Add
-    expr_dmy = 'Add'
-    showme = '+'
+    showme = 'Add'
+    sy_str = 'Add({})'
+    repr_str = 'AddChain{},[{}]'
     xtype = ((float,), float)
     xtype_chain = float
 
 
 class MulChain(OperatorChained):
     # sfeh:discuss: if sympy is
-    expr_dmy = 'Mul'
-    showme = '*'
+    showme = 'Mul'
     symfun = sympy.Mul
+    sy_str = 'Mul({})'
+    repr_str = 'MulChain{},[{}]'
     xtype = ((float,), float)
     xtype_chain = float
 
 
-class MinChained(OperatorChained):
+class MinChain(OperatorChained):
     symfun = sympy.Min
-    expr_dmy = 'Min'
     showme = 'Min'
+    sy_str = 'Min({})'
+    repr_str = 'MinChain{},[{}]'
     xtype = ((float, float), float)
     chain_xtype = float
 
 
-class MaxChained(OperatorChained):
+class MaxChain(OperatorChained):
     symfun = sympy.Max
-    expr_dmy = 'Max'
     showme = 'Max'
+    sy_str = 'Max([{}])'
+    repr_str = 'MaxChain{},[{}]'
     xtype = ((float, float), float)
     chain_xtype = float
 
@@ -66,8 +70,9 @@ class Piecewise(OperatorChained):
 """
     # ogclass = Ifte
     # xtype = ((float, bool), float)
-    expr_dmy = 'Piecewise'
     showme = 'Piecewise'
+    sy_str = 'Piecewise([{}])'
+    repr_str = 'Piecewise{},[{}]'
     # these must be handeled differently, so commented out
     # xtype = ((ExprCondPair,), float)
     # xtype_chain = ExprCondPair_Dummy
@@ -75,9 +80,10 @@ class Piecewise(OperatorChained):
     symfun = lambda *a: sympy.Piecewise(a)
 
 
-class AndChained(OperatorChained):
+class AndChain(OperatorChained):
     expr_dmy = 'And'
-    showme = 'and'
+    sy_str = 'And([{}])'
+    repr_str = 'And{},[{}]'
     xtype = ((bool,), bool)
     xtype_chain = bool
     symfun = sympy.And
@@ -86,7 +92,8 @@ class AndChained(OperatorChained):
 class OrChained(OperatorChained):
     xtype = ((bool,), bool)
     xtype_chain = bool
-    expr_dmy = 'Or'
-    showme = 'or'
+    showme = 'Or'
+    sy_str = 'Or([{}])'
+    repr_str = 'OrChain{},[{}]'
     symfun = sympy.Or
 

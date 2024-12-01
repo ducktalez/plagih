@@ -6,11 +6,12 @@ The main class of a gp run. It holds the following functionalities
 """
 from collections import deque
 
-from plagih.fitness_kernel import eval_regression_sym_experimental, regression_error
+from plagih.fitness_kernel import eval_predict
 from plagih.monitoring import plot_performance
 from plagih.paretofront import *
 import pandas as pd
 
+from plagih.sympy_extras import plagih_sympify
 from plagih.util import *
 from plagih.random_nodes_generator import norm_choices, operatorpool_to_picks
 import copy
@@ -39,13 +40,13 @@ The factory to create trees
 
 
 d_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul,
-              sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or,sympy.StrictLessThan: Lt, sympy.LessThan: Le,
-              sympy.StrictGreaterThan: Gt,sympy.GreaterThan: Ge, sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan,
-              sympy.acos: Acos,sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
-              sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: exp}
+              sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or, sympy.StrictLessThan: Lt, sympy.LessThan: Le,
+              sympy.StrictGreaterThan: Gt, sympy.GreaterThan: Ge, sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan,
+              sympy.acos: Acos, sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: Tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
+              sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: Exp}
 # The chained version is the regular version updated with the following operators
-d_sym2node_chain = d_sym2node | {sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChained, sympy.Max: MaxChained,
-                                 sympy.And: AndChained, sympy.Or: OrChained, sympy.Piecewise: Piecewise,
+d_sym2node_chain = d_sym2node | {sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChain, sympy.Max: MaxChain,
+                                 sympy.And: AndChain, sympy.Or: OrChained, sympy.Piecewise: Piecewise,
                                  sympy.functions.elementary.piecewise.ExprCondPair: ExprCondPair}
 
 
@@ -64,7 +65,6 @@ class Node:
         self.depth = depth  # requires repair after changes
         self.parent_node = None  # pointer to parent, requires repair after changes
         self.root_node = None  # pointer to the one root-node, requires repair after changes
-        # self.is_chain = is_chain  # sfeh:xxx check update required
 
     def is_chain(self):
         """
@@ -101,10 +101,6 @@ class Node:
         # typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
         # sfeh:delete_me if no error after 27-11-2023
         typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
-        # try:
-        # except AttributeError as ex:
-        #     print(f'XXXxxx DELETE ME if i do not come up')
-        #     typus_str = self.typus  # because Terminals are obj -> 'Symbol' obj has no attr __name__
 
         if self.childs:
             if issubclass(self.typus, BaseOperator):
@@ -127,43 +123,18 @@ class Node:
         return f"[{typus_str}]"
 
     def get_lut_id(self):
-        # """
-        # sfeh: Do NOT use str() or str_as_list(), as values get rounded
-        #     Do NOT return a node-list and convert them to strings
-        #     -> use repr()
-        # Unique+simple representation of a tree (to check in a lut if it was calculated already)
-        # regular print/string option should look better, this is just for getting a unique identifier
-        # returns string Identificator
-        # sfeh:discuss is this just repr?
-        # ID=Identificator, which"""
-        #
-        # # todo this whole function can be replaced with repr_as_list()
-        # try:
-        #     typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
-        # except AttributeError as ex:
-        #     print('XXX DEBUG delete me if you do not remember me :)')
-        #     # sfeh debug me
-        #     typus_str = self.typus  # because Terminals are obj -> 'Symbol' obj has no attr __name__
-        #
-        # if self.childs:
-        #     # if self.is_ExprCdPair():
-        #     #     # elif issubclass(self.typus, TerminalDummy):
-        #     #     childstr = ', '.join([cc.repr_as_list() for cc in self.childs])  # those are actual childs
-        #     #     typus_str = f'({childstr})'
-        #     # el
-        #     if self.has_childs():  # self.is_arity_operator() n
-        #         childstr = [cc.repr_as_list() for cc in self.childs]
-        #         childstr = ', '.join(childstr)
-        #         typus_str = f'{typus_str}, {childstr}'
-        #     else:
-        #         try:
-        #             typus_str = f'{self.childs[0]}'
-        #         except TypeError as ex:
-        #             typus_str = str(self.childs[0].evalf())  # sfeh:open int? rational?, non-floats are handled badly
-        #         except Exception as ex:
-        #             print(f'sfeh:debug, delete? KEEP? {ex}')  # InvalidOperation([<class 'decimal.InvalidOperation'>])
-        #
-        # return f"[{typus_str}]"
+        """
+        # this whole function WAS replaced with repr_as_list()
+
+        sfeh: Do NOT use str() or str_as_list(), as values get rounded
+            Do NOT return a node-list and convert them to strings
+            -> use repr()
+        Unique+simple representation of a tree (to check in a lut if it was calculated already)
+        regular print/string option should look better, this is just for getting a unique identifier
+        returns string Identificator
+        sfeh:discuss is this just repr?
+        ID=Identificator, which"""
+
         return self.repr_as_list()
 
     def str_as_expr(self):
@@ -177,11 +148,21 @@ class Node:
         """Converts directly into a sympy expr
         from node-class, go to a sympy expression
         """
+
         if issubclass(self.typus, Terminal):
             _sym = self.typus.get_sym()  # _sym = self.typus.symfun
             _cs = self.childs[0]
-            return _sym(_cs)
-        elif self.typus in (Piecewise, sympy.Piecewise):
+            r = _sym(_cs)
+            return r
+
+        elif issubclass(self.typus, (Round, PowRounded)):
+            _cs = [cc.get_sympy_expr() for cc in self.childs]
+            _sym = self.typus.get_sym()
+            # _sym = Round_Dummy
+            _cs = _sym(*_cs)  # todo
+            return _cs
+
+        elif self.typus in (Piecewise, sympy.Piecewise):  # sfeh:open delete ONE of them?
             _sym = sympy.Piecewise
             _cs = self.childs
             _cs = [(cc.childs[0], cc.childs[1]) for cc in _cs]
@@ -192,42 +173,11 @@ class Node:
         else:
             _cs = [cc.get_sympy_expr() for cc in self.childs]
             _sym = self.typus.get_sym()
-            # # sfeh: 25.08.2024 was used for debugging
-            # if self.is_operator():
-            #     _sym = self.typus.get_sym()
-            # elif self.is_ExprCdPair():
-            #     _sym = self.typus.get_sym()
-            # elif CHAINED_VERION:
-            #     _sym = self.typus.get_sym()
-            # else:
-            #     raise NotImplementedError(f'get_sympy_expr no match for {self}, {type(self.typus)}')
-
             try:
                 r = _sym(*_cs)  # noqa (_sym is definitely assigned)
-                # NO sym.check here. Just return the final result
-                return r
-            # except RecursionError as ex:
-            #     print(f'sfeh:RecursionError, maybe Piecewise?: {self.typus}, {self.childs}, {ex}')
-            #     raise RecursionError
-            # except AttributeError as sfeh:
-            #     return _sym(*_cs)
-            # except TypeError as ex:
-            #     # print(f'sfeh:TypeError?: {self.typus}, {self.childs}: {ex}')
-            #     # TypeError: Argument must be a Basic object, not `Node`
-            #     # !! TypeError('expecting bool or Boolean, not `(cartPos > 18.0, cartPos < 14.0)`.')
-            #     return _sym(*_cs)
-            except sympy.polys.polyerrors.CoercionFailed as ex:
-                # sympy.polys.polyerrors.CoercionFailed: expected an integer, got 0.000564
-                print(f'XXX Sympy error? Changing to TypError: {ex}')
-                raise sympy.polys.polyerrors.CoercionFailed(ex)
-            except IndexError as ex:
-                print(f'sfeh:asddsaasd. {ex}')  # What is this kind of error?
-                raise ex
             except (ValueError, TypeError) as ex:
-                # if complex number; sfeh:discuss keep real part with sympy.re?
-                raise ex
-            except Exception as ex:
-                raise ex
+                raise SympySimplificationError(ex)
+            return r
 
     def get_expr_raw_fstring(self):
         """Add (1 + a)"""
@@ -238,32 +188,21 @@ class Node:
             expr = [cc.get_expr_raw_fstring() for cc in self.childs]
             expr = ', '.join(expr)
             if issubclass(self.typus, OperatorArity):
-                expr = f'{self.typus.__name__}({expr})'
+                expr = f'{self.typus.showme}({expr})'
+                # expr = f'{self.typus.__name__}({expr})'  todo debug
             elif self.is_ExprCdPair():
                 expr = f'({expr})'
-            elif CHAINED_VERION:
-                try:
-                    expr = f'{self.typus.expr_dmy}({expr})'
-                except Exception as ex:
-                    raise ex
-                    # sfeh:debug "AttributeError("type object 'ExprCondPair' has no attribute 'expr_dmy'")"
-
-        # Sfeh:notimplementederror here?
+            # elif CHAINED_VERION:
+            #     expr = f'{self.typus.__name__}({expr})'
+            #     # expr = f'{self.typus.expr_dmy}({expr})'
         return expr
 
-    # def get_tf_expr(self):
-    #     if self.childs and issubclass(self.typus, OperatorArity):
-    #         _tf = self.typus.tflow
-    #         _cs = [cc.get_tf_expr() for cc in self.childs]
-    #         return _tf(_cs)
-    #     elif self.childs and issubclass(self.typus, Terminal):
-    #         _tf = self.typus.tflow
-    #         _cs = self.childs[0]
-    #         return _tf(_cs)
-    #     raise NotImplementedError(f'get_tf_expr no match for {self}, {type(self.typus)}')
 
     def represent(self):
         """
+        sfeh:open
+            - represent does not work and needs a lot of testing
+            - Is not required for now!
         Printing the nodes as nested array structure such that it can be saved/loaded
         very closely related to str(), but adds the following information:
         - ":fix", when nodes are fixed"""
@@ -279,8 +218,13 @@ class Node:
         return f"[{s}]"
 
     def __repr__(self):
-        """sfeh:WRONG! Do NOT use __str__!"""
-        raise NotImplementedError
+        """
+        sfeh:WRONG! Do NOT use __str__!
+        This is acceptable, as it is never used anyways.
+        only fixed nodes are missing
+        """
+        # raise NotImplementedError
+        return self.__str__()
 
     def len_nodecount_raw(self):
         """counting the amount of nodes recursively"""
@@ -296,11 +240,7 @@ class Node:
     def is_ExprCdPair(self):
         # sfeh: Sometimes, it hits the Dummy-class, sometimes (chained?) the sympy class. Not sure, why.
 
-        a = issubclass(self.typus, ExprCondPair_Dummy)
-        b = issubclass(self.typus, sympy.functions.elementary.piecewise.ExprCondPair)
         r = issubclass(self.typus, (sympy.functions.elementary.piecewise.ExprCondPair, ExprCondPair_Dummy))
-        if a:
-            print('SFEH:XXX 123')
         return r
 
     def len_nodecount_fair(self):
@@ -315,8 +255,6 @@ class Node:
 
             if self.is_typus(Usub):
                 n = sum(cc_list)
-            # elif self.is_ExprCdPair():
-            #     n = 1 + max(cc_list)  # sfeh:discuss
             else:
                 n = 1 + sum(cc_list)
 
@@ -467,6 +405,7 @@ class Node:
             node_list = [x for x in node_list if x.typus == Number]
             # sfeh: do this in create new tree?
             node = rnd_choice(node_list)  # debug if ignores chains
+
             xtype = xt_self(node.get_xtype_tuple())
             new_node = tb.node_selector.choose_symbol_node(xtype)
             node.set_new_node(new_node)
@@ -520,7 +459,7 @@ class Node:
         base = [x for x in base if x.is_term()]
         return base
 
-    def list_mutable_nodes(self, xtype=None, skip_first=False, allow_chain=False) -> ['Node']:
+    def list_mutable_nodes(self, xtype=None, skip_first=False, allow_chain=True) -> ['Node']:
         """return all nodes that are mutable, aka suite for point- or branchmutation
         sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!"""
 
@@ -570,18 +509,37 @@ class Node:
 
         return
 
-    def tree_node_grouping(self):
+    def tree_node_grouping(self, tolerance=0):
         """
         If possible, this groups nodes to a simpler expression (if possible).
         E.g. a ** 2 -> square(a)
              a + b + c -> sum(a, b, c)  (chaining)
 
         # sfeh:idea Heavyside function. input a val, input b threshold
+        # sfeh: sub, usub replace?
+        sfeh:idea tolerance for grouping?
         """
         if self.is_term():  # good for runtime
+            ## sfeh:xxx sfeh:open do this in mutation?
+            # if self.is_number() and tolerance > 0:
+            #     val = self.childs[0]
+            #     # from sympy.physics.units import speed_of_light, meter, second more ideas!
+            #     # sfeh also find more math building blocks, typical formulae
+            #     # sympy.pi,         sympy.GoldenRatio,  sympy.Catalan,      sympy.EulerGamma,   sympy.TribonacciConstant
+            #     # 3.14159265358979, 1.61803398874989,   0.915965594177219,  0.577215664901533,  1.83928675521416
+            #     for const in [sympy.pi, sympy.GoldenRatio, sympy.Catalan, sympy.EulerGamma, sympy.TribonacciConstant]:
+            #         if (const-val) < tolerance:
+            #             self.childs[0] = const
+            #             return
+            #     if val - sympy.nsimplify(val, tolerance=tolerance, rational=True) < tolerance:
+            #     # sfeh:idea sympy.nsimplify('3.333333*x+0.522', tolerance=0.1, rational=True) for
+            #     #   - Terminals
+            #     #   - Even whole formulae!
+
+                # sfeh:VERY USEFUL: strg+TribonacciConstant to go to init with useful info
             return
 
-        if self.typus in (Pow, Powrounded):
+        if self.typus in (Pow, PowRounded):
             n_exp = self.childs[1].childs[0]  # must exist
             if n_exp == -1:
                 self.replace_with(DivFraction, childs=[self.childs[0]])
@@ -592,12 +550,10 @@ class Node:
             elif n_exp == 0:
                 self.replace_with(Number, childs=[1])
             elif self.childs[1].typus == Round:
-                self.replace_with(Powrounded, childs=[self.childs[0], n_exp])
+                self.replace_with(PowRounded, childs=[self.childs[0], n_exp])
             # sfeh:discuss, powrounded here? not clear
             elif self.childs[1].typus == Number and n_exp % 1 == 0:
-                self.set_typus(Powrounded)
-
-            # sfehxxx sub, usub replace
+                self.set_typus(PowRounded)
 
         elif self.typus == Mul:
             if not self.is_chain():  # div only for
@@ -622,7 +578,7 @@ class Node:
                     elif 0 < mul1 < 1:
                         self.replace_with(Div, childs=[self.childs[0], 1 / mul1])
                         sfeh_div_by_test = 1 / mul1  # sfeh keep "div" as option
-                        print(f'asd this needs testing when reached in future {sfeh_div_by_test}')
+                        print(f'sfeh:test this needs testing when reached in future {sfeh_div_by_test}')
 
         for cc in self.childs:
             cc.tree_node_grouping()
@@ -650,8 +606,9 @@ class RootNode_Dummy(Node):
         super().__init__(*args, **kwargs)
 
 
-def sympy_to_tree(s_expr: sympy.Basic, allow_chain=CHAINED_VERION) -> Node:
+def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
     """
+    tree_from_expr, tree_from_sympy
     Important: start with the most specific rule
     # sfeh:discuss computational improvement when option to ignore args? do "raises" in args save time?
     # check is expr is an accepted operator, otherwise reconstruction probably fails"""
@@ -687,9 +644,9 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=CHAINED_VERION) -> Node:
 
         cc_nodes = []
         for arg in s_expr.args:
-            cc_nodes.append(sympy_to_tree(arg, allow_chain=CHAINED_VERION))
+            cc_nodes.append(sympy_to_tree(arg, allow_chain=allow_chain))
 
-        if CHAINED_VERION:
+        if allow_chain:  # sfeh:xxx do this one level above? ignore all allow_chains in here?
             op = d_sym2node_chain[type(s_expr)]
             return Node(op, childs=cc_nodes)
 
@@ -699,7 +656,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=CHAINED_VERION) -> Node:
         elif isinstance(s_expr, sympy.Piecewise):
             # "Chained_VERSION" version is handled before
             reversed_pairs = list(s_expr.args[::-1])  # tuples to list, reversed: tuple must be nested the deepest
-            reversed_pairs = [[sympy_to_tree(xx, allow_chain=CHAINED_VERION) for xx in list(i)] for i in
+            reversed_pairs = [[sympy_to_tree(xx, allow_chain=allow_chain) for xx in list(i)] for i in
                               reversed_pairs]  # noqa
             otherwise = reversed_pairs[0][0]  # the last "True" condition
             for pairs in reversed_pairs[1:]:
@@ -708,7 +665,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=CHAINED_VERION) -> Node:
 
         # sfehx include Usub, ignore usub in tree len()
 
-        # elif isinstance(s_expr, RoundDummy):
+        # elif isinstance(s_expr, Round_Dummy):
         #     return Node(Round, [cc_nodes[0]])
 
         elif isinstance(s_expr, Mul):
@@ -727,16 +684,6 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain=CHAINED_VERION) -> Node:
             else:
                 return Node(clss, cc_nodes)
 
-        elif isinstance(s_expr, sympy.re):
-            # We assume, that these Functions occur due to assumptions.
-            # (for now: sympy.re, the Real-part of a number)
-            # hence, we can skip this function while rebuilding without loosing any information
-            # as Symbols match their assumptions when they are rebuilt aswell
-            # sfeh:debug: When does sympy.re occur? Are there other cases?
-            # sfehxxx reintroduce piecewise? discuss: ignore trees which have real/complex numbers
-            # return sympy_to_tree(expr.args[0], allow_chain=allow_chain)
-            return cc_nodes  # sfeh:delete? never reached? 26.08.2024
-
     # sfeh:discuss
     # NotImplementedError: Expr missing: ITE(p > 13, tan(p - v) >= 2.578643, tan(p - v) >= 1)
     # this should not have occured, because it evaluates to bool, not to float
@@ -752,7 +699,7 @@ if __name__ == '__main__':
 
 class NodeRandomizer:
 
-    def __init__(self, build_operator_dict, build_variables_list):
+    def __init__(self, build_operator_dict, symbols: [sympy.Symbol], make_symbol_fun):
         """make all probabilities sum to 1 for each categoray (Add: 2, Mul: 1, Tan: 0.5) in"""
 
         self.pick_op, self.pick_op_match = operatorpool_to_picks(build_operator_dict)
@@ -761,7 +708,7 @@ class NodeRandomizer:
         # Powrounded: 0.5
 
         self.pick_symbol = {
-            float: norm_choices([[sympy.Symbol(ii, real=True, imaginary=False), 1] for ii in build_variables_list]),
+            float: norm_choices([[make_symbol_fun(ii), 1] for ii in symbols]),
             bool: []}  # NotImplementedError
 
         # -> Choosing 50 random numeric values from the dataset for building trees ...just not zeros)
@@ -774,12 +721,15 @@ class NodeRandomizer:
             bool: norm_choices([[lambda: random.choice((True, False)), 1]])}
 
     def choose_operator(self, xt):
-        # sfehxxxx allow_chain
-        op = np.random.choice(self.pick_op[xt][0], p=self.pick_op[xt][1])  # no (), which would evaluate the op
+        if CHAIN_implement:
+            op = np.random.choice(self.pick_op[xt][0], p=self.pick_op[xt][1])
+        else:
+            op = np.random.choice(self.pick_op[xt][0], p=self.pick_op[xt][1])  # no (), which would evaluate the op
         return op
 
     def choose_operator_match(self, xtype):
-        # sfehxxx allow_chain
+        if CHAIN_implement:
+            pass
         op = np.random.choice(self.pick_op_match[xtype][0], p=self.pick_op_match[xtype][1])
         return op
 
@@ -847,7 +797,7 @@ def randomly_split_range(range_max: int, num_splits: int) -> list[int]:
     return sample_dist
 
 
-def tree_simplification(tree, allow_chain=CHAINED_VERION) -> Node:
+def tree_simplification(tree, allow_chain) -> Node:
     """
     (Tries to) simplify/mathematically-reduce a tree. It is quite experimental
     # sfeh sympy-reconstruct patterns
@@ -858,34 +808,33 @@ def tree_simplification(tree, allow_chain=CHAINED_VERION) -> Node:
     tree_copy = copy.deepcopy(tree)
     expr_sym = tree.get_sympy_expr()
     tree = sympy_to_tree(expr_sym, allow_chain=allow_chain)
-    if not CHAINED_VERION:
+    if not allow_chain:
         tree.tree_node_grouping()
         if len(tree_copy) < len(tree):
             print(f'WHATTPPENDED SFEH'
                   f'\n\told: {tree_copy.str_as_list()}'
                   f'\n\tsym: {tree.str_as_list()}')
             if tree_copy.get_sympy_expr() != tree.get_sympy_expr():
-                print_warning(f'\t{tree_copy.get_sympy_expr()}'
-                              f'\n\t{tree.get_sympy_expr()}')
+                print_warning('w', f'\t{tree_copy.get_sympy_expr()}\n\t{tree.get_sympy_expr()}')
     return tree
 
 
-def evolve_reduce_simplify(tree: Node, completely=True, force=False) -> Node:
+def evolve_reduce_simplify(tree: Node, allow_chain, completely=True, force=False) -> Node:
     """Reducing a fintree to its most basic form with sympify.
     (completely = False: reduce just one branch. if you wanted to have more complexity)"""
     tree_copy = copy.deepcopy(tree)
     if completely:  # reduce the complete tree
         nodes_lv0 = tree.get_mutable_rootnodes(extend_lvls=0)  # only required for fixed-core trees
         for cc in nodes_lv0:
-            cc.set_new_node(tree_simplification(cc))
+            cc.set_new_node(tree_simplification(cc, allow_chain))
     else:
-        node_list = [n for n in tree.list_mutable_nodes() if
+        node_list = [n for n in tree.list_mutable_nodes(allow_chain) if
                      issubclass(n.typus, OperatorArity)]  # ignoring leaf nodes...
         if len(node_list) == 0:
             print_warning('wwww', f'Tree for simplification does not provide operators: {tree}')
             return tree
         node = np.random.choice(node_list)
-        node.set_new_node(tree_simplification(node))  # sfeh chosen must be set again? or not? test it at least.
+        node.set_new_node(tree_simplification(node, allow_chain))  # sfeh chosen must be set again? or not? test it at least.
     if force:
         return tree
     else:
@@ -914,7 +863,7 @@ class Evolution:
     was "TreeBuildRestrictions"
     functions to build trees, with the advantage of being able to use general build restrictions."""
 
-    def __init__(self, origin_xtype, origin_tree, node_selector, build_restrictions, complexity_metric):
+    def __init__(self, origin_xtype, origin_tree, node_selector, build_restrictions, complexity_metric, allow_chain):
         """
         origin_tree: A tree, which
         """
@@ -928,7 +877,9 @@ class Evolution:
         self.depth_max = build_restrictions.get('depth_max', 10)
         self.nodes_max = build_restrictions.get('nodes_max', 100)
 
-    def evolve_prune_tree(self, tree: Node):
+        self.allow_a_chain = allow_chain
+
+    def evolve_prune_tree(self, tree: Node, allow_chain):
         """prune depth
         -> prune everything below a certain level... (should not happen in the first place)
         prune nodes
@@ -937,7 +888,7 @@ class Evolution:
         sfeh:discussion there is a difference between parsimony and complexity...
         sfeh:discuss analyze the amount of trees that have to be pruned?
         sfeh:open add labelweight_max to"""
-        nodelist = tree.list_mutable_nodes()
+        nodelist = tree.list_mutable_nodes(allow_chain)
         for dnode in nodelist:
             if dnode.depth == self.nodes_max and dnode.get_arity() > 0:
                 print_warning('wwww', f'Node in fintree is too deep: {dnode.depth}')
@@ -948,7 +899,7 @@ class Evolution:
         prune_amount = len(tree) - self.nodes_max
         while prune_amount > 0:
             print_warning('wwww', f'Tree too complex: {len(tree)} > {self.nodes_max}, pruning {prune_amount}.')
-            nodelist = tree.list_mutable_nodes()
+            nodelist = tree.list_mutable_nodes(allow_chain)
             prune_now = 1 + np.random.randint(prune_amount)  # 19 -> prune branch with 1 to max. 19 nodes
 
             nodelist = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
@@ -1022,7 +973,7 @@ class Evolution:
 
         return evotree
 
-    def new_tree_nodes(self, nn, p_term=0):
+    def new_tree_nodes(self, nn, allow_chain, p_term=0):
         """insert a (random) number of branches at the first possible "layer" (not necessary depth)
         (If all nodes are modifiable, it is the root node. Otherwise, it is the first layer of modifiable nodes
         - get these nodes, randomly choose a subset of those
@@ -1041,9 +992,9 @@ class Evolution:
         layer0_splits = randomly_split_range(nn, len(layer0_nodes))
 
         for ii, node0 in enumerate(layer0_nodes):  # pareto_insert branches! get layer always, node ids might change
-            lvl0_node = np.random.choice(node0.list_mutable_nodes())  # layer0_branch =
+            lvl0_node = np.random.choice(node0.list_mutable_nodes(allow_chain))  # layer0_branch =
             # branch_size = layer0_nodes[ii]  # sfeh:idea + len(lvl0_node)
-            new_subbranch = self.new_tree_nodes(lvl0_node.get_xtype_self(), p_term=p_term)
+            new_subbranch = self.new_tree_nodes(lvl0_node.get_xtype_self(), allow_chain, p_term=p_term)
             lvl0_node.set_new_node(new_subbranch)
 
         return evotree
@@ -1057,7 +1008,7 @@ class Evolution:
             node.depth = depth
 
         else:
-            # sfeh:allowchain?
+
             label = self.node_selector.choose_operator(xt_out)
             child_xts = label.get_child_xts()
             num = len(child_xts)
@@ -1065,6 +1016,10 @@ class Evolution:
 
             if num_rest > 0:
                 nums = randomly_split_range(num_rest - 1, num)
+
+                if CHAIN_implement:
+                    pass  # optional; just add more node here already
+
                 for ii, xt in enumerate(child_xts):
                     cc = self.evolve_create_random(xt, depth_goal, num_rest=nums[ii], depth=depth + 1, p_term=p_term)
                     childs.append(cc)
@@ -1099,25 +1054,25 @@ class Evolution:
                                                    p_term=p_term)
         return evotree
 
-    def evolve_mutate_filter(self, tree):
+    def evolve_mutate_filter(self, tree, allow_chain):
         """Mutates a number of float terminal of a fintree
         - filter point/branch/all, branch can also affect a point only as well as all nodes
         - filter observations?
         - filter terminals
         - filter with which filter?"""
 
-        _nd = np.random.choice(tree.list_mutable_nodes())
+        _nd = np.random.choice(tree.list_mutable_nodes(allow_chain))
         # sfeh: does nothing if no float values are in this tree
         _nd.evolve_mutate_filter_gauss()
 
         return tree
 
-    def evolve_mutate_point(self, tree: Node):
+    def evolve_mutate_point(self, tree: Node, allow_chain):
         """Mutate a single mutable point in any Tree.
         sfeh:debug is the fintree a fintree copy or the same fintree?"""
         evotree = copy.deepcopy(tree)
 
-        node = rnd_choice(evotree.list_mutable_nodes(allow_chain=CHAINED_VERION))  # debug if ignores chains
+        node = rnd_choice(evotree.list_mutable_nodes(allow_chain))  # debug if ignores chains
         xtype = node.get_xtype_tuple()
 
         if node.is_operator():
@@ -1133,12 +1088,12 @@ class Evolution:
 
         return evotree
 
-    def evolve_mutate_branch_depth(self, tree: Node, depth_goal, p_term=0.0):
+    def evolve_mutate_branch_depth(self, tree: Node, depth_goal, allow_chain, p_term=0.0):
         """"""
         n_init = len(tree)
-        node_list = tree.list_mutable_nodes()
+        node_list = tree.list_mutable_nodes(allow_chain)
         node = np.random.choice(node_list)
-        xtype_out = node.get_xtype_self()
+        xtype_out = node.get_xtype_self()  # ValueError: 'a' cannot be empty unless no samples are taken
         branch = self.evolve_create_random(xtype_out, depth_goal, num_rest=self.nodes_max - n_init, depth=0,
                                            p_term=p_term)
         node.set_new_node(branch)
@@ -1152,7 +1107,7 @@ class Evolution:
         nodes_init = len(tree)
         if tree is None:
             raise NotImplementedError('SFEH:open Implement standard selection mechanism')
-        nd = tree.list_mutable_nodes()
+        nd = tree.list_mutable_nodes(self.allow_a_chain)
         nd = rnd_choice(nd)
         xt_out = nd.get_xtype_self()
         nodes_goal = min(self.nodes_max - (nodes_init - len(nd)), nodes_goal)
@@ -1175,11 +1130,11 @@ class Evolution:
         # aa = node_deepcopy(tree1)
         # bb = node_deepcopy(tree2)
 
-        a_nds = aa.list_mutable_nodes(skip_first=True)  # why actually ignore root node
-        a_nds = [x for x in a_nds if len(x) > 1]
+        a_nds = aa.list_mutable_nodes(skip_first=True)  # sfeh ...why actually ignore root node?
+        # a_nds = [x for x in a_nds if len(x) > 1]  # ignore terminal nodes
 
         if len(a_nds) == 0:
-            raise ValueError(f'Crossover tree 1 has no mutable nodes')
+            raise ValueError(f'Crossover tree 1 has no mutable nodes!')
 
         a_nd = np.random.choice(a_nds)
         xt_out = a_nd.get_xtype_self()
@@ -1201,8 +1156,8 @@ class Evolution:
         a_nd.set_new_node(b_nd)
         b_nd.set_new_node(cpy)
 
-        aa = self.evolve_prune_tree(tree=aa)
-        bb = self.evolve_prune_tree(tree=bb)
+        aa = self.evolve_prune_tree(tree=aa, allow_chain=True)
+        bb = self.evolve_prune_tree(tree=bb, allow_chain=True)
 
         return aa, bb
 
@@ -1364,7 +1319,7 @@ class Candidate:
 
     def __str__(self):
         """Show the Parsimony and Fitness of a tree"""
-        return f'[{self.get_parsimony():2.0f}: fit {self.get_fitness():4.2f}]'
+        return f'[{self.get_parsimony():2.0f}: fit {self.get_fitness():4.2f} ({self.tree.__str__()})]'
 
     def full_string(self):
         return f'{self.__str__()}: {self.get_evotree().get_sympy_expr()}'
@@ -1394,7 +1349,7 @@ class Candidate:
 
 class ExplainableGP:
 
-    def __init__(self, name, pop_max, gen_max, rootdir, df_train, df_control, evolve: Evolution):
+    def __init__(self, name, pop_max, gen_max, rootdir, df_train, df_control, evolve: Evolution, symbols, normalize_numpy, CHAINED_VERION_main):
         self.time_start = time.perf_counter()
         self.name = name
         self.df_train = df_train
@@ -1405,6 +1360,9 @@ class ExplainableGP:
         self.gen_max = gen_max
         self.rootdir = rootdir
         self.gen_id = 0
+        self.symbols = symbols
+        self.normalize_numpy = 'todo'
+        self.allow_chain = CHAINED_VERION_main
 
         printpl('gg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
@@ -1429,15 +1387,6 @@ class ExplainableGP:
                                                 'fit_avg', 'fit_var', 'fit_best',
                                                 'parsim_avg', 'parsim_var', 'parsim_best',
                                                 'gens_since_last_pareto'])
-
-    # SFEH:xxx
-    # WHATTPPENDED
-    # [Div, [2.81], [cartVel]]
-    # [Mul, [2.81], [DivFraction, [cartVel]]]
-    # 2.81 / cartVel
-    # 2.81 / cartVel
-    # --> 3/a =sym> Mul(3, (1/a))
-    # --> if Mul(DivFraction()) -> Divide
 
     def pop_print(self):
         """Print the expressions of all trees in a population"""
@@ -1486,7 +1435,7 @@ class ExplainableGP:
             if success:
                 self.gens_since_last_pareto = 0
                 try:  # sfeh: trying to simplify the tree for improved pareto
-                    symtree = evolve_reduce_simplify(candidate_tree.get_evotree(), force=True)
+                    symtree = evolve_reduce_simplify(candidate_tree.get_evotree(), self.allow_chain, force=True)
                     sym_candidate = self.tree_to_candidate(symtree, tag='sfeh:sym')
                     if sym_candidate.get_parsimony() < candidate_tree.get_parsimony():
                         printyeah('a', f'Paretofront: Even further simplified! '
@@ -1531,22 +1480,22 @@ class ExplainableGP:
             cand_origin = self.tree_to_candidate(self.evolve.origin_tree, raise_if_useless=False, tag='origin')
             self.pop_next_append(cand_origin)
         else:
-            if CHAINED_VERION:
+            if self.allow_chain:
                 @self.create_trees(rate=0.5)
                 def init_rand1():
                     n = np.clip(int(random.normalvariate(4.0, 1.0)), 3, 6)
                     tree = self.evolve.evolve_new_tree_depth(n, float, p_term=0)
-                    tree = tree_simplification(tree, allow_chain=CHAINED_VERION)
+                    tree = tree_simplification(tree, allow_chain=self.allow_chain)
                     # sfeh trees can shrink to single-noded trees
                     if tree.get_max_depth() <= 1:
-                        raise ValueError(f'Tree did not get complex enough')
+                        raise TreeSizeError(f'Tree did not get complex enough')
                     return tree
 
                 @self.create_trees(rate=0.5)
                 def init_rand2():
                     n = np.clip(int(random.normalvariate(3.5, 1.0)), 3, 6)
                     tree = self.evolve.evolve_new_tree_depth(n, float, p_term=0)
-                    tree = tree_simplification(tree, allow_chain=CHAINED_VERION)
+                    tree = tree_simplification(tree, allow_chain=self.allow_chain)
                     return tree
             else:
                 @self.create_trees(rate=0.5)
@@ -1576,7 +1525,7 @@ class ExplainableGP:
         printpl('gggg', f'|->{evotree.len_nodecount_fair():2.0f}: {evotree.str_as_expr()}')
         self.pop_next.append(ct)
 
-    def create_trees(self, rate=0.0, crossover=False):
+    def create_trees(self, rate=0.0, crossover=False, simplify=False):
         """Safely append a tree to the population.
         Even though the raw trees should have everything to display their expression,
         they have gone through a process of changes. Here, the final tree (candidate_tree) is refurbished."""
@@ -1592,6 +1541,9 @@ class ExplainableGP:
                 try:
                     if crossover:
                         t1, t2 = create_tree_func()
+                        # if simplify:
+                        #     t1 = tree_simplification(t1, allow_chain=self.allow_chain)
+                        #     t2 = tree_simplification(t2, allow_chain=self.allow_chain)
                         ctree1 = self.tree_to_candidate(t1, tag=tag)
                         self.pop_next_append(ctree1)
                         n_success += 1
@@ -1600,42 +1552,34 @@ class ExplainableGP:
                         n_success += 1
                     else:
                         evotree = create_tree_func()
+                        # if simplify:
+                        #     evotree = tree_simplification(evotree, allow_chain=self.allow_chain)
                         ctree = self.tree_to_candidate(evotree, tag=tag)
                         self.pop_next_append(ctree)
                         n_success += 1
 
+                except (TreeSizeError, SympySimplificationError) as ex:
+                    fails_list.append(ex)
+                    print_warning('www', f'\'{tag}\' failed: {ex}')
+                    if len(fails_list) > 2 * n_success + 5:  # allow more fails: fails_list > n
+                        print_caution(f'Evolution fails too often: {tag}, {len(fails_list)}. ({n_success} successful).'
+                                      f'\n{fails_list}')
+                        return  # sfeh raise?
+
                 except (ValueError, ArithmeticError) as ex:
-                    if 'ValueError: Tree did not get complex enough' in str(ex):
-                        fails_list.append(ex)
-                        print_warning('www', f'\'{tag}\' failed: {ex}')
-                        if len(fails_list) > 2 * n_success + 5:  # allow more fails: fails_list > n
-                            print_caution(f'Evolution fails too often: {tag}, {len(fails_list)}. ({n_success} successful).'
-                                          f'\n{fails_list}')
-                            return  # sfeh raise?
+                    if 'Crossover tree 1 has no mutable nodes!' in str(ex):
+                        print_warning('w', f'This should not happen too often: {ex}')
+                        pass
                     else:
                         raise
                 except TypeError as ex:
-                    # TypeError: Cannot convert complex to float
-                    # ==> Okay!
                     # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
                     # ==> sfeh probably this error: cond(): 'false_fn' argument required
                     # ==> Happens, when ITE is coming up. Ignoring for now.
-                    # TypeError('Node.is_ExprCdPair() takes 1 positional argument but 2 were given')
-                    # ==>
                     if str(ex) == "Cannot convert complex to float":
                         pass
-                    else:
-                        raise Exception  #  print(f'Typeerror, but why? {ex}')
                 except AttributeError as ex:
                     print(f'("Okay", if sympy.im in expr) {ex}')
-                #     # raise AttributeError(f'Probably sympy.im in expr {ex}')
-                #     # AttributeError: Probably sympy.im in expr 'int' object
-                #     raise AttributeError(f'AttributeError: {ex}')
-                #     # f'\n\tint object has no attribute get_nodes_at_depth has no attribute get_nodes_at_depth
-                #     # f'\n\tProbably sympy.im in expr has no attribute get_nodes_at_depth
-                #     # print(f'Probably sympy.im in expr {ex}')
-                #     #  AttributeError: 'Xor' object has no attribute '_eval_as_set'
-                #     #    |--AttributeError: Probably sympy.im in expr 'Xor' object has no attribute '_eval_as_set'
                 except KeyError as ex:
                     # KeyError(re) -> okay?, real part implies complex numbers, ignoring is okay
                     print(f'Keyerror, (probably sympy.lambdify expression not evaluable): {ex}')
@@ -1646,8 +1590,20 @@ class ExplainableGP:
 
         return loop
 
+    def eval_fitness(self, sy_expr):
+
+        pairwise_results = eval_predict(sy_expr, self.df_train, self.symbols, self.normalize_numpy)
+        pairwise_results = pairwise_results['result']
+        fitness = np.sqrt(np.mean((pairwise_results - self.df_train['action']) ** 2))  # discuss: np.square vs. **2: should be mainly irrelevant
+        fitness = round(fitness, FLOAT_PRECISION)
+        return fitness
+
     def tree_to_candidate(self, evotree: Node, tag=None, raise_if_useless=True):
-        """the "fixed" node information is not relevant"""
+        """the "fixed" node information is not relevant
+
+        Tree MUST NOT be altered from here!
+        raise_if_useless is here in order to show, where the maximum nodes is exceeded!
+        """
 
         evotree.force_input_node(self.evolve)
         evotree.repair_depth()
@@ -1667,26 +1623,12 @@ class ExplainableGP:
             parsimony = eval_parsimony(evotree, self.evolve.complexity_metric, origin_tree=self.evolve.origin_tree)
             self.lut_parsim[tree_id] = parsimony
             if raise_if_useless and parsimony > self.evolve.nodes_max:  # sfeh:open
-                raise ValueError(f'Tree too complex: {parsimony} > {self.evolve.nodes_max}')
+                raise TreeSizeError(f'Tree too complex: {parsimony} > {self.evolve.nodes_max}')
 
         if sy_expr in self.lut_fitness:
             fitness = self.lut_fitness[sy_expr]
         else:
-            # sfeh:discuss sympy real=True might allow imaginary results
-            # t0 = time.perf_counter()
-            try:
-                pairwise_results = eval_regression_sym_experimental(sy_expr, self.df_train)
-            except Exception as TODO:
-                pairwise_results = eval_regression_sym_experimental(sy_expr, self.df_train)
-
-            fitness = regression_error(pairwise_results, self.df_train['action'])
-
-            # t1 = time.perf_counter()
-            # fitness2 = self.kernel.eval_tf(sy_expr)['mean_error']
-            # t2 = time.perf_counter()
-            # print(f'asd {t1-t0:4.4f} {t2-t1:4.4f} ({(t1-t0)-(t2-t1):4.2f}) {fitness:4.2f} {fitness2:4.2f}')
-            # if DEBUG_DUMMY or fitness != self.kernel.eval_sym_experimental(sy_expr):
-            #     print(f'FAILED: {fitness} vs. {self.kernel.eval_sym_experimental(sy_expr)}')
+            fitness = self.eval_fitness(sy_expr)
 
             self.lut_fitness[sy_expr] = fitness  # sfeh:discuss: lut update in finalize_tree_get_meta()?
 
@@ -1844,6 +1786,7 @@ def selection_tournament(pop, n=3):
     return evotree
 
 
+
 if __name__ == '__main__':
     """
     Alpha tests
@@ -1860,3 +1803,8 @@ if __name__ == '__main__':
 
     # nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
     nstr = '["+:fix",["-:fix",["Ifte",["True"],["sin",["2"]],["/",["2.043"],["4"]]],["cartVel"]],["-1.3"]]'
+    expr = 'Mul(2.5, cartVel)'
+    expr = 'Ifte(Or(Lt(cartPos, cartPos), True), (Abs(cartVel) + cartVel/2), (Add(11.0, cartVel) / Sign(16.0)))'
+    expr_sy = plagih_sympify(expr, eval_locals={'cartVel': sympy.Symbol('cartVel'), 'cartPos': sympy.Symbol('cartPos')})
+    tree = sympy_to_tree(expr_sy, allow_chain=False)
+    print(tree)

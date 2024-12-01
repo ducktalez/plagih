@@ -1,3 +1,7 @@
+import pandas
+
+from plagih.sympy_extras import plagih_sympify
+from plagih.tree_labels import Round_Dummy, PowRounded
 from plagih.util import *
 import sympy
 from sympy.utilities.exceptions import ignore_warnings
@@ -5,12 +9,16 @@ import warnings
 import numpy as np
 
 
-def eval_regression_sym_experimental(expr, df):
+custom_functions = {
+    'Min': np.minimum.reduce,
+    'Max': np.maximum.reduce,
+    'Round_Dummy': Round_Dummy,
+}
+
+
+def eval_predict(expr, df: pandas.DataFrame, variable_names, normalize_numpy):
     """
     Returns the fitness (float)
-    todo
-        - This is seemingly faster than TF?... -> There is no reason why it should be faster with TF on processors
-        - Not stable and only working with mountaincar
 
     def eval_sym_experimental(self, expr, return_results=False):
         # Not stable and only working with mountaincar
@@ -32,57 +40,57 @@ def eval_regression_sym_experimental(expr, df):
         else:
             return results
     """
+    # a, b = sympy.symbols('cartVel cartPos')
+    # cartVels = df['cartVel']
+    # cartPoss = df['cartPos']
+    # print(f'HEsdfgRE TODO: {expr}')
+    cartPos, cartVel = sympy.symbols('cartPos cartVel')
+    variable_names = [str(var) for var in (cartPos, cartVel)]
+    func = sympy.lambdify(tuple([cartPos, cartVel]), expr, modules=[custom_functions, 'numpy'])
 
-    a, b = sympy.symbols('cartVel cartPos')
-    cartVels = df['cartVel']
-    cartPoss = df['cartPos']
-    f = sympy.lambdify([a, b], expr, 'numpy')
-    
+    # x = expr.evalf(subs={symbols[0]: 1.234, symbols[1]: 2.3456})
+
+    # SUCK FYMPY
+    # "ValueError: setting an array element with a sequence.
+    #   The requested array has an inhomogeneous shape after 1 dimensions.
+    #   The detected shape was (2,) + inhomogeneous part."
+
     # x = expr.evalf(subs={'cartVel': cartVels, 'cartPos': cartPoss})
-    try:
-        with warnings.catch_warnings():
-            with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
-                with ignore_warnings(DeprecationWarning):  # something like use "**" instead of "Pow"
-                    raw_results = f(cartVels, cartPoss)
+    # raw_results = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
+    with warnings.catch_warnings():
+        with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
+            with ignore_warnings(DeprecationWarning):  # something like use "**" instead of "Pow"
+                df['result'] = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
+                # raw_results = df.apply(lambda row: func(*[row[var] for var in variable_names]), axis=1)
 
-    except Exception as TODO:
-        # todo ValueError('setting an array element with a sequence. The requested array has an inhomogeneous shape after 1 dimensions. The detected shape was (2,) + inhomogeneous part.')
-        resarray = []
+                #     TODO YO WTF
+                # if normalize_numpy is not None:  # clip and round result
+                #     # raw_results = normalize_numpy(raw_results)
+                #     raw_results = lambda x: pd.round(np.clip(raw_results, 0, 2), 0)
+
+
+    if normalize_numpy is not None:  # clip and round result
+        # raw_results = normalize_numpy(raw_results)
         try:
-            for debugme in df.iterrows():
-                vel = debugme[1]['cartVel']
-                pos = debugme[1]['cartPos']
-                lol = str(expr)
-                lol = sympy.sympify(lol)
-                ass1 = expr.free_symbols
-                ass2 = lol.free_symbols
-                # print('asdasd', ass1, ass2)
-                asdfasdf = lol.subs({'cartVel': vel, 'cartPos': pos})
-                asdfasdf = asdfasdf.evalf()
-                fdsa = expr.subs({'cartVel': vel, 'cartPos': pos})
-                resarray.append(asdfasdf)
+            raw_results = lambda x: np.round(np.clip(raw_results, 0, 2), 0)
         except Exception as TODO:
-            for debugme in df.iterrows():
-                vel = debugme[1]['cartVel']
-                pos = debugme[1]['cartPos']
-                lol = str(expr)
-                lol = sympy.sympify(lol)
-                ass1 = expr.free_symbols
-                ass2 = lol.free_symbols
-                # print('asdasd', ass1, ass2)
-                asdfasdf = lol.subs({'cartVel': vel, 'cartPos': pos})
-                asdfasdf = asdfasdf.evalf()
-                fdsa = expr.subs({'cartVel': vel, 'cartPos': pos})
-                resarray.append(asdfasdf)
-        print(resarray, 'TODO')
+            raw_results = lambda x: np.round(np.clip(raw_results, 0, 2), 0)
 
-    results = np.round(np.clip(raw_results, 0, 2), 0)    # sfeh:data-specific! sanitize_results
-
-    return results
+    return df
 
 
-def regression_error(yy_hat, yy):
+if __name__ == '__main__':
+    import pandas as pd
+    df = pd.read_csv(Path(__file__).parent.parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv').astype('float32')
+    symbols = sympy.symbols(['cartVel', 'cartPos'], real=True, imaginary=False)
+    ex = '0.00162*cartPos*cartVel/(cartPos + 4.23)'
+    # expr = sympy.Mul(symbols[0], (2, sympy.Add(1, symbols[1])))
+    expr = PowRounded.symfun(2, sympy.Add(1, symbols[1]))
+    print(f'HERE TODO22: {expr}')
+    cartPos, cartVel = sympy.symbols('cartPos cartVel')
+    variable_names = [str(var) for var in (cartPos, cartVel)]
+    func = sympy.lambdify(tuple(symbols), expr, modules=[custom_functions, 'numpy'])
 
-    fitness = np.sqrt(np.mean((yy - yy_hat) ** 2))  # discuss: np.square vs. **2: should be mainly irrelevant
-    fitness = round(fitness, FLOAT_PRECISION)
-    return fitness
+    func = sympy.lambdify(tuple(symbols), expr, modules=[custom_functions, 'numpy'])
+    raw_results = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
+    print('ssdfg', raw_results)

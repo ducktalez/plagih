@@ -14,8 +14,6 @@ class Good_Expert:
     def decide(self, observation):
 
         cartPos, cartVel = observation
-        xxx = (2 if ((cartPos < -1) or ((cartPos < 0.1) and (cartVel < -0.05))) else (
-            0 if ((cartVel < 0.02) and ((cartPos > -0.45) and (cartPos < -0.05))) else (0 if (cartVel < 0) else 2)))
 
         pos, vel = observation
         if pos < -1 or (pos < 0.1 and vel < -0.05):

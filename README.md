@@ -8,7 +8,8 @@
 - double linked tree (root node, parent node)
   - implemented!
   - use for tree-visualisation
-- histogram for tree complexity 
+- histogram for tree complexity
+- discuss: allow_chain is probably not required at so many places...
 - gen_create_initial -> create random pop if pop empty? with leftovers?
 - tree -> evaluate nodes for best improvement 
 - population cluster/races
@@ -43,6 +44,16 @@
 - print(sympy.parsing.sympy_parser.transformations)
 - "Ban" trees, if they are too dominant
 - Different print types for trees, also visualization
+- make categorical options categorical. For mountain car, it is scalable, but a categorical options (aka a 3 nodes last layer) should be an option
+- prevent the LUT of becoming too big; make a counter whenever a result is hit and delete the smallest in each cycle. Reset the numbers aswell.
+- pseudo-backpropagation: ALL functions in a tree can be represented as a neural network. E. g. if-function is two input variables, a softmax layer and a result layer. replace a tree with a NN in the next step and train it.
+- sympy facttor (up/downfactor), so it adds stuff together, expand(), 
+- user-functions (=nodes with n inputs, given by a user)
+- sfeh:idea sympy.nsimplify('3.333333*x+0.522', tolerance=0.1, rational=True) for
+  - Terminals 
+  - Even whole formulae!
+  - Especially! Powers x**y
+- Introduce rounding/clipping for many more functions
 
 ### Semi-interesting
 
@@ -50,6 +61,7 @@
 - trees with one node just very rarely?
 - https://deap.readthedocs.io/en/master/api/tools.html
 - continuous evolution (with mp), select from 3 and also replace 3
+- Move all benchmarks, experiments, etc., to another project
 
 ## Always check for notes in code
 - xxx
@@ -75,7 +87,6 @@
 Attention: If you want to write your own code, look for important developer informations in the section below!
 
 ## name ideas
-- AnnaGP
 - FamGP (Familiar GP)
 - plagih: plausible genetic improvements
   ...is a genetic programming framework. 
@@ -111,25 +122,7 @@ Main features:
 - (example available)
 
 
-## Python 3.9 packages
-
-I am using Anaconda. Some packages are only available in pip.
-sfeh:save this as requirements
-
-Conda packages:
-matplotlib
-pathlib
-sympy
-apted
-tensorflow
-sklearn
-pandas
-sympy
-scipy
-pyYAML
-tikzplotlib (optional)
-gym (optional)
-distutils (optional)
+## Python 3.9 Anaconda packages
 
 All packages: `matplotlib pathlib sympy tensorflow pandas sympy scipy pyYAML scikit-learn scipy gym apted tikzplotlib`
 

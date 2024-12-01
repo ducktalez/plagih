@@ -36,8 +36,6 @@ Useful information:
 - These variables are set for every sympy object and thus can be tested, e.g. a.is_Boolean
     # To be overridden with True in the appropriate subclasses
 
-    sfeh xxx input variables as locals? ?
-    sfeh:open this is probably the reason for the capitalized class names in sympy: return eval(self, a)
     sfeh: I think we should get rid of sympy in the long term. A lot of problems are related to sympy.
 
     sfeh:sypyunification errors:
@@ -45,7 +43,6 @@ Useful information:
         - 'And(a<2, a < 5)'
         - sympy.simplify('sign(-a)') -> -sign(a)
 
-    sfeh:xxx sympy facttor (up/downfactor), so it adds stuff together
     sfeh:discus simplify/unify
 
 Custom Operators /Functions/Nodes/Terminals/Nested:
@@ -56,10 +53,11 @@ import os
 from typing import Callable
 
 import sympy
+from blib2to3.pgen2.parse import DUMMY_NODE
 # import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
 from sympy.functions.elementary.piecewise import ExprCondPair
 
-from plagih.util import get_subclasses, FLOAT_PRECISION, DEBUG_DUMMY  # noqa
+from plagih.util import get_subclasses, FLOAT_PRECISION, DEBUG_DUMMY, SympySimplificationError  # noqa
 
 os.environ["KMP_WARNINGS"] = "FALSE"
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # https://github.com/tensorflow/tensorflow/issues/27023
@@ -71,7 +69,12 @@ os.environ["KMP_WARNINGS"] = "FALSE"
 
 
 class Typus:
-    """Typus need rework"""
+    """
+    The expr-content of a node
+    sfeh:open Typus needs rework.         ...why?
+        - most functions in here are not tested, but also never required
+        - str() function is used only for showing infos in debugger
+    """
     symfun = None
     xtype = None
 
@@ -108,7 +111,11 @@ class Typus:
         if issubclass(self.__class__, Terminal):
             return 1
         else:
-            return 1 + sum([len(cc) for cc in self.args])
+            try:
+                return 1 + sum([len(cc) for cc in self.args])
+            except Exception as todo:
+                print(f'TODO ASDASD {todo}')
+                return 1 + sum([len(cc) for cc in self.args])
 
     def _sympy_(self, *args):  # -> sympy.Basic:
         _sym = self.symfun
@@ -142,19 +149,28 @@ class Typus:
 
 
 class CustomOperator:
-    # sfeh:xxx make an abstract class + mark all classes
-    # tflow = lambda *args: None
     symfun = lambda *args: None
     xtype = ((None, None), None)
 
 
+class Node_Dummy(Typus):
+    """Terminal_Dummy, Function_Dummy now both in here"""
+    @classmethod
+    def get_child_xts(cls):
+        return cls.xtype[0]
+
+
 class BaseOperator(Typus):
-    showme = 'Missing'
+    showme = 'BaseOperator'
+    sy_str = None
+    repr_str = None
     pass
 
 
-class OperatorArity(BaseOperator):  # sfeh:xxx sympy.Function was here, also is_Function = True
-    showme = 'Missing'
+class OperatorArity(BaseOperator):
+    showme = 'OperatorArity'
+    sy_str = None
+    repr_str = None
     pass
 
 
@@ -163,7 +179,9 @@ class OperatorChained(BaseOperator):
     # no tflow, separate handling in totf-function
     # Piecewise, AddChain, MulChain, MinChain, MaxChain, AndChain, OrChain
     # childs_min_max = [1, 5]
-    showme = 'Missing'
+    showme = 'OperatorChained'
+    sy_str = None
+    repr_str = None
     pass
 
 
@@ -214,7 +232,6 @@ class Terminal(Typus):  # sfeh sympy.Atom
     """Terminal nodes are leaf nodes which can not have children. e.g.:
     - constants (e.g. 2.3)
     - observations (e.g. b, aka data input)
-    - user-functions (sfeh:open)
     """
     value = None
 
@@ -242,11 +259,10 @@ class Number(Terminal):
 
 class Symbol(Terminal):
     """
+    The Symbol is set with sympy.Symbol() on creation in child[0]
     sfeh:discuss: should typus have a sign (-pos); can appear in observations
     This was used to deal with negative values
         self.name = nlabl if nlabl[0] != '-' else nlabl[1:]
-        sfeh:xxx option here for type float/bool
-    sfeh:xxx how to set assumptions, Provide information such as real, integer, positive, range/interval
     """
     symfun = lambda *a: a[0]
     xtype = ((), float)
@@ -254,7 +270,9 @@ class Symbol(Terminal):
 
 class Add(MathOperator, ChainableOp):
     symfun = sympy.Add
-    showme = '+'
+    showme = 'Add'
+    sy_str = '({}+{})'
+    repr_str = 'Add{},[{},{}]'
     xtype = ((float, float), float)
     chain_xtype = float
 
@@ -264,43 +282,57 @@ class DivFraction(MathOperator):
     aka InverseFraction"""
     xtype = ((float, float), float)
     symfun = lambda a: sympy.Pow(a, sympy.S.NegativeOne)
-    showme = '1/x'
+    showme = 'DivFraction'
+    sy_str = '(1/{})'
+    repr_str = 'DivFraction{},[{}]'
 
 
 class Pow(MathOperator):
     symfun = sympy.Pow
-    showme = 'x^y'
+    showme = 'Pow'
+    sy_str = '({}**{})'
+    repr_str = 'Pow{},[{},{]]'
     xtype = ((float, float), float)
 
 
 class Abs(MathOperator):
     symfun = sympy.Abs
-    showme = 'abs'
+    showme = 'Abs'
+    sy_str = 'Abs({})'
+    repr_str = 'Abs{},[{}]'
     xtype = ((float,), float)
 
 
 class Sign(MathOperator, NoSymCapitalized):
     # does not work in string, but irrelevant. sympy.simplify('sign(-a)') -> -sign(a)
     symfun = sympy.sign
-    showme = 'sign'
+    showme = 'Sign'
+    sy_str = 'sign({})'
+    repr_str = 'Sign{},[{}]'
     xtype = ((float,), float)
 
 
 class Log(MathOperator, NoSymCapitalized):
     symfun = sympy.log  # sfeh: Log isactually Ln (base e)
-    showme = 'log'
+    showme = 'Log'
+    sy_str = 'log({})'
+    repr_str = 'Log{},[{}]'
     xtype = ((float,), float)
 
 
 class Cos(AngleOperator, NoSymCapitalized):
     symfun = sympy.cos
-    showme = 'cos'
+    showme = 'Cos'
+    sy_str = 'cos({})'
+    repr_str = 'Cos{},[{}]'
     xtype = ((float,), float)
 
 
 class Sin(AngleOperator, NoSymCapitalized):
     symfun = sympy.sin
-    showme = 'sin'
+    showme = 'Sin'
+    sy_str = 'sin({})'
+    repr_str = 'Sin{},[{}]'
     xtype = ((float,), float)
 
 
@@ -308,87 +340,116 @@ class Tan(AngleOperator, NoSymCapitalized):
     # sfeh:discuss actually rename classes.
     # they do not have to match sympy expressions/classes
     symfun = sympy.tan
-    showme = 'tan'
+    showme = 'Tan'
+    sy_str = 'tan({})'
+    repr_str = 'Tan{},[{}]'
     xtype = ((float,), float)
 
 
 class Acos(AngleOperator, NoSymCapitalized):
     symfun = sympy.acos
-    showme = 'acos'
+    showme = 'Acos'
+    sy_str = 'acos({})'
+    repr_str = 'Acos{},[{}]'
     xtype = ((float,), float)
 
 
 class Asin(AngleOperator, NoSymCapitalized):
     symfun = sympy.asin
-    showme = 'asin'
+    showme = 'Asin'
+    sy_str = 'asin({})'
+    repr_str = 'Asin{},[{}]'
     xtype = ((float,), float)
 
 
 class Atan(AngleOperator, NoSymCapitalized):
     symfun = sympy.atan
-    showme = 'atan'
+    showme = 'Atan'
+    sy_str = 'atan({})'
+    repr_str = 'Atan{},[{}]'
     xtype = ((float,), float)
 
 
-class tanh(AngleOperator, NoSymCapitalized):
+class Tanh(AngleOperator, NoSymCapitalized):
     symfun = sympy.tanh
-    showme = 'tanh'
+    showme = 'Tanh'
+    sy_str = 'tanh({})'
+    repr_str = 'Tanh{},[{}]'
     xtype = ((float,), float)
 
 
 class Sinh(AngleOperator, NoSymCapitalized):
     symfun = sympy.sinh
+    sy_str = 'Sinh({})'
+    Sinh = 'Abs{},[{}]'
+    repr_str = 'Sinh{},[{}]'
     xtype = ((float,), float)
 
 
 class Cosh(AngleOperator, NoSymCapitalized):
     symfun = sympy.cosh
-    showme = 'cosh'
+    showme = 'Cosh'
+    sy_str = 'cosh({})'
+    repr_str = 'Cosh{},[{}, {}]'
     xtype = ((float,), float)
 
 
 class Xor(LogicOperator, NoSymCapitalized):
     symfun = sympy.Xor
-    showme = 'xor'
+    showme = 'Xor'
+    sy_str = '({}^{})'
+    repr_str = 'Xor{},[{}, {}]'
     xtype = ((bool, bool), bool)
 
 
 class Not(LogicOperator):
     symfun = sympy.Not
-    showme = 'not'
+    showme = 'Not'
+    sy_str = '~({})'
+    repr_str = 'Not{},[{}]'
     xtype = ((bool,), bool)
 
 
 class Eq(LogicOperator):
     # sfeh:debug Eq and Ne (), which also work for boolean inputs in sympy
     symfun = sympy.Eq
-    showme = '=='
+    showme = 'Eq'  # '==' not working in sympy!
+    sy_str = 'Eq({}, {})'
+    repr_str = 'Eq{},[{}, {}]'
     xtype = ((float, float), bool)
 
 
 class Ne(LogicOperator):
     symfun = sympy.Ne
-    showme = '!='
+    showme = 'Ne'  # != not working in sympy
+    sy_str = 'Ne({},{})'
+    repr_str = 'Ne{},[{}, {}]'
     xtype = ((float, float), bool)
 
 
 class Mul(MathOperator, ChainableOp):
     symfun = sympy.Mul
-    showme = '*'
+    showme = 'Mul'  #
+    sy_str = '({}*{})'
+    repr_str = 'Mul{},[{}, {}]'
     xtype = ((float, float), float)
     chain_xtype = float
 
 
 class And(LogicOperator, ChainableOp):
     symfun = sympy.And
-    showme = '&'
+    showme = 'And'
+    sy_str = '({}&{})'
+    repr_str = 'And{},[{}, {}]'
     xtype = ((bool, bool), bool)
     chain_xtype = bool
 
 
 class Or(LogicOperator, ChainableOp):
     symfun = sympy.Or
-    showme = 'or'
+    showme = 'Or'
+    sy_str = '({}|{})'
+    repr_str = 'Or{},[{}, {}]'
     xtype = ((bool, bool), bool)
     chain_xtype = bool
 
@@ -397,70 +458,91 @@ class ITE(LogicOperator):
     """sfeh:is this really required? currently not in use"""
     symfun = sympy.ITE
     showme = 'ITE'
+    sy_str = 'ITE({}{}{})'
+    repr_str = 'ITE{},[{}, {}, {}]'
     # tflow = lambda *args: tf.cond(args[0], true_fn=args[1], false_fn=args[2])
     xtype = ((bool, bool, bool), bool)
 
 
 class Min(MinMaxBase, ChainableOp):
     symfun = sympy.Min
-    showme = 'min'
+    showme = 'Min'
+    sy_str = 'Min({},{})'
+    repr_str = 'Min{},[{}, {}]'
     xtype = ((float, float), float)
     chain_xtype = float
 
 
 class Max(MinMaxBase, ChainableOp):
     symfun = sympy.Max
-    showme = 'max'
+    showme = 'Max'
+    sy_str = 'Max({},{})'
+    repr_str = 'Max{},[{}, {}]'
     xtype = ((float, float), float)
     chain_xtype = float
 
 
 class Lt(RelationalOperator):
     symfun = sympy.Lt
-    showme = '<'
+    showme = 'Lt'
+    sy_str = '({} < {})'
+    repr_str = 'Lt{},[{}, {}]'
     xtype = ((float, float), bool)
 
 
 class Le(RelationalOperator):
     symfun = sympy.Le
-    showme = '<='
+    showme = 'Le='
+    sy_str = '({}<={})'
+    repr_str = 'Le{},[{}, {}]'
     xtype = ((float, float), bool)
 
 
 class Gt(RelationalOperator):
     symfun = sympy.Gt
-    showme = '>'
+    showme = 'Gt'
+    sy_str = '({}>{})'
+    repr_str = 'Gt{},[{}, {}]'
     xtype = ((float, float), bool)
 
 
 class Ge(RelationalOperator):
-    symfun = sympy.Ge
-    showme = '>='
     xtype = ((float, float), bool)
+    symfun = sympy.Ge
+    showme = 'Ge'
+    sy_str = '({}>={})'
+    repr_str = 'Ge{},[{}, {}]'
 
 
 class Square(MathOperator):
     symfun = lambda a: sympy.Pow(a, 2)
-    showme = 'x^2'
     xtype = ((float,), float)
+    showme = 'Square'
+    sy_str = '({}**2)'
+    repr_str = 'Square{},[{}]'
 
 
 class Sub(MathOperator):
     xtype = ((float, float), float)
     symfun = lambda a, b: sympy.Add(a, -b)
-    showme = '-'
+    showme = 'Sub'
+    sy_str = '({}-{})'
+    repr_str = 'Sub{},[{}, {}]'
 
 
 class Ifte(OperatorArity, ChainableOp):
     """Also class Piecewise"""
     xtype = ((bool, float, float), float)
     symfun = lambda *args: sympy.Piecewise((args[1], args[0]), (args[2], True))
-    showme = 'If-then-else'
+    showme = 'Ifte'
+    sy_str = 'Ifte({},{},{})'
+    repr_str = 'Ifte{},[{}, {}, {}]'
+    expr_dummy = 'Ifte'
     chain_xtype = (float, bool)
 
 
 class Round(MathOperator):
-    """sfeh:XXX this does not work
+    """sfeh:TEST this does not work
     discuss:
     - sympy.Float(x, 1)  <-- sfeh:open
     - sympy.Integer(x)
@@ -472,32 +554,51 @@ class Round(MathOperator):
     """
     # sfeh:xxx check conversion
     xtype = ((float,), float)
-    # symfun = lambda a: a.round(0) if a.is_number else RoundDummy(a)
-    symfun: Callable[[sympy.Expr], sympy.Expr] = lambda a: a.round(0) if a.is_number else Round(a)  # sfeh (next line)
+    # symfun = lambda a: a.round(0) if a.is_number else Round_Dummy(a)
+    # symfun: Callable[[sympy.Expr], sympy.Expr] = lambda a: a.round(0) if a.is_number else Round(a)  # sfeh (next line)
     # this is here to hint the type, as sympy will throw a warning otherwise, leading to this
-    # https://docs.sympy.org/latest/explanation/active-deprecations.html#non-expr-args-deprecated
-    showme = 'round'
+    symfun = lambda arg: Round_Dummy(arg)
+    showme = 'Round'
+    sy_str = 'Round_Dummy({},1)'
+    repr_str = 'Round_Dummy{},[{}]'
 
 
-class Powrounded(OperatorArity):
-    # tflow = lambda a, b: tf.pow(a, tf.round(b))
-    # todo: error coming up, when the power of an exponent has a variable in it: Round.symfun fails to work.
-    #   AttributeError: 'function' object has no attribute 'is_Symbol
-    symfun = lambda a, b: sympy.Pow(a, Round.symfun(b))  # symfun = lambda a, b: a**Round.symfun(b)
-    showme = 'x^((y))'
+class Round_Dummy(sympy.Function, Node_Dummy):
+    """
+    Workaround for rounding exponents
+    For more details, look at: plagih/discoveries/rounding_exponents.py
+    """
+    @classmethod
+    def eval(cls, a):
+        if a.is_symbol:
+            return
+        elif a.is_number:
+            return round(a)
+
+    def _sympy_(self, a):
+        return eval(self, a)
+
+class PowRounded(OperatorArity):
+    """Requires class Round_Dummy!"""
+    symfun = lambda a, b: sympy.Pow(a, Round_Dummy(b))
+    showme = 'PowRounded'
+    sy_str = '(({})**(Round_Dummy({})))'
+    repr_str = 'PowRounded{},[{}, {}]'
     xtype = ((float, float), float)
 
-
-class Log1p(MathOperator):
-    # https://docs.sympy.org/latest/modules/codegen.html#sympy.codegen.cfunctions.log1p
-    xtype = ((float,), float)
-    symfun = lambda a: sympy.log(a + 1)
-    showme = 'log1p'
+# sfeh:open
+# class Log1p(MathOperator):
+#     # https://docs.sympy.org/latest/modules/codegen.html#sympy.codegen.cfunctions.log1p
+#     xtype = ((float,), float)
+#     symfun = lambda a: sympy.log(a + 1)
+#     showme = 'log1p'
 
 
 class Div(MathOperator):
     symfun = lambda a, b: sympy.Mul(a, 1 / b)
-    showme = 'a/b'
+    showme = 'Div'
+    sy_str = '({}/{})'
+    repr_str = 'Div{},[{}, {}]'
     xtype = ((float, float), float)
 
 
@@ -505,7 +606,9 @@ class Sqrt(MathOperator):
     """Capitalized class name, even though its a sympy function"""
     xtype = ((float,), float)
     symfun = sympy.sqrt  # same as: lambda a: sympy.Pow(a, sympy.S.Half)
-    showme = 'sqrt'
+    showme = 'Sqrt'
+    sy_str = 'sqrt({})'
+    repr_str = 'Sqrt{},[{}, {}]'
 
 
 # class Divide_no_nan(Operator):
@@ -518,40 +621,42 @@ class Sqrt(MathOperator):
 class Usub(MathOperator, sympy.Function):
     xtype = ((float,), float)
     symfun = lambda a: sympy.Mul(a, -1)
-    showme = '-(x)'  # sfeh
+    showme = 'Usub'  # sfeh
+    sy_str = '(-{})'
+    repr_str = 'Usub{},[{}]'
 
 
 class Clip(MinMaxBase, CustomOperator):
     # sfeh:open use this
     symfun = lambda a, b, c: sympy.Min(sympy.Max(a, b), c)
-    showme = 'clip'
+    showme = 'Clip'
+    sy_str = '(sympy.Min(sympy.Max({}}, {}}), {}}))'
+    repr_str = 'Clip{},[{}, {}]'
     xtype = ((float, float, float), float)
 
 
-class exp(MathOperator):
+class Exp(MathOperator):
     symfun = sympy.exp
-    showme = 'x^e'
+    showme = 'Exp'
+    sy_str = '({}**E)'
+    repr_str = 'Exp{},[{}, {}]'
     xtype = ((float,), float)
 
 
-class TerminalDummy(Typus):
-    @classmethod
-    def get_child_xts(cls):
-        return cls.xtype[0]
-
-
-class ExprCondPair_Dummy(TerminalDummy):
+class ExprCondPair_Dummy(Node_Dummy):
     """sfeh:discuss
     The only purpose is to wrap the results for a Node-structure, where every Node has childs with other nodes"""
     symfun = sympy.functions.elementary.piecewise.ExprCondPair
     showme = 'ExprCondPair_Dummy'
+    sy_str = '(ExprCondPair({}, {}))'
+    repr_str = 'ExprCondPair_Dummy{},[{}, {}]'
     xtype = ((float, bool), float)
     expr_dmy = 'ExprCondPair_Dummy'
 
 
 def sym_check(expr_sym):
     if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im):  # sfeh:discuss sympy.re
-        raise ArithmeticError(f'Simplification failed: {expr_sym}')
+        raise SympySimplificationError(f'Simplification failed: {expr_sym}')
     return expr_sym
 
 
@@ -587,25 +692,6 @@ def expr_sympify(expr):
 
     try:
         expr_sym = sympy.sympify(expr)
-        # sfeh:xxx sympy expand, for evaluation probably
-        # if DEBUG_DUMMY:
-        #     try:
-        #         # sfeh:XXX use or delete this!
-        #         cartVel, cartPos = sympy.symbols('cartVel cartPos')
-        #         expr_sym2 = expr_sym.factor()
-        #         expr_sym22 = expr_sym.factor(cartVel + cartPos)
-        #         expr_sym3 = expr_sym.expand()
-        #         expr_sym32 = expr_sym.expand(cartVel + cartPos)
-        #         if expr_sym2 != expr_sym22:
-        #             pass
-        #         if expr_sym != expr_sym2:
-        #             print(f'COMPARE FACTOR:\n{expr_sym}\n{expr_sym2}')
-        #         if expr_sym3 != expr_sym32:
-        #             pass
-        #         if expr_sym != expr_sym3:
-        #             print(f'COMPARE EXTEND:\n{expr_sym}\n{expr_sym3}')
-        #     except Exception as ex:
-        #         print(f'sympify-factor ex: {expr_sym} {ex}')
         sym_check(expr_sym)
         return expr_sym
 
@@ -672,7 +758,7 @@ def expr_sympify(expr):
 #     sympy.sign: tf.sign,
 #     # The real Part
 #     sympy.re: lambda a: tf.convert_to_tensor(a, dtype=tf.dtypes.float32),  # sfeh sympy-gotcha, comes up randomly
-#     # RoundDummy: tf.round,
+#     # Round_Dummy: tf.round,
 #     sympy.exp: tf.exp,  # sfeh this occurs randomly...
 #     sympy.ITE: tf.cond
 # }
@@ -761,14 +847,14 @@ def expr_sympify(expr):
 #         #     tf_fun = totf[type(expr)]
 #         # except KeyError:
 #         #     # sfeh:debug can this work??
-#         #     #   - im(Rounddummy(cartVel))
-#         #     tf_fun = type(expr).tflow  # sfeh:debug-01.02 why does im come up here? (mut_br) im(Rounddummy(cartPos))
+#         #     #   - im(Round_Dummy(cartVel))
+#         #     tf_fun = type(expr).tflow  # sfeh:debug-01.02 why does im come up here? (mut_br) im(Round_Dummy(cartPos))
 #         #     # sfeh:idea exception, try to map sympy to tf function with same name (sympy.cos -> tf.cos)
 #
 #         tf_args = [sympy_to_tensorflow(a, d_tensors) for a in expr_sy.args]
 #         # SFEH:Missing and Problems:
 #         #   - Exception: eval-ex: type object 'cosh' has no attribute 'tflow'
-#         #   - AttributeError: type object 'Rounddummy' has no attribute 'tflow'
+#         #   - AttributeError: type object 'Round_Dummy' has no attribute 'tflow'
 #         try:
 #             result = tf_fun(*tf_args)  # fits, if the arguments match the expected arguments exactly Add(a, b)
 #         except TypeError:
@@ -794,11 +880,11 @@ def expr_sympify(expr):
 #     [3]:    including meta-data (fitness_train, complexity)
 #
 #     # sfeh:discuss set tree depth at the end or so
-#     # sfeh:xxx set NodeBase as metatype and make this class (ExpressionTree, or so...) a new thing
+#     # sfeh: set NodeBase as metatype and make this class (ExpressionTree, or so...) a new thing
 #     """
 #
 #     args = []
-#     is_fix = False  # sfeh:xx here?
+#     is_fix = False  # sfeh:x here?
 #
 #     def __new__(cls, subcls, *args, **kwargs):
 #         """
@@ -919,9 +1005,9 @@ if __name__ == '__main__':
         '(Or(True, True) & c)',
         'Ifte(And(False, True), b, 0.046948)',
         'Ifte(Ne(True, Lt(Sub(a, 2), 1)), 1, 2)',
-        'cos(tan(Square(Multiply(Add(Round(Ifte(Ne(Ge(b, 15), True), 7, Sub(a, 16.5))), 5), 4))))'
+        'cos(tan(Square(Multiply(Add(Round(Ifte(Ne(Ge(b, 15), True), 7, Sub(a, 16.5))), 5), 4))))',
+        'Ifte(Lt(Ifte(Eq(Min(b, 1), 3), Max(a, b), b), 0), 0, 2)'
     ]
-    xxx_problems = ['Ifte(Lt(Ifte(Eq(Min(b, 1), 3), Max(a, b), b), 0), 0, 2)']
 
     def test_sympify():
         print('Running sympify example')

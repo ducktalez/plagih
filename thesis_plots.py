@@ -105,7 +105,7 @@ def thesis_plot_ib_comparisson():
         rects2 = ax.bar(x+width/2, reward_safe, color='g', width=width, label='safe')
 
         ax.legend(loc='lower left')
-        plt.yticks(IB_YICKS[0], IB_YICKS[1])
+        # plt.yticks(IB_YICKS[0], IB_YICKS[1])
 
         # rects1 = ax.bar(x - width / 2, men_means, width, label='Men')
         # rects2 = ax.bar(x + width / 2, women_means, width, label='Women')
@@ -150,7 +150,7 @@ def thesisplot_tempdiff():
     xx3, pp3 = get_probs(20)
     xx4, pp4 = get_probs(30)
     xx5, pp5 = get_probs(50)
-    # sfeh xxx make this more beautiful
+    # sfeh:beautify make this more beautiful
     with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots()
         ax.plot(xx1, pp1, linestyle='dotted', marker='.', label='5 values')

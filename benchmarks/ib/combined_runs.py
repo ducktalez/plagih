@@ -1,20 +1,13 @@
 # coding=utf-8
 import sys
-from pathlib import Path
 import argparse
 from benchmarks.ib.ib_eval_agents import eval_combined_agents
-# from benchmarks.ib.ib_eval_agents import *
 import itertools
 
 sys.path.append('../../')
 sys.path.insert(1, '../benchnmarks/ib/')
-import os
 from plagih.plagih_gp_base_class_xai import *
-import yaml
 import multiprocessing as mp
-import pickle
-import numpy as np
-import matplotlib.pyplot as plt
 from plagih.util import *
 
 

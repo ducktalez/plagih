@@ -72,13 +72,12 @@ os.environ["KMP_WARNINGS"] = "FALSE"
 class Typus:
     """
     The expr-content of a node
-    sfeh:open Typus needs rework.         ...why?
         - most functions in here are not tested, but also never required
         - str() function is used only for showing infos in debugger
     """
     symfun = None
     xtype = ((None,), None)
-    showme = 'Typus'
+    showme = None
     sy_str = lambda self, s: None  # 'sympy-fun'
     formulae_str = None  # 'sympy-expr'
     repr_str = None  # 'repr-format-{}-options'
@@ -165,9 +164,8 @@ class Node_Dummy(Typus):
 
 class BaseOperator(Typus):
     showme = 'BaseOperator'
-    sy_str = lambda self, s: None
+    sy_str = None
     repr_str = None
-    pass
 
 
 class OperatorArity(BaseOperator):
@@ -245,6 +243,7 @@ class Boolean(Terminal):
     # sfeh:discuss just for True/False?
     xtype = ((), bool)
     symfun = lambda *a: sympy.S.true if a[0] else ~sympy.S.true  # sympy.logic.boolalg.Boolean  # sfeh:discuss
+    showme = 'Boolean'
     # tflow = lambda arg: tf.constant(arg, dtype=tf.bool)
 
     # def __init__(self, value):
@@ -254,6 +253,7 @@ class Boolean(Terminal):
 class Number(Terminal):
     xtype = ((), float)
     symfun = lambda *a: sympy.Float(float(a[0]), FLOAT_PRECISION)
+    showme = 'Number'
     # symfun = lambda *a: sympy.Rational(float(a[0]), FLOAT_PRECISION)
     # sfeh: problem with rational: Sqrt(8.0) -> 2*sqrt(6)/3. sfeh: actually is_atomic?
     # tflow = lambda a: tf.constant(a, dtype=tf.float32)
@@ -271,6 +271,7 @@ class Symbol(Terminal):
     """
     symfun = lambda *a: a[0]
     xtype = ((), float)
+    showme = 'Symbol'
 
 
 class Add(MathOperator, ChainableOp):

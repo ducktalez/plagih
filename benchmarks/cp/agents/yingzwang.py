@@ -306,7 +306,8 @@ eps, rewards = np.array(rewards_list).T
 plt.plot(eps, rewards)
 plt.xlabel('episode')
 plt.ylabel('reward')
-plt.show()
+plt.savefig('mtc-agents-yingzwang.png')
+plt.close('all')
 
 # check solved requirements
 N = 100
@@ -316,7 +317,7 @@ print("episodes before solving: {}".format(ep_solve))
 
 
 observation_samples = []
-# sfeh new code
+# my new code
 for ep in range(30):
     state = env.reset()  # shape (s_dim,)
     ep_reward = 0  # total reward per episode

@@ -36,32 +36,32 @@ def _test_simple(chained_on=True):
 
     gp.gen_create_initial()
 
-    # for _ in range(1):
-    #     @gp.create_trees(rate=1)
-    #     def rand2():
-    #         return gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
-    #
-    #     gp.end_generation()
-    #
-    # for _ in range(2):
-    #     @gp.create_trees(rate=1, simplify=True)
-    #     def rand2_CHAINA():
-    #         tree = gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
-    #         tree = tree_simplification(tree, allow_chain=CHAINED_VERION_main)
-    #         tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
-    #         return tree
-    #
-    #     gp.end_generation()
-    #
-    # for _ in range(10):
-    #     @gp.create_trees(rate=1)
-    #     def mx_branch_n1():
-    #         tree = selection_tournament(gp.pop_genepool, n=3)
-    #         n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
-    #         tree = gp.evolve.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
-    #         return tree
-    #
-    #     gp.end_generation()
+    for _ in range(1):
+        @gp.create_trees(rate=1)
+        def rand2():
+            return gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+
+        gp.end_generation()
+
+    for _ in range(2):
+        @gp.create_trees(rate=1, simplify=True)
+        def rand2_CHAINA():  # noqa
+            tree = gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+            tree = tree_simplification(tree, allow_chain=chained_on)
+            tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
+            return tree
+
+        gp.end_generation()
+
+    for _ in range(10):
+        @gp.create_trees(rate=1)
+        def mx_branch_n1():
+            tree = selection_tournament(gp.pop_genepool, n=3)
+            n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
+            tree = gp.evolve.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
+            return tree
+
+        gp.end_generation()
 
     for _ in range(10):
         @gp.create_trees(rate=1, crossover=True, simplify=True)
@@ -191,7 +191,7 @@ def _test_random_pop(chained_on=True):
             @gp.create_trees(rate=0.1)
             def filter_optimize():
                 tree = selection_tournament(gp.pop_genepool, n=3)
-                return gp.evolve.evolve_mutate_filter(tree)
+                return gp.evolve.evolve_mutate_filter(tree, allow_chain=chained_on)
 
             @gp.create_trees(rate=0.1)
             def rand2():

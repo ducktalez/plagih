@@ -24,7 +24,6 @@
   - TF-evaluation equals python-evaluation equals sympy evaluation
 - BackPropagation through nodes, rank value for whole tree 
 - generell
-  - remove TODOTODO
   - get it running
   - remove TODOs
   - remove sfeh:...
@@ -55,6 +54,8 @@
   - Especially! Powers x**y
 - Introduce rounding/clipping for many more functions
 - adjust tournament_size to general fitness skew
+- adding the pareto-trees visualized to the paretofront plot
+- mutate chained operators specifically
 
 ### Semi-interesting
 
@@ -281,3 +282,13 @@ Große Weltveränderer stehen auf jeden Fall für Veränderung
   - Besonderheit
 - Extrempunkte
 - Extremlösungen
+
+# whathappened
+
+```
+WHATTPPENDED SFEH
+	old: [Sign, [Square, [Mul, [cartPos], [cartVel]]]]
+	sym: [Sign, [Mul, [Square, [cartPos]], [Square, [cartVel]]]]
+	old: sign(((cartPos * cartVel))**2)
+	sym: sign(((cartPos)**2 * (cartVel)**2))
+	sym: Node(Sign, [Node(Square, [Node(Mul, [Node(Symbol, ["cartPos"]), Node(Symbol, ["cartVel"])])])])```

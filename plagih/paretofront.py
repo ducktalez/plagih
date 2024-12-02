@@ -8,7 +8,7 @@ from plagih.util import *
 
 def pareto_from_pop(pop_list):
     """
-    sfeh check this!! op_next mostly has 2 pareto entries??
+    sfeh:different entries at the same pareto-slot is possible
     """
     pop_list = pareto_sort(pop_list)
 
@@ -25,7 +25,12 @@ def pareto_from_pop(pop_list):
     for tree in pop_list:
         parsim = tree.get_parsimony()
         if parsim == ref_par:  # parsim can not be smaller
-            continue  # sfeh:discuss does sorted keep the order?
+            fitness = tree.get_fitness()
+            if fitness == ref_fit:
+                pop_pareto.append(tree)
+                ref_fit = fitness
+            continue
+
         else:
             fitness = tree.get_fitness()
             if fitness < ref_fit:
@@ -51,30 +56,6 @@ def pareto_export(paretofront):
             in paretofront]
 
 
-def pareto_insert_again_simplified(self, fintree):
-    """
-    # sfeh:open
-    """
-    # tree_sym = copy.deepcopy(evotree)
-    #
-    # try:
-    #     # printez('aaa', 'Trying to simplify for paretofront entry.')  # simplify the fintree and save in paretofront once again
-    #     tree_sym.evolve_reduce(obs_infos=obs_infos, completely=True)
-    #     parsimony = tree_sym.eval_parsimony(self.conf.complexity_measure, origin_tree=self.origin)
-    #     if parsimony < evotree.meta.parsimony:
-    #         # self.printpl('aa', 'Successfully reduced paretofront fintree!')
-    #         sym_fitness = self.eval_tf_fitness(tree_sym)  # sfeh actually not required, delete this
-    #         tree_sym.meta.fitness_train = sym_fitness
-    #         tree_sym.meta.parsimony = parsimony
-    #         self.update_pareto_with_tree(tree_sym)
-    # except Exception as ex:
-    #     print_warning('www', f'Tree sympification did not work: {ex}')
-    #
-    # else:
-    #     self.printpl('aaa', 'Pareto entry was already simplified')
-    pass
-
-
 def plot_paretofront(paretofront, path, name, parsimony_max) -> []:
     """Write pyplot with paretofront candidates"""
 
@@ -87,19 +68,13 @@ def plot_paretofront(paretofront, path, name, parsimony_max) -> []:
 
     with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots()
-        right = max(max(xx), parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
-
-        # beyond_lines:  # adding a point to the edges to imply that there are no more values (paretofront-plot)
-        # xx = np.concatenate([[xx[0]-1.05], xx, [right + 1]])
-        # yy = np.concatenate([[max(yy) + 1], yy, [yy[-1]]])
+        right = max(max(xx), parsimony_max) * 1.05
         xx = np.concatenate([xx, [right + 1]])
         yy = np.concatenate([yy, [yy[-1]]])
 
         run_name_latex = str(name).replace('_', '-')  # workaround for latex version
         ax.step(xx, yy, linestyle='dashed', marker='.', label=f'{run_name_latex}', where='post')
-        ax.set(xlabel='complexity', ylabel='regression error',
-               xlim=(0, right),
-               ylim=(0, (max(yy) - min(min(yy), 0)) * 1.05))
+        ax.set(xlabel='complexity', ylabel='regression error', xlim=(0, right), ylim=(0, (max(yy) - min(min(yy), 0)) * 1.05))
 
         try:
             path_pdf = path / f'paretofront.pdf'
@@ -200,7 +175,7 @@ def analyze_pareto(cpu_cores=16):  # sfeh 16 cores? nope
     #         # "\\multicolumn{2}{c}{complexity} & \\multicolumn{2}{c}{regression error} & \\multicolumn{4}{c}{IB reward} & combinations & expression \\tabularnewline\n" \
     #         tex_line_input, tex_line_overview = '', ''
     #
-    #         res_all = combined_lists(self.rootdir.parent, 40, 40, local_yamls=True, cpu_cores=cpu_cores)  # sfeh use self.conf.mp_cores
+    #         res_all = combined_lists(self.rootdir.parent, 40, 40, local_yamls=True, cpu_cores=cpu_cores)
     #
     #         xx = [x['parsim_sum'] for x in res_all]
     #         y_all = [y['experiment'] for y in res_all]

@@ -218,7 +218,6 @@ def compare_savehuman_vs_sarsa():
         ax.plot(np.arange(len(rewards_mtc)), rewards_mtc, label='Maximize velocity')
         ax.set(xlabel='episode', ylabel='reward', xlim=(0, 100))  # 1.05  # top * 1.05 for better style
         ax.legend(loc='lower left')
-        plt.show()
         savepath = path_make_dir(Path.cwd() / 'MA_lyx/img/pyplots_custom/sarsa_vs_human.pdf')
         fig.savefig(savepath)
         plt.close('all')

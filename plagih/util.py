@@ -5,7 +5,7 @@ import time
 
 import yaml
 from pathlib import Path
-
+from matplotlib import pyplot as plt
 # from distutils.spawn import find_executable
 import numpy as np
 
@@ -188,7 +188,7 @@ pyplot_size = (3.6, 2.7)  # default: (6.4, 4.8) S: (4, 3)  XXL: (16, 9)  M: (4.8
 plplot_size_up = (3.6, 3.6)
 
 pyplot_rc_tex = {'figure.autolayout': True,
-                 'text.usetex': shutil.which('latex') or False,  # check if 'latex' is available
+                 'text.usetex': shutil.which('latex') is not None,  # check if 'latex' is available
                  'backend': 'pgf',
                  'figure.figsize': pyplot_size,
                  'axes.labelpad': 0.5,  # padding axis-ticks to axis title

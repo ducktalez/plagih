@@ -25,7 +25,6 @@ class AddChain(OperatorChained):
 
 
 class MulChain(OperatorChained):
-    # sfeh:discuss: if sympy is
     showme = 'Mul'
     symfun = sympy.Mul
     sy_str = 'Mul({})'

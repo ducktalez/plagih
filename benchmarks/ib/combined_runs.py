@@ -126,7 +126,6 @@ def plot_best_prediction(rootdir_eval, parsims, combined_all_p, lut_file, parsim
 
         with Path.open(rootdir_eval / 'best_regrerr.yaml', 'w') as file:
             _ = yaml.dump(bestregr_data, file, default_flow_style=False, sort_keys=False)
-    # yaml_dump(rootdir_eval / 'best_regrerr.yaml', [' '.join(str(xx) for xx in x['parsims']) for x in best_regrerr_dict])  # sfeh delete this?
 
     """
     okay

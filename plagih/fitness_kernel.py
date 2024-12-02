@@ -63,7 +63,7 @@ def eval_predict(expr, df: pd.DataFrame, variable_names, normalize_numpy):
                     df_results = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
                     # raw_results = df.apply(lambda row: func(*[row[var] for var in variable_names]), axis=1)
 
-    except ZeroDivisionError as sfeh:
+    except ZeroDivisionError:
         # df['result'] = df.fillna(np.nan)
         pass
 

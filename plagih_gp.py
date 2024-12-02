@@ -22,7 +22,7 @@ rootdir = Path.cwd() / 'MTC200_RMSE_scratch'
 normalize_numpy = lambda x: np.round(np.clip(x, 0, 2), 0)
 
 pop_max = 100
-gen_max = 100
+gen_max = 15
 nodes_max = 50
 depth_max = 10
 
@@ -65,7 +65,7 @@ def _test_simple(chained_on=True):
 
     for _ in range(10):
         @gp.create_trees(rate=1, crossover=True, simplify=True)
-        def xover_CHAINA():
+        def xover_CHAINA():  # noqa
             tree_a = selection_tournament(gp.pop_genepool, n=3)
             tree_b = selection_tournament(gp.pop_genepool, n=3)
             tree_a = tree_simplification(tree_a, allow_chain=chained_on)
@@ -142,21 +142,21 @@ def _test_random_pop(chained_on=True):
         if chained_on:
 
             @gp.create_trees(rate=0.30, simplify=True)
-            def mx_branch_d_CHAIN():
+            def mx_branch_d_CHAIN():  # noqa
                 tree = selection_tournament(gp.pop_genepool, n=3)
                 tree = gp.evolve.evolve_mutate_branch_depth(tree, 4, chained_on, p_term=0.5)
                 tree = tree_simplification(tree, allow_chain=gp.allow_chain)
                 return tree
 
             @gp.create_trees(rate=0.1, simplify=True)
-            def rand2_CHAINB():
+            def rand2_CHAINB():  # noqa
                 # sfeh:discuss: deep random trees have a tendency to also allow weird-ass looking nonsense
                 tree = gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
                 tree = tree_simplification(tree, allow_chain=gp.allow_chain)
                 return tree
 
             @gp.create_trees(rate=0.3, crossover=True, simplify=True)
-            def xover_CHAIN():
+            def xover_CHAIN():  # noqa
                 tree_a = selection_tournament(gp.pop_genepool, n=3)
                 tree_b = selection_tournament(gp.pop_genepool, n=3)
                 evo1, evo2 = gp.evolve.evolve_crossover(tree_a, tree_b)
@@ -226,7 +226,7 @@ def _test_random_pop(chained_on=True):
 
 
 if __name__ == "__main__":
+    # _test_simple(chained_on=True)
+    _test_random_pop(chained_on=True)
     _test_simple(chained_on=False)
     _test_random_pop(chained_on=False)  # sfeh:open
-    _test_simple(chained_on=True)
-    _test_random_pop(chained_on=True)

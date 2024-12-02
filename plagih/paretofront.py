@@ -85,13 +85,13 @@ def plot_paretofront(paretofront, path, name, parsimony_max) -> []:
             fig.savefig(path_png)
             printez('f', f"paretofront (.png): {path_png}")
         except PermissionError as perm_error:
-            print_caution(f'Could not save plot: {perm_error}')  # sfeh for everything?
+            print_caution(f'Could not save plot: {perm_error}')
         except Exception as ex:
             raise ex
     return
 
 
-def analyze_pareto(cpu_cores=16):  # sfeh 16 cores? nope
+def analyze_pareto(cpu_cores=4):
     """
     sfeh:open
     Writing all analysis files after evaluating the paretofront.

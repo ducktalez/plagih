@@ -1,6 +1,4 @@
 import pandas as pd
-
-from plagih.sympy_extras import plagih_sympify
 from plagih.tree_labels import Round_Dummy, PowRounded
 from plagih.util import *
 import sympy
@@ -16,7 +14,7 @@ custom_functions = {
 }
 
 
-def eval_predict(expr, df: pd.DataFrame, variable_names, normalize_numpy):
+def eval_predict(expr, df: pd.DataFrame, sy_symbols, normalize_numpy):
     """
     Returns the fitness (float)
 
@@ -40,12 +38,7 @@ def eval_predict(expr, df: pd.DataFrame, variable_names, normalize_numpy):
         else:
             return results
     """
-    # a, b = sympy.symbols('cartVel cartPos')
-    # cartVels = df['cartVel']
-    # cartPoss = df['cartPos']
-    cartPos, cartVel = sympy.symbols('cartPos cartVel')
-    variable_names = [str(var) for var in (cartPos, cartVel)]
-    func = sympy.lambdify(tuple([cartPos, cartVel]), expr, modules=[custom_functions, 'numpy'])
+    func = sympy.lambdify(tuple(sy_symbols), expr, modules=[custom_functions, 'numpy'])
 
     # x = expr.evalf(subs={symbols[0]: 1.234, symbols[1]: 2.3456})
 
@@ -54,23 +47,15 @@ def eval_predict(expr, df: pd.DataFrame, variable_names, normalize_numpy):
     #   The requested array has an inhomogeneous shape after 1 dimensions.
     #   The detected shape was (2,) + inhomogeneous part."
 
-    # x = expr.evalf(subs={'cartVel': cartVels, 'cartPos': cartPoss})
-    # raw_results = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
-    try:
-        with warnings.catch_warnings():
-            with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
-                with ignore_warnings(DeprecationWarning):  # something like use "**" instead of "Pow"
-                    df_results = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
-                    # raw_results = df.apply(lambda row: func(*[row[var] for var in variable_names]), axis=1)
-
-    except ZeroDivisionError:
-        # df['result'] = df.fillna(np.nan)
-        pass
+    with warnings.catch_warnings():
+        with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
+            with ignore_warnings(DeprecationWarning):  # something like use "**" instead of "Pow"
+                df_results = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
+                # raw_results = df.apply(lambda row: func(*[row[var] for var in variable_names]), axis=1)
 
     if normalize_numpy is not None:  # clip and round result
         df_results = normalize_numpy(df_results)
 
-    # df['result'] = df_results
     return df_results
 
 

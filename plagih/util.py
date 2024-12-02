@@ -16,8 +16,7 @@ PRINT_DUMMY = 'wwwaaagggiiifff'  # noqa: dummy for print-policy wwaaaggggggiiiff
 FLOAT_PRECISION = 3
 PLOTS_INTERVAL = 1
 BACKUP_INTERVAL = 10
-CHAINED_VERION = True  # sfeh:not here?
-CHAIN_implement = CHAINED_VERION  # used as placeholder for implementation-tasks
+CHAIN_implement = 'TODO'  # used as placeholder for implementation-tasks
 TREE_MIN_PARSIMONY = 3
 
 

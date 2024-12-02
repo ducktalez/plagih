@@ -6,13 +6,12 @@ from matplotlib.ticker import StrMethodFormatter
 def plot_performance(monitor_df, name, path_monitoring: Path):
     """
     All monitoring infos
-    sfeh den shit in Funktionen aufteilen
     # fit_best is not necessary
     """
     with plt.rc_context(rc={'axes.grid': True}):
         fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]},
                                 sharex='all')
-        plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
+        plt.subplots_adjust(wspace=0, hspace=0.1)  # left=0, bottom=0, right=1, top=1
         xx = list(monitor_df.index)
 
         axs0 = axs[0]
@@ -46,7 +45,6 @@ def plot_performance(monitor_df, name, path_monitoring: Path):
                        marker='')  # linestyle='None'
         axs0_twin.tick_params(axis='y', labelcolor='tab:gray')
         axs0_twin.set_ylim(ymin=0, ymax=max(monitor_df['gens_since_last_pareto'].max() or 1, 50))
-        # print_e(f'damn setting ylim not working sfeh :s {ex}')
         # axs0_twin.set_ylim(ymin=0, ymax=max(monitor_df['gens_since_last_pareto'].notnull().max() or 1, 50))
         # # print(monitor_df['gens_since_last_pareto'].notnull().max())
 

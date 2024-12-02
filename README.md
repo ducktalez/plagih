@@ -1,37 +1,94 @@
 # Familiar Genetic Programming with TensorFlow
 
+- Fast
+- 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
+
 ## Ablage/Todos
 
-- gens_since_last_pareto
-- population cluster / races
+- double linked tree (root node, parent node)
+  - implemented!
+  - use for tree-visualisation
+- histogram for tree complexity
+- discuss: allow_chain is probably not required at so many places...
+- gen_create_initial -> create random pop if pop empty? with leftovers?
+- tree -> evaluate nodes for best improvement 
+- population cluster/races
 - Make regular Function Classes Sympy Functions
-- ASTify all functions
-- introduce integer
-- replace x**2 with Squared(x)
+- SFEHASD: Keep all same-quality Pareto-entries!! 
+- replacing
+  - replace x**2 with Squared(x)
+  - replace -1*x, coming from sympy functions
+  - 
 - Tests for:
   - Auto-testruns: loop/reload through [random, origin, origin_fixed] [MC, IB]
   - TF-evaluation equals python-evaluation equals sympy evaluation
 - BackPropagation through nodes, rank value for whole tree 
+- generell
+  - get it running
+  - remove TODOs
+  - remove sfeh:...
 - separate monitoring class
 - introduce NN in alpha-tree, at well-mutable nodes
-- evaluate one very large TF-graph containing the whole population
+- evaluate one very large graph (TF?) containing the whole population
+- use sympy.count_ops() to count operators
 - parallelisation
+- evolve-operatoren: werte runden, runden einbauen,
+- test-cases with notation, docstring
+- numba.pydata.org https://www.youtube.com/watch?v=x58W9A2lnQc
+- If no float-symbols found, return (1) true or (2) an operator? 
+- sympy exprtools abchecken
+- sfeh:discussion especially with mc: there can be more than one pareto entry with the same parsimony/fitness!
+- build trees like sympy.factor() structure?
+- Division-multiplicator node as non-len() chain input?
+- print(sympy.parsing.sympy_parser.transformations)
+- "Ban" trees, if they are too dominant
+- Different print types for trees, also visualization
+- make categorical options categorical. For mountain car, it is scalable, but a categorical options (aka a 3 nodes last layer) should be an option
+- prevent the LUT of becoming too big; make a counter whenever a result is hit and delete the smallest in each cycle. Reset the numbers aswell.
+- pseudo-backpropagation: ALL functions in a tree can be represented as a neural network. E. g. if-function is two input variables, a softmax layer and a result layer. replace a tree with a NN in the next step and train it.
+- sympy facttor (up/downfactor), so it adds stuff together, expand(), 
+- user-functions (=nodes with n inputs, given by a user)
+- sfeh:idea sympy.nsimplify('3.333333*x+0.522', tolerance=0.1, rational=True) for
+  - Terminals 
+  - Even whole formulae!
+  - Especially! Powers x**y
+- Introduce rounding/clipping for many more functions
+- adjust tournament_size to general fitness skew
+- adding the pareto-trees visualized to the paretofront plot
+- mutate chained operators specifically
 
-Always check
-- xxxxx
+### Semi-interesting
+
+- introduce integer
+- trees with one node just very rarely?
+- https://deap.readthedocs.io/en/master/api/tools.html
+- continuous evolution (with mp), select from 3 and also replace 3
+- Move all benchmarks, experiments, etc., to another project
+
+## Always check for notes in code
+- xxx
 - sfeh
 - asd
+- delete
+- debug this / debug me
+- check, if every sympy-to-tree reconstruction works
+
+## Compared to DEAP
+- DEAP has non-Programming options (altering arrays). Plagih is only for GP.
+- complexity node-count based, instead of depth-baased only.
+- trees that are not lists
 
 ## crazy ideas
 - evolution+ranking of node evolutions
+- GP individuals for evolution process
 
 ## Checks for when you have altered code
-- Functions need to be in ops_dict
+- Functions need to be in ops_dict (and some more)
+- reconstruction of trees
 
 Attention: If you want to write your own code, look for important developer informations in the section below!
 
 ## name ideas
-- AnnaGP
 - FamGP (Familiar GP)
 - plagih: plausible genetic improvements
   ...is a genetic programming framework. 
@@ -45,6 +102,13 @@ Attention: If you want to write your own code, look for important developer info
 - Genetic Backpropagation
 - transforming the whole population into one graph, bottom to top. Do something with the "reversed" tree
 
+More ideas:
+- EM algo gp/nn process
+  Step 1: Train a gp process to replace a NN.
+  Step 2: Allow the pareto candidates as input to a nn, making the network smaller
+- propagate matrizes of gradual improvements
+
+Matrix
 
 ## Intro
 
@@ -60,23 +124,14 @@ Main features:
 - (example available)
 
 
-## Python 3.8 packages
+## Python 3.9 Anaconda packages
 
-I am using Anaconda. Some packages are only available in pip though.
-save this as requirements
+All packages: `matplotlib pathlib sympy tensorflow pandas sympy scipy pyYAML scikit-learn scipy gym apted tikzplotlib`
 
-Conda packages:
-matplotlib
-pathlib
-sympy
-apted
-tensorflow
-tensorflow-gpu
-sklearn
-pandas
-sympy
-tikzplotlib (optional)
-gym (optional)
+`conda install -c matplotlib pathlib sympy tensorflow pandas sympy scipy pyYAML`
+
+`pip install scikit-learn scipy gym apted tikzplotlib`
+
 
 non-conda packages:
 apted
@@ -139,12 +194,13 @@ Operators get randomly picked, so adding some more often will change the result.
 
 Possible operators are:
 
-|Group|examples|
-|:------------------ |:-----------------|
-|Mathematical operators|`+`, `-`, `*`, `/`, `**`, `abs`, `sign`, `Square`, `sqrt`, `log`, `log1p`, `cos`, `sin`, `tan`, `acos`, `asin`, `atan`, `Mini`, `Maxi`|
-|Logical operators | `Andb`, `Orb`, `not`|
-|Comparative operators|`==`, `!=`, `<`, `<=`, `>`, `>=`|
-|Conditional (If-then-else)|`Ifte`|
+| Group                      | examples                                                                                                                                         |
+|:---------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------|
+| Mathematical operators     | `+`, `-`, `*`, `/`, `**`, `abs`, `sign`, `Square`, `sqrt`, `log`, `log1p`, `cos`, `sin`, `tan`, `acos`, `asin`, `atan`, `BinaryMin`, `BinaryMax` |
+| Logical operators          | `BinaryAnd`, `BinaryOr`, `not`                                                                                                                   |
+| Comparative operators      | `==`, `!=`, `<`, `<=`, `>`, `>=`                                                                                                                 |
+|                            |                                                                                                                                                  |
+| Conditional (If-then-else) | `Ifte`                                                                                                                                           |
 
 
 ### How to: tree_labels.csv
@@ -163,7 +219,7 @@ Possible operators are:
 - `trees/#all_trees.tex` - A Latex file with all computational trees visualized
 
 
-## ====Everything from here is garbage====
+## ====Everything below here is garbage====
 
 ## ideas for names
 - The Elves and the Shoemaker
@@ -176,9 +232,20 @@ Possible operators are:
     - Tensorflow-evaluation (offline)
     - strongly typed
 
+### Tree architecture
+The evolution process uses the Node/Fintree class, but there are 4 tree versions which need conversion.
+1. Loadable trees (nested List, E.g. ['+':fix, ['a'], ['b']])
+2. The tree class
+3. Sympy-trees
+4. Tensorflow graphs
+
+Sympy trees need a lot of conversion options.
+
 ## Description
 
-The Genetic-Programming Framework is primarily intended to extend a human written program to achieve the same performance as a (better) NN solution. Decisive for the "explainability" is the number of changes to the reference program that are necessary to get to the target solution ("tree_edit_distance").    
+The Genetic-Programming Framework is primarily intended to extend a human written program to achieve the same 
+performance as a (better) NN solution. Decisive for the "explainability" is the number of changes to the reference 
+program that are necessary to get to the target solution ("tree_edit_distance").    
 
 PLAGIH stands for PLAusible Genetic Improvements to Heuristics. The name will probably be changed soon.
 This is a Project resulting from my Masters Thesis (with yet unknown name). 
@@ -188,11 +255,6 @@ plausible addition to the original program which the developer does understand.
 
 
 ### All included Plagih stuff
-
-## Run Plagih
-Required packages: `tensorflow` `tensorflow-gpu` `numpy` `sympy` `Apted` `pickle`
-
-Optional: `tikzplotlib` (For additional Latex-graph)
 
 
 ## Developer information
@@ -204,4 +266,29 @@ Optional: `tikzplotlib` (For additional Latex-graph)
 The plagih_gp run depends on the following modules:
 - a loop, in which new generations of evolved trees are created
 - trees, which are a recursive node-structure, that allow evolution
-- 
+
+
+# Biographie
+Große Weltveränderer stehen auf jeden Fall für Veränderung
+
+
+- real vs. symbolisch  (Bill Gates vs. Mutter Theresa)
+  - Namenlose Unternehmer  (Hätte auch jeder andere machen können)
+  - Bill Gates
+  - Musk  ("Herausragend")
+- "Großer Sprung überwunden"
+  - Rückschlag
+  - Zero-to-Hero
+  - Besonderheit
+- Extrempunkte
+- Extremlösungen
+
+# whathappened
+
+```
+WHATTPPENDED SFEH
+	old: [Sign, [Square, [Mul, [cartPos], [cartVel]]]]
+	sym: [Sign, [Mul, [Square, [cartPos]], [Square, [cartVel]]]]
+	old: sign(((cartPos * cartVel))**2)
+	sym: sign(((cartPos)**2 * (cartVel)**2))
+	sym: Node(Sign, [Node(Square, [Node(Mul, [Node(Symbol, ["cartPos"]), Node(Symbol, ["cartVel"])])])])```

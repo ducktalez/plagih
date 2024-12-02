@@ -32,7 +32,7 @@ SOFTWARE.
 '''
 
 
-class IDS(object):
+class IDS:
     '''
     Lightweight python implementation of the industrial benchmark
     Uses the same standard settings as in src/main/ressources/simTest.properties 

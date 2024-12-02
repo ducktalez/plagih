@@ -104,7 +104,7 @@ def mtc_heatmap_helper(agent, num_splits, n, dummy=None):
     if dummy == 1:
         result = np.vectorize(lambda x: np.nan if x == 0 else 1)(result)
     else:  # either dummy=2 OR no dummy
-        result = np.vectorize(lambda x: np.nan if x == 0 else x)(result)  # sfeh: envstate_normalize values?
+        result = np.vectorize(lambda x: np.nan if x == 0 else x)(result)
 
     return x_linspace, y_linspace, result
 
@@ -199,7 +199,7 @@ def mtc_play(agent, render=False, n=1):
             fail_sum += 1
     reward_average = reward_sum / n
     env.close()
-    print(f'asd {np.average(list_episode_rewards)}')
+    print(f'Average reward: {np.average(list_episode_rewards)}')
 
     return reward_average, fail_sum, list_episode_rewards
 
@@ -303,6 +303,7 @@ def eval_agent_list(agent_list, goal_agent, n=100, dir_save=Path('img/')):
     plt.bar(x, y)
     # names = [x[0] for x in agent_performance]; plt.xticks(x, names)
     plt.savefig(dir_save / 'agent_perf.pdf')
+    plt.close('all')
 
     summary_text = '\n'.join([f'Tree {x[0]} has real average reward {x[1]} and failed {x[2]} times.' for x in agent_performance])
     with (dir_save / 'summary.txt').open('w') as file:
@@ -310,9 +311,6 @@ def eval_agent_list(agent_list, goal_agent, n=100, dir_save=Path('img/')):
 
 
 # def auto_evaluate_run_end(rootdir, sarsa_agent, n=100):
-#     """
-#     asd
-#     """
 #
 #     class DummyMcAgent:
 #

@@ -1,2 +1,2 @@
-label_list,Ifte, Andb, 2, 0, <=, <=, Mini, cartVel, cartVel, +, +, -, *, 0.7,*, 0.03, *, 0.008, -0.07, **,-0.09, **, 0.3, **, +, 2, +, 2, +, 4, cartPos, 0.38, cartPos, 0.25,cartPos, 0.9
+label_list,Ifte, Andb, 2, 0, <=, <=, BinaryMin, cartVel, cartVel, +, +, -, *, 0.7,*, 0.03, *, 0.008, -0.07, **,-0.09, **, 0.3, **, +, 2, +, 2, +, 4, cartPos, 0.38, cartPos, 0.25,cartPos, 0.9
 modify_list,0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1

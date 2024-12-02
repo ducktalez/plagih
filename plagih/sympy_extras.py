@@ -1,69 +1,15 @@
 """
-sfeh: I think we should get rid of sympy in the long term. A lot of problems are related to sympy.
-sfeh:open this is probably the reason for the capitalized class names in sympy: return eval(self, a)
+THIS CODE IS NOT USED
 
-This class enrichens the python-core 'sympy'.
-Sympy is used to reduce the functions to their most basic form.
-E. g., it reduces '1+1+a' to 'a+2' and thus saves much computation power.
-
-- implementing missing functions in sympify, e. g. 'if a then b else c'.
-- All number-related functions must have set
-    is_real = True
-    otherwise: '1 < Maxi(2, Ifte(1 < a, 1, 1))' will crash. (< operators only work on non-complex - aka real numbers)
-    check for is_number if required.
-
-- Classes must currently have the exact same name as their occurance (Ifte -> Ifte, not ifte or so)
-    This is because when None is returned, the class name gets replaced at the function. could be solved, but why though :P
-
-Useful information:
-- These variables are set for every sympy object and thus can be tested, e.g. a.is_Boolean
-    # To be overridden with True in the appropriate subclasses
-    is_number = False
-    is_Atom = False
-    is_Symbol = False
-    is_symbol = False
-    is_Indexed = False
-    is_Dummy = False
-    is_Wild = False
-    is_Function = False
-    is_Add = False
-    is_Mul = False
-    is_Pow = False
-    is_Number = False
-    is_Float = False
-    is_Rational = False
-    is_Integer = False
-    is_NumberSymbol = False
-    is_Order = False
-    is_Derivative = False
-    is_Piecewise = False
-    is_Poly = False
-    is_AlgebraicNumber = False
-    is_Relational = False
-    is_Equality = False
-    is_Boolean = False
-    is_Not = False
-    is_Matrix = False
-    is_Vector = False
-    is_Point = False
-    is_MatAdd = False
-    is_MatMul = False
-
-    #sfeh discussion: sympify hat option rational=True, was aus Zahlen Brüche macht
-
-    #sfeh:open combine the nodes with the sympy shizzle
-
-    sfeh xxx inpput variables as locals? Provide information such as real, integer, positive, range/interval?
+It is helpful for debugging sympification, when it does not work.
+However, all classes were replaced in the main code
 """
 import re
 
 from sympy import Function, sympify, symbols, simplify  # , unify
 
-# from sympy.core.numbers import ComplexInfinity
-from plagih.util import DEBUG_DUMMY
 
-
-class Ifte(Function):
+class SyIfte(Function):
     """
     my_sympify('Ifte(a, b, c)')
     """
@@ -82,7 +28,7 @@ class Ifte(Function):
         return eval(self, *args)
 
 
-class Mini(Function):
+class SyMini(Function):
     """
     Minimum function with arity-2.
     min() does not work (for now), as nested min() get accumulated, which leads to problems creating the tf-graph
@@ -106,7 +52,7 @@ class Mini(Function):
         return eval(self, a, b)
 
 
-class Maxi(Function):
+class SyMaxi(Function):
     """
     """
     nargs = 2
@@ -128,7 +74,7 @@ class Maxi(Function):
         return eval(self, a, b)
 
 
-class Andb(Function):
+class SyAndb(Function):
     """
     """
     nargs = 2
@@ -138,7 +84,6 @@ class Andb(Function):
     def eval(cls, a, b):
 
         # if (a == True or a == False) and (b == True or b == False):
-        # sfeh xxx
         if a.is_Boolean and b.is_Boolean:
             return a and b
         elif a == b:
@@ -150,7 +95,7 @@ class Andb(Function):
         return eval(self, a, b)
 
 
-class Orb(Function):
+class SyOrb(Function):
     """
     """
     nargs = 2
@@ -183,7 +128,7 @@ class Orb(Function):
     #     return eval(a or b)
 
 
-class Notb(Function):
+class SyNotb(Function):
     """
     Not (boolean)
     Problem was:
@@ -195,7 +140,7 @@ class Notb(Function):
 
     @classmethod
     def eval(cls, a):
-        if sympify(a).is_Boolean:  # sfeh sympify.is_xxx here seems dumb
+        if sympify(a).is_Boolean:  # sfeh sympify.is_... here is dumb
             return not a
         else:
             return None
@@ -204,7 +149,7 @@ class Notb(Function):
         return eval(self, a)
 
 
-class Square(Function):
+class SySquare(Function):
     """
 
     """
@@ -224,7 +169,7 @@ class Square(Function):
         return eval(self, a)
 
 
-class Usub(Function):
+class SyUsub(Function):
     """
     """
     nargs = 1
@@ -239,7 +184,7 @@ class Usub(Function):
         return eval(self, a)
 
 
-class Round(Function):
+class SyRound(Function):
     """
     """
     nargs = 1
@@ -257,7 +202,7 @@ class Round(Function):
         return eval(self, a)
 
 
-class SignX(Function):
+class SySignX(Function):
     """
     """
     nargs = 1
@@ -289,15 +234,16 @@ def sympy_symbol_defaults(name_list):
 
 
 # attention: exactly same capitals/letters! (gets replaced)
-local_sympy_dict = {'Ifte': Ifte,
-                    'Mini': Mini,
-                    'Maxi': Maxi,
-                    'Andb': Andb,
-                    'Orb': Orb,
-                    'Notb': Notb,
-                    'Square': Square,
-                    'Usub': Usub,
-                    'Round': Round}
+local_sympy_dict = {'Ifte': SyIfte,
+                    'Mini': SyMini,
+                    'Maxi': SyMaxi,
+                    'Andb': SyAndb,
+                    'Orb': SyOrb,
+                    'Notb': SyNotb,
+                    'Square': SySquare,
+                    'Usub': SyUsub,
+                    'Round': SyRound,
+                    'SignX': SySignX}
 
 
 def plagih_sympify(expr, eval_locals=None):
@@ -317,7 +263,7 @@ def plagih_sympify(expr, eval_locals=None):
     try:
         # return sympify(sympify(function_string, locals=local_sympy_dict))
         expr = sympify(expr, locals=local_sympy_dict)  # rational=True?
-        expr = sympify(expr, locals=local_sympy_dict)  # discussion
+        expr = sympify(expr, locals=local_sympy_dict)  # ...was sympy bug, delete this line and test if works now
         return expr
     except Exception as ex:
         return 'nan'  # 'nan' always evaluates to nan. ALl nan bugs should be solved.
@@ -368,7 +314,7 @@ if __name__ == "__main__":
              '1 < Maxi(2, Ifte(1 < a, 1, 1))']
 
     expr = '(((0.326675 * Consumption_2) - Shift_9) + (Ifte((-Shift_9 < Consumption_5), Shift_7, Ifte((Square(Gain_6) < Maxi(Fatigue_2, Ifte((Shift_9 < Shift_4), -Gain_3, Gain_5))), Shift_9, Shift_4))))'
-    # expr = '-Consumption_0*sign(re(asdW**2)) - 0.004073'
+    # expr = '-Consumption_0*sign(re(W**2)) - 0.004073'
     # expr = 'Mini(-1 - 1 + sqrt(1)'
     # expr = 'Maxi(2.202197, (Abs(cartVel) - sqrt(cartVel)))'
     # expr = '(vel + vel)'

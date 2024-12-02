@@ -1,20 +1,13 @@
 # coding=utf-8
 import sys
-from pathlib import Path
 import argparse
 from benchmarks.ib.ib_eval_agents import eval_combined_agents
-# from benchmarks.ib.ib_eval_agents import *
 import itertools
 
 sys.path.append('../../')
 sys.path.insert(1, '../benchnmarks/ib/')
-import os
 from plagih.plagih_gp_base_class_xai import *
-import yaml
 import multiprocessing as mp
-import pickle
-import numpy as np
-import matplotlib.pyplot as plt
 from plagih.util import *
 
 
@@ -24,7 +17,7 @@ funny_limits = (-15000, -4000)
 
 def mp_evall(arow):
     """
-    Use mp (multiprocessing) to evaluate parallelized
+    Use mp (multiprocessing) to paralleliz
     """
     parsims = arow['parsims']
     regress_sum = arow['regress_sum']
@@ -37,7 +30,12 @@ def mp_evall(arow):
         ibx_safe = eval_combined_agents(codes, complete=False)
         ibx_r50 = eval_combined_agents(codes, randomize=50, repeat_avg=10)
         ibx_safe_r50 = eval_combined_agents(codes, complete=False, randomize=50, repeat_avg=10)
-        print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {regress_sum:.4f}. \t({parsims})\tcomplete: {ibx:0.1f} \tsafe: {ibx_safe:0.1f} \tall_r50: {ibx_r50:0.1f} \tsafe_r50: {ibx_safe_r50:0.1f}')
+        print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {regress_sum:.4f}. '
+              f'\t({parsims})'
+              f'\tcomplete: {ibx:0.1f} '
+              f'\tsafe: {ibx_safe:0.1f} '
+              f'\tall_r50: {ibx_r50:0.1f} '
+              f'\tsafe_r50: {ibx_safe_r50:0.1f}')
         return [lut_hash, ibx, ibx_safe, ibx_r50, ibx_safe_r50]
     except Exception as ex:
         print(f'WARNING: Something failed in the evaluation process: {ex}')
@@ -73,11 +71,11 @@ def eval_and_lut(eval_list, parsim_MAX, parsim_1MAX, lut_file, mp_cpu_MAX):
                 open_combinations.append(arow)
 
     mp.Process()
-    mp_cores = min(mp.cpu_count(), mp_cpu_MAX)
+    # mp_cores = min(mp.cpu_count(), mp_cpu_MAX)
 
-    print(f'Using {mp_cores} for mp (available: {mp.cpu_count()})')
-    with mp.Pool(mp_cores) as p:
-        mp_result = p.map(mp_evall, open_combinations)
+    # print(f'Using {mp_cores} for mp (available: {mp.cpu_count()})')
+    # with mp.Pool(mp_cores) as p:
+    #     mp_result = p.map(mp_evall, open_combinations)
 
     mp_result_dict = {a: [b, c, d, e] for a, b, c, d, e in mp_result}  # [lut_hash, experiment, experiment_safe, experiment_r50, experiment_safe_r50]
     lut.update(mp_result_dict)
@@ -128,7 +126,6 @@ def plot_best_prediction(rootdir_eval, parsims, combined_all_p, lut_file, parsim
 
         with Path.open(rootdir_eval / 'best_regrerr.yaml', 'w') as file:
             _ = yaml.dump(bestregr_data, file, default_flow_style=False, sort_keys=False)
-    # yaml_dump(rootdir_eval / 'best_regrerr.yaml', [' '.join(str(xx) for xx in x['parsims']) for x in best_regrerr_dict])  # sfeh delete this?
 
     """
     okay
@@ -285,7 +282,7 @@ def merge_paretos(path_main):
             xx, yy = np.array(tuples).T
             ax.step(xx, yy, linestyle='dotted', marker='.', label=f'action {ii}', where='post')
 
-        ax.set(xlabel='complexity', ylabel='regression error', xlim=(0, None), ylim=(0, None))  # 1.05  # top * 1.05 for better style
+        ax.set(xlabel='complexity', ylabel='regression error', xlim=(0, None), ylim=(0, None))  # top * 1.05 (style)
         ax.legend(loc='lower left')
 
         path_paretocombined = path_main / f'pareto_combined.pdf'

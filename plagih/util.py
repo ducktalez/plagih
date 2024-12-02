@@ -1,25 +1,51 @@
 import pickle
+import re
+import shutil
 import time
 
 import yaml
 from pathlib import Path
-
-from distutils.spawn import find_executable
-
+from matplotlib import pyplot as plt
+# from distutils.spawn import find_executable
+import numpy as np
 
 DEBUG_DUMMY = True  # Use this to find codeblocks that are just interesting during development
 TEST_DUMMY = True  # sfeh: actually use this later! check trees, check if all ops are usable,
+DELETE_ME = True  # sfeh:delete this when development phase is over
+PRINT_DUMMY = 'wwwaaagggiiifff'  # noqa: dummy for print-policy wwaaaggggggiiifff
+FLOAT_PRECISION = 3
+PLOTS_INTERVAL = 1
+BACKUP_INTERVAL = 10
+CHAINED_VERION = True  # sfeh:not here?
+CHAIN_implement = CHAINED_VERION  # used as placeholder for implementation-tasks
+TREE_MIN_PARSIMONY = 3
+
+
+# # GP Evolution
+# period = {'gen_plots': 5, 'gen_save': 5}
+# mp_cores = 1
+
+
+class TreeSizeError(Exception):
+    """Non-important, but errors that often come up, e.g.
+    - tree is too small after simplification
+    - Tree has too many nodes. This should be covered somewhere though!
+    discuss:subclassing value-error?"""
+    pass
+
+
+class SympySimplificationError(Exception):
+    """Non-important, but errors that often come up
+    usually, when imaginary numbers accidentally come up in an expression"""
+    pass
 
 
 class BColors:
-    HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKGREEN = '\033[92m'
     WARNING = '\033[93m'
+    HEADER = '\033[95m'
     FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
     BLACK = '\033[30m'
     RED = '\033[31m'
     GREEN = '\033[32m'
@@ -28,74 +54,141 @@ class BColors:
     MAGENTA = '\033[35m'
     CYAN = '\033[36m'
     WHITE = '\033[37m'
-    RESET = '\033[39m'
-
     BLACK2 = '\033[40m'
     RED2 = '\033[41m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    UNDERLINE_RESET = '\033[0m'
+    ITALIC = '\x1B[3m'
+    ITALIC_RESET = '\x1B[0m'
+    RESET_COLOR = '\033[39m'
+    RESET = '\033[0m'
+
+    # Reset
+    Color_Off = '\033[0m'  # Text Reset
+
+    # Regular Colors
+    Black = '\033[0;30m'  # Black
+    Red = '\033[0;31m'  # Red
+    Cyan = '\033[0;36m'  # Cyan
+    White = '\033[0;37m'  # White
+
+    # Bold
+    BBlack = '\033[1;30m'  # Black
+    BRed = '\033[1;31m'  # Red
+    BCyan = '\033[1;36m'  # Cyan
+    BWhite = '\033[1;37m'  # White
+
+    # Underline
+    UBlack = '\033[4;30m'  # Black
+    URed = '\033[4;31m'  # Red
+    UCyan = '\033[4;36m'  # Cyan
+    UWhite = '\033[4;37m'  # White
+
+    # Background
+    On_Black = '\033[40m'  # Black
+    On_Red = '\033[41m'  # Red
+    On_Cyan = '\033[46m'  # Cyan
+    On_White = '\033[47m'  # White
+
+    # High Intensty
+    IBlack = '\033[0;90m'  # Black
+    IRed = '\033[0;91m'  # Red
+    ICyan = '\033[0;96m'  # Cyan
+    IWhite = '\033[0;97m'  # White
+
+    # Bold High Intensty
+    BIBlack = '\033[1;90m'  # Black
+    BIRed = '\033[1;91m'  # Red
+    BICyan = '\033[1;96m'  # Cyan
+    BIWhite = '\033[1;97m'  # White
+
+    # High Intensty backgrounds
+    On_IBlack = '\033[0;100m'  # Black
+    On_IRed = '\033[0;101m'  # Red
+    On_ICyan = '\033[0;106m'  # Cyan
+    On_IWhite = '\033[0;107m'  # White
+
+
+def rnd_choice(a):
+    return np.random.choice(a)
+
+
+def xt_self(xtype):
+    return xtype[1]
+
+
+def xt_childs(xtype):
+    return xtype[0]
+
+
+def get_subclasses(cls):
+    for subclass in cls.__subclasses__():
+        yield from get_subclasses(subclass)
+        yield subclass
 
 
 def pickle_dump(path, data):
-    """
-
-    """
+    """Saving python data (probably run) in a very small pickle file"""
     path = path_make_dir(path)
 
     with Path.open(path, 'wb') as file:
         pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
 
-    printez('f', f'Backup: {path.as_posix()}')
+    printez('f', f'Backup: {path}')  # .as_posix()
 
 
-def yaml_dump(path, data, print_type=None, default_flow_style=True):
-    """
-    saves prepared plagih data to pickle file
-    - default_flow_style=False for dumping in a block style
-    """
+def yaml_dump(path, data, default_flow_style=True):
+    """saves data to yaml file (better than xml/Json)
+    - default_flow_style=False for dumping in a block style"""
     path = path_make_dir(path)
     with Path.open(path, 'w') as file:
         _ = yaml.dump(data, file, default_flow_style=default_flow_style, sort_keys=False)
-        printez('ff', f'{path.as_posix()}', print_type=print_type)
+        printez('ff', f'{path}')  # .as_posix()
         return
 
 
-def print_warning(message_type, text, print_type=None):
+def string_remove_trailing_zeroes(x):
+    """
+    2.00000000000 -> 2
+    0.20000000000 -> 0.2
+    :param x:
+    :return:
+    """
+    x = re.sub(r'\.0+$|0+$', '', x)
+    return x
+
+
+def print_warning(msg_type, text):
     """
     Printing warnings
     """
     try:
-        if print_type:
-            if message_type not in print_type:
-                return
-        if message_type == 'w':
-            print(f'{BColors.WARNING}Warning ({message_type}): {text}{BColors.RESET}')  # completely yellow
+        if msg_type not in PRINT_DUMMY:
+            return
+        if 'w' in msg_type:
+            print(f'{BColors.WARNING}Warning ({msg_type}): {text}{BColors.RESET_COLOR}')  # all yellow
         else:
-            print(f'{BColors.WARNING}Warning ({message_type}): {text}{BColors.RESET}')  # only "Warning" yellow
+            print(f'{BColors.WARNING}Warning ({msg_type}):{BColors.RESET_COLOR} {text}')  # only "Warning" yellow
     except Exception as ex:
-        print_warning('w', f'Could not print warning: {ex}', print_type=print_type)
+        print_warning('w', f'Could not print warning: {ex}')
     return
 
 
 def path_make_dir(p: Path):
     """
-    sfehfun
+    Creates the folder and files according to run specified through naming (E.g. MTC200_MSE_scratch)
     """
     folder = p if len(p.suffix) == 0 else p.parent
     folder.mkdir(parents=True, exist_ok=True)
     return p
 
 
-def file_dump(path, data, verbose='SKIPsfeh', print_type=None):
-    path_make_dir(path)
-    with Path.open(path, 'w') as file:
-        file.write(data)
-        printez(verbose, f'{path.as_posix()}', print_type=print_type)
-
-
 pyplot_size = (3.6, 2.7)  # default: (6.4, 4.8) S: (4, 3)  XXL: (16, 9)  M: (4.8, 3.6) (4.4, 3.3)
 plplot_size_up = (3.6, 3.6)
 
 pyplot_rc_tex = {'figure.autolayout': True,
-                 'text.usetex': find_executable('latex') or False,  # sfeh:debug check if latex is available
+                 'text.usetex': shutil.which('latex') is not None,  # check if 'latex' is available
                  'backend': 'pgf',
                  'figure.figsize': pyplot_size,
                  'axes.labelpad': 0.5,  # padding axis-ticks to axis title
@@ -152,12 +245,6 @@ pyplot_rc_two_column = {'figure.autolayout': True,
 
 rc_pyplot_size = {'figure.figsize': pyplot_size}
 # ['text.latex.preamble'=r"\usepackage{lmodern}"]
-
-# pyplot_rc_options = {'font.family': 'serif',
-#                      'font.serif': ['Times', 'Palatino', 'New Century Schoolbook', 'Bookman', 'Computer Modern Roman'],
-#                      'font.sans-serif': ['Helvetica', 'Avant Garde', 'Computer Modern Sans serif'],
-#                      'font.cursive': ['Zapf Chancery'],
-#                      'font.monospace': ['Courier', 'Computer Modern Typewriter']}
 
 # def plot_rc_default(self):
 #     rc('font', weight='bold')    # bold fonts are easier to see
@@ -229,45 +316,40 @@ with plt.rc_context(rc=rc_params):
 """
 
 
-def print_blue(txt):
-    print(f"{BColors.CYAN}{txt}{BColors.RESET}")
-    return
+def blue_string(txt):
+    """Was print_blue()"""
+    return f"{BColors.CYAN}{txt}{BColors.RESET_COLOR}"
 
 
-def print_e(txt):
+def print_caution(txt):
     """
     Printing errors that are not worth stopping by raising an exception
     BColors.FAIL
     """
-    print(f'{BColors.RED}ERROR!\n{BColors.WARNING}{txt}{BColors.RESET}\n')
+    print(f'{BColors.RED}CAUTION! {BColors.WARNING}{txt}{BColors.RESET_COLOR}')
 
 
 def pickle_load(path: Path):
-    """
-    loads a pickle file (usually .p or .pkl)
-    """
+    """loads a pickle file (usually .p or .pkl)"""
     with Path.open(path, 'rb') as file:
         pickle_data = pickle.load(file)
 
     return pickle_data
 
 
-def printez(message_type, text, print_type=None):
-    """
-    giving prints colours, accessable from everywhere
-    """
-    if print_type:
-        if message_type not in print_type:
-            return
+def printez(message_type, text):
+    """giving prints colours, accessable from everywhere"""
+    if message_type not in PRINT_DUMMY:
+        return
 
     if 'i' in message_type:
-        print(f'{BColors.CYAN}Info: {text}{BColors.RESET}')
+        print(f'{BColors.CYAN}Info: {text}{BColors.RESET_COLOR}')
     elif 'f' in message_type:
-        print(f'{BColors.MAGENTA}Writing File: {text}{BColors.RESET}{BColors.RESET}')
+        print(f'{BColors.MAGENTA}Writing File: {text}{BColors.RESET_COLOR}{BColors.RESET_COLOR}')
     elif 'a' in message_type:
-        print(f'{BColors.GREEN}{text}{BColors.RESET}')  # Paretofront:
+        print(f'{BColors.GREEN}{text}{BColors.RESET_COLOR}')  # Paretofront:
     elif 'w' in message_type:
-        print_warning(message_type, text, print_type=print_type)
+        print_warning(message_type, text)
     elif 'g' in message_type:
         time_now = time.strftime("%d.%m %H:%M", time.localtime())
         print(f'[{time_now}] {text}')
@@ -278,10 +360,8 @@ def printez(message_type, text, print_type=None):
 
 
 def yaml_load(path: Path):
-    """
-    .yaml-file loader (saves two lines that I had to look up all the time)
-    Especially the Loader has to be specified.
-    """
+    """.yaml-file loader (saves two lines that I had to look up all the time)
+    Especially the Loader has to be specified."""
     with Path.open(path, 'r') as file:
         loaded_yaml = yaml.load(file, Loader=yaml.FullLoader)  # yaml.safe_load sfeh?
 
@@ -292,8 +372,9 @@ if __name__ == '__main__':
     print(f'Testing the plot style')
     import matplotlib.pyplot as plt
     import numpy as np
+
     x = range(10)
-    y = np.sin(np.arange(10)/10) + np.arange(10)/10
+    y = np.sin(np.arange(10) / 10) + np.arange(10) / 10
     with plt.rc_context(rc=pyplot_rc_two_column):
         fig, ax = plt.subplots()
         ax.plot(x, y, marker='x', label='random values (idk)')

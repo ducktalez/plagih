@@ -12,7 +12,6 @@ def plot_approach(episodes, reward_sample_interval, episode_rewards1, rewards1_a
     plt.title('Sampled Reward vs Episodes')
     plt.ylim(-200, -50)
     plt.savefig(f'MTC-{approach}-{episodes}-{reward_sample_interval}.pdf')
-    plt.show()
 
     plt.plot(reward_sample_interval * (np.arange(len(episode_rewards1)) + 1), rewards1_avg, label=str(approach))
     plt.legend()
@@ -22,7 +21,6 @@ def plot_approach(episodes, reward_sample_interval, episode_rewards1, rewards1_a
     plt.title('Average Reward vs Episodes')
     plt.ylim(-200, -50)
     plt.savefig(f'MTC-{approach}-{episodes}-{reward_sample_interval}-average.pdf')
-    plt.show()
 
     plt.close('all')
     return

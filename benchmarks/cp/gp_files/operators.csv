@@ -11,7 +11,7 @@ operator, arity
 ==,2
 Andb,2
 Orb,2
-Mini,2
+BinaryMin,2
 Maxi,2
 Ifte,3
 sin,1

@@ -6,7 +6,7 @@ The main class of a gp run. It holds the following functionalities
 """
 from collections import deque
 
-from plagih.fitness_kernel import eval_predict
+from plagih.fitness_kernel import eval_predict_df
 from plagih.monitoring import plot_performance
 from plagih.paretofront import *
 
@@ -45,7 +45,7 @@ d_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, 
 # The chained version is the regular version updated with the following operators
 d_sym2node_chain = d_sym2node | {sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChain, sympy.Max: MaxChain,
                                  sympy.And: AndChain, sympy.Or: OrChain, sympy.Piecewise: Piecewise,
-                                 sympy.functions.elementary.piecewise.ExprCondPair: ExprCondPair}
+                                 ExprCondPair: ExprCondPair_Dummy}
 
 
 @dataclass
@@ -90,7 +90,7 @@ class Node:
     #         except AttributeError as ex:
     #             typus_str = self.childs[0]  # AttributeError("'bool' object has no attribute 'evalf'")
     #     else:
-    #         childstr = ', '.join([cc.repr_as_list() for cc in self.childs])
+    #         childstr = ', '.join([cc.repr_as_list() for cc in self.get_childs()])
     #         typus_str = f'{typus_str}, {childstr}'
     #
     #     return f"[{typus_str}]"
@@ -102,7 +102,7 @@ class Node:
 
         if self.childs:
             if issubclass(self.typus, BaseOperator):
-                childstr = ', '.join([cc.str_as_list() for cc in self.childs])
+                childstr = ', '.join([cc.str_as_list() for cc in self.get_childs()])
                 typus_str = f'{typus_str}, {childstr}'
             else:
                 try:
@@ -177,7 +177,7 @@ class Node:
             return r
 
         elif issubclass(self.typus, (Round, PowRounded)):
-            _cs = [cc.get_sympy_expr() for cc in self.childs]
+            _cs = [cc.get_sympy_expr() for cc in self.get_childs()]
             _sym = self.typus.get_sym()
             # _sym = Round_Dummy
             _cs = _sym(*_cs)  # sfeh:debug2024
@@ -188,11 +188,11 @@ class Node:
             _cs = self.childs
             _cs = [(cc.childs[0], cc.childs[1]) for cc in _cs]
             _cs = [(cc[0].get_sympy_expr(), cc[1].get_sympy_expr()) for cc in _cs]
-            _cs = [sympy.functions.elementary.piecewise.ExprCondPair(cc[0], cc[1]) for cc in _cs]
+            _cs = [ExprCondPair(cc[0], cc[1]) for cc in _cs]
             _cs = _sym(*_cs)
             return _cs
         else:
-            _cs = [cc.get_sympy_expr() for cc in self.childs]
+            _cs = [cc.get_sympy_expr() for cc in self.get_childs()]
             _sym = self.typus.get_sym()
             try:
                 r = _sym(*_cs)  # noqa (_sym is definitely assigned)
@@ -200,24 +200,24 @@ class Node:
                 raise SympySimplificationError(ex)
             return r
 
-    def get_expr_raw_fstring(self):
-        """Add (1, a)
-        self.typus.__name__ gets the class name
-        """
-        if self.is_term():
-            fex = f'{self.childs[0]}'
-            fex = string_remove_trailing_zeroes(fex)
-            return fex
-        else:
-            fex = [cc.get_expr_raw_fstring() for cc in self.childs]
-            fex = ', '.join(fex)
-            if issubclass(self.typus, OperatorArity):
-                fex = f'{self.typus.showme}({fex})'
-            elif self.is_ExprCdPair():
-                fex = f'({fex})'
-            else:
-                fex = f'{self.typus.showme}({fex})'
-        return f'{fex}'
+    # def get_expr_raw_fstring(self):
+    #     """Add (1, a)
+    #     self.typus.__name__ gets the class name
+    #     """
+    #     if self.is_term():
+    #         fex = f'{self.childs[0]}'
+    #         fex = string_remove_trailing_zeroes(fex)
+    #         return fex
+    #     else:
+    #         fex = [cc.get_expr_raw_fstring() for cc in self.get_childs()]
+    #         fex = ', '.join(fex)
+    #         if issubclass(self.typus, OperatorArity):
+    #             fex = f'{self.typus.showme}({fex})'
+    #         elif self.is_ExprCdPair():
+    #             fex = f'({fex})'
+    #         else:
+    #             fex = f'{self.typus.showme}({fex})'
+    #     return f'{fex}'
 
     def get_expr_symlike(self, try_sympify=False):
         """(1 + a)
@@ -229,7 +229,7 @@ class Node:
             expr = string_remove_trailing_zeroes(expr)
             return expr
         else:
-            expr = [cc.get_expr_symlike(try_sympify=try_sympify) for cc in self.childs]
+            expr = [cc.get_expr_symlike(try_sympify=try_sympify) for cc in self.get_childs()]
             # if issubclass(self.typus, (ExprCondPair)):
             #     print('kjh')
             if self.is_chain():
@@ -272,7 +272,7 @@ class Node:
                 s = f'{cs}'
 
         else:
-            cs = [cc.represent_str(show_all=show_all) for cc in self.childs]
+            cs = [cc.represent_str(show_all=show_all) for cc in self.get_childs()]
             cs = ', '.join(cs)
             s = f"{s}, {cs}"
 
@@ -296,7 +296,7 @@ class Node:
                 cs = f'"{cs}"'
 
         else:
-            cs = [cc.get_tree_export() for cc in self.childs]
+            cs = [cc.get_tree_export() for cc in self.get_childs()]
             cs = ', '.join(cs)
 
         fix_opt = ', is_fix=True' if self.is_fix else ''
@@ -315,7 +315,7 @@ class Node:
     def len_nodecount_raw(self):
         """counting the amount of nodes recursively"""
         if self.has_childs():
-            return 1 + sum([cc.len_nodecount_raw() for cc in self.childs])
+            return 1 + sum([cc.len_nodecount_raw() for cc in self.get_childs()])
         else:
             return 1  # childs can currently be floats
 
@@ -325,7 +325,7 @@ class Node:
 
     def is_ExprCdPair(self):  # noqa
         # sfeh: Sometimes, it hits the Dummy-class, sometimes (chained?) the sympy class. Not sure, why.
-        r = issubclass(self.typus, (sympy.functions.elementary.piecewise.ExprCondPair, ExprCondPair_Dummy))
+        r = issubclass(self.typus, (ExprCondPair, ExprCondPair_Dummy))
         return r
 
     def len_nodecount_fair(self):
@@ -336,7 +336,7 @@ class Node:
         if self.is_term():
             n = 1
         else:
-            cc_list = [cc.len_nodecount_fair() for cc in self.childs]
+            cc_list = [cc.len_nodecount_fair() for cc in self.get_childs()]
 
             if self.is_typus(Usub):
                 n = sum(cc_list)
@@ -373,11 +373,14 @@ class Node:
     def set_root(self, n: 'Node'):
         self.root_node = n
 
+    def get_childs(self):
+        return self.childs  # sfeh:open
+
     def set_childs(self, child_list):
         if isinstance(child_list, (list, tuple)):
             self.childs = child_list
             if self.has_childs():
-                for cc in self.childs:
+                for cc in self.get_childs():
                     cc.set_parent(self)  # set pointer in child-nodes
                     cc.set_root(self)
         else:
@@ -420,7 +423,7 @@ class Node:
     #     res = parent_id
     #
     #     if self.is_operator():
-    #         for cc in self.childs:
+    #         for cc in self.get_childs():
     #             res.extend(cc.get_all_nodes())
     #
     #     return res
@@ -438,14 +441,14 @@ class Node:
 
         if extend_lvls >= 0:
             if self.has_childs():
-                for cc in self.childs:
+                for cc in self.get_childs():
                     n.extend(cc.get_mutable_rootnodes(extend_lvls=extend_lvls))
 
         return n
 
     def get_apted_notation(self):
         """Calculating the TED requires this (weird) representation"""
-        return f"{{{self.get_typus()}{''.join([cc.get_apted_notation() for cc in self.childs])}}}"
+        return f"{{{self.get_typus()}{''.join([cc.get_apted_notation() for cc in self.get_childs()])}}}"
 
     def get_max_depth(self, depth=0):
         """Go through all nodes, save depth
@@ -453,7 +456,7 @@ class Node:
         if len(self.childs) <= 1:
             return depth
         else:
-            return max(cc.get_max_depth(depth=depth + 1) for cc in self.childs)
+            return max(cc.get_max_depth(depth=depth + 1) for cc in self.get_childs())
 
     def is_arity_operator(self):
         # Nodes that are notchained-nodes
@@ -505,7 +508,7 @@ class Node:
         depth = depth or 0  # sfeh: "None" was set as depth somewhere. Could not find it.
         self.depth = depth
         if self.has_childs():
-            for cc in self.childs:
+            for cc in self.get_childs():
                 cc.repair_depth(depth=depth + 1)
 
         return
@@ -525,7 +528,7 @@ class Node:
         linking the root and parent nodes"""
         self.root_node = root
         self.parent_node = parent
-        for cc in self.childs:
+        for cc in self.get_childs():
             cc.repair_backlink(self, root)
         # self.repair_depth()
 
@@ -573,7 +576,7 @@ class Node:
 
         # recursively add the other nodes
         if self.has_childs():  # sfeh:chain-operators discuss
-            for cc in self.childs:
+            for cc in self.get_childs():
                 a = cc.list_mutable_nodes(xtype=xtype, skip_first=False, allow_chain=allow_chain)
                 node_list.extend(a)
 
@@ -588,7 +591,7 @@ class Node:
                 intelligent filtering
         """
         if self.has_childs():
-            for cc in self.childs:
+            for cc in self.get_childs():
                 cc.evolve_mutate_filter_gauss()
 
         else:
@@ -629,7 +632,7 @@ class Node:
             return
         else:
 
-            for cc in self.childs:
+            for cc in self.get_childs():
                 cc.tree_node_grouping(tolerance=tolerance)
 
             if self.typus in (Pow, PowRounded):
@@ -647,7 +650,7 @@ class Node:
 
             elif self.typus == Mul:
                 if self.is_chain():  # div only for
-                    # for cc in self.childs:
+                    # for cc in self.get_childs():
                     # Nothing to do here! ?
                     pass
                 else:
@@ -747,7 +750,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
             op = d_sym2node_chain[type(s_expr)]
             return Node(op, childs=cc_nodes)
 
-        if isinstance(s_expr, sympy.functions.elementary.piecewise.ExprCondPair):
+        if isinstance(s_expr, ExprCondPair):
             return Node(ExprCondPair_Dummy, cc_nodes)  # sfeh:debug/test
 
         elif isinstance(s_expr, sympy.Piecewise):
@@ -817,10 +820,7 @@ class NodeRandomizer:
             bool: norm_choices([[lambda: random.choice((True, False)), 1]])}
 
     def choose_operator(self, xt):
-        if CHAIN_implement:
-            op = np.random.choice(self.pick_op[xt][0], p=self.pick_op[xt][1])
-        else:
-            op = np.random.choice(self.pick_op[xt][0], p=self.pick_op[xt][1])  # no (), which would evaluate the op
+        op = np.random.choice(self.pick_op[xt][0], p=self.pick_op[xt][1])  # no (), which would evaluate the op
         return op
 
     def choose_operator_match(self, xtype):
@@ -913,8 +913,8 @@ def tree_simplification(tree, allow_chain) -> Node:
         print(f'WHATTPPENDED SFEH'
               f'\n\told: {tree_copy.str_as_list()}'
               f'\n\tsym: {tree.str_as_list()}'
-              f'\n\told: {tree_copy.get_expr_symlike()}'
-              f'\n\tsym: {tree.get_expr_symlike()}'
+              # f'\n\told: {tree_copy.get_expr_symlike()}'
+              # f'\n\tsym: {tree.get_expr_symlike()}'
               f'\n\tsym: {tree_copy.get_tree_export()}')
         if tree_copy.get_sympy_expr() != tree.get_sympy_expr():
             print_warning('w', f'\t{tree_copy.get_sympy_expr()}\n\t{tree.get_sympy_expr()}')
@@ -1661,7 +1661,7 @@ class ExplainableGP:
                 except (ValueError, ArithmeticError) as ex:
                     # if 'Crossover tree 1 has no mutable nodes!' in str(ex):
                     # if "'a' cannot be empty unless no samples are taken" in str(ex):
-                    print_warning('ww', f'Value/Arithmetic: {ex}')
+                    print_warning('ww', f'OnlyPrintException: Value/Arithmetic: {ex}')
                 except TypeError as ex:
                     # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
                     # ==> sfeh probably this error: cond(): 'false_fn' argument required
@@ -1669,22 +1669,22 @@ class ExplainableGP:
                     if str(ex) == "Cannot convert complex to float":
                         pass
                 except AttributeError as ex:
-                    print(f'("Okay", if sympy.im in expr) {ex}')
+                    print(f'OnlyPrintException: (Okay, if sympy.im in expr) {ex}')
                 except KeyError as ex:
                     # KeyError(re) -> okay?, real part implies complex numbers, ignoring is okay
                     # (probably sympy.lambdify expression not evaluable)
-                    print(f'Keyerror?: {ex}')
+                    print(f'OnlyPrintException: Keyerror?: {ex}')
                 except RecursionError as ex:
-                    print(f'RecursionError (probably Piecewise/relational combination?): {ex}')
+                    print(f'OnlyPrintException: RecursionError (probably Piecewise/relational combination?): {ex}')
                 except NotImplementedError as nie:
                     print_caution(f'Notimplemented? {nie}')
                 except Exception as ex:
-                    print(f'Why are we not here??? {ex}')
+                    print(f'OnlyPrintException: Why are we not here??? {ex}')
         return loop
 
     def eval_fitness(self, sy_expr):
 
-        df_results = eval_predict(sy_expr, self.df_train, self.symbols, self.normalize_numpy)
+        df_results = eval_predict_df(sy_expr, self.df_train, self.symbols, self.normalize_numpy)
         # pairwise_results = pairwise_results['result']
         fitness = np.sqrt(np.mean((df_results - self.df_train['action']) ** 2))  # discuss: np.square vs. **2: should be mainly irrelevant
         fitness = round(fitness, FLOAT_PRECISION)
@@ -1898,4 +1898,6 @@ if __name__ == '__main__':
     expr_sy = plagih_sympify(expr, eval_locals={'cartVel': sympy.Symbol('cartVel'), 'cartPos': sympy.Symbol('cartPos')})
     tree = sympy_to_tree(expr_sy, allow_chain=False)
     # tree = Node(Max, [Node(Min, [Node(Abs, [Node(Symbol, ["cartVel"])]), Node(Add, [Node(Number, [-0.061]), Node(Symbol, ["cartPos"])])]), Node(Add, [Node(Max, [Node(Symbol, ["cartPos"]), Node(Number, [11])]), Node(Sin, [Node(Symbol, ["cartPos"])])])])
+    tree = Node(Piecewise, [Node(ExprCondPair_Dummy, [Node(Symbol, ['vel']), Node(Boolean, [False])]),
+                            Node(ExprCondPair_Dummy, [Node(Number, [1.23]), Node(Boolean, [True])])])
     print(tree)

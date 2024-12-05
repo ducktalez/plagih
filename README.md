@@ -55,7 +55,17 @@
 - Introduce rounding/clipping for many more functions
 - adjust tournament_size to general fitness skew
 - adding the pareto-trees visualized to the paretofront plot
-- mutate chained operators specifically
+- mutate chained operators specifically, crossover too. add summands, remove summands, .... as option.
+- List of all potential inputs as layer, just multiplied with 1 or 1
+- check if at least one node is forced!
+- Introduce Tree-"styles", one expression can be represented in many ways
+  - Raw (=as generated)
+  - Isolate inputs in formulae as long as possible
+  - Factorized
+  - Simplified
+  - create "better mutable" trees?
+- Discuss: Input normalization. Leads to different formulae; which is NOT desired, right?
+- Node/Number type rational?
 
 ### Semi-interesting
 
@@ -291,4 +301,15 @@ WHATTPPENDED SFEH
 	sym: [Sign, [Mul, [Square, [cartPos]], [Square, [cartVel]]]]
 	old: sign(((cartPos * cartVel))**2)
 	sym: sign(((cartPos)**2 * (cartVel)**2))
-	sym: Node(Sign, [Node(Square, [Node(Mul, [Node(Symbol, ["cartPos"]), Node(Symbol, ["cartVel"])])])])```
+	sym: Node(Sign, [Node(Square, [Node(Mul, [Node(Symbol, ["cartPos"]), Node(Symbol, ["cartVel"])])])])
+```
+
+```
+
+WHATTPPENDED SFEH
+	old: [Square, [Square, [PowRounded, [7.00], [cartPos]]]]
+	sym: [Pow, [7.00], [MulChain, [4], [Round, [cartPos]]]]
+	old: ((7)**Round_Dummy(cartPos))**2)**2
+	sym: (7)**((4 * Round_Dummy(cartPos,1)))
+	sym: Node(Square, [Node(Square, [Node(PowRounded, [Node(Number, [7]), Node(Symbol, ["cartPos"])])])])
+```

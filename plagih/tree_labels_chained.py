@@ -4,6 +4,7 @@ Separate file to NOT confuse anything, even though there might be some redundanc
 """
 import os
 
+import numpy as np
 import sympy
 
 from plagih.tree_labels import OperatorChained
@@ -15,6 +16,7 @@ os.environ["KMP_WARNINGS"] = "FALSE"
 class AddChain(OperatorChained):
     """It is Sum, but we call it chain, as vector also is taken"""
     symfun = sympy.Add
+    np_fun = lambda x: np.sum(np.vstack(x), axis=0)
     showme = 'Add'
     sy_str = 'Add({})'
     formulae_str = 'Add({})'
@@ -27,6 +29,7 @@ class AddChain(OperatorChained):
 class MulChain(OperatorChained):
     showme = 'Mul'
     symfun = sympy.Mul
+    np_fun = lambda x: np.prod(np.vstack(x), axis=0)
     sy_str = 'Mul({})'
     formulae_str = 'Mul({})'
     repr_str = 'MulChain{},[{}]'
@@ -37,6 +40,7 @@ class MulChain(OperatorChained):
 
 class MinChain(OperatorChained):
     symfun = sympy.Min
+    np_fun = lambda x: np.min(np.vstack(x), axis=0)
     showme = 'Min'
     sy_str = 'Min({})'
     formulae_str = 'Min({})'
@@ -47,6 +51,7 @@ class MinChain(OperatorChained):
 
 class MaxChain(OperatorChained):
     symfun = sympy.Max
+    np_fun = lambda x: np.max(np.vstack(x), axis=0)
     showme = 'Max'
     sy_str = 'Max({})'
     formulae_str = 'Max({})'

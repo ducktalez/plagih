@@ -10,42 +10,25 @@ import numpy as np
 
 
 custom_functions = {
-    'Min': np.minimum.reduce,
-    'Max': np.maximum.reduce,
+    # 'Min': np.minimum.reduce,  # todo, might be false.
+    # 'Max': np.maximum.reduce,
+    'Min': np.min,  # todo, might be false.
+    'Max': np.max,
     'Round_Dummy': np.round,
 }
 
 
-def eval_predict(expr, df: pd.DataFrame, variable_names, normalize_numpy):
+def eval_predict_df(sy_expr: sympy.Basic, df: pd.DataFrame, variable_names, normalize_numpy):
     """
     Returns the fitness (float)
 
-    def eval_sym_experimental(self, expr, return_results=False):
-        # Not stable and only working with mountaincar
-
-        _inputs = self.data_dict
-
-        cartVel, cartPos = sympy.symbols('cartVel cartPos')
-        ex = sympy.sympify(str(expr))
-        f = sympy.lambdify([cartVel, cartPos], ex, 'numpy')
-        cartVel = np.array(_inputs['cartVel'])
-        cartPos = np.array(_inputs['cartPos'])
-        action = np.array(_inputs['action'])
-        raw_results = f(cartVel, cartPos)
-        results = np.round(np.clip(raw_results, 0, 2), 0)
-
-        if not return_results:
-            fitness = np.sqrt(np.mean((results-action)**2))
-            return np.round(fitness, FLOAT_PRECISION)
-        else:
-            return results
     """
     # a, b = sympy.symbols('cartVel cartPos')
     # cartVels = df['cartVel']
     # cartPoss = df['cartPos']
     cartPos, cartVel = sympy.symbols('cartPos cartVel')
-    variable_names = [str(var) for var in (cartPos, cartVel)]
-    func = sympy.lambdify(tuple([cartPos, cartVel]), expr, modules=[custom_functions, 'numpy'])
+    variable_names = [str(var) for var in (cartPos, cartVel)]  # sfeh
+    func = sympy.lambdify(tuple([cartPos, cartVel]), sy_expr, modules=[custom_functions, 'numpy'])
 
     # x = expr.evalf(subs={symbols[0]: 1.234, symbols[1]: 2.3456})
 
@@ -56,22 +39,47 @@ def eval_predict(expr, df: pd.DataFrame, variable_names, normalize_numpy):
 
     # x = expr.evalf(subs={'cartVel': cartVels, 'cartPos': cartPoss})
     # raw_results = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
-    try:
-        with warnings.catch_warnings():
-            with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
-                with ignore_warnings(DeprecationWarning):  # something like use "**" instead of "Pow"
-                    df_results = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
-                    # raw_results = df.apply(lambda row: func(*[row[var] for var in variable_names]), axis=1)
+    with warnings.catch_warnings():
+        with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
+            with ignore_warnings(DeprecationWarning):  # something like use "**" instead of "Pow"
+                df_results = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
 
-    except ZeroDivisionError:
-        # df['result'] = df.fillna(np.nan)
-        pass
+                # np_input = [df[str(symbol)].to_numpy() for symbol in symbols]
+                # np_results = func(*np_input)
+                # # df_results = df.apply(lambda row: func(), axis=1)
+                # # df_results = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
+                # # raw_results = df.apply(lambda row: func(*[row[var] for var in variable_names]), axis=1)
 
     if normalize_numpy is not None:  # clip and round result
         df_results = normalize_numpy(df_results)
 
+    # todo numpy evaluation
+
     # df['result'] = df_results
     return df_results
+
+def eval_sympyLoop(expr, df):
+
+    cartVel, cartPos = sympy.symbols('cartVel cartPos')
+    ex = sympy.sympify(str(expr))
+    f = sympy.lambdify([cartVel, cartPos], ex, 'numpy')
+    cartVel = np.array(df['cartVel'])
+    cartPos = np.array(df['cartPos'])
+    action = np.array(df['action'])
+    raw_results = f(cartVel, cartPos)
+    results = np.round(np.clip(raw_results, 0, 2), 0)
+    #
+    # if not return_results:
+    #     fitness = np.sqrt(np.mean((results-action)**2))
+    #     return np.round(fitness, FLOAT_PRECISION)
+    # else:
+    #     return results
+
+    return results
+
+def eval_tensorflow(expr, df):
+    pass
+
 
 
 if __name__ == '__main__':

@@ -668,7 +668,7 @@ class ExprCondPair_Dummy(Node_Dummy):
     Named like this to differ from the sympy original (ExprCondPair)
     sfeh:discuss
     The only purpose is to wrap the results for a Node-structure, where every Node has childs with other nodes"""
-    symfun = sympy.functions.elementary.piecewise.ExprCondPair
+    symfun = ExprCondPair
     showme = 'ExprCondPair_Dummy'
     sy_str = 'ExprCondPair({0}, {1})'
     repr_str = 'ExprCondPair_Dummy{},[{}, {}]'

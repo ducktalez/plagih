@@ -8,10 +8,10 @@ from plagih.util import *
 import pandas as pd
 import sympy
 
-INPUT_NAMES = ['cartVel', 'cartPos']
+col_names = ['cartVel', 'cartPos']
 df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv').astype('float32')
 df_train, df_control = train_test_split(df, test_size=0.2, random_state=0)
-DATA_SYMBOLS = sympy.symbols(df[INPUT_NAMES].columns, real=True, imaginary=False)  # sfeh input_names dirty here
+DATA_SYMBOLS = sympy.symbols(df[col_names].columns, real=True, imaginary=False)  # sfeh input_names dirty here
 
 build_operator_dict = {Add: 2, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
                        Sin: 0.5, Not: 0.5, Lt: 0.5, Le: 0.5, And: 1, Or: 1, Min: 1, Max: 1}
@@ -22,7 +22,7 @@ rootdir = Path.cwd() / 'MTC200_RMSE_scratch'
 normalize_numpy = lambda x: np.round(np.clip(x, 0, 2), 0)
 
 pop_max = 100
-gen_max = 100
+gen_max = 15
 nodes_max = 50
 depth_max = 10
 
@@ -30,7 +30,7 @@ depth_max = 10
 def _test_simple(chained_on=True):
     """SIMPLE"""
 
-    node_selector = NodeRandomizer(build_operator_dict, INPUT_NAMES, make_symbol_fun)
+    node_selector = NodeRandomizer(build_operator_dict, col_names, make_symbol_fun)
     evolve = Evolution(None, None, node_selector, {'depth_max': 7, 'nodes_max': 50}, 'tree_node_count', chained_on)
     gp = ExplainableGP('TEST', pop_max, gen_max, rootdir, df_train, df_control, evolve, DATA_SYMBOLS, normalize_numpy, chained_on)
 
@@ -95,7 +95,7 @@ def _test_random_pop(chained_on=True):
     # ops_arity = {Ifte: 2}  # operators that contradict with fixed arity
     ops_arity = {Ifte: 2, PowRounded: 1, Round: 1}  # operators that contradict with fixed arity
     build_operator_dict.update(ops_arity)
-    node_selector = NodeRandomizer(build_operator_dict, INPUT_NAMES, make_symbol_fun)
+    node_selector = NodeRandomizer(build_operator_dict, col_names, make_symbol_fun)
 
     build_restrictions = {'depth_max': 7, 'nodes_max': 50}
 

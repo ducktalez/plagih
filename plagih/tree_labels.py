@@ -270,12 +270,14 @@ class Symbol(Terminal):
         self.name = nlabl if nlabl[0] != '-' else nlabl[1:]
     """
     symfun = lambda *a: a[0]
+    # np_fun =
     xtype = ((), float)
     showme = 'Symbol'
 
 
 class Add(MathOperator, ChainableOp):
     symfun = sympy.Add
+    np_fun = np.add
     showme = 'Add'
     sy_str = '({0} + {1})'
     formulae_str = '({} + {})'
@@ -286,9 +288,10 @@ class Add(MathOperator, ChainableOp):
 
 class DivFraction(MathOperator):
     """x**-1
-    aka InverseFraction"""
+    aka InverseFraction aka DivFraction aka Reciprocal"""
     xtype = ((float, float), float)
     symfun = lambda a: sympy.Pow(a, sympy.S.NegativeOne)
+    np_fun = np.reciprocal  # sfeh rename class?
     showme = 'DivFraction'
     sy_str = '1/({})'
     repr_str = 'DivFraction{},[{}]'
@@ -296,6 +299,7 @@ class DivFraction(MathOperator):
 
 class Pow(MathOperator):
     symfun = sympy.Pow
+    np_fun = np.power
     showme = 'Pow'
     sy_str = '({0})**({1})'
     repr_str = 'Pow{},[{},{}]'
@@ -304,6 +308,7 @@ class Pow(MathOperator):
 
 class Abs(MathOperator):
     symfun = sympy.Abs
+    np_fun = np.abs  # np.absolute
     showme = 'Abs'
     sy_str = 'Abs({})'
     repr_str = 'Abs{},[{}]'
@@ -313,6 +318,7 @@ class Abs(MathOperator):
 class Sign(MathOperator, NoSymCapitalized):
     # does not work in string, but irrelevant. sympy.simplify('sign(-a)') -> -sign(a)
     symfun = sympy.sign
+    np_fun = np.sign
     showme = 'Sign'
     sy_str = 'sign({})'
     repr_str = 'Sign{},[{}]'
@@ -321,6 +327,7 @@ class Sign(MathOperator, NoSymCapitalized):
 
 class Log(MathOperator, NoSymCapitalized):
     symfun = sympy.log  # sfeh: Log isactually Ln (base e)
+    np_fun = np.log
     showme = 'Log'
     sy_str = 'log({})'
     repr_str = 'Log{},[{}]'
@@ -329,6 +336,7 @@ class Log(MathOperator, NoSymCapitalized):
 
 class Cos(AngleOperator, NoSymCapitalized):
     symfun = sympy.cos
+    np_fun = np.cos
     showme = 'Cos'
     sy_str = 'cos({})'
     repr_str = 'Cos{},[{}]'
@@ -337,6 +345,7 @@ class Cos(AngleOperator, NoSymCapitalized):
 
 class Sin(AngleOperator, NoSymCapitalized):
     symfun = sympy.sin
+    np_fun = np.sin
     showme = 'Sin'
     sy_str = 'sin({})'
     repr_str = 'Sin{},[{}]'
@@ -347,6 +356,7 @@ class Tan(AngleOperator, NoSymCapitalized):
     # sfeh:discuss actually rename classes.
     # they do not have to match sympy expressions/classes
     symfun = sympy.tan
+    np_fun = np.tan
     showme = 'Tan'
     sy_str = 'tan({})'
     repr_str = 'Tan{},[{}]'
@@ -355,6 +365,7 @@ class Tan(AngleOperator, NoSymCapitalized):
 
 class Acos(AngleOperator, NoSymCapitalized):
     symfun = sympy.acos
+    np_fun = np.arccos  # arccosh
     showme = 'Acos'
     sy_str = 'acos({})'
     repr_str = 'Acos{},[{}]'
@@ -363,6 +374,7 @@ class Acos(AngleOperator, NoSymCapitalized):
 
 class Asin(AngleOperator, NoSymCapitalized):
     symfun = sympy.asin
+    np_fun = np.arcsin
     showme = 'Asin'
     sy_str = 'asin({})'
     repr_str = 'Asin{},[{}]'
@@ -371,6 +383,7 @@ class Asin(AngleOperator, NoSymCapitalized):
 
 class Atan(AngleOperator, NoSymCapitalized):
     symfun = sympy.atan
+    np_fun = np.arctan
     showme = 'Atan'
     sy_str = 'atan({})'
     repr_str = 'Atan{},[{}]'
@@ -379,6 +392,7 @@ class Atan(AngleOperator, NoSymCapitalized):
 
 class Tanh(AngleOperator, NoSymCapitalized):
     symfun = sympy.tanh
+    np_fun = np.tanh
     showme = 'Tanh'
     sy_str = 'tanh({})'
     repr_str = 'Tanh{},[{}]'
@@ -387,6 +401,7 @@ class Tanh(AngleOperator, NoSymCapitalized):
 
 class Sinh(AngleOperator, NoSymCapitalized):
     symfun = sympy.sinh
+    np_fun = np.sinh
     showme = 'Sinh'
     sy_str = 'sinh({})'
     repr_str = 'Sinh{},[{}]'
@@ -395,6 +410,7 @@ class Sinh(AngleOperator, NoSymCapitalized):
 
 class Cosh(AngleOperator, NoSymCapitalized):
     symfun = sympy.cosh
+    np_fun = np.cosh
     showme = 'Cosh'
     sy_str = 'cosh({})'
     repr_str = 'Cosh{},[{}, {}]'
@@ -405,6 +421,7 @@ class Xor(LogicOperator, NoSymCapitalized):
     """
     Caution: loading '(a ^ b)', the sympy-Xor-representation, is interpreted as a**b"""
     symfun = sympy.Xor
+    np_fun = np.logical_xor
     showme = 'Xor'
     sy_str = 'Xor({}, {})'  # 'a ^ b'
     repr_str = 'Xor{},[{}, {}]'
@@ -413,6 +430,7 @@ class Xor(LogicOperator, NoSymCapitalized):
 
 class Not(LogicOperator):
     symfun = sympy.Not
+    np_fun = np.logical_not
     showme = 'Not'
     sy_str = '~({})'
     repr_str = 'Not{},[{}]'
@@ -422,6 +440,7 @@ class Not(LogicOperator):
 class Eq(LogicOperator):
     # sfeh:debug Eq and Ne (), which also work for boolean inputs in sympy
     symfun = sympy.Eq
+    np_fun = np.equal
     showme = 'Eq'  # '==' not working in sympy!
     sy_str = 'Eq({0}, {1})'
     repr_str = 'Eq{},[{}, {}]'
@@ -430,6 +449,7 @@ class Eq(LogicOperator):
 
 class Ne(LogicOperator):
     symfun = sympy.Ne
+    np_fun = np.not_equal
     showme = 'Ne'  # != not working in sympy
     sy_str = 'Ne({0}, {1})'
     repr_str = 'Ne{},[{}, {}]'
@@ -438,6 +458,7 @@ class Ne(LogicOperator):
 
 class Mul(MathOperator, ChainableOp):
     symfun = sympy.Mul
+    np_fun = np.multiply
     showme = 'Mul'  #
     sy_str = '({0} * {1})'
     repr_str = 'Mul{},[{}, {}]'
@@ -447,6 +468,7 @@ class Mul(MathOperator, ChainableOp):
 
 class And(LogicOperator, ChainableOp):
     symfun = sympy.And
+    np_fun = np.logical_and
     showme = 'And'
     sy_str = '({0} & {1})'
     repr_str = 'And{},[{}, {}]'
@@ -456,6 +478,7 @@ class And(LogicOperator, ChainableOp):
 
 class Or(LogicOperator, ChainableOp):
     symfun = sympy.Or
+    np_fun = np.logical_or
     showme = 'Or'
     sy_str = '({0}|{1})'
     repr_str = 'Or{},[{}, {}]'
@@ -466,6 +489,7 @@ class Or(LogicOperator, ChainableOp):
 class ITE(LogicOperator):
     """sfeh:is this really required? currently not in use"""
     symfun = sympy.ITE
+    np_fun = 'sfeh:Missing'
     showme = 'ITE'
     sy_str = 'ITE({0}, {1}, {2})'
     repr_str = 'ITE{},[{}, {}, {}]'
@@ -475,6 +499,7 @@ class ITE(LogicOperator):
 
 class Min(MinMaxBase, ChainableOp):
     symfun = sympy.Min
+    np_fun = np.min  # sfeh max, maximum, maximum.reduce
     showme = 'Min'
     sy_str = 'Min({0},{1})'
     repr_str = 'Min{},[{}, {}]'
@@ -490,6 +515,7 @@ class Min(MinMaxBase, ChainableOp):
 
 class Max(MinMaxBase, ChainableOp):
     symfun = sympy.Max
+    np_fun = np.max  # sfeh max, maximum, maximum.reduce
     showme = 'Max'
     sy_str = 'Max({0}, {1})'
     repr_str = 'Max{},[{}, {}]'
@@ -505,6 +531,7 @@ class Max(MinMaxBase, ChainableOp):
 
 class Lt(RelationalOperator):
     symfun = sympy.Lt
+    np_fun = np.less
     showme = 'Lt'
     sy_str = '({0} < {1})'
     repr_str = 'Lt{},[{}, {}]'
@@ -513,6 +540,7 @@ class Lt(RelationalOperator):
 
 class Le(RelationalOperator):
     symfun = sympy.Le
+    np_fun = np.less_equal
     showme = 'Le='
     sy_str = '({0} <= {1})'
     repr_str = 'Le{},[{}, {}]'
@@ -521,6 +549,7 @@ class Le(RelationalOperator):
 
 class Gt(RelationalOperator):
     symfun = sympy.Gt
+    np_fun = np.greater
     showme = 'Gt'
     sy_str = '({0} > {1})'
     repr_str = 'Gt{},[{}, {}]'
@@ -530,6 +559,7 @@ class Gt(RelationalOperator):
 class Ge(RelationalOperator):
     xtype = ((float, float), bool)
     symfun = sympy.Ge
+    np_fun = np.greater_equal
     showme = 'Ge'
     sy_str = '({0} >= {1})'
     repr_str = 'Ge{},[{}, {}]'
@@ -537,6 +567,7 @@ class Ge(RelationalOperator):
 
 class Square(MathOperator):
     symfun = lambda a: sympy.Pow(a, 2)
+    np_fun = np.exp2
     xtype = ((float,), float)
     showme = 'Square'
     sy_str = '({})**2'
@@ -601,6 +632,7 @@ class PowRounded(MathOperator):
     """Requires class Round_Dummy!
     Rounds the exponent; sfeh:idea clip exponent?"""
     symfun = lambda a, b: sympy.Pow(a, Round_Dummy(b))
+    np_fun = lambda a, b: np.power(a, np.round(b))
     showme = 'PowRounded'
     sy_str = '{0})**Round_Dummy({1})'
     repr_str = 'PowRounded{},[{}, {}]'
@@ -616,6 +648,7 @@ class PowRounded(MathOperator):
 
 class Div(MathOperator):
     symfun = lambda a, b: sympy.Mul(a, 1 / b)
+    np_fun = np.divide
     showme = 'Div'
     sy_str = '({0}/{1})'
     repr_str = 'Div{},[{}, {}]'
@@ -626,6 +659,7 @@ class Sqrt(MathOperator):
     """Capitalized class name, even though its a sympy function"""
     xtype = ((float,), float)
     symfun = sympy.sqrt  # same as: lambda a: sympy.Pow(a, sympy.S.Half)
+    np_fun = np.sqrt
     showme = 'Sqrt'
     sy_str = 'sqrt({})'
     repr_str = 'Sqrt{},[{}, {}]'
@@ -641,6 +675,8 @@ class Sqrt(MathOperator):
 class Usub(MathOperator, sympy.Function):
     xtype = ((float,), float)
     symfun = lambda a: sympy.Mul(a, -1)
+    np_fun = np.negative
+    # tf_fun = tf.negative
     showme = 'Usub'  # sfeh
     sy_str = '(-{})'
     repr_str = 'Usub{},[{}]'
@@ -649,6 +685,8 @@ class Usub(MathOperator, sympy.Function):
 class Clip(MinMaxBase, CustomOperator):
     # sfeh:open use this
     symfun = lambda a, b, c: sympy.Min(sympy.Max(a, b), c)
+    np_fun = lambda a, b, c: np.clip(a, b, c)
+    # tf_fun = lambda a, b, c: tf.clip_by_value(a, b, c)
     showme = 'Clip'
     sy_str = '(sympy.Min(sympy.Max({0}, {1}), {2}))'
     repr_str = 'Clip{},[{}, {}]'
@@ -657,6 +695,7 @@ class Clip(MinMaxBase, CustomOperator):
 
 class Exp(MathOperator):
     symfun = sympy.exp
+    np_fun = np.exp2
     showme = 'Exp'
     sy_str = '{}**E'
     repr_str = 'Exp{},[{}, {}]'
@@ -677,7 +716,8 @@ class ExprCondPair_Dummy(Node_Dummy):
 
 
 def sym_check(expr_sym):
-    if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im):  # sfeh:discuss sympy.re
+    if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im):
+        # sfeh:discuss sympy.re: real part -> just irgnore! please implement
         raise SympySimplificationError(f'Simplification failed: {expr_sym}')
     return expr_sym
 
@@ -1050,21 +1090,21 @@ if __name__ == '__main__':
                 # st[x.__name__] = x.__name__
                 pass
         st = ', '.join([f"{k}: {v}" for k, v in st.items()])
-        print(f'sympy_to_node = {{{st}}}')
+        print(f'sym2node = {{{st}}}')
 
 
-    def check_subclasses():
-
+    def all_typus_subclasses():
+        sub = []
         for x in get_subclasses(OperatorArity):
             if len(x.__subclasses__()) > 0:
-                # print('vdsfg', x)
                 pass
             else:
-                print(x.__name__)
-                # pass
+                sub.append(x.__name__)
+        return sub
 
-
-    check_subclasses()
+    print(all_typus_subclasses())
+    print('===================')
+    print_relevant_subclasses()
 
     # test_basic_tfconversion()  # sfeh all tests
     # test_sympify()

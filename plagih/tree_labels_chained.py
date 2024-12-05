@@ -41,6 +41,7 @@ class MulChain(OperatorChained):
 class MinChain(OperatorChained):
     symfun = sympy.Min
     np_fun = lambda x: np.min(np.vstack(x), axis=0)
+    # np_fun = lambda x: np.minimum  # sfeh open
     showme = 'Min'
     sy_str = 'Min({})'
     formulae_str = 'Min({})'

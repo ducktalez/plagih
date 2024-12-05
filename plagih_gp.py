@@ -12,7 +12,6 @@ col_names = ['cartVel', 'cartPos']
 df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv').astype('float32')
 df_train, df_control = train_test_split(df, test_size=0.2, random_state=0)
 DATA_SYMBOLS = sympy.symbols(df[col_names].columns, real=True, imaginary=False)  # sfeh input_names dirty here
-DATA_SYMBOLS = [sympy.Symbol(x, real=True, imaginary=False) for x in col_names]
 
 build_operator_dict = {Add: 2, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
                        Sin: 0.5, Not: 0.5, Lt: 0.5, Le: 0.5, And: 1, Or: 1, Min: 1, Max: 1}
@@ -33,7 +32,7 @@ def _test_simple(chained_on=True):
 
     node_selector = NodeRandomizer(build_operator_dict, col_names, make_symbol_fun)
     evolve = Evolution(None, None, node_selector, {'depth_max': 7, 'nodes_max': 50}, 'tree_node_count', chained_on)
-    gp = ExplainableGP('TEST', pop_max, gen_max, rootdir, df_train, df_control, evolve, DATA_SYMBOLS, normalize_numpy, chained_on, col_names)
+    gp = ExplainableGP('TEST', pop_max, gen_max, rootdir, df_train, df_control, evolve, DATA_SYMBOLS, normalize_numpy, chained_on)
 
     gp.gen_create_initial()
 
@@ -66,7 +65,7 @@ def _test_simple(chained_on=True):
 
     for _ in range(10):
         @gp.create_trees(rate=1, crossover=True, simplify=True)
-        def xover_CHAINA():  # noqa
+        def xover_CHAINA():
             tree_a = selection_tournament(gp.pop_genepool, n=3)
             tree_b = selection_tournament(gp.pop_genepool, n=3)
             tree_a = tree_simplification(tree_a, allow_chain=chained_on)
@@ -121,7 +120,7 @@ def _test_random_pop(chained_on=True):
 
     # tb = TreeBuildRestrictions(origin_xtype, None, nc, build_restrictions, 'tree_node_count')
     evolve = Evolution(None, origin_tree, node_selector, build_restrictions, 'tree_node_count', chained_on)
-    gp = ExplainableGP('MTC200_RMSE_scratch', pop_max, gen_max, rootdir, df_train, df_control, evolve, DATA_SYMBOLS, normalize_numpy, chained_on, col_names)
+    gp = ExplainableGP('MTC200_RMSE_scratch', pop_max, gen_max, rootdir, df_train, df_control, evolve, DATA_SYMBOLS, normalize_numpy, chained_on)
     try:
         # gp.backup_load()
         printpl('i', 'Ignore loading backup!')
@@ -143,21 +142,21 @@ def _test_random_pop(chained_on=True):
         if chained_on:
 
             @gp.create_trees(rate=0.30, simplify=True)
-            def mx_branch_d_CHAIN():  # noqa
+            def mx_branch_d_CHAIN():
                 tree = selection_tournament(gp.pop_genepool, n=3)
                 tree = gp.evolve.evolve_mutate_branch_depth(tree, 4, chained_on, p_term=0.5)
                 tree = tree_simplification(tree, allow_chain=gp.allow_chain)
                 return tree
 
             @gp.create_trees(rate=0.1, simplify=True)
-            def rand2_CHAINB():  # noqa
+            def rand2_CHAINB():
                 # sfeh:discuss: deep random trees have a tendency to also allow weird-ass looking nonsense
                 tree = gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
                 tree = tree_simplification(tree, allow_chain=gp.allow_chain)
                 return tree
 
             @gp.create_trees(rate=0.3, crossover=True, simplify=True)
-            def xover_CHAIN():  # noqa
+            def xover_CHAIN():
                 tree_a = selection_tournament(gp.pop_genepool, n=3)
                 tree_b = selection_tournament(gp.pop_genepool, n=3)
                 evo1, evo2 = gp.evolve.evolve_crossover(tree_a, tree_b)
@@ -227,7 +226,7 @@ def _test_random_pop(chained_on=True):
 
 
 if __name__ == "__main__":
-    _test_simple(chained_on=True)
-    _test_random_pop(chained_on=True)
     _test_simple(chained_on=False)
     _test_random_pop(chained_on=False)  # sfeh:open
+    _test_simple(chained_on=True)
+    _test_random_pop(chained_on=True)

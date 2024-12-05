@@ -5,9 +5,8 @@ The main class of a gp run. It holds the following functionalities
 -
 """
 from collections import deque
-from symtable import Symbol
 
-from plagih.fitness_evaluation import *
+from plagih.fitness_kernel import eval_predict_df
 from plagih.monitoring import plot_performance
 from plagih.paretofront import *
 
@@ -71,7 +70,7 @@ class Node:
         -> when there are more childs than input-xtypes
         ...if there are less. its weird, maybe node in construction?"""
         a = issubclass(self.typus, OperatorChained)
-        b = len(self.typus.xtype[0]) < len(self.get_childs())
+        b = len(self.typus.xtype[0]) < len(self.childs)
         if a or b:
             return True
         else:
@@ -101,16 +100,16 @@ class Node:
         # sfeh:delete_me if no error after 27-11-2023
         typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
 
-        if self.get_childs():
+        if self.childs:
             if issubclass(self.typus, BaseOperator):
                 childstr = ', '.join([cc.str_as_list() for cc in self.get_childs()])
                 typus_str = f'{typus_str}, {childstr}'
             else:
                 try:
                     if self.is_number():
-                        typus_str = f'{self.get_childs()[0]:.3g}'  # '.5g'->5 decimals, trailing zeros, but rare (ugly) "E+04"
+                        typus_str = f'{self.childs[0]:.3g}'  # '.5g'->5 decimals, trailing zeros, but rare (ugly) "E+04"
                     else:
-                        typus_str = f'{self.get_childs()[0]}'
+                        typus_str = f'{self.childs[0]}'
                 except TypeError as ex:  # noqa
                     typus_str = str(self.childs[0].evalf())
                     typus_str = string_remove_trailing_zeroes(typus_str)
@@ -173,7 +172,7 @@ class Node:
 
         if issubclass(self.typus, Terminal):
             _sym = self.typus.get_sym()  # _sym = self.typus.symfun
-            _cs = self.get_childs()[0]
+            _cs = self.childs[0]
             r = _sym(_cs)
             return r
 
@@ -274,9 +273,6 @@ class Node:
 
         else:
             cs = [cc.represent_str(show_all=show_all) for cc in self.get_childs()]
-
-            # if self.is_ExprCdPair():
-
             cs = ', '.join(cs)
             s = f"{s}, {cs}"
 
@@ -376,10 +372,10 @@ class Node:
 
     def set_root(self, n: 'Node'):
         self.root_node = n
-    
+
     def get_childs(self):
-        return self.childs
-    
+        return self.childs  # sfeh:open
+
     def set_childs(self, child_list):
         if isinstance(child_list, (list, tuple)):
             self.childs = child_list
@@ -398,14 +394,14 @@ class Node:
             if str(self.typus) != str(origin.typus):
                 raise
             self.is_fix = True
-            for ii, cc in enumerate(self.get_childs()):
+            for ii, cc in enumerate(self.childs):
                 cc.update_fixed_nodes(origin.childs[ii])
 
     def get_all_nodes_visualize(self, setid: str):
         """returns all nodes in a tree as list
         a+1 -> [+a1, a, 1]"""
         # if len(self.childs) == 0:
-        showme = f'{self.get_childs()[0]}' if self.is_term() else f'{self.get_typus().showme}'
+        showme = f'{self.childs[0]}' if self.is_term() else f'{self.get_typus().showme}'
 
         res = {setid: {'node': self,
                        'showme': showme}}
@@ -414,7 +410,7 @@ class Node:
         if self.is_term():  # sfeh is_term instead of operator due to fuckin exprCondPairs
             pass
         else:
-            for ii, cc in enumerate(self.get_childs()):
+            for ii, cc in enumerate(self.childs):
                 cid = f'{setid}-{ii}'
                 cr, ce = cc.get_all_nodes_visualize(cid)
                 res.update(cr)
@@ -457,7 +453,7 @@ class Node:
     def get_max_depth(self, depth=0):
         """Go through all nodes, save depth
         sfeh: this computes the depth and does not take advantage of saved depths"""
-        if len(self.get_childs()) <= 1:
+        if len(self.childs) <= 1:
             return depth
         else:
             return max(cc.get_max_depth(depth=depth + 1) for cc in self.get_childs())
@@ -600,7 +596,8 @@ class Node:
 
         else:
             if self.is_number():
-                self.childs[0] = round(random.gauss(self.childs[0], 0.1), FLOAT_PRECISION)  # sfeh: -> no symbols -> userspecific
+                self.childs[0] = round(random.gauss(self.childs[0], 0.1),
+                                       FLOAT_PRECISION)  # sfeh: -> no symbols -> userspecific
 
         return
 
@@ -615,22 +612,21 @@ class Node:
         sfeh:idea tolerance for grouping?
         """
         if self.is_term():  # good for runtime
-            # sfeh:open do this in mutation?
-            if self.is_number() and tolerance > 0:
-                val = self.childs[0]
-                # from sympy.physics.units import speed_of_light, meter, second more ideas!
-                # sfeh also find more math building blocks, typical formulae
-                # sympy.pi,         sympy.GoldenRatio,  sympy.Catalan,      sympy.EulerGamma,   sympy.TribonacciConstant
-                # 3.14159265358979, 1.61803398874989,   0.915965594177219,  0.577215664901533,  1.83928675521416
-                for const in [sympy.pi, sympy.GoldenRatio, sympy.Catalan, sympy.EulerGamma, sympy.TribonacciConstant]:
-                    if (const-val) < tolerance:
-                        self.childs[0] = const
-                        return
-                self.childs[0] = sympy.nsimplify(val, tolerance=tolerance, rational=True)
-
-                # sfeh:idea sympy.nsimplify('3.333333*x+0.522', tolerance=0.1, rational=True) for
-                #   - Terminals
-                #   - Even whole formulae!
+            ## sfeh:xxx sfeh:open do this in mutation?
+            # if self.is_number() and tolerance > 0:
+            #     val = self.childs[0]
+            #     # from sympy.physics.units import speed_of_light, meter, second more ideas!
+            #     # sfeh also find more math building blocks, typical formulae
+            #     # sympy.pi,         sympy.GoldenRatio,  sympy.Catalan,      sympy.EulerGamma,   sympy.TribonacciConstant
+            #     # 3.14159265358979, 1.61803398874989,   0.915965594177219,  0.577215664901533,  1.83928675521416
+            #     for const in [sympy.pi, sympy.GoldenRatio, sympy.Catalan, sympy.EulerGamma, sympy.TribonacciConstant]:
+            #         if (const-val) < tolerance:
+            #             self.childs[0] = const
+            #             return
+            #     if val - sympy.nsimplify(val, tolerance=tolerance, rational=True) < tolerance:
+            #     # sfeh:idea sympy.nsimplify('3.333333*x+0.522', tolerance=0.1, rational=True) for
+            #     #   - Terminals
+            #     #   - Even whole formulae!
 
                 # sfeh:VERY USEFUL: strg+TribonacciConstant to go to init with useful info
             return
@@ -697,6 +693,14 @@ def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
         return distance
     else:
         raise Exception(f'Complexity measurement not available: {complexity_measure}')
+
+
+class RootNode_Dummy(Node):
+    """Sfeh:discuss
+    this node can be used as dummy and is used to mimic a root type"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
@@ -820,6 +824,8 @@ class NodeRandomizer:
         return op
 
     def choose_operator_match(self, xtype):
+        if CHAIN_implement:
+            pass
         op = np.random.choice(self.pick_op_match[xtype][0], p=self.pick_op_match[xtype][1])
         return op
 
@@ -910,7 +916,8 @@ def tree_simplification(tree, allow_chain) -> Node:
               # f'\n\told: {tree_copy.get_expr_symlike()}'
               # f'\n\tsym: {tree.get_expr_symlike()}'
               f'\n\tsym: {tree_copy.get_tree_export()}')
-
+        if tree_copy.get_sympy_expr() != tree.get_sympy_expr():
+            print_warning('w', f'\t{tree_copy.get_sympy_expr()}\n\t{tree.get_sympy_expr()}')
     return tree
 
 
@@ -1111,6 +1118,9 @@ class Evolution:
 
             if num_rest > 0:
                 nums = randomly_split_range(num_rest - 1, num)
+
+                if CHAIN_implement:  # sfeh:open
+                    pass  # optional; just add more node here already
 
                 for ii, xt in enumerate(child_xts):
                     cc = self.evolve_create_random(xt, depth_goal, num_rest=nums[ii], depth=depth + 1, p_term=p_term)
@@ -1428,7 +1438,7 @@ class Candidate:
 
 class ExplainableGP:
 
-    def __init__(self, name, pop_max, gen_max, rootdir, df_train, df_control, evolve: Evolution, sy_symbols, normalize_numpy, allow_chain, col_names):
+    def __init__(self, name, pop_max, gen_max, rootdir, df_train, df_control, evolve: Evolution, symbols, normalize_numpy, allow_chain):
         self.time_start = time.perf_counter()
         self.name = name
         self.df_train = df_train
@@ -1439,10 +1449,9 @@ class ExplainableGP:
         self.gen_max = gen_max
         self.rootdir = rootdir
         self.gen_id = 0
-        self.symbols = sy_symbols
+        self.symbols = symbols
         self.normalize_numpy = normalize_numpy
         self.allow_chain = allow_chain
-        self.col_names = col_names
 
         printpl('gg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
@@ -1652,7 +1661,7 @@ class ExplainableGP:
                 except (ValueError, ArithmeticError) as ex:
                     # if 'Crossover tree 1 has no mutable nodes!' in str(ex):
                     # if "'a' cannot be empty unless no samples are taken" in str(ex):
-                    print_warning('ww', f'Value/Arithmetic: {ex}')
+                    print_warning('ww', f'OnlyPrintException: Value/Arithmetic: {ex}')
                 except TypeError as ex:
                     # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
                     # ==> sfeh probably this error: cond(): 'false_fn' argument required
@@ -1660,22 +1669,22 @@ class ExplainableGP:
                     if str(ex) == "Cannot convert complex to float":
                         pass
                 except AttributeError as ex:
-                    raise Exception(f'(Okay, if sympy.im in expr) {ex}')  #
+                    print(f'OnlyPrintException: (Okay, if sympy.im in expr) {ex}')
                 except KeyError as ex:
                     # KeyError(re) -> okay?, real part implies complex numbers, ignoring is okay
                     # (probably sympy.lambdify expression not evaluable)
-                    print(f'Keyerror?: {ex}')
+                    print(f'OnlyPrintException: Keyerror?: {ex}')
                 except RecursionError as ex:
-                    print(f'RecursionError (probably Piecewise/relational combination?): {ex}')
+                    print(f'OnlyPrintException: RecursionError (probably Piecewise/relational combination?): {ex}')
                 except NotImplementedError as nie:
                     print_caution(f'Notimplemented? {nie}')
                 except Exception as ex:
-                    print(f'Why are we not here??? {ex}')
+                    print(f'OnlyPrintException: Why are we not here??? {ex}')
         return loop
 
     def eval_fitness(self, sy_expr):
 
-        df_results = eval_predict(sy_expr, self.df_train, self.symbols, self.normalize_numpy)
+        df_results = eval_predict_df(sy_expr, self.df_train, self.symbols, self.normalize_numpy)
         # pairwise_results = pairwise_results['result']
         fitness = np.sqrt(np.mean((df_results - self.df_train['action']) ** 2))  # discuss: np.square vs. **2: should be mainly irrelevant
         fitness = round(fitness, FLOAT_PRECISION)

@@ -55,6 +55,7 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 import sympy
+# import sympy.functions.elementary.piecewise  # sfeh: needs separate import?
 from sympy.functions.elementary.piecewise import ExprCondPair
 
 from plagih.util import get_subclasses, FLOAT_PRECISION, DEBUG_DUMMY, SympySimplificationError  # noqa
@@ -664,12 +665,10 @@ class Exp(MathOperator):
 
 class ExprCondPair_Dummy(Node_Dummy):
     """
-    Looks like in sympy: (x, cond) or (2, (cartVel<0))
     Named like this to differ from the sympy original (ExprCondPair)
     sfeh:discuss
     The only purpose is to wrap the results for a Node-structure, where every Node has childs with other nodes"""
     symfun = ExprCondPair
-    np_fun = lambda a: np.array()
     showme = 'ExprCondPair_Dummy'
     sy_str = 'ExprCondPair({0}, {1})'
     repr_str = 'ExprCondPair_Dummy{},[{}, {}]'

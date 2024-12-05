@@ -16,7 +16,6 @@ os.environ["KMP_WARNINGS"] = "FALSE"
 class AddChain(OperatorChained):
     """It is Sum, but we call it chain, as vector also is taken"""
     symfun = sympy.Add
-    np_fun = np.add
     np_fun = lambda x: np.sum(np.vstack(x), axis=0)
     showme = 'Add'
     sy_str = 'Add({})'
@@ -82,9 +81,6 @@ class Piecewise(OperatorChained):
 """
     # ogclass = Ifte
     # xtype = ((float, bool), float)
-    symfun = lambda *a: sympy.Piecewise(a)
-    # (e1, c1), (e2, c2) -> ex, (c1, c2), (e1, e2)
-    # np_fun = lambda *a: np.piecewise(a, a)
     showme = 'Piecewise'
     sy_str = 'Piecewise({})'
     formulae_str = 'Piecewise({})'
@@ -93,6 +89,7 @@ class Piecewise(OperatorChained):
     # xtype = ((ExprCondPair,), float)
     # xtype_chain = ExprCondPair_Dummy
     # symfun = sympy.Piecewise
+    symfun = lambda *a: sympy.Piecewise(a)
 
 
 class AndChain(OperatorChained):

@@ -76,7 +76,7 @@ class Node:
         -> when there are more childs than input-xtypes
         ...if there are less. its weird, maybe node in construction?"""
         a = issubclass(self.typus, OperatorChained)
-        b = len(self.typus.xtype[0]) < len(self.childs)
+        b = len(self.typus.xtype[0]) < len(self.get_childs())
         if a or b:
             return True
         else:
@@ -106,18 +106,18 @@ class Node:
         # sfeh:delete_me if no error after 27-11-2023
         typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
 
-        if self.childs:
+        if self.get_childs():
             if issubclass(self.typus, BaseOperator):
                 childstr = ', '.join([cc.str_as_list() for cc in self.get_childs()])
                 typus_str = f'{typus_str}, {childstr}'
             else:
                 try:
                     if self.is_number():
-                        typus_str = f'{self.childs[0]:.3g}'  # '.5g'->5 decimals, trailing zeros, but rare (ugly) "E+04"
+                        typus_str = f'{self.get_childs()[0]:.3g}'  # '.5g'->5 decimals, trailing zeros, but rare (ugly) "E+04"
                     else:
-                        typus_str = f'{self.childs[0]}'
+                        typus_str = f'{self.get_childs()[0]}'
                 except TypeError as ex:  # noqa
-                    typus_str = str(self.childs[0].evalf())
+                    typus_str = str(self.get_childs()[0].evalf())
                     typus_str = string_remove_trailing_zeroes(typus_str)
                     # sympy.ONE -> 1.0000000...
                     # sfeh:open int, non-floats are handled badly
@@ -178,7 +178,7 @@ class Node:
 
         if issubclass(self.typus, Terminal):
             _sym = self.typus.get_sym()  # _sym = self.typus.symfun
-            _cs = self.childs[0]
+            _cs = self.get_childs()[0]
             r = _sym(_cs)
             return r
 
@@ -191,8 +191,8 @@ class Node:
 
         elif self.typus in (Piecewise, sympy.Piecewise):  # sfeh:open delete ONE of them?
             _sym = sympy.Piecewise
-            _cs = self.childs
-            _cs = [(cc.childs[0], cc.childs[1]) for cc in _cs]
+            _cs = self.get_childs()
+            _cs = [(cc.get_childs()[0], cc.get_childs()[1]) for cc in _cs]
             _cs = [(cc[0].get_sympy_expr(), cc[1].get_sympy_expr()) for cc in _cs]
             _cs = [ExprCondPair(cc[0], cc[1]) for cc in _cs]
             _cs = _sym(*_cs)
@@ -211,7 +211,7 @@ class Node:
     #     self.typus.__name__ gets the class name
     #     """
     #     if self.is_term():
-    #         fex = f'{self.childs[0]}'
+    #         fex = f'{self.get_childs()[0]}'
     #         fex = string_remove_trailing_zeroes(fex)
     #         return fex
     #     else:
@@ -231,7 +231,7 @@ class Node:
         and then, the inputs are filled in the gaps
         """
         if self.is_term():
-            expr = f'{self.childs[0]}'
+            expr = f'{self.get_childs()[0]}'
             expr = string_remove_trailing_zeroes(expr)
             return expr
         else:
@@ -270,7 +270,7 @@ class Node:
             s += ':fix'
 
         if self.is_term():
-            cs = f'{self.childs[0]}'
+            cs = f'{self.get_childs()[0]}'
             cs = string_remove_trailing_zeroes(cs)
             if show_all:
                 s = f'{s}({cs})'
@@ -296,7 +296,7 @@ class Node:
         label = self.typus.showme  # class name
 
         if self.is_term():
-            cs = f'{self.childs[0]}'
+            cs = f'{self.get_childs()[0]}'
             cs = string_remove_trailing_zeroes(cs)
             if self.is_term_and_symbol():
                 cs = f'"{cs}"'
@@ -400,13 +400,12 @@ class Node:
             if str(self.typus) != str(origin.typus):
                 raise
             self.is_fix = True
-            for ii, cc in enumerate(self.childs):
+            for ii, cc in enumerate(self.get_childs()):
                 cc.update_fixed_nodes(origin.childs[ii])
 
     def get_all_nodes_visualize(self, setid: str):
         """returns all nodes in a tree as list
         a+1 -> [+a1, a, 1]"""
-        # if len(self.childs) == 0:
         showme = f'{self.childs[0]}' if self.is_term() else f'{self.get_typus().showme}'
 
         res = {setid: {'node': self,
@@ -641,17 +640,17 @@ class Node:
             for cc in self.get_childs():
                 cc.tree_node_grouping(tolerance=tolerance)
 
-            if self.typus in (Pow, PowRounded):
-                n_exp = self.childs[1].childs[0]  # must exist
+            if self.get_typus() in (Pow, PowRounded):
+                n_exp = self.get_childs()[1].get_childs()[0]  # must exist
                 if n_exp == -1:
-                    self.replace_with(DivFraction, childs=[self.childs[0]])
+                    self.replace_with(DivFraction, childs=[self.get_childs()[0]])
                 elif n_exp == 2:
-                    self.replace_with(Square, childs=[self.childs[0]])
+                    self.replace_with(Square, childs=[self.get_childs()[0]])
                 elif n_exp == 0.5:
-                    self.replace_with(Sqrt, childs=[self.childs[0]])
-                elif self.childs[1].typus == Round:
-                    self.replace_with(PowRounded, childs=[self.childs[0], n_exp])
-                elif self.childs[1].typus == Number and n_exp % 1 == 0:
+                    self.replace_with(Sqrt, childs=[self.get_childs()[0]])
+                elif self.get_childs()[1].typus == Round:
+                    self.replace_with(PowRounded, childs=[self.get_childs()[0], n_exp])
+                elif self.get_childs()[1].typus == Number and n_exp % 1 == 0:
                     self.set_typus(PowRounded)
 
             elif self.typus == Mul:
@@ -660,26 +659,26 @@ class Node:
                     # Nothing to do here! ?
                     pass
                 else:
-                    if self.childs[0].typus == DivFraction:
-                        self.replace_with(Div, childs=[self.childs[1], self.childs[0].childs[0]])
-                    elif self.childs[1].typus == DivFraction:
-                        self.replace_with(Div, childs=[self.childs[0], self.childs[1].childs[0]])
+                    if self.get_childs()[0].typus == DivFraction:
+                        self.replace_with(Div, childs=[self.get_childs()[1], self.get_childs()[0].get_childs()[0]])
+                    elif self.get_childs()[1].typus == DivFraction:
+                        self.replace_with(Div, childs=[self.get_childs()[0], self.get_childs()[1].get_childs()[0]])
 
-                    elif self.childs[0].typus == Number:
-                        mul1 = self.childs[0].childs[0]
+                    elif self.get_childs()[0].typus == Number:
+                        mul1 = self.get_childs()[0].get_childs()[0]
                         if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
-                            self.replace_with(Usub, childs=[self.childs[1]])  # sfeh Usub ONLY option, ignore usub tree len
+                            self.replace_with(Usub, childs=[self.get_childs()[1]])  # sfeh Usub ONLY option, ignore usub tree len
                         elif 0 < mul1 < 1:
-                            self.replace_with(Div, childs=[self.childs[1], Node(Number, childs=[1 / mul1])])
+                            self.replace_with(Div, childs=[self.get_childs()[1], Node(Number, childs=[1 / mul1])])
 
-                    elif self.childs[1].typus == Number:
+                    elif self.get_childs()[1].typus == Number:
                         # sfeh this code can be simplified?
-                        mul1 = self.childs[1].childs[0]
+                        mul1 = self.get_childs()[1].get_childs()[0]
                         if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
-                            self.replace_with(Usub, childs=[self.childs[0]])  # sfeh Usub ONLY option, ignore usub tree len
+                            self.replace_with(Usub, childs=[self.get_childs()[0]])  # sfeh Usub ONLY option, ignore usub tree len
                             print(f'Success! 11')
                         elif 0 < mul1 < 1:
-                            self.replace_with(Div, childs=[self.childs[0], 1 / mul1])
+                            self.replace_with(Div, childs=[self.get_childs()[0], 1 / mul1])
                             sfeh_div_by_test = 1 / mul1  # sfeh keep "div" as option
                             print(f'Success! 12')
                             print(f'sfeh:test this needs testing when reached in future {sfeh_div_by_test}')

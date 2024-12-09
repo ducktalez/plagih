@@ -5,6 +5,8 @@
 
 ## Ablage/Todos
 
+- TODO: self.evolve.origin_tree
+
 - double linked tree (root node, parent node)
   - implemented!
   - use for tree-visualisation

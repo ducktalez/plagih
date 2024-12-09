@@ -102,7 +102,7 @@ def tree_graph(expr):
         if stack:
             edges.append((stack[-1][0], i))
             stack[-1][1] -= 1
-        labels[i] = node.name if isinstance(node, Primitive) else node.value
+        labels[i] = node.get_name if isinstance(node, Primitive) else node.value
         stack.append([i, node.arity])
         while stack and stack[-1][1] == 0:
             stack.pop()

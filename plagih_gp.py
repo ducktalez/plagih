@@ -3,7 +3,10 @@ This starts the whole genetic programming.
 This (extra) file was added to have a file in the root directory that can be started.
 """
 from sklearn.model_selection import train_test_split
-from plagih.plagih_gp_base_class_xai import *
+
+from plagih.evolve import Evolution
+from plagih.gp import selection_tournament, ExplainableGP
+from plagih.trees import *
 from plagih.util import *
 import pandas as pd
 import sympy
@@ -12,11 +15,9 @@ col_names = ['cartVel', 'cartPos']
 df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv').astype('float32')
 df_train, df_control = train_test_split(df, test_size=0.2, random_state=0)
 DATA_SYMBOLS = sympy.symbols(df[col_names].columns, real=True, imaginary=False)  # sfeh input_names dirty here
+operator_dict = Evolution.operator_presets['math_simple']
 
-build_operator_dict = {Add: 2, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
-                       Sin: 0.5, Not: 0.5, Lt: 0.5, Le: 0.5, And: 1, Or: 1, Min: 1, Max: 1}
-
-make_symbol_fun = lambda x: sympy.Symbol(x, real=True, imaginary=False)
+symbols_lambda = lambda x: sympy.Symbol(x, real=True, imaginary=False)
 
 rootdir = Path.cwd() / 'MTC200_RMSE_scratch'
 normalize_numpy = lambda x: np.round(np.clip(x, 0, 2), 0)
@@ -30,9 +31,8 @@ depth_max = 10
 def _test_simple(chained_on=True):
     """SIMPLE"""
 
-    node_selector = NodeRandomizer(build_operator_dict, col_names, make_symbol_fun)
-    evolve = Evolution(None, None, node_selector, {'depth_max': 7, 'nodes_max': 50}, 'tree_node_count', chained_on)
-    gp = ExplainableGP('TEST', pop_max, gen_max, rootdir, df_train, df_control, evolve, DATA_SYMBOLS, normalize_numpy, chained_on)
+    evolve = Evolution(symbol_list=['cartVel', 'cartPos'], operators=operator_dict, depth_max=7, nodes_max=50, allow_chain=chained_on)
+    gp = ExplainableGP(evolve, df_train, rootdir=rootdir, normalize_numpy=normalize_numpy, allow_chain=chained_on)
 
     gp.gen_create_initial()
 
@@ -84,43 +84,10 @@ def _test_simple(chained_on=True):
 def _test_random_pop(chained_on=True):
     """Testrun"""
 
-    # class Fixed(Node):
-    #     def __init__(self, *args):
-    #         super(Fixed, self).__init__(*args, is_fix=True)
-    #
-    # class N(Node):
-    #     def __init__(self, *args):
-    #         super(N, self).__init__(*args, is_fix=True)
+    operator_dict.update({Ifte: 2, PowRounded: 1, Round: 1})
 
-    # ops_arity = {Ifte: 2}  # operators that contradict with fixed arity
-    ops_arity = {Ifte: 2, PowRounded: 1, Round: 1}  # operators that contradict with fixed arity
-    build_operator_dict.update(ops_arity)
-    node_selector = NodeRandomizer(build_operator_dict, col_names, make_symbol_fun)
-
-    build_restrictions = {'depth_max': 7, 'nodes_max': 50}
-
-    # ### A simple tree and a simple tree with fixed nodes
-    # '["Ifte",["<",["cartVel"],["0"]],["0"],["2"]]'
-    # '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]'
-    # origin_tree = Node(Ifte, [Node(Le, [(Symbol('cartVel'), Number(0))], Number(0), Number(2)])
-    # origin_tree = Node(Add, [Node(Number, [sympy.Float(1)]), Node(Symbol, [sympy.Symbol('cartVel')])], is_fix=True)
-    # origin_tree = '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]'
-
-    # origin_tree = Node(Ifte,
-    #                    [Node(Lt,
-    #                          [Node(Symbol, [sympy.Symbol('cartVel')]),
-    #                           Node(Number, [0])]),
-    #                     Node(Number, [0], is_fix=True),
-    #                     Node(Number, [2], is_fix=True)], is_fix=True)
-    # origin_tree.repair_depth()  # sfeh:discuss
-    # print(origin_tree)
-    # print(origin_tree.get_sympy_expr())
-
-    origin_tree = None
-
-    # tb = TreeBuildRestrictions(origin_xtype, None, nc, build_restrictions, 'tree_node_count')
-    evolve = Evolution(None, origin_tree, node_selector, build_restrictions, 'tree_node_count', chained_on)
-    gp = ExplainableGP('MTC200_RMSE_scratch', pop_max, gen_max, rootdir, df_train, df_control, evolve, DATA_SYMBOLS, normalize_numpy, chained_on)
+    evolve = Evolution(symbol_list=['cartVel', 'cartPos'], operators=operator_dict, depth_max=7, nodes_max=50, allow_chain=chained_on)
+    gp = ExplainableGP(evolve, df_train, rootdir=rootdir, normalize_numpy=normalize_numpy, allow_chain=chained_on)
     try:
         # gp.backup_load()
         printpl('i', 'Ignore loading backup!')
@@ -227,6 +194,6 @@ def _test_random_pop(chained_on=True):
 
 if __name__ == "__main__":
     _test_simple(chained_on=False)
-    _test_random_pop(chained_on=False)  # sfeh:open
-    _test_simple(chained_on=True)
-    _test_random_pop(chained_on=True)
+    # _test_random_pop(chained_on=False)  # sfeh:open
+    # _test_simple(chained_on=True)
+    # _test_random_pop(chained_on=True)

@@ -20,11 +20,6 @@ CHAIN_implement = 'TODO'  # used as placeholder for implementation-tasks
 TREE_MIN_PARSIMONY = 3
 
 
-# # GP Evolution
-# period = {'gen_plots': 5, 'gen_save': 5}
-# mp_cores = 1
-
-
 class TreeSizeError(Exception):
     """Non-important, but errors that often come up, e.g.
     - tree is too small after simplification
@@ -156,6 +151,15 @@ def string_remove_trailing_zeroes(x):
     """
     x = re.sub(r'\.0+$|0+$', '', x)
     return x
+
+
+def printpl(msg_t, message_str):
+    """Lightweight print function.
+    Instead of checking if you should print every time, this is done here.
+    message_type options can be found in config
+    """
+    printez(msg_t, message_str)
+    return
 
 
 def print_warning(msg_type, text):

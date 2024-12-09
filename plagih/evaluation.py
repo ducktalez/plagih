@@ -1,7 +1,6 @@
 import pandas as pd
 
 from plagih.sympy_extras import plagih_sympify
-from plagih.tree_labels import Round_Dummy, PowRounded
 from plagih.util import *
 import sympy
 from sympy.utilities.exceptions import ignore_warnings
@@ -18,7 +17,7 @@ custom_functions = {
 }
 
 
-def eval_predict_df(sy_expr: sympy.Basic, df: pd.DataFrame, variable_names, normalize_numpy):
+def eval_predict_df(sy_expr: sympy.Basic, df: pd.DataFrame, normalize_numpy=None):
     """
     Returns the fitness (float)
 

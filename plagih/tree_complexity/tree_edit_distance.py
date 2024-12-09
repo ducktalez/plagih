@@ -34,13 +34,13 @@ def print_apted_tree(tree):
     def print_apted_tree_helper(subtree, depth=0):
         if tree_vis_dic.get(depth) is None:
             tree_vis_dic[depth] = []
-        tree_vis_dic[depth].append(subtree.name)
+        tree_vis_dic[depth].append(subtree.get_name)
 
         depth += 1
 
         for child in subtree.children:
             print_apted_tree_helper(child, depth)
-        return subtree.name
+        return subtree.get_name
 
     print_apted_tree_helper(tree)
 
@@ -180,18 +180,18 @@ def tree_nodeid_ted_mapping(mapping):
     for ii, map_i in enumerate(mapping):
         a, b = map_i[0], map_i[1]
         if a is None:
-            print(f'{ii} inserted {b.name}')
+            print(f'{ii} inserted {b.get_name}')
             pass
         elif b is None:
-            print(f'{ii} deleted {a.name}')
+            print(f'{ii} deleted {a.get_name}')
         else:
-            a_name = a.name
-            b_name = b.name
+            a_name = a.get_name
+            b_name = b.get_name
             if a_name == b_name:
                 # print(f'{ii} No change, {a.name}')
                 pass
             else:
-                print(f'{ii} changed {a.name}')
+                print(f'{ii} changed {a.get_name}')
 
     return
 

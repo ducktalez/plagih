@@ -17,13 +17,13 @@ def pareto_from_pop(pop_list):
     except Exception as ex:
         raise Exception(f'The list is empty, i guess: {pop_list}. {ex}')
 
-    ref_par = xx.get_parsimony()
+    ref_par = xx.get_parsim()
     ref_fit = xx.get_fitness()
 
     pop_pareto = [xx]
 
     for tree in pop_list:
-        parsim = tree.get_parsimony()
+        parsim = tree.get_parsim()
         if parsim == ref_par:  # parsim can not be smaller
             fitness = tree.get_fitness()
             if fitness == ref_fit:
@@ -43,7 +43,7 @@ def pareto_from_pop(pop_list):
 
 
 def pareto_sort(tree_list):
-    tree_list = sorted(tree_list, key=lambda x: (x.get_parsimony(), x.get_fitness()))  # keys can be negative (*-1)
+    tree_list = sorted(tree_list, key=lambda x: (x.get_parsim(), x.get_fitness()))  # keys can be negative (*-1)
     return tree_list
 
 
@@ -56,10 +56,10 @@ def pareto_export(paretofront):
             in paretofront]
 
 
-def plot_paretofront(paretofront, path, name, parsimony_max) -> []:
+def plot_paretofront(paretofront, path, parsimony_max) -> []:
     """Write pyplot with paretofront candidates"""
 
-    tuples = [[tree.get_parsimony(), tree.get_fitness()] for tree in paretofront]
+    tuples = [[tree.get_parsim(), tree.get_fitness()] for tree in paretofront]
     xx, yy = np.array(tuples).T
 
     if len(xx) == 0:
@@ -72,7 +72,7 @@ def plot_paretofront(paretofront, path, name, parsimony_max) -> []:
         xx = np.concatenate([xx, [right + 1]])
         yy = np.concatenate([yy, [yy[-1]]])
 
-        run_name_latex = str(name).replace('_', '-')  # workaround for latex version
+        run_name_latex = str(path.name).replace('_', '-')  # workaround for latex version
         ax.step(xx, yy, linestyle='dashed', marker='.', label=f'{run_name_latex}', where='post')
         ax.set(xlabel='complexity', ylabel='regression error', xlim=(0, right), ylim=(0, (max(yy) - min(min(yy), 0)) * 1.05))
 

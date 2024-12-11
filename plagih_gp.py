@@ -31,7 +31,7 @@ depth_max = 10
 def _test_simple(chained_on=True):
     """SIMPLE"""
 
-    evolve = Evolution(symbol_list=['cartVel', 'cartPos'], operators=operator_dict, depth_max=7, nodes_max=50, allow_chain=chained_on)
+    evolve = Evolution(symbol_list=sympy.symbols(['cartVel', 'cartPos']), operators=operator_dict, depth_max=7, nodes_max=50, allow_chain=chained_on)
     gp = ExplainableGP(evolve, df_train, rootdir=rootdir, normalize_numpy=normalize_numpy, allow_chain=chained_on)
 
     gp.gen_create_initial()
@@ -161,7 +161,7 @@ def _test_random_pop(chained_on=True):
                 return gp.evolve.evolve_mutate_filter(tree, allow_chain=chained_on)
 
             @gp.create_trees(rate=0.1)
-            def rand2():
+            def rand2b():
                 tree = gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
                 return tree
 

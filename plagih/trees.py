@@ -4,11 +4,20 @@ The main class of a gp run. It holds the following functionalities
 - population (pop_base, pop_next)
 -
 """
+
+"""
+Tree nodes that do not require fixed arity.
+Separate file to NOT confuse anything, even though there might be some redundancy
+"""
+import os
+
+from plagih.util import get_subclasses, FLOAT_PRECISION, DEBUG_DUMMY  # noqa
+
+os.environ["KMP_WARNINGS"] = "FALSE"
 from plagih.util import *
 import copy
 import random
 from dataclasses import dataclass
-import sympy.core.numbers
 from plagih.tree_complexity.tree_edit_distance import apted_distance
 from plagih.util import FLOAT_PRECISION, string_remove_trailing_zeroes, rnd_choice, xt_self
 import os
@@ -207,45 +216,6 @@ class Node:
         s = self.get_sympy_expr()
         return s
 
-    def get_sympy_expr(self) -> sympy.Basic:
-        """Converts directly into a sympy expr
-        from node-class, go to a sympy expression
-        """
-        todo0 = self.symfun
-        todo1 = type(self).symfun
-
-        if self.is_term():
-            # if issubclass(type(self), Terminal):
-            _sym = type(self).symfun  # _sym = self.typus.symfun
-            _cs = self.get_childs()[0]
-            r = _sym(_cs)
-            return r
-            # return _cs
-
-        elif issubclass(type(self), (Round, PowRounded)):
-            _cs = [cc.get_sympy_expr() for cc in self.get_childs()]
-            _sym = type(self).symfun
-            # _sym = Round_Dummy
-            _cs = _sym(*_cs)  # sfeh:debug2024
-            return _cs
-
-        elif self.get_typus_sfeh() in (Piecewise, sympy.Piecewise):  # sfeh:open delete ONE of them?
-            _sym = sympy.Piecewise
-            _cs = self.get_childs()
-            _cs = [(cc.get_childs()[0], cc.get_childs()[1]) for cc in _cs]
-            _cs = [(cc[0].get_sympy_expr(), cc[1].get_sympy_expr()) for cc in _cs]
-            _cs = [ExprCondPair(cc[0], cc[1]) for cc in _cs]
-            _cs = _sym(*_cs)
-            return _cs
-        else:
-            _cs = [cc.get_sympy_expr() for cc in self.get_childs()]
-            _sym = type(self).symfun
-            try:
-                r = _sym(*_cs)  # noqa (_sym is definitely assigned)
-            except (ValueError, TypeError) as ex:
-                raise SympySimplificationError(ex)
-            return r
-
     # def get_expr_raw_fstring(self):
     #     """Add (1, a)
     #     self.typus.__name__ gets the class name
@@ -372,7 +342,7 @@ class Node:
     #     """all other values are automatically set by assigning the respected node"""
     #     self.typus = t
 
-    def set_parent(self, n: 'Node'):
+    def set_parent(self, n):
         self.parent_node = n
 
     def set_root(self, n: 'Node'):
@@ -383,8 +353,8 @@ class Node:
 
     def set_childs(self, child_list):
         if isinstance(child_list, (list, tuple)):
-            child_list = [cast_input(x) for x in list(*child_list)]
-            self.childs = child_list
+            ccs = [cast_input(x) for x in child_list]
+            self.childs = ccs
             if self.has_childs():
                 for cc in self.get_childs():
                     cc.set_parent(self)  # set pointer in child-nodes
@@ -521,11 +491,14 @@ class Node:
 
     def set_new_node(self, nd_new: 'Typus', debug=True):
         """Replacing oneself with another node"""
-        if debug:
-            raise NotImplementedError('SFEH remove debug and debug this')
+        # if debug:
+        #     raise NotImplementedError('SFEH remove debug and debug this')
         old_todo = copy.deepcopy(self)
         # self.__dict__ = nd_new.__dict__
-        self.__class__ = nd_new.__class__
+        try:
+            self.__class__ = nd_new.__class__
+        except Exception as todo:
+            self.__class__ = nd_new.__class__
         self.__dict__.update(nd_new.__dict__)
         # self.chain_xtype = nd_new.chain_xtype
         self.childs = nd_new.childs
@@ -553,10 +526,13 @@ class Node:
         self.parent_node = parent
         for cc in self.get_childs():
             cc.repair_backlink(self, root)
-        # self.repair_depth()
+        # self.repair_depth()  # sfeh:random powrounded replace is always when fitting? should maybe not?
 
     def replace_with(self, typus, childs):
-        new_node = typus(childs)
+        try:  # todo unrelated set_childs should set parents and root node!
+            new_node = typus(*childs)
+        except Exception as ex:
+            new_node = typus(childs)  # todo this line is never reached... i hope
         self.set_new_node(new_node)
         # if typus is not None:
         #     self.set_typus(typus)
@@ -594,7 +570,7 @@ class Node:
 
             if xtype is None or xtype == self.get_xtype_self():
                 # if not allow_chain or (allow_chain and self.is_chain()):
-                if allow_chain or (self.is_chain()):
+                if allow_chain or (not self.is_chain()):  # if it is chain -> check if allowed
                     node_list = [self]
                 else:
                     node_list = []
@@ -671,9 +647,14 @@ class Node:
                 n_exp = mychlds[1].get_childs()[0]  # must exist
                 if n_exp == -1:
                     self.replace_with(DivFraction, childs=[mychlds[0]])
+                # sfeh:discuss (-2), respective negative exponent in general
                 elif n_exp == 2:
                     self.replace_with(Square, childs=[mychlds[0]])
                 elif n_exp == 0.5:
+                    self.replace_with(Sqrt, childs=[mychlds[0]])
+                elif n_exp == sympy.S.Half:  # todo other missing matches? is found hard
+                    self.replace_with(Sqrt, childs=[mychlds[0]])
+                elif n_exp == 0.5 or n_exp == sympy.S.Half:  # todo
                     self.replace_with(Sqrt, childs=[mychlds[0]])
                 elif mychlds[1].get_typus_sfeh() == Round:
                     self.replace_with(PowRounded, childs=[mychlds[0], n_exp])
@@ -692,11 +673,13 @@ class Node:
                         self.replace_with(Div, childs=[mychlds[0], mychlds[1].get_childs()[0]])
 
                     elif mychlds[0].get_typus_sfeh() == Number:
-                        mul1 = mychlds[0].get_childs()[0]
+                        mul1 = mychlds[0].get_childs()[0]  # todo
                         if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
+
                             self.replace_with(Usub, childs=[mychlds[1]])  # sfeh Usub ONLY option, ignore usub tree len
                         elif 0 < mul1 < 1:
-                            self.replace_with(Div, childs=[mychlds[1], nd(Number, childs=[1 / mul1])])
+                            sfeh = nd(Number, (1 / mul1))
+                            self.replace_with(Div, childs=[mychlds[1], sfeh])
 
                     elif mychlds[1].get_typus_sfeh() == Number:
                         # sfeh this code can be simplified?
@@ -711,6 +694,220 @@ class Node:
                         #     print(f'sfeh:test this needs testing when reached in future {sfeh_div_by_test}')
                         raise NotImplementedError  # commented block above
         return  # two indents
+
+
+class Typus(Node):
+    """
+    The expr-content of a node
+        - most functions in here are not tested, but also never required
+        - str() function is used only for showing infos in debugger
+    """
+    symfun = None
+    xtype = ((None,), None)
+    showme = None
+    sy_str = lambda self, s: None  # 'sympy-fun'
+    formulae_str = None  # 'sympy-expr'
+    repr_str = None  # 'repr-format-{}-options'
+    chain_xtype = None
+
+    def __init__(self, *args: iter):
+        super().__init__(*args)
+
+    def get_sympy_expr(self) -> sympy.Basic:
+        """Converts directly into a sympy expr
+        from node-class, go to a sympy expression
+        """
+        todo0 = self.symfun
+        todo1 = type(self).symfun
+        # print(f't0t1: {todo0}  {todo1}')
+
+        if self.is_term():
+            # if issubclass(type(self), Terminal):
+            _sym = type(self).symfun  # _sym = self.typus.symfun
+            _cs = self.get_childs()
+            try:
+                r = _sym(_cs)
+            except Exception as todo:
+                r = _sym(*_cs)  # should not be there
+            return r  # 2.3470000 -> 2.35
+            # return _cs
+
+        elif issubclass(type(self), (Round, PowRounded)):
+            _cs = [cc.get_sympy_expr() for cc in self.get_childs()]
+            _sym = type(self).symfun
+            # _sym = Round_Dummy
+            _cs = _sym(_cs)  # sfeh:debug2024
+            return _cs
+
+        elif self.get_typus_sfeh() in (Piecewise, sympy.Piecewise):  # sfeh:open delete ONE of them?
+            _sym = sympy.Piecewise
+            _cs = self.get_childs()
+            _cs = [(cc.get_childs()[0], cc.get_childs()[1]) for cc in _cs]
+            _cs = [(cc[0].get_sympy_expr(), cc[1].get_sympy_expr()) for cc in _cs]
+            _cs = [ExprCondPair(cc[0], cc[1]) for cc in _cs]
+            _cs = _sym(_cs)
+            return _cs
+        elif self.is_operator():
+            _cs = [cc.get_sympy_expr() for cc in self.get_childs()]
+            _sym = type(self).symfun
+            try:
+                r = _sym(_cs)  # noqa (_sym is definitely assigned)
+            except (ValueError, TypeError) as ex:
+                # r = _sym(*_cs)  # noqa (_sym is definitely assigned)  # todo delete line
+                raise SympySimplificationError(f'getsympyexpr-err| {ex}')
+            return r
+        else:
+            raise NotImplementedError
+
+    def represent_str(self, show_all=True):
+        """
+        sfeh:open
+            - represent does not work and needs a lot of testing
+            - Is not required for now!
+        Printing the nodes as nested array structure such that it can be saved/loaded
+        very closely related to str(), but adds the following information:
+        - ":fix", when nodes are fixed"""
+
+        s = self.showme  # class name
+
+        if self.is_fix and show_all:
+            s += ':fix'
+
+        if self.is_term():
+            cs = f'{self.get_childs()[0]}'
+            cs = string_remove_trailing_zeroes(cs)
+            if show_all:
+                raise NotImplementedError
+            else:
+                s = f'{cs}'
+
+        else:
+            cs = [cc.represent_str(show_all=show_all) for cc in self.get_childs()]
+            cs = ', '.join(cs)
+            s = f"{s}({cs})"
+
+        s = f"{s}"  # v1
+
+        return s
+
+    def represent_str_sfeh_old(self, show_all=True):
+        """
+        sfeh:open
+            - represent does not work and needs a lot of testing
+            - Is not required for now!
+        Printing the nodes as nested array structure such that it can be saved/loaded
+        very closely related to str(), but adds the following information:
+        - ":fix", when nodes are fixed"""
+
+        s = self.showme  # class name
+
+        if self.is_fix and show_all:
+            s += ':fix'
+
+        if self.is_term():
+            cs = f'{self.get_childs()[0]}'
+            cs = string_remove_trailing_zeroes(cs)
+            if show_all:
+                s = f'{s}({cs})'
+            else:
+                s = f'{cs}'
+
+        else:
+            cs = [cc.represent_str(show_all=show_all) for cc in self.get_childs()]
+            cs = ', '.join(cs)
+            s = f"{s}, {cs}"
+
+        s = f"[{s}]"  # v1
+
+        return s
+
+    def __str__(self):
+        # sfeh which style for trees?
+        """
+        Those string can be used:
+        [Abs, [Abs, [Square, [cartPos]]]]
+        [Abs, [Abs, [Square, [Symbol(cartPos)]]]]
+        Abs(Abs((cartPos)**2))
+        Abs(cartPos**2)
+        cartPos**2
+        Abs(Abs(Square(cartPos)))
+        [Abs, [Abs, [Square, [cartPos]]]]
+        """
+        s = self.represent_str(show_all=False)
+        # s1 = self.represent_str()
+        # s2 = self.get_expr_symlike()
+        # s3 = self.get_expr_symlike(try_sympify=True)
+        # s4 = self.get_sympy_expr()
+        # s5 = self.get_expr_raw_fstring()
+        # s6 = self.str_as_list()
+        # s_export = self.get_tree_export()
+        # print(f'{s}\n{s1}\n{s2}\n{s3}\n{s4}\n{s5}\n{s6}\n{s_export}')
+        return s
+
+    # def __new__(cls, *args, **kwargs):
+    #     """Why use new as init method? -> Allows returning an instance of a different class"""
+    #
+    #     obj = object.__new__(cls)
+    #     obj.args = args
+    #     if issubclass(cls, Terminal):
+    #         pass
+    #
+    #     return obj
+
+    # def __str__(self):
+    #     _str = self.as_str()
+    #     return _str
+    #
+    # def as_str(self):
+    #     """not working"""
+    #     _str = self.__class__.__name__
+    #     _str = self.__class__
+    #     if issubclass(self.__class__, (OperatorArity, OperatorChained)):
+    #         _childstr = ', '.join([a.as_str() for a in self.args])
+    #         _str = f'{_str}({_childstr})'
+    #     elif issubclass(type(self), Terminal):
+    #         raise
+    #         pass  # _str = f'{self.value}'
+    #     else:
+    #         raise
+    #     return _str
+
+    # def __len__(self):
+    #     """ONLY works, when args are there"""
+    #     if issubclass(self.__class__, Terminal):
+    #         return 1
+    #     else:
+    #         return 1 + sum([len(cc) for cc in self.args])
+
+    def _sympy_(self, *args):  # -> sympy.Basic:
+        _sym = self.symfun
+        # _sym = _sym(*args)
+        # childstr = [sympy.sympify(cc) for cc in args]
+        # _sym = _sym(*childstr)
+
+        # if isinstance(self, Operator):
+        #     childstr = [sympy.sympify(cc) for cc in args]
+        #     _sym = _sym(*childstr)
+        #
+        # elif isinstance(self, TerminalNode):
+        #     return self.symfun(self.args[0])
+        #
+        # else:
+        #     raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
+
+        return _sym
+
+    # @classmethod
+    # def get_sym(cls):
+    #     _sym = cls.symfun
+    #     return _sym
+
+    def get_symstr(self):
+        return self.symfun.__name__
+
+    @classmethod
+    def get_child_xts(cls):
+        return cls.xtype[0]
 
 
 def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
@@ -740,23 +937,16 @@ def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
 
 def nd(ty, ccs):  # -> Typus:
     # return Node(ty, ccs)
-    try:
-        node = ty(ccs)
-    except Exception as todo:
-        node = ty(*ccs)
+    node = ty(ccs)
     return node
 
 def nd2(ty, ccs):  # -> Typus:
     # return Node(ty, ccs)
-    try:
-        node = nd(ty, *ccs)
-    except Exception as todo:
-        node = nd(ty, ccs)
-
+    node = nd(ty, *ccs)
     return node
 
 
-def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
+def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Typus:
     """
     tree_from_expr, tree_from_sympy
     Important: start with the most specific rule
@@ -775,16 +965,20 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
 
     elif s_expr.is_Atom:
         if s_expr.is_Symbol:
-            return nd(Symbol, s_expr)  # str VERY important!! "Symbol type input" is not accepted
+            # _n = nd(SfehSymbol, s_expr)  # str VERY important!! "Symbol type input" is not accepted  # todo
+            _n = nd(Symbol, s_expr)  # str VERY important!! "Symbol type input" is not accepted
+            return _n
         else:
             # expr_eval = s_expr.evalf(FLOAT_PRECISION)  # sfeh
             # if abs(s_expr - expr_eval) > 0.001:  # sfeh use float recision here 0.1**FLOAT_PRECISION
             #     expr_eval = s_expr
             if s_expr.is_Boolean:
-                return nd(Boolean, s_expr)
+                _n = nd(Boolean, s_expr)
+                return _n
             elif s_expr.is_number:  # is_float does not match int
                 # return nd(Float, [round(float(expr_eval), FLOAT_PRECISION)])
-                return nd(Number, s_expr)
+                _n = nd(Number, s_expr)
+                return _n
                 # "TypeError: Cannot convert complex to float" -> ignore the whole expression, let it fail
             else:
                 raise NotImplementedError(f'What happened here? {s_expr}')
@@ -796,14 +990,16 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
             cc_nodes.append(sympy_to_tree(arg, allow_chain=allow_chain))
 
         if isinstance(s_expr, Round_Dummy):
-            return nd2(Round, cc_nodes)
+            _n = nd(Round, cc_nodes)
+            return _n
 
         elif allow_chain:  # sfeh:xxx do this one level above? ignore all allow_chains in here?
             op = d_sym2node_chain[type(s_expr)]
-            return nd(op, cc_nodes)
+            _n = nd(op, cc_nodes)
+            return _n
 
         elif isinstance(s_expr, ExprCondPair):
-            return nd2(ExprCondPair_Dummy, cc_nodes)  # sfeh:debug/test
+            return nd(ExprCondPair_Dummy, cc_nodes)  # sfeh:debug/test
 
         elif isinstance(s_expr, sympy.Piecewise):
             # "Chained_VERSION" version is handled before
@@ -811,7 +1007,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
             reversed_pairs = [[sympy_to_tree(xx, allow_chain=allow_chain) for xx in list(i)] for i in reversed_pairs]
             otherwise = reversed_pairs[0][0]  # the last "True" condition
             for pairs in reversed_pairs[1:]:
-                otherwise = nd2(Ifte, [pairs[1], pairs[0], otherwise])
+                otherwise = nd(Ifte, [pairs[1], pairs[0], otherwise])
             return otherwise
 
         # sfehx include Usub, ignore usub in tree len()
@@ -828,12 +1024,17 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
             clss = d_sym2node[type(s_expr)]
             if len(s_expr.args) > len(clss.get_child_xts()):
                 _cc = cc_nodes[0]
-                for _c2 in cc_nodes[1:]:
-                    _cc = nd2(clss, [_cc, _c2])
+                for _c2 in cc_nodes[1:]:  # sfeh check, if the order is like sympy order
+                    _cc = clss(_cc, _c2)
                 return _cc
                 # raise TypeError(f"{clss} takes exactly {len(clss.get_child_xts())} args ({len(expr.args)} given)")
             else:
-                return nd2(clss, cc_nodes)
+                try:
+                    n = clss(*cc_nodes)  # Max, Min, sign, add, mul, pow
+                    return n
+                except Exception as todo:
+                    n = clss(cc_nodes)  #
+                    return n
 
     # sfeh:discuss
     # NotImplementedError: Expr missing: ITE(p > 13, tan(p - v) >= 2.578643, tan(p - v) >= 1)
@@ -841,7 +1042,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
     raise NotImplementedError(f'Expr missing: {s_expr}')
 
 
-def tree_simplification(tree, allow_chain) -> Node:
+def tree_simplification(tree, allow_chain) -> Typus:
     """
     (Tries to) simplify/mathematically-reduce a tree. It is quite experimental
     # sfeh sympy-reconstruct patterns
@@ -858,13 +1059,13 @@ def tree_simplification(tree, allow_chain) -> Node:
     tree.tree_node_grouping(tolerance=0)
     # print(f'End:   {len(tree)}\t{tree}')
     if len(tree_copy) < len(tree):
-        print(f'WHATTPPENDED SFEH'
+        print(f'WHATHAPPENED SFEH'
               f'\n\told: {tree_copy.str_as_list()}'
               f'\n\tsym: {tree.str_as_list()}'
               # f'\n\told: {tree_copy.get_expr_symlike()}'
               # f'\n\tsym: {tree.get_expr_symlike()}'
               f'\n\tsym: {tree_copy.get_tree_export()}')
-        if tree_copy.get_sympy_expr() != tree.get_sympy_expr():
+        if str(tree_copy.get_sympy_expr()) != str(tree.get_sympy_expr()):  # sfeh str() should not be required
             print_warning('w', f'\t{tree_copy.get_sympy_expr()}\n\t{tree.get_sympy_expr()}')
     return tree
 
@@ -876,7 +1077,8 @@ def evolve_reduce_simplify(tree: Node, allow_chain, completely=True, force=False
     if completely:  # reduce the complete tree
         nodes_lv0 = tree.get_mutable_rootnodes(extend_lvls=0)  # only required for fixed-core trees
         for cc in nodes_lv0:
-            cc.set_new_node(tree_simplification(cc, allow_chain))
+            cc2 = tree_simplification(cc, allow_chain)
+            cc.set_new_node(cc2)
     else:
         node_list = [n for n in tree.list_mutable_nodes(allow_chain=allow_chain) if
                      issubclass(n.get_typus_sfeh(), OperatorArity)]  # ignoring leaf nodes...
@@ -884,7 +1086,8 @@ def evolve_reduce_simplify(tree: Node, allow_chain, completely=True, force=False
             print_warning('wwww', f'Tree for simplification does not provide operators: {tree}')
             return tree
         node = np.random.choice(node_list)
-        node.set_new_node(tree_simplification(node, allow_chain))  # sfeh chosen must be set again? or not? test it at least.
+        node2 = tree_simplification(node, allow_chain)
+        node.set_new_node(node2)  # sfeh chosen must be set again? or not? test it at least.
     if force:
         return tree
     else:
@@ -1029,192 +1232,16 @@ def node_deepcopy(tree: Node):
 #     return tree
 
 
-if __name__ == '__main__':
-    _test_open = '[Ifte, [Or, [b < -1], [And, [b < 0.1], [a < -0.05]]], 2, [Ifte, [And, [And, ' \
-                 '[b > -0.45], [b < -0.05]], [a < -0.5]], 0, [Ifte, [a < 0], 0, 2]]]',
-    _test_loadabls = ["['+',['-',['Ifte',['True'],['sign',['cartVel']],['/',[2.3],[4]]],['cartVel']],[-1.3]]",
-                      '["Ifte:fix",["<",["cartVel"],[0]],["0:fix"],["2:fix"]]',
-                      '["Ifte", ["Not", [False]], [0.0], [2.0]]']
-
-
-class Typus(Node):
-    """
-    The expr-content of a node
-        - most functions in here are not tested, but also never required
-        - str() function is used only for showing infos in debugger
-    """
-    symfun = None
-    xtype = ((None,), None)
-    showme = None
-    sy_str = lambda self, s: None  # 'sympy-fun'
-    formulae_str = None  # 'sympy-expr'
-    repr_str = None  # 'repr-format-{}-options'
-    chain_xtype = None
-
-    def __init__(self, *args: iter):
-        super().__init__(*args)
-
-    def represent_str(self, show_all=True):
-        """
-        sfeh:open
-            - represent does not work and needs a lot of testing
-            - Is not required for now!
-        Printing the nodes as nested array structure such that it can be saved/loaded
-        very closely related to str(), but adds the following information:
-        - ":fix", when nodes are fixed"""
-
-        s = self.showme  # class name
-
-        if self.is_fix and show_all:
-            s += ':fix'
-
-        if self.is_term():
-            cs = f'{self.get_childs()[0]}'
-            cs = string_remove_trailing_zeroes(cs)
-            if show_all:
-                raise NotImplementedError
-            else:
-                s = f'{cs}'
-
-        else:
-            cs = [cc.represent_str(show_all=show_all) for cc in self.get_childs()]
-            cs = ', '.join(cs)
-            s = f"{s}({cs})"
-
-        s = f"{s}"  # v1
-
-        return s
-
-    def represent_str_sfeh_old(self, show_all=True):
-        """
-        sfeh:open
-            - represent does not work and needs a lot of testing
-            - Is not required for now!
-        Printing the nodes as nested array structure such that it can be saved/loaded
-        very closely related to str(), but adds the following information:
-        - ":fix", when nodes are fixed"""
-
-        s = self.showme  # class name
-
-        if self.is_fix and show_all:
-            s += ':fix'
-
-        if self.is_term():
-            cs = f'{self.get_childs()[0]}'
-            cs = string_remove_trailing_zeroes(cs)
-            if show_all:
-                s = f'{s}({cs})'
-            else:
-                s = f'{cs}'
-
-        else:
-            cs = [cc.represent_str(show_all=show_all) for cc in self.get_childs()]
-            cs = ', '.join(cs)
-            s = f"{s}, {cs}"
-
-        s = f"[{s}]"  # v1
-
-        return s
-    
-    def __str__(self):
-        # sfeh which style for trees?
-        """
-        Those string can be used:
-        [Abs, [Abs, [Square, [cartPos]]]]
-        [Abs, [Abs, [Square, [Symbol(cartPos)]]]]
-        Abs(Abs((cartPos)**2))
-        Abs(cartPos**2)
-        cartPos**2
-        Abs(Abs(Square(cartPos)))
-        [Abs, [Abs, [Square, [cartPos]]]]
-        """
-        s = self.represent_str(show_all=False)
-        # s1 = self.represent_str()
-        # s2 = self.get_expr_symlike()
-        # s3 = self.get_expr_symlike(try_sympify=True)
-        # s4 = self.get_sympy_expr()
-        # s5 = self.get_expr_raw_fstring()
-        # s6 = self.str_as_list()
-        # s_export = self.get_tree_export()
-        # print(f'{s}\n{s1}\n{s2}\n{s3}\n{s4}\n{s5}\n{s6}\n{s_export}')
-        return s
-
-    # def __new__(cls, *args, **kwargs):
-    #     """Why use new as init method? -> Allows returning an instance of a different class"""
-    #
-    #     obj = object.__new__(cls)
-    #     obj.args = args
-    #     if issubclass(cls, Terminal):
-    #         pass
-    #
-    #     return obj
-
-    # def __str__(self):
-    #     _str = self.as_str()
-    #     return _str
-    #
-    # def as_str(self):
-    #     """not working"""
-    #     _str = self.__class__.__name__
-    #     _str = self.__class__
-    #     if issubclass(self.__class__, (OperatorArity, OperatorChained)):
-    #         _childstr = ', '.join([a.as_str() for a in self.args])
-    #         _str = f'{_str}({_childstr})'
-    #     elif issubclass(type(self), Terminal):
-    #         raise
-    #         pass  # _str = f'{self.value}'
-    #     else:
-    #         raise
-    #     return _str
-
-    # def __len__(self):
-    #     """ONLY works, when args are there"""
-    #     if issubclass(self.__class__, Terminal):
-    #         return 1
-    #     else:
-    #         return 1 + sum([len(cc) for cc in self.args])
-
-    def _sympy_(self, *args):  # -> sympy.Basic:
-        _sym = self.symfun
-        # _sym = _sym(*args)
-        # childstr = [sympy.sympify(cc) for cc in args]
-        # _sym = _sym(*childstr)
-
-        # if isinstance(self, Operator):
-        #     childstr = [sympy.sympify(cc) for cc in args]
-        #     _sym = _sym(*childstr)
-        #
-        # elif isinstance(self, TerminalNode):
-        #     return self.symfun(self.args[0])
-        #
-        # else:
-        #     raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
-
-        return _sym
-
-    # @classmethod
-    # def get_sym(cls):
-    #     _sym = cls.symfun
-    #     return _sym
-
-    def get_symstr(self):
-        return self.symfun.__name__
-
-    @classmethod
-    def get_child_xts(cls):
-        return cls.xtype[0]
-
-
 class CustomOperator:
-    symfun = lambda *args: None
-    xtype = ((None, None), None)
+    pass
 
 
 class Node_Dummy(Typus):
     """Terminal_Dummy, Function_Dummy now both in here"""
-    @classmethod
-    def get_child_xts(cls):
-        return cls.xtype[0]
+    # @classmethod
+    # def get_child_xts(cls):
+    #     return cls.xtype[0]
+    pass
 
 
 class BaseOperator(Typus):
@@ -1225,7 +1252,7 @@ class OperatorArity(BaseOperator):
 
     def __init__(self, *args):
         super().__init__()
-        self.set_childs([args])
+        self.set_childs(args)  # was *args and args
 
     arity = None
 
@@ -1302,7 +1329,7 @@ class Terminal(Typus):  # sfeh sympy.Atom
 class Boolean(Terminal):
     # sfeh:discuss just for True/False?
     xtype = ((), bool)
-    symfun = lambda *a: sympy.S.true if a[0] else ~sympy.S.true  # sympy.logic.boolalg.Boolean  # sfeh:discuss
+    symfun = lambda a: sympy.S.true if a[0] else ~sympy.S.true  # sympy.logic.boolalg.Boolean  # sfeh:discuss
     showme = 'Boolean'
     # tflow = lambda arg: tf.constant(arg, dtype=tf.bool)
 
@@ -1312,7 +1339,7 @@ class Boolean(Terminal):
 
 class Number(Terminal):
     xtype = ((), float)
-    symfun = lambda *a: sympy.Float(float(a[0]), FLOAT_PRECISION)
+    symfun = lambda a: sympy.Float(float(a[0]), FLOAT_PRECISION)
     showme = 'Number'
     # symfun = lambda *a: sympy.Rational(float(a[0]), FLOAT_PRECISION)
     # sfeh: problem with rational: Sqrt(8.0) -> 2*sqrt(6)/3. sfeh: actually is_atomic?
@@ -1329,7 +1356,9 @@ class Symbol(Terminal):
     This was used to deal with negative values
         self.name = nlabl if nlabl[0] != '-' else nlabl[1:]
     """
-    symfun = lambda *a: sympy.Symbol(a[0])  # sfeh
+    # symfun = lambda a: sympy.Symbol(a[0]) if isinstance(a[0], str) else a[0]
+    symfun = lambda a: a[0]  # sfeh  # todo what
+    # symfun = lambda *a: sympy.Symbol(a[0])  # sfeh
     # np_fun =
     xtype = ((), float)
     showme = 'Symbol'
@@ -1347,11 +1376,11 @@ def cast_input(ii):
         elif isinstance(ii, str):
             return Symbol(ii)  # sfeh symbol opts
         else:
-            raise ValueError(f'Type not allowed in tree: {type(ii) ({ii})}')
+            raise NotImplementedError
 
 
 class Add(MathOperator, ChainableOp):
-    symfun = sympy.Add
+    symfun = lambda a: sympy.Add(a[0], a[1])
     np_fun = np.add
     showme = 'Add'
     sy_str = '({0} + {1})'
@@ -1365,7 +1394,7 @@ class DivFraction(MathOperator):
     """x**-1
     aka InverseFraction aka DivFraction aka Reciprocal"""
     xtype = ((float, float), float)
-    symfun = lambda a: sympy.Pow(a, sympy.S.NegativeOne)
+    symfun = lambda a: sympy.Pow(a[0], sympy.S.NegativeOne)
     np_fun = np.reciprocal  # sfeh rename class?
     showme = 'DivFraction'
     sy_str = '1/({})'
@@ -1373,7 +1402,7 @@ class DivFraction(MathOperator):
 
 
 class Pow(MathOperator):
-    symfun = sympy.Pow
+    symfun = lambda a: sympy.Pow(a[0], a[1])
     np_fun = np.power
     showme = 'Pow'
     sy_str = '({0})**({1})'
@@ -1382,7 +1411,7 @@ class Pow(MathOperator):
 
 
 class Abs(MathOperator):
-    symfun = sympy.Abs
+    symfun = lambda a: sympy.Abs(a[0])
     np_fun = np.abs  # np.absolute
     showme = 'Abs'
     sy_str = 'Abs({})'
@@ -1392,7 +1421,7 @@ class Abs(MathOperator):
 
 class Sign(MathOperator, NoSymCapitalized):
     # does not work in string, but irrelevant. sympy.simplify('sign(-a)') -> -sign(a)
-    symfun = sympy.sign
+    symfun = lambda a: sympy.sign(a[0])
     np_fun = np.sign
     showme = 'Sign'
     sy_str = 'sign({})'
@@ -1401,7 +1430,7 @@ class Sign(MathOperator, NoSymCapitalized):
 
 
 class Log(MathOperator, NoSymCapitalized):
-    symfun = sympy.log  # sfeh: Log isactually Ln (base e)
+    symfun = lambda a: sympy.log(a[0])  # sfeh: Log isactually Ln (base e)
     np_fun = np.log
     showme = 'Log'
     sy_str = 'log({})'
@@ -1410,7 +1439,7 @@ class Log(MathOperator, NoSymCapitalized):
 
 
 class Cos(AngleOperator, NoSymCapitalized):
-    symfun = sympy.cos
+    symfun = lambda a: sympy.cos(a[0])
     np_fun = np.cos
     showme = 'Cos'
     sy_str = 'cos({})'
@@ -1419,7 +1448,7 @@ class Cos(AngleOperator, NoSymCapitalized):
 
 
 class Sin(AngleOperator, NoSymCapitalized):
-    symfun = sympy.sin
+    symfun = lambda a: sympy.sin(a[0])
     np_fun = np.sin
     showme = 'Sin'
     sy_str = 'sin({})'
@@ -1430,7 +1459,7 @@ class Sin(AngleOperator, NoSymCapitalized):
 class Tan(AngleOperator, NoSymCapitalized):
     # sfeh:discuss actually rename classes.
     # they do not have to match sympy expressions/classes
-    symfun = sympy.tan
+    symfun = lambda a: sympy.tan(a[0])
     np_fun = np.tan
     showme = 'Tan'
     sy_str = 'tan({})'
@@ -1439,7 +1468,7 @@ class Tan(AngleOperator, NoSymCapitalized):
 
 
 class Acos(AngleOperator, NoSymCapitalized):
-    symfun = sympy.acos
+    symfun = lambda a: sympy.acos(a[0])
     np_fun = np.arccos  # arccosh
     showme = 'Acos'
     sy_str = 'acos({})'
@@ -1448,7 +1477,7 @@ class Acos(AngleOperator, NoSymCapitalized):
 
 
 class Asin(AngleOperator, NoSymCapitalized):
-    symfun = sympy.asin
+    symfun = lambda a: sympy.asin(a[0])
     np_fun = np.arcsin
     showme = 'Asin'
     sy_str = 'asin({})'
@@ -1457,7 +1486,7 @@ class Asin(AngleOperator, NoSymCapitalized):
 
 
 class Atan(AngleOperator, NoSymCapitalized):
-    symfun = sympy.atan
+    symfun = lambda a: sympy.atan(a[0])
     np_fun = np.arctan
     showme = 'Atan'
     sy_str = 'atan({})'
@@ -1466,7 +1495,7 @@ class Atan(AngleOperator, NoSymCapitalized):
 
 
 class Tanh(AngleOperator, NoSymCapitalized):
-    symfun = sympy.tanh
+    symfun = lambda a: sympy.tanh(a[0])
     np_fun = np.tanh
     showme = 'Tanh'
     sy_str = 'tanh({})'
@@ -1475,7 +1504,7 @@ class Tanh(AngleOperator, NoSymCapitalized):
 
 
 class Sinh(AngleOperator, NoSymCapitalized):
-    symfun = sympy.sinh
+    symfun = lambda a: sympy.sinh(a[0])
     np_fun = np.sinh
     showme = 'Sinh'
     sy_str = 'sinh({})'
@@ -1484,7 +1513,7 @@ class Sinh(AngleOperator, NoSymCapitalized):
 
 
 class Cosh(AngleOperator, NoSymCapitalized):
-    symfun = sympy.cosh
+    symfun = lambda a: sympy.cosh(a[0])
     np_fun = np.cosh
     showme = 'Cosh'
     sy_str = 'cosh({})'
@@ -1492,10 +1521,10 @@ class Cosh(AngleOperator, NoSymCapitalized):
     xtype = ((float,), float)
 
 
-class Xor(LogicOperator, NoSymCapitalized):
+class Xor(LogicOperator, NoSymCapitalized, ChainableOp):
     """
     Caution: loading '(a ^ b)', the sympy-Xor-representation, is interpreted as a**b"""
-    symfun = sympy.Xor
+    symfun = lambda *a: sympy.Xor(*a)
     np_fun = np.logical_xor
     showme = 'Xor'
     sy_str = 'Xor({}, {})'  # 'a ^ b'
@@ -1504,7 +1533,7 @@ class Xor(LogicOperator, NoSymCapitalized):
 
 
 class Not(LogicOperator):
-    symfun = sympy.Not
+    symfun = lambda a: sympy.Not(a[0])
     np_fun = np.logical_not
     showme = 'Not'
     sy_str = '~({})'
@@ -1514,7 +1543,7 @@ class Not(LogicOperator):
 
 class Eq(LogicOperator):
     # sfeh:debug Eq and Ne (), which also work for boolean inputs in sympy
-    symfun = sympy.Eq
+    symfun = lambda a: sympy.Eq(a[0], a[1])
     np_fun = np.equal
     showme = 'Eq'  # '==' not working in sympy!
     sy_str = 'Eq({0}, {1})'
@@ -1523,7 +1552,7 @@ class Eq(LogicOperator):
 
 
 class Ne(LogicOperator):
-    symfun = sympy.Ne
+    symfun = lambda a: sympy.Ne(a[0], a[1])
     np_fun = np.not_equal
     showme = 'Ne'  # != not working in sympy
     sy_str = 'Ne({0}, {1})'
@@ -1532,7 +1561,7 @@ class Ne(LogicOperator):
 
 
 class Mul(MathOperator, ChainableOp):
-    symfun = sympy.Mul
+    symfun = lambda a: sympy.Mul(a[0], a[1])
     np_fun = np.multiply
     showme = 'Mul'  #
     sy_str = '({0} * {1})'
@@ -1542,7 +1571,7 @@ class Mul(MathOperator, ChainableOp):
 
 
 class And(LogicOperator, ChainableOp):
-    symfun = sympy.And
+    symfun = lambda a: sympy.And(a[0], a[1])
     np_fun = np.logical_and
     showme = 'And'
     sy_str = '({0} & {1})'
@@ -1552,7 +1581,7 @@ class And(LogicOperator, ChainableOp):
 
 
 class Or(LogicOperator, ChainableOp):
-    symfun = sympy.Or
+    symfun = lambda a: sympy.Or(a[0], a[1])
     np_fun = np.logical_or
     showme = 'Or'
     sy_str = '({0}|{1})'
@@ -1563,7 +1592,7 @@ class Or(LogicOperator, ChainableOp):
 
 class ITE(LogicOperator):
     """sfeh:is this really required? currently not in use"""
-    symfun = sympy.ITE
+    symfun = lambda a: sympy.ITE(a[0], a[1], a[2])
     np_fun = 'sfeh:Missing'
     showme = 'ITE'
     sy_str = 'ITE({0}, {1}, {2})'
@@ -1573,7 +1602,7 @@ class ITE(LogicOperator):
 
 
 class Min(MinMaxBase, ChainableOp):
-    symfun = sympy.Min
+    symfun = lambda a: sympy.Min(a[0], a[1])
     np_fun = np.min  # sfeh max, maximum, maximum.reduce
     showme = 'Min'
     sy_str = 'Min({0},{1})'
@@ -1589,7 +1618,7 @@ class Min(MinMaxBase, ChainableOp):
 
 
 class Max(MinMaxBase, ChainableOp):
-    symfun = sympy.Max
+    symfun = lambda a: sympy.Max(a[0], a[1])
     np_fun = np.max  # sfeh max, maximum, maximum.reduce
     showme = 'Max'
     sy_str = 'Max({0}, {1})'
@@ -1605,7 +1634,7 @@ class Max(MinMaxBase, ChainableOp):
 
 
 class Lt(RelationalOperator):
-    symfun = sympy.Lt
+    symfun = lambda a: sympy.Lt(a[0], a[1])
     np_fun = np.less
     showme = 'Lt'
     sy_str = '({0} < {1})'
@@ -1614,7 +1643,7 @@ class Lt(RelationalOperator):
 
 
 class Le(RelationalOperator):
-    symfun = sympy.Le
+    symfun = lambda a: sympy.Le(a[0], a[1])
     np_fun = np.less_equal
     showme = 'Le='
     sy_str = '({0} <= {1})'
@@ -1623,7 +1652,7 @@ class Le(RelationalOperator):
 
 
 class Gt(RelationalOperator):
-    symfun = sympy.Gt
+    symfun = lambda a: sympy.Gt(a[0], a[1])
     np_fun = np.greater
     showme = 'Gt'
     sy_str = '({0} > {1})'
@@ -1633,7 +1662,7 @@ class Gt(RelationalOperator):
 
 class Ge(RelationalOperator):
     xtype = ((float, float), bool)
-    symfun = sympy.Ge
+    symfun = lambda a: sympy.Ge(a[0], a[1])
     np_fun = np.greater_equal
     showme = 'Ge'
     sy_str = '({0} >= {1})'
@@ -1641,7 +1670,7 @@ class Ge(RelationalOperator):
 
 
 class Square(MathOperator):
-    symfun = lambda a: sympy.Pow(a, 2)
+    symfun = lambda a: sympy.Pow(a[0], 2)
     np_fun = np.exp2
     xtype = ((float,), float)
     showme = 'Square'
@@ -1651,16 +1680,16 @@ class Square(MathOperator):
 
 class Sub(MathOperator):
     xtype = ((float, float), float)
-    symfun = lambda a, b: sympy.Add(a, -b)
+    symfun = lambda a: sympy.Add(a[0], -a[1])
     showme = 'Sub'
     sy_str = '({0} - {1})'
     repr_str = 'Sub{},[{}, {}]'
 
 
-class Ifte(OperatorArity, ChainableOp):
+class Ifte(OperatorArity):  # sfeh:Discuss: ChainableOp
     """Also class Piecewise"""
     xtype = ((bool, float, float), float)
-    symfun = lambda *args: sympy.Piecewise((args[1], args[0]), (args[2], True))
+    symfun = lambda a: sympy.Piecewise((a[1], a[0]), (a[2], True))
     showme = 'Ifte'
     sy_str = 'Ifte({0},{1},{2})'
     repr_str = 'Ifte{},[{}, {}, {}]'
@@ -1676,13 +1705,13 @@ class Round(MathOperator):
     # symfun = lambda a: a.round(0) if a.is_number else Round_Dummy(a)
     # symfun: Callable[[sympy.Expr], sympy.Expr] = lambda a: a.round(0) if a.is_number else Round(a)  # sfeh (next line)
     # this is here to hint the type, as sympy will throw a warning otherwise, leading to this
-    symfun = lambda arg: Round_Dummy(arg)
+    symfun = lambda a: Round_Dummy(a[0])
     showme = 'Round'
     sy_str = 'Round_Dummy({},1)'
     repr_str = 'Round_Dummy{},[{}]'
 
 
-class Round_Dummy(sympy.Function, MathOperator, Node_Dummy):
+class Round_Dummy(sympy.Function):  # Not a Math-operator
     """
     Workaround for rounding exponents
     For more details, look at: plagih/discoveries/rounding_exponents.py
@@ -1706,7 +1735,7 @@ class Round_Dummy(sympy.Function, MathOperator, Node_Dummy):
 class PowRounded(MathOperator):
     """Requires class Round_Dummy!
     Rounds the exponent; sfeh:idea clip exponent?"""
-    symfun = lambda a, b: sympy.Pow(a, Round_Dummy(b))
+    symfun = lambda a: sympy.Pow(a[0], Round_Dummy(a[1]))
     np_fun = lambda a, b: np.power(a, np.round(b))
     showme = 'PowRounded'
     sy_str = '{0})**Round_Dummy({1})'
@@ -1722,7 +1751,7 @@ class PowRounded(MathOperator):
 
 
 class Div(MathOperator):
-    symfun = lambda a, b: sympy.Mul(a, 1 / b)
+    symfun = lambda a: sympy.Mul(a[0], 1 / a[1])
     np_fun = np.divide
     showme = 'Div'
     sy_str = '({0}/{1})'
@@ -1733,7 +1762,7 @@ class Div(MathOperator):
 class Sqrt(MathOperator):
     """Capitalized class name, even though its a sympy function"""
     xtype = ((float,), float)
-    symfun = sympy.sqrt  # same as: lambda a: sympy.Pow(a, sympy.S.Half)
+    symfun = lambda a: sympy.sqrt(a[0])  # same as: lambda a: sympy.Pow(a, sympy.S.Half)
     np_fun = np.sqrt
     showme = 'Sqrt'
     sy_str = 'sqrt({})'
@@ -1747,9 +1776,9 @@ class Sqrt(MathOperator):
 #     xtype = ((float, float), float)
 
 
-class Usub(MathOperator, sympy.Function):
+class Usub(MathOperator):
     xtype = ((float,), float)
-    symfun = lambda a: sympy.Mul(a, -1)
+    symfun = lambda a: sympy.Mul(a[0], -1)
     np_fun = np.negative
     # tf_fun = tf.negative
     showme = 'Usub'  # sfeh
@@ -1759,7 +1788,7 @@ class Usub(MathOperator, sympy.Function):
 
 class Clip(MinMaxBase, CustomOperator):
     # sfeh:open use this
-    symfun = lambda a, b, c: sympy.Min(sympy.Max(a, b), c)
+    symfun = lambda a: sympy.Min(sympy.Max(a[0], a[1]), a[2])
     np_fun = lambda a, b, c: np.clip(a, b, c)
     # tf_fun = lambda a, b, c: tf.clip_by_value(a, b, c)
     showme = 'Clip'
@@ -1769,7 +1798,7 @@ class Clip(MinMaxBase, CustomOperator):
 
 
 class Exp(MathOperator):
-    symfun = sympy.exp
+    symfun = lambda a: sympy.exp(a[0])
     np_fun = np.exp2
     showme = 'Exp'
     sy_str = '{}**E'
@@ -1782,30 +1811,17 @@ class ExprCondPair_Dummy(Node_Dummy):
     Named like this to differ from the sympy original (ExprCondPair)
     sfeh:discuss
     The only purpose is to wrap the results for a Node-structure, where every Node has childs with other nodes"""
-    symfun = ExprCondPair
+    symfun = lambda a: ExprCondPair(a[0], a[1])
     showme = 'ExprCondPair_Dummy'
     sy_str = 'ExprCondPair({0}, {1})'
     repr_str = 'ExprCondPair_Dummy{},[{}, {}]'
     xtype = ((float, bool), float)
     expr_dmy = 'ExprCondPair_Dummy'
 
-"""
-Tree nodes that do not require fixed arity.
-Separate file to NOT confuse anything, even though there might be some redundancy
-"""
-import os
-
-import numpy as np
-import sympy
-
-from plagih.util import get_subclasses, FLOAT_PRECISION, DEBUG_DUMMY  # noqa
-
-os.environ["KMP_WARNINGS"] = "FALSE"
-
 
 class AddChain(OperatorChained):
     """It is Sum, but we call it chain, as vector also is taken"""
-    symfun = sympy.Add
+    symfun = lambda *a: sympy.Add(*a)
     np_fun = lambda x: np.sum(np.vstack(x), axis=0)
     showme = 'Add'
     sy_str = 'Add({})'
@@ -1818,7 +1834,7 @@ class AddChain(OperatorChained):
 
 class MulChain(OperatorChained):
     showme = 'Mul'
-    symfun = sympy.Mul
+    symfun = lambda *a: sympy.Mul(*a)
     np_fun = lambda x: np.prod(np.vstack(x), axis=0)
     sy_str = 'Mul({})'
     formulae_str = 'Mul({})'
@@ -1829,7 +1845,7 @@ class MulChain(OperatorChained):
 
 
 class MinChain(OperatorChained):
-    symfun = sympy.Min
+    symfun = lambda *a: sympy.Min(*a)
     np_fun = lambda x: np.min(np.vstack(x), axis=0)
     # np_fun = lambda x: np.minimum  # sfeh open
     showme = 'Min'
@@ -1841,7 +1857,7 @@ class MinChain(OperatorChained):
 
 
 class MaxChain(OperatorChained):
-    symfun = sympy.Max
+    symfun = lambda *a: sympy.Max(*a)
     np_fun = lambda x: np.max(np.vstack(x), axis=0)
     showme = 'Max'
     sy_str = 'Max({})'
@@ -1872,6 +1888,7 @@ class Piecewise(OperatorChained):
 """
     # ogclass = Ifte
     # xtype = ((float, bool), float)
+    symfun = lambda *a: sympy.Piecewise(*a)
     showme = 'Piecewise'
     sy_str = 'Piecewise({})'
     formulae_str = 'Piecewise({})'
@@ -1880,29 +1897,29 @@ class Piecewise(OperatorChained):
     # xtype = ((ExprCondPair,), float)
     # xtype_chain = ExprCondPair_Dummy
     # symfun = sympy.Piecewise
-    symfun = lambda *a: sympy.Piecewise(a)
 
 
 class AndChain(OperatorChained):
     expr_dmy = 'And'
+    symfun = lambda *a: sympy.And(*a)
+    showme = 'AndChain'
     sy_str = 'And({})'
     formulae_str = 'And({})'
     repr_str = 'And{},[{}]'
     inline_sep = ' & '
     xtype = ((bool,), bool)
     xtype_chain = bool
-    symfun = sympy.And
 
 
 class OrChain(OperatorChained):
     xtype = ((bool,), bool)
     xtype_chain = bool
+    symfun = lambda *a: sympy.Or(*a)
     showme = 'Or'
     sy_str = 'Or({})'
     formulae_str = 'Or({})'
     inline_sep = ' | '
     repr_str = 'OrChain{},[{}]'
-    symfun = sympy.Or
 
 
 sym2node = {sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos, sympy.asin: Asin, sympy.atan: Atan,

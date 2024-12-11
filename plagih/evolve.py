@@ -1,6 +1,3 @@
-
-from random import Random
-
 from plagih.trees import *
 from plagih.util import *
 
@@ -134,7 +131,7 @@ class NodeSelect:
     def choose_constant_node(self, xt):
         _v = np.random.choice(self.pick_constant[xt][0], p=self.pick_constant[xt][1])()  # just dist. must be ()
         if xt == float:
-            _v = sympy.Float(_v)  # sfeh:discuss allow "rational" inputs? 1/3, 3/4, ...
+            _v = sympy.Float(_v, FLOAT_PRECISION)  #  sfeh:discuss allow "rational" inputs? 1/3, 3/4, ...
             # _v = sympy.Rational(_v)  # sfeh:discuss allow "rational" inputs? 1/3, 3/4, ...
             # return nd(Number, [_v])  # sfeh: check all "Was here"; round FLOAT_PRECISION was here
             return nd(Number, _v)  # round FLOAT_PRECISION was here
@@ -148,7 +145,8 @@ class NodeSelect:
         """similar to choose_terminal_node()
         sfeh: delete?"""
         _v = np.random.choice(self.pick_symbol[xt][0], p=self.pick_symbol[xt][1])
-        return nd(Symbol, _v)
+        n = nd(Symbol, _v)
+        return n
 
 
 class Evolution:
@@ -188,6 +186,8 @@ class Evolution:
 
         if symbol_list is None:
             symbol_list = sympy.symbols('a b')  # sfeh:sympy symbols options
+        else:
+            symbol_list = [sympy.Symbol(s) if isinstance(s, str) else s for s in symbol_list]
 
         self.node_selector = NodeSelect(operators, symbol_list)
 
@@ -455,7 +455,7 @@ class Evolution:
         # a_nds = [x for x in a_nds if len(x) > 1]  # ignore terminal nodes
 
         if len(a_nds) == 0:
-            raise ValueError(f'Crossover tree 1 has no mutable nodes!')
+            raise ValueError(f'Crossover tree 1 has no mutable nodes!')  # sfeh special value error?
 
         a_nd = np.random.choice(a_nds)
         xt_out = a_nd.get_xtype_self()

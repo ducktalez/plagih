@@ -12,7 +12,7 @@ class Candidate:
     WAS: class FinalizedTree
     An actual individual (Tree + meta-infos/phenotypes)"""
 
-    def __init__(self, tree: Node, fitness, parsimony, tag: str):
+    def __init__(self, tree: Typus, fitness, parsimony, tag: str):
         self.tree = tree
         self.fitness = fitness
         self.parsimony = parsimony
@@ -100,9 +100,12 @@ class ExplainableGP:
             s = None
         return s
 
-    def pop_print(self):
-        """Print the expressions of all trees in a population"""
-        n = [f'{k.full_string()}' for k in self.pop_next]
+    def print_pop(self, pop):
+        """
+        Print the expressions of all trees in a population
+        pop_print
+        """
+        n = [f'{k.full_string()}' for k in pop]
         n = [f'{BColors.BLUE}{x}' if ii % 2 == 0 else f'{BColors.YELLOW}{x}' for ii, x in enumerate(n)]
         n = [f'{k}\n' if ii % 10 == 9 else f'{k}\t' for ii, k in enumerate(n)]  # stop \n in line 0
         n = ''.join(n)
@@ -145,8 +148,11 @@ class ExplainableGP:
                             success = True
 
             if success:
+
                 self.gens_since_last_pareto = 0
-                try:  # sfeh: trying to simplify the tree for improved pareto
+
+                # sfeh: trying to simplify the tree for improved pareto
+                try:
                     symtree = evolve_reduce_simplify(candidate_tree.get_evotree(), self.allow_chain, force=True)
                     sym_candidate = self.tree_to_candidate(symtree, tag='sfeh:sym')
                     if sym_candidate.get_parsim() < candidate_tree.get_parsim():
@@ -174,7 +180,7 @@ class ExplainableGP:
         self.run_update_paretofront(self.pop_next)
 
         self.pop_genepool = self.pop_next[:]
-        self.pop_print()
+        self.print_pop(self.pop_next)
         self.pop_next = []
         self.analyze_generation()
         self.gen_id += 1
@@ -274,7 +280,7 @@ class ExplainableGP:
                 except (TreeSizeError, SympySimplificationError) as ex:
 
                     fails_list.append(ex)
-                    print_warning('www', f'\'{tag}\' failed: {ex}')
+                    print_warning('www', f'Failed for tag \'{tag}\': {ex}')
                     if len(fails_list) > 2 * n_success + 5:  # allow more fails: fails_list > n
                         print_caution(f'Evolution fails too often: {tag}, {len(fails_list)}. ({n_success} successful).'
                                       f'\n{fails_list}')
@@ -313,7 +319,7 @@ class ExplainableGP:
         fitness = round(fitness, FLOAT_PRECISION)
         return fitness
 
-    def tree_to_candidate(self, evotree: Node, origin_tree=None, tag=None, raise_if_useless=True):
+    def tree_to_candidate(self, evotree: Typus, origin_tree=None, tag=None, raise_if_useless=True):
         """the "fixed" node information is not relevant
 
         Tree MUST NOT be altered from here!

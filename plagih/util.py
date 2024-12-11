@@ -146,6 +146,7 @@ def string_remove_trailing_zeroes(x):
     """
     2.00000000000 -> 2
     0.20000000000 -> 0.2
+    sfeh: 1.1e+3 is 1100. Looks ugly like this.
     :param x:
     :return:
     """

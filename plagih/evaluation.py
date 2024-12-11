@@ -1,6 +1,6 @@
 import pandas as pd
 
-from plagih.sympy_extras import plagih_sympify
+from plagih.trees import PowRounded
 from plagih.util import *
 import sympy
 from sympy.utilities.exceptions import ignore_warnings

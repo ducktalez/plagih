@@ -20,11 +20,6 @@ CHAIN_implement = 'TODO'  # used as placeholder for implementation-tasks
 TREE_MIN_PARSIMONY = 3
 
 
-# # GP Evolution
-# period = {'gen_plots': 5, 'gen_save': 5}
-# mp_cores = 1
-
-
 class TreeSizeError(Exception):
     """Non-important, but errors that often come up, e.g.
     - tree is too small after simplification
@@ -147,15 +142,54 @@ def yaml_dump(path, data, default_flow_style=True):
         return
 
 
-def string_remove_trailing_zeroes(x):
+def remove_trailing_zeroes(x):
+    x = re.sub(r'\.0+$|0+$', '', x)
+    return x
+
+
+def term_format(x, cut=False):
+    """
+    :param x:
+    :return:
+    sfeh HOW OFTEN IS THIS USED O_ô can be replaced with string_remove_trailing_zeroes()
+    """
+    try:
+        if cut:
+            x = float(x)
+            if float(x) < 0.001 or float(x) > 1000:
+                xstr = f'{x:.3g}'
+            else:
+                xstr = f'{x:.3f}'
+                xstr = re.sub(r'\.0+$|0+$', '', xstr)
+        else:
+            xstr = remove_trailing_zeroes(x)
+        return xstr
+    except ValueError:
+        return x
+
+
+def string_remove_trailing_zeroes(number_string):
     """
     2.00000000000 -> 2
     0.20000000000 -> 0.2
-    :param x:
+    sfeh: 1.1e+3 is 1100. Looks ugly like this.
+    :param number_string:
     :return:
     """
-    x = re.sub(r'\.0+$|0+$', '', x)
-    return x
+    # Removes unnecessary zeros at the end of decimal numbers
+    cleaned_string = re.sub(r'(\.\d*?)0+(?!\d)', r'\1', number_string)
+    # Removes the decimal point if there are no decimal places left: keep this point to imply float?
+    cleaned_string = re.sub(r'\.(?!\d)', '', cleaned_string)
+    return cleaned_string
+
+
+def printpl(msg_t, message_str):
+    """Lightweight print function.
+    Instead of checking if you should print every time, this is done here.
+    message_type options can be found in config
+    """
+    printez(msg_t, message_str)
+    return
 
 
 def print_warning(msg_type, text):

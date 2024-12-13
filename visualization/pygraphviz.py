@@ -1,4 +1,4 @@
-from plagih.tree import Node
+from plagih.trees import Node
 
 
 def render_pygraphviz(tree: Node):

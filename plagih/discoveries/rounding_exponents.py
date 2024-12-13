@@ -8,7 +8,6 @@ A sympy Issue was opened here https://github.com/sympy/sympy/issues/27326 on 28.
 """
 import numpy as np
 import sympy
-from sympy import Function, Symbol
 
 
 # N( )

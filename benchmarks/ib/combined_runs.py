@@ -6,7 +6,7 @@ import itertools
 
 sys.path.append('../../')
 sys.path.insert(1, '../benchnmarks/ib/')
-from plagih.plagih_gp_base_class_xai import *
+from plagih.trees import *
 import multiprocessing as mp
 from plagih.util import *
 
@@ -108,7 +108,6 @@ def eval_and_lut(eval_list, parsim_MAX, parsim_1MAX, lut_file, mp_cpu_MAX):
 def plot_best_prediction(rootdir_eval, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, mp_cpu_MAX):
     """
     plot best guess
-    sfeh test RMSE?
     """
     best_regrerr = [min([row for row in combined_all_p[p]], key=lambda x: x['regress_sum']) for p in parsims]
     best_regrerr_dict = eval_and_lut(best_regrerr, parsim_MAX, parsim_1MAX, lut_file, mp_cpu_MAX)
@@ -197,7 +196,7 @@ def combined_lists(path_main, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_co
     Three runs have to be combined from their raw code.
     (I now found a much better way by loading from the backup file, but SFEH is lazy x.D)
     """
-    main_name = path_main.name
+    main_name = path_main.get_name
     merge_paretos(path_main)
 
     if local_yamls:
@@ -269,7 +268,7 @@ def merge_paretos(path_main):
         fig, ax = plt.subplots()
         plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
         for ii, color in enumerate(['blue', 'magenta', 'red']):
-            path_combackup = path_main / f'{path_main.name}_{ii}/backup/backup.p'
+            path_combackup = path_main / f'{path_main.get_name}_{ii}/backup/backup.p'
             gp_backup_data = pickle_load(path_combackup)
             # except Exception:
             #     # sfeh this sucks, IB eval doesnt find it
@@ -317,15 +316,15 @@ def main():
         rootdirstar = slurm1 + slurm2 + slurm3
         for runfolders in rootdirstar:
             if runfolders.is_dir():
-                if runfolders.name[:2] == 'IB':
-                    print(f'\nEvaluating {runfolders.name}')
+                if runfolders.get_name[:2] == 'IB':
+                    print(f'\nEvaluating {runfolders.get_name}')
                     try:
                         combined_lists(runfolders, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, cpu_cores=args.mp_cores)
                     except Exception as ex:
-                        print(f'Failed evaluation for {runfolders.name}. ignoring. Reason: {ex}')
+                        print(f'Failed evaluation for {runfolders.get_name}. ignoring. Reason: {ex}')
                         # sfeh except only the one fail that is required?
                 else:
-                    print(f'\nSkipping {runfolders.name}')
+                    print(f'\nSkipping {runfolders.get_name}')
 
     else:
         combined_lists(mainpath, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, cpu_cores=args.mp_cores)

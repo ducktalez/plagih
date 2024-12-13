@@ -29,6 +29,8 @@ class Candidate:
         return f'[{self.get_parsim():2.0f}: fit {self.get_fitness():4.2f} ({self.tree.__str__()})]'
 
     def full_string(self):
+        # Paretofront: Removing obsol ... ))]: \x1b[1msign(Max(c
+        # sfeh: https://stackoverflow.com/questions/62213322/python-3-bug-print-background-color-issue
         return f'{self.__str__()}: {BColors.BOLD}{self.get_evotree().get_sympy_expr()}{BColors.RESET}'
 
     def get_evotree(self):
@@ -168,7 +170,7 @@ class ExplainableGP:
                               i.get_fitness() > candidate_tree.get_fitness() and i.get_parsim() >= candidate_tree.get_parsim()]
                 if _obsoletes:
                     x = [f'{i.full_string()}' for i in _obsoletes]
-                    printez('a', f'Paretofront: Removing obsolete entries {x}')  # todo Paretofront: Removing obsolete entries ['[11: fit 0.61 (Add(Sign(Max(cartPos, cartVel)), Add(Min(cartPos, 6), Log(5))))]: \x1b[1msign(Max(c
+                    printez('a', f'Paretofront: Removing obsolete entries {x}')
                 self.paretofront = [ftree for ftree in self.paretofront if ftree not in _obsoletes]
                 self.paretofront.append(candidate_tree)
                 self.paretofront = pareto_sort(self.paretofront)
@@ -280,16 +282,17 @@ class ExplainableGP:
                 except (TreeSizeError, SympySimplificationError) as ex:
 
                     fails_list.append(ex)
-                    print_warning('www', f'Failed for tag \'{tag}\': {ex}')
+                    print_warning('www', f'Failed evolution tag \'{tag}\': {ex}')
                     if len(fails_list) > 2 * n_success + 5:  # allow more fails: fails_list > n
                         print_caution(f'Evolution fails too often: {tag}, failed: {len(fails_list)}x. ({n_success} ok).'
                                       f'\n{fails_list}')
                         return  # sfeh raise?
 
-                # except (ValueError, ArithmeticError) as ex:
-                #     # if 'Crossover tree 1 has no mutable nodes!' in str(ex):
-                #     # if "'a' cannot be empty unless no samples are taken" in str(ex):
-                #     print_warning('ww', f'OnlyPrintException: Value/Arithmetic: {ex}')
+                except (ValueError, ArithmeticError) as ex:
+                    # if 'Crossover tree 1 has no mutable nodes!' in str(ex):
+                    if ("'a' cannot be empty unless no samples are taken" in str(ex)
+                            or "The argument 'zoo' is not comparable" in str(ex)):
+                        print_warning('ww', f'OnlyPrintException: {ex}')
                 except TypeError as ex:
                     # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
                     # ==> sfeh probably this error: cond(): 'false_fn' argument required
@@ -297,7 +300,7 @@ class ExplainableGP:
                     if str(ex) == "Cannot convert complex to float":
                         pass
                 # except AttributeError as ex:
-                # todo comented
+
                 #     print(f'OnlyPrintException: (Okay, if sympy.im in expr) {ex}')
                 except KeyError as ex:
                     # KeyError(re) -> okay?, real part implies complex numbers, ignoring is okay
@@ -335,7 +338,7 @@ class ExplainableGP:
             sy_expr = self.lut_sym[tree_id]
         else:
             sy_expr = evotree.get_sympy_expr()
-            sym_check(sy_expr)  # sfeh:discuss save bad trees in LUT aswell? Different LUT for bad trees?
+            # sympy_expression_check(sy_expr, raise_ex=True)  # sfeh:discuss save bad trees in LUT aswell? Different LUT for bad trees?
             self.lut_sym[tree_id] = sy_expr
 
         if tree_id in self.lut_parsim:

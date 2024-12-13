@@ -104,6 +104,7 @@ class Node:
     depth = None
     root_node = None
     parent_node = None
+    xtype = None
 
     def __init__(self, *args: iter, depth=None, is_fix=None, set_class=None):
 
@@ -113,9 +114,9 @@ class Node:
         self.parent_node = None  # pointer to parent, requires repair after changes
         self.depth = None  # pointer to the one root-node, requires repair after changes
 
-    def represent_str(self):
-        # sfeh: not here?
-        pass
+    # def represent_str(self, *args):
+    #     # sfeh: not here?
+    #     pass
 
     def is_chain(self):
         """
@@ -340,9 +341,6 @@ class Node:
     def get_xtype_tuple(self):
         return self.xtype
 
-    def get_xtype_childs(self):
-        return self.xtype[0]
-
     def get_xtype_self(self):
         return self.xtype[1]
 
@@ -477,8 +475,8 @@ class Node:
             # sfeh: do this in create new tree?
             try:
                 node = rnd_choice(node_list)  # debug if ignores chains
-            except ValueError as todo:
-                node = rnd_choice(node_list)  # debug if ignores chains
+            except ValueError as ex:
+                raise ValueError(f'Single-node tree with non-matching xtype: {self}')
 
 
             xtype = xt_self(node.get_xtype_tuple())
@@ -510,8 +508,7 @@ class Node:
         # self.formulae_str = nd_new.formulae_str
         self.repr_str = nd_new.repr_str
         self.showme = nd_new.showme
-        # self.is_fix = old_todo.is_fix  # sfeh cant be changed!
-        # self.depth = old_todo.depth
+        # self.depth = sfeh?
         # self.parent_node = None
         # self.root_node = None
 
@@ -534,10 +531,7 @@ class Node:
         # self.repair_depth()  # sfeh:random powrounded replace is always when fitting? should maybe not?
 
     def replace_with(self, typus, childs):
-        try:  # todo unrelated: set_childs should set parents and root node!
-            new_node = typus(*childs)
-        except Exception as ex:
-            new_node = typus(childs)  # todo this line is never reached... i hope
+        new_node = typus(*childs)
         self.set_new_node(new_node)
         # if typus is not None:
         #     self.set_typus(typus)
@@ -616,8 +610,8 @@ class Node:
         # sfeh: sub, usub replace?
         sfeh:idea tolerance for grouping?
         """
-        # if 'todo':
-        #     raise NotImplementedError
+
+
 
         if self.is_term():  # good for runtime
             ## sfeh:xxx sfeh:open do this in mutation?
@@ -654,10 +648,10 @@ class Node:
                 elif n_exp == 2:
                     self.replace_with(Square, childs=[mychlds[0]])
                 elif n_exp == 0.5:
+                    self.replace_with(Sqrt, childs=[mychlds[0]])  # never hits!
+                elif n_exp == sympy.S.Half:
                     self.replace_with(Sqrt, childs=[mychlds[0]])
-                elif n_exp == sympy.S.Half:  # todo other missing matches? is found hard
-                    self.replace_with(Sqrt, childs=[mychlds[0]])
-                elif n_exp == 0.5 or n_exp == sympy.S.Half:  # todo
+                elif n_exp == 0.5 or n_exp == sympy.S.Half:
                     self.replace_with(Sqrt, childs=[mychlds[0]])
                 elif mychlds[1].get_typus_sfeh() == Round:
                     self.replace_with(PowRounded, childs=[mychlds[0], n_exp])
@@ -677,23 +671,21 @@ class Node:
 
                     elif mychlds[0].get_typus_sfeh() == Number:
                         mul1 = mychlds[0].get_childs()[0]  # todo
-                        if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
+                        if mul1 == sympy.S.NegativeOne:  # sfeh aka sympy.S.NegativeOne -1, was -1 before
 
                             self.replace_with(Usub, childs=[mychlds[1]])  # sfeh Usub ONLY option, ignore usub tree len
                         elif 0 < mul1 < 1:
-                            sfeh = nd(Number, (1 / mul1))
-                            self.replace_with(Div, childs=[mychlds[1], sfeh])
+                            _n = Number((1 / mul1))  # sfeh: discuss; not always the best choice? maybe never? :P
+                            self.replace_with(Div, childs=[mychlds[1], _n])
 
                     elif mychlds[1].get_typus_sfeh() == Number:
                         # sfeh this code can be simplified?
                         # mul1 = mychlds[1].get_childs()[0]
                         # if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
                         #     self.replace_with(Usub, childs=[mychlds[0]])  # sfeh Usub ONLY option, ignore usub tree len
-                        #     print(f'Success! 11')
                         # elif 0 < mul1 < 1:
                         #     self.replace_with(Div, childs=[mychlds[0], 1 / mul1])
                         #     sfeh_div_by_test = 1 / mul1  # sfeh keep "div" as option
-                        #     print(f'Success! 12')
                         #     print(f'sfeh:test this needs testing when reached in future {sfeh_div_by_test}')
                         raise NotImplementedError  # commented block above
         return  # two indents
@@ -725,38 +717,40 @@ class Typus(Node):
             # if issubclass(type(self), Terminal):
             _sym = type(self).symfun  # _sym = self.typus.symfun
             _cs = self.get_childs()
-            r = _sym(_cs)
-            return r  # 2.3470000 -> 2.35
-            # return _cs
+            _r = _sym(_cs)
 
         elif issubclass(type(self), (Round, PowRounded)):
             _cs = [cc.get_sympy_expr() for cc in self.get_childs()]
             _sym = type(self).symfun
-            # _sym = Round_Dummy
-            _cs = _sym(_cs)  # sfeh:debug2024
-            return _cs
+            _r = _sym(_cs)
 
         elif self.get_typus_sfeh() in (Piecewise, sympy.Piecewise):  # sfeh:open delete ONE of them?
             _sym = sympy.Piecewise
             _cs = self.get_childs()
             _cs = [(cc.get_childs()[0], cc.get_childs()[1]) for cc in _cs]
             _cs = [(cc[0].get_sympy_expr(), cc[1].get_sympy_expr()) for cc in _cs]
+            # try:
             _cs = [ExprCondPair(cc[0], cc[1]) for cc in _cs]
-            _cs = _sym(*_cs)
-            return _cs
+            # except Exception as sfeh:
+            #     # NotImplementedError in Sympy "A method to determine whether a multivariate conditional is consistent"
+            #     _cs = [ExprCondPair(cc[0], cc[1]) for cc in _cs]
+            _r = _sym(*_cs)
         elif self.is_operator():
             _cs = [cc.get_sympy_expr() for cc in self.get_childs()]
             _sym = type(self).symfun
             try:
                 if self.is_chain():
-                    r = _sym(*_cs)  # noqa (_sym is definitely assigned)
+                    _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
                 else:
-                    r = _sym(_cs)  # noqa (_sym is definitely assigned)
+                    _r = _sym(_cs)  # noqa (_sym is definitely assigned)
             except (ValueError, TypeError) as ex:
                 raise SympySimplificationError(f'getsympyexpr-err| {ex}')
-            return r
         else:
             raise NotImplementedError
+
+        sympy_expression_check(_r, raise_ex=True)
+
+        return _r
 
     def represent_str(self, show_all=True, cut_terms=False):
         """
@@ -906,16 +900,6 @@ def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
 #     def __init__(self, *args, **kwargs):
 #         super().__init__(*args, **kwargs)
 
-def nd(ty, ccs):  # -> Typus:
-    # return Node(ty, ccs)
-    node = ty(ccs)
-    return node
-
-def nd2(ty, ccs):  # -> Typus:
-    # return Node(ty, ccs)
-    node = nd(ty, *ccs)
-    return node
-
 
 def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Typus:
     """
@@ -924,11 +908,11 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Typus:
     # sfeh:discuss computational improvement when option to ignore args? do "raises" in args save time?
     # check is expr is an accepted operator, otherwise reconstruction probably fails"""
     if isinstance(s_expr, bool):
-        return nd(Boolean, s_expr)
+        return Boolean(s_expr)
 
     elif isinstance(s_expr, sympy.logic.boolalg.BooleanAtom):
         s_expr = True if isinstance(s_expr, (bool, sympy.logic.boolalg.BooleanTrue)) else False
-        return nd(Boolean, s_expr)
+        return Boolean(s_expr)
 
     # the following two lines are not required, if sympy filters for bad expressions earlier
     # if expr.is_imaginary or expr.is_infinite:
@@ -936,18 +920,17 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Typus:
 
     elif s_expr.is_Atom:
         if s_expr.is_Symbol:
-            _n = nd(Symbol, s_expr)  # str VERY important!! "Symbol type input" is not accepted
+            _n = Symbol(s_expr)
             return _n
         else:
             # expr_eval = s_expr.evalf(FLOAT_PRECISION)  # sfeh
             # if abs(s_expr - expr_eval) > 0.001:  # sfeh use float recision here 0.1**FLOAT_PRECISION
             #     expr_eval = s_expr
             if s_expr.is_Boolean:
-                _n = nd(Boolean, s_expr)
+                _n = Boolean(s_expr)
                 return _n
             elif s_expr.is_number:  # is_float does not match int
-                # return nd(Float, [round(float(expr_eval), FLOAT_PRECISION)])
-                _n = nd(Number, s_expr)
+                _n = Number(s_expr)
                 return _n
                 # "TypeError: Cannot convert complex to float" -> ignore the whole expression, let it fail
             else:
@@ -960,7 +943,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Typus:
             cc_nodes.append(sympy_to_tree(arg, allow_chain=allow_chain))
 
         if isinstance(s_expr, Round_Dummy):
-            _n = nd(Round, cc_nodes[0])
+            _n = Round(cc_nodes[0])
             return _n
 
         elif allow_chain:  # sfeh:xxx do this one level above? ignore all allow_chains in here?
@@ -969,7 +952,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Typus:
             return _n
 
         elif isinstance(s_expr, ExprCondPair):
-            return nd(ExprCondPair_Dummy, cc_nodes)  # sfeh:debug/test
+            return ExprCondPair_Dummy(cc_nodes)  # sfeh:debug/test
 
         elif isinstance(s_expr, sympy.Piecewise):
             # "Chained_VERSION" version is handled before
@@ -1216,15 +1199,22 @@ class Node_Dummy(Typus):
     pass
 
 
-class BaseOperator(Typus):
+class PleaseUsePartnerOp(Node_Dummy):
+    """Those operator-classes should be withdrawn, as they do not add further information
+    E. g. Ge, Gt,
+    such that only <, <=, ==, != exist and >, >= are not actually used
+    """
     pass
 
 
-class OperatorArity(BaseOperator):
+class BaseOperator(Typus):
 
     def __init__(self, *args):
         super().__init__()
-        self.set_childs(args)  # was *args and args
+        self.set_childs(args)
+
+
+class OperatorArity(BaseOperator):
 
     arity = None
 
@@ -1234,10 +1224,6 @@ class OperatorChained(BaseOperator):
     # no tflow, separate handling in totf-function
     # Piecewise, AddChain, MulChain, MinChain, MaxChain, AndChain, OrChain
     # childs_min_max = [1, 5]
-
-    def __init__(self, *args):
-        super().__init__()  # todo if not different, ->baseOperator func
-        self.set_childs(args)
 
     showme = 'OperatorChained'
     sy_str = lambda self, s: None
@@ -1628,7 +1614,7 @@ class Le(RelationalOperator):
     xtype = ((float, float), bool)
 
 
-class Gt(RelationalOperator):
+class Gt(RelationalOperator, PleaseUsePartnerOp):
     symfun = lambda a: sympy.Gt(a[0], a[1])
     np_fun = np.greater
     showme = 'Gt'
@@ -1637,7 +1623,7 @@ class Gt(RelationalOperator):
     xtype = ((float, float), bool)
 
 
-class Ge(RelationalOperator):
+class Ge(RelationalOperator, PleaseUsePartnerOp):
     xtype = ((float, float), bool)
     symfun = lambda a: sympy.Ge(a[0], a[1])
     np_fun = np.greater_equal
@@ -1783,7 +1769,7 @@ class Exp(MathOperator):
     xtype = ((float,), float)
 
 
-class ExprCondPair_Dummy(Node_Dummy):
+class ExprCondPair_Dummy(Node_Dummy):  # noqa
     """
     Named like this to differ from the sympy original (ExprCondPair)
     sfeh:discuss
@@ -1918,7 +1904,7 @@ d_sym2node_chain = d_sym2node | {sympy.Add: AddChain, sympy.Mul: MulChain, sympy
                                  ExprCondPair: ExprCondPair_Dummy}
 
 
-def sym_check(expr_sym):
+def sympy_expression_check(expr_sym, raise_ex=False):
     if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im):
         # sfeh:discuss sympy.re: real part -> just irgnore! please implement
         raise SympySimplificationError(f'Simplification failed: {expr_sym}')
@@ -1957,7 +1943,7 @@ def expr_sympify(expr):
 
     try:
         expr_sym = sympy.sympify(expr)
-        sym_check(expr_sym)
+        sympy_expression_check(expr_sym, raise_ex=True)
         return expr_sym
 
     except ValueError as ex:

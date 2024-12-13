@@ -134,18 +134,17 @@ class NodeSelect:
             _v = sympy.Float(_v, FLOAT_PRECISION)  #  sfeh:discuss allow "rational" inputs? 1/3, 3/4, ...
             # _v = sympy.Rational(_v)  # sfeh:discuss allow "rational" inputs? 1/3, 3/4, ...
             # return nd(Number, [_v])  # sfeh: check all "Was here"; round FLOAT_PRECISION was here
-            return nd(Number, _v)  # round FLOAT_PRECISION was here
+            return Number(_v)  # round FLOAT_PRECISION was here
         else:
-            # _v = sympy.logic.boolalg.BooleanAtom(_v)  # sfeh:discuss: vs. Boolean
+            # _v = sympy.logic.boolalg.BooleanAtom(_v)  # discuss: vs. Boolean
             # -> sympy.sympify('And(True, BooleanAtom(False))')
-            _v = _v  # BooleanAtom was here - why? Any purpose?
-            return nd(Boolean, _v)
+            return Boolean(_v)
 
     def choose_symbol_node(self, xt) -> Symbol:
         """similar to choose_terminal_node()
         sfeh: delete?"""
         _v = np.random.choice(self.pick_symbol[xt][0], p=self.pick_symbol[xt][1])
-        n = nd(Symbol, _v)
+        n = Symbol(_v)
         return n
 
 

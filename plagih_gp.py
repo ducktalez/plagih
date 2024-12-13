@@ -193,7 +193,7 @@ def _test_random_pop(chained_on=True):
 
 
 if __name__ == "__main__":
-    _test_simple(chained_on=False)
-    _test_random_pop(chained_on=False)
     _test_simple(chained_on=True)
     _test_random_pop(chained_on=True)
+    _test_simple(chained_on=False)
+    _test_random_pop(chained_on=False)

@@ -118,232 +118,6 @@ class Node:
     #     # sfeh: not here?
     #     pass
 
-    def is_chain(self):
-        """
-        is the node "in chain mode"?
-        -> when there are more childs than input-xtypes
-        ...if there are less. its weird, maybe node in construction?"""
-        a = issubclass(type(self), OperatorChained)
-        # b = len(self.get_xtype_childs()) < len(self.get_childs())
-        # if a != b:
-        #     raise NotImplementedError  # sfeh only debug
-        # if a or b:
-        #     return True
-        # else:
-        #     return False
-        return a
-
-    def is_number(self):
-        """sfeh's check"""
-        x = issubclass(type(self), Number)
-        return x
-
-    # def repr_as_list(self):
-    #     typus_str = self.typus.__name__  # Node-name (Mul, Symbol)
-    #
-    #     if self.is_term():
-    #         try:
-    #             typus_str = self.childs[0].evalf()
-    #         except AttributeError as ex:
-    #             typus_str = self.childs[0]  # AttributeError("'bool' object has no attribute 'evalf'")
-    #     else:
-    #         childstr = ', '.join([cc.repr_as_list() for cc in self.get_childs()])
-    #         typus_str = f'{typus_str}, {childstr}'
-    #
-    #     return f"[{typus_str}]"
-
-    def get_typus_sfeh(self):
-        t_sfeh = self.__class__.__name__
-        t = self.__class__
-        return t
-
-    def get_ma_name_sfeh(self):
-        s = self.showme
-        return s
-
-    def str_as_list(self, cut_terms=False):
-        # typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
-        # sfeh:delete_me if no error after 27-11-2023
-        # typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
-        typus_str = self.get_ma_name_sfeh()  # sfeh: can str(typus) work? -> str with args recursively?
-
-        if self.get_childs():
-            if issubclass(type(self), BaseOperator):
-                childstr = ', '.join([cc.str_as_list(cut_terms=cut_terms) for cc in self.get_childs()])
-                typus_str = f'{typus_str}, {childstr}'
-            else:
-                # terminal nodes
-                v = self.get_childs()[0]
-                try:
-                    if self.is_number():
-                        # only show decimals for very small numbers: e.g. 0.00002, but 0.123456 -> 0.123
-                        typus_str = term_format(f'{v}', cut=cut_terms)
-
-                        # sfeh:discuss: now, small values are displayed as 0
-                        # sfeh:discuss this is removed for mow
-                        #   typus_str = f'{v:.3g}'  # '.5g'->5 decimals, trailing zeros, but rare (ugly) "E+04"
-                        #   TypeError('unsupported format string passed to One.__format__')
-                    else:
-                        typus_str = f'{v}'
-                except TypeError as ex:  # noqa  # sfeh
-                    v_eval = v.evalf()
-                    typus_str = term_format(v_eval, cut=cut_terms)
-                    # sympy.ONE -> 1.0000000...
-                    # sfeh:open int, non-floats are handled badly
-                except Exception as ex:
-                    print(f'SUCCESS sfeh:debug, delete?2 KEEP? {ex}')
-
-        return f"[{typus_str}]"
-
-    def __repr__(self):
-        """
-        sfeh:WRONG! Do NOT use __str__!
-        This is acceptable, as it is never used anyways.
-        only fixed nodes are missing
-        """
-        # raise NotImplementedError
-        return self.represent_str(show_all=False)  # sfeh yeah, prints trees in debugger
-
-    def get_lut_id(self):
-        """
-        # this whole function WAS replaced with repr_as_list()
-
-        sfeh: Do NOT use str() or str_as_list(), as values get rounded
-            Do NOT return a node-list and convert them to strings
-            -> use repr()
-        Unique+simple representation of a tree (to check in a lut if it was calculated already)
-        regular print/string option should look better, this is just for getting a unique identifier
-        returns string Identificator
-        sfeh:discuss is this just repr?
-        ID=Identificator, which"""
-
-        # s = self.repr_as_list()
-        s = self.represent_str(show_all=False)
-        return s
-
-    def str_as_expr(self):
-        s = self.get_sympy_expr()
-        return s
-
-    # def get_expr_raw_fstring(self):
-    #     """Add (1, a)
-    #     self.typus.__name__ gets the class name
-    #     """
-    #     if self.is_term():
-    #         fex = f'{self.get_childs()[0]}'
-    #         fex = string_remove_trailing_zeroes(fex)
-    #         return fex
-    #     else:
-    #         fex = [cc.get_expr_raw_fstring() for cc in self.get_childs()]
-    #         fex = ', '.join(fex)
-    #         if issubclass(type(self), OperatorArity):
-    #             fex = f'{self.typus.showme}({fex})'
-    #         elif self.is_ExprCdPair():
-    #             fex = f'({fex})'
-    #         else:
-    #             fex = f'{self.typus.showme}({fex})'
-    #     return f'{fex}'
-
-    def get_expr_symlike(self, try_sympify=False, cut_terms=False):
-        """(1 + a)
-        each step returns like ({} + {})
-        and then, the inputs are filled in the gaps
-        """
-        if self.is_term():
-            expr = f'{self.get_childs()[0]}'
-            expr = term_format(expr, cut=cut_terms)
-            return expr
-        else:
-            expr = [cc.get_expr_symlike(try_sympify=try_sympify, cut_terms=cut_terms) for cc in self.get_childs()]
-            # if issubclass(type(self), (ExprCondPair)):
-            #     print('kjh')
-            if self.is_chain():
-                if issubclass(type(self), (AddChain, MulChain, AndChain, OrChain)):
-                    expr = self.get_typus_sfeh().inline_sep.join(expr)
-                    expr = f'({expr})'
-                else:
-                    expr = ', '.join(expr)
-                    expr = self.get_typus_sfeh().sy_str.format(expr)
-            else:
-                expr = self.get_typus_sfeh().sy_str.format(*expr)
-
-        if try_sympify:
-            expr_sy = sympy.sympify(expr)  # sfeh No local dict required?
-            return expr_sy
-
-        return f'{expr}'
-
-
-    def get_tree_export_DEPRECATED(self):
-        """
-        Deprecated due to the node class being inherited by a typus class now
-        :return:
-        """
-
-        label = self.get_typus_sfeh().showme  # class name
-
-        if self.is_term():
-            cs = f'{self.get_childs()[0]}'
-            cs = term_format(cs, cut=False)
-            if self.is_term_and_symbol():
-                cs = f'"{cs}"'
-
-        else:
-            cs = [cc.get_tree_export() for cc in self.get_childs()]
-            cs = ', '.join(cs)
-
-        fix_opt = ', is_fix=True' if self.is_fix else ''
-        creation = f'({label}, [{cs}]{fix_opt})'
-        return creation
-
-    def len_nodecount_raw(self):
-        """counting the amount of nodes recursively"""
-        if self.has_childs():
-            return 1 + sum([cc.len_nodecount_raw() for cc in self.get_childs()])
-        else:
-            return 1  # childs can currently be floats
-
-    def is_typus(self, t):
-        r = issubclass(type(self), t)
-        return r
-
-    def is_ExprCdPair(self):  # noqa
-        # sfeh: Sometimes, it hits the Dummy-class, sometimes (chained?) the sympy class. Not sure, why.
-        r = issubclass(type(self), (ExprCondPair, ExprCondPair_Dummy))
-        return r
-
-    def len_nodecount_fair(self):
-        """counting the amount of nodes, but
-            - ignoring "Usub"!"
-            - only biggest branch of Piecewise (aka If-then-else)
-        """
-        if self.is_term():
-            n = 1
-        else:
-            cc_list = [cc.len_nodecount_fair() for cc in self.get_childs()]
-
-            if self.is_typus(Usub):
-                n = sum(cc_list)
-            else:
-                n = 1 + sum(cc_list)
-
-        return n
-
-    def __len__(self):
-        return self.len_nodecount_fair()
-
-    def get_typus(self):
-        return self.get_typus_sfeh()
-
-    def get_arity(self):
-        return len(self.get_typus_sfeh().get_child_xts())
-
-    def get_xtype_tuple(self):
-        return self.xtype
-
-    def get_xtype_self(self):
-        return self.xtype[1]
-
     # def set_typus(self, t):  # : Type[Typus]
     #     """all other values are automatically set by assigning the respected node"""
     #     self.typus = t
@@ -752,6 +526,232 @@ class Typus(Node):
 
         return _r
 
+    def is_chain(self):
+        """
+        is the node "in chain mode"?
+        -> when there are more childs than input-xtypes
+        ...if there are less. its weird, maybe node in construction?"""
+        a = issubclass(type(self), OperatorChained)
+        # b = len(self.get_xtype_childs()) < len(self.get_childs())
+        # if a != b:
+        #     raise NotImplementedError  # sfeh only debug
+        # if a or b:
+        #     return True
+        # else:
+        #     return False
+        return a
+
+    def is_number(self):
+        """sfeh's check"""
+        x = issubclass(type(self), Number)
+        return x
+
+    # def repr_as_list(self):
+    #     typus_str = self.typus.__name__  # Node-name (Mul, Symbol)
+    #
+    #     if self.is_term():
+    #         try:
+    #             typus_str = self.childs[0].evalf()
+    #         except AttributeError as ex:
+    #             typus_str = self.childs[0]  # AttributeError("'bool' object has no attribute 'evalf'")
+    #     else:
+    #         childstr = ', '.join([cc.repr_as_list() for cc in self.get_childs()])
+    #         typus_str = f'{typus_str}, {childstr}'
+    #
+    #     return f"[{typus_str}]"
+
+    def get_typus_sfeh(self):
+        t_sfeh = self.__class__.__name__
+        t = self.__class__
+        return t
+
+    def get_ma_name_sfeh(self):
+        s = self.showme
+        return s
+
+    def str_as_list(self, cut_terms=False):
+        # typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
+        # sfeh:delete_me if no error after 27-11-2023
+        # typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
+        typus_str = self.get_ma_name_sfeh()  # sfeh: can str(typus) work? -> str with args recursively?
+
+        if self.get_childs():
+            if issubclass(type(self), BaseOperator):
+                childstr = ', '.join([cc.str_as_list(cut_terms=cut_terms) for cc in self.get_childs()])
+                typus_str = f'{typus_str}, {childstr}'
+            else:
+                # terminal nodes
+                v = self.get_childs()[0]
+                try:
+                    if self.is_number():
+                        # only show decimals for very small numbers: e.g. 0.00002, but 0.123456 -> 0.123
+                        typus_str = term_format(f'{v}', cut=cut_terms)
+
+                        # sfeh:discuss: now, small values are displayed as 0
+                        # sfeh:discuss this is removed for mow
+                        #   typus_str = f'{v:.3g}'  # '.5g'->5 decimals, trailing zeros, but rare (ugly) "E+04"
+                        #   TypeError('unsupported format string passed to One.__format__')
+                    else:
+                        typus_str = f'{v}'
+                except TypeError as ex:  # noqa  # sfeh
+                    v_eval = v.evalf()
+                    typus_str = term_format(v_eval, cut=cut_terms)
+                    # sympy.ONE -> 1.0000000...
+                    # sfeh:open int, non-floats are handled badly
+                except Exception as ex:
+                    print(f'SUCCESS sfeh:debug, delete?2 KEEP? {ex}')
+
+        return f"[{typus_str}]"
+
+    def __repr__(self):
+        """
+        sfeh:WRONG! Do NOT use __str__!
+        This is acceptable, as it is never used anyways.
+        only fixed nodes are missing
+        """
+        # raise NotImplementedError
+        return self.represent_str(show_all=False)  # sfeh yeah, prints trees in debugger
+
+    def get_lut_id(self):
+        """
+        # this whole function WAS replaced with repr_as_list()
+
+        sfeh: Do NOT use str() or str_as_list(), as values get rounded
+            Do NOT return a node-list and convert them to strings
+            -> use repr()
+        Unique+simple representation of a tree (to check in a lut if it was calculated already)
+        regular print/string option should look better, this is just for getting a unique identifier
+        returns string Identificator
+        sfeh:discuss is this just repr?
+        ID=Identificator, which"""
+
+        # s = self.repr_as_list()
+        s = self.represent_str(show_all=False)
+        return s
+
+    def str_as_expr(self):
+        s = self.get_sympy_expr()
+        return s
+
+    # def get_expr_raw_fstring(self):
+    #     """Add (1, a)
+    #     self.typus.__name__ gets the class name
+    #     """
+    #     if self.is_term():
+    #         fex = f'{self.get_childs()[0]}'
+    #         fex = string_remove_trailing_zeroes(fex)
+    #         return fex
+    #     else:
+    #         fex = [cc.get_expr_raw_fstring() for cc in self.get_childs()]
+    #         fex = ', '.join(fex)
+    #         if issubclass(type(self), OperatorArity):
+    #             fex = f'{self.typus.showme}({fex})'
+    #         elif self.is_ExprCdPair():
+    #             fex = f'({fex})'
+    #         else:
+    #             fex = f'{self.typus.showme}({fex})'
+    #     return f'{fex}'
+
+    def get_expr_symlike(self, try_sympify=False, cut_terms=False):
+        """(1 + a)
+        each step returns like ({} + {})
+        and then, the inputs are filled in the gaps
+        """
+        if self.is_term():
+            expr = f'{self.get_childs()[0]}'
+            expr = term_format(expr, cut=cut_terms)
+            return expr
+        else:
+            expr = [cc.get_expr_symlike(try_sympify=try_sympify, cut_terms=cut_terms) for cc in self.get_childs()]
+            # if issubclass(type(self), (ExprCondPair)):
+            #     print('kjh')
+            if self.is_chain():
+                if issubclass(type(self), (AddChain, MulChain, AndChain, OrChain)):
+                    expr = self.get_typus_sfeh().inline_sep.join(expr)
+                    expr = f'({expr})'
+                else:
+                    expr = ', '.join(expr)
+                    expr = self.get_typus_sfeh().sy_str.format(expr)
+            else:
+                expr = self.get_typus_sfeh().sy_str.format(*expr)
+
+        if try_sympify:
+            expr_sy = sympy.sympify(expr)  # sfeh No local dict required?
+            return expr_sy
+
+        return f'{expr}'
+
+
+    def get_tree_export_DEPRECATED(self):
+        """
+        Deprecated due to the node class being inherited by a typus class now
+        :return:
+        """
+
+        label = self.get_typus_sfeh().showme  # class name
+
+        if self.is_term():
+            cs = f'{self.get_childs()[0]}'
+            cs = term_format(cs, cut=False)
+            if self.is_term_and_symbol():
+                cs = f'"{cs}"'
+
+        else:
+            cs = [cc.get_tree_export() for cc in self.get_childs()]
+            cs = ', '.join(cs)
+
+        fix_opt = ', is_fix=True' if self.is_fix else ''
+        creation = f'({label}, [{cs}]{fix_opt})'
+        return creation
+
+    def len_nodecount_raw(self):
+        """counting the amount of nodes recursively"""
+        if self.has_childs():
+            return 1 + sum([cc.len_nodecount_raw() for cc in self.get_childs()])
+        else:
+            return 1  # childs can currently be floats
+
+    def is_typus(self, t):
+        r = issubclass(type(self), t)
+        return r
+
+    def is_ExprCdPair(self):  # noqa
+        # sfeh: Sometimes, it hits the Dummy-class, sometimes (chained?) the sympy class. Not sure, why.
+        r = issubclass(type(self), (ExprCondPair, ExprCondPair_Dummy))
+        return r
+
+    def len_nodecount_fair(self):
+        """counting the amount of nodes, but
+            - ignoring "Usub"!"
+            - only biggest branch of Piecewise (aka If-then-else)
+        """
+        if self.is_term():
+            n = 1
+        else:
+            cc_list = [cc.len_nodecount_fair() for cc in self.get_childs()]
+
+            if self.is_typus(Usub):
+                n = sum(cc_list)
+            else:
+                n = 1 + sum(cc_list)
+
+        return n
+
+    def __len__(self):
+        return self.len_nodecount_fair()
+
+    def get_typus(self):
+        return self.get_typus_sfeh()
+
+    def get_arity(self):
+        return len(self.get_typus_sfeh().get_child_xts())
+
+    def get_xtype_tuple(self):
+        return self.xtype
+
+    def get_xtype_self(self):
+        return self.xtype[1]
+
     def represent_str(self, show_all=True, cut_terms=False):
         """
         sfeh:open
@@ -988,6 +988,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Typus:
     # sfeh:discuss
     # NotImplementedError: Expr missing: ITE(p > 13, tan(p - v) >= 2.578643, tan(p - v) >= 1)
     # this should not have occured, because it evaluates to bool, not to float
+        sympy_expression_check(s_expr)
     raise NotImplementedError(f'Expr missing: {s_expr}')
 
 
@@ -1013,8 +1014,7 @@ def tree_simplification(tree, allow_chain) -> Typus:
         print(f'WHATHAPPENED SFEH'
               f'\n\told: {tree_copy.str_as_list()}'
               f'\n\tsym: {tree.str_as_list()}'
-              f'\n\t{astr}'
-              f'\n\t{bstr}')
+              f'\n\t{astr}')
               # f'\n\told: {tree_copy.get_expr_symlike()}'
               # f'\n\tsym: {tree.get_expr_symlike()}'
               # f'\n\tsym: {tree_copy.get_tree_export()}')
@@ -1905,8 +1905,8 @@ d_sym2node_chain = d_sym2node | {sympy.Add: AddChain, sympy.Mul: MulChain, sympy
 
 
 def sympy_expression_check(expr_sym, raise_ex=False):
-    if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im):
-        # sfeh:discuss sympy.re: real part -> just irgnore! please implement
+    if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im, sympy.re):
+        # sfeh:discuss sympy.re: real part -> don't ignore; if there is a real part, there is a imaginary part.
         raise SympySimplificationError(f'Simplification failed: {expr_sym}')
     return expr_sym
 

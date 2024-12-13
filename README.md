@@ -68,6 +68,18 @@
   - create "better mutable" trees?
 - Discuss: Input normalization. Leads to different formulae; which is NOT desired, right?
 - Node/Number type rational?
+- introduce a scale-oparetor, that only multiplies with a number, in order to be a good building block
+- https://github.com/sympy/sympy/issues/27364
+  ```python
+  import sympy
+  
+  a = sympy.symbols('a', real=True)
+  
+  print(sympy.simplify('Max(a, 1) >= a', locals={'a': a}))  # a <= Max(1, a), should be True.  # noqa
+  print(sympy.simplify('a <= Abs(-a)', locals={'a': a}))  # -> a <= Abs(a), should be True  # noqa
+  print(sympy.simplify('a <= Abs(a)', locals={'a': a}))  # -> a <= Abs(a), should be True  # noqa
+  ```
+- Inputrange, outputrange, derivable, goalrequirement, iscyclic
 
 ### Semi-interesting
 

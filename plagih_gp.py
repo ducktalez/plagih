@@ -61,7 +61,7 @@ def _test_simple(chained_on=True):
             tree = gp.evolve.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
             return tree
 
-        gp.end_generation()
+        gp.end_generation()  # todo:unrelated: operators -> always evalf() inside as default!
 
     for _ in range(10):
         @gp.create_trees(rate=1, crossover=True, simplify=True)
@@ -194,6 +194,6 @@ def _test_random_pop(chained_on=True):
 
 if __name__ == "__main__":
     _test_simple(chained_on=False)
-    # _test_random_pop(chained_on=False)  # sfeh:open
-    # _test_simple(chained_on=True)
-    # _test_random_pop(chained_on=True)
+    _test_random_pop(chained_on=False)
+    _test_simple(chained_on=True)
+    _test_random_pop(chained_on=True)

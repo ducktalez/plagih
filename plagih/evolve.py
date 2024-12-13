@@ -452,10 +452,12 @@ class Evolution:
         # bb = node_deepcopy(tree2)
 
         a_nds = aa.list_mutable_nodes(skip_first=True)  # sfeh ...why actually ignore root node?
+        #   -> this shall prevent two trees from just "swapping place" (aka only root nodes are exchanged)
+        #   -> this can actually happen quite often, when trees have small complexity
         # a_nds = [x for x in a_nds if len(x) > 1]  # ignore terminal nodes
 
         if len(a_nds) == 0:
-            raise ValueError(f'Crossover tree 1 has no mutable nodes!')  # sfeh special value error?
+            raise ValueError(f'Crossover tree 1 has no mutable nodes!')  # sfeh special (value?) error?
 
         a_nd = np.random.choice(a_nds)
         xt_out = a_nd.get_xtype_self()

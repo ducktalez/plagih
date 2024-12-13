@@ -1,45 +1,24 @@
-import numpy as np
-import sympy as sp
-import pandas as pd
-
-def evaluate_sympy_expression(expr, df):
-    """
-    Evaluate a SymPy expression on a pandas DataFrame using columns corresponding to the symbols in the expression.
-
-    Args:
-        expr (sympy.Expr): The SymPy expression to evaluate.
-        df (pd.DataFrame): The DataFrame containing columns matching the symbols in the expression.
-
-    Returns:
-        np.ndarray: The evaluated results as a NumPy array.
-    """
-    # Extract symbols from the expression
-    symbols = sorted(expr.free_symbols, key=lambda s: str(s))  # Sort for consistent ordering
-
-    # Create a lambdified function
-    lambdified_func = sp.lambdify(symbols, expr, modules="numpy")
-
-    # Map symbols to DataFrame columns
-    args = [df[str(symbol)].to_numpy() for symbol in symbols]
-
-    # Evaluate the expression
-    return lambdified_func(*args)
+from sympy import symbols, Function
+from sympy.multipledispatch import dispatch
 
 
-# Example usage
-if __name__ == "__main__":
-    # Define a SymPy expression
-    x, y, z = sp.symbols('x y z')
-    expr = x**2 + sp.sin(y) + sp.log(z)
+# Define a custom Abs class
+class MyAbs(Function):
+    def _eval_is_ge(self, other):
+        # Handle the case where we compare Abs(arg) >= arg
+        if other == self.args[0]:  # Compare to the argument of Abs
+            if self.args[0].is_real:  # Only valid for real arguments
+                return True
+        return None
 
-    # Create a DataFrame
-    df = pd.DataFrame({
-        'x': [1, 2, 3],
-        'y': [0.5, 1.0, 1.5],
-        'z': [2.718, 7.389, 20.085]
-    })
+# Define a dispatch rule for MyAbs
+@dispatch(MyAbs, symbols.__class__)
+def _eval_is_ge(lhs, rhs):
+    return lhs._eval_is_ge(rhs)
 
-    # Evaluate the expression and store the result in a new column
-    df['result'] = evaluate_sympy_expression(expr, df)
+# Testing the implementation
+a = symbols('a', real=True)
+abs_a = MyAbs(a)
 
-    print(df)
+# Test the is_ge function
+print(sympy.is_ge(abs_a, a))  # Should print True

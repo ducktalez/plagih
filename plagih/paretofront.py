@@ -77,11 +77,8 @@ def plot_paretofront(paretofront, path, parsimony_max) -> []:
         ax.set(xlabel='complexity', ylabel='regression error', xlim=(0, right), ylim=(0, (max(yy) - min(min(yy), 0)) * 1.05))
 
         try:
-            path_pdf = path / f'paretofront.pdf'
-            fig.savefig(path_pdf)
-            printez('f', f"paretofront (.pdf): {path_pdf}")
-
             path_png = path / f'paretofront.png'
+            # path_pdf = path / f'paretofront.pdf'
             fig.savefig(path_png)
             printez('f', f"paretofront (.png): {path_png}")
         except PermissionError as perm_error:

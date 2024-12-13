@@ -19,7 +19,7 @@ import copy
 import random
 from dataclasses import dataclass
 from plagih.tree_complexity.tree_edit_distance import apted_distance
-from plagih.util import FLOAT_PRECISION, string_remove_trailing_zeroes, rnd_choice, xt_self
+import plagih.util
 import os
 # from typing import Callable
 
@@ -160,7 +160,7 @@ class Node:
         s = self.showme
         return s
 
-    def str_as_list(self):
+    def str_as_list(self, cut_terms=False):
         # typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
         # sfeh:delete_me if no error after 27-11-2023
         # typus_str = self.typus.__name__  # sfeh: can str(typus) work? -> str with args recursively?
@@ -168,17 +168,25 @@ class Node:
 
         if self.get_childs():
             if issubclass(type(self), BaseOperator):
-                childstr = ', '.join([cc.str_as_list() for cc in self.get_childs()])
+                childstr = ', '.join([cc.str_as_list(cut_terms=cut_terms) for cc in self.get_childs()])
                 typus_str = f'{typus_str}, {childstr}'
             else:
+                # terminal nodes
+                v = self.get_childs()[0]
                 try:
                     if self.is_number():
-                        typus_str = f'{self.get_childs()[0]:.3g}'  # '.5g'->5 decimals, trailing zeros, but rare (ugly) "E+04"
+                        # only show decimals for very small numbers: e.g. 0.00002, but 0.123456 -> 0.123
+                        typus_str = term_format(f'{v}', cut=cut_terms)
+
+                        # sfeh:discuss: now, small values are displayed as 0
+                        # sfeh:discuss this is removed for mow
+                        #   typus_str = f'{v:.3g}'  # '.5g'->5 decimals, trailing zeros, but rare (ugly) "E+04"
+                        #   TypeError('unsupported format string passed to One.__format__')
                     else:
-                        typus_str = f'{self.get_childs()[0]}'
-                except TypeError as ex:  # noqa
-                    typus_str = str(self.get_childs()[0].evalf())
-                    typus_str = string_remove_trailing_zeroes(typus_str)
+                        typus_str = f'{v}'
+                except TypeError as ex:  # noqa  # sfeh
+                    v_eval = v.evalf()
+                    typus_str = term_format(v_eval, cut=cut_terms)
                     # sympy.ONE -> 1.0000000...
                     # sfeh:open int, non-floats are handled badly
                 except Exception as ex:
@@ -235,17 +243,17 @@ class Node:
     #             fex = f'{self.typus.showme}({fex})'
     #     return f'{fex}'
 
-    def get_expr_symlike(self, try_sympify=False):
+    def get_expr_symlike(self, try_sympify=False, cut_terms=False):
         """(1 + a)
         each step returns like ({} + {})
         and then, the inputs are filled in the gaps
         """
         if self.is_term():
             expr = f'{self.get_childs()[0]}'
-            expr = string_remove_trailing_zeroes(expr)
+            expr = term_format(expr, cut=cut_terms)
             return expr
         else:
-            expr = [cc.get_expr_symlike(try_sympify=try_sympify) for cc in self.get_childs()]
+            expr = [cc.get_expr_symlike(try_sympify=try_sympify, cut_terms=cut_terms) for cc in self.get_childs()]
             # if issubclass(type(self), (ExprCondPair)):
             #     print('kjh')
             if self.is_chain():
@@ -265,9 +273,9 @@ class Node:
         return f'{expr}'
 
 
-    def get_tree_export(self):
+    def get_tree_export_DEPRECATED(self):
         """
-
+        Deprecated due to the node class being inherited by a typus class now
         :return:
         """
 
@@ -275,7 +283,7 @@ class Node:
 
         if self.is_term():
             cs = f'{self.get_childs()[0]}'
-            cs = string_remove_trailing_zeroes(cs)
+            cs = term_format(cs, cut=False)
             if self.is_term_and_symbol():
                 cs = f'"{cs}"'
 
@@ -467,7 +475,11 @@ class Node:
         else:
             node_list = [x for x in node_list if type(x) == Number]  # sfeh only replaces numbers. ok for now.
             # sfeh: do this in create new tree?
-            node = rnd_choice(node_list)  # debug if ignores chains
+            try:
+                node = rnd_choice(node_list)  # debug if ignores chains
+            except ValueError as todo:
+                node = rnd_choice(node_list)  # debug if ignores chains
+
 
             xtype = xt_self(node.get_xtype_tuple())
             new_node = tb.node_selector.choose_symbol_node(xtype)
@@ -489,16 +501,9 @@ class Node:
 
         return
 
-    def set_new_node(self, nd_new: 'Typus', debug=True):
+    def set_new_node(self, nd_new: 'Typus'):
         """Replacing oneself with another node"""
-        # if debug:
-        #     raise NotImplementedError('SFEH remove debug and debug this')
-        old_todo = copy.deepcopy(self)
-        # self.__dict__ = nd_new.__dict__
-        try:
-            self.__class__ = nd_new.__class__
-        except Exception as todo:
-            self.__class__ = nd_new.__class__
+        self.__class__ = nd_new.__class__
         self.__dict__.update(nd_new.__dict__)
         # self.chain_xtype = nd_new.chain_xtype
         self.childs = nd_new.childs
@@ -506,7 +511,7 @@ class Node:
         self.repr_str = nd_new.repr_str
         self.showme = nd_new.showme
         # self.is_fix = old_todo.is_fix  # sfeh cant be changed!
-        self.depth = old_todo.depth
+        # self.depth = old_todo.depth
         # self.parent_node = None
         # self.root_node = None
 
@@ -529,7 +534,7 @@ class Node:
         # self.repair_depth()  # sfeh:random powrounded replace is always when fitting? should maybe not?
 
     def replace_with(self, typus, childs):
-        try:  # todo unrelated set_childs should set parents and root node!
+        try:  # todo unrelated: set_childs should set parents and root node!
             new_node = typus(*childs)
         except Exception as ex:
             new_node = typus(childs)  # todo this line is never reached... i hope
@@ -560,8 +565,6 @@ class Node:
         # -> Check, if this node should be added
         if self.is_fix:
             node_list = []
-        elif skip_first:  # ignore_first is automatically set to false during recursion
-            node_list = []
         elif self.is_ExprCdPair():  # It is just a dummy holding a tuple
             node_list = []
         elif self.is_typus(Piecewise):
@@ -580,7 +583,7 @@ class Node:
         # recursively add the other nodes
         if self.has_childs():  # sfeh:chain-operators discuss
             for cc in self.get_childs():
-                a = cc.list_mutable_nodes(xtype=xtype, skip_first=False, allow_chain=allow_chain)
+                a = cc.list_mutable_nodes(xtype=xtype, allow_chain=allow_chain)
                 node_list.extend(a)
 
         return node_list
@@ -717,18 +720,12 @@ class Typus(Node):
         """Converts directly into a sympy expr
         from node-class, go to a sympy expression
         """
-        todo0 = self.symfun
-        todo1 = type(self).symfun
-        # print(f't0t1: {todo0}  {todo1}')
 
         if self.is_term():
             # if issubclass(type(self), Terminal):
             _sym = type(self).symfun  # _sym = self.typus.symfun
             _cs = self.get_childs()
-            try:
-                r = _sym(_cs)
-            except Exception as todo:
-                r = _sym(*_cs)  # should not be there
+            r = _sym(_cs)
             return r  # 2.3470000 -> 2.35
             # return _cs
 
@@ -745,21 +742,23 @@ class Typus(Node):
             _cs = [(cc.get_childs()[0], cc.get_childs()[1]) for cc in _cs]
             _cs = [(cc[0].get_sympy_expr(), cc[1].get_sympy_expr()) for cc in _cs]
             _cs = [ExprCondPair(cc[0], cc[1]) for cc in _cs]
-            _cs = _sym(_cs)
+            _cs = _sym(*_cs)
             return _cs
         elif self.is_operator():
             _cs = [cc.get_sympy_expr() for cc in self.get_childs()]
             _sym = type(self).symfun
             try:
-                r = _sym(_cs)  # noqa (_sym is definitely assigned)
+                if self.is_chain():
+                    r = _sym(*_cs)  # noqa (_sym is definitely assigned)
+                else:
+                    r = _sym(_cs)  # noqa (_sym is definitely assigned)
             except (ValueError, TypeError) as ex:
-                # r = _sym(*_cs)  # noqa (_sym is definitely assigned)  # todo delete line
                 raise SympySimplificationError(f'getsympyexpr-err| {ex}')
             return r
         else:
             raise NotImplementedError
 
-    def represent_str(self, show_all=True):
+    def represent_str(self, show_all=True, cut_terms=False):
         """
         sfeh:open
             - represent does not work and needs a lot of testing
@@ -775,49 +774,21 @@ class Typus(Node):
 
         if self.is_term():
             cs = f'{self.get_childs()[0]}'
-            cs = string_remove_trailing_zeroes(cs)
+            if cut_terms:
+                cs = term_format(cs, cut=cut_terms)
+            else:
+                cs = remove_trailing_zeroes(cs)
             if show_all:
                 raise NotImplementedError
             else:
                 s = f'{cs}'
 
         else:
-            cs = [cc.represent_str(show_all=show_all) for cc in self.get_childs()]
+            cs = [cc.represent_str(show_all=show_all, cut_terms=cut_terms) for cc in self.get_childs()]
             cs = ', '.join(cs)
             s = f"{s}({cs})"
 
         s = f"{s}"  # v1
-
-        return s
-
-    def represent_str_sfeh_old(self, show_all=True):
-        """
-        sfeh:open
-            - represent does not work and needs a lot of testing
-            - Is not required for now!
-        Printing the nodes as nested array structure such that it can be saved/loaded
-        very closely related to str(), but adds the following information:
-        - ":fix", when nodes are fixed"""
-
-        s = self.showme  # class name
-
-        if self.is_fix and show_all:
-            s += ':fix'
-
-        if self.is_term():
-            cs = f'{self.get_childs()[0]}'
-            cs = string_remove_trailing_zeroes(cs)
-            if show_all:
-                s = f'{s}({cs})'
-            else:
-                s = f'{cs}'
-
-        else:
-            cs = [cc.represent_str(show_all=show_all) for cc in self.get_childs()]
-            cs = ', '.join(cs)
-            s = f"{s}, {cs}"
-
-        s = f"[{s}]"  # v1
 
         return s
 
@@ -833,7 +804,7 @@ class Typus(Node):
         Abs(Abs(Square(cartPos)))
         [Abs, [Abs, [Square, [cartPos]]]]
         """
-        s = self.represent_str(show_all=False)
+        s = self.represent_str(show_all=False, cut_terms=True)
         # s1 = self.represent_str()
         # s2 = self.get_expr_symlike()
         # s3 = self.get_expr_symlike(try_sympify=True)
@@ -965,7 +936,6 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Typus:
 
     elif s_expr.is_Atom:
         if s_expr.is_Symbol:
-            # _n = nd(SfehSymbol, s_expr)  # str VERY important!! "Symbol type input" is not accepted  # todo
             _n = nd(Symbol, s_expr)  # str VERY important!! "Symbol type input" is not accepted
             return _n
         else:
@@ -990,12 +960,12 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Typus:
             cc_nodes.append(sympy_to_tree(arg, allow_chain=allow_chain))
 
         if isinstance(s_expr, Round_Dummy):
-            _n = nd(Round, cc_nodes)
+            _n = nd(Round, cc_nodes[0])
             return _n
 
         elif allow_chain:  # sfeh:xxx do this one level above? ignore all allow_chains in here?
             op = d_sym2node_chain[type(s_expr)]
-            _n = nd(op, cc_nodes)
+            _n = op(*cc_nodes)
             return _n
 
         elif isinstance(s_expr, ExprCondPair):
@@ -1007,7 +977,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Typus:
             reversed_pairs = [[sympy_to_tree(xx, allow_chain=allow_chain) for xx in list(i)] for i in reversed_pairs]
             otherwise = reversed_pairs[0][0]  # the last "True" condition
             for pairs in reversed_pairs[1:]:
-                otherwise = nd(Ifte, [pairs[1], pairs[0], otherwise])
+                otherwise = Ifte(pairs[1], pairs[0], otherwise)
             return otherwise
 
         # sfehx include Usub, ignore usub in tree len()
@@ -1029,12 +999,8 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Typus:
                 return _cc
                 # raise TypeError(f"{clss} takes exactly {len(clss.get_child_xts())} args ({len(expr.args)} given)")
             else:
-                try:
-                    n = clss(*cc_nodes)  # Max, Min, sign, add, mul, pow
-                    return n
-                except Exception as todo:
-                    n = clss(cc_nodes)  #
-                    return n
+                n = clss(*cc_nodes)  # Max, Min, sign, add, mul, pow
+                return n
 
     # sfeh:discuss
     # NotImplementedError: Expr missing: ITE(p > 13, tan(p - v) >= 2.578643, tan(p - v) >= 1)
@@ -1059,14 +1025,20 @@ def tree_simplification(tree, allow_chain) -> Typus:
     tree.tree_node_grouping(tolerance=0)
     # print(f'End:   {len(tree)}\t{tree}')
     if len(tree_copy) < len(tree):
+        astr = string_remove_trailing_zeroes(str(tree_copy.get_sympy_expr()))
+        bstr = string_remove_trailing_zeroes(str(tree.get_sympy_expr()))
         print(f'WHATHAPPENED SFEH'
               f'\n\told: {tree_copy.str_as_list()}'
               f'\n\tsym: {tree.str_as_list()}'
+              f'\n\t{astr}'
+              f'\n\t{bstr}')
               # f'\n\told: {tree_copy.get_expr_symlike()}'
               # f'\n\tsym: {tree.get_expr_symlike()}'
-              f'\n\tsym: {tree_copy.get_tree_export()}')
-        if str(tree_copy.get_sympy_expr()) != str(tree.get_sympy_expr()):  # sfeh str() should not be required
-            print_warning('w', f'\t{tree_copy.get_sympy_expr()}\n\t{tree.get_sympy_expr()}')
+              # f'\n\tsym: {tree_copy.get_tree_export()}')
+        if astr != bstr:  # sfeh str() should not be required
+            # sfeh 'a**0.5' does not become 'sqrt(a)'! use rational=True or sympy.S.Half
+            # sfeh: rational can be a valid improvement, creating unified trees
+            print_warning('w', f'Diff in sympy expression?\n\t{astr}\n\t{bstr}')
     return tree
 
 
@@ -1265,7 +1237,7 @@ class OperatorChained(BaseOperator):
 
     def __init__(self, *args):
         super().__init__()  # todo if not different, ->baseOperator func
-        self.set_childs([args])
+        self.set_childs(args)
 
     showme = 'OperatorChained'
     sy_str = lambda self, s: None
@@ -1282,6 +1254,8 @@ class ChainableOp:
     Add, Mul, Min, Max
     And, Or
     Piecewise/Ifte
+
+    sympy-equivalent: class LatticeOp
     """
     chain_xtype = None
 
@@ -1340,6 +1314,9 @@ class Boolean(Terminal):
 class Number(Terminal):
     xtype = ((), float)
     symfun = lambda a: sympy.Float(float(a[0]), FLOAT_PRECISION)
+    # sympy.Rational(0.1) -> 3602879701896397/36028797018963968
+    # sympy.Rational('0.1') -> 1/10
+    # symfun = lambda a: sympy.Float(str(sympy.Float(a[0], FLOAT_PRECISION)))
     showme = 'Number'
     # symfun = lambda *a: sympy.Rational(float(a[0]), FLOAT_PRECISION)
     # sfeh: problem with rational: Sqrt(8.0) -> 2*sqrt(6)/3. sfeh: actually is_atomic?
@@ -1357,7 +1334,7 @@ class Symbol(Terminal):
         self.name = nlabl if nlabl[0] != '-' else nlabl[1:]
     """
     # symfun = lambda a: sympy.Symbol(a[0]) if isinstance(a[0], str) else a[0]
-    symfun = lambda a: a[0]  # sfeh  # todo what
+    symfun = lambda a: a[0]  # sfeh, no symbol-conversion; no reason for.
     # symfun = lambda *a: sympy.Symbol(a[0])  # sfeh
     # np_fun =
     xtype = ((), float)
@@ -1645,7 +1622,7 @@ class Lt(RelationalOperator):
 class Le(RelationalOperator):
     symfun = lambda a: sympy.Le(a[0], a[1])
     np_fun = np.less_equal
-    showme = 'Le='
+    showme = 'Le'
     sy_str = '({0} <= {1})'
     repr_str = 'Le{},[{}, {}]'
     xtype = ((float, float), bool)
@@ -1812,7 +1789,7 @@ class ExprCondPair_Dummy(Node_Dummy):
     sfeh:discuss
     The only purpose is to wrap the results for a Node-structure, where every Node has childs with other nodes"""
     symfun = lambda a: ExprCondPair(a[0], a[1])
-    showme = 'ExprCondPair_Dummy'
+    showme = 'ExprCondPair_Dummy'  # sfeh... mmake this a tuple?
     sy_str = 'ExprCondPair({0}, {1})'
     repr_str = 'ExprCondPair_Dummy{},[{}, {}]'
     xtype = ((float, bool), float)

@@ -168,7 +168,7 @@ class ExplainableGP:
                               i.get_fitness() > candidate_tree.get_fitness() and i.get_parsim() >= candidate_tree.get_parsim()]
                 if _obsoletes:
                     x = [f'{i.full_string()}' for i in _obsoletes]
-                    printez('a', f'Paretofront: Removing obsolete entries {x}')
+                    printez('a', f'Paretofront: Removing obsolete entries {x}')  # todo Paretofront: Removing obsolete entries ['[11: fit 0.61 (Add(Sign(Max(cartPos, cartVel)), Add(Min(cartPos, 6), Log(5))))]: \x1b[1msign(Max(c
                 self.paretofront = [ftree for ftree in self.paretofront if ftree not in _obsoletes]
                 self.paretofront.append(candidate_tree)
                 self.paretofront = pareto_sort(self.paretofront)
@@ -282,7 +282,7 @@ class ExplainableGP:
                     fails_list.append(ex)
                     print_warning('www', f'Failed for tag \'{tag}\': {ex}')
                     if len(fails_list) > 2 * n_success + 5:  # allow more fails: fails_list > n
-                        print_caution(f'Evolution fails too often: {tag}, {len(fails_list)}. ({n_success} successful).'
+                        print_caution(f'Evolution fails too often: {tag}, failed: {len(fails_list)}x. ({n_success} ok).'
                                       f'\n{fails_list}')
                         return  # sfeh raise?
 

@@ -5,11 +5,12 @@
 
 ## Ablage/Todos
 
-- TODO: self.evolve.origin_tree
+- self.evolve.origin_tree
+- evaluation
+- simplification
 
-- double linked tree (root node, parent node)
-  - implemented!
-  - use for tree-visualisation
+# Sub-todos
+
 - histogram for tree complexity
 - discuss: allow_chain is probably not required at so many places...
 - gen_create_initial -> create random pop if pop empty? with leftovers?
@@ -80,6 +81,60 @@
   print(sympy.simplify('a <= Abs(a)', locals={'a': a}))  # -> a <= Abs(a), should be True  # noqa
   ```
 - Inputrange, outputrange, derivable, goalrequirement, iscyclic
+- operators -> always evalf() inside as default?
+- ``sympy.piecewise_exclusive()``
+- Abs only with simplify
+  - sympy.S('(Abs(a)*Abs(b))')
+  - sympy.simplify('(Abs(a)*Abs(b))')
+```python
+import sympy
+sympy.core.numbers.Zero
+```
+
+# Simplifications
+
+- simplify()
+  - uses all, but looks for string-length
+  - factor
+
+All the possible simplifications in simplify(), as introduced in [sympy](https://docs.sympy.org/latest/tutorials/intro-tutorial/simplification.html).
+
+Polynomial
+- ``factor()``, ``expand``()
+- ``collect()`` collects common powers of a term in an expression.
+- ``cancel()``  rational function into  standard canonical form
+- ``apart()`` performs a partial fraction decomposition
+
+Trigonometric
+- ``trigsimp()``
+- ``expand()``  (``sin(x + y) -> sin(x)⋅cos(y) + sin(y)⋅cos(x)``)
+- (``tan(x).rewrite(cos)``) (see special functions)
+
+Power
+- ``powsimp(force=False)``
+- ``expand_power_exp()``
+- ``expand_power_base()``
+- ``powdenest(force=False)`` applies identity 3, from left to right.
+
+Exponentials, logs
+- ``expand_log(force=False)``
+- ``logcombine(force=False)``
+
+Sympy special functions:
+- ``factorial(n)``  (ignored)
+- ``binomial(n, k)``  (ignored)
+- ``rewrite()``  (trigonometry)
+- ``expand_func()``  (ignored)
+- ``hyperexpand()``  (ignored)
+- ``combsimp()``  (ignored)
+- ``gammasimp()``  (ignored)
+- ``list_to_frac()``  (ignored)
+
+## sfeh: make assumptions for inputs
+
+- concerning range (positive, natural numbers)
+- complex numbers 
+
 
 ### Semi-interesting
 

@@ -27,7 +27,6 @@ gen_max = 15
 nodes_max = 50
 depth_max = 10
 
-
 def _test_simple(chained_on=True):
     """SIMPLE"""
 
@@ -39,14 +38,16 @@ def _test_simple(chained_on=True):
     for _ in range(1):
         @gp.create_trees(rate=1)
         def rand2():
-            return gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+            d = np.clip(int(random.normalvariate(3.5, 1)), 3, 5)
+            return gp.evolve.evolve_new_tree_depth(d, float, p_term=0)
 
         gp.end_generation()
 
     for _ in range(2):
-        @gp.create_trees(rate=1, simplify=True)
+        @gp.create_trees(rate=1, simplicate=True)
         def rand2_CHAINA():  # noqa
-            tree = gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+            d = np.clip(int(random.normalvariate(3.5, 1)), 3, 5)
+            tree = gp.evolve.evolve_new_tree_depth(d, float, p_term=0)
             tree = tree_simplification(tree, allow_chain=chained_on)
             tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
             return tree
@@ -61,10 +62,10 @@ def _test_simple(chained_on=True):
             tree = gp.evolve.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
             return tree
 
-        gp.end_generation()  # todo:unrelated: operators -> always evalf() inside as default!
+        gp.end_generation()
 
     for _ in range(10):
-        @gp.create_trees(rate=1, crossover=True, simplify=True)
+        @gp.create_trees(rate=1, crossover=True, simplicate=True)
         def xover_CHAINA():
             tree_a = selection_tournament(gp.pop_genepool, n=3)
             tree_b = selection_tournament(gp.pop_genepool, n=3)
@@ -108,21 +109,21 @@ def _test_random_pop(chained_on=True):
 
         if chained_on:
 
-            @gp.create_trees(rate=0.30, simplify=True)
+            @gp.create_trees(rate=0.30, simplicate=True)
             def mx_branch_d_CHAIN():
                 tree = selection_tournament(gp.pop_genepool, n=3)
                 tree = gp.evolve.evolve_mutate_branch_depth(tree, 4, chained_on, p_term=0.5)
                 tree = tree_simplification(tree, allow_chain=gp.allow_chain)
                 return tree
 
-            @gp.create_trees(rate=0.1, simplify=True)
+            @gp.create_trees(rate=0.1, simplicate=True)
             def rand2_CHAINB():
                 # sfeh:discuss: deep random trees have a tendency to also allow weird-ass looking nonsense
                 tree = gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
                 tree = tree_simplification(tree, allow_chain=gp.allow_chain)
                 return tree
 
-            @gp.create_trees(rate=0.3, crossover=True, simplify=True)
+            @gp.create_trees(rate=0.3, crossover=True, simplicate=True)
             def xover_CHAIN():
                 tree_a = selection_tournament(gp.pop_genepool, n=3)
                 tree_b = selection_tournament(gp.pop_genepool, n=3)
@@ -135,7 +136,7 @@ def _test_random_pop(chained_on=True):
             @gp.create_trees(rate=0.05)
             def re_sym_all():
                 tree = selection_tournament(gp.pop_genepool, n=3)
-                return evolve_reduce_simplify(tree, gp.allow_chain, completely=True)
+                return evolve_reduce_simplicate(tree, gp.allow_chain, completely=True)
 
             @gp.create_trees(rate=0.10)
             def mx_branch_d():

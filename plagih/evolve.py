@@ -197,7 +197,7 @@ class Evolution:
 
         self.allow_a_chain = allow_chain
 
-    def evolve_prune_tree(self, tree: Node, allow_chain):
+    def evolve_prune_tree(self, tree: NodeStructure, allow_chain):
         """prune depth
         -> prune everything below a certain level... (should not happen in the first place)
         prune nodes
@@ -267,7 +267,7 @@ class Evolution:
     #     #         obs_prop.pop_append_evotree(1)  # just one value
     #     pass
 
-    def evolve_new_tree_depth(self, depth_goal, xt_out, p_term=0.0) -> Node:
+    def evolve_new_tree_depth(self, depth_goal, xt_out, p_term=0.0) -> NodeStructure:
 
         if self.origin_tree is not None:
 
@@ -285,7 +285,7 @@ class Evolution:
 
         return evotree
 
-    def evolve_chained_new_tree_depth(self, depth_goal, xt_out, p_term=0.0) -> Node:
+    def evolve_chained_new_tree_depth(self, depth_goal, xt_out, p_term=0.0) -> NodeStructure:
 
         evotree = self.evolve_create_random(xt_out, depth_goal, depth=0, num_rest=-1, p_term=p_term)
 
@@ -317,7 +317,7 @@ class Evolution:
     #
     #     return evotree
 
-    def evolve_create_random(self, xt_out, depth_max_local, num_rest=-1, depth=0, p_term=0.0) -> Typus:
+    def evolve_create_random(self, xt_out, depth_max_local, num_rest=-1, depth=0, p_term=0.0) -> Node:
         """
         sfeh: just use depth_rest and calculate it earlier with depth_max_local and self.depth_max
         sfeh: make this specific to tree complexity measure?
@@ -387,7 +387,7 @@ class Evolution:
 
         return tree
 
-    def evolve_mutate_point(self, tree: Node, allow_chain):
+    def evolve_mutate_point(self, tree: NodeStructure, allow_chain):
         """Mutate a single mutable point in any Tree.
         sfeh:debug is the fintree a fintree copy or the same fintree?"""
         evotree = copy.deepcopy(tree)
@@ -408,7 +408,7 @@ class Evolution:
 
         return evotree
 
-    def evolve_mutate_branch_depth(self, tree: Node, depth_goal, allow_chain, p_term=0.0):
+    def evolve_mutate_branch_depth(self, tree: NodeStructure, depth_goal, allow_chain, p_term=0.0):
         """"""
         n_init = len(tree)
         node_list = tree.list_mutable_nodes(allow_chain=allow_chain)
@@ -420,7 +420,7 @@ class Evolution:
 
         return tree
 
-    def evolve_mutate_branch_nodes(self, tree: Node, nodes_goal, p_term=0.0):
+    def evolve_mutate_branch_nodes(self, tree: NodeStructure, nodes_goal, p_term=0.0):
         """currently only one branch
         p_term: probability terminating the tree in a node
         """
@@ -436,7 +436,7 @@ class Evolution:
         nd.set_new_node(branch)
         return tree
 
-    def evolve_crossover(self, aa: Node, bb: Node):
+    def evolve_crossover(self, aa: NodeStructure, bb: NodeStructure):
         """Evolution with crossover of branches between two trees
         currently only one branch
 

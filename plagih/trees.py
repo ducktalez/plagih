@@ -10,16 +10,13 @@ Tree nodes that do not require fixed arity.
 Separate file to NOT confuse anything, even though there might be some redundancy
 """
 import os
-
-from plagih.util import get_subclasses, FLOAT_PRECISION, DEBUG_DUMMY  # noqa
+from plagih.util import *
 
 os.environ["KMP_WARNINGS"] = "FALSE"
-from plagih.util import *
 import copy
 import random
 from dataclasses import dataclass
 from plagih.tree_complexity.tree_edit_distance import apted_distance
-import plagih.util
 import os
 # from typing import Callable
 
@@ -27,8 +24,6 @@ import numpy as np
 import pandas as pd
 import sympy
 from sympy.functions.elementary.piecewise import ExprCondPair
-
-from plagih.util import get_subclasses, FLOAT_PRECISION, DEBUG_DUMMY, SympySimplificationError  # noqa
 
 os.environ["KMP_WARNINGS"] = "FALSE"
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # https://github.com/tensorflow/tensorflow/issues/27023
@@ -93,18 +88,17 @@ np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before
 
 
 @dataclass
-class Node:
+class NodeStructure:
     """
     Recursively holds the nodes of a tree
     parent: pointer to parent node, 'None' implies root-node
-        parent-parameter added for pseudo-backprop
+        - parent-link added for pseudo-backprop
     """
     childs = None
     is_fix = None
     depth = None
     root_node = None
     parent_node = None
-    xtype = None
 
     def __init__(self, *args: iter, depth=None, is_fix=None, set_class=None):
 
@@ -125,7 +119,7 @@ class Node:
     def set_parent(self, n):
         self.parent_node = n
 
-    def set_root(self, n: 'Node'):
+    def set_root(self, n: 'NodeStructure'):
         self.root_node = n
 
     def get_childs(self):
@@ -141,47 +135,6 @@ class Node:
                     cc.set_root(self)
         else:
             raise TypeError(f'childs must be set as list, not {type(child_list)}: {child_list}')
-
-    def update_fixed_nodes(self, origin: 'Node'):
-        """Updating the fixed nodes in a tree where they were lost for some reason.
-        This should never be the case! But it happened during development of recreating a tree from expression.
-        This might also be useful in tree checks"""
-        if origin.is_fix:
-            if str(self.typus) != str(origin.typus):
-                raise
-            self.is_fix = True
-            for ii, cc in enumerate(self.get_childs()):
-                cc.update_fixed_nodes(origin.childs[ii])
-
-    def get_all_nodes_visualize(self, setid: str):
-        """returns all nodes in a tree as list
-        a+1 -> [+a1, a, 1]"""
-        showme = f'{self.childs[0]}' if self.is_term() else f'{self.get_typus_sfeh().showme}'
-
-        res = {setid: {'node': self,
-                       'showme': showme}}
-        edges = []
-
-        if self.is_term():  # sfeh is_term instead of operator due to fuckin exprCondPairs
-            pass
-        else:
-            for ii, cc in enumerate(self.childs):
-                cid = f'{setid}-{ii}'
-                cr, ce = cc.get_all_nodes_visualize(cid)
-                res.update(cr)
-                edges.append((setid, cid))
-                edges.extend(ce)
-
-        return res, edges
-
-    # def get_enum(self, parent_id='root'):
-    #     res = parent_id
-    #
-    #     if self.is_operator():
-    #         for cc in self.get_childs():
-    #             res.extend(cc.get_all_nodes())
-    #
-    #     return res
 
     def get_mutable_rootnodes(self, extend_lvls=2):
         """Returns the list of first mutable nodes
@@ -201,10 +154,6 @@ class Node:
 
         return n
 
-    def get_apted_notation(self):
-        """Calculating the TED requires this (weird) representation"""
-        return f"{{{self.get_typus_sfeh()}{''.join([cc.get_apted_notation() for cc in self.get_childs()])}}}"
-
     def get_max_depth(self, depth=0):
         """Go through all nodes, save depth
         sfeh: this computes the depth and does not take advantage of saved depths"""
@@ -213,8 +162,9 @@ class Node:
         else:
             return max(cc.get_max_depth(depth=depth + 1) for cc in self.get_childs())
 
-    def is_arity_operator(self):
-        # Nodes that are notchained-nodes
+    def is_operator_arity(self):
+        """Check, if node is an operator with a fixed arity
+        Nodes that are notchained-nodes"""
         return issubclass(type(self), OperatorArity)  # sfeh check? Terminal?
 
     def is_operator(self):
@@ -223,8 +173,6 @@ class Node:
     def is_term_and_symbol(self):
         if self.is_term():
             a = issubclass(type(self), Symbol)
-            # b = issubclass(type(self), Number)
-            # c = issubclass(type(self), Boolean)
             if a:
                 return True
         return False
@@ -236,6 +184,135 @@ class Node:
     def has_childs(self):
         # better to check for recursive use, as e.g. ExprCondPair is not a regular operator
         return not self.is_term()
+
+    def repair_depth(self, depth=0):
+        """
+        aka set_depth recursively for all nodes in a branch
+        mainly used in branch
+        The depth is written inevery node (for whatever reason), and instead of having to propagate
+        the depth through every crossover/branch mutation function, instead, we call it when replacing nodes
+        """
+        depth = depth or 0  # sfeh: "None" was set as depth somewhere. Could not find it.
+        self.depth = depth
+        if self.has_childs():
+            for cc in self.get_childs():
+                cc.repair_depth(depth=depth + 1)
+
+        return
+
+    # sfeh:Do links to parents lead to problems when crossover/etc happens?
+
+    def repair_backlink(self, parent: 'NodeStructure', root: 'NodeStructure'):
+        """backlink was introduced on 23.04.2024,
+        linking the root and parent nodes"""
+        self.root_node = root
+        self.parent_node = parent
+        for cc in self.get_childs():
+            cc.repair_backlink(self, root)
+        # self.repair_depth()  # sfeh:random powrounded replace is always when fitting? should maybe not?
+
+
+class Node(NodeStructure):
+    """
+    was Typus, was Label
+    The expr-content of a node
+        - most functions in here are not tested, but also never required
+        - str() function is used only for showing infos in debugger
+    """
+    symfun = None
+    showme = None
+    sy_str = lambda self, s: None  # 'sympy-fun'
+    formulae_str = None  # 'sympy-expr'
+    repr_str = None  # 'repr-format-{}-options'
+    xtype = None
+    chain_xtype = None
+
+    def __init__(self, *args: iter):
+        super().__init__(*args)
+
+    def set_new_node(self, nd_new: 'Node'):
+        """Replacing oneself with another node"""
+        # self_copy = copy.deepcopy(self)
+        self.__class__ = nd_new.__class__
+        self.__dict__.update(nd_new.__dict__)
+        # self.chain_xtype = nd_new.chain_xtype
+        # self.childs = nd_new.childs
+        # self.formulae_str = nd_new.formulae_str
+        # self.repr_str = nd_new.repr_str
+        # self.showme = nd_new.showme
+        # self.depth = sfeh?
+        # self.parent_node = None
+        # self.root_node = None
+
+        # self.set_typus(nd_new.typus)  # sfeh remove childs, is_fix...
+        # self.set_childs(nd_new.childs)  # sfeh maybe must be updated recursively
+        # self.repair_depth(depth=self.depth)  # Especially required for crossover or branchesnd_new
+        # # sfeh: depth is repaired at the end, as some bug leads to wrong depths somewhere (depth=None)
+        # # sfeh check fixed or if type matches?
+        pass
+
+    def replace_with(self, typus, childs):
+        new_node = typus(*childs)
+        self.set_new_node(new_node)
+        pass
+
+    def get_sympy_expr(self, simplimore=False) -> sympy.Basic:
+        """Converts directly into a sympy expr
+        from node-class, go to a sympy expression
+        """
+
+        if self.is_term():
+            # if issubclass(type(self), Terminal):
+            _sym = type(self).symfun  # _sym = self.typus.symfun
+            _cs = self.get_childs()
+            _r = _sym(_cs)
+
+        elif issubclass(type(self), (Round, PowRounded)):
+            _cs = [cc.get_sympy_expr(simplimore=simplimore) for cc in self.get_childs()]
+            _sym = type(self).symfun
+            _r = _sym(_cs)
+
+        elif self.get_typus_sfeh() in (Piecewise, sympy.Piecewise):  # sfeh:open delete ONE of them?
+            _sym = sympy.Piecewise
+            _cs = self.get_childs()
+            _cs = [(cc.get_childs()[0], cc.get_childs()[1]) for cc in _cs]
+            _cs = [(cc[0].get_sympy_expr(simplimore=simplimore), cc[1].get_sympy_expr(simplimore=simplimore)) for cc in _cs]
+            # try:
+            _cs = [ExprCondPair(cc[0], cc[1]) for cc in _cs]
+            # except Exception as sfeh:
+            #     # NotImplementedError in Sympy "A method to determine whether a multivariate conditional is consistent"
+            #     _cs = [ExprCondPair(cc[0], cc[1]) for cc in _cs]
+            _r = _sym(*_cs)
+        elif self.is_operator():
+            _cs = [cc.get_sympy_expr(simplimore=simplimore) for cc in self.get_childs()]
+            _sym = type(self).symfun
+            try:
+                if self.is_chain():
+                    _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
+                else:
+                    _r = _sym(_cs)  # noqa (_sym is definitely assigned)
+            except (ValueError, TypeError) as ex:
+                raise SympySimplificationError(f'getsympyexpr-err| {ex}')
+        else:
+            raise NotImplementedError
+
+        sympy_expression_check(_r, raise_ex=True)
+
+        # _r_td = sympy.simplify(_r)
+        # _r2 = sympy.S(_r)
+        # _r3 = sympy.S(_r_td)
+        # if _r != _r_td:
+        #     # this may make the expression bigger??
+        #     # _r2 = 64.0*cartPos**2*(cartPos + Abs(cartVel) + 1.15)
+        #     # _r3 = cartPos**2*(64.0*cartPos + 64.0*Abs(cartVel) + 73.5)
+        #     print(f'SFEH:XXX! {_r_td}')
+
+        return _r
+
+    def list_terminal_nodes(self):
+        base = self.list_mutable_nodes()
+        base = [x for x in base if x.is_term()]
+        return base
 
     def force_input_node(self, tb):
         """Some trees have only constants as terminals.
@@ -257,274 +334,6 @@ class Node:
             new_node = tb.node_selector.choose_symbol_node(xtype)
             # node.set_new_node(new_node)
             node.set_new_node(new_node, debug=False)
-
-    def repair_depth(self, depth=0):
-        """
-        aka set_depth recursively for all nodes in a branch
-        mainly used in branch
-        The depth is written inevery node (for whatever reason), and instead of having to propagate
-        the depth through every crossover/branch mutation function, instead, we call it when replacing nodes
-        """
-        depth = depth or 0  # sfeh: "None" was set as depth somewhere. Could not find it.
-        self.depth = depth
-        if self.has_childs():
-            for cc in self.get_childs():
-                cc.repair_depth(depth=depth + 1)
-
-        return
-
-    def set_new_node(self, nd_new: 'Typus'):
-        """Replacing oneself with another node"""
-        self.__class__ = nd_new.__class__
-        self.__dict__.update(nd_new.__dict__)
-        # self.chain_xtype = nd_new.chain_xtype
-        self.childs = nd_new.childs
-        # self.formulae_str = nd_new.formulae_str
-        self.repr_str = nd_new.repr_str
-        self.showme = nd_new.showme
-        # self.depth = sfeh?
-        # self.parent_node = None
-        # self.root_node = None
-
-        # self.set_typus(nd_new.typus)  # sfeh remove childs, is_fix...
-        # self.set_childs(nd_new.childs)  # sfeh maybe must be updated recursively
-        # self.repair_depth(depth=self.depth)  # Especially required for crossover or branchesnd_new
-        # # sfeh: depth is repaired at the end, as some bug leads to wrong depths somewhere (depth=None)
-        # # sfeh check fixed or if type matches?
-        pass
-
-    # sfeh:Do links to parents lead to problems when crossover/etc happens?
-
-    def repair_backlink(self, parent: 'Node', root: 'Node'):
-        """backlink was introduced on 23.04.2024,
-        linking the root and parent nodes"""
-        self.root_node = root
-        self.parent_node = parent
-        for cc in self.get_childs():
-            cc.repair_backlink(self, root)
-        # self.repair_depth()  # sfeh:random powrounded replace is always when fitting? should maybe not?
-
-    def replace_with(self, typus, childs):
-        new_node = typus(*childs)
-        self.set_new_node(new_node)
-        # if typus is not None:
-        #     self.set_typus(typus)
-        # if childs is not None:
-        #     self.set_childs(childs)
-        # # self.repair()
-        #
-        # # self.repair_depth(self.depth)  # sfeh:discuss not required
-        # # no checks
-        pass
-
-    def list_terminal_nodes(self):
-        base = self.list_mutable_nodes()
-        base = [x for x in base if x.is_term()]
-        return base
-
-    def list_mutable_nodes(self, xtype=None, skip_first=False, allow_chain=True) -> ['Node']:
-        """return all nodes that are mutable, aka suite for point- or branchmutation
-        sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!
-
-        === ValueError: 'a' cannot be empty unless no samples are taken
-        ===> probably, no nodes were there to bemutated
-        """
-
-        # -> Check, if this node should be added
-        if self.is_fix:
-            node_list = []
-        elif self.is_ExprCdPair():  # It is just a dummy holding a tuple
-            node_list = []
-        elif self.is_typus(Piecewise):
-            node_list = []  # Piecewise has ambiguous xtype that can not be checked
-        else:
-
-            if xtype is None or xtype == self.get_xtype_self():
-                # if not allow_chain or (allow_chain and self.is_chain()):
-                if allow_chain or (not self.is_chain()):  # if it is chain -> check if allowed
-                    node_list = [self]
-                else:
-                    node_list = []
-            else:
-                node_list = []
-
-        # recursively add the other nodes
-        if self.has_childs():  # sfeh:chain-operators discuss
-            for cc in self.get_childs():
-                a = cc.list_mutable_nodes(xtype=xtype, allow_chain=allow_chain)
-                node_list.extend(a)
-
-        return node_list
-
-    def evolve_mutate_filter_gauss(self):
-        """Recursively filter the nodes in the branch of fintree
-        sfeh:   random filter all terminal nodes /
-                single node /
-                nodes in a branch /
-                random nodes in a branch /
-                intelligent filtering
-        """
-        if self.has_childs():
-            for cc in self.get_childs():
-                cc.evolve_mutate_filter_gauss()
-
-        else:
-            if self.is_number():
-                self.childs[0] = round(random.gauss(self.childs[0], 0.1), FLOAT_PRECISION)  # sfeh: -> no symbols -> userspecific
-
-        return
-
-    def tree_node_grouping(self, tolerance=0):
-        """
-        If possible, this groups nodes to a simpler expression (if possible).
-        E.g. a ** 2 -> square(a)
-             a + b + c -> sum(a, b, c)  (chaining)
-
-        # sfeh:idea Heavyside function. input a val, input b threshold
-        # sfeh: sub, usub replace?
-        sfeh:idea tolerance for grouping?
-        """
-
-
-
-        if self.is_term():  # good for runtime
-            ## sfeh:xxx sfeh:open do this in mutation?
-            # if self.is_number() and tolerance > 0:
-            #     val = self.childs[0]
-            #     # from sympy.physics.units import speed_of_light, meter, second more ideas!
-            #     # sfeh also find more math building blocks, typical formulae
-            #     # sympy.pi,         sympy.GoldenRatio,  sympy.Catalan,      sympy.EulerGamma,   sympy.TribonacciConstant
-            #     # 3.14159265358979, 1.61803398874989,   0.915965594177219,  0.577215664901533,  1.83928675521416
-            #     for const in [sympy.pi, sympy.GoldenRatio, sympy.Catalan, sympy.EulerGamma, sympy.TribonacciConstant]:
-            #         if (const-val) < tolerance:
-            #             self.childs[0] = const
-            #             return
-            #     if val - sympy.nsimplify(val, tolerance=tolerance, rational=True) < tolerance:
-            #     # sfeh:idea sympy.nsimplify('3.333333*x+0.522', tolerance=0.1, rational=True) for
-            #     #   - Terminals
-            #     #   - Even whole formulae!
-
-                # sfeh:VERY USEFUL: strg+TribonacciConstant to go to init with useful info
-            return
-        else:
-
-            sfeh = self.get_typus_sfeh()
-            mychlds = self.get_childs()
-
-            for cc in mychlds:
-                cc.tree_node_grouping(tolerance=tolerance)
-
-            if sfeh in (Pow, PowRounded):
-                n_exp = mychlds[1].get_childs()[0]  # must exist
-                if n_exp == -1:
-                    self.replace_with(DivFraction, childs=[mychlds[0]])
-                # sfeh:discuss (-2), respective negative exponent in general
-                elif n_exp == 2:
-                    self.replace_with(Square, childs=[mychlds[0]])
-                elif n_exp == 0.5:
-                    self.replace_with(Sqrt, childs=[mychlds[0]])  # never hits!
-                elif n_exp == sympy.S.Half:
-                    self.replace_with(Sqrt, childs=[mychlds[0]])
-                elif n_exp == 0.5 or n_exp == sympy.S.Half:
-                    self.replace_with(Sqrt, childs=[mychlds[0]])
-                elif mychlds[1].get_typus_sfeh() == Round:
-                    self.replace_with(PowRounded, childs=[mychlds[0], n_exp])
-                elif mychlds[1].get_typus_sfeh() == Number and n_exp % 1 == 0:
-                    self.replace_with(PowRounded, childs=mychlds)
-
-            elif sfeh == Mul:
-                if self.is_chain():  # div only for
-                    # for cc in mychlds:
-                    # Nothing to do here! ?
-                    pass
-                else:
-                    if mychlds[0].get_typus_sfeh() == DivFraction:
-                        self.replace_with(Div, childs=[mychlds[1], mychlds[0].get_childs()[0]])
-                    elif mychlds[1].get_typus_sfeh() == DivFraction:
-                        self.replace_with(Div, childs=[mychlds[0], mychlds[1].get_childs()[0]])
-
-                    elif mychlds[0].get_typus_sfeh() == Number:
-                        mul1 = mychlds[0].get_childs()[0]  # todo
-                        if mul1 == sympy.S.NegativeOne:  # sfeh aka sympy.S.NegativeOne -1, was -1 before
-
-                            self.replace_with(Usub, childs=[mychlds[1]])  # sfeh Usub ONLY option, ignore usub tree len
-                        elif 0 < mul1 < 1:
-                            _n = Number((1 / mul1))  # sfeh: discuss; not always the best choice? maybe never? :P
-                            self.replace_with(Div, childs=[mychlds[1], _n])
-
-                    elif mychlds[1].get_typus_sfeh() == Number:
-                        # sfeh this code can be simplified?
-                        # mul1 = mychlds[1].get_childs()[0]
-                        # if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
-                        #     self.replace_with(Usub, childs=[mychlds[0]])  # sfeh Usub ONLY option, ignore usub tree len
-                        # elif 0 < mul1 < 1:
-                        #     self.replace_with(Div, childs=[mychlds[0], 1 / mul1])
-                        #     sfeh_div_by_test = 1 / mul1  # sfeh keep "div" as option
-                        #     print(f'sfeh:test this needs testing when reached in future {sfeh_div_by_test}')
-                        raise NotImplementedError  # commented block above
-        return  # two indents
-
-
-class Typus(Node):
-    """
-    The expr-content of a node
-        - most functions in here are not tested, but also never required
-        - str() function is used only for showing infos in debugger
-    """
-    symfun = None
-    xtype = ((None,), None)
-    showme = None
-    sy_str = lambda self, s: None  # 'sympy-fun'
-    formulae_str = None  # 'sympy-expr'
-    repr_str = None  # 'repr-format-{}-options'
-    chain_xtype = None
-
-    def __init__(self, *args: iter):
-        super().__init__(*args)
-
-    def get_sympy_expr(self) -> sympy.Basic:
-        """Converts directly into a sympy expr
-        from node-class, go to a sympy expression
-        """
-
-        if self.is_term():
-            # if issubclass(type(self), Terminal):
-            _sym = type(self).symfun  # _sym = self.typus.symfun
-            _cs = self.get_childs()
-            _r = _sym(_cs)
-
-        elif issubclass(type(self), (Round, PowRounded)):
-            _cs = [cc.get_sympy_expr() for cc in self.get_childs()]
-            _sym = type(self).symfun
-            _r = _sym(_cs)
-
-        elif self.get_typus_sfeh() in (Piecewise, sympy.Piecewise):  # sfeh:open delete ONE of them?
-            _sym = sympy.Piecewise
-            _cs = self.get_childs()
-            _cs = [(cc.get_childs()[0], cc.get_childs()[1]) for cc in _cs]
-            _cs = [(cc[0].get_sympy_expr(), cc[1].get_sympy_expr()) for cc in _cs]
-            # try:
-            _cs = [ExprCondPair(cc[0], cc[1]) for cc in _cs]
-            # except Exception as sfeh:
-            #     # NotImplementedError in Sympy "A method to determine whether a multivariate conditional is consistent"
-            #     _cs = [ExprCondPair(cc[0], cc[1]) for cc in _cs]
-            _r = _sym(*_cs)
-        elif self.is_operator():
-            _cs = [cc.get_sympy_expr() for cc in self.get_childs()]
-            _sym = type(self).symfun
-            try:
-                if self.is_chain():
-                    _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
-                else:
-                    _r = _sym(_cs)  # noqa (_sym is definitely assigned)
-            except (ValueError, TypeError) as ex:
-                raise SympySimplificationError(f'getsympyexpr-err| {ex}')
-        else:
-            raise NotImplementedError
-
-        sympy_expression_check(_r, raise_ex=True)
-
-        return _r
 
     def is_chain(self):
         """
@@ -561,7 +370,7 @@ class Typus(Node):
     #     return f"[{typus_str}]"
 
     def get_typus_sfeh(self):
-        t_sfeh = self.__class__.__name__
+        # t_sfeh = self.__class__.__name__
         t = self.__class__
         return t
 
@@ -681,6 +490,170 @@ class Typus(Node):
 
         return f'{expr}'
 
+    def list_mutable_nodes(self, xtype=None, skip_first=False, allow_chain=True) -> ['NodeStructure']:
+        """return all nodes that are mutable, aka suite for point- or branchmutation
+        sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!
+
+        === ValueError: 'a' cannot be empty unless no samples are taken
+        ===> probably, no nodes were there to bemutated
+        """
+
+        # -> Check, if this node should be added
+        if self.is_fix:
+            node_list = []
+        elif self.is_ExprCdPair():  # It is just a dummy holding a tuple
+            node_list = []
+        elif self.is_typus(Piecewise):
+            node_list = []  # Piecewise has ambiguous xtype that can not be checked
+        else:
+
+            if xtype is None or xtype == self.get_xtype_self():
+                # if not allow_chain or (allow_chain and self.is_chain()):
+                if allow_chain or (not self.is_chain()):  # if it is chain -> check if allowed
+                    node_list = [self]
+                else:
+                    node_list = []
+            else:
+                node_list = []
+
+        # recursively add the other nodes
+        if self.has_childs():  # sfeh:chain-operators discuss
+            for cc in self.get_childs():
+                a = cc.list_mutable_nodes(xtype=xtype, allow_chain=allow_chain)
+                node_list.extend(a)
+
+        return node_list
+
+    def get_all_nodes_visualize(self, setid: str):
+        """returns all nodes in a tree as list
+        a+1 -> [+a1, a, 1]"""
+        showme = f'{self.childs[0]}' if self.is_term() else f'{self.get_typus_sfeh().showme}'
+
+        res = {setid: {'node': self,
+                       'showme': showme}}
+        edges = []
+
+        if self.is_term():  # sfeh is_term instead of operator due to fuckin exprCondPairs
+            pass
+        else:
+            for ii, cc in enumerate(self.childs):
+                cid = f'{setid}-{ii}'
+                cr, ce = cc.get_all_nodes_visualize(cid)
+                res.update(cr)
+                edges.append((setid, cid))
+                edges.extend(ce)
+
+        return res, edges
+
+    def get_apted_notation(self):
+        """Calculating the TED requires this (weird) representation"""
+        return f"{{{self.get_typus_sfeh()}{''.join([cc.get_apted_notation() for cc in self.get_childs()])}}}"
+
+    def evolve_mutate_filter_gauss(self):
+        """Recursively filter the nodes in the branch of fintree
+        sfeh:   random filter all terminal nodes /
+                single node /
+                nodes in a branch /
+                random nodes in a branch /
+                intelligent filtering
+        """
+        if self.has_childs():
+            for cc in self.get_childs():
+                cc.evolve_mutate_filter_gauss()
+
+        else:
+            if self.is_number():
+                self.childs[0] = round(random.gauss(self.childs[0], 0.1), FLOAT_PRECISION)  # sfeh: -> no symbols -> userspecific
+
+        return
+
+    def tree_node_grouping(self, tolerance=0):
+        """
+        If possible, this groups nodes to a simpler expression (if possible).
+        E.g. a ** 2 -> square(a)
+             a + b + c -> sum(a, b, c)  (chaining)
+
+        # sfeh:idea Heavyside function. input a val, input b threshold
+        # sfeh: sub, usub replace?
+        sfeh:idea tolerance for grouping?
+        """
+
+        if self.is_term():  # good for runtime
+            ## sfeh:xxx sfeh:open do this in mutation?
+            # if self.is_number() and tolerance > 0:
+            #     val = self.childs[0]
+            #     # from sympy.physics.units import speed_of_light, meter, second more ideas!
+            #     # sfeh also find more math building blocks, typical formulae
+            #     # sympy.pi,         sympy.GoldenRatio,  sympy.Catalan,      sympy.EulerGamma,   sympy.TribonacciConstant
+            #     # 3.14159265358979, 1.61803398874989,   0.915965594177219,  0.577215664901533,  1.83928675521416
+            #     for const in [sympy.pi, sympy.GoldenRatio, sympy.Catalan, sympy.EulerGamma, sympy.TribonacciConstant]:
+            #         if (const-val) < tolerance:
+            #             self.childs[0] = const
+            #             return
+            #     if val - sympy.nsimplify(val, tolerance=tolerance, rational=True) < tolerance:
+            #     # sfeh:idea sympy.nsimplify('3.333333*x+0.522', tolerance=0.1, rational=True) for
+            #     #   - Terminals
+            #     #   - Even whole formulae!
+
+                # sfeh:VERY USEFUL: strg+TribonacciConstant to go to init with useful info
+            return
+        else:
+
+            sfeh = self.get_typus_sfeh()
+            mychlds = self.get_childs()
+
+            for cc in mychlds:
+                cc.tree_node_grouping(tolerance=tolerance)
+
+            if sfeh in (Pow, PowRounded):
+                n_exp = mychlds[1].get_childs()[0]  # must exist
+                if n_exp == -1:
+                    self.replace_with(DivFraction, childs=[mychlds[0]])
+                # sfeh:discuss (-2), respective negative exponent in general
+                elif n_exp == 2:
+                    self.replace_with(Square, childs=[mychlds[0]])
+                elif n_exp == 0.5:
+                    self.replace_with(Sqrt, childs=[mychlds[0]])  # never hits!
+                elif n_exp == sympy.S.Half:
+                    self.replace_with(Sqrt, childs=[mychlds[0]])
+                elif n_exp == 0.5 or n_exp == sympy.S.Half:
+                    self.replace_with(Sqrt, childs=[mychlds[0]])
+                elif mychlds[1].get_typus_sfeh() == Round:
+                    self.replace_with(PowRounded, childs=[mychlds[0], n_exp])
+                elif mychlds[1].get_typus_sfeh() == Number and n_exp % 1 == 0:
+                    self.replace_with(PowRounded, childs=mychlds)
+
+            elif sfeh == Mul:
+                if self.is_chain():  # div only for
+                    # for cc in mychlds:
+                    # Nothing to do here! ?
+                    pass
+                else:
+                    if mychlds[0].get_typus_sfeh() == DivFraction:
+                        self.replace_with(Div, childs=[mychlds[1], mychlds[0].get_childs()[0]])
+                    elif mychlds[1].get_typus_sfeh() == DivFraction:
+                        self.replace_with(Div, childs=[mychlds[0], mychlds[1].get_childs()[0]])
+
+                    elif mychlds[0].get_typus_sfeh() == Number:
+                        mul1 = mychlds[0].get_childs()[0]  # todo
+                        if mul1 == sympy.S.NegativeOne:  # sfeh aka sympy.S.NegativeOne -1, was -1 before
+
+                            self.replace_with(Usub, childs=[mychlds[1]])  # sfeh Usub ONLY option, ignore usub tree len
+                        elif 0 < mul1 < 1:
+                            _n = Number((1 / mul1))  # sfeh: discuss; not always the best choice? maybe never? :P
+                            self.replace_with(Div, childs=[mychlds[1], _n])
+
+                    elif mychlds[1].get_typus_sfeh() == Number:
+                        # sfeh this code can be simplified?
+                        # mul1 = mychlds[1].get_childs()[0]
+                        # if mul1 == -1:  # aka sympy.S.NegativeOne -1, was -1 before
+                        #     self.replace_with(Usub, childs=[mychlds[0]])  # sfeh Usub ONLY option, ignore usub tree len
+                        # elif 0 < mul1 < 1:
+                        #     self.replace_with(Div, childs=[mychlds[0], 1 / mul1])
+                        #     sfeh_div_by_test = 1 / mul1  # sfeh keep "div" as option
+                        #     print(f'sfeh:test this needs testing when reached in future {sfeh_div_by_test}')
+                        raise NotImplementedError  # commented block above
+        return  # two indents
 
     def get_tree_export_DEPRECATED(self):
         """
@@ -809,41 +782,6 @@ class Typus(Node):
         # print(f'{s}\n{s1}\n{s2}\n{s3}\n{s4}\n{s5}\n{s6}\n{s_export}')
         return s
 
-    # def __new__(cls, *args, **kwargs):
-    #     """Why use new as init method? -> Allows returning an instance of a different class"""
-    #
-    #     obj = object.__new__(cls)
-    #     obj.args = args
-    #     if issubclass(cls, Terminal):
-    #         pass
-    #
-    #     return obj
-
-    # def __str__(self):
-    #     _str = self.as_str()
-    #     return _str
-    #
-    # def as_str(self):
-    #     """not working"""
-    #     _str = self.__class__.__name__
-    #     _str = self.__class__
-    #     if issubclass(self.__class__, (OperatorArity, OperatorChained)):
-    #         _childstr = ', '.join([a.as_str() for a in self.args])
-    #         _str = f'{_str}({_childstr})'
-    #     elif issubclass(type(self), Terminal):
-    #         raise
-    #         pass  # _str = f'{self.value}'
-    #     else:
-    #         raise
-    #     return _str
-
-    # def __len__(self):
-    #     """ONLY works, when args are there"""
-    #     if issubclass(self.__class__, Terminal):
-    #         return 1
-    #     else:
-    #         return 1 + sum([len(cc) for cc in self.args])
-
     def _sympy_(self, *args):  # -> sympy.Basic:
         _sym = self.symfun
         # _sym = _sym(*args)
@@ -901,7 +839,7 @@ def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
 #         super().__init__(*args, **kwargs)
 
 
-def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Typus:
+def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
     """
     tree_from_expr, tree_from_sympy
     Important: start with the most specific rule
@@ -992,7 +930,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Typus:
     raise NotImplementedError(f'Expr missing: {s_expr}')
 
 
-def tree_simplification(tree, allow_chain) -> Typus:
+def tree_simplification(tree, allow_chain) -> Node:
     """
     (Tries to) simplify/mathematically-reduce a tree. It is quite experimental
     # sfeh sympy-reconstruct patterns
@@ -1002,6 +940,10 @@ def tree_simplification(tree, allow_chain) -> Typus:
     """
     tree_copy = copy.deepcopy(tree)
     expr_sym = tree.get_sympy_expr()
+    # expr_sym2 = sympy.simplify(expr_sym)
+    # if str(expr_sym) != str(expr_sym2):
+    #     print(f'sfeh: {expr_sym} // {expr_sym2}')
+    # expr_sym3  = tree.get_sympy_expr(simplimore=True)  # todo
     tree = sympy_to_tree(expr_sym, allow_chain=allow_chain)
     # if not allow_chain:
     # print(f'Copy : {len(tree_copy)}\t{tree_copy}')
@@ -1025,7 +967,7 @@ def tree_simplification(tree, allow_chain) -> Typus:
     return tree
 
 
-def evolve_reduce_simplify(tree: Node, allow_chain, completely=True, force=False) -> Node:
+def evolve_reduce_simplicate(tree: NodeStructure, allow_chain, completely=True, force=False) -> NodeStructure:
     """Reducing a fintree to its most basic form with sympify.
     (completely = False: reduce just one branch. if you wanted to have more complexity)"""
     tree_copy = copy.deepcopy(tree)
@@ -1050,18 +992,12 @@ def evolve_reduce_simplify(tree: Node, allow_chain, completely=True, force=False
             print_warning('w',
                           f'Tree grew larger during simplification:\n\t{tree_copy.str_as_list()}\n\t{tree.str_as_list()}')
             print_warning('ww', f'tree_copy: {len(tree_copy)} vs. {len(tree)}')
-            # [Square, [Powrounded, [-0.91], [cartPos]]] < [Pow, [-0.91], [Mul, [2], [Round, [cartPos]]]]
-            ######
-            # sfeh:open simplify usub in front of terminal nodes
-            # Warning (w): Tree grew larger during simplification:
-            # 	[Add, [Sub, [1.06], [cartPos]], [Div, [Mul, [Add, [cartVel], [Mul, [9.00], [Add, [Max, [-0.341], [cartPos]], [Abs, [cartPos]]]]], [Sin, [cartVel]]], [0.0420]]]
-            # 	[Add, [Add, [1.06], [Usub, [cartPos]]], [Mul, [Mul, [23.8], [Add, [Add, [cartVel], [Mul, [9.00], [Abs, [cartPos]]]], [Mul, [9.00], [Max, [-0.341], [cartPos]]]]], [Sin, [cartVel]]]]
             return tree_copy
         else:
             return tree
 
 
-def node_deepcopy(tree: Node):
+def node_deepcopy(tree: NodeStructure):
     _cpy = copy.deepcopy(tree)
     return _cpy
 
@@ -1191,7 +1127,7 @@ class CustomOperator:
     pass
 
 
-class Node_Dummy(Typus):
+class Node_Dummy(Node):
     """Terminal_Dummy, Function_Dummy now both in here"""
     # @classmethod
     # def get_child_xts(cls):
@@ -1207,7 +1143,7 @@ class PleaseUsePartnerOp(Node_Dummy):
     pass
 
 
-class BaseOperator(Typus):
+class BaseOperator(Node):
 
     def __init__(self, *args):
         super().__init__()
@@ -1276,7 +1212,7 @@ class NoSymCapitalized:
     pass
 
 
-class Terminal(Typus):  # sfeh sympy.Atom
+class Terminal(Node):  # sfeh sympy.Atom
     """Terminal nodes are leaf nodes which can not have children. e.g.:
     - constants (e.g. 2.3)
     - observations (e.g. b, aka data input)
@@ -1328,7 +1264,7 @@ class Symbol(Terminal):
 
 
 def cast_input(ii):
-    if isinstance(ii, Node):
+    if isinstance(ii, NodeStructure):
         return ii
     else:
         # For "human" inputs like Add(1, 'var')
@@ -1723,7 +1659,8 @@ class Div(MathOperator):
 
 
 class Sqrt(MathOperator):
-    """Capitalized class name, even though its a sympy function"""
+    """Capitalized class name, even though its a sympy function
+    In SymPy, sqrt(x) is just a shortcut to x**Rational(1, 2)"""
     xtype = ((float,), float)
     symfun = lambda a: sympy.sqrt(a[0])  # same as: lambda a: sympy.Pow(a, sympy.S.Half)
     np_fun = np.sqrt

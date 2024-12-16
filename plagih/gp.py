@@ -12,7 +12,7 @@ class Candidate:
     WAS: class FinalizedTree
     An actual individual (Tree + meta-infos/phenotypes)"""
 
-    def __init__(self, tree: Typus, fitness, parsimony, tag: str):
+    def __init__(self, tree: Node, fitness, parsimony, tag: str):
         self.tree = tree
         self.fitness = fitness
         self.parsimony = parsimony
@@ -155,7 +155,7 @@ class ExplainableGP:
 
                 # sfeh: trying to simplify the tree for improved pareto
                 try:
-                    symtree = evolve_reduce_simplify(candidate_tree.get_evotree(), self.allow_chain, force=True)
+                    symtree = evolve_reduce_simplicate(candidate_tree.get_evotree(), self.allow_chain, force=True)
                     sym_candidate = self.tree_to_candidate(symtree, tag='sfeh:sym')
                     if sym_candidate.get_parsim() < candidate_tree.get_parsim():
                         printez('a', f'Paretofront: Further simplified! {sym_candidate.get_parsim()} < {candidate_tree.get_parsim()}')
@@ -246,7 +246,7 @@ class ExplainableGP:
         printpl('gggg', f'|->{evotree.len_nodecount_fair():2.0f}: {evotree.str_as_expr()}')
         self.pop_next.append(ct)
 
-    def create_trees(self, rate=0.0, crossover=False, simplify=False):
+    def create_trees(self, rate=0.0, crossover=False, simplicate=False):
         """Safely append a tree to the population.
         Even though the raw trees should have everything to display their expression,
         they have gone through a process of changes. Here, the final tree (candidate_tree) is refurbished."""
@@ -322,7 +322,7 @@ class ExplainableGP:
         fitness = round(fitness, FLOAT_PRECISION)
         return fitness
 
-    def tree_to_candidate(self, evotree: Typus, origin_tree=None, tag=None, raise_if_useless=True):
+    def tree_to_candidate(self, evotree: Node, origin_tree=None, tag=None, raise_if_useless=True):
         """the "fixed" node information is not relevant
 
         Tree MUST NOT be altered from here!

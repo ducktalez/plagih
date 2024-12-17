@@ -1,4 +1,4 @@
-from plagih.evaluation import eval_predict_df
+from plagih.evaluation import *
 from plagih.evolve import Evolution
 from plagih.monitoring import plot_performance
 from plagih.paretofront import *
@@ -51,7 +51,7 @@ class ExplainableGP:
         - class data-specific/eval -> df_train, normalize_numpy
         - class
     """
-    def __init__(self, evolve: Evolution, df_train, rootdir=None, allow_chain=False, normalize_numpy=None, pop_max=100, gen_max=15):
+    def __init__(self, evolve: Evolution, df_train, rootdir=None, allow_chain=False, normalize_numpy=None, pop_max=100, gen_size=15):
         self.time_start = time.perf_counter()
         if rootdir is None:
             self.rootdir = None
@@ -62,8 +62,8 @@ class ExplainableGP:
         self.df_train = df_train
         # self.df_control = df_control
         self.evolve = evolve
-        self.pop_max = pop_max
-        self.gen_max = gen_max
+        self.pop_size = pop_max
+        self.gen_size = gen_size
         self.gen_id = 0
         self.normalize_numpy = normalize_numpy
         self.allow_chain = allow_chain
@@ -252,7 +252,7 @@ class ExplainableGP:
         they have gone through a process of changes. Here, the final tree (candidate_tree) is refurbished."""
 
         def loop(create_tree_func):
-            n = int(rate * self.pop_max)
+            n = int(rate * self.pop_size)
             n_success = 0
             fails_list = []
             tag = create_tree_func.__name__
@@ -314,10 +314,13 @@ class ExplainableGP:
                 #     print(f'OnlyPrintException: Why are we not here??? {ex}')
         return loop
 
-    def eval_fitness(self, sy_expr):
+    def eval_fitness(self, sy_expr, symbol_list):
+        # df_results = eval_predict_df(sy_expr, self.df_train, symbols, normalize_numpy=self.normalize_numpy)
+        df_results = eval_predict_df(sy_expr, self.df_train, symbol_list)
 
-        df_results = eval_predict_df(sy_expr, self.df_train, normalize_numpy=self.normalize_numpy)
-        # pairwise_results = pairwise_results['result']
+        if self.normalize_numpy is not None:  # clip and round result
+            df_results = self.normalize_numpy(df_results)
+
         fitness = np.sqrt(np.mean((df_results - self.df_train['action']) ** 2))  # discuss: np.square vs. **2: should be mainly irrelevant
         fitness = round(fitness, FLOAT_PRECISION)
         return fitness
@@ -352,7 +355,7 @@ class ExplainableGP:
         if sy_expr in self.lut_fitness:
             fitness = self.lut_fitness[sy_expr]
         else:
-            fitness = self.eval_fitness(sy_expr)
+            fitness = self.eval_fitness(sy_expr, self.evolve.symbol_list)
 
             self.lut_fitness[sy_expr] = fitness  # sfeh:discuss: lut update in finalize_tree_get_meta()?
 
@@ -389,8 +392,6 @@ class ExplainableGP:
             try:
                 with Path.open(path_backup, 'rb') as file:
                     run_data = pickle.load(file)
-            except NotImplementedError as ex:
-                raise Exception(f'NotImplementedError: {ex}')
             except EOFError as ex:
                 raise Exception(f'EOFError: \n{ex}')
 
@@ -405,7 +406,7 @@ class ExplainableGP:
         tmp_dict = pop_analyze(self.pop_genepool, gen_time, self.gens_since_last_pareto)
         self.monitor_df.loc[self.gen_id] = tmp_dict
         printpl('gg',
-                f"Created {len(self.pop_genepool)}/{self.pop_max} ({tmp_dict['pop_unique']} unique) in generation {self.gen_id}. "
+                f"Created {len(self.pop_genepool)}/{self.pop_size} ({tmp_dict['pop_unique']} unique) in generation {self.gen_id}. "
                 f"Trees in LUT: {len(self.lut_fitness)} Generation took {gen_time:4.2f}s")
 
         printpl('ggg', f'--- Generation {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}. ---')

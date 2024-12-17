@@ -40,7 +40,7 @@ def mp_evall(arow):
     except Exception as ex:
         print(f'WARNING: Something failed in the evaluation process: {ex}')
         print(f'WARNING: arow {arow}')
-        return [lut_hash, -20000, -20000, -20000, -20000]  # sfeh
+        return [lut_hash, -20000, -20000, -20000, -20000]  #
 
 
 def eval_and_lut(eval_list, parsim_MAX, parsim_1MAX, lut_file, mp_cpu_MAX):
@@ -121,7 +121,6 @@ def plot_best_prediction(rootdir_eval, parsims, combined_all_p, lut_file, parsim
     try:
         yaml_dump(rootdir_eval / 'best_regrerr.yaml', bestregr_data)  # sfeh delete this?
     except:
-        # sfeh FFS this FUCKING includes
 
         with Path.open(rootdir_eval / 'best_regrerr.yaml', 'w') as file:
             _ = yaml.dump(bestregr_data, file, default_flow_style=False, sort_keys=False)

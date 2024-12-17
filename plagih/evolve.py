@@ -184,10 +184,10 @@ class Evolution:
             raise NotImplementedError
 
         if symbol_list is None:
-            symbol_list = sympy.symbols('a b')  # sfeh:sympy symbols options
+            symbol_list = sympy.symbols('a b', real=True, imaginary=False)  # sfeh:sympy symbols options
         else:
             symbol_list = [sympy.Symbol(s) if isinstance(s, str) else s for s in symbol_list]
-
+        self.symbol_list = symbol_list
         self.node_selector = NodeSelect(operators, symbol_list)
 
         self.complexity_metric = complexity_metric
@@ -197,7 +197,7 @@ class Evolution:
 
         self.allow_a_chain = allow_chain
 
-    def evolve_prune_tree(self, tree: NodeStructure, allow_chain):
+    def evolve_prune_tree(self, tree: Node, allow_chain):
         """prune depth
         -> prune everything below a certain level... (should not happen in the first place)
         prune nodes
@@ -387,7 +387,7 @@ class Evolution:
 
         return tree
 
-    def evolve_mutate_point(self, tree: NodeStructure, allow_chain):
+    def evolve_mutate_point(self, tree: Node, allow_chain):
         """Mutate a single mutable point in any Tree.
         sfeh:debug is the fintree a fintree copy or the same fintree?"""
         evotree = copy.deepcopy(tree)
@@ -408,7 +408,7 @@ class Evolution:
 
         return evotree
 
-    def evolve_mutate_branch_depth(self, tree: NodeStructure, depth_goal, allow_chain, p_term=0.0):
+    def evolve_mutate_branch_depth(self, tree: Node, depth_goal, allow_chain, p_term=0.0):
         """"""
         n_init = len(tree)
         node_list = tree.list_mutable_nodes(allow_chain=allow_chain)

@@ -5,9 +5,14 @@
 
 ## Ablage/Todos
 
+- evaluation alternatives
+  - np-fun in every class, vectorize
+  - tf-fun in every class
+  - regular python code implementation
+- type-hints!!
 - self.evolve.origin_tree
-- evaluation
 - simplification
+- introduce breath-first-representation!
 
 # Sub-todos
 
@@ -86,14 +91,39 @@
 - Abs only with simplify
   - sympy.S('(Abs(a)*Abs(b))')
   - sympy.simplify('(Abs(a)*Abs(b))')
-```python
-import sympy
-sympy.core.numbers.Zero
-```
+  - sympy.core.numbers.Zero
+- structure in gp tree (add(a, add(a, c))) as gp-relevant?
+- lut for every subbranch ()
+  - "free symbols" in tree?
+- simplifications as evolution-factor
+- nsimplify()
+- variable-names = symbols
+- Introduce min/max input operator, that is the number of the min/max value of inputs in the column.
+- apted-discance can also compute the actual edit steps
+- Crossover - make fix nodes insertable
+- create_random should be the same for first generation and other randoms
+- warning for sympifyable origin tree
+- only allow variables in specific subtrees/branches
+-  insert constants like pi, e, into trees
+- choose_operator should be adjusted a little towards actually useful functions
+- pop-mining?
+  - trees too large? -> reduce size
+  - trees too small?
+  - too smiliar? -> more random new anything
+  - too bad? -> increase tournament_size
+  - wenn ein gp lauf immer wieder dieselben Lösungen findet, verbiete einige Grundstrukturen. ...oder andere einschränkungen. sin verbieten. wenn nichts besseres gefunden wird, weiter
+- Bring back latex?
+- group tree branches based on used variables?
+- if constant filter process improved a tree -> try again with slightly smaller/bigger adaption
+- CMA-ES, ffs. Deap does this, this is looooowest prio.
+- separate populations training
+  - Tree-structure mining; Good candidates may all have the same core. If they do, start new population with just this core? 
+  - start separate population with specifically NOT this core?
 
-# Simplifications
 
-- simplify()
+# Simplifications/representations
+
+- `simplify()`
   - uses all, but looks for string-length
   - factor
 
@@ -129,6 +159,13 @@ Sympy special functions:
 - ``combsimp()``  (ignored)
 - ``gammasimp()``  (ignored)
 - ``list_to_frac()``  (ignored)
+
+the string representation is very important, as it represents a 'genetic code'. 
+I compare formulas as they are "in strings", like a touring-machine. So, the first
+operator is also the most important one. 
+However, flattening a tree also leaves the question: depth vs. width?
+Should we see the trees from top down (all levels)?
+
 
 ## sfeh: make assumptions for inputs
 

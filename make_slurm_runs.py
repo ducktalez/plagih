@@ -69,7 +69,7 @@ run_starts = [
 
 complete_params = []
 
-# sfeh -D, --chdir=<directory>
+# -D, --chdir=<directory>
 #     Set the working directory of the batch script to directory before it is executed. The path can be specified as full path or relative path to the directory where the command is executed.
 # sfeh --output=./benchmarks/slurm_runs/{run_name}/slurm-%j.out # not used anymore cause its shit
 # --exclusive (only you are allowed to work on the machine)

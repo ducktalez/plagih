@@ -70,15 +70,6 @@ Useful information:
 - These variables are set for every sympy object and thus can be tested, e.g. a.is_Boolean
     # To be overridden with True in the appropriate subclasses
 
-    sfeh: I think we should get rid of sympy in the long term. A lot of problems are related to sympy.
-
-    sfeh:sypyunification errors:
-        - 'a and b', 'b and a'
-        - 'And(a<2, a < 5)'
-        - sympy.simplify('sign(-a)') -> -sign(a)
-
-    sfeh:discus simplify/unify
-
 Custom Operators /Functions/Nodes/Terminals/Nested:
     Any custom node must have a typus subclassing NodeBase
     Also, make a case in sympy_to_nested to reconstruct trees from sympy expressions.
@@ -241,8 +232,10 @@ class Node(NodeStructure):
         # self.repr_str = nd_new.repr_str
         # self.showme = nd_new.showme
         # self.depth = sfeh?
-        # self.parent_node = None
-        # self.root_node = None
+        self.parent_node = None
+        self.root_node = None
+        self.depth = None
+        # sfeh all BaseNodeStructure infos should not be updated
 
         # self.set_typus(nd_new.typus)  # sfeh remove childs, is_fix...
         # self.set_childs(nd_new.childs)  # sfeh maybe must be updated recursively
@@ -261,31 +254,21 @@ class Node(NodeStructure):
         from node-class, go to a sympy expression
         """
 
+        _sym = type(self).symfun
+        _cs = self.get_childs()
+
         if self.is_term():
-            # if issubclass(type(self), Terminal):
-            _sym = type(self).symfun  # _sym = self.typus.symfun
-            _cs = self.get_childs()
             _r = _sym(_cs)
 
-        elif issubclass(type(self), (Round, PowRounded)):
-            _cs = [cc.get_sympy_expr(simplimore=simplimore) for cc in self.get_childs()]
-            _sym = type(self).symfun
-            _r = _sym(_cs)
-
-        elif self.get_typus_sfeh() in (Piecewise, sympy.Piecewise):  # sfeh:open delete ONE of them?
-            _sym = sympy.Piecewise
-            _cs = self.get_childs()
+        elif isinstance(self, Piecewise):  # sfeh:open delete ONE of them?
+            # _sym = sympy.Piecewise
             _cs = [(cc.get_childs()[0], cc.get_childs()[1]) for cc in _cs]
             _cs = [(cc[0].get_sympy_expr(simplimore=simplimore), cc[1].get_sympy_expr(simplimore=simplimore)) for cc in _cs]
-            # try:
             _cs = [ExprCondPair(cc[0], cc[1]) for cc in _cs]
-            # except Exception as sfeh:
-            #     # NotImplementedError in Sympy "A method to determine whether a multivariate conditional is consistent"
-            #     _cs = [ExprCondPair(cc[0], cc[1]) for cc in _cs]
             _r = _sym(*_cs)
         elif self.is_operator():
-            _cs = [cc.get_sympy_expr(simplimore=simplimore) for cc in self.get_childs()]
-            _sym = type(self).symfun
+            _cs = [cc.get_sympy_expr(simplimore=simplimore) for cc in _cs]
+
             try:
                 if self.is_chain():
                     _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
@@ -296,7 +279,7 @@ class Node(NodeStructure):
         else:
             raise NotImplementedError
 
-        sympy_expression_check(_r, raise_ex=True)
+        sympy_expression_check_raise(_r)
 
         # _r_td = sympy.simplify(_r)
         # _r2 = sympy.S(_r)
@@ -306,6 +289,36 @@ class Node(NodeStructure):
         #     # _r2 = 64.0*cartPos**2*(cartPos + Abs(cartVel) + 1.15)
         #     # _r3 = cartPos**2*(64.0*cartPos + 64.0*Abs(cartVel) + 73.5)
         #     print(f'SFEH:XXX! {_r_td}')
+
+        return _r
+
+    def eval_np_expr(self):
+
+        if self.is_term():
+            # if issubclass(type(self), Terminal):
+            _sym = type(self).np_fun  # _sym = self.typus.symfun
+            _cs = self.get_childs()
+            _r = _sym(_cs)
+
+        elif self.get_typus_sfeh() in (Piecewise, sympy.Piecewise):  # sfeh:open delete ONE of them?
+            _sym = sympy.Piecewise
+            _cs = self.get_childs()
+            _cs = [(cc.get_childs()[0], cc.get_childs()[1]) for cc in _cs]
+            _cs = [(cc[0].eval_np_expr(), cc[1].eval_np_expr()) for cc in _cs]
+            _cs = [ExprCondPair(cc[0], cc[1]) for cc in _cs]
+            _r = _sym(*_cs)
+        elif self.is_operator():
+            _cs = [cc.eval_np_expr() for cc in self.get_childs()]
+            _sym = type(self).symfun
+            try:
+                _r = _sym(*_cs)
+                # _r = _sym(_cs)  # debug
+            except (ValueError, TypeError) as ex:
+                raise SympySimplificationError(f'getsympyexpr-err| {ex}')
+        else:
+            raise NotImplementedError
+
+        sympy_expression_check_raise(_r)
 
         return _r
 
@@ -613,7 +626,8 @@ class Node(NodeStructure):
                 elif n_exp == 2:
                     self.replace_with(Square, childs=[mychlds[0]])
                 elif n_exp == 0.5:
-                    self.replace_with(Sqrt, childs=[mychlds[0]])  # never hits!
+                    self.replace_with(Sqrt, childs=[mychlds[0]])
+                    raise   # never hits!
                 elif n_exp == sympy.S.Half:
                     self.replace_with(Sqrt, childs=[mychlds[0]])
                 elif n_exp == 0.5 or n_exp == sympy.S.Half:
@@ -635,7 +649,7 @@ class Node(NodeStructure):
                         self.replace_with(Div, childs=[mychlds[0], mychlds[1].get_childs()[0]])
 
                     elif mychlds[0].get_typus_sfeh() == Number:
-                        mul1 = mychlds[0].get_childs()[0]  # todo
+                        mul1 = mychlds[0].get_childs()[0]  # sfeh
                         if mul1 == sympy.S.NegativeOne:  # sfeh aka sympy.S.NegativeOne -1, was -1 before
 
                             self.replace_with(Usub, childs=[mychlds[1]])  # sfeh Usub ONLY option, ignore usub tree len
@@ -926,7 +940,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
     # sfeh:discuss
     # NotImplementedError: Expr missing: ITE(p > 13, tan(p - v) >= 2.578643, tan(p - v) >= 1)
     # this should not have occured, because it evaluates to bool, not to float
-        sympy_expression_check(s_expr)
+        sympy_expression_check_raise(s_expr)
     raise NotImplementedError(f'Expr missing: {s_expr}')
 
 
@@ -943,7 +957,7 @@ def tree_simplification(tree, allow_chain) -> Node:
     # expr_sym2 = sympy.simplify(expr_sym)
     # if str(expr_sym) != str(expr_sym2):
     #     print(f'sfeh: {expr_sym} // {expr_sym2}')
-    # expr_sym3  = tree.get_sympy_expr(simplimore=True)  # todo
+    # expr_sym3  = tree.get_sympy_expr(simplimore=True)
     tree = sympy_to_tree(expr_sym, allow_chain=allow_chain)
     # if not allow_chain:
     # print(f'Copy : {len(tree_copy)}\t{tree_copy}')
@@ -953,10 +967,9 @@ def tree_simplification(tree, allow_chain) -> Node:
     if len(tree_copy) < len(tree):
         astr = string_remove_trailing_zeroes(str(tree_copy.get_sympy_expr()))
         bstr = string_remove_trailing_zeroes(str(tree.get_sympy_expr()))
-        print(f'WHATHAPPENED SFEH'
+        print(f'WHATHAPPENED SFEH\t{astr}'
               f'\n\told: {tree_copy.str_as_list()}'
-              f'\n\tsym: {tree.str_as_list()}'
-              f'\n\t{astr}')
+              f'\n\tsym: {tree.str_as_list()}')
               # f'\n\told: {tree_copy.get_expr_symlike()}'
               # f'\n\tsym: {tree.get_expr_symlike()}'
               # f'\n\tsym: {tree_copy.get_tree_export()}')
@@ -1329,7 +1342,8 @@ class Sign(MathOperator, NoSymCapitalized):
 
 
 class Log(MathOperator, NoSymCapitalized):
-    symfun = lambda a: sympy.log(a[0])  # sfeh: Log isactually Ln (base e)
+    # Log isactually Ln (base e). Log/Ln is the same, idk fuck Log10
+    symfun = lambda a: sympy.log(a[0])
     np_fun = np.log
     showme = 'Log'
     sy_str = 'log({})'
@@ -1841,7 +1855,8 @@ d_sym2node_chain = d_sym2node | {sympy.Add: AddChain, sympy.Mul: MulChain, sympy
                                  ExprCondPair: ExprCondPair_Dummy}
 
 
-def sympy_expression_check(expr_sym, raise_ex=False):
+def sympy_expression_check_raise(expr_sym):
+
     if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im, sympy.re):
         # sfeh:discuss sympy.re: real part -> don't ignore; if there is a real part, there is a imaginary part.
         raise SympySimplificationError(f'Simplification failed: {expr_sym}')
@@ -1880,7 +1895,7 @@ def expr_sympify(expr):
 
     try:
         expr_sym = sympy.sympify(expr)
-        sympy_expression_check(expr_sym, raise_ex=True)
+        sympy_expression_check_raise(expr_sym)
         return expr_sym
 
     except ValueError as ex:

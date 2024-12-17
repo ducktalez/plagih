@@ -1,6 +1,6 @@
 import pandas as pd
 
-from plagih.trees import PowRounded
+from plagih.trees import PowRounded, Round_Dummy
 from plagih.util import *
 import sympy
 from sympy.utilities.exceptions import ignore_warnings
@@ -9,53 +9,46 @@ import numpy as np
 
 
 custom_functions = {
-    # 'Min': np.minimum.reduce,  # todo, might be false.
+    # 'Min': np.minimum.reduce,  # this IS false
     # 'Max': np.maximum.reduce,
-    'Min': np.min,  # todo, might be false.
+    'Min': np.min,  # sfeh this works (?)
     'Max': np.max,
+    # 'Min': np.minimum,
+    # 'Max': np.maximum,
+    # sympy.minimum: np.minimum,  # is this even an option?
+    # sympy.maximum: np.maximum,
     'Round_Dummy': np.round,
 }
 
 
-def eval_predict_df(sy_expr: sympy.Basic, df: pd.DataFrame, normalize_numpy=None):
+def eval_predict_df(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list):
     """
-    Returns the fitness (float)
-
     """
-    # a, b = sympy.symbols('cartVel cartPos')
-    # cartVels = df['cartVel']
-    # cartPoss = df['cartPos']
-    cartPos, cartVel = sympy.symbols('cartPos cartVel')
-    variable_names = [str(var) for var in (cartPos, cartVel)]  # sfeh
-    func = sympy.lambdify(tuple([cartPos, cartVel]), sy_expr, modules=[custom_functions, 'numpy'])
+    func = sympy.lambdify(symbol_list, sy_expr, modules=[custom_functions, 'numpy'])
 
-    # x = expr.evalf(subs={symbols[0]: 1.234, symbols[1]: 2.3456})
-
-    # SUCK FYMPY
-    # "ValueError: setting an array element with a sequence.
-    #   The requested array has an inhomogeneous shape after 1 dimensions.
-    #   The detected shape was (2,) + inhomogeneous part."
-
-    # x = expr.evalf(subs={'cartVel': cartVels, 'cartPos': cartPoss})
-    # raw_results = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
     with warnings.catch_warnings():
         with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
-            with ignore_warnings(DeprecationWarning):  # something like use "**" instead of "Pow"
-                df_results = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
+            with ignore_warnings(DeprecationWarning):  # something 'like use "**" instead of "Pow"'
+                df_results = df.apply(lambda row: func(*[row[str(var)] for var in symbol_list]), axis=1)
 
-                # np_input = [df[str(symbol)].to_numpy() for symbol in symbols]
-                # np_results = func(*np_input)
-                # # df_results = df.apply(lambda row: func(), axis=1)
-                # # df_results = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
-                # # raw_results = df.apply(lambda row: func(*[row[var] for var in variable_names]), axis=1)
-
-    if normalize_numpy is not None:  # clip and round result
-        df_results = normalize_numpy(df_results)
-
-    # todo numpy evaluation
-
-    # df['result'] = df_results
     return df_results
+
+def evaluate_sympy_expression(expression, df, symbols):
+    """
+    Does NOT work!
+
+    Try to evaluate this:
+    - expr = sympy.Min(2, 2 * cartPos)
+    """
+    np_input = [df[str(name)].to_numpy() for name in symbols]
+    func = sympy.lambdify(tuple(symbols), expression, modules='numpy')
+
+    with warnings.catch_warnings():
+        with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
+            with ignore_warnings(DeprecationWarning):  # something 'like use "**" instead of "Pow"'
+                result = func(*np_input)
+
+    return result
 
 def eval_sympyLoop(expr, df):
 
@@ -80,19 +73,20 @@ def eval_tensorflow(expr, df):
     pass
 
 
-
 if __name__ == '__main__':
     import pandas as pd
     df = pd.read_csv(Path(__file__).parent.parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv').astype('float32')
     symbols = sympy.symbols(['cartVel', 'cartPos'], real=True, imaginary=False)
+    cartPos, cartVel = symbols[0], symbols[1]
     ex = '0.00162*cartPos*cartVel/(cartPos + 4.23)'
     # expr = sympy.Mul(symbols[0], (2, sympy.Add(1, symbols[1])))
-    expr = PowRounded.symfun(2, sympy.Add(1, symbols[1]))
+    x = Round_Dummy
+    expr = sympy.Min(2, sympy.Add(1, symbols[1]))
+    expr = sympy.Min(cartVel, sympy.Add(2, symbols[1]))
     # sfeh
-    cartPos, cartVel = sympy.symbols('cartPos cartVel')
     variable_names = [str(var) for var in (cartPos, cartVel)]
-    func = sympy.lambdify(tuple(symbols), expr, modules=[custom_functions, 'numpy'])
+    # func = sympy.lambdify(tuple(symbols), expr, modules=[custom_functions, 'numpy'])
+    # raw_results = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
 
-    func = sympy.lambdify(tuple(symbols), expr, modules=[custom_functions, 'numpy'])
-    raw_results = df.apply(lambda row: func(row['cartPos'], row['cartVel']), axis=1)
-    print('ssdfg', raw_results)
+    result = evaluate_sympy_expression(expr, df, [cartVel, cartPos])
+    print('ssdfg', result)

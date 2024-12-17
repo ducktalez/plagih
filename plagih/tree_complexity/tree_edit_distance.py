@@ -15,7 +15,6 @@ class CustomConfig(Config):
 def apted_distance(expr1, expr2):
     """
     Computes the apted distance
-    sfeh: can also compute the actual edit steps
     """
 
     tree1 = aptree.from_text(expr1)

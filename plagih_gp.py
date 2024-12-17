@@ -14,7 +14,7 @@ import sympy
 col_names = ['cartVel', 'cartPos']
 df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv').astype('float32')
 df_train, df_control = train_test_split(df, test_size=0.2, random_state=0)
-DATA_SYMBOLS = sympy.symbols(df[col_names].columns, real=True, imaginary=False)  # sfeh input_names dirty here
+DATA_SYMBOLS = sympy.symbols(df[col_names].columns, real=True)  # sfeh input_names dirty here
 operator_dict = Evolution.operator_presets['math_simple']
 
 symbols_lambda = lambda x: sympy.Symbol(x, real=True, imaginary=False)
@@ -22,7 +22,7 @@ symbols_lambda = lambda x: sympy.Symbol(x, real=True, imaginary=False)
 rootdir = Path.cwd() / 'MTC200_RMSE_scratch'
 normalize_numpy = lambda x: np.round(np.clip(x, 0, 2), 0)
 
-pop_max = 100
+pop_size = 100
 gen_max = 15
 nodes_max = 50
 depth_max = 10
@@ -100,7 +100,7 @@ def _test_random_pop(chained_on=True):
 
     gp.time_genstart = time.perf_counter()  # sfeh here?
 
-    while gp.gen_id <= gp.gen_max and not gp.run_custom_exit_condition():
+    while gp.gen_id <= gp.gen_size and not gp.run_custom_exit_condition():
 
         @gp.create_trees(rate=0.1)
         def repro1():

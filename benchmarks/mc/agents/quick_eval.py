@@ -1,5 +1,5 @@
 """
-sfeh-specific file. not required otherwise.
+MountainCar-specific file. not required otherwise.
 
 pos = observation0
 velocity = observation1
@@ -322,7 +322,7 @@ def eval_agent_list(agent_list, goal_agent, n=100, dir_save=Path('img/')):
 #             try:
 #                 mc_actn = eval(self.mcAction)
 #             except:
-#                 raise  # sfeh
+#                 raise
 #             return int(round(max(0, min(2, mc_actn))))
 #
 #     try:
@@ -349,7 +349,6 @@ def eval_agent_list(agent_list, goal_agent, n=100, dir_save=Path('img/')):
 #             bur1 = bur2 = None
 #             avg_reward, fails, _ = mtc_play(mc_gent, n=n)
 #
-#             # sfehsfeh save  time comment this
 #             bur1 = mtc_plot_decisions_space(mc_gent, folder=dir_save, name=agent_name, dummy=True, backup_results1=bur1)
 #             bur2 = mtc_plot_differences(mc_gent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False, backup_results2=bur2)  # diff at start for diashow
 #             mtc_plot_decisions_space(mc_gent, folder=dir_save, name=f'space-{agent_name}', dummy=False)

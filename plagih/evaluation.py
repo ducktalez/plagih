@@ -10,7 +10,7 @@ import numpy as np
 
 custom_functions = {
     # 'Min': np.minimum.reduce,  # this IS false
-    # 'Max': np.maximum.reduce,
+    # 'Max': np.maximum.reduce,  # sfeh not so nice...
     'Min': np.min,  # sfeh this works (?)
     'Max': np.max,
     # 'Min': np.minimum,

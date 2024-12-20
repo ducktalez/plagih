@@ -292,33 +292,30 @@ class Node(NodeStructure):
 
         return _r
 
+
     def eval_np_expr(self):
+        # todo np eval
+        _sym = type(self).symfun
+        _cs = self.get_childs()
 
         if self.is_term():
-            # if issubclass(type(self), Terminal):
-            _sym = type(self).np_fun  # _sym = self.typus.symfun
-            _cs = self.get_childs()
             _r = _sym(_cs)
 
-        elif self.get_typus_sfeh() in (Piecewise, sympy.Piecewise):  # sfeh:open delete ONE of them?
-            _sym = sympy.Piecewise
-            _cs = self.get_childs()
+        elif isinstance(self, Piecewise):  # sfeh:open delete ONE of them?
+            # _sym = sympy.Piecewise
             _cs = [(cc.get_childs()[0], cc.get_childs()[1]) for cc in _cs]
             _cs = [(cc[0].eval_np_expr(), cc[1].eval_np_expr()) for cc in _cs]
             _cs = [ExprCondPair(cc[0], cc[1]) for cc in _cs]
             _r = _sym(*_cs)
         elif self.is_operator():
-            _cs = [cc.eval_np_expr() for cc in self.get_childs()]
-            _sym = type(self).symfun
-            try:
-                _r = _sym(*_cs)
-                # _r = _sym(_cs)  # debug
-            except (ValueError, TypeError) as ex:
-                raise SympySimplificationError(f'getsympyexpr-err| {ex}')
+            _cs = [cc.eval_np_expr() for cc in _cs]
+
+            if self.is_chain():
+                _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
+            else:
+                _r = _sym(_cs)  # noqa (_sym is definitely assigned)
         else:
             raise NotImplementedError
-
-        sympy_expression_check_raise(_r)
 
         return _r
 
@@ -612,13 +609,12 @@ class Node(NodeStructure):
             return
         else:
 
-            sfeh = self.get_typus_sfeh()
             mychlds = self.get_childs()
 
             for cc in mychlds:
                 cc.tree_node_grouping(tolerance=tolerance)
 
-            if sfeh in (Pow, PowRounded):
+            if isinstance(self, (Pow, PowRounded)):
                 n_exp = mychlds[1].get_childs()[0]  # must exist
                 if n_exp == -1:
                     self.replace_with(DivFraction, childs=[mychlds[0]])
@@ -632,23 +628,25 @@ class Node(NodeStructure):
                     self.replace_with(Sqrt, childs=[mychlds[0]])
                 elif n_exp == 0.5 or n_exp == sympy.S.Half:
                     self.replace_with(Sqrt, childs=[mychlds[0]])
-                elif mychlds[1].get_typus_sfeh() == Round:
+                elif isinstance(mychlds[1], Round):
                     self.replace_with(PowRounded, childs=[mychlds[0], n_exp])
-                elif mychlds[1].get_typus_sfeh() == Number and n_exp % 1 == 0:
+                elif isinstance(mychlds[1], Number) and n_exp % 1 == 0:
                     self.replace_with(PowRounded, childs=mychlds)
 
-            elif sfeh == Mul:
+            elif isinstance(self, Mul):
                 if self.is_chain():  # div only for
                     # for cc in mychlds:
                     # Nothing to do here! ?
                     pass
                 else:
-                    if mychlds[0].get_typus_sfeh() == DivFraction:
+
+                    # if mychlds[0].get_typus_sfeh() == DivFraction:
+                    if isinstance(mychlds[0], DivFraction):
                         self.replace_with(Div, childs=[mychlds[1], mychlds[0].get_childs()[0]])
-                    elif mychlds[1].get_typus_sfeh() == DivFraction:
+                    elif isinstance(mychlds[1], DivFraction):
                         self.replace_with(Div, childs=[mychlds[0], mychlds[1].get_childs()[0]])
 
-                    elif mychlds[0].get_typus_sfeh() == Number:
+                    elif mychlds[0].__class__ == Number:
                         mul1 = mychlds[0].get_childs()[0]  # sfeh
                         if mul1 == sympy.S.NegativeOne:  # sfeh aka sympy.S.NegativeOne -1, was -1 before
 
@@ -668,28 +666,6 @@ class Node(NodeStructure):
                         #     print(f'sfeh:test this needs testing when reached in future {sfeh_div_by_test}')
                         raise NotImplementedError  # commented block above
         return  # two indents
-
-    def get_tree_export_DEPRECATED(self):
-        """
-        Deprecated due to the node class being inherited by a typus class now
-        :return:
-        """
-
-        label = self.get_typus_sfeh().showme  # class name
-
-        if self.is_term():
-            cs = f'{self.get_childs()[0]}'
-            cs = term_format(cs, cut=False)
-            if self.is_term_and_symbol():
-                cs = f'"{cs}"'
-
-        else:
-            cs = [cc.get_tree_export() for cc in self.get_childs()]
-            cs = ', '.join(cs)
-
-        fix_opt = ', is_fix=True' if self.is_fix else ''
-        creation = f'({label}, [{cs}]{fix_opt})'
-        return creation
 
     def len_nodecount_raw(self):
         """counting the amount of nodes recursively"""
@@ -980,7 +956,7 @@ def tree_simplification(tree, allow_chain) -> Node:
     return tree
 
 
-def evolve_reduce_simplicate(tree: NodeStructure, allow_chain, completely=True, force=False) -> NodeStructure:
+def evolve_reduce_simplicate(tree: Node, allow_chain, completely=True, force=False) -> NodeStructure:
     """Reducing a fintree to its most basic form with sympify.
     (completely = False: reduce just one branch. if you wanted to have more complexity)"""
     tree_copy = copy.deepcopy(tree)
@@ -1010,7 +986,7 @@ def evolve_reduce_simplicate(tree: NodeStructure, allow_chain, completely=True, 
             return tree
 
 
-def node_deepcopy(tree: NodeStructure):
+def node_deepcopy(tree: Node) -> Node:
     _cpy = copy.deepcopy(tree)
     return _cpy
 
@@ -1058,82 +1034,6 @@ def node_deepcopy(tree: NodeStructure):
 #     def origin_tree_copy(self):
 #         return copy.deepcopy(self.fintree.tree)
 
-
-# def rec_build_tree(lst, obs_list=None, depth=0):
-#     """
-#     [rec]ursive building of a tree
-#     recursively loads a nested list into a evotree structure
-#     nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
-#     nstr = '[+,[-,[Ifte,[True],[sin,[2]],[/,[2.043],[4]]],[cartVel]],[-1.3]]'
-#     """
-#
-#     strlabel = str(lst[0])
-#     if ':fix' in strlabel:
-#         strlabel = strlabel.replace(':fix', '')
-#         is_fix = True
-#     else:
-#         is_fix = False
-#
-#     if strlabel in ['True', 'False']:
-#         node = Bool(strlabel)
-#     else:
-#         try:
-#             strlabel = float(strlabel)
-#             node = Float(strlabel)
-#         except ValueError:
-#             if strlabel in loadable_ops_dict:
-#                 node = loadable_ops_dict[strlabel]
-#             else:
-#                 if obs_list:
-#                     if strlabel in obs_list:
-#                         node = Symbol(strlabel)
-#                     else:
-#                         raise Exception(f'Label "{strlabel}" can not be assigned to a node-label!')
-#                 else:
-#                     node = Symbol(strlabel)
-#
-#     # node = Nested(label, depth=depth, is_fix=is_fix)
-#
-#     if len(lst[1:]) == node.get_arity():
-#         childs = [rec_build_tree(x, depth=depth + 1, obs_list=obs_list) for x in lst[1:]]
-#         node.set_childs(childs)
-#
-#     else:
-#         # childs = [rec_build_tree(x, depth=depth + 1, obs_list=obs_list) for x in lst[1:]]
-#         # node.set_childs(childs)  # sfeh delete
-#         raise Exception(f'Tree-building list length {len(lst[1:])} does not match arity {node.get_arity()}.')
-#
-#     return node
-
-
-# def check_tree_loadable_reconstruction(tree: Nested):
-#     """
-#     Extracts a tree expression and rebuilds the tree
-#     The trees must be identical, as it only rebuilt itself
-#     :return:
-#     """
-#     tree_0 = copy.deepcopy(tree)
-#     _nested = tree.eval_expr_str()
-#     tree_1 = evotree_from_nested_labels(_nested)
-#     tree_1.update_fixed_nsteds(tree_0)
-#
-#     a = repr(tree_0)
-#     b = repr(tree_1)
-#
-#     return a == b
-
-
-# def evotree_from_nested_labels(nested_str, obs_list=None):
-#     """
-#     optional: op_dict + labels not in '' can be used to load the operators directly
-#     all_input_options = ['1', '0', '-1.132', 'True', 'False', 'vel', 'Ifte', 'max', 'Max', '-vel']
-#     nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
-#     """
-#     evaled_expr = eval(nested_str)  # sfeh:discuss -> sympify? <- no
-#     tree = rec_build_tree(evaled_expr, depth=0, obs_list=obs_list)
-#     tree.finalize_set_depth()
-#
-#     return tree
 
 
 class CustomOperator:
@@ -1390,6 +1290,7 @@ class Acos(AngleOperator, NoSymCapitalized):
 
 
 class Asin(AngleOperator, NoSymCapitalized):
+    """"""
     symfun = lambda a: sympy.asin(a[0])
     np_fun = np.arcsin
     showme = 'Asin'
@@ -1446,6 +1347,7 @@ class Xor(LogicOperator, NoSymCapitalized, ChainableOp):
 
 
 class Not(LogicOperator):
+    """not"""
     symfun = lambda a: sympy.Not(a[0])
     np_fun = np.logical_not
     showme = 'Not'
@@ -1454,7 +1356,8 @@ class Not(LogicOperator):
     xtype = ((bool,), bool)
 
 
-class Eq(LogicOperator):
+class Eq(RelationalOperator):
+    """a == b"""
     # sfeh:debug Eq and Ne (), which also work for boolean inputs in sympy
     symfun = lambda a: sympy.Eq(a[0], a[1])
     np_fun = np.equal
@@ -1464,7 +1367,8 @@ class Eq(LogicOperator):
     xtype = ((float, float), bool)
 
 
-class Ne(LogicOperator):
+class Ne(RelationalOperator):
+    """a != b"""
     symfun = lambda a: sympy.Ne(a[0], a[1])
     np_fun = np.not_equal
     showme = 'Ne'  # != not working in sympy

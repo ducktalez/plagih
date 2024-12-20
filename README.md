@@ -119,6 +119,20 @@
 - separate populations training
   - Tree-structure mining; Good candidates may all have the same core. If they do, start new population with just this core? 
   - start separate population with specifically NOT this core?
+- Partnering: trees search for other trees, that match solutions better
+  - omg: what, if we simply make a df-results list for each datapoint and then
+    lay them over each other, in order to see, which parts can be optimized?
+    This might be big.
+    Lets assume the df is the gene-sequence you hit correctly (rs error from 0 to 1) 
+    and then, we look at the intersection of trees data results. Like with regular individuals, 
+    in a partner search, we simply look for generally good partners that specifically have
+    Good individuals can be crossed, but also; this can be the base for a piecewise
+    analysis of the dataframe (sorted... somehow?), where another ML entity puzzles together
+    the mosaiks of solutions. It can be a tree, too, but the sorting of the data is not obvious.
+    The data should only be "sorted" according to how well it was predicted.
+    Actually, we should make an ordered Dataframe, to do this.
+    We just need a measurement, a metric, to value the amount of actual hits and non/bad hits.
+    Similar to entropy, in order to know, which trees should be merged together.
 
 
 # Simplifications/representations

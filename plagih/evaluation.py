@@ -8,23 +8,24 @@ import warnings
 import numpy as np
 
 
-custom_functions = {
-    # 'Min': np.minimum.reduce,  # this IS false
-    # 'Max': np.maximum.reduce,  # sfeh not so nice...
-    'Min': np.min,  # sfeh this works (?)
-    'Max': np.max,
-    # 'Min': np.minimum,
-    # 'Max': np.maximum,
-    # sympy.minimum: np.minimum,  # is this even an option?
-    # sympy.maximum: np.maximum,
-    'Round_Dummy': np.round,
-}
+# custom_functions = {
+#     # 'Min': np.minimum.reduce,  # this IS false
+#     # 'Max': np.maximum.reduce,  # sfeh not so nice...
+#     'Min': np.min,  # sfeh this works (?)
+#     'Max': np.max,
+#     # 'Min': np.minimum,
+#     # 'Max': np.maximum,
+#     # sympy.minimum: np.minimum,  # is this even an option?
+#     # sympy.maximum: np.maximum,
+#     'Round_Dummy': np.round,
+# }
 
 
 def eval_predict_df(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list):
     """
     """
-    func = sympy.lambdify(symbol_list, sy_expr, modules=[custom_functions, 'numpy'])
+    # func = sympy.lambdify(symbol_list, sy_expr, modules=[custom_functions, 'numpy'])
+    func = sympy.lambdify(symbol_list, sy_expr, modules=['numpy'])
 
     with warnings.catch_warnings():
         with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
@@ -69,8 +70,8 @@ def eval_sympyLoop(expr, df):
 
     return results
 
-def eval_tensorflow(expr, df):
-    pass
+# def eval_tensorflow(expr, df):
+#     pass
 
 
 if __name__ == '__main__':
@@ -80,7 +81,6 @@ if __name__ == '__main__':
     cartPos, cartVel = symbols[0], symbols[1]
     ex = '0.00162*cartPos*cartVel/(cartPos + 4.23)'
     # expr = sympy.Mul(symbols[0], (2, sympy.Add(1, symbols[1])))
-    x = Round_Dummy
     expr = sympy.Min(2, sympy.Add(1, symbols[1]))
     expr = sympy.Min(cartVel, sympy.Add(2, symbols[1]))
     # sfeh

@@ -51,7 +51,7 @@ class ExplainableGP:
         - class data-specific/eval -> df_train, normalize_numpy
         - class
     """
-    def __init__(self, evolve: Evolution, df_train, rootdir=None, allow_chain=False, normalize_numpy=None, pop_max=100, gen_size=15):
+    def __init__(self, evolve: Evolution, df_train, rootdir=None, allow_chain=False, normalize_numpy=np.array, pop_max=100, gen_size=15):
         self.time_start = time.perf_counter()
         if rootdir is None:
             self.rootdir = None
@@ -314,17 +314,6 @@ class ExplainableGP:
                 #     print(f'OnlyPrintException: Why are we not here??? {ex}')
         return loop
 
-    def eval_fitness(self, sy_expr, symbol_list):
-        # df_results = eval_predict_df(sy_expr, self.df_train, symbols, normalize_numpy=self.normalize_numpy)
-        df_results = eval_predict_df(sy_expr, self.df_train, symbol_list)
-
-        if self.normalize_numpy is not None:  # clip and round result
-            df_results = self.normalize_numpy(df_results)
-
-        fitness = np.sqrt(np.mean((df_results - self.df_train['action']) ** 2))  # discuss: np.square vs. **2: should be mainly irrelevant
-        fitness = round(fitness, FLOAT_PRECISION)
-        return fitness
-
     def tree_to_candidate(self, evotree: Node, origin_tree=None, tag=None, raise_if_useless=True):
         """the "fixed" node information is not relevant
 
@@ -355,7 +344,63 @@ class ExplainableGP:
         if sy_expr in self.lut_fitness:
             fitness = self.lut_fitness[sy_expr]
         else:
-            fitness = self.eval_fitness(sy_expr, self.evolve.symbol_list)
+            """Sympy lambdify"""  ###############################
+            results_raw_df = eval_predict_df(sy_expr, self.df_train, self.evolve.symbol_list)
+            df_results = self.normalize_numpy(results_raw_df)
+            df_fitness = np.sqrt(np.mean((df_results - self.df_train['action']) ** 2))
+            df_fitness = round(df_fitness, FLOAT_PRECISION)
+            df_results = df_results.to_numpy()
+
+            # """basic eval"""  ############################### sfeh takes FOREVER
+            # symbol_list = self.evolve.symbol_list
+            # loop_results = []
+            # for i, row in self.df_train.iterrows():
+            #     local_dict = {s: row[str(s)] for s in symbol_list}
+            #     # row_result = sy_expr.subs(local_dict).evalf()
+            #     row_result = sy_expr.evalf(locals=local_dict)
+            #     loop_results.append(row_result)
+            # loop_results = np.array(loop_results)
+            # if self.normalize_numpy is not None:
+            #     loop_results = self.normalize_numpy(loop_results)
+            # loop_fitness = np.sqrt(np.mean((loop_results - self.df_train['action']) ** 2))
+
+            # """Numpy eval debug""" ###############################
+            # true_values = self.df_train['action'].to_numpy()
+            # npd_results = evotree.eval_np_debug(self.df_train)
+            # npd_results = self.normalize_numpy(npd_results)
+            # npd_fitness = np.sqrt(np.mean((npd_results - true_values) ** 2))
+            # npd_fitness = round(npd_fitness, FLOAT_PRECISION)
+            # # todo:off-topic should input variables not be 0? (->no its ok)
+
+            """Numpy eval""" ###############################
+            true_values = self.df_train['action'].to_numpy()
+
+            # Suppress specific RuntimeWarning
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", RuntimeWarning)
+                results_raw_np = evotree.eval_np()(self.df_train)
+                np_results = self.normalize_numpy(results_raw_np)
+                np_fitness = np.sqrt(np.mean((np_results - true_values) ** 2))
+                np_fitness = round(np_fitness, FLOAT_PRECISION)
+
+            # print(f'F: {fitness_2}')
+            # print(f'DF: {df_fitness} NP: {np_fitness}, {sum(df_results)} {sum(np_results)}')
+            if sum(df_results - np_results) > 0:
+                a = results_raw_df.to_numpy()[0]
+                b = results_raw_np[0]
+                print_warning('w', f'Different eval results? {results_raw_df.to_numpy()[0]} {results_raw_np[0]}')
+                cartVel = self.df_train.iloc[0]['cartVel']
+                cartPos = self.df_train.iloc[0]['cartPos']
+                action = self.df_train.iloc[0]['action']
+                ex_tmp = str(evotree.get_expr_symlike())
+                ex_tmp = ex_tmp.replace('Max', 'max')
+                ex_tmp = ex_tmp.replace('Min', 'min')
+                ex_tmp = ex_tmp.replace('Abs', 'abs')
+                ex_tmp = ex_tmp.replace('sin', 'np.sin')
+                result_diffs = df_results - np_results
+                print(f'{result_diffs}')
+
+            fitness = np_fitness
 
             self.lut_fitness[sy_expr] = fitness  # sfeh:discuss: lut update in finalize_tree_get_meta()?
 

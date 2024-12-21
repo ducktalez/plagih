@@ -267,7 +267,7 @@ class Evolution:
     #     #         obs_prop.pop_append_evotree(1)  # just one value
     #     pass
 
-    def evolve_new_tree_depth(self, depth_goal, xt_out, p_term=0.0) -> NodeStructure:
+    def evolve_new_tree_depth(self, depth_goal, xt_out, p_term=0.0) -> Node:
 
         if self.origin_tree is not None:
 
@@ -285,7 +285,7 @@ class Evolution:
 
         return evotree
 
-    def evolve_chained_new_tree_depth(self, depth_goal, xt_out, p_term=0.0) -> NodeStructure:
+    def evolve_chained_new_tree_depth(self, depth_goal, xt_out, p_term=0.0) -> Node:
 
         evotree = self.evolve_create_random(xt_out, depth_goal, depth=0, num_rest=-1, p_term=p_term)
 
@@ -420,7 +420,7 @@ class Evolution:
 
         return tree
 
-    def evolve_mutate_branch_nodes(self, tree: NodeStructure, nodes_goal, p_term=0.0):
+    def evolve_mutate_branch_nodes(self, tree: Node, nodes_goal, p_term=0.0):
         """currently only one branch
         p_term: probability terminating the tree in a node
         """
@@ -436,7 +436,7 @@ class Evolution:
         nd.set_new_node(branch)
         return tree
 
-    def evolve_crossover(self, aa: NodeStructure, bb: NodeStructure):
+    def evolve_crossover(self, aa: Node, bb: Node):
         """Evolution with crossover of branches between two trees
         currently only one branch
 
@@ -450,7 +450,8 @@ class Evolution:
         # aa = node_deepcopy(tree1)
         # bb = node_deepcopy(tree2)
 
-        a_nds = aa.list_mutable_nodes(skip_first=True)  # sfeh ...why actually ignore root node?
+        a_nds = aa.list_mutable_nodes()
+        a_nds = a_nds[1:]  # skip_first. sfeh ...why actually ignore root node?
         #   -> this shall prevent two trees from just "swapping place" (aka only root nodes are exchanged)
         #   -> this can actually happen quite often, when trees have small complexity
         # a_nds = [x for x in a_nds if len(x) > 1]  # ignore terminal nodes

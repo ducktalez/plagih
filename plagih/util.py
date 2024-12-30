@@ -25,7 +25,7 @@ class TreeSizeError(Exception):
     pass
 
 
-class SympySimplificationError(Exception):
+class SympyError(Exception):
     """Non-important, but errors that often come up
     usually, when imaginary numbers accidentally come up in an expression"""
     pass

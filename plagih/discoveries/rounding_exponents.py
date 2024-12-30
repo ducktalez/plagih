@@ -20,21 +20,19 @@ print('N( ):\n', a, b)
 # Integer(1.234)
 a = sympy.sympify('Integer(1.234)')     # -> 1
 print('Integer()\n', a)
-# sympy.sympify('Integer(a)')         # -> TypeError: Argument of Integer should be of numeric type, got a.
-# sympy.sympify('Integer(a)', locals={'a': Symbol('a', numeric=True)})  # -> TypeError ->
 # # -> TypeError: int() argument must be a string, a bytes-like object or a real number, not 'Symbol'
 
 # Modulo (%)
 a = sympy.sympify('1.234 - (1.234 % 1)')                                  # -> 1
 b = sympy.sympify('Pow(2, (a-(a % 1)))', locals={'a': 1.234})             # -> 2
-print('Modulo (%)\n', a, b)
+print(f'Modulo (%)\n', a, b)
 # sympy.sympify('Pow(2, (a-(a % 1)))', locals={'a': Symbol('a')})       # -> Typeerror ->
 # # -> TypeError: unsupported operand type(s) for %: 'Symbol' and 'One'
 
 # round()
 a = sympy.sympify('round(1.234)')             # -> 1
 b = sympy.sympify('Pow(2, round(1.234))')     # -> 2
-print('round(1.234)\n', a, b)
+print(f'round(1.234)\n', a, b)
 # c = sympy.sympify('Pow(2, round(a))')         # TypeError: Cannot round symbolic expression
 
 # # custom Rnd_Dmy class
@@ -58,7 +56,7 @@ class Rnd_Dmy(sympy.Function):
             return None  # Keep symbolic
         # Handle numerical case
         elif a.is_number:
-            return sympy.Integer(round(a))  # Ensure it's a SymPy Integer
+            return round(a)  # todo sympy.Integer(round(a))  # Ensure it's a SymPy Integer
 
     def __call__(self, a):
         # Handle numerical evaluation (for lambdify or direct calls)

@@ -5,8 +5,11 @@
 
 ## Ablage/Todos
 
+- Rewrite tree class
+- display pareto candidates as
 - evaluation alternatives
-  - np-fun in every class, vectorize
+  - compare runtime
+  - done! np-fun in every class, vectorize
   - tf-fun in every class
   - regular python code implementation
 - type-hints!!
@@ -133,7 +136,8 @@
     Actually, we should make an ordered Dataframe, to do this.
     We just need a measurement, a metric, to value the amount of actual hits and non/bad hits.
     Similar to entropy, in order to know, which trees should be merged together.
-
+- progress-print anzeigen des aktuell erzeugten Baum, zum durchlaufen
+- nonzero-operator? making zero-ish inputs slightly positive? 
 
 # Simplifications/representations
 

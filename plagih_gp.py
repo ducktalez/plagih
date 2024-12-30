@@ -3,9 +3,6 @@ This starts the whole genetic programming.
 This (extra) file was added to have a file in the root directory that can be started.
 """
 from sklearn.model_selection import train_test_split
-
-from plagih.evolve import Evolution
-from plagih.gp import selection_tournament, ExplainableGP
 from plagih.trees import *
 from plagih.util import *
 import pandas as pd
@@ -49,7 +46,10 @@ def _test_simple(chained_on=True):
             d = np.clip(int(random.normalvariate(3.5, 1)), 3, 5)
             tree = gp.evolve.evolve_new_tree_depth(d, float, p_term=0)
             tree = tree_simplification(tree, allow_chain=chained_on)
-            tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
+            try:
+                tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
+            except Exception as todo:
+                tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
             return tree
 
         gp.end_generation()
@@ -194,7 +194,7 @@ def _test_random_pop(chained_on=True):
 
 
 if __name__ == "__main__":
-    _test_simple(chained_on=True)
     _test_random_pop(chained_on=True)
-    _test_simple(chained_on=False)
     _test_random_pop(chained_on=False)
+    _test_simple(chained_on=False)
+    _test_simple(chained_on=True)

@@ -295,9 +295,8 @@ def expr_sympify(expr_raw):
     # I[^f] (searching "I", but ignoring "Ifte" though by not-having a "f" as second letter), old version: of \*I[^f]
     #  (pycharm also USUALLY does not check capitalized letters; i vs. I)
     # find: zoo, inf, *I, nan, (I)   , but ignore I in Ifte
-    # re.search('(zoo|inf|nan|I[^f]|\\*I|re\()', str(expr_sym))
-    if re.search('(zoo|inf|nan|I[^f])', expr_sym):  # sfeh outdated
-        raise Exception(f'Simplification failed for expression: {expr_sym}')
+    # if re.search('(zoo|inf|nan|I[^f]|\\*I|re\()', str(expr_sym)):  # sfeh outdated
+    #     raise Exception(f'sedfg: {expr_sym}')
 
     # if DEBUG_DUMMY:
     #     b = str(simplify(expr_sym))

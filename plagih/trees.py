@@ -275,18 +275,52 @@ class Node(NodeStructure):
     #         self.set_childs(args)  # todo haha! this does not evaluate and thus saves some time and errorz
     #     except Exception as todo:
 
-    def eval_np_debug(self, df):
-        if self.is_term():
-            my_np = self.eval_np()
-            res = my_np(df)
-        elif self.is_operator():
-            child_values = [ccl.eval_np_debug(df) for ccl in self.get_childs()]
-            my_np = self.eval_np(*child_values)
-            res = my_np(df)
-        else:
-            raise NotImplementedError("Evaluation not implemented for this node type.")
+    # def eval_np_debug(self, df):
+    #     if self.is_term():
+    #         my_np = self.eval_np_debug(df)
+    #         res = my_np(df)
+    #     elif self.is_operator():
+    #         try:
+    #             child_values = self.get_np_child_lambdas()
+    #             my_np = self.eval_np_debug(*child_values)
+    #             res = my_np(df)
+    #         except Exception as todo:
+    #             child_values = [ccl.eval_np_debug(df) for ccl in self.get_childs()]
+    #             my_np = self.eval_np(*child_values)
+    #             res = my_np(df)
+    #     else:
+    #         raise NotImplementedError("Evaluation not implemented for this node type.")
+    #
+    #     return res
 
-        return res
+    def eval_np_debug(self, *args):
+        """
+        Debug-friendly version of eval_np() without vectorization or lambda functions.
+
+        Args:
+            *args: Optional additional arguments (e.g., for lambdified inputs).
+
+        Returns:
+            The computed NumPy result as a raw NumPy array.
+        """
+        # Step 1: Evaluate all child nodes sequentially
+        child_results = []
+        for child in self.children:
+            child_eval = child.eval_np(*args)  # Recursively evaluate each child
+            child_result = child_eval(None)  # Pass None or the required DataFrame
+            print(f"Child result: {child_result}")  # Debug: print intermediate results
+            child_results.append(child_result)
+
+        # Step 2: Apply the node's np_fun to the collected child results
+        try:
+            result = self.np_fun(*child_results)
+            print(f"Node result after applying np_fun: {result}")  # Debug: print the final result
+        except Exception as e:
+            print(f"Error while applying np_fun: {e}")
+            raise
+
+        # Step 3: Return the final result
+        return result
 
     # def eval_np(self, *args):
     #     """
@@ -375,7 +409,7 @@ class Node(NodeStructure):
         # if isinstance(typus, (ChainableOp, OperatorChained)):
         #     arity = typus.get_arity()
         if childs is not None:
-            # todo use CHainable Versions of
+            # todo use chainable Versions of
             #   -> check, if child length fits self.node and
             # todo idee: represent every node as ALL versions of itself. active version, simplified, original
             ...
@@ -396,7 +430,7 @@ class Node(NodeStructure):
         _cs = self.get_childs()
 
         if self.is_term():
-            _r = _sym(_cs)
+            _r = _sym(*_cs)
 
         elif isinstance(self, Piecewise):  # sfeh:open delete ONE of them?
             # _sym = sympy.Piecewise
@@ -408,7 +442,7 @@ class Node(NodeStructure):
             _cs = [cc.get_sympy_expr(simplimore=simplimore) for cc in _cs]
 
             try:
-                _r = _sym(_cs)  # noqa (_sym is definitely assigned)
+                _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
             except (ValueError, TypeError) as ex:
                 if sym_expr_check_regex(ex):
                     raise SympyError(f'getsympyexpr-err| {ex}')
@@ -1200,6 +1234,7 @@ class BaseOperator(Node):
 
     def get_np_child_lambdas(self, *args):
         ccl = [cc.eval_np(*args) for cc in self.get_childs()]
+        # ccl -> [[np-lambda/vector], [np-lambda/vector]]
         return ccl
 
     # Add debug prints
@@ -1208,7 +1243,7 @@ class BaseOperator(Node):
         # print(f"Evaluating Node: {self}")
 
         def node_lambda(df):
-            child_values = [ccl(df) for ccl in self.get_np_child_lambdas()]
+            child_values = self.get_np_child_lambdas()
             # print(f"Child Values for {self}: {child_values}")
             return self.np_fun(*child_values)
 
@@ -1276,7 +1311,7 @@ class Trigonometry(MathOperator):
     pass
 
 
-class MinMaxBase(MathOperator):
+class BaseMinMax(MathOperator):
     pass
 
 
@@ -1306,7 +1341,7 @@ class Terminal(Node):  # sfeh sympy.Atom
 class Boolean(Terminal):
     # sfeh:discuss just for True/False?
     xtype = ((), bool)  # sfeh ((None,), bool)?
-    symfun = lambda a: sympy.S.true if a[0] else ~sympy.S.true  # sympy.logic.boolalg.Boolean  # sfeh:discuss
+    symfun = lambda *a: sympy.S.true if a[0] else ~sympy.S.true  # sympy.logic.boolalg.Boolean  # sfeh:discuss
     np_fun = np.array
     showme = 'Boolean'
     # tflow = lambda arg: tf.constant(arg, dtype=tf.bool)
@@ -1320,7 +1355,7 @@ class Boolean(Terminal):
 
 class Number(Terminal):
     xtype = ((), float)
-    symfun = lambda a: sympy.Float(float(a[0]), FLOAT_PRECISION)
+    symfun = lambda *a: sympy.Float(float(a[0]), FLOAT_PRECISION)
     np_fun = np.array
     # sympy.Rational(0.1) -> 3602879701896397/36028797018963968
     # sympy.Rational('0.1') -> 1/10
@@ -1339,7 +1374,7 @@ class Symbol(Terminal):
     This was used to deal with negative values
         self.name = nlabl if nlabl[0] != '-' else nlabl[1:]
     """
-    symfun = lambda a: a[0]  # sfeh, no symbol-conversion; no reason for.
+    symfun = lambda *a: a[0]  # sfeh, no symbol-conversion; no reason for.
     np_fun = None
     # np_fun =
     xtype = ((), float)
@@ -1371,30 +1406,44 @@ def cast_input(value: Any) -> Node:
 
 class Add(MathOperator, ChainableOp):
     """Chained-version is Sum, but we call it chain, as vector also is taken"""
-    symfun = lambda a: sympy.Add(a[0], a[1])
+    symfun = lambda *a: sympy.Add(a[0], a[1])
     symfun2 = lambda *a: sympy.Add(*a)
-    np_fun = np.add
+    np_fun = lambda a: np.sum(a)  # add.reduce(*a, axis=0)
+    # np_fun = np.sum
+    # np_fun = lambda *a: np.sum(*a, axis=0)
     showme = 'Add'
     sy_str = '({0} + {1})'
     formulae_str = '({} + {})'
     repr_str = 'Add{},[{},{}]'
     xtype = ((float, float), float)
     symfun_chain = lambda a: sympy.Add(*a)
-    np_fun_chain = lambda *a: np.sum(a)  # n
+    np_fun_chain = lambda *a: np.sum(*a)  # n
     sy_str_chain = 'Add({})'
     formulae_str_chain = 'Add({})'
     repr_str_chain = 'AddChain{},[{}]'
-    inline_sep_chain = ' + '
+    inline_sep = ' + '
     xtype_chain = ([(float,)], float)
     xtype_input = float
+
+    # def eval_np(self, *args):
+    #     """
+    #     Evaluate the node using NumPy with its child nodes.
+    #
+    #     Args:
+    #         *args: Optional additional arguments (e.g., for lambdified inputs).
+    #
+    #     Returns:
+    #         A callable function that computes the node's value.
+    #     """
+    #     return lambda df: self.np_fun(*self.get_np_child_lambdas())
 
 
 class DivFraction(MathOperator):
     """x**-1
     aka InverseFraction aka DivFraction aka Reciprocal"""
     xtype = ((float,), float)
-    symfun = lambda a: sympy.Pow(a[0], sympy.S.NegativeOne)
-    np_fun = lambda *a: np.reciprocal(float(*a))
+    symfun = lambda *a: sympy.Pow(a[0], sympy.S.NegativeOne)
+    np_fun = np.reciprocal
     # sfeh np.reciprocal(2) -> 0 np.reciprocal(float(2)) -> 0.5
     # -> it is okay, 1/(int) is just always zero
     # np_fun = lambda *a: np.reciprocal(float(*a))  # sfeh rename class?
@@ -1404,7 +1453,7 @@ class DivFraction(MathOperator):
 
 
 class Pow(MathOperator):
-    symfun = lambda a: sympy.Pow(a[0], a[1])
+    symfun = lambda *a: sympy.Pow(a[0], a[1])
     np_fun = np.power
     showme = 'Pow'
     sy_str = '({0})**({1})'
@@ -1413,7 +1462,7 @@ class Pow(MathOperator):
 
 
 class Abs(MathOperator):
-    symfun = lambda a: sympy.Abs(a[0])
+    symfun = lambda *a: sympy.Abs(a[0])
     np_fun = np.absolute  # np.fabs works only for non-complex numbers
     showme = 'Abs'
     sy_str = 'Abs({})'
@@ -1423,7 +1472,7 @@ class Abs(MathOperator):
 
 class Sign(MathOperator, NoSymCapitalized):
     # does not work in string, but irrelevant. sympy.simplify('sign(-a)') -> -sign(a)
-    symfun = lambda a: sympy.sign(a[0])
+    symfun = lambda *a: sympy.sign(a[0])
     np_fun = np.sign
     showme = 'Sign'
     sy_str = 'sign({})'
@@ -1433,7 +1482,7 @@ class Sign(MathOperator, NoSymCapitalized):
 
 class Log(MathOperator, NoSymCapitalized):
     # Log isactually Ln (base e). Log/Ln is the same, idk fuck Log10
-    symfun = lambda a: sympy.log(a[0])
+    symfun = lambda *a: sympy.log(a[0])
     np_fun = np.log
     showme = 'Log'
     sy_str = 'log({})'
@@ -1442,7 +1491,7 @@ class Log(MathOperator, NoSymCapitalized):
 
 
 class Cos(Trigonometry, NoSymCapitalized):
-    symfun = lambda a: sympy.cos(a[0])
+    symfun = lambda *a: sympy.cos(a[0])
     np_fun = np.cos
     showme = 'Cos'
     sy_str = 'cos({})'
@@ -1451,7 +1500,7 @@ class Cos(Trigonometry, NoSymCapitalized):
 
 
 class Sin(Trigonometry, NoSymCapitalized):
-    symfun = lambda a: sympy.sin(a[0])
+    symfun = lambda *a: sympy.sin(a[0])
     np_fun = np.sin
     showme = 'Sin'
     sy_str = 'sin({})'
@@ -1462,7 +1511,7 @@ class Sin(Trigonometry, NoSymCapitalized):
 class Tan(Trigonometry, NoSymCapitalized):
     # sfeh:discuss actually rename classes.
     # they do not have to match sympy expressions/classes
-    symfun = lambda a: sympy.tan(a[0])
+    symfun = lambda *a: sympy.tan(a[0])
     np_fun = np.tan
     showme = 'Tan'
     sy_str = 'tan({})'
@@ -1471,7 +1520,7 @@ class Tan(Trigonometry, NoSymCapitalized):
 
 
 class Acos(Trigonometry, NoSymCapitalized):
-    symfun = lambda a: sympy.acos(a[0])
+    symfun = lambda *a: sympy.acos(a[0])
     np_fun = np.arccos  # arccosh
     showme = 'Acos'
     sy_str = 'acos({})'
@@ -1481,7 +1530,7 @@ class Acos(Trigonometry, NoSymCapitalized):
 
 class Asin(Trigonometry, NoSymCapitalized):
     """"""
-    symfun = lambda a: sympy.asin(a[0])
+    symfun = lambda *a: sympy.asin(a[0])
     np_fun = np.arcsin
     showme = 'Asin'
     sy_str = 'asin({})'
@@ -1490,7 +1539,7 @@ class Asin(Trigonometry, NoSymCapitalized):
 
 
 class Atan(Trigonometry, NoSymCapitalized):
-    symfun = lambda a: sympy.atan(a[0])
+    symfun = lambda *a: sympy.atan(a[0])
     np_fun = np.arctan
     showme = 'Atan'
     sy_str = 'atan({})'
@@ -1499,7 +1548,7 @@ class Atan(Trigonometry, NoSymCapitalized):
 
 
 class Tanh(Trigonometry, NoSymCapitalized):
-    symfun = lambda a: sympy.tanh(a[0])
+    symfun = lambda *a: sympy.tanh(a[0])
     np_fun = np.tanh
     showme = 'Tanh'
     sy_str = 'tanh({})'
@@ -1508,7 +1557,7 @@ class Tanh(Trigonometry, NoSymCapitalized):
 
 
 class Sinh(Trigonometry, NoSymCapitalized):
-    symfun = lambda a: sympy.sinh(a[0])
+    symfun = lambda *a: sympy.sinh(a[0])
     np_fun = np.sinh
     showme = 'Sinh'
     sy_str = 'sinh({})'
@@ -1517,7 +1566,7 @@ class Sinh(Trigonometry, NoSymCapitalized):
 
 
 class Cosh(Trigonometry, NoSymCapitalized):
-    symfun = lambda a: sympy.cosh(a[0])
+    symfun = lambda *a: sympy.cosh(a[0])
     np_fun = np.cosh
     showme = 'Cosh'
     sy_str = 'cosh({})'
@@ -1527,7 +1576,7 @@ class Cosh(Trigonometry, NoSymCapitalized):
 
 class Not(LogicOperator):
     """not"""
-    symfun = lambda a: sympy.Not(a[0])
+    symfun = lambda *a: sympy.Not(a[0])
     np_fun = np.logical_not
     showme = 'Not'
     sy_str = '~({})'
@@ -1538,7 +1587,7 @@ class Not(LogicOperator):
 class Eq(RelationalOperator):
     """a == b"""
     # sfeh:debug Eq and Ne (), which also work for boolean inputs in sympy
-    symfun = lambda a: sympy.Eq(a[0], a[1])
+    symfun = lambda *a: sympy.Eq(a[0], a[1])
     np_fun = np.equal
     showme = 'Eq'  # '==' not working in sympy!
     sy_str = 'Eq({0}, {1})'
@@ -1548,7 +1597,7 @@ class Eq(RelationalOperator):
 
 class Ne(RelationalOperator):
     """a != b"""
-    symfun = lambda a: sympy.Ne(a[0], a[1])
+    symfun = lambda *a: sympy.Ne(a[0], a[1])
     np_fun = np.not_equal
     showme = 'Ne'  # != not working in sympy
     sy_str = 'Ne({0}, {1})'
@@ -1557,14 +1606,14 @@ class Ne(RelationalOperator):
 
 
 class Mul(MathOperator, ChainableOp):
-    symfun = lambda a: sympy.Mul(a[0], a[1])
-    np_fun = np.multiply
+    symfun = lambda *a: sympy.Mul(a[0], a[1])
+    np_fun = np.multiply.reduce
     showme = 'Mul'  #
     sy_str = '({0} * {1})'
     repr_str = 'Mul{},[{}, {}]'
     xtype = ((float, float), float)
     symfun_chain = lambda a: sympy.Mul(*a)
-    np_fun_chain = lambda *a: np.prod(a)
+    # np_fun = lambda *a: np.prod(a)
     sy_str_chain = 'Mul({})'
     repr_str_chain = 'MulChain{},[{}]'
     inline_sep = ' * '
@@ -1574,8 +1623,9 @@ class Mul(MathOperator, ChainableOp):
 
 class And(LogicOperator, ChainableOp):
     symfun = lambda *a: sympy.And(*a)  # todo
-    # symfun = lambda a: sympy.And(a[0], a[1])  # todo
-    np_fun = np.logical_and
+    # symfun = lambda *a: sympy.And(a[0], a[1])  # todo
+    # np_fun = np.logical_and  # only arity-2
+    np_fun = lambda *a: np.all(a, axis=0)
     showme = 'And'
     sy_str = '({0} & {1})'
     repr_str = 'And{},[{}, {}]'
@@ -1592,8 +1642,9 @@ class And(LogicOperator, ChainableOp):
 
 
 class Or(LogicOperator, ChainableOp):
-    symfun = lambda a: sympy.Or(a[0], a[1])
-    np_fun = np.logical_or
+    symfun = lambda *a: sympy.Or(a[0], a[1])
+    # np_fun = np.logical_or  # only arity-2
+    np_fun = lambda *a: np.any(a, axis=0)
     showme = 'Or'
     sy_str = '({0}|{1})'
     repr_str = 'Or{},[{}, {}]'
@@ -1610,8 +1661,8 @@ class Or(LogicOperator, ChainableOp):
 class Xor(LogicOperator, NoSymCapitalized, ChainableOp):
     """
     Caution: loading '(a ^ b)', the sympy-Xor-representation, is interpreted as a**b"""
-    symfun = lambda a: sympy.Xor(a[0], a[1])
-    np_fun = np.logical_xor
+    symfun = lambda *a: sympy.Xor(*a)
+    np_fun = lambda *a: np.logical_xor.reduce(a, axis=0)
     showme = 'Xor'
     sy_str = 'Xor({}, {})'  # 'a ^ b'
     repr_str = 'Xor{},[{}, {}]'
@@ -1629,7 +1680,7 @@ class Xor(LogicOperator, NoSymCapitalized, ChainableOp):
 
 class ITE(LogicOperator):
     """sfeh:is this really required? currently not in use"""
-    symfun = lambda a: sympy.ITE(a[0], a[1], a[2])
+    symfun = lambda *a: sympy.ITE(a[0], a[1], a[2])
     # np_fun = lambda *a: np.logical_or(np.logical_and(*a[0], *a[1]), np.logical_and(np.logical_not(*a[0]), *a[2]))
     # np_fun = lambda a: np.logical_or(np.logical_and(a[0], a[1]), np.logical_and(np.logical_not(a[0]), a[2]))
     # np_fun = lambda a, b, c: np.logical_or(np.logical_and(a, b), np.logical_and(np.logical_not(a), c))
@@ -1641,9 +1692,9 @@ class ITE(LogicOperator):
     # tflow = lambda *args: tf.cond(args[0], true_fn=args[1], false_fn=args[2])
 
 
-class Min(MinMaxBase, ChainableOp):
-    symfun = lambda a: sympy.Min(a[0], a[1])
-    np_fun = np.minimum  # sfeh max, maximum, maximum.reduce
+class Min(BaseMinMax, ChainableOp):
+    symfun = lambda *a: sympy.Min(*a)
+    np_fun = lambda *a: np.minimum.reduce(a)  # sfeh max, maximum, maximum.reduce
     showme = 'Min'
     sy_str = 'Min({0},{1})'
     repr_str = 'Min{},[{}, {}]'
@@ -1664,9 +1715,9 @@ class Min(MinMaxBase, ChainableOp):
     #     raise TypeError("Unsupported type for numerical evaluation in Min(MinMaxBase, ChainableOp)")
 
 
-class Max(MinMaxBase, ChainableOp):
-    symfun = lambda a: sympy.Max(a[0], a[1])
-    np_fun = np.maximum  # sfeh max, maximum, maximum.reduce
+class Max(BaseMinMax, ChainableOp):
+    symfun = lambda *a: sympy.Max(*a)
+    np_fun = lambda *a: np.maximum.reduce(a)  # sfeh max, maximum, maximum.reduce
     showme = 'Max'
     sy_str = 'Max({0}, {1})'
     repr_str = 'Max{},[{}, {}]'
@@ -1690,7 +1741,7 @@ class Max(MinMaxBase, ChainableOp):
 
 
 class Lt(RelationalOperator):
-    symfun = lambda a: sympy.Lt(a[0], a[1])
+    symfun = lambda *a: sympy.Lt(a[0], a[1])
     np_fun = np.less
     showme = 'Lt'
     sy_str = '({0} < {1})'
@@ -1699,7 +1750,7 @@ class Lt(RelationalOperator):
 
 
 class Le(RelationalOperator):
-    symfun = lambda a: sympy.Le(a[0], a[1])
+    symfun = lambda *a: sympy.Le(a[0], a[1])
     np_fun = np.less_equal
     showme = 'Le'
     sy_str = '({0} <= {1})'
@@ -1708,7 +1759,7 @@ class Le(RelationalOperator):
 
 
 class Gt(RelationalOperator, PleaseUsePartnerOp):
-    symfun = lambda a: sympy.Gt(a[0], a[1])
+    symfun = lambda *a: sympy.Gt(a[0], a[1])
     np_fun = np.greater
     showme = 'Gt'
     sy_str = '({0} > {1})'
@@ -1718,7 +1769,7 @@ class Gt(RelationalOperator, PleaseUsePartnerOp):
 
 class Ge(RelationalOperator, PleaseUsePartnerOp):
     xtype = ((float, float), bool)
-    symfun = lambda a: sympy.Ge(a[0], a[1])
+    symfun = lambda *a: sympy.Ge(a[0], a[1])
     np_fun = np.greater_equal
     showme = 'Ge'
     sy_str = '({0} >= {1})'
@@ -1726,7 +1777,7 @@ class Ge(RelationalOperator, PleaseUsePartnerOp):
 
 
 class Square(MathOperator):
-    symfun = lambda a: sympy.Pow(a[0], 2)
+    symfun = lambda *a: sympy.Pow(a[0], 2)
     np_fun = np.square
     xtype = ((float,), float)
     showme = 'Square'
@@ -1735,7 +1786,7 @@ class Square(MathOperator):
 
 
 class Exp(MathOperator):
-    symfun = lambda a: sympy.exp(a[0])
+    symfun = lambda *a: sympy.exp(a[0])
     np_fun = np.exp
     showme = 'Exp'
     sy_str = '{}**E'
@@ -1744,7 +1795,7 @@ class Exp(MathOperator):
 
 
 class Exp2(MathOperator):
-    symfun = lambda a: sympy.Pow(2, a[0])
+    symfun = lambda *a: sympy.Pow(2, a[0])
     np_fun = np.exp2
     xtype = ((float,), float)
     showme = 'Exp2'
@@ -1754,7 +1805,7 @@ class Exp2(MathOperator):
 
 class Sub(MathOperator):
     xtype = ((float, float), float)
-    symfun = lambda a: sympy.Add(a[0], -a[1])
+    symfun = lambda *a: sympy.Add(a[0], -a[1])
     np_fun = np.subtract
     showme = 'Sub'
     sy_str = '({0} - {1})'
@@ -1764,7 +1815,7 @@ class Sub(MathOperator):
 class Ifte(OperatorArity):  # sfeh:Discuss: ChainableOp
     """Also class Piecewise"""
     xtype = ((bool, float, float), float)
-    symfun = lambda a: sympy.Piecewise((a[1], a[0]), (a[2], True))
+    symfun = lambda *a: sympy.Piecewise((a[1], a[0]), (a[2], True))
     np_fun = np.where
     showme = 'Ifte'
     sy_str = 'Ifte({0},{1},{2})'
@@ -1792,7 +1843,7 @@ class Ifte(OperatorArity):  # sfeh:Discuss: ChainableOp
 class Piecewise(ChainableOp):
     # ogclass = Ifte
     # xtype = ((float, bool), float)
-    symfun = lambda a: sympy.Piecewise(*a)
+    symfun = lambda *a: sympy.Piecewise(*a)
     np_fun = None
     showme = 'Piecewise'
     sy_str = 'Piecewise({})'
@@ -1801,6 +1852,7 @@ class Piecewise(ChainableOp):
     # these must be handeled differently, so commented out
     xtype = ([(ExprCondPair,)], float)
     xtype_chain = ExprCondPair  # discuss (float, bool)
+    xtype_input = ExprCondPair
 
     def eval_np(self, *args):
         pairs = [(c.childs[0].eval_np(*args), c.childs[1].eval_np(*args)) for c in self.get_childs()]
@@ -1819,20 +1871,28 @@ class Round(MathOperator):
 
     """
     xtype = ((float,), float)
-    # symfun = lambda a: a.round(0) if a.is_number else Round_Dummy(a)
+    # symfun = lambda *a: a.round(0) if a.is_number else Round_Dummy(a)
     # symfun: Callable[[sympy.Expr], sympy.Expr] = lambda a: a.round(0) if a.is_number else Round(a)  # sfeh (next line)
     # this is here to hint the type, as sympy will throw a warning otherwise, leading to this
-    symfun = lambda a: Round_Dummy(a[0])
+    symfun = lambda *a: Round_Dummy(a[0])
     np_fun = np.round
     showme = 'Round'
     sy_str = 'Round_Dummy({},1)'
     repr_str = 'Round_Dummy{},[{}]'
 
+    def eval_np(self, *args: Any):
+        def _safe_round(input):
+            if not isinstance(input, (int, float, np.ndarray)):
+                raise TypeError(f"Unsupported input type for np.round: {type(input)}")
+            return np.round(input)
+
+        return lambda df: _safe_round(*[ccl(df) for ccl in self.get_np_child_lambdas()])  # Replace self.some_value with your actual input
+
 
 class PowRounded(MathOperator):
     """Requires class Round_Dummy!
     Rounds the exponent; sfeh:idea clip exponent?"""
-    symfun = lambda a: sympy.Pow(a[0], Round_Dummy(a[1]))
+    symfun = lambda *a: sympy.Pow(a[0], Round_Dummy(a[1]))
     np_fun = staticmethod(lambda base, exponent: np.power(base, np.int_(np.round(exponent))))
     # np_fun = lambda base, exponent: np.power(base, np.round(exponent))
     # np_fun = lambda *a: np.power(*a[0], np.round(*a[1]))
@@ -1843,18 +1903,18 @@ class PowRounded(MathOperator):
     xtype = ((float, float), float)
 
     def eval_np(self, *args):
-        return lambda df: self.np_fun(*[ccl(df) for ccl in self.get_np_child_lambdas()])
+        return lambda df: self.np_fun(*self.get_np_child_lambdas())
 
 # sfeh:open
 # class Log1p(MathOperator):
 #     # https://docs.sympy.org/latest/modules/codegen.html#sympy.codegen.cfunctions.log1p
 #     xtype = ((float,), float)
-#     symfun = lambda a: sympy.log(a + 1)
+#     symfun = lambda *a: sympy.log(a + 1)
 #     showme = 'log1p'
 
 
 class Div(MathOperator):
-    symfun = lambda a: sympy.Mul(a[0], 1 / a[1])
+    symfun = lambda *a: sympy.Mul(a[0], 1 / a[1])
     np_fun = np.divide
     showme = 'Div'
     sy_str = '({0}/{1})'
@@ -1866,7 +1926,7 @@ class Sqrt(MathOperator):
     """Capitalized class name, even though its a sympy function
     In SymPy, sqrt(x) is just a shortcut to x**Rational(1, 2)"""
     xtype = ((float,), float)
-    symfun = lambda a: sympy.sqrt(a[0])  # same as: lambda a: sympy.Pow(a, sympy.S.Half)
+    symfun = lambda *a: sympy.sqrt(a[0])  # same as: lambda a: sympy.Pow(a, sympy.S.Half)
     np_fun = np.sqrt
     showme = 'Sqrt'
     sy_str = 'sqrt({})'
@@ -1876,13 +1936,13 @@ class Sqrt(MathOperator):
 # class Divide_no_nan(Operator):
 #     # class-name = 'Divide_no_nan'  # sfeh??
 #     tflow = tf.math.divide_no_nan
-#     symfun = lambda a, b: sympy.Mul(a, )
+#     symfun = lambda *a, b: sympy.Mul(a, )
 #     xtype = ((float, float), float)
 
 
 class Usub(MathOperator):
     xtype = ((float,), float)
-    symfun = lambda a: sympy.Mul(a[0], -1)
+    symfun = lambda *a: sympy.Mul(a[0], -1)
     np_fun = np.negative
     # tf_fun = tf.negative
     showme = 'Usub'  # sfeh
@@ -1890,9 +1950,9 @@ class Usub(MathOperator):
     repr_str = 'Usub{},[{}]'
 
 
-class Clip(MinMaxBase, CustomOperator):
+class Clip(BaseMinMax, CustomOperator):
     # sfeh:open use this
-    symfun = lambda a: sympy.Min(sympy.Max(a[0], a[1]), a[2])
+    symfun = lambda *a: sympy.Min(sympy.Max(a[0], a[1]), a[2])
     np_fun = np.clip  # lambda a, b, c: np.clip(a, b, c)
     # tf_fun = lambda a, b, c: tf.clip_by_value(a, b, c)
     showme = 'Clip'
@@ -1908,7 +1968,7 @@ class ExprCondPair_Dummy(Node_Dummy):  # noqa
     sfeh:discuss
     The only purpose is to wrap the results for a Node-structure, where every Node has childs with other nodes"""
     arity = 2
-    symfun = lambda a: ExprCondPair(a[0], a[1])
+    symfun = lambda *a: ExprCondPair(a[0], a[1])
     np_fun = None
     showme = 'ExprCondPair_Dummy'  # sfeh... mmake this a tuple?
     sy_str = 'ExprCondPair({0}, {1})'
@@ -3206,11 +3266,15 @@ class ExplainableGP:
             # Suppress specific RuntimeWarning
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)
-                results_raw_np = evotree.eval_np()
+                # results_raw_np = evotree.eval_np()
                 try:
-                    results_raw_np = results_raw_np(self.df_train)
+                    results_raw_np = evotree.eval_np_debug(self.df_train)
                 except Exception as todo:
-                    results_raw_np = results_raw_df  # todo keep this; but!
+                    results_raw_np = evotree.eval_np_debug(self.df_train)
+                # try:
+                #     results_raw_np = results_raw_np(self.df_train)
+                # except Exception as todo:
+                #     results_raw_np = results_raw_df  # todo keep this; but!
                 np_results = self.normalize_numpy(results_raw_np)
                 np_fitness = np.sqrt(np.mean((np_results - true_values) ** 2))
                 np_fitness = round(np_fitness, FLOAT_PRECISION)
@@ -3604,26 +3668,24 @@ if __name__ == '__main__':
         d = {float: lambda: np.random.random(),
              bool: lambda: np.random.choice([True, False])}
         try:
+            xtype_me = c.xtype[1]
             if issubclass(c, ChainableOp):
                 xtype_childs = c.xtype_input
-                xtype_me = c.xtype_chain
-                inputs_sy = [d.get(xtype_childs)() for _ in range(np.random.choice([2, 3]))]
-                inputs_np = np.array([[x] for x in inputs_sy])
+                inputs_sy = [d.get(xtype_childs)() for _ in range(4)]
             else:
                 xtype_childs = c.xtype[0]
-                xtype_me = c.xtype[1]
                 inputs_sy = [d.get(x)() for x in xtype_childs]
-                inputs_np = [np.array(x) for x in inputs_sy]
+            inputs_np = np.array([[x] for x in inputs_sy])
             symfun = c.symfun
             np_fun = c.np_fun
-            res_sy = symfun(*inputs_sy)  # symfun(inputs_sy), np_fun(*inputs_np)
+            res_sy = symfun(*inputs_sy)  # symfun(*inputs_sy), np_fun(*inputs_np)
             res_np = np_fun(*inputs_np)
             res_sy = xtype_me(res_sy)
             res_np = xtype_me(res_np)
             if abs(res_sy-res_np) < 0.0001:
                 print(c.__name__, res_sy, res_np)
             else:
-                # print('FAILED!', c.__name__, res_sy, res_np, (res_sy-res_np), inputs_sy)
+                print('FAILED!', c.__name__, res_sy, res_np, (res_sy-res_np), inputs_sy)
                 pass
         except Exception as ex:
             if c in [ExprCondPair_Dummy, Piecewise, Boolean, Number, Symbol]:  # sfeh

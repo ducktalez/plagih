@@ -305,9 +305,9 @@ class Node(NodeStructure):
         """
         # Step 1: Evaluate all child nodes sequentially
         child_results = []
-        for child in self.children:
+        for child in self.get_childs():
             child_eval = child.eval_np(*args)  # Recursively evaluate each child
-            child_result = child_eval(None)  # Pass None or the required DataFrame
+            child_result = child_eval()  # Pass None or the required DataFrame
             print(f"Child result: {child_result}")  # Debug: print intermediate results
             child_results.append(child_result)
 
@@ -954,6 +954,9 @@ class Node(NodeStructure):
     def eval_np(self, *args)  -> Callable[[np.ndarray], np.ndarray]:
         ...
 
+    def eval_now(self, df, *args)  -> [np.ndarray]:
+        ...
+
 
 def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
     """
@@ -1237,17 +1240,26 @@ class BaseOperator(Node):
         # ccl -> [[np-lambda/vector], [np-lambda/vector]]
         return ccl
 
-    # Add debug prints
+    def get_np_child_now(self, df, *args):
+        ccl = [cc.eval_now(df, *args) for cc in self.get_childs()]
+        return ccl
+
     def eval_np(self, *args):
-        # Debug: Print the node type
-        # print(f"Evaluating Node: {self}")
 
         def node_lambda(df):
-            child_values = self.get_np_child_lambdas()
-            # print(f"Child Values for {self}: {child_values}")
+            child_values = self.get_np_child_lambdas(*args)
             return self.np_fun(*child_values)
 
         return node_lambda
+
+    def eval_now(self, df, *args) -> [np.ndarray]:
+        child_values = self.get_np_child_now(df, *args)
+        try:
+            res = self.np_fun(*child_values)
+        except Exception as todo:
+            res = self.np_fun(child_values)
+
+        return res
 
 
 class OperatorArity(BaseOperator):
@@ -1337,6 +1349,10 @@ class Terminal(Node):  # sfeh sympy.Atom
     def set_value(self, val):
         self.set_childs(val)
 
+    def eval_now(self, df, *args)  -> [np.ndarray]:
+        res = self.eval_np()(df)
+        return res
+
 
 class Boolean(Terminal):
     # sfeh:discuss just for True/False?
@@ -1408,7 +1424,7 @@ class Add(MathOperator, ChainableOp):
     """Chained-version is Sum, but we call it chain, as vector also is taken"""
     symfun = lambda *a: sympy.Add(a[0], a[1])
     symfun2 = lambda *a: sympy.Add(*a)
-    np_fun = lambda a: np.sum(a)  # add.reduce(*a, axis=0)
+    np_fun = lambda *a: np.add(*a)  # add.reduce(*a, axis=0)
     # np_fun = np.sum
     # np_fun = lambda *a: np.sum(*a, axis=0)
     showme = 'Add'
@@ -1436,6 +1452,22 @@ class Add(MathOperator, ChainableOp):
     #         A callable function that computes the node's value.
     #     """
     #     return lambda df: self.np_fun(*self.get_np_child_lambdas())
+
+
+class Mul(MathOperator, ChainableOp):
+    symfun = lambda *a: sympy.Mul(a[0], a[1])
+    np_fun = np.multiply.reduce
+    showme = 'Mul'  #
+    sy_str = '({0} * {1})'
+    repr_str = 'Mul{},[{}, {}]'
+    xtype = ((float, float), float)
+    symfun_chain = lambda a: sympy.Mul(*a)
+    # np_fun = lambda *a: np.prod(a)
+    sy_str_chain = 'Mul({})'
+    repr_str_chain = 'MulChain{},[{}]'
+    inline_sep = ' * '
+    xtype_chain = ([(float,)], float)
+    xtype_input = float
 
 
 class DivFraction(MathOperator):
@@ -1605,27 +1637,11 @@ class Ne(RelationalOperator):
     xtype = ((float, float), bool)
 
 
-class Mul(MathOperator, ChainableOp):
-    symfun = lambda *a: sympy.Mul(a[0], a[1])
-    np_fun = np.multiply.reduce
-    showme = 'Mul'  #
-    sy_str = '({0} * {1})'
-    repr_str = 'Mul{},[{}, {}]'
-    xtype = ((float, float), float)
-    symfun_chain = lambda a: sympy.Mul(*a)
-    # np_fun = lambda *a: np.prod(a)
-    sy_str_chain = 'Mul({})'
-    repr_str_chain = 'MulChain{},[{}]'
-    inline_sep = ' * '
-    xtype_chain = ([(float,)], float)
-    xtype_input = float
-
-
 class And(LogicOperator, ChainableOp):
     symfun = lambda *a: sympy.And(*a)  # todo
     # symfun = lambda *a: sympy.And(a[0], a[1])  # todo
     # np_fun = np.logical_and  # only arity-2
-    np_fun = lambda *a: np.all(a, axis=0)
+    np_fun = lambda *a: np.all(*a, axis=0)
     showme = 'And'
     sy_str = '({0} & {1})'
     repr_str = 'And{},[{}, {}]'
@@ -1644,7 +1660,7 @@ class And(LogicOperator, ChainableOp):
 class Or(LogicOperator, ChainableOp):
     symfun = lambda *a: sympy.Or(a[0], a[1])
     # np_fun = np.logical_or  # only arity-2
-    np_fun = lambda *a: np.any(a, axis=0)
+    np_fun = lambda *a: np.any(*a, axis=0)
     showme = 'Or'
     sy_str = '({0}|{1})'
     repr_str = 'Or{},[{}, {}]'
@@ -1662,7 +1678,7 @@ class Xor(LogicOperator, NoSymCapitalized, ChainableOp):
     """
     Caution: loading '(a ^ b)', the sympy-Xor-representation, is interpreted as a**b"""
     symfun = lambda *a: sympy.Xor(*a)
-    np_fun = lambda *a: np.logical_xor.reduce(a, axis=0)
+    np_fun = lambda *a: np.logical_xor.reduce(*a, axis=0)
     showme = 'Xor'
     sy_str = 'Xor({}, {})'  # 'a ^ b'
     repr_str = 'Xor{},[{}, {}]'
@@ -1694,7 +1710,7 @@ class ITE(LogicOperator):
 
 class Min(BaseMinMax, ChainableOp):
     symfun = lambda *a: sympy.Min(*a)
-    np_fun = lambda *a: np.minimum.reduce(a)  # sfeh max, maximum, maximum.reduce
+    np_fun = lambda *a: np.minimum(*a)  # sfeh max, maximum, maximum.reduce
     showme = 'Min'
     sy_str = 'Min({0},{1})'
     repr_str = 'Min{},[{}, {}]'
@@ -1717,7 +1733,7 @@ class Min(BaseMinMax, ChainableOp):
 
 class Max(BaseMinMax, ChainableOp):
     symfun = lambda *a: sympy.Max(*a)
-    np_fun = lambda *a: np.maximum.reduce(a)  # sfeh max, maximum, maximum.reduce
+    np_fun = lambda *a: np.maximum(*a)  # sfeh max, maximum, maximum.reduce
     showme = 'Max'
     sy_str = 'Max({0}, {1})'
     repr_str = 'Max{},[{}, {}]'
@@ -1888,12 +1904,23 @@ class Round(MathOperator):
 
         return lambda df: _safe_round(*[ccl(df) for ccl in self.get_np_child_lambdas()])  # Replace self.some_value with your actual input
 
+    def eval_now(self, df, *args) -> [np.ndarray]:
+
+        child_values = self.get_np_child_now(df, *args)
+
+        try:
+            res = self.np_fun(*child_values)
+        except Exception as todo:
+            res = self.np_fun(*child_values)  # Round,
+
+        return res
 
 class PowRounded(MathOperator):
     """Requires class Round_Dummy!
     Rounds the exponent; sfeh:idea clip exponent?"""
     symfun = lambda *a: sympy.Pow(a[0], Round_Dummy(a[1]))
-    np_fun = staticmethod(lambda base, exponent: np.power(base, np.int_(np.round(exponent))))
+    np_fun = lambda base, exponent, *args: np.power(base, np.int_(np.round(exponent)))
+    # np_fun = staticmethod(lambda base, exponent: np.power(base, np.int_(np.round(exponent))))
     # np_fun = lambda base, exponent: np.power(base, np.round(exponent))
     # np_fun = lambda *a: np.power(*a[0], np.round(*a[1]))
     # np_fun = None
@@ -3268,9 +3295,9 @@ class ExplainableGP:
                 warnings.simplefilter("ignore", RuntimeWarning)
                 # results_raw_np = evotree.eval_np()
                 try:
-                    results_raw_np = evotree.eval_np_debug(self.df_train)
+                    results_raw_np = evotree.eval_now(self.df_train)
                 except Exception as todo:
-                    results_raw_np = evotree.eval_np_debug(self.df_train)
+                    results_raw_np = evotree.eval_now(self.df_train)
                 # try:
                 #     results_raw_np = results_raw_np(self.df_train)
                 # except Exception as todo:

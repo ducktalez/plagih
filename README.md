@@ -137,7 +137,12 @@
     We just need a measurement, a metric, to value the amount of actual hits and non/bad hits.
     Similar to entropy, in order to know, which trees should be merged together.
 - progress-print anzeigen des aktuell erzeugten Baum, zum durchlaufen
-- nonzero-operator? making zero-ish inputs slightly positive? 
+- nonzero-operator? making zero-ish inputs slightly positive?
+- 
+- Sleeppropagation GP Problem "mathematisch" nachbauen (mit GP zum Beispiel), dann neues env erzeugen 
+ (mit dem fake-zeug), dann
+ neu trainieren und selbst trainieren. 
+- 
 
 # Simplifications/representations
 

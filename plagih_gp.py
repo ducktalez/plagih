@@ -146,7 +146,8 @@ def _test_random_pop(chained_on=True):
             @gp.create_trees(rate=0.15)
             def mx_branch_n2():
                 tree = selection_tournament(gp.pop_genepool, n=3)
-                n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
+                # n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
+                n = np.random.choice([1, 3, 5, 10, 12, 15, 17, 19, 20])
                 tree = gp.evolve.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
                 return tree
 
@@ -163,7 +164,7 @@ def _test_random_pop(chained_on=True):
 
             @gp.create_trees(rate=0.1)
             def rand2b():
-                tree = gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+                tree = gp.evolve.evolve_new_tree_depth(np.random.choice([3, 4, 4, 5]), float, p_term=0)
                 return tree
 
             @gp.create_trees(rate=0.3, crossover=True)

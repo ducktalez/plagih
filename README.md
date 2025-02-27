@@ -5,7 +5,7 @@
 
 ## Ablage/Todos
 
-- Rewrite tree class
+- Rewrite tree class (new "add" node)
 - display pareto candidates as
 - evaluation alternatives
   - compare runtime

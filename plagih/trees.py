@@ -1421,7 +1421,9 @@ def cast_input(value: Any) -> Node:
 
 
 class Add(MathOperator, ChainableOp):
-    """Chained-version is Sum, but we call it chain, as vector also is taken"""
+    """
+
+    """
     symfun = lambda *a: sympy.Add(a[0], a[1])
     symfun2 = lambda *a: sympy.Add(*a)
     np_fun = lambda *a: np.add(*a)  # add.reduce(*a, axis=0)
@@ -1911,6 +1913,7 @@ class Round(MathOperator):
         try:
             res = self.np_fun(*child_values)
         except Exception as todo:
+            raise
             res = self.np_fun(*child_values)  # Round,
 
         return res
@@ -3297,6 +3300,7 @@ class ExplainableGP:
                 try:
                     results_raw_np = evotree.eval_now(self.df_train)
                 except Exception as todo:
+                    raise
                     results_raw_np = evotree.eval_now(self.df_train)
                 # try:
                 #     results_raw_np = results_raw_np(self.df_train)
@@ -3307,10 +3311,8 @@ class ExplainableGP:
                 np_fitness = round(np_fitness, FLOAT_PRECISION)
 
             if 'nan' in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf:
-                pass  # todo
+                pass # debug
 
-            # print(f'F: {fitness_2}')
-            # print(f'DF: {df_fitness} NP: {np_fitness}, {sum(df_results)} {sum(np_results)}')
             if sum(df_results - np_results) > 0:
                 a = results_raw_df.to_numpy()[0]
                 b = results_raw_np[0]
@@ -3500,6 +3502,7 @@ def eval_predict_df(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list):
     try:
         return df_results
     except Exception as todo:
+        raise
         return df_results  # todo this is useless
 
 def evaluate_sympy_expression(expression, df, symbols):

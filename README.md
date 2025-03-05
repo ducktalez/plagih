@@ -5,6 +5,7 @@
 
 ## Ablage/Todos
 
+- get eval_np() working! and eval_now()
 - Rewrite tree class (new "add" node)
 - display pareto candidates as
 - evaluation alternatives
@@ -142,7 +143,9 @@
 - Sleeppropagation GP Problem "mathematisch" nachbauen (mit GP zum Beispiel), dann neues env erzeugen 
  (mit dem fake-zeug), dann
  neu trainieren und selbst trainieren. 
-- 
+- Zum Thema "großer Einheitsbaum": Hier könnte man Äste absterben lassen, wenn sie zu
+  schlecht sind. Also z.B. wenn alle weiteren Äste unter diesem Knoten schlecht sind,
+  und es über 1000 Stück schon gab, dann wird dieser Knoten an der Stelle gekillt.
 
 # Simplifications/representations
 

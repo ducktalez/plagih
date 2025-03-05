@@ -387,7 +387,7 @@ class Node(NodeStructure):
             self.revoke_useless_nodes()
 
         if self != debug_todo:
-            print(f'Debug=>{debug_todo.represent_str()}\n     =>{self.represent_str()}')
+            print(f'Debug=> {debug_todo.represent_str()}\n     => {self.represent_str()}')
 
         # Updating the structural Infos that have been updated with false Informations
         if repair:
@@ -798,7 +798,8 @@ class Node(NodeStructure):
                         self.replace_with(Sqrt, [p_base])
                     elif p_exp_v % 1 == 0:
                         self.replace_with(PowRounded, [p_base, p_exp])
-                    elif (1 / p_exp_v) % 1 == 0:  # exponent is natural number
+                    elif (p_exp_v > 0) and (1 / p_exp_v) % 1 == 0:  # exponent is natural number
+                        # must be checked, for Pow(a, -1/2)
                         node_sub = PowRounded(p_base, p_exp)
                         self.replace_with(DivFraction, [node_sub])
                     elif p_exp_v == -2 and allow_grow:
@@ -920,9 +921,6 @@ class Node(NodeStructure):
 
         s = self.showme  # class name
 
-        if self.is_fix and show_all:
-            s += ':fix'
-
         if self.is_term():
             cs = f'{self.get_childs()[0]}'
             if cut_terms:
@@ -930,10 +928,11 @@ class Node(NodeStructure):
             else:
                 cs = remove_trailing_zeroes(cs)
 
-            if show_all:
-                raise NotImplementedError
-            else:
-                s = f'{cs}'
+            s = f'{cs}'
+
+            if self.is_fix and show_all:
+                s += ':fix'  # sfeh:discuss there must be a more natural way to show that...
+
 
         else:
             cs = [cc.represent_str(show_all=show_all, cut_terms=cut_terms) for cc in self.get_childs()]
@@ -1646,10 +1645,18 @@ class Mul(MathOperator, ChainableOp):
 
 class DivFraction(MathOperator):
     """x**-1
-    aka InverseFraction aka DivFraction aka Reciprocal"""
+    aka InverseFraction aka DivFraction aka Reciprocal
+
+    From https://numpy.org/doc/2.1/reference/generated/numpy.reciprocal.html
+        ~ "This function is not designed to work with integers."
+
+        np.reciprocal(2)  # Output: 0
+        np.reciprocal(2.0)  # Output: 0.5
+    """
     xtype = ((float,), float)
     symfun = lambda *a: sympy.Pow(a[0], sympy.S.NegativeOne)
-    np_fun = np.reciprocal
+    # np_fun = np.reciprocal "
+    np_fun = staticmethod(lambda a: np.reciprocal(np.asarray(a, dtype=np.float64)))
     # sfeh np.reciprocal(2) -> 0 np.reciprocal(float(2)) -> 0.5
     # -> it is okay, 1/(int) is just always zero
     # np_fun = lambda *a: np.reciprocal(float(*a))  # sfeh rename class?
@@ -2136,7 +2143,12 @@ class PowRounded(MathOperator):
 
 
 class Div(MathOperator):
-    symfun = lambda *a: sympy.Mul(a[0], 1 / a[1])
+    """
+    sympy.div() doesn't work for non-polynomials
+    """
+    # symfun = lambda *a: sympy.Mul(a[0], 1 / a[1])
+    # symfun = lambda *a: sympy.div(a[0], a[1])  #
+    symfun = lambda *a: sympy.Mul(a[0], sympy.Pow(a[1], -1))
     np_fun = staticmethod(np.divide)
     showme = 'Div'
     sy_str = '({0}/{1})'

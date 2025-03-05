@@ -7,6 +7,7 @@
 
 - get eval_np() working! and eval_now()
 - Rewrite tree class (new "add" node)
+- use logging
 - display pareto candidates as
 - evaluation alternatives
   - compare runtime

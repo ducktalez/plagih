@@ -263,30 +263,6 @@ class Node(NodeStructure):
     def __init__(self, *args: iter, **kwargs):
         super().__init__(*args, **kwargs)
 
-    #     # args = [cast_input(v) for v in list(args)]
-    #     try:
-    #         super().__init__()
-    #         self.set_childs(args)  # todo haha! this does not evaluate and thus saves some time and errorz
-    #     except Exception as todo:
-
-    # def eval_np_debug(self, df):
-    #     if self.is_term():
-    #         my_np = self.eval_np_debug(df)
-    #         res = my_np(df)
-    #     elif self.is_operator():
-    #         try:
-    #             child_values = self.get_np_child_lambdas()
-    #             my_np = self.eval_np_debug(*child_values)
-    #             res = my_np(df)
-    #         except Exception as todo:
-    #             child_values = [ccl.eval_np_debug(df) for ccl in self.get_childs()]
-    #             my_np = self.eval_np(*child_values)
-    #             res = my_np(df)
-    #     else:
-    #         raise NotImplementedError("Evaluation not implemented for this node type.")
-    #
-    #     return res
-
     def eval_np_debug(self, *args):
         """
         Debug-friendly version of eval_np() without vectorization or lambda functions.
@@ -469,7 +445,7 @@ class Node(NodeStructure):
                 if sym_expr_check_regex(ex):
                     raise SympyError(f'getsympyexpr-err| {ex}')
                 else:
-                    print(f'TODO ex: {ex}')
+                    print(f'asd ex: {ex}')
                     raise SympyError(f'TODO ex: {ex}')
 
         else:
@@ -513,14 +489,6 @@ class Node(NodeStructure):
             new_node = tb.node_selector.choose_symbol_node(xtype)
             # node.set_new_node(new_node)
             node.set_new_node(new_node)
-
-    # def is_chain(self):
-    #     """
-    #     is the node "in chain mode"?
-    #     -> when there are more childs than input-xtypes
-    #     ...if there are less. its weird, maybe node in construction?"""
-    #     a = isinstance(self, OperatorChained)  # todo
-    #     return a
 
     def is_number(self):
         """sfeh's check"""
@@ -785,28 +753,56 @@ class Node(NodeStructure):
             if isinstance(self, (Pow, PowRounded)):
                 p_base = mychlds[0]
                 p_exp = mychlds[1]
+
                 if isinstance(p_exp, Number):
                     p_exp_v = p_exp.get_value()
-                    if p_exp_v in [1, sympy.S.One]:
-                        self.replace_with_node(p_base)  # todo debug, if this works as planned
-                        # self.set_new_node(p_base, clean_chain=True)
-                    elif p_exp_v in [-1, sympy.S.NegativeOne]:
+
+                    if p_exp_v in [1, sympy.S.One]:  # x**1 → x
+                        self.replace_with_node(p_base)
+
+                    elif p_exp_v in [-1, sympy.S.NegativeOne]:  # x**-1 → 1/x
                         self.replace_with(DivFraction, [p_base])
-                    elif p_exp_v == 2:
+
+                    elif p_exp_v == 2:  # x**2 → Square(x)
                         self.replace_with(Square, [p_base])
-                    elif p_exp_v in [0.5, sympy.S.Half]:
+
+                    elif p_exp_v == -2:  # x**-2 → 1/(x**2)
+                        self.replace_with(DivFraction, [Square(p_base)])
+
+                    elif p_exp_v in [0.5, sympy.S.Half]:  # x**0.5 → sqrt(x)
                         self.replace_with(Sqrt, [p_base])
-                    elif p_exp_v % 1 == 0:
+
+                    elif p_exp_v < 0 and p_exp_v % 1 == 0:
+                        # x**-n → 1/(x**n) für ganzzahliges negatives n
+                        self.replace_with(DivFraction, [PowRounded(p_base, Number(abs(p_exp_v)))])
+
+                    elif p_exp_v > 0 and p_exp_v % 1 == 0:
+                        # x**n bleibt gleich, aber wird in PowRounded umgewandelt
                         self.replace_with(PowRounded, [p_base, p_exp])
-                    elif (p_exp_v > 0) and (1 / p_exp_v) % 1 == 0:  # exponent is natural number
-                        # must be checked, for Pow(a, -1/2)
-                        node_sub = PowRounded(p_base, p_exp)
+
+                    # elif p_exp_v > 0 and (1 / p_exp_v) % 1 == 0:
+                    #     # x**(1/n) → n-te Wurzel(x) (z. B. x**(1/3) → Kubikwurzel(x))
+                    #     root_degree = int(1 / p_exp_v)
+                    #     self.replace_with(NthRoot, [p_base, Number(root_degree)])
+                    #
+                    # elif p_exp_v < 0 and (1 / abs(p_exp_v)) % 1 == 0:
+                    #     # x**(-1/n) → 1/(n-te Wurzel(x))
+                    #     root_degree = int(1 / abs(p_exp_v))
+                    #     node_sub = NthRoot(p_base, Number(root_degree))
+                    #     self.replace_with(DivFraction, [node_sub])
+
+                    elif p_exp_v > 0 and (1 / p_exp_v) % 1 == 0:
+                        # x**(1/n) → x**(1/n) bleibt als Potenz stehen (z. B. x**(1/3))
+                        root_degree = int(1 / p_exp_v)
+                        self.replace_with(PowRounded, [p_base, Number(sympy.Rational(1, root_degree))])
+
+                    elif p_exp_v < 0 and (1 / abs(p_exp_v)) % 1 == 0:
+                        # x**(-1/n) → 1/(x**(1/n))
+                        root_degree = int(1 / abs(p_exp_v))
+                        node_sub = PowRounded(p_base, Number(sympy.Rational(1, root_degree)))
                         self.replace_with(DivFraction, [node_sub])
-                    elif p_exp_v == -2 and allow_grow:
-                        # sfeh: make class function, that checks, if the return size is larger than the initial
-                        nd_sub = Square([p_base])
-                        self.replace_with(DivFraction, [nd_sub])
-                elif isinstance(p_exp, Round):  # sfeh discuss putting even powers into Squares
+
+                elif isinstance(p_exp, Round):  # Wenn der Exponent gerundet wurde
                     deep_child = p_exp.childs[0]
                     self.replace_with(PowRounded, [p_base, deep_child])
 
@@ -817,10 +813,10 @@ class Node(NodeStructure):
                     mychlds_remove = lambda el: [x for x in mychlds if x != el]
 
                     if isinstance(cc, DivFraction):
-                        # e. g.: "a * 1/3"
+                        # e. g.: "a * 1/3" -> "3/a"
                         div_by = cc.get_childs()[0]
                         node_sub = Mul(*mychlds_remove(cc))
-                        self.replace_with(Div, [node_sub, div_by])
+                        self.replace_with(Div, [node_sub, div_by])  # todo this makes chained mul little parts
                     elif isinstance(cc, Number):
                         mul1 = cc.get_value()
                         if mul1 in (1, sympy.S.One):
@@ -828,7 +824,7 @@ class Node(NodeStructure):
                             new_childs = mychlds_remove(cc)  # can be one (->Number) or more (->Mul)
                             # todo I think, the following lines should also be possible with just
                             #   replacing the childs.
-                            #   wait! no. maybe nodes are not grouped anymopre after that
+                            #   wait! no. maybe nodes are not grouped anymore after that
                             if len(new_childs) == 1:
                                 # If only one child remains, replace self with that node
                                 self.replace_with_node(new_childs[0])
@@ -886,10 +882,7 @@ class Node(NodeStructure):
         if self.is_term():
             n = 1
         else:
-            try:
-                cc_list = [cc.len_nodecount_fair() for cc in self.get_childs()]
-            except Exception as todo:
-                return 1  # todo this seems to work! remove todo.
+            cc_list = [cc.len_nodecount_fair() for cc in self.get_childs()]
 
             if self.is_typus(Usub):  # sfeh
                 n = sum(cc_list)
@@ -1404,7 +1397,7 @@ class BaseOperator(Node):
         #     for v in evaluated_children
         # ]
         evaluated_children = [
-            np.asarray(v) if not isinstance(v, np.ndarray) else v.astype(np.float64)
+            np.asarray(v, dtype=bool) if v.dtype == np.bool_ else np.asarray(v, dtype=np.float64)
             for v in evaluated_children
         ]
 
@@ -1412,21 +1405,21 @@ class BaseOperator(Node):
         # print(f"DEBUG: Child shapes before np_fun: {[np.shape(v) for v in evaluated_children]}")
 
         try:
-            res = self.np_fun(*evaluated_children)
+            res = self.np_fun(*child_values)
         except Exception as e:
             print(f"ERROR in {self.__class__.__name__}: {e}")
             print(f"DEBUG: Child shapes: {[np.shape(v) for v in evaluated_children]}")
-
-            evaluated_children = [np.reshape(v, (-1,)) if len(v.shape) > 1 else v for v in evaluated_children]
 
             try:
                 res = self.np_fun(*evaluated_children)
             except Exception as e2:
                 print(f"FINAL ERROR in {self.__class__.__name__}: {e2}")
-                raise
 
-        # if not isinstance(res, np.ndarray) or res.dtype == np.object_:
-        #     res = np.asarray(res, dtype=np.float64)  # todo this makes bool values to float
+                evaluated_children = [np.reshape(v, (-1,)) if len(v.shape) > 1 else v for v in evaluated_children]
+                res = self.np_fun(*evaluated_children)
+
+
+
 
         return res
 
@@ -1595,10 +1588,10 @@ class Add(MathOperator, ChainableOp):
     """
     symfun = lambda *a: sympy.Add(a[0], a[1])
     symfun2 = lambda *a: sympy.Add(*a)
-    # np_fun = staticmethod(lambda *a: np.add(*a))  # add.reduce(*a, axis=0)
+
     np_fun = staticmethod(lambda *a: np.sum(np.stack(a), axis=0))
     # np_fun = np.sum
-    # np_fun = lambda *a: np.sum(*a, axis=0)
+
     showme = 'Add'
     sy_str = '({0} + {1})'
     formulae_str = '({} + {})'
@@ -1663,6 +1656,18 @@ class DivFraction(MathOperator):
     showme = 'DivFraction'
     sy_str = '1/({})'
     repr_str = 'DivFraction{},[{}]'
+
+
+class NthRoot(MathOperator):
+    """Repräsentiert die n-te Wurzel: NthRoot(x, n) → x**(1/n)
+    sfeh:open reinimplementieren"""
+
+    xtype = ((float, float), float)  # (Basis, Wurzelgrad) → float
+    symfun = staticmethod(lambda *a: sympy.root(a[0], a[1]))  # SymPy Wurzel-Funktion
+    np_fun = staticmethod(lambda base, n: np.power(base, 1 / n))  # NumPy Power-Funktion
+    showme = 'NthRoot'
+    sy_str = 'root({}, {})'
+    repr_str = 'NthRoot{},[{}, {}]'
 
 
 class Pow(MathOperator):
@@ -1819,24 +1824,32 @@ class Ne(RelationalOperator):
 
 
 class And(LogicOperator, ChainableOp):
-    symfun = lambda *a: sympy.And(*a)  # todo
-    # symfun = lambda *a: sympy.And(a[0], a[1])  # todo
-    # np_fun = np.logical_and  # only arity-2
-    # np_fun = staticmethod(lambda *a: np.all(*a, axis=0))
-    np_fun = staticmethod(lambda *a: np.all(a, axis=0))
+    """ Logisches UND für zwei oder mehr Eingaben """
+
+    # SymPy: Funktioniert mit beliebig vielen Eingaben
+    symfun = staticmethod(lambda *a: sympy.And(*a))
+
+    # NumPy: Verwendet logical_and.reduce für mehr als zwei Eingaben
+    np_fun = staticmethod(lambda *a: np.logical_and.reduce([np.asarray(x, dtype=bool) for x in a]))
+
     showme = 'And'
-    sy_str = '({0} & {1})'
+    sy_str = '({0} & {1})'  # Arity-2 Formatierung
     repr_str = 'And{},[{}, {}]'
+
+    # Datentypen für Eingaben und Ausgaben
     xtype = ((bool, bool), bool)
+    xtype_input = bool
+
+    # Ketten-Operator für mehr als zwei Eingaben
     expr_dmy = 'And'
-    symfun_chain = lambda a: sympy.And(*a)
-    np_fun_chain = lambda *a: np.logical_and(*a)
+    symfun_chain = staticmethod(lambda a: sympy.And(*a))
+    np_fun_chain = staticmethod(lambda *a: np.logical_and.reduce([np.asarray(x, dtype=bool) for x in a]))
+
     showme_chain = 'AndChain'
-    sy_str_chain = 'And({})'
+    sy_str_chain = 'And({})'  # Variadische Notation
     repr_str_chain = 'And{},[{}]'
     inline_sep = ' & '
     xtype_chain = ([(bool,)], bool)
-    xtype_input = bool
 
 
 class Or(LogicOperator, ChainableOp):
@@ -1872,7 +1885,7 @@ class Xor(LogicOperator, NoSymCapitalized, ChainableOp):
     np_fun_chain = lambda *a: np.logical_xor(*a)
     sy_str_chain = 'Xor({})'  # 'a ^ b'
     inline_sep = ' ^ '
-    repr_str_chain = 'XorChained{},[{}, {}]'
+
     xtype_chain = ([(bool,)], bool)
     xtype_input = bool
 
@@ -1927,7 +1940,7 @@ class Max(BaseMinMax, ChainableOp):
     symfun_chain = lambda a: sympy.Max(*a)
     np_fun_chain = np.maximum  # np.vstack(x)
     sy_str_chain = 'Max({})'
-    repr_str_chain = 'MaxChain{},[{}]'
+
     xtype_chain = ([(float,)], float)
 
     def __call__(self, a):
@@ -2109,11 +2122,7 @@ class Round(MathOperator):
 
         child_values = self.get_np_child_now(df, *args)
 
-        try:
-            res = self.np_fun(*child_values)
-        except Exception as todo:
-            print(f"Error in Round.eval_now(): {todo}, child_values: {child_values}")
-            res = np.round(child_values).astype(int)  # todo (debugging) move this into the try block, it is right
+        res = self.np_fun(*child_values)
 
         return res
 
@@ -2176,8 +2185,10 @@ class Sqrt(MathOperator):
 
 class Usub(MathOperator):
     xtype = ((float,), float)
-    symfun = lambda *a: sympy.Mul(a[0], -1)
-    np_fun = np.negative
+    # symfun = lambda *a: sympy.Mul(a[0], -1)
+    symfun = staticmethod(lambda *a: -a[0])
+    # np_fun = np.negative
+    np_fun = staticmethod(lambda x: np.negative(x))
     # tf_fun = tf.negative
     showme = 'Usub'  # sfeh
     sy_str = '(-{})'
@@ -3103,6 +3114,8 @@ class Evolution:
 
         if len(b_nds) > 0:
             b_nd = np.random.choice(b_nds)
+            if isinstance(a_nd, Usub) or isinstance(b_nd, Usub):
+                print('ASDFASDASD')  # todo remove this line (debug)
         else:
             xt_out = float if xt_out == bool else bool  # switching to the other swap type
             b_nds = bb.list_mutable_nodes(xtype=xt_out)
@@ -3505,7 +3518,7 @@ class ExplainableGP:
                     results_raw_np = evotree.eval_now(self.df_train)
                 except Exception as todo:
                     raise
-                    results_raw_np = evotree.eval_now(self.df_train)
+
                 # try:
                 #     results_raw_np = results_raw_np(self.df_train)
                 # except Exception as todo:
@@ -3701,15 +3714,15 @@ def eval_predict_df(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list):
             with ignore_warnings(DeprecationWarning):  # something 'like use "**" instead of "Pow"'
                 df_results = df.apply(lambda row: func(*[row[str(var)] for var in symbol_list]), axis=1)
                 # try:
-                # except NameError as todo:
+
                 #
-                #     # expr = str(sy_expr)  # todo try this next
+
                 #     # sy_expr = plagih_sympify(expr)
                 #     df_results = df.apply(lambda row: func(*[row[str(var)] for var in symbol_list]), axis=1)
-    try:
-        return df_results
-    except Exception as todo:
-        return df_results  # todo this is useless
+    return df_results
+
+
+
 
 def evaluate_sympy_expression(expression, df, symbols):
     """

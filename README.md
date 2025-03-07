@@ -148,6 +148,13 @@
   schlecht sind. Also z.B. wenn alle weiteren Äste unter diesem Knoten schlecht sind,
   und es über 1000 Stück schon gab, dann wird dieser Knoten an der Stelle gekillt.
 
+# Working with this Framework...
+The following are bitches:
+- Usub-class (-x).I am not even sure, if should be an operator.
+- Round-class. There is a dummy-class, as that did not work on its own.
+- Min/Max class. Those specifically due to sympy.
+- 
+
 # Simplifications/representations
 
 - `simplify()`

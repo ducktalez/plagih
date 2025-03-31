@@ -15,8 +15,6 @@ custom_functions = {
 }
 
 
-
-
 # def eval_tensorflow(expr, df):
 #     pass
 

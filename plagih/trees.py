@@ -22,7 +22,7 @@ from plagih.util import *
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
 
-from typing import Optional, List, Union, Callable, Any
+from typing import Optional, List, Union, Callable, Any, Tuple
 from dataclasses import dataclass, field
 
 
@@ -442,10 +442,11 @@ class Node(NodeStructure):
                 _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
             except (ValueError, TypeError) as ex:
                 # sfeh:05.03.2024 ValueError("The argument 'log(Min(-0.095, cartVel))' is not comparable.")
+                if "Invalid comparison of non-real" in ex:
+                    raise SympyError(f'TODO ex: {ex}')
                 if sym_expr_check_regex(ex):
                     raise SympyError(f'getsympyexpr-err| {ex}')
                 else:
-                    print(f'asd ex: {ex}')
                     raise SympyError(f'TODO ex: {ex}')
 
         else:
@@ -743,6 +744,9 @@ class Node(NodeStructure):
         elif self.is_operator():
 
             mychlds = self.get_childs()
+
+            if isinstance(self, Usub) and len(mychlds) > 1:
+                print(f"ERROR: Usub should only have one child, but got {len(mychlds)}")
 
             for cc in mychlds:
                 cc.tree_node_grouping(tolerance=tolerance)
@@ -1390,6 +1394,9 @@ class BaseOperator(Node):
                 val = val.eval_now(df, *args)
             evaluated_children.append(val)
 
+        if isinstance(self, Usub) and len(evaluated_children) > 1:
+            print(f"DEBUG ERROR: Usub received multiple inputs: {evaluated_children}")
+
         # todo-asarray
         #   also: should not be required. they should all be arrays. maybe, typehints are sufficient?
         # evaluated_children = [
@@ -1405,21 +1412,36 @@ class BaseOperator(Node):
         # print(f"DEBUG: Child shapes before np_fun: {[np.shape(v) for v in evaluated_children]}")
 
         try:
-            res = self.np_fun(*child_values)
+            res = self.np_fun(*evaluated_children)
         except Exception as e:
             print(f"ERROR in {self.__class__.__name__}: {e}")
-            print(f"DEBUG: Child shapes: {[np.shape(v) for v in evaluated_children]}")
+            print(f"DEBUG: Child values: {evaluated_children}")
+
+            # **Ensure correct input types**
+            corrected_inputs = [
+                np.asarray(v, dtype=np.float64) if v.dtype != np.bool_ else np.asarray(v, dtype=bool)
+                for v in evaluated_children
+            ]
 
             try:
-                res = self.np_fun(*evaluated_children)
+                res = self.np_fun(*corrected_inputs)
             except Exception as e2:
                 print(f"FINAL ERROR in {self.__class__.__name__}: {e2}")
+                raise
 
-                evaluated_children = [np.reshape(v, (-1,)) if len(v.shape) > 1 else v for v in evaluated_children]
-                res = self.np_fun(*evaluated_children)
-
-
-
+        # try:
+        #     res = self.np_fun(*child_values)
+        # except Exception as e:
+        #     print(f"ERROR in {self.__class__.__name__}: {e}")
+        #     print(f"DEBUG: Child shapes: {[np.shape(v) for v in evaluated_children]}")
+        #
+        #     try:
+        #         res = self.np_fun(*evaluated_children)
+        #     except Exception as e2:
+        #         print(f"FINAL ERROR in {self.__class__.__name__}: {e2}")
+        #
+        #         evaluated_children = [np.reshape(v, (-1,)) if len(v.shape) > 1 else v for v in evaluated_children]
+        #         res = self.np_fun(*evaluated_children)
 
         return res
 
@@ -1671,8 +1693,11 @@ class NthRoot(MathOperator):
 
 
 class Pow(MathOperator):
-    symfun = lambda *a: sympy.Pow(a[0], a[1])
-    np_fun = np.power
+    # symfun = lambda *a: sympy.Pow(a[0], a[1])
+    # np_fun = np.power
+    symfun = staticmethod(lambda *a: sympy.Pow(a[0], a[1]) if len(a) == 2 else None)
+    np_fun = staticmethod(lambda base, exp: np.power(
+        np.abs(base), exp) if np.all((base >= 0) | (exp % 1 == 0)) else np.nan)
     showme = 'Pow'
     sy_str = '({0})**({1})'
     repr_str = 'Pow{},[{},{}]'
@@ -2185,11 +2210,8 @@ class Sqrt(MathOperator):
 
 class Usub(MathOperator):
     xtype = ((float,), float)
-    # symfun = lambda *a: sympy.Mul(a[0], -1)
-    symfun = staticmethod(lambda *a: -a[0])
-    # np_fun = np.negative
+    symfun: Callable[[Tuple[float]], float] = staticmethod(lambda a: -a[0])
     np_fun = staticmethod(lambda x: np.negative(x))
-    # tf_fun = tf.negative
     showme = 'Usub'  # sfeh
     sy_str = '(-{})'
     repr_str = 'Usub{},[{}]'
@@ -3516,14 +3538,21 @@ class ExplainableGP:
                 # results_raw_np = evotree.eval_np()
                 try:
                     results_raw_np = evotree.eval_now(self.df_train)
-                except Exception as todo:
-                    raise
+                except Exception as sfeh:
+                    if "input array" in str(sfeh) and "shape" in str(sfeh):
+                        raise sfeh
+                    else:
+                        results_raw_np = evotree.eval_now(self.df_train)  # todo debug
 
                 # try:
                 #     results_raw_np = results_raw_np(self.df_train)
                 # except Exception as todo:
                 #     results_raw_np = results_raw_df  # todo keep this; but!
-                np_results = self.normalize_numpy(results_raw_np)
+
+                try:
+                    np_results = self.normalize_numpy(results_raw_np)
+                except Exception as sfeh:
+                    np_results = self.normalize_numpy(results_raw_np)
                 np_fitness = np.sqrt(np.mean((np_results - true_values) ** 2))
                 np_fitness = round(np_fitness, FLOAT_PRECISION)
 
@@ -3546,7 +3575,6 @@ class ExplainableGP:
                 # print(f'{result_diffs}')
 
             fitness = np_fitness
-            #  TODO ########################################
 
             fitness = df_fitness
 

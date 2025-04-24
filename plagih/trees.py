@@ -1159,7 +1159,7 @@ def tree_simplification(tree: Node, allow_chain) -> Node:
         print(f'WHATHAPPENED SFEH\t{astr}'
               f'\n\told: {tree_copy.str_as_list()}'
               f'\n\tsym: {tree.str_as_list()}')
-              # f'\n\told: {tree_copy.get_expr_symlike()}'  # todo oftopic check, if the inputs from chained all get evaluated
+              # f'\n\told: {tree_copy.get_expr_symlike()}'  # todo offtopic check, if the inputs from chained all get evaluated
               # f'\n\tsym: {tree.get_expr_symlike()}'  # todo offtopic tree node grouping maybe needs iterations
               # f'\n\tsym: {tree_copy.get_tree_export()}')
         if astr != bstr:  # sfeh str() should not be required
@@ -3534,25 +3534,10 @@ class ExplainableGP:
             # todo fitness is nan? -> raise ValueError. // [11: fit  nan (Mul(Sin(Log(cartPos))
             # Suppress specific RuntimeWarning
             with warnings.catch_warnings():
-                warnings.simplefilter("ignore", RuntimeWarning)
+                warnings.simplefilter("ignore", RuntimeWarning)  # sfeh:discuss...
                 # results_raw_np = evotree.eval_np()
-                try:
-                    results_raw_np = evotree.eval_now(self.df_train)
-                except Exception as sfeh:
-                    if "input array" in str(sfeh) and "shape" in str(sfeh):
-                        raise sfeh
-                    else:
-                        results_raw_np = evotree.eval_now(self.df_train)  # todo debug
-
-                # try:
-                #     results_raw_np = results_raw_np(self.df_train)
-                # except Exception as todo:
-                #     results_raw_np = results_raw_df  # todo keep this; but!
-
-                try:
-                    np_results = self.normalize_numpy(results_raw_np)
-                except Exception as sfeh:
-                    np_results = self.normalize_numpy(results_raw_np)
+                results_raw_np = evotree.eval_now(self.df_train)  # exception? -> check np.isnan(df_results).any()
+                np_results = self.normalize_numpy(results_raw_np)
                 np_fitness = np.sqrt(np.mean((np_results - true_values) ** 2))
                 np_fitness = round(np_fitness, FLOAT_PRECISION)
 

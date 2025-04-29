@@ -31,6 +31,12 @@ class SympyError(Exception):
     pass
 
 
+class CuriosityError(Exception):
+    """NeverHappensError/CuriosityError/DeletemeRrror/TodoError/DebugError
+    For code, that should never be reached. Just to check, why."""
+    pass
+
+
 class BColors:
     OKBLUE = '\033[94m'
     OKGREEN = '\033[92m'

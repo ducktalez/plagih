@@ -316,22 +316,47 @@ class Node(NodeStructure):
     #     return fun
 
     def revoke_useless_nodes(self) -> None:
-        """Simplify the node by removing unnecessary children or chain operators."""
+        """Simplify the node by removing unnecessary children or chain operators.
+        E. g. when
+            - chainable operators have too few operators: Mul(a) -> a
+            - One child is the neutral element: Add(a, 0)
+        """
+        # sfeh:discuss: Those nodes may have structural purpose
         # Recursively simplify children
-
+        # sfeh:if this only does things with multiplication, move this to multiplication
         if self.is_term():
             pass
         else:
+            if isinstance(self, (Add, Mul)):
+                if isinstance(self, Add):
+                    for cc in self.get_childs():
+                        if cc.is_term():
+                            if cc.get_value() in [0, sympy.S.Zero, 0.0]:
+                                childs_new = self.get_childs()
+                                childs_new.remove(cc)
+                                self.set_childs(childs_new)
+                                raise CuriosityError
+                elif isinstance(self, Mul):
+                    for cc in self.get_childs():
+                        if cc.is_term():
+                            if cc.get_value() in [1, sympy.S.One, 1.0]:
+                                childs_new = self.get_childs()
+                                childs_new.remove(cc)
+                                self.set_childs(childs_new)
+                                raise CuriosityError  # deleteme-error
+
             for child in self.get_childs():
-                child.revoke_useless_nodes()  # todo?: should this be handeled EXACTLY when required? keep as backup?
+                child.revoke_useless_nodes()  # sfeh:open?: should this be handeled EXACTLY when required? keep as backup?
 
             arity = self.get_arity()
             num_childs = len(self.get_childs())
+
             # Check for simplifications based on arity
             if num_childs < arity:
-                # Single child node: replace with the child itself
+                # e.g. Mul(a) -> a
                 cc = self.get_childs()[0]
                 self.set_new_node(cc)
+
             elif num_childs == arity:
                 # self.set_chain(False)
                 ...
@@ -357,13 +382,13 @@ class Node(NodeStructure):
         self.__class__ = nd_new.__class__
         self.__dict__.update(nd_new.__dict__)
 
-        debug_todo = copy.deepcopy(self)
+        debug_me = copy.deepcopy(self)
 
         if clean_chain:
             self.revoke_useless_nodes()
 
-        if self != debug_todo:
-            print(f'Debug=> {debug_todo.represent_str()}\n     => {self.represent_str()}')
+        if self != debug_me:  # success: 8, fails: 0
+            print(f'Debug=> {debug_me.represent_str()}\n     => {self.represent_str()}')
 
         # Updating the structural Infos that have been updated with false Informations
         if repair:
@@ -406,9 +431,6 @@ class Node(NodeStructure):
         # if isinstance(typus, (ChainableOp, OperatorChained)):
         #     arity = typus.get_arity()
         if childs is not None:
-            # todo use chainable Versions of
-            #   -> check, if child length fits self.node and
-            # todo idee: represent every node as ALL versions of itself. active version, simplified, original
             ...
         # if len(cc.get_childs) < new_node.get_arity():
         #     # sfeh:debug
@@ -714,6 +736,8 @@ class Node(NodeStructure):
         # sfeh:idea Heavyside function. input a val, input b threshold
         # sfeh: sub, usub replace?
         sfeh:idea tolerance for grouping?
+        sfeh:idea expr = b + a + a
+            terms = expr.as_ordered_terms()
         """
 
         if self.is_term():  # good for runtime
@@ -811,12 +835,15 @@ class Node(NodeStructure):
                     self.replace_with(PowRounded, [p_base, deep_child])
 
             elif isinstance(self, Mul):  # MulChain
+                numerators = []  # sfeh delete if code not used
+                denominators = []
                 for cc in mychlds:
 
                     # Removes the one factor from the childs, that is matched
                     mychlds_remove = lambda el: [x for x in mychlds if x != el]
 
                     if isinstance(cc, DivFraction):
+                        denominators.append(cc.get_childs()[0])
                         # e. g.: "a * 1/3" -> "3/a"
                         div_by = cc.get_childs()[0]
                         node_sub = Mul(*mychlds_remove(cc))
@@ -824,26 +851,28 @@ class Node(NodeStructure):
                     elif isinstance(cc, Number):
                         mul1 = cc.get_value()
                         if mul1 in (1, sympy.S.One):
-                            # todo shouldn't sympy do this?? everything with sympy.S.One??
-                            new_childs = mychlds_remove(cc)  # can be one (->Number) or more (->Mul)
-                            # todo I think, the following lines should also be possible with just
-                            #   replacing the childs.
-                            #   wait! no. maybe nodes are not grouped anymore after that
-                            if len(new_childs) == 1:
-                                # If only one child remains, replace self with that node
-                                self.replace_with_node(new_childs[0])
-                            else:
-                                # If multiple children remain, recreate Mul node
-                                self.replace_with(Mul, new_childs)
-                            ...
+                            raise CuriosityError
+                            # new_childs = mychlds_remove(cc)  # can be one (->Number) or more (->Mul)
+                            # # todo I think, the following lines should also be possible with just
+                            # #   replacing the childs.
+                            # #   wait! no. maybe nodes are not grouped anymore after that
+                            # if len(new_childs) == 1:
+                            #     # If only one child remains, replace self with that node
+                            #     self.replace_with_node(new_childs[0])
+                            # else:
+                            #     # If multiple children remain, recreate Mul node
+                            #     self.replace_with(Mul, new_childs)
+                            # ...
                         elif mul1 in (-1, sympy.S.NegativeOne):  # sfeh aka sympy.S.NegativeOne -1, was -1 before
                             self.replace_with(Usub, mychlds_remove(cc))
-                        elif 0 < mul1 < 1:
-                            sfeh_check = (1 / mul1) % 1  # == 0
-                            # sfeh: discuss; not always the best choice? maybe never? :P
-                            node_sub = Mul(*mychlds_remove(cc))
-                            new_num = (1 / mul1)
-                            self.replace_with(Div, [node_sub, Number(new_num)])
+                        elif 0 < mul1 < 1:  # sfeh:xxx:discuss: introduce "factor" as class? multiplies x with a number
+                            sfeh_check = (1 / mul1) % 1
+                            if (1 / mul1) % 1  == 0:  # check if the result is a natural number
+                                # denominators.append(Number(inv))
+                                # sfeh: discuss; not always the best choice? maybe never? :P
+                                node_sub = Mul(*mychlds_remove(cc))
+                                new_num = (1 / mul1)
+                                self.replace_with(Div, [node_sub, Number(new_num)])
                             # sfeh... remove this, just in´verse sometimes, in general.
                         else:
                             # sfeh:ScaleNode-idea here
@@ -851,7 +880,8 @@ class Node(NodeStructure):
                     else:
                         continue  # make sure to skip the following return statement
 
-                    # IMPORTANT! Leave this loop, if one factor was found
+                    # self.revoke_useless_nodes()  # clean Mul-junk here
+                    # IMPORTANT! EXIT this loop, if one factor was found
                     return
 
         elif issubclass(type(self), ExprCondPair_Dummy):
@@ -859,7 +889,17 @@ class Node(NodeStructure):
 
         else:
             raise NotImplementedError
-
+        # # Wenn Divisionen erkannt wurden → baue Bruchstruktur
+        # if denominators:
+        #     numerator_expr = Mul(*numerators, evaluate=False) if numerators else Number(1)
+        #     denominator_expr = Mul(*denominators, evaluate=False) if len(denominators) > 1 else denominators[0]
+        #     self.replace_with(Div, [numerator_expr, denominator_expr])
+        #     return
+        #
+        # # Falls nach Entfernung von `1` nur noch ein Faktor bleibt
+        # remaining = numerators
+        # if len(remaining) == 1:
+        #     self.replace_with_node(remaining[0])
         return  # two indents
 
     def len_nodecount_raw(self):
@@ -1063,10 +1103,10 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
 
     else:  # **Operators**
 
-        # if s_expr.is_Integer:
-        #     raise 'TODO'
-        # else:
-        #     pass
+        if s_expr.is_Integer:  # todo delete this if did not happen
+            raise 'TODO'
+        else:
+            pass
 
         cc_nodes = []
         for arg in s_expr.args:
@@ -1141,16 +1181,21 @@ def tree_simplification(tree: Node, allow_chain) -> Node:
     # if not allow_chain:
     # print(f'Copy : {len(tree_copy)}\t{tree_copy}')
     # print(f'Before simplification: {len(tree)}\t{tree}')
-    tree_a = copy.deepcopy(tree)
-    tree.tree_node_grouping(tolerance=0)
-    tree_b = copy.deepcopy(tree)
-    tree.tree_node_grouping(tolerance=0)
-    tree_c = copy.deepcopy(tree)
-    print(f'Tree updates\n'
-          f'\t{tree_copy.represent_str(show_all=False)}\n'
-          f'a\t{tree_a.represent_str(show_all=False)}\n'
-          f'b\t{tree_b.represent_str(show_all=False)}\n'
-          f'c\t{tree_c.represent_str(show_all=False)}')
+    for _ in range(3):
+        tree_tmp = copy.deepcopy(tree)
+        tree.tree_node_grouping(tolerance=0)
+        if _ == 2:
+            raise CuriosityError
+        if tree == tree_tmp:
+            continue
+
+    # print(f'Tree updates\n'
+    #       f'\t{tree_copy.represent_str(show_all=False)}\n'
+    #       f'a\t{tree_a.represent_str(show_all=False)}\n'
+    #       f'b\t{tree_b.represent_str(show_all=False)}\n'
+    #       f'c\t{tree_c.represent_str(show_all=False)}')
+    # if tree_b.represent_str(show_all=False) != tree_c.represent_str(show_all=False):
+    #     raise CuriosityError
     # sfeh:discuss
     # print(f'After simplification:  {len(tree)}\t{tree}')
     if len(tree_copy) < len(tree):
@@ -1159,8 +1204,8 @@ def tree_simplification(tree: Node, allow_chain) -> Node:
         print(f'WHATHAPPENED SFEH\t{astr}'
               f'\n\told: {tree_copy.str_as_list()}'
               f'\n\tsym: {tree.str_as_list()}')
-              # f'\n\told: {tree_copy.get_expr_symlike()}'  # todo offtopic check, if the inputs from chained all get evaluated
-              # f'\n\tsym: {tree.get_expr_symlike()}'  # todo offtopic tree node grouping maybe needs iterations
+              # f'\n\told: {tree_copy.get_expr_symlike()}'
+              # f'\n\tsym: {tree.get_expr_symlike()}'
               # f'\n\tsym: {tree_copy.get_tree_export()}')
         if astr != bstr:  # sfeh str() should not be required
             # sfeh 'a**0.5' does not become 'sqrt(a)'! use rational=True or sympy.S.Half
@@ -1274,18 +1319,9 @@ class BaseOperator(Node):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.chain = kwargs.get('chain')
-        # try:
-        #     self.set_childs(args)
-        # except Exception as todo:
-        #     self.set_childs(*args)
-            # we just want this to work, no matter what
 
     def set_chain(self, param: bool):
         self.chain = param
-
-    def get_chain(self) -> bool:
-        # todo actually just if arity < childs
-        return self.chain
 
     def get_np_child_lambdas(self, *args):
         ccl = [cc.eval_np(*args) for cc in self.get_childs()]
@@ -1483,7 +1519,7 @@ class ChainableOp:
 
     sympy-equivalent: class LatticeOp
     """
-    xtype_chain = None  # todo offtopic name allow_chain allow_variadic
+    xtype_chain = None
 
 
 class MathOperator(BaseOperator):
@@ -2835,7 +2871,7 @@ class Evolution:
 
     def __init__(self, symbol_list=None, origin_xtype=float, operators=None, origin_tree=None,
                  depth_max=10, nodes_max=100, complexity_metric='tree_node_count_fair', allow_chain=None):
-        """
+        """  # sfeh:xxx offtopic name allow_chain allow_variadic
         origin_tree: A tree, which
         sfeh:warning if options are left empty?
         """
@@ -3531,7 +3567,6 @@ class ExplainableGP:
             """Numpy eval""" ###############################
             true_values = self.df_train['action'].to_numpy()
 
-            # todo fitness is nan? -> raise ValueError. // [11: fit  nan (Mul(Sin(Log(cartPos))
             # Suppress specific RuntimeWarning
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)  # sfeh:discuss...
@@ -3541,8 +3576,8 @@ class ExplainableGP:
                 np_fitness = np.sqrt(np.mean((np_results - true_values) ** 2))
                 np_fitness = round(np_fitness, FLOAT_PRECISION)
 
-            if 'nan' in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf:
-                pass # debug me
+            if 'nan' in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf:  # sfeh:code not so good looking
+                raise ValueError # sfeh NanValueError
 
             if sum(df_results - np_results) > 0:
                 a = results_raw_df.to_numpy()[0]
@@ -3805,8 +3840,6 @@ if __name__ == '__main__':
         'a*b*2', 'a+b+a+2+4', 'Min(a, b, 3)', 'Max(a, b, 4, a**2, a+b)', 'a<3',
         'Piecewise((a, c), (b, d), (a+b, True))',
         'Eq(4, 4.0)',
-        # 'Square((Min(-2.176629, b) - Abs(a)))', 'Round(-123.333334234) + Round(b)',
-        # 'Ifte(c, 1, 2)', '1 < Max(2, Ifte(1 < a, 1, 1))', 'Max(a+1, 2**(5-b))'
     ]
     tst_custom = [
         'Ifte(a, b, c)',

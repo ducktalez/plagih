@@ -46,10 +46,7 @@ def _test_simple(chained_on=True):
             d = np.clip(int(random.normalvariate(3.5, 1)), 3, 5)
             tree = gp.evolve.evolve_new_tree_depth(d, float, p_term=0)
             tree = tree_simplification(tree, allow_chain=chained_on)
-            try:
-                tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
-            except Exception as todo:
-                tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
+            tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
             return tree
 
         gp.end_generation()

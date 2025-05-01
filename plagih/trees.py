@@ -233,7 +233,7 @@ class NodeStructure:
 
     # sfeh:Do links to parents lead to problems when crossover/etc happens?
 
-    def repair_all(self, parent: 'NodeStructure'=None, root: 'NodeStructure'= None, depth=int, arg_pos=0):
+    def repair_all(self, parent: 'NodeStructure'=None, root: 'NodeStructure'= None, depth:int=0, arg_pos=0):
         """backlink was introduced on 23.04.2024,
         linking the root and parent nodes"""
         self.root_node = root
@@ -243,7 +243,6 @@ class NodeStructure:
 
         for ii, cc in enumerate(self.get_childs()):
             cc.repair_all(parent=self, root=root, depth=depth+1, arg_pos=ii)
-        # self.repair_depth()  # sfeh:random powrounded replace is always when fitting? should maybe not?
 
 
 class Node(NodeStructure):
@@ -387,8 +386,8 @@ class Node(NodeStructure):
         if clean_chain:
             self.revoke_useless_nodes()
 
-        if self != debug_me:  # success: 8, fails: 0
-            print(f'Debug=> {debug_me.represent_str()}\n     => {self.represent_str()}')
+        # if self != debug_me:  # success: 8, fails: 0
+        #     print(f'Debug=> {debug_me.represent_str()}\n     => {self.represent_str()}')  # sfeh ALWAYS is Div(Mul(cartPos), cartVel)
 
         # Updating the structural Infos that have been updated with false Informations
         if repair:
@@ -1103,11 +1102,6 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
 
     else:  # **Operators**
 
-        if s_expr.is_Integer:  # todo delete this if did not happen
-            raise 'TODO'
-        else:
-            pass
-
         cc_nodes = []
         for arg in s_expr.args:
             cc_nodes.append(sympy_to_tree(arg, allow_chain=allow_chain))
@@ -1134,9 +1128,6 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
             return otherwise
 
         # sfehx include Usub, ignore usub in tree len()
-
-        # elif isinstance(s_expr, Round_Dummy):
-        #     return nd2(Round, [cc_nodes[0]])
 
         # elif isinstance(s_expr, Mul):
         #     # if s_expr.args[0].is_Rational:
@@ -1171,7 +1162,7 @@ def tree_simplification(tree: Node, allow_chain) -> Node:
     #   map piecewise to if-then-else
     #   map power fractal - to sqrt?
     """
-    tree_copy = copy.deepcopy(tree)
+    tree_history = [copy.deepcopy(tree)]
     expr_sym = tree.get_sympy_expr()
     # expr_sym2 = sympy.simplify(expr_sym)
     # if str(expr_sym) != str(expr_sym2):
@@ -1181,13 +1172,13 @@ def tree_simplification(tree: Node, allow_chain) -> Node:
     # if not allow_chain:
     # print(f'Copy : {len(tree_copy)}\t{tree_copy}')
     # print(f'Before simplification: {len(tree)}\t{tree}')
-    for _ in range(3):
-        tree_tmp = copy.deepcopy(tree)
+    for _ in range(5):
+        tree_history.append(copy.deepcopy(tree))
         tree.tree_node_grouping(tolerance=0)
-        if _ == 2:
+        if _ == 4:
             raise CuriosityError
-        if tree == tree_tmp:
-            continue
+        if str(tree) == str(tree_history[-1]):
+            break
 
     # print(f'Tree updates\n'
     #       f'\t{tree_copy.represent_str(show_all=False)}\n'
@@ -1198,15 +1189,14 @@ def tree_simplification(tree: Node, allow_chain) -> Node:
     #     raise CuriosityError
     # sfeh:discuss
     # print(f'After simplification:  {len(tree)}\t{tree}')
-    if len(tree_copy) < len(tree):
-        astr = string_remove_trailing_zeroes(str(tree_copy.get_sympy_expr()))
+    tree_history_len = [len(tt) for tt in tree_history]
+    if len(tree_history[0]) < len(tree):
+        astr = string_remove_trailing_zeroes(str(tree_history[0].get_sympy_expr()))
         bstr = string_remove_trailing_zeroes(str(tree.get_sympy_expr()))
-        print(f'WHATHAPPENED SFEH\t{astr}'
-              f'\n\told: {tree_copy.str_as_list()}'
-              f'\n\tsym: {tree.str_as_list()}')
-              # f'\n\told: {tree_copy.get_expr_symlike()}'
-              # f'\n\tsym: {tree.get_expr_symlike()}'
-              # f'\n\tsym: {tree_copy.get_tree_export()}')
+        print(f'WHATHAPPENED SFEH\t{astr}')
+        for ii, tt in enumerate(tree_history):
+            print(f'\t{ii}:\t{tt.str_as_list()}')
+
         if astr != bstr:  # sfeh str() should not be required
             # sfeh 'a**0.5' does not become 'sqrt(a)'! use rational=True or sympy.S.Half
             # sfeh: rational can be a valid improvement, creating unified trees
@@ -1332,9 +1322,6 @@ class BaseOperator(Node):
         """Ensures all child nodes return properly shaped NumPy arrays."""
         ccl = [cc.eval_now(df, *args) for cc in self.get_childs()]
 
-        # Ensure uniform shapes (convert lists & scalars to arrays)
-        # sfeh:open np.float64 is not good for bool values
-        # sfeh:open npfloat64 and npfloat32 as option for runtime?
         # ccl = [np.asarray(c, dtype=np.float64) if not isinstance(c, np.ndarray) else c for c in ccl]
         ccl = [np.asarray(c) if not isinstance(c, np.ndarray) else c for c in ccl]
 
@@ -1439,10 +1426,19 @@ class BaseOperator(Node):
         #     np.asarray(v, dtype=np.float64) if not isinstance(v, np.ndarray) else v.astype(np.float64)
         #     for v in evaluated_children
         # ]
-        evaluated_children = [
-            np.asarray(v, dtype=bool) if v.dtype == np.bool_ else np.asarray(v, dtype=np.float64)
-            for v in evaluated_children
-        ]
+        # evaluated_children = [
+        #     np.asarray(v, dtype=bool) if v.dtype == np.bool_ else np.asarray(v, dtype=np.float64)
+        #     for v in evaluated_children
+        # ]
+        for v in evaluated_children:
+            if v.dtype == np.bool_:
+                arr = np.asarray(v)
+                if arr.dtype != bool:
+                    CuriosityError("WARNUNG: Bool-Datentyp erwartet, aber anderer Typ gefunden:", arr.dtype)
+            else:
+                arr = np.asarray(v)
+                if arr.dtype != np.float64:
+                    CuriosityError("WARNUNG: float64 erwartet, aber anderer Typ gefunden:", arr.dtype)
 
         # print(f"DEBUG: Final child types after conversion: {[type(v) for v in evaluated_children]}")
         # print(f"DEBUG: Child shapes before np_fun: {[np.shape(v) for v in evaluated_children]}")
@@ -1453,7 +1449,7 @@ class BaseOperator(Node):
             print(f"ERROR in {self.__class__.__name__}: {e}")
             print(f"DEBUG: Child values: {evaluated_children}")
 
-            # **Ensure correct input types**
+            # todo remove **Ensure correct input types**
             corrected_inputs = [
                 np.asarray(v, dtype=np.float64) if v.dtype != np.bool_ else np.asarray(v, dtype=bool)
                 for v in evaluated_children
@@ -1707,7 +1703,8 @@ class DivFraction(MathOperator):
     xtype = ((float,), float)
     symfun = lambda *a: sympy.Pow(a[0], sympy.S.NegativeOne)
     # np_fun = np.reciprocal "
-    np_fun = staticmethod(lambda a: np.reciprocal(np.asarray(a, dtype=np.float64)))
+    # np_fun = staticmethod(lambda a: np.reciprocal(np.asarray(a, dtype=np.float64)))  # todo remove np.asarray
+    np_fun = staticmethod(lambda a: np.reciprocal(a, dtype=np.float64))
     # sfeh np.reciprocal(2) -> 0 np.reciprocal(float(2)) -> 0.5
     # -> it is okay, 1/(int) is just always zero
     # np_fun = lambda *a: np.reciprocal(float(*a))  # sfeh rename class?
@@ -1891,7 +1888,8 @@ class And(LogicOperator, ChainableOp):
     symfun = staticmethod(lambda *a: sympy.And(*a))
 
     # NumPy: Verwendet logical_and.reduce für mehr als zwei Eingaben
-    np_fun = staticmethod(lambda *a: np.logical_and.reduce([np.asarray(x, dtype=bool) for x in a]))
+    # np_fun = staticmethod(lambda *a: np.logical_and.reduce([np.asarray(x, dtype=bool) for x in a]))
+    np_fun = staticmethod(lambda *a: np.logical_and.reduce(a))
 
     showme = 'And'
     sy_str = '({0} & {1})'  # Arity-2 Formatierung
@@ -1904,6 +1902,7 @@ class And(LogicOperator, ChainableOp):
     # Ketten-Operator für mehr als zwei Eingaben
     expr_dmy = 'And'
     symfun_chain = staticmethod(lambda a: sympy.And(*a))
+    # np_fun_chain = staticmethod(lambda *a: np.logical_and.reduce([np.asarray(x, dtype=bool) for x in a]))
     np_fun_chain = staticmethod(lambda *a: np.logical_and.reduce([np.asarray(x, dtype=bool) for x in a]))
 
     showme_chain = 'AndChain'
@@ -2180,9 +2179,8 @@ class Round(MathOperator):
         return lambda df: _safe_round(*[ccl(df) for ccl in self.get_np_child_lambdas()])  # Replace self.some_value with your actual input
 
     def eval_now(self, df, *args) -> [np.ndarray]:
-
+        """"""
         child_values = self.get_np_child_now(df, *args)
-
         res = self.np_fun(*child_values)
 
         return res
@@ -3400,8 +3398,8 @@ class ExplainableGP:
                     tree = self.evolve.evolve_new_tree_depth(n, float, p_term=0)
                     tree = tree_simplification(tree, allow_chain=self.allow_chain)
                     # sfeh trees can shrink to single-noded trees
-                    if tree.get_max_depth() < 1:
-                        raise TreeSizeError(f'Tree did not get complex enough')
+                    if tree.get_max_depth() == 0:
+                        raise TreeSizeError(f'Tree did not get complex enough (only root node).')
                     return tree
 
                 @self.create_trees(rate=0.5)
@@ -3536,7 +3534,7 @@ class ExplainableGP:
         if sy_expr in self.lut_fitness:
             fitness = self.lut_fitness[sy_expr]
         else:
-            """Sympy lambdify"""  ###############################
+            """Sympy lambdify"""
             results_raw_df = eval_predict_df(sy_expr, self.df_train, self.evolve.symbol_list)
             df_results = self.normalize_numpy(results_raw_df)
             df_fitness = np.sqrt(np.mean((df_results - self.df_train['action']) ** 2))

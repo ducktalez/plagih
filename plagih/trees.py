@@ -99,7 +99,7 @@ class Round_Dummy(sympy.Function):  # Not a Math-operator
     def __call__(self, a):
         # Handle numerical evaluation (for lambdify or direct calls)
         if isinstance(a, (int, float, np.ndarray)):
-            return np.round(a)
+            return np.round(a).astype(np.int64)  # asarray
         raise TypeError("Unsupported type for numerical evaluation in Round_Dummy")
 
 
@@ -3998,3 +3998,7 @@ if __name__ == '__main__':
     tree = PowRounded(Number(3), Number(2))
     npex = tree.eval_np_debug(df)
     print(f'res: {npex}')
+
+    # todo remove
+    sfeh = 'Mul(289, cartVel, Add(cartPos, Mul(2.27, cartVel)), Sin(PowRounded(12, cartPos)))'
+    sympy_to_tree(sfeh)

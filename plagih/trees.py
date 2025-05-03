@@ -184,10 +184,14 @@ class NodeStructure:
     def get_max_depth(self, depth=0):
         """Go through all nodes, save depth
         sfeh: this computes the depth and does not take advantage of saved depths"""
-        if len(self.childs) <= 1:
-            return depth
+        # if hasattr(self, '_cached_depth'):
+        #     return self._cached_depth  # sfeh:discuss
+        if self.has_childs():
+            max_depth = max(cc.get_max_depth(depth=depth + 1) for cc in self.get_childs())
         else:
-            return max(cc.get_max_depth(depth=depth + 1) for cc in self.get_childs())
+            max_depth = depth
+
+        return max_depth
 
     # def is_operator_arity(self):
     #     """Check, if node is an operator with a fixed arity
@@ -392,9 +396,9 @@ class Node(NodeStructure):
         # Updating the structural Infos that have been updated with false Informations
         if repair:
             self.parent_node = self_copy.parent_node  # debug if parent are linked correctly
-            self.root_node = self_copy.root_node  # todo recursively update
+            self.root_node = self_copy.root_node  # sfeh:open recursively update
             self.depth = self_copy.depth  # todo recursively update, use input params
-            # self.repair_depth()
+
             self.repair_all()
 
         else:
@@ -1449,17 +1453,17 @@ class BaseOperator(Node):
             print(f"ERROR in {self.__class__.__name__}: {e}")
             print(f"DEBUG: Child values: {evaluated_children}")
 
-            # todo remove **Ensure correct input types**
-            corrected_inputs = [
-                np.asarray(v, dtype=np.float64) if v.dtype != np.bool_ else np.asarray(v, dtype=bool)
-                for v in evaluated_children
-            ]
-
-            try:
-                res = self.np_fun(*corrected_inputs)
-            except Exception as e2:
-                print(f"FINAL ERROR in {self.__class__.__name__}: {e2}")
-                raise
+            # # sfeh delete_me **Ensure correct input types**
+            # corrected_inputs = [
+            #     np.asarray(v, dtype=np.float64) if v.dtype != np.bool_ else np.asarray(v, dtype=bool)
+            #     for v in evaluated_children
+            # ]
+            #
+            # try:
+            #     res = self.np_fun(*corrected_inputs)
+            # except Exception as e2:
+            #     print(f"FINAL ERROR in {self.__class__.__name__}: {e2}")
+            raise
 
         # try:
         #     res = self.np_fun(*child_values)

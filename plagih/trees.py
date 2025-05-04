@@ -11,6 +11,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import sympy
+from sympy import false
 from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.utilities.exceptions import ignore_warnings
 
@@ -84,10 +85,17 @@ class Round_Dummy(sympy.Function):  # Not a Math-operator
     """
     @classmethod
     def eval(cls, a):
-        if a.is_symbol:
-            return
+        if not isinstance(a, sympy.Basic):
+            return sympy.Integer(round(a))
+        elif a.is_symbol:
+            return  # leave symbolic
         elif a.is_number:
-            return sympy.Integer(round(a))  # Ensure it's a SymPy Integer
+            return sympy.Integer(round(a))
+        # else:
+        #     return a  # sfeh not tested yet
+        #       It preserves symbolic expressions that aren't explicitly handled.
+        #       It prevents None from being returned, which SymPy would interpret as "no simplification"
+        #       and keep unevaluated.
 
     """This method allows the class to be compatible with SymPy's internal operations. 
     However, its default implementation often suffices, and you don't need to override it 
@@ -235,6 +243,16 @@ class NodeStructure:
 
         return
 
+    def import_tree(self, input):
+        # todo...import-statement?
+        ...
+        return
+
+    def export_tree(self, input):
+        # todo...import-statement?
+        ...
+        return
+
     # sfeh:Do links to parents lead to problems when crossover/etc happens?
 
     def repair_all(self, parent: 'NodeStructure'=None, root: 'NodeStructure'= None, depth:int=0, arg_pos=0):
@@ -263,8 +281,16 @@ class Node(NodeStructure):
     xtype: tuple = ()
     xtype_chain: Union[bool, float] = False
 
+    is_Atom = ...  # sympy-check
+
     def __init__(self, *args: iter, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def __sympy__(self):
+        if self.symfun is None:
+            raise NotImplementedError(f"symfun not defined in {type(self).__name__}")
+        child_syms = [child.__sympy__() for child in self.childs]
+        return self.symfun(*child_syms)
 
     def eval_np_debug(self, *args):
         """
@@ -642,7 +668,7 @@ class Node(NodeStructure):
                 else:
                     # expr = ', '.join(expr)
                     expr = self.sy_str.format(expr)
-            except Exception as todo:  # is actually a required exception!
+            except Exception as okay:  # sfeh is actually a required exception! (...but why)
                 expr = self.sy_str.format(*expr)  # e. g. Min
 
         if try_sympify:
@@ -850,7 +876,7 @@ class Node(NodeStructure):
                         # e. g.: "a * 1/3" -> "3/a"
                         div_by = cc.get_childs()[0]
                         node_sub = Mul(*mychlds_remove(cc))
-                        self.replace_with(Div, [node_sub, div_by])  # todo this makes chained mul little parts
+                        self.replace_with(Div, [node_sub, div_by])  # todo this makes chained mul to 1/(mul( )) -> check if more than 2 inputs
                     elif isinstance(cc, Number):
                         mul1 = cc.get_value()
                         if mul1 in (1, sympy.S.One):
@@ -1160,7 +1186,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
 
 def tree_simplification(tree: Node, allow_chain) -> Node:
     """
-    (Tries to) simplify/mathematically-reduce a tree. It is quite experimental
+    (Tries to) simplify/sympify/unify/mathematically-reduce a tree. It is quite experimental
     # sfeh sympy-reconstruct patterns
     #   map symoy-sign to a sum
     #   map piecewise to if-then-else
@@ -1204,7 +1230,10 @@ def tree_simplification(tree: Node, allow_chain) -> Node:
         if astr != bstr:  # sfeh str() should not be required
             # sfeh 'a**0.5' does not become 'sqrt(a)'! use rational=True or sympy.S.Half
             # sfeh: rational can be a valid improvement, creating unified trees
-            print_warning('w', f'Diff in sympy expression?\n\t{astr}\n\t{bstr}')
+            print_warning('w', f'Diff in sympy expression?\n\t{astr}\n\t{bstr}')  # sfeh raise ex...
+            # sfeh Example 03.05.2025
+            # 	sin(cartVel**(6450000000*Round_Dummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
+            # 	sin(cartVel**(6.45e+9*Round_Dummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
     return tree
 
 def evolve_reduce_simplicate(tree: Node, allow_chain, completely=True, force=False) -> Node:
@@ -1309,6 +1338,7 @@ class PleaseUsePartnerOp(Node_Dummy):
 class BaseOperator(Node):
 
     chain: Optional[bool] = None
+    is_Atom = False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1326,8 +1356,8 @@ class BaseOperator(Node):
         """Ensures all child nodes return properly shaped NumPy arrays."""
         ccl = [cc.eval_now(df, *args) for cc in self.get_childs()]
 
-        # ccl = [np.asarray(c, dtype=np.float64) if not isinstance(c, np.ndarray) else c for c in ccl]
-        ccl = [np.asarray(c) if not isinstance(c, np.ndarray) else c for c in ccl]
+        ccl = [np.asarray(c, dtype=np.float64) if not isinstance(c, np.ndarray) else c for c in ccl]
+        # ccl = [np.asarray(c) if not isinstance(c, np.ndarray) else c for c in ccl]
 
         # Reshape to consistent format
         max_shape = max(len(c.shape) for c in ccl)
@@ -1430,10 +1460,10 @@ class BaseOperator(Node):
         #     np.asarray(v, dtype=np.float64) if not isinstance(v, np.ndarray) else v.astype(np.float64)
         #     for v in evaluated_children
         # ]
-        # evaluated_children = [
-        #     np.asarray(v, dtype=bool) if v.dtype == np.bool_ else np.asarray(v, dtype=np.float64)
-        #     for v in evaluated_children
-        # ]
+        evaluated_children = [
+            np.asarray(v, dtype=bool) if v.dtype == np.bool_ else np.asarray(v, dtype=np.float64)
+            for v in evaluated_children
+        ]
         for v in evaluated_children:
             if v.dtype == np.bool_:
                 arr = np.asarray(v)
@@ -1441,29 +1471,28 @@ class BaseOperator(Node):
                     CuriosityError("WARNUNG: Bool-Datentyp erwartet, aber anderer Typ gefunden:", arr.dtype)
             else:
                 arr = np.asarray(v)
-                if arr.dtype != np.float64:
+                if arr.dtype != np.float64:  # int32: I, float32: I
                     CuriosityError("WARNUNG: float64 erwartet, aber anderer Typ gefunden:", arr.dtype)
 
         # print(f"DEBUG: Final child types after conversion: {[type(v) for v in evaluated_children]}")
         # print(f"DEBUG: Child shapes before np_fun: {[np.shape(v) for v in evaluated_children]}")
 
-        try:
-            res = self.np_fun(*evaluated_children)
-        except Exception as e:
-            print(f"ERROR in {self.__class__.__name__}: {e}")
-            print(f"DEBUG: Child values: {evaluated_children}")
-
-            # # sfeh delete_me **Ensure correct input types**
-            # corrected_inputs = [
-            #     np.asarray(v, dtype=np.float64) if v.dtype != np.bool_ else np.asarray(v, dtype=bool)
-            #     for v in evaluated_children
-            # ]
-            #
-            # try:
-            #     res = self.np_fun(*corrected_inputs)
-            # except Exception as e2:
-            #     print(f"FINAL ERROR in {self.__class__.__name__}: {e2}")
-            raise
+        res = self.np_fun(*evaluated_children)
+        # except Exception as e:
+        #     print(f"ERROR in {self.__class__.__name__}: {e}")
+        #     print(f"DEBUG: Child values: {evaluated_children}")
+        #
+        #     # sfeh delete_me **Ensure correct input types**
+        #     corrected_inputs = [
+        #         np.asarray(v, dtype=np.float64) if v.dtype != np.bool_ else np.asarray(v, dtype=bool)
+        #         for v in evaluated_children
+        #     ]
+        #
+        #     try:
+        #         res = self.np_fun(*corrected_inputs)
+        #     except Exception as e2:
+        #         print(f"FINAL ERROR in {self.__class__.__name__}: {e2}")
+        #     raise
 
         # try:
         #     res = self.np_fun(*child_values)
@@ -1559,7 +1588,8 @@ class Terminal(Node):  # sfeh sympy.Atom
     - constants (e.g. 2.3)
     - observations (e.g. b, aka data input)
     """
-    # value = None
+    is_Atom = True
+
     def __len__(self):
         return 1
 
@@ -1572,6 +1602,7 @@ class Terminal(Node):  # sfeh sympy.Atom
     def eval_now(self, df, *args)  -> [np.ndarray]:
         res = self.eval_np()(df)
         return res
+
 
 
 class Boolean(Terminal):
@@ -1617,7 +1648,9 @@ class Symbol(Terminal):
     showme = 'Symbol'
 
     def eval_np(self, *args):
-        return lambda df: df[str(self.get_value())].to_numpy()
+        """Returns a lambda that extracts the correct column from a DataFrame as NumPy array."""
+        name = str(self.get_value())
+        return lambda df: df[name].to_numpy(dtype=np.float64)
 
 
 def cast_input(value: Any) -> Node:
@@ -1644,12 +1677,8 @@ class Add(MathOperator, ChainableOp):
     """
 
     """
-    symfun = lambda *a: sympy.Add(a[0], a[1])
-    symfun2 = lambda *a: sympy.Add(*a)
-
+    symfun = lambda *a: sympy.Add(*a)
     np_fun = staticmethod(lambda *a: np.sum(np.stack(a), axis=0))
-    # np_fun = np.sum
-
     showme = 'Add'
     sy_str = '({0} + {1})'
     formulae_str = '({} + {})'
@@ -1678,7 +1707,8 @@ class Add(MathOperator, ChainableOp):
 
 
 class Mul(MathOperator, ChainableOp):
-    symfun = lambda *a: sympy.Mul(a[0], a[1])
+    symfun = staticmethod(lambda *args: sympy.Mul(*args))
+    # symfun = lambda *a: sympy.Mul(a[0], a[1])
     # np_fun = np.multiply  # np.multiply.reduce  # np.multiply ONLY for pairwise multiplication!
     np_fun = staticmethod(lambda *a: np.prod(np.stack(a), axis=0))
     showme = 'Mul'  #
@@ -1707,8 +1737,8 @@ class DivFraction(MathOperator):
     xtype = ((float,), float)
     symfun = lambda *a: sympy.Pow(a[0], sympy.S.NegativeOne)
     # np_fun = np.reciprocal "
-    # np_fun = staticmethod(lambda a: np.reciprocal(np.asarray(a, dtype=np.float64)))  # todo remove np.asarray
-    np_fun = staticmethod(lambda a: np.reciprocal(a, dtype=np.float64))
+    np_fun = staticmethod(lambda a: np.reciprocal(np.asarray(a, dtype=np.float64)))  # todo remove np.asarray
+    # np_fun = staticmethod(lambda a: np.reciprocal(a, dtype=np.float64))
     # sfeh np.reciprocal(2) -> 0 np.reciprocal(float(2)) -> 0.5
     # -> it is okay, 1/(int) is just always zero
     # np_fun = lambda *a: np.reciprocal(float(*a))  # sfeh rename class?
@@ -1762,6 +1792,7 @@ class Sign(MathOperator, NoSymCapitalized):
 
 class Log(MathOperator, NoSymCapitalized):
     # Log isactually Ln (base e). Log/Ln is the same, idk fuck Log10
+    # discuss: Log-operator + abs/max so inputs are >0
     symfun = lambda *a: sympy.log(a[0])
     np_fun = np.log
     showme = 'Log'
@@ -1892,8 +1923,8 @@ class And(LogicOperator, ChainableOp):
     symfun = staticmethod(lambda *a: sympy.And(*a))
 
     # NumPy: Verwendet logical_and.reduce für mehr als zwei Eingaben
-    # np_fun = staticmethod(lambda *a: np.logical_and.reduce([np.asarray(x, dtype=bool) for x in a]))
-    np_fun = staticmethod(lambda *a: np.logical_and.reduce(a))
+    np_fun = staticmethod(lambda *a: np.logical_and.reduce([np.asarray(x, dtype=bool) for x in a]))
+    # np_fun = staticmethod(lambda *a: np.logical_and.reduce(a))
 
     showme = 'And'
     sy_str = '({0} & {1})'  # Arity-2 Formatierung
@@ -1906,8 +1937,8 @@ class And(LogicOperator, ChainableOp):
     # Ketten-Operator für mehr als zwei Eingaben
     expr_dmy = 'And'
     symfun_chain = staticmethod(lambda a: sympy.And(*a))
-    # np_fun_chain = staticmethod(lambda *a: np.logical_and.reduce([np.asarray(x, dtype=bool) for x in a]))
     np_fun_chain = staticmethod(lambda *a: np.logical_and.reduce([np.asarray(x, dtype=bool) for x in a]))
+    # np_fun_chain = staticmethod(lambda *a: np.logical_and.reduce([np.asarray(x, dtype=bool) for x in a]))
 
     showme_chain = 'AndChain'
     sy_str_chain = 'And({})'  # Variadische Notation
@@ -1938,7 +1969,8 @@ class Xor(LogicOperator, NoSymCapitalized, ChainableOp):
     """
     Caution: loading '(a ^ b)', the sympy-Xor-representation, is interpreted as a**b"""
     symfun = lambda *a: sympy.Xor(*a)
-    np_fun = staticmethod(lambda *a: np.logical_xor.reduce(*a, axis=0))
+    # np_fun = staticmethod(lambda *a: np.logical_xor.reduce(*a, axis=0))
+    np_fun = staticmethod(lambda *a: np.logical_xor.reduce([np.asarray(x, dtype=bool) for x in a])) # np.logical_and.reduce())
     showme = 'Xor'
     sy_str = 'Xor({}, {})'  # 'a ^ b'
     repr_str = 'Xor{},[{}, {}]'
@@ -2206,6 +2238,7 @@ class PowRounded(MathOperator):
     def eval_np(self, *args):
         return lambda df: self.np_fun(*self.get_np_child_lambdas())
 
+
 # sfeh:open
 # class Log1p(MathOperator):
 #     # https://docs.sympy.org/latest/modules/codegen.html#sympy.codegen.cfunctions.log1p
@@ -2248,7 +2281,8 @@ class Sqrt(MathOperator):
 
 class Usub(MathOperator):
     xtype = ((float,), float)
-    symfun: Callable[[Tuple[float]], float] = staticmethod(lambda a: -a[0])
+    # symfun: Callable[[Tuple[float]], float] = staticmethod(lambda a: -a[0])
+    symfun: Callable[[Tuple[float]], float] = staticmethod(lambda a: -a)
     np_fun = staticmethod(lambda x: np.negative(x))
     showme = 'Usub'  # sfeh
     sy_str = '(-{})'
@@ -3581,7 +3615,7 @@ class ExplainableGP:
             if 'nan' in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf:  # sfeh:code not so good looking
                 raise ValueError # sfeh NanValueError
 
-            if sum(df_results - np_results) > 0:
+            if sum(df_results - np_results) > 0.001:
                 a = results_raw_df.to_numpy()[0]
                 b = results_raw_np[0]
                 print_warning('w', f'Different eval results? {results_raw_df.to_numpy()[0]:4.4f} {results_raw_np[0]:4.4f}, {sy_expr}')
@@ -3996,9 +4030,38 @@ if __name__ == '__main__':
     }
     df = pd.DataFrame(data)
     tree = PowRounded(Number(3), Number(2))
-    npex = tree.eval_np_debug(df)
-    print(f'res: {npex}')
+    # todo test hieraus machen, soll am ende von einem testlauf durchlaufen
 
-    # todo remove
-    sfeh = 'Mul(289, cartVel, Add(cartPos, Mul(2.27, cartVel)), Sin(PowRounded(12, cartPos)))'
-    sympy_to_tree(sfeh)
+
+
+
+
+
+
+
+
+    expr = 'Mul(289, cartVel, Add(cartPos, Mul(2.27, cartVel)), Sin(PowRounded(12, cartPos)))'
+    tr = PowRounded(Number(12), Symbol(sympy.S('cartPos')))
+    ex = 'Mul(12, cartPos)'
+    t = PowRounded(Number(12), Symbol(sympy.Symbol('cartPos')))
+    # sy = sympy.sympify(ex, locals=locals_dict)
+    # t = sympy_to_tree(sy, allow_chain=True)
+    t = Mul(
+        Number(289),
+        Symbol(sympy.Symbol('cartVel')),
+        Add(
+            Symbol(sympy.Symbol('cartPos')),
+            Mul(
+                Number(2.27),
+                Symbol(sympy.Symbol('cartVel'))
+            )
+        ),
+        Sin(
+            PowRounded(
+                Number(12),
+                Symbol(sympy.Symbol('cartPos'))
+            )
+        )
+    )
+    print(t)
+    print(t.get_sympy_expr())

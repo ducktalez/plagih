@@ -379,18 +379,21 @@ def printez(message_type, text):
         return
 
     if 'i' in message_type:
-        print(f'{BColors.CYAN}Info: {text}{BColors.RESET_COLOR}')
+        txt = f'{BColors.CYAN}Info: {text}{BColors.RESET_COLOR}'
     elif 'f' in message_type:
-        print(f'{BColors.MAGENTA}Writing File: {text}{BColors.RESET_COLOR}{BColors.RESET_COLOR}')
+        txt = f'Writing File: {text}{BColors.RESET_COLOR}{BColors.RESET_COLOR}'
     elif 'a' in message_type:
-        print(f'{BColors.GREEN}{text}{BColors.RESET_COLOR}')  # Paretofront:
+        txt = f'{BColors.GREEN}{text}{BColors.RESET_COLOR}'  # Paretofront:
     elif 'w' in message_type:
         print_warning(message_type, text)
+        return
     elif 'g' in message_type:
         time_now = time.strftime("%d.%m %H:%M", time.localtime())
-        print(f'[{time_now}] {text}')
+        txt = f'[{time_now}] {text}'
     else:
         raise Exception(f'print_type-mode {message_type} not known.')
+
+    print(f'{txt}')
 
     return
 

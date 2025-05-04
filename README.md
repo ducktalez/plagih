@@ -147,6 +147,29 @@
 - Zum Thema "großer Einheitsbaum": Hier könnte man Äste absterben lassen, wenn sie zu
   schlecht sind. Also z.B. wenn alle weiteren Äste unter diesem Knoten schlecht sind,
   und es über 1000 Stück schon gab, dann wird dieser Knoten an der Stelle gekillt.
+- Komplexitätsmaß Assembler-operatoren?
+    ```
+  import dis
+
+  dis.dis(lambda x: x+1)
+  
+  3           0 RESUME                   0
+              2 LOAD_FAST                0 (x)
+              4 LOAD_CONST               1 (1)
+              6 BINARY_OP                0 (+)
+             10 RETURN_VALUE
+    ```
+    ````
+  from numba import njit
+  @njit
+   def f(x):
+       return np.log(x**2 + 1e-6)
+   
+   f.inspect_asm(np.float64)
+    ````
+- BIGTREE
+  A complete tree, feeding bottom-up on nodes that seem very userful
+  like putting the genepool actually all together
 
 # Working with this Framework...
 The following are bitches:

@@ -19,6 +19,7 @@ from plagih.monitoring import plot_performance
 from plagih.paretofront import pareto_sort, pareto_from_pop, plot_paretofront
 from plagih.tree_complexity.tree_edit_distance import apted_distance
 from plagih.util import *
+from web_interface.flask_test import index
 
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
@@ -83,19 +84,25 @@ class Round_Dummy(sympy.Function):  # Not a Math-operator
     Workaround for rounding exponents
     For more details, look at: plagih/discoveries/rounding_exponents.py
     """
+    # @classmethod
+    # def eval(cls, a):
+    #     if not isinstance(a, sympy.Basic):
+    #         return sympy.Integer(round(a))
+    #     elif a.is_symbol:
+    #         return  # leave symbolic
+    #     elif a.is_number:
+    #         return sympy.Integer(round(a))
+    #     # else:
+    #     #     return a  # sfeh not tested yet
+    #     #       It preserves symbolic expressions that aren't explicitly handled.
+    #     #       It prevents None from being returned, which SymPy would interpret as "no simplification"
+    #     #       and keep unevaluated.
     @classmethod
     def eval(cls, a):
-        if not isinstance(a, sympy.Basic):
-            return sympy.Integer(round(a))
-        elif a.is_symbol:
-            return  # leave symbolic
-        elif a.is_number:
-            return sympy.Integer(round(a))
-        # else:
-        #     return a  # sfeh not tested yet
-        #       It preserves symbolic expressions that aren't explicitly handled.
-        #       It prevents None from being returned, which SymPy would interpret as "no simplification"
-        #       and keep unevaluated.
+        try:
+            return sympy.Integer(round(a.evalf()))
+        except:
+            return
 
     """This method allows the class to be compatible with SymPy's internal operations. 
     However, its default implementation often suffices, and you don't need to override it 
@@ -105,10 +112,18 @@ class Round_Dummy(sympy.Function):  # Not a Math-operator
     #     return self.eval(a)  # sfeh: is this required?
 
     def __call__(self, a):
-        # Handle numerical evaluation (for lambdify or direct calls)
-        if isinstance(a, (int, float, np.ndarray)):
-            return np.round(a).astype(np.int64)  # asarray
+        # if isinstance(a, (int, float, np.ndarray)):
+        #     return np.round(a).astype(np.int64)
+        if isinstance(a, (int, float)):
+            return int(round(a))
+        elif isinstance(a, np.ndarray):
+            return np.vectorize(lambda v: int(round(float(v))))(a)
         raise TypeError("Unsupported type for numerical evaluation in Round_Dummy")
+
+    @staticmethod
+    def np_round_dummy(x):
+        """Exact numpy-equivalent of Round_Dummy logic"""
+        return np.vectorize(lambda v: int(round(float(v))))(x)
 
 
 @dataclass
@@ -871,13 +886,17 @@ class Node(NodeStructure):
                     # Removes the one factor from the childs, that is matched
                     mychlds_remove = lambda el: [x for x in mychlds if x != el]
 
-                    if isinstance(cc, DivFraction):
-                        denominators.append(cc.get_childs()[0])
-                        # e. g.: "a * 1/3" -> "3/a"
-                        div_by = cc.get_childs()[0]
-                        node_sub = Mul(*mychlds_remove(cc))
-                        self.replace_with(Div, [node_sub, div_by])  # todo this makes chained mul to 1/(mul( )) -> check if more than 2 inputs
-                    elif isinstance(cc, Number):
+                    # if isinstance(cc, DivFraction):
+                    #     has_div_frac = [isinstance(ix, DivFraction) for ix in mychlds]
+                    #     if sum(has_div_frac) > 1:
+                    #         continue  # leave them alone
+                    #     denominators.append(cc.get_childs()[0])
+                    #     # e. g.: "a * 1/3" -> "3/a"
+                    #     div_by = cc.get_childs()[0]
+                    #     node_sub = Mul(*mychlds_remove(cc))
+                    #     self.replace_with(Div, [node_sub, div_by])  # todo this makes chained mul to 1/(mul( )) -> check if more than 2 inputs
+                    # el
+                    if isinstance(cc, Number):
                         mul1 = cc.get_value()
                         if mul1 in (1, sympy.S.One):
                             raise CuriosityError
@@ -906,6 +925,15 @@ class Node(NodeStructure):
                         else:
                             # sfeh:ScaleNode-idea here
                             pass
+                    elif isinstance(cc, DivFraction):
+                        has_div_frac = [isinstance(ix, DivFraction) for ix in mychlds]
+                        if sum(has_div_frac) > 1:
+                            continue  # leave them alone
+                        denominators.append(cc.get_childs()[0])
+                        # e. g.: "a * 1/3" -> "3/a"
+                        div_by = cc.get_childs()[0]
+                        node_sub = Mul(*mychlds_remove(cc))
+                        self.replace_with(Div, [node_sub, div_by])  # todo this makes chained mul to 1/(mul( )) -> check if more than 2 inputs
                     else:
                         continue  # make sure to skip the following return statement
 
@@ -1206,6 +1234,7 @@ def tree_simplification(tree: Node, allow_chain) -> Node:
         tree_history.append(copy.deepcopy(tree))
         tree.tree_node_grouping(tolerance=0)
         if _ == 4:
+            print(tree_history)
             raise CuriosityError
         if str(tree) == str(tree_history[-1]):
             break
@@ -1631,7 +1660,7 @@ class Number(Terminal):
     # tflow = lambda a: tf.constant(a, dtype=tf.float32)
 
     def eval_np(self, *args):  # sfeh: required to make np.array()?
-        return lambda df: np.full(df.shape[0], self.get_value(), dtype=float)
+        return lambda df: np.full(df.shape[0], self.get_value(), dtype=np.float64)
 
 
 class Symbol(Terminal):
@@ -1667,8 +1696,10 @@ def cast_input(value: Any) -> Node:
             return Boolean(value)
         elif isinstance(value, (sympy.Number, float, int)):
             return Number(value)
-        elif isinstance(value, (sympy.Symbol, str)):
+        elif isinstance(value, str):
             return Symbol(value)  # sfeh symbol opts
+        elif isinstance(value, sympy.Symbol):
+            return value
         else:
             raise NotImplementedError
 
@@ -2003,6 +2034,7 @@ class ITE(LogicOperator):
 class Min(BaseMinMax, ChainableOp):
     symfun = lambda *a: sympy.Min(*a)
     # np_fun = lambda *a: np.minimum(*a)  # sfeh max, maximum, maximum.reduce
+    # np_fun = staticmethod(lambda xs: np.minimum.reduce(xs))
     np_fun = staticmethod(lambda *a: np.minimum.reduce(np.vstack([np.asarray(x, dtype=np.float64) for x in a]), axis=0))
     showme = 'Min'
     sy_str = 'Min({0},{1})'
@@ -2200,7 +2232,8 @@ class Round(MathOperator):
     # this is here to hint the type, as sympy will throw a warning otherwise, leading to this
     symfun = lambda *a: Round_Dummy(a[0])
     # np_fun = lambda num: np.round(np.asarray(num)).astype(int)
-    np_fun: Callable[[np.ndarray], np.ndarray] = staticmethod(lambda num: np.int_(np.round(num)))
+    # np_fun: Callable[[np.ndarray], np.ndarray] = staticmethod(lambda num: np.int_(np.round(num)))
+    np_fun = staticmethod(lambda x: np.vectorize(lambda v: int(round(float(v))))(x))
     showme = 'Round'
     sy_str = 'Round_Dummy({},1)'
     repr_str = 'Round_Dummy{},[{}]'
@@ -2226,10 +2259,8 @@ class PowRounded(MathOperator):
     Rounds the exponent; sfeh:idea clip exponent?"""
     symfun = lambda *a: sympy.Pow(a[0], Round_Dummy(a[1]))
     # np_fun = lambda base, exponent, *args: np.power(base, np.int_(np.round(exponent)))
-    np_fun = staticmethod(lambda base, exponent: np.power(base, np.int_(np.round(exponent))))
-    # np_fun = lambda base, exponent: np.power(base, np.round(exponent))
-    # np_fun = lambda *a: np.power(*a[0], np.round(*a[1]))
-    # np_fun = None
+    # np_fun = staticmethod(lambda base, exponent: np.power(base, np.int_(np.round(exponent))))
+    np_fun = staticmethod(lambda base, exponent: np.power(base, np.vectorize(lambda x: int(round(float(x))))(exponent)))
     showme = 'PowRounded'
     sy_str = '{0})**Round_Dummy({1})'
     repr_str = 'PowRounded{},[{}, {}]'
@@ -2930,6 +2961,7 @@ class Evolution:
             symbol_list = sympy.symbols('a b', real=True, imaginary=False)  # sfeh:sympy symbols options
         else:
             symbol_list = [sympy.Symbol(s) if isinstance(s, str) else s for s in symbol_list]
+            symbol_list = sorted(symbol_list, key=lambda x: str(x))
         self.symbol_list = symbol_list
         self.node_selector = NodeSelect(operators, symbol_list)
 
@@ -3208,8 +3240,8 @@ class Evolution:
 
         if len(b_nds) > 0:
             b_nd = np.random.choice(b_nds)
-            if isinstance(a_nd, Usub) or isinstance(b_nd, Usub):
-                print('ASDFASDASD')  # todo remove this line (debug)
+
+
         else:
             xt_out = float if xt_out == bool else bool  # switching to the other swap type
             b_nds = bb.list_mutable_nodes(xtype=xt_out)
@@ -3572,6 +3604,7 @@ class ExplainableGP:
         if sy_expr in self.lut_fitness:
             fitness = self.lut_fitness[sy_expr]
         else:
+
             """Sympy lambdify"""
             results_raw_df = eval_predict_df(sy_expr, self.df_train, self.evolve.symbol_list)
             df_results = self.normalize_numpy(results_raw_df)
@@ -3579,56 +3612,32 @@ class ExplainableGP:
             df_fitness = round(df_fitness, FLOAT_PRECISION)
             df_results = df_results.to_numpy()
 
-            # """basic eval"""  ############################### sfeh takes FOREVER
-            # symbol_list = self.evolve.symbol_list
-            # loop_results = []
-            # for i, row in self.df_train.iterrows():
-            #     local_dict = {s: row[str(s)] for s in symbol_list}
-            #     # row_result = sy_expr.subs(local_dict).evalf()
-            #     row_result = sy_expr.evalf(locals=local_dict)
-            #     loop_results.append(row_result)
-            # loop_results = np.array(loop_results)
-            # if self.normalize_numpy is not None:
-            #     loop_results = self.normalize_numpy(loop_results)
-            # loop_fitness = np.sqrt(np.mean((loop_results - self.df_train['action']) ** 2))
-
-            # """Numpy eval debug""" ###############################
-            # true_values = self.df_train['action'].to_numpy()
-            # npd_results = evotree.eval_np_debug(self.df_train)
-            # npd_results = self.normalize_numpy(npd_results)
-            # npd_fitness = np.sqrt(np.mean((npd_results - true_values) ** 2))
-            # npd_fitness = round(npd_fitness, FLOAT_PRECISION)
-            # # sfeh:off-topic should input variables not be 0? (->no its ok)
-
-            """Numpy eval""" ###############################
+            """Numpy eval"""
             true_values = self.df_train['action'].to_numpy()
 
-            # Suppress specific RuntimeWarning
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)  # sfeh:discuss...
-                # results_raw_np = evotree.eval_np()
                 results_raw_np = evotree.eval_now(self.df_train)  # exception? -> check np.isnan(df_results).any()
                 np_results = self.normalize_numpy(results_raw_np)
                 np_fitness = np.sqrt(np.mean((np_results - true_values) ** 2))
                 np_fitness = round(np_fitness, FLOAT_PRECISION)
 
-            if 'nan' in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf:  # sfeh:code not so good looking
-                raise ValueError # sfeh NanValueError
+                if 'nan' in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf:  # sfeh:code not so good looking
+                    raise ValueError # sfeh NanValueError
 
             if sum(df_results - np_results) > 0.001:
-                a = results_raw_df.to_numpy()[0]
-                b = results_raw_np[0]
-                print_warning('w', f'Different eval results? {results_raw_df.to_numpy()[0]:4.4f} {results_raw_np[0]:4.4f}, {sy_expr}')
-                cartVel = self.df_train.iloc[0]['cartVel']
-                cartPos = self.df_train.iloc[0]['cartPos']
-                action = self.df_train.iloc[0]['action']
-                ex_tmp = str(evotree.get_expr_symlike())
-                ex_tmp = ex_tmp.replace('Max', 'max')
-                ex_tmp = ex_tmp.replace('Min', 'min')
-                ex_tmp = ex_tmp.replace('Abs', 'abs')
-                ex_tmp = ex_tmp.replace('sin', 'np.sin')
+
+                diffs = np.abs(df_results - np_results)
+                mask = diffs > 0.001
+
+                if np.any(mask):
+                    indices = np.where(mask)[0]
+                    print_warning('w', f'{len(indices)} differences found above tolerance 0.001:')
+
+                # results_syraw_df = eval_predict_df_sympy_only(sy_expr, self.df_train)  # sfeh takes forever
+
                 result_diffs = df_results - np_results
-                # print(f'{result_diffs}')
+                print(f'Different results in evaluation: {sum(df_results - np_results)} ({sy_expr})')
 
             fitness = np_fitness
 
@@ -3785,27 +3794,57 @@ def selection_tournament(pop, n=3):
     evotree = copy.deepcopy(evotree)
     return evotree
 
+def eval_predict_df_sympy_only(sy_expr: sympy.Basic, df: pd.DataFrame) -> pd.Series:
+    """TODO TODOTODO Alles aufräumen, was mit evaluation zu tun hat. Prüfung da lassen.
+    Echte SymPy-Evaluierung über ein DataFrame – Zeile für Zeile.
+    Keine NumPy-/lambdify-Abkürzungen.
+    Gibt eine Series mit evaluierten float-Werten zurück.
+    """
+    results = []
+
+    # Automatisch alle freien Symbole erkennen und in Strings umwandeln
+    symbol_names = [str(s) for s in sy_expr.free_symbols]
+
+    for _, row in df.iterrows():
+        local_dict = {name: row[name] for name in symbol_names}
+        result = sy_expr.evalf(subs=local_dict)  # oder .subs(...).evalf()
+        results.append(float(result))  # konvertiere zu float
+        printpl('iii', f'Sympy row-by-row evaluation: {result} ({row.values})')
+
+    return pd.Series(results, index=df.index)
 
 def eval_predict_df(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list):
     """
+    Evaluation with Sympy
     """
-    # func = sympy.lambdify(symbol_list, sy_expr, modules=[custom_functions, 'numpy'])
-    # func = sympy.lambdify(symbol_list, sy_expr, modules=['numpy'])
-    func = sympy.lambdify(symbol_list, sy_expr, modules=[{'Round_Dummy': np.round}, 'numpy'])
+
+    if symbol_list is None:
+        symbol_list = sorted(sy_expr.free_symbols, key=lambda x: str(x))
+    else:
+        symbol_list = [sympy.Symbol(s) if isinstance(s, str) else s for s in symbol_list]
+        symbol_list = sorted(symbol_list, key=lambda x: str(x))
+
+    symbol_list_str = [str(s) for s in symbol_list]
+
+    test_row = df.iloc[0]
+
+    # 2. Mapping-Check
+    if set(symbol_list_str) != set(str(s) for s in sy_expr.free_symbols):
+        raise ValueError("Mismatch between provided symbol list and expression symbols!")
+    sfeh_dict = {'Abs': Abs.np_fun, 'Round_Dummy': Round_Dummy.np_round_dummy,
+                 'Min': Min.np_fun, 'Max': Max.np_fun}
+    func = sympy.lambdify(symbol_list, sy_expr, modules=[sfeh_dict, 'numpy'])
+    # func = sympy.lambdify(symbol_syms, sy_expr, modules=[sfeh_dict, 'numpy'])
+    # func = sympy.lambdify(symbol_list, sy_expr, modules=[{'Round_Dummy': np.round}, 'numpy'])  # todo
 
     with warnings.catch_warnings():
         with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
             with ignore_warnings(DeprecationWarning):  # something 'like use "**" instead of "Pow"'
-                df_results = df.apply(lambda row: func(*[row[str(var)] for var in symbol_list]), axis=1)
-                # try:
+                if set(symbol_list_str) != set(str(s) for s in sy_expr.free_symbols):
+                    raise ValueError("Mismatch between symbol list and free symbols of expression!")
+                df_results = df.apply(lambda row: func(*[row[s] for s in symbol_list_str]), axis=1)  # sfeh was str(var)
 
-                #
-
-                #     # sy_expr = plagih_sympify(expr)
-                #     df_results = df.apply(lambda row: func(*[row[str(var)] for var in symbol_list]), axis=1)
     return df_results
-
-
 
 
 def evaluate_sympy_expression(expression, df, symbols):
@@ -3939,53 +3978,6 @@ if __name__ == '__main__':
                 sub.append(x)
         return sub
 
-    # # print(all_typus_subclasses())
-    # # print('===================')
-    # # print_relevant_subclasses()
-    #
-    # # test_basic_tfconversion()  # sfeh all tests
-    # # test_sympify()
-    #
-    # # x = Add(childs=[Symbol('a'), Mul(childs=[2, 3])])
-    # # n1 = Float
-    # # n2 = Symbol
-    # # n3 = Boolean
-    # # n4 = Add()
-    # # # print(n1, n2, n3, n4)
-    # # print(len(n1), len(n4))
-    #
-    # # for _subc in get_subclasses(BaseTree):
-    # #     if  in _subc.__bases__:
-    # #         # print(f'ignoring {_subc}')
-    # #         pass
-    # #     else:
-    # #         print(f'{_subc.__name__}')
-    # #
-    # # print(type(RelationalOperator))
-    # # print_relevant_subclasses()
-    #
-    # """
-    # Alpha tests
-    # """
-    # # t1 = tb.invent_core_depth(float, 3, p_term=0.5)
-    # # tree2 = tb.evolve_mutate_point(t1)
-    # # t1 = tb.invent_core_depth(float, 3, p_term=0.1)
-    # # t2 = tb.invent_core_depth(float, 3, p_term=0.1)
-    # # t1, t2 = tb.evolve_crossover(t1, t2)
-    # # for _ in range(5):
-    # #     print('x.D', t1, '===', t2)
-    # #     t1, t2 = tb.evolve_crossover(t1, t2)
-    # #     print('x~D', t1, '===', t2)
-    #
-    # # nstr = '["+",["-",["Ifte",["True"],["sin",[2]],["/",[2.043],[4]]],["cartVel"]],[-1.3]]'
-    # # nstr = '["+:fix",["-:fix",["Ifte",["True"],["sin",["2"]],["/",["2.043"],["4"]]],["cartVel"]],["-1.3"]]'
-    # # expr = 'Mul(2.5, cartVel)'
-    # # expr = 'Ifte(Or(Lt(cartPos, cartPos), True), (Abs(cartVel) + cartVel/2), (Add(11.0, cartVel) / Sign(16.0)))'
-    # # expr_sy = plagih_sympify(expr, eval_locals={'cartVel': sympy.Symbol('cartVel'), 'cartPos': sympy.Symbol('cartPos')})
-    # # tree = sympy_to_tree(expr_sy, allow_chain=False)
-    # tree = Ifte(False, 1, Add(Pow(1, 2), 'vel'))
-    # print(tree)
-
     # sfeh: staticmethod for symfun?
 
     ndclasses = all_typus_subclasses()
@@ -4065,3 +4057,8 @@ if __name__ == '__main__':
     )
     print(t)
     print(t.get_sympy_expr())
+
+
+print(Round_Dummy(sympy.Float(-0.1)))       # sollte -0
+print(Round_Dummy(sympy.Float(0.49)))       # sollte 0
+print(Round_Dummy(sympy.Symbol('x') + 1.13))  # sollte eine Zahl liefern, wenn x ersetzt wird

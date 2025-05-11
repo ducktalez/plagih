@@ -11,7 +11,8 @@ custom_functions = {
     # # 'Max': np.maximum,
     # # sympy.minimum: np.minimum,  # is this even an option?
     # # sympy.maximum: np.maximum,
-    'Round_Dummy': np.round,
+    # 'Round_Dummy': np.round,  todo check this
+    'Round_Dummy': lambda a: int(round(a)),
 }
 
 

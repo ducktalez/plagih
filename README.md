@@ -5,10 +5,7 @@
 
 ## Ablage/Todos
 
-- get eval_np() working! and eval_now()
-- Rewrite tree class (new "add" node)
-- use logging
-- display pareto candidates as
+- display pareto candidates as png trees
 - evaluation alternatives
   - compare runtime
   - done! np-fun in every class, vectorize
@@ -18,6 +15,7 @@
 - self.evolve.origin_tree
 - simplification
 - introduce breath-first-representation!
+- use logging
 
 # Sub-todos
 
@@ -248,7 +246,7 @@ Should we see the trees from top down (all levels)?
 
 ## Compared to DEAP
 - DEAP has non-Programming options (altering arrays). Plagih is only for GP.
-- complexity node-count based, instead of depth-baased only.
+- complexity node-count based, instead of depth-based only.
 - trees that are not lists
 
 ## crazy ideas
@@ -303,7 +301,7 @@ All packages: `matplotlib pathlib sympy tensorflow pandas sympy scipy pyYAML sci
 
 `conda install -c matplotlib pathlib sympy tensorflow pandas sympy scipy pyYAML`
 
-`pip install scikit-learn scipy gym apted tikzplotlib`
+`pip install scikit-learn scipy gym apted tikzplotlib graphviz`
 
 
 non-conda packages:
@@ -431,8 +429,8 @@ plausible addition to the original program which the developer does understand.
 
 
 ## Developer information
-- Do not save paths in pickle between runs; if required, only save strings. 
-- Otherwise, pickle files between systems may not work.
+- Sympy evaluation and numpy-evaluation have slightly different results.
+  Especially when 'Round' is oart of the calculation. NP is faster, sympy more accurate.
 
 ### The structure of the code
 

@@ -100,8 +100,14 @@ class Round_Dummy(sympy.Function):  # Not a Math-operator
     @classmethod
     def eval(cls, a):
         try:
-            return sympy.Integer(round(a.evalf()))
-        except:
+            if not isinstance(a, sympy.Basic):
+                return sympy.Integer(round(a.evalf()))
+                # return sympy.Integer(round(a))
+            elif a.is_symbol:
+                return  # leave symbolic
+            elif a.is_number:
+                return sympy.Integer(round(a.evalf()))
+        except Exception as ex:
             return
 
     """This method allows the class to be compatible with SymPy's internal operations. 
@@ -307,58 +313,6 @@ class Node(NodeStructure):
         child_syms = [child.__sympy__() for child in self.childs]
         return self.symfun(*child_syms)
 
-    def eval_np_debug(self, *args):
-        """
-        Debug-friendly version of eval_np() without vectorization or lambda functions.
-
-        Args:
-            *args: Optional additional arguments (e.g., for lambdified inputs).
-
-        Returns:
-            The computed NumPy result as a raw NumPy array.
-        """
-        # Step 1: Evaluate all child nodes sequentially
-        child_results = []
-        for child in self.get_childs():
-            child_eval = child.eval_np(*args)  # Recursively evaluate each child
-            child_result = child_eval()  # Pass None or the required DataFrame
-            print(f"Child result: {child_result}")  # Debug: print intermediate results
-            child_results.append(child_result)
-
-        # Step 2: Apply the node's np_fun to the collected child results
-        try:
-            result = self.np_fun(*child_results)
-            print(f"Node result after applying np_fun: {result}")  # Debug: print the final result
-        except Exception as e:
-            print(f"Error while applying np_fun: {e}")
-            raise
-
-        # Step 3: Return the final result
-        return result
-
-    # def eval_np(self, *args):
-    #     """
-    #     Evaluate the node using NumPy.
-    #     Recursively applies `eval_np` on all children and uses `self.np_fun` for evaluation.
-    #     """
-    #     # Generate lambdas for children
-    #     child_lambdas = [c.eval_np(*args) for c in self.childs]
-    #
-    #     # Return a lambda that applies the numpy function to evaluated children
-    #     def node_lambda(df):
-    #         # Evaluate child lambdas with the DataFrame
-    #         child_values = [child_lambda(df) for child_lambda in child_lambdas]
-    #         # Apply the numpy function
-    #         return self.np_fun(*child_values)
-    #
-    #     return node_lambda
-    #
-    # # @classmethod
-    # def eval_np(self, *args):
-    #     cc = [lambda df: c.eval_np(*args)(df) for c in self.get_childs()]
-    #     fun = lambda df: type(self).np_fun(*cc)(df)
-    #     return fun
-
     def revoke_useless_nodes(self) -> None:
         """Simplify the node by removing unnecessary children or chain operators.
         E. g. when
@@ -431,9 +385,6 @@ class Node(NodeStructure):
         if clean_chain:
             self.revoke_useless_nodes()
 
-        # if self != debug_me:  # success: 8, fails: 0
-        #     print(f'Debug=> {debug_me.represent_str()}\n     => {self.represent_str()}')  # sfeh ALWAYS is Div(Mul(cartPos), cartVel)
-
         # Updating the structural Infos that have been updated with false Informations
         if repair:
             self.parent_node = self_copy.parent_node  # debug if parent are linked correctly
@@ -463,7 +414,7 @@ class Node(NodeStructure):
             self.parent_node.childs = [
                 new_node if child is self else child for child in self.parent_node.childs
             ]
-        # print(f"Debug: Replaced {self} ---> {new_node}")  # Debugging
+        # print(f"Debug: Replaced {self} ---> {new_node}")
         self.set_new_node(new_node)
 
         # def replace_with(self, typus: 'Node.__class__', childs: list['Node']):
@@ -574,7 +525,7 @@ class Node(NodeStructure):
     #         typus_str = f'{typus_str}, {childstr}'
     #
     #     return f"[{typus_str}]"
-        
+
 
     def get_ma_name_sfeh(self):
         s = self.showme
@@ -1410,7 +1361,6 @@ class BaseOperator(Node):
         # Step 1: Retrieve the evaluated child functions
         child_lambdas = [child.eval_np(*args) for child in self.children]
 
-        # Debugging print statement
         print(f"DEBUG: eval_np called on {self.__class__.__name__} with {len(child_lambdas)} children")
 
         # Step 2: Ensure np_fun is callable
@@ -1435,7 +1385,6 @@ class BaseOperator(Node):
             # Step 5: Ensure child_values are NumPy arrays
             child_values = [np.asarray(v) if not isinstance(v, np.ndarray) else v for v in child_values]
 
-            # Debugging
             print(f"DEBUG: Node {self.__class__.__name__}, child shapes: {[v.shape for v in child_values]}")
 
             # Step 6: Apply the NumPy function
@@ -2243,7 +2192,7 @@ class Round(MathOperator):
             # if not isinstance(input, (int, float, np.ndarray)):
             #     raise TypeError(f"Unsupported input type for np.round: {type(input)}")
             arr = np.asarray(input)
-            return np.round(arr).astype(int)  # Ensure int type
+            return np.round(arr).astype(int)  # Ensure int type  # sfeh int enough in asarray?
 
         return lambda df: _safe_round(*[ccl(df) for ccl in self.get_np_child_lambdas()])  # Replace self.some_value with your actual input
 
@@ -3163,8 +3112,7 @@ class Evolution:
         return tree
 
     def evolve_mutate_point(self, tree: Node, allow_chain):
-        """Mutate a single mutable point in any Tree.
-        sfeh:debug is the fintree a fintree copy or the same fintree?"""
+        """Mutate a single mutable point in any Tree."""
         evotree = copy.deepcopy(tree)
 
         node = rnd_choice(evotree.list_mutable_nodes())  # debug if ignores chains

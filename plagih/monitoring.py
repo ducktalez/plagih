@@ -1,6 +1,8 @@
 from plagih.util import *
 from matplotlib import pyplot as plt
 from matplotlib.ticker import StrMethodFormatter
+from collections import Counter
+from pathlib import Path
 
 
 def plot_performance(monitor_df, path_monitoring: Path):
@@ -73,4 +75,75 @@ def plot_performance(monitor_df, path_monitoring: Path):
         axs0.set_title(f'monitoring GP generations {path_monitoring.name}')  # sfeh
         fig.tight_layout()
         fig.savefig(path_monitoring)
+        plt.close('all')
+
+
+def plot_parsimony_histogram(population, path_out: Path, *, title: str | None = None, color: str = 'tab:blue'):
+    """Plottet die Parsimony/Komplexität einer Population als Histogramm.
+
+    Ziel: schnell sehen, welche Tree-Größen in der Population vorkommen.
+
+    Eigenschaften:
+    - Bins sind ganzzahlige Parsimony-Werte (ein Bin pro Wert).
+    - Balken stehen direkt nebeneinander (kein Abstand) und sind nach Parsimony auf der x-Achse sortiert.
+
+    Erwartete Populationseinträge:
+    - `Candidate`-Objekte (haben `.parsimony` oder `.get_parsim()`)
+    - oder Nodes/Trees, wenn sie ein Attribut `.parsimony` haben (Fallback)
+
+    `path_out` sollte ein `pathlib.Path` sein (z.B. `self.rootdir / 'monitoring_parsimony_histogram.png'`).
+    """
+
+    def _get_parsimony(item):
+        if item is None:
+            return None
+        # Candidate: bevorzugt API
+        if hasattr(item, 'get_parsim') and callable(getattr(item, 'get_parsim')):
+            return getattr(item, 'get_parsim')()
+        if hasattr(item, 'parsimony'):
+            return getattr(item, 'parsimony')
+        return None
+
+    pars = []
+    for it in population or []:
+        p = _get_parsimony(it)
+        if p is None:
+            continue
+        try:
+            pars.append(int(round(float(p))))
+        except Exception:
+            continue
+
+    if len(pars) == 0:
+        # Leeres Plotfile erzeugen (robust für Monitoring-Pipelines)
+        with plt.rc_context(rc={'axes.grid': True}):
+            fig, ax = plt.subplots(figsize=(16, 6))
+            ax.set_title(title or f'Parsimony histogram ({path_out.name})')
+            ax.set_xlabel('parsimony / complexity')
+            ax.set_ylabel('count')
+            ax.text(0.5, 0.5, 'no data', ha='center', va='center', transform=ax.transAxes)
+            fig.tight_layout()
+            fig.savefig(path_out)
+            plt.close('all')
+        return
+
+    counts = Counter(pars)
+    xs = sorted(counts.keys())
+    ys = [counts[x] for x in xs]
+
+    with plt.rc_context(rc={'axes.grid': True}):
+        fig, ax = plt.subplots(figsize=(16, 6))
+
+        # width=1.0 -> Balken ohne Lücke
+        ax.bar(xs, ys, width=1.0, align='center', color=color, edgecolor=color)
+
+        ax.set_xlabel('parsimony / complexity')
+        ax.set_ylabel('count')
+        ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.0f}'))
+
+        ax.set_xlim(min(xs) - 0.5, max(xs) + 0.5)
+        ax.set_title(title or f'Parsimony histogram ({path_out.name})')
+
+        fig.tight_layout()
+        fig.savefig(path_out)
         plt.close('all')

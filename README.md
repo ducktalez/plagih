@@ -19,7 +19,6 @@
 
 # Sub-todos
 
-- histogram for tree complexity
 - discuss: allow_chain is probably not required at so many places...
 - gen_create_initial -> create random pop if pop empty? with leftovers?
 - tree -> evaluate nodes for best improvement 
@@ -29,7 +28,6 @@
 - replacing
   - replace x**2 with Squared(x)
   - replace -1*x, coming from sympy functions
-  - 
 - Tests for:
   - Auto-testruns: loop/reload through [random, origin, origin_fixed] [MC, IB]
   - TF-evaluation equals python-evaluation equals sympy evaluation

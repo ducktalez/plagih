@@ -15,8 +15,8 @@ from sympy import false
 from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.utilities.exceptions import ignore_warnings
 
-from plagih.monitoring import plot_performance
-from plagih.paretofront import pareto_sort, pareto_from_pop, plot_paretofront
+from plagih.monitoring import *
+from plagih.paretofront import *
 from plagih.tree_complexity.tree_edit_distance import apted_distance
 from plagih.util import *
 from web_interface.flask_test import index
@@ -3602,6 +3602,7 @@ class ExplainableGP:
         """
         plot_performance(self.monitor_df, self.rootdir / 'monitoring.png')
         plot_paretofront(self.paretofront, self.rootdir, self.evolve.nodes_max)
+        plot_parsimony_histogram(self.pop_genepool, self.rootdir / 'monitoring_parsimony_histogram.png')
 
     def backup_save(self, opt_path_backup=None):
         """

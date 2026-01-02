@@ -19,8 +19,6 @@ symbols_lambda = lambda x: sympy.Symbol(x, real=True, imaginary=False)
 rootdir = Path.cwd() / 'MTC200_RMSE_scratch'
 normalize_numpy = lambda x: np.round(np.clip(x, 0, 2), 0)
 
-gen_end = 100
-gen_max = 15
 nodes_max = 50
 depth_max = 10
 
@@ -97,7 +95,7 @@ def _test_random_pop(chained_on=True):
 
     gp.time_genstart = time.perf_counter()  # sfeh here?
 
-    while gp.gen_id <= gp.pop_size and not gp.run_custom_exit_condition():
+    while gp.gen_id <= gp.gen_end and not gp.run_custom_exit_condition():
 
         @gp.create_trees(rate=0.1)
         def repro1():
@@ -192,7 +190,7 @@ def _test_random_pop(chained_on=True):
 
 
 if __name__ == "__main__":
-    _test_random_pop(chained_on=True)
-    _test_random_pop(chained_on=False)
     _test_simple(chained_on=False)
     _test_simple(chained_on=True)
+    _test_random_pop(chained_on=True)
+    _test_random_pop(chained_on=False)

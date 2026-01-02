@@ -1,34 +1,4 @@
 """
-The main class of a gp run. It holds the following functionalities
-- run information (config, evolution-specifications for the loop, success monitoring])
-- population (pop_base, pop_next)
--
-"""
-import copy
-import random
-import warnings
-
-import numpy as np
-import pandas as pd
-import sympy
-
-from sympy.functions.elementary.piecewise import ExprCondPair
-from sympy.utilities.exceptions import ignore_warnings
-
-from matplotlib.ticker import StrMethodFormatter
-
-from plagih.paretofront import *
-from plagih.tree_complexity.tree_edit_distance import apted_distance
-from plagih.util import *
-
-
-np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
-
-
-from typing import Optional, List, Union, Callable, Any, Tuple
-from dataclasses import dataclass, field
-
-"""
 plagih_tree contain a new implementation of trees that we use in genetic programming to display a program.
 The old karoo "fintree" is replaced with, for now, "treer" in the code.
 not all functions can use fintree for now and some fintree-functions require the old "fintree"
@@ -70,6 +40,32 @@ Custom Operators /Functions/Nodes/Terminals/Nested:
     Any custom node must have a typus subclassing NodeBase
     Also, make a case in sympy_to_tree to reconstruct trees from sympy expressions.
 """
+
+
+import copy
+import random
+import warnings
+
+import numpy as np
+import pandas as pd
+import sympy
+
+from sympy.functions.elementary.piecewise import ExprCondPair
+from sympy.utilities.exceptions import ignore_warnings
+
+from matplotlib.ticker import StrMethodFormatter
+
+from plagih.paretofront import *
+from plagih.tree_complexity.tree_edit_distance import apted_distance
+from plagih.util import *
+
+
+np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
+
+
+from typing import Optional, List, Union, Callable, Any, Tuple
+from dataclasses import dataclass, field
+
 
 
 class Round_Dummy(sympy.Function):  # Not a Math-operator
@@ -498,20 +494,6 @@ class Node(NodeStructure):
         """sfeh's check"""
         return issubclass(type(self), Number)
 
-    # def repr_as_list(self):
-    #     typus_str = self.typus.__name__  # Node-name (Mul, Symbol)
-    #
-    #     if self.is_term():
-    #         try:
-    #             typus_str = self.childs[0].evalf()
-    #         except AttributeError as ex:
-    #             typus_str = self.childs[0]  # AttributeError("'bool' object has no attribute 'evalf'")
-    #     else:
-    #         childstr = ', '.join([cc.repr_as_list() for cc in self.get_childs()])
-    #         typus_str = f'{typus_str}, {childstr}'
-    #
-    #     return f"[{typus_str}]"
-
 
     def get_ma_name_sfeh(self):
         s = self.showme
@@ -581,25 +563,6 @@ class Node(NodeStructure):
         s = self.get_sympy_expr()
         return s
 
-    # def get_expr_raw_fstring(self):
-    #     """Add (1, a)
-    #     self.typus.__name__ gets the class name
-    #     """
-    #     if self.is_term():
-    #         fex = f'{self.get_childs()[0]}'
-    #         fex = string_remove_trailing_zeroes(fex)
-    #         return fex
-    #     else:
-    #         fex = [cc.get_expr_raw_fstring() for cc in self.get_childs()]
-    #         fex = ', '.join(fex)
-    #         if issubclass(type(self), OperatorArity):
-    #             fex = f'{self.typus.showme}({fex})'
-    #         elif self.is_ExprCdPair():
-    #             fex = f'({fex})'
-    #         else:
-    #             fex = f'{self.typus.showme}({fex})'
-    #     return f'{fex}'
-
     def get_expr_symlike(self, try_sympify=False, cut_terms=False):
         """(1 + a)
         each step returns like ({} + {})
@@ -647,12 +610,7 @@ class Node(NodeStructure):
         else:
 
             if xtype is None or xtype == self.get_xtype_self():
-
                 node_list = [self]
-                # if allow_chain or (not self.is_chain()):  # if it is chain -> check if allowed
-                #     node_list = [self]
-                # else:
-                #     node_list = []
             else:
                 node_list = []
 
@@ -1047,14 +1005,6 @@ def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
         raise Exception(f'Complexity measurement not available: {complexity_measure}')
 
 
-# class RootNode_Dummy(Node):
-#     """Sfeh:discuss
-#     this node can be used as dummy and is used to mimic a root type"""
-#
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-
-
 def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
     """
     tree_from_expr, tree_from_sympy
@@ -1229,51 +1179,6 @@ def evolve_reduce_simplicate(tree: Node, allow_chain, completely=True, force=Fal
 def node_deepcopy(tree: Node) -> Node:
     _cpy = copy.deepcopy(tree)
     return _cpy
-
-
-# class TreeMeta:
-#
-#     def __init__(self, fitness, parsimony):
-#         self.fitness = fitness
-#         self.parsimony = parsimony
-#
-#     def get_fitness(self):
-#         return self.fitness
-#
-#     def get_parsimony(self):
-#         return self.parsimony
-#
-#     # ...should this mean the size or fitness? not clear at all
-#     # def __lt__(self, other):
-#     #     return self.get_fitness() < other.get_fitness()
-#     #
-#     # def __eq__(self, other):
-#     #     return self.get_fitness() <= other.get_fitness()
-
-
-# class OriginTree(FinalizedTree):
-#     """
-#     The origin fintree (which was already loaded) gets activated for its use in the GP-process
-#     sfeh: This class could be a subclass of FinalizedTree, but only if it is used only when an origin exists
-#     """
-#
-#     def __init__(self, tree, meta):
-#         super().__init__(tree, meta)
-#         if tree:
-#             meta.append_tag('origin')  # sfeh:discuss
-#             self.existing = True
-#             # self.printpl('gg', f'Loading origin fintree, regr. error {fitness_train}.
-#             Time: {time.perf_counter() - self.time_start:4.2f}s')
-#         else:
-#             self.existing = False
-#             self.fintree = None  # sfeh probably the 'existing' above is deprecated
-#
-#     def origin_is_fix(self):
-#         return self.tree.is_fix
-#
-#     def origin_tree_copy(self):
-#         return copy.deepcopy(self.fintree.tree)
-
 
 
 class CustomOperator:
@@ -2196,8 +2101,6 @@ class Div(MathOperator):
     """
     sympy.div() doesn't work for non-polynomials
     """
-    # symfun = lambda *a: sympy.Mul(a[0], 1 / a[1])
-    # symfun = lambda *a: sympy.div(a[0], a[1])  #
     symfun = lambda *a: sympy.Mul(a[0], sympy.Pow(a[1], -1))
     np_fun = staticmethod(np.divide)
     showme = 'Div'
@@ -3233,7 +3136,7 @@ class ExplainableGP:
         else:
             raise NotImplementedError
         self.df_train = df_train
-        # self.df_control = df_control
+
         self.evolve = evolve
         self.gen_end = gen_end
         self.pop_size = pop_size
@@ -3252,6 +3155,7 @@ class ExplainableGP:
         self.pop_next = []
 
         self.lut_sym = {}
+        self.lut_remove = {}
         self.lut_parsim = {}
         self.lut_fitness = {}  # Lookup-table for tree(-expressions) and its fitness/parsimony. Improving runtime a lot!
 
@@ -3495,6 +3399,8 @@ class ExplainableGP:
         evotree.repair_depth()
 
         tree_id = evotree.get_lut_id()
+        if tree_id in self.lut_remove:
+            printpl('iii', f'Tree-id already marked for removal in LUT: {tree_id}')
 
         if tree_id in self.lut_sym:
             sy_expr = self.lut_sym[tree_id]
@@ -3509,51 +3415,58 @@ class ExplainableGP:
             parsimony = eval_parsimony(evotree, self.evolve.complexity_metric, origin_tree=origin_tree)
             self.lut_parsim[tree_id] = parsimony
             if raise_if_useless and parsimony > self.evolve.nodes_max:  # sfeh:open
+                self.lut_remove[tree_id] = True
                 raise TreeSizeError(f'Tree too complex: {parsimony} > {self.evolve.nodes_max}')
 
         if sy_expr in self.lut_fitness:
             fitness = self.lut_fitness[sy_expr]
         else:
 
-            """Sympy lambdify"""
-            results_raw_df = eval_predict_df(sy_expr, self.df_train, self.evolve.symbol_list)
-            df_results = self.normalize_numpy(results_raw_df)
-            df_fitness = np.sqrt(np.mean((df_results - self.df_train['action']) ** 2))
-            df_fitness = round(df_fitness, FLOAT_PRECISION)
-            df_results = df_results.to_numpy()
+            try:
+                """Sympy lambdify"""
+                results_raw_df = eval_predict_df(sy_expr, self.df_train, self.evolve.symbol_list)
+                df_results = self.normalize_numpy(results_raw_df)
+                df_fitness = np.sqrt(np.mean((df_results - self.df_train['action']) ** 2))
+                df_fitness = round(df_fitness, FLOAT_PRECISION)
+                df_results = df_results.to_numpy()
 
-            """Numpy eval"""
-            true_values = self.df_train['action'].to_numpy()
+                """Numpy eval"""
+                true_values = self.df_train['action'].to_numpy()
 
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", RuntimeWarning)  # sfeh:discuss...
-                results_raw_np = evotree.eval_now(self.df_train)  # exception? -> check np.isnan(df_results).any()
-                np_results = self.normalize_numpy(results_raw_np)
-                np_fitness = np.sqrt(np.mean((np_results - true_values) ** 2))
-                np_fitness = round(np_fitness, FLOAT_PRECISION)
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", RuntimeWarning)  # sfeh:discuss...
+                    results_raw_np = evotree.eval_now(self.df_train)  # exception? -> check np.isnan(df_results).any()
+                    np_results = self.normalize_numpy(results_raw_np)
+                    np_fitness = np.sqrt(np.mean((np_results - true_values) ** 2))
+                    np_fitness = round(np_fitness, FLOAT_PRECISION)
 
-                if 'nan' in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf:  # sfeh:code not so good looking
-                    raise ValueError # sfeh NanValueError
+                    if 'nan' in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf:  # sfeh:code not so good looking
+                        raise ValueError # sfeh NanValueError
 
-            if sum(df_results - np_results) > 0.001:
+                if sum(df_results - np_results) > 0.001:
 
-                diffs = np.abs(df_results - np_results)
-                mask = diffs > 0.001
+                    diffs = np.abs(df_results - np_results)
+                    mask = diffs > 0.001
 
-                if np.any(mask):
-                    indices = np.where(mask)[0]
-                    print_warning('w', f'{len(indices)} differences found above tolerance 0.001:')
+                    if np.any(mask):
+                        indices = np.where(mask)[0]
+                        print_warning('w', f'{len(indices)} differences found above tolerance 0.001:')
 
-                # results_syraw_df = eval_predict_df_sympy_only(sy_expr, self.df_train)  # sfeh takes forever
+                    # results_syraw_df = eval_predict_df_sympy_only(sy_expr, self.df_train)  # sfeh takes forever
 
-                result_diffs = df_results - np_results
-                print(f'Different results in evaluation: {sum(df_results - np_results)} ({sy_expr})')
+                    result_diffs = df_results - np_results
+                    print(f'Different results in evaluation: {sum(df_results - np_results)} ({sy_expr})')
 
-            fitness = np_fitness
+                fitness = np_fitness
 
-            fitness = df_fitness
+                fitness = df_fitness
 
-            self.lut_fitness[sy_expr] = fitness  # sfeh:discuss: lut update in finalize_tree_get_meta()?
+                self.lut_fitness[sy_expr] = fitness  # sfeh:discuss: lut update in finalize_tree_get_meta()?
+            except Exception as ex:
+                # TODO this try/except-block is just here for self.lut_remove marking. Clean this up later.
+                self.lut_remove[tree_id] = True
+                print_warning('w', f'Could not evaluate fitness for tree {sy_expr}: {ex}')
+                raise
 
         candidate = Candidate(evotree, fitness=fitness, parsimony=parsimony, tag=tag)
         return candidate
@@ -3573,7 +3486,7 @@ class ExplainableGP:
             gen_filename = f'monitoring_parsimony_histogram_{self.gen_id:03d}.png'
             # Use pop_size as max_population and nodes_max as max_parsimony for fixed scaling
             plot_parsimony_histogram(self.pop_genepool, self.rootdir / gen_filename,
-                                     max_population=self.gen_end,
+                                     max_population=self.pop_size,  # rename pl0x
                                      max_parsimony=self.evolve.nodes_max)
 
     def backup_save(self, opt_path_backup=None):
@@ -3587,7 +3500,6 @@ class ExplainableGP:
         run_backup_data = {}, self.gen_id, self.pop_genepool, self.paretofront, self.monitor_df
         path_backup = path_make_dir(path_backup)
         pickle_dump(path_backup, run_backup_data)
-        # sfeh:debug
 
     def backup_load(self, opt_path_backup=None):
         """Load/safe backup of a run"""
@@ -3638,33 +3550,6 @@ class ExplainableGP:
             return True
         else:
             return False
-
-    # def plot_evolve_performance(self):
-    #     """
-    #     Plots for each tag in the evolution list
-    #     (too much, I guess)
-    #     sfeh: this should be saved within the trees. Everything else is a waste of memory!
-    #     sfeh:open
-    #     """
-    #     try:
-    #         with plt.rc_context(rc=pyplot_rc_tex):
-    #             fig, axs = plt.subplots(nrows=3, ncols=1, figsize=(16, 9),
-    #                                     sharex='all')  # , gridspec_kw={'height_ratios': [1,1,1]}
-    #             fig.tight_layout()
-    #             for tag in self.evolve_tags:
-    #                 # ['fitness_train', 'parsimony', 'lentree', 'evolve_num', 'count']
-    #                 axs[0].plot(self.monitor_df[tag]['fitness_train'], label=f'{tag}')
-    #                 axs[1].plot(self.monitor_evol[tag]['parsimony'], label=f'{tag}')
-    #                 axs[2].plot((self.monitor_evol[tag]['lentree'] / self.monitor_evol[tag]['evolve_num']),
-    #                             label=f'{tag}')
-    #
-    #             plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
-    #             path = self.rootdir / f'monitoring_evolutions.pdf'
-    #             fig.savefig(path)
-    #             self.printpl('f', f"monitoring_evolutions (pdf): {path}")  # .as_posix()
-    #
-    #     except Exception as ex:
-    #         print_e(f'plot_evolution_analysis failed because of: {ex}')
 
 def plot_performance(monitor_df, path_monitoring: Path):
     """
@@ -3942,8 +3827,10 @@ def eval_predict_df(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list):
     test_row = df.iloc[0]
 
     # 2. Mapping-Check
+    wtf = set(str(s) for s in sy_expr.free_symbols)  # todo
     if set(symbol_list_str) != set(str(s) for s in sy_expr.free_symbols):
-        raise ValueError("Mismatch between provided symbol list and expression symbols!")
+        # raise ValueError("Mismatch between provided symbol list and expression symbols!")
+        pass  # delete?
     sfeh_dict = {'Abs': Abs.np_fun, 'Round_Dummy': Round_Dummy.np_round_dummy,
                  'Min': Min.np_fun, 'Max': Max.np_fun}
     func = sympy.lambdify(symbol_list, sy_expr, modules=[sfeh_dict, 'numpy'])
@@ -3954,7 +3841,8 @@ def eval_predict_df(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list):
         with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
             with ignore_warnings(DeprecationWarning):  # something 'like use "**" instead of "Pow"'
                 if set(symbol_list_str) != set(str(s) for s in sy_expr.free_symbols):
-                    raise ValueError("Mismatch between symbol list and free symbols of expression!")
+                    # raise ValueError("Mismatch between symbol list and free symbols of expression!")
+                    pass  # delete?
                 df_results = df.apply(lambda row: func(*[row[s] for s in symbol_list_str]), axis=1)  # sfeh was str(var)
 
     return df_results

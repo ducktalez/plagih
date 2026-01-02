@@ -2169,39 +2169,6 @@ class ExprCondPair_Default(ExprCondPair):
     ...
 
 
-# class AddChain(OperatorChained):
-
-
-# class MulChain(OperatorChained):
-
-
-# class MinMaxChainBase(OperatorChained):
-
-
-# class MinChain(MinMaxChainBase):
-
-
-# class MaxChain(MinMaxChainBase):
-
-
-# class OrderedSelector(ChainOp):
-#     """sfeh:Orders Elements with < and picks the (1, -1 or even -2, 'median')-element?
-#     sfeh:idea using a function for selecting the n-th is an option!"""
-#     xtype = ((float,), float)
-#     xtype_chain = float
-#     symfun = lambda *a: sympy.Order(a)
-#     np_fun = None
-
-
-# class AndChain(OperatorChained):
-
-
-# class OrChain(OperatorChained):
-
-
-# class XorChain(OperatorChained):
-
-
 sym2node = {sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos, sympy.asin: Asin, sympy.atan: Atan,
             sympy.tanh: Tanh, sympy.sinh: Sinh, sympy.cosh: Cosh, sympy.Min: Min, sympy.Max: Max, sympy.Add: Add,
             sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul, sympy.sqrt: Sqrt,
@@ -2442,83 +2409,6 @@ def expr_sympify(expr):
 #         return result
 #     raise NotImplementedError(f'Cannot convert {expr_sy}')  # noqa: unreachable code, but was reached often while dev
 
-
-# class ExperimentalBaseTree(NodeBase):
-#     """
-#     Is currently not in use and Experimental
-#     states? sfeh:discuss
-#     [None]: not set
-#     [0]:    evolution/construction/build mode (potentially missing leaf nodes)
-#     [1]:    structurally complete/finalized branch (node_depths correct, node_id set, ...)
-#     [2]:    root-correct structure
-#     [3]:    including meta-data (fitness_train, complexity)
-#
-#     # sfeh:discuss set tree depth at the end or so
-#     # sfeh: set NodeBase as metatype and make this class (ExpressionTree, or so...) a new thing
-#     """
-#
-#     args = []
-#     is_fix = False  # sfeh:x here?
-#
-#     def __new__(cls, subcls, *args, **kwargs):
-#         """
-#         Why new instead of init?
-#         -> https://docs.sympy.org/latest/tutorials/intro-tutorial/manipulation.html
-#         " SymPy classes make heavy use of the __new__ class constructor, which, unlike __init__,
-#         allows a different class to be returned from the constructor."
-#         """
-#         # if isinstance(cls, Operator):
-#         #     pass
-#         # elif isinstance(cls, TerminalNode):
-#         #     if isinstance(cls, Symbol):
-#         #         cls.fam, cls.time_index, _ = observation_get_family_and_time(args, none_return=None)
-#         #         cls.index_minmax = None
-#
-#         obj = object.__new__(subcls)
-#         obj.args = [arg for arg in args]
-#         return obj
-#
-#     def __init_subclass__(cls, **kwargs):
-#         super().__init_subclass__(**kwargs)
-#         cls.args = kwargs.get('args', [])
-#         cls.is_fix = kwargs.get('is_fix', [])
-#
-#     def __str__(self):
-#         return self.get_str_recursive()
-#
-#     def get_str_recursive(self):
-#         if isinstance(self, Operator):
-#             childstr = ', '.join([str(x) for x in self.args])
-#             _str = f"{self}({childstr})"
-#         elif isinstance(self, TerminalNode):
-#             _str = f'{self.value[0]}'
-#         else:
-#             raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
-#
-#         return _str
-#
-#     def __repr__(self):
-#         return self.get_repr_recursive()
-#
-#     def get_repr_recursive(self):
-#
-#         _isfix = ', is_fix=True' if self.is_fix else ''
-#         if isinstance(self, Operator):
-#             childstr = ', '.join([repr(x) for x in self.args])
-#         elif isinstance(self, TerminalNode):
-#             childstr = self.args[0]
-#         else:
-#             raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
-#
-#         return f"{self.__class__.__name__}({childstr}{_isfix})"
-#
-#     def __len__(self):
-#         return 1 + sum([len(cc) for cc in self.args])
-#
-#     def get_nclass(self):
-#         return self.__class__.__name__
-
-
 #######################################
 # sfeh:idea check these options
 #     import sympy
@@ -2640,29 +2530,6 @@ def operatorpool_to_picks(d_operator_pool):
     for k_xt in pick_op_match.keys():
         pick_op_match[k_xt] = norm_choices(pick_op_match[k_xt])
     return pick_op, pick_op_match
-
-
-# class NodeCreatorBase(ABC):
-#
-#     @abstractmethod
-#     def choose_operator(self, xt):
-#         pass
-#
-#     @abstractmethod
-#     def choose_operator_match(self, xtype):
-#         pass
-#
-#     @abstractmethod
-#     def choose_terminal(self, xt):
-#         pass
-#
-#     @abstractmethod
-#     def choose_constant(self, xt):
-#         pass
-#
-#     @abstractmethod
-#     def choose_symbol(self, xt):
-#         pass
 
 
 class NodeSelect:
@@ -2820,44 +2687,6 @@ class Evolution:
             prune_amount = len(tree) - self.nodes_max
 
         return tree
-
-    # def observations_add(self, obs_names):
-    #     """
-    #     :param obs_names: list of all observation names (e.g. ['cartVel', 'cartPos'])
-    #     """
-    #     # def observation_select_index(observations, max_hist=10):
-    #     #     """
-    #     #     chooses variables but weighting how old they are.
-    #     #     observations = ['gain_0', 'gain_1', 'gain_2', 'gain_3', 'gain_4'] -> [0.28, 0.23, 0.19, 0.16, 0.13]
-    #     #     sfeh: what about larger steps?
-    #     #     e.g. [0, 1, 2, 3] is good, but [0, 5, 10, 15] is baad
-    #     #     what if variables are not all of same diff?
-    #     #     """
-    #     #     observations = np.delete(observations, np.s_[max_hist:])
-    #     #     x = len(observations)
-    #     #     fairness_bonus = np.log(x) + 1  # raising the opportunity of historic data just a little...
-    #     #     p = np.geomspace(1 + fairness_bonus, x + fairness_bonus, num=x)[::-1]  # reverse the geometric series
-    #     #     p = p / np.sum(p)  # the sum must be equal to 1  # not required with choices
-    #     #     return np.random.choice(observations, p=p)  # returning a function this time
-    #     #
-    #     # obs_prop = []
-    #     # obs_info = {}
-    #     #
-    #     # for fam in list(set(observation_get_family_and_time(x)[0] for x in obs_names)):
-    #     #     fam_members = sorted([x for x in obs_names if x.fam == fam], key=lambda o: o.time_index)
-    #     #     if len(fam_members) > 1:
-    #     #         obs_names.extend([x for x in fam_members])
-    #     #         obs_prop.extend(list(observation_select_index(fam_members)))
-    #     #         index_minmax = (fam_members[0].time_index, fam_members[-1].time_index)
-    #     #         for obs in fam_members:
-    #     #             obs.index_minmax = index_minmax
-    #     #             obs_info[obs.name] = obs
-    #     #     else:
-    #     #         obs = fam_members[0]
-    #     #         obs_info[obs.name] = obs
-    #     #         obs_names.pop_append_evotree(obs)
-    #     #         obs_prop.pop_append_evotree(1)  # just one value
-    #     pass
 
     def evolve_new_tree_depth(self, depth_goal, xt_out, p_term=0.0) -> Node:
 
@@ -3824,25 +3653,13 @@ def eval_predict_df(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list):
 
     symbol_list_str = [str(s) for s in symbol_list]
 
-    test_row = df.iloc[0]
-
-    # 2. Mapping-Check
-    wtf = set(str(s) for s in sy_expr.free_symbols)  # todo
-    if set(symbol_list_str) != set(str(s) for s in sy_expr.free_symbols):
-        # raise ValueError("Mismatch between provided symbol list and expression symbols!")
-        pass  # delete?
     sfeh_dict = {'Abs': Abs.np_fun, 'Round_Dummy': Round_Dummy.np_round_dummy,
                  'Min': Min.np_fun, 'Max': Max.np_fun}
     func = sympy.lambdify(symbol_list, sy_expr, modules=[sfeh_dict, 'numpy'])
-    # func = sympy.lambdify(symbol_syms, sy_expr, modules=[sfeh_dict, 'numpy'])
-    # func = sympy.lambdify(symbol_list, sy_expr, modules=[{'Round_Dummy': np.round}, 'numpy'])  # todo
 
     with warnings.catch_warnings():
         with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
             with ignore_warnings(DeprecationWarning):  # something 'like use "**" instead of "Pow"'
-                if set(symbol_list_str) != set(str(s) for s in sy_expr.free_symbols):
-                    # raise ValueError("Mismatch between symbol list and free symbols of expression!")
-                    pass  # delete?
                 df_results = df.apply(lambda row: func(*[row[s] for s in symbol_list_str]), axis=1)  # sfeh was str(var)
 
     return df_results
@@ -3875,12 +3692,6 @@ def eval_sympyLoop(expr, df):
     action = np.array(df['action'])
     raw_results = f(cartVel, cartPos)
     results = np.round(np.clip(raw_results, 0, 2), 0)
-    #
-    # if not return_results:
-    #     fitness = np.sqrt(np.mean((results-action)**2))
-    #     return np.round(fitness, FLOAT_PRECISION)
-    # else:
-    #     return results
 
     return results
 
@@ -3893,13 +3704,6 @@ if __name__ == '__main__':
         'c': sympy.Symbol('c', bool=True),
         'd': sympy.Symbol('d', bool=True),
     }
-
-    # tensors = {
-    #     'a': tf.constant([1.0, 2, 3, 4, 5, 6], dtype=tf.dtypes.float32),
-    #     'b': tf.constant([-1.0, -2, -3, -4, -5, -6], dtype=tf.float32),
-    #     'c': tf.constant([True, False, True, False, True, False], dtype=tf.dtypes.bool),
-    #     'd': tf.constant([True, True, True, True, True, True], dtype=tf.dtypes.bool)
-    # }` # sfeh are tensors actually better??
 
     tensors = {
         'a': [1.0, 2, 3, 4, 5, 6],

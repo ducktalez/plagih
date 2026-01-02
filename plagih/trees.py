@@ -3441,7 +3441,7 @@ class ExplainableGP:
                     np_fitness = round(np_fitness, FLOAT_PRECISION)
 
                     if 'nan' in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf:  # sfeh:code not so good looking
-                        raise ValueError # sfeh NanValueError
+                        raise ValueError('NaN in results')
 
                 if sum(df_results - np_results) > 0.001:
 

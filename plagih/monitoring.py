@@ -78,20 +78,25 @@ def plot_performance(monitor_df, path_monitoring: Path):
         plt.close('all')
 
 
-def plot_parsimony_histogram(population, path_out: Path, *, title: str | None = None, color: str = 'tab:blue'):
+def plot_parsimony_histogram(population, path_out: Path, *, title: str | None = None, color: str = 'tab:blue',
+                            max_population: int | None = None, max_parsimony: int | None = None):
     """Plottet die Parsimony/Komplexität einer Population als Histogramm.
 
     Ziel: schnell sehen, welche Tree-Größen in der Population vorkommen.
 
     Eigenschaften:
     - Bins sind ganzzahlige Parsimony-Werte (ein Bin pro Wert).
-    - Balken stehen direkt nebeneinander (kein Abstand) und sind nach Parsimony auf der x-Achse sortiert.
+    - Balken sind nach Evolution (tag) gruppiert und farbcodiert
+    - Keine Abstände zwischen den Balken
+    - Feste Skalierung für Vergleichbarkeit über Generationen
 
     Erwartete Populationseinträge:
-    - `Candidate`-Objekte (haben `.parsimony` oder `.get_parsim()`)
+    - `Candidate`-Objekte (haben `.parsimony` oder `.get_parsim()` und `.tag`)
     - oder Nodes/Trees, wenn sie ein Attribut `.parsimony` haben (Fallback)
 
     `path_out` sollte ein `pathlib.Path` sein (z.B. `self.rootdir / 'monitoring_parsimony_histogram.png'`).
+    `max_population`: Maximale Populationsgröße für feste X-Achsen-Skalierung
+    `max_parsimony`: Maximale Parsimony für feste Y-Achsen-Skalierung
     """
 
     def _get_parsimony(item):
@@ -104,13 +109,21 @@ def plot_parsimony_histogram(population, path_out: Path, *, title: str | None = 
             return getattr(item, 'parsimony')
         return None
 
+    def _get_tag(item):
+        """Extract the evolution tag from a candidate"""
+        if hasattr(item, 'tag'):
+            return item.tag
+        return 'unknown'
+
     pars = []
+    tags = []
     for it in population or []:
         p = _get_parsimony(it)
         if p is None:
             continue
         try:
             pars.append(int(round(float(p))))
+            tags.append(_get_tag(it))
         except Exception:
             continue
 
@@ -127,22 +140,69 @@ def plot_parsimony_histogram(population, path_out: Path, *, title: str | None = 
             plt.close('all')
         return
 
-    counts = Counter(pars)
-    xs = sorted(counts.keys())
-    ys = [counts[x] for x in xs]
+    # Group by tag first, then by parsimony
+    from collections import defaultdict
+    data_by_tag = defaultdict(lambda: defaultdict(int))
+    for p, t in zip(pars, tags):
+        data_by_tag[t][p] += 1
+
+    all_tags = sorted(data_by_tag.keys())
+    all_parsimony_values = sorted(set(pars))
+
+    # Create a color map for tags
+    import matplotlib.cm as cm
+    import numpy as np
+    colors = cm.tab10(np.linspace(0, 1, len(all_tags)))
+    tag_colors = dict(zip(all_tags, colors))
 
     with plt.rc_context(rc={'axes.grid': True}):
         fig, ax = plt.subplots(figsize=(16, 6))
 
-        # width=1.0 -> Balken ohne Lücke
-        ax.bar(xs, ys, width=1.0, align='center', color=color, edgecolor=color)
+        # Build bars grouped by evolution
+        current_position = 0
+        xticks_positions = []
+        xticks_labels = []
 
-        ax.set_xlabel('parsimony / complexity')
+        for tag in all_tags:
+            parsimony_counts = data_by_tag[tag]
+
+            # Plot each parsimony value for this tag
+            for parsimony_val in all_parsimony_values:
+                count = parsimony_counts.get(parsimony_val, 0)
+                if count > 0:  # Only plot if there's data
+                    ax.bar(current_position, count, width=1.0, align='edge',
+                           color=tag_colors[tag], edgecolor='white', linewidth=0.5, label=tag if parsimony_val == all_parsimony_values[0] else "")
+                    current_position += 1
+
+            # Add separator or track position for labels
+            if tag != all_tags[-1]:  # Don't add gap after last tag
+                current_position += 0.5  # Small visual separator between evolution groups
+
+            # Store midpoint for x-axis label
+            xticks_positions.append(current_position - (len([p for p in all_parsimony_values if parsimony_counts.get(p, 0) > 0]) + 0.5) / 2)
+            xticks_labels.append(tag)
+
+        ax.set_xlabel('Evolution')
         ax.set_ylabel('count')
         ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.0f}'))
 
-        ax.set_xlim(min(xs) - 0.5, max(xs) + 0.5)
+        # Fixed scaling for comparability across generations
+        if max_population is not None:
+            ax.set_xlim(0, max_population)
+        else:
+            ax.set_xlim(0, current_position)
+
+        if max_parsimony is not None:
+            ax.set_ylim(0, max_parsimony)
+
+        ax.set_xticks(xticks_positions)
+        ax.set_xticklabels(xticks_labels, rotation=45, ha='right')
         ax.set_title(title or f'Parsimony histogram ({path_out.name})')
+
+        # Add legend (remove duplicates)
+        handles, labels = ax.get_legend_handles_labels()
+        by_label = dict(zip(labels, handles))
+        ax.legend(by_label.values(), by_label.keys(), loc='upper right', framealpha=0.9)
 
         fig.tight_layout()
         fig.savefig(path_out)

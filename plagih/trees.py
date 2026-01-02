@@ -11,7 +11,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import sympy
-from sympy import false
+
 from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.utilities.exceptions import ignore_warnings
 
@@ -19,21 +19,13 @@ from plagih.monitoring import *
 from plagih.paretofront import *
 from plagih.tree_complexity.tree_edit_distance import apted_distance
 from plagih.util import *
-from web_interface.flask_test import index
+
 
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
 
 from typing import Optional, List, Union, Callable, Any, Tuple
 from dataclasses import dataclass, field
-
-
-# import os
-# os.environ["KMP_WARNINGS"] = "FALSE"
-# tf.compat.v1.disable_eager_execution()
-# tf.compat.v1.enable_eager_execution()  # sfeh possibly faster with disable
-# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # https://github.com/tensorflow/tensorflow/issues/27023
-# import tensorflow as tf  # noqa check if ignoring warnings still required (tensorflow sends endless warnings)
 
 """
 plagih_tree contain a new implementation of trees that we use in genetic programming to display a program.
@@ -221,11 +213,6 @@ class NodeStructure:
             max_depth = depth
 
         return max_depth
-
-    # def is_operator_arity(self):
-    #     """Check, if node is an operator with a fixed arity
-    #     Nodes that are notchained-nodes"""
-    #     return issubclass(type(self), OperatorArity)  # sfeh check? Terminal?
 
     def is_operator(self):
         return issubclass(type(self), BaseOperator)
@@ -1029,11 +1016,6 @@ class Node(NodeStructure):
 
         return _sym
 
-    # @classmethod
-    # def get_sym(cls):
-    #     _sym = cls.symfun
-    #     return _sym
-
     def get_symstr(self):
         return self.symfun.__name__
 
@@ -1096,7 +1078,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
             _n = Symbol(s_expr)
             return _n
         else:
-            # expr_eval = s_expr.evalf(FLOAT_PRECISION)  # sfeh
+            # expr_eval = s_expr.evalf()  # sfeh
             # if abs(s_expr - expr_eval) > 0.001:  # sfeh use float recision here 0.1**FLOAT_PRECISION
             #     expr_eval = s_expr
             if s_expr.is_Boolean:
@@ -1434,10 +1416,6 @@ class BaseOperator(Node):
 
         # todo-asarray
         #   also: should not be required. they should all be arrays. maybe, typehints are sufficient?
-        # evaluated_children = [
-        #     np.asarray(v, dtype=np.float64) if not isinstance(v, np.ndarray) else v.astype(np.float64)
-        #     for v in evaluated_children
-        # ]
         evaluated_children = [
             np.asarray(v, dtype=bool) if v.dtype == np.bool_ else np.asarray(v, dtype=np.float64)
             for v in evaluated_children
@@ -1672,18 +1650,6 @@ class Add(MathOperator, ChainableOp):
     inline_sep = ' + '
     xtype_chain = ([(float,)], float)
     xtype_input = float
-
-    # def eval_np(self, *args):
-    #     """
-    #     Evaluate the node using NumPy with its child nodes.
-    #
-    #     Args:
-    #         *args: Optional additional arguments (e.g., for lambdified inputs).
-    #
-    #     Returns:
-    #         A callable function that computes the node's value.
-    #     """
-    #     return lambda df: self.np_fun(*self.get_np_child_lambdas())
 
 
 class Mul(MathOperator, ChainableOp):
@@ -2427,7 +2393,6 @@ def expr_sympify(expr):
 #  sympy.numbers.Infinity: tensorflow.constant(np.Infinity),
 #  sympy.numbers.NegativeInfinity: tensorflow.constant(-np.Infinity),
 #  sympy.numbers.ComplexInfinity: tensorflow.complex(0, np.Infinity),sympy.numbers.ImaginaryUnit,
-#  sympy.numbers.NumberSymbol
 #  sympy.numbers.Catalan: tensorflow.constant(sympy.numbers.Catalan),
 #  sympy.numbers.NaN: tensorflow.constant(sympy.numbers.NaN),
 
@@ -2697,6 +2662,7 @@ class Candidate:
         self.tree = tree
         self.fitness = fitness
         self.parsimony = parsimony
+        self.tag = tag  # Track which evolution created this candidate
         # self.last_evolution = deque([tag], maxlen=10)  # sfeh:open
 
     # def append_tag(self, tag):
@@ -3602,7 +3568,18 @@ class ExplainableGP:
         """
         plot_performance(self.monitor_df, self.rootdir / 'monitoring.png')
         plot_paretofront(self.paretofront, self.rootdir, self.evolve.nodes_max)
+
+        # Create main histogram (without fixed scaling)
         plot_parsimony_histogram(self.pop_genepool, self.rootdir / 'monitoring_parsimony_histogram.png')
+
+        # Create numbered histograms for each generation up to 20 with fixed scaling
+        if self.gen_id <= 20:
+            gen_filename = f'monitoring_parsimony_histogram_{self.gen_id:03d}.png'
+            # Use pop_size as max_population and nodes_max as max_parsimony for fixed scaling
+            plot_parsimony_histogram(self.pop_genepool, self.rootdir / gen_filename,
+                                   title=f'Parsimony histogram - Generation {self.gen_id}',
+                                   max_population=self.pop_size,
+                                   max_parsimony=self.evolve.nodes_max)
 
     def backup_save(self, opt_path_backup=None):
         """

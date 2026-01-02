@@ -19,7 +19,7 @@ symbols_lambda = lambda x: sympy.Symbol(x, real=True, imaginary=False)
 rootdir = Path.cwd() / 'MTC200_RMSE_scratch'
 normalize_numpy = lambda x: np.round(np.clip(x, 0, 2), 0)
 
-pop_size = 100
+gen_end = 100
 gen_max = 15
 nodes_max = 50
 depth_max = 10
@@ -27,8 +27,8 @@ depth_max = 10
 def _test_simple(chained_on=True):
     """SIMPLE"""
 
-    evolve = Evolution(symbol_list=sympy.symbols(['cartVel', 'cartPos']), operators=operator_dict, depth_max=7, nodes_max=50, allow_chain=chained_on)
-    gp = ExplainableGP(evolve, df_train, rootdir=rootdir, normalize_numpy=normalize_numpy, allow_chain=chained_on)
+    evolve = Evolution(symbol_list=sympy.symbols(['cartVel', 'cartPos']), operators=operator_dict, allow_chain=chained_on)
+    gp = ExplainableGP(evolve, df_train, rootdir=rootdir, pop_size=50,  gen_end=20, normalize_numpy=normalize_numpy, allow_chain=chained_on)
 
     gp.gen_create_initial()
 
@@ -85,7 +85,7 @@ def _test_random_pop(chained_on=True):
     operator_dict.update({Ifte: 2, PowRounded: 1, Round: 1})
 
     evolve = Evolution(symbol_list=['cartVel', 'cartPos'], operators=operator_dict, depth_max=7, nodes_max=50, allow_chain=chained_on)
-    gp = ExplainableGP(evolve, df_train, rootdir=rootdir, normalize_numpy=normalize_numpy, allow_chain=chained_on)
+    gp = ExplainableGP(evolve, df_train, rootdir=rootdir, pop_size=50,  gen_end=20,  normalize_numpy=normalize_numpy, allow_chain=chained_on)
     try:
         # gp.backup_load()
         printpl('i', 'Ignore loading backup!')
@@ -97,7 +97,7 @@ def _test_random_pop(chained_on=True):
 
     gp.time_genstart = time.perf_counter()  # sfeh here?
 
-    while gp.gen_id <= gp.gen_size and not gp.run_custom_exit_condition():
+    while gp.gen_id <= gp.pop_size and not gp.run_custom_exit_condition():
 
         @gp.create_trees(rate=0.1)
         def repro1():

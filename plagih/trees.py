@@ -107,8 +107,6 @@ class Round_Dummy(sympy.Function):  # Not a Math-operator
     However, its default implementation often suffices, and you don't need to override it 
     unless you are doing something unusual. 
     You can safely remove it unless you have a specific use case"""
-    # def _sympy_(self, a):
-    #     return self.eval(a)  # sfeh: is this required?
 
     def __call__(self, a):
         # if isinstance(a, (int, float, np.ndarray)):
@@ -3226,7 +3224,7 @@ class ExplainableGP:
         - class data-specific/eval -> df_train, normalize_numpy
         - class
     """
-    def __init__(self, evolve: Evolution, df_train, rootdir=None, allow_chain=False, normalize_numpy=np.array, pop_max=100, gen_size=15):
+    def __init__(self, evolve: Evolution, df_train, rootdir=None, pop_size = 100, gen_end=100, allow_chain=False, normalize_numpy=np.array):
         self.time_start = time.perf_counter()
         if rootdir is None:
             self.rootdir = None
@@ -3237,14 +3235,11 @@ class ExplainableGP:
         self.df_train = df_train
         # self.df_control = df_control
         self.evolve = evolve
-        self.pop_size = pop_max
-        self.gen_size = gen_size
+        self.gen_end = gen_end
+        self.pop_size = pop_size
         self.gen_id = 0
         self.normalize_numpy = normalize_numpy
         self.allow_chain = allow_chain
-        # self.mp_cores = 1  # sfeh: open MP (multiprocessing)
-
-        # printpl('gg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
         print(f'\n'
               f'\tInitializing Plagih.\n'
@@ -3427,7 +3422,7 @@ class ExplainableGP:
         they have gone through a process of changes. Here, the final tree (candidate_tree) is refurbished."""
 
         def loop(create_tree_f):
-            n = int(rate * self.pop_size)
+            n = int(rate * self.gen_end)
             n_success = 0
             fails_list = []
             tag = create_tree_f.__name__
@@ -3571,15 +3566,15 @@ class ExplainableGP:
         plot_paretofront(self.paretofront, self.rootdir, self.evolve.nodes_max)
 
         # Create main histogram (without fixed scaling)
-        plot_parsimony_histogram(self.pop_genepool, self.rootdir / 'monitoring_parsimony_histogram.png', self.pop_size, self.gen_size)
+        plot_parsimony_histogram(self.pop_genepool, self.rootdir / 'monitoring_parsimony_histogram.png', self.gen_end, self.pop_size)
 
         # Create numbered histograms for each generation up to 20 with fixed scaling
         if self.gen_id <= 20:
             gen_filename = f'monitoring_parsimony_histogram_{self.gen_id:03d}.png'
             # Use pop_size as max_population and nodes_max as max_parsimony for fixed scaling
             plot_parsimony_histogram(self.pop_genepool, self.rootdir / gen_filename,
-                                   max_population=self.pop_size,
-                                   max_parsimony=self.evolve.nodes_max)
+                                     max_population=self.gen_end,
+                                     max_parsimony=self.evolve.nodes_max)
 
     def backup_save(self, opt_path_backup=None):
         """
@@ -3618,7 +3613,7 @@ class ExplainableGP:
         tmp_dict = pop_analyze(self.pop_genepool, gen_time, self.gens_since_last_pareto)
         self.monitor_df.loc[self.gen_id] = tmp_dict
         printpl('gg',
-                f"Created {len(self.pop_genepool)}/{self.pop_size} ({tmp_dict['pop_unique']} unique) in generation {self.gen_id}. "
+                f"Created {len(self.pop_genepool)}/{self.gen_end} ({tmp_dict['pop_unique']} unique) in generation {self.gen_id}. "
                 f"Trees in LUT: {len(self.lut_fitness)} Generation took {gen_time:4.2f}s")
 
         printpl('ggg', f'--- Generation {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}. ---')

@@ -31,15 +31,15 @@ def _test_simple(dir_name, chained_on=True):
         @gp.create_trees(rate=1)
         def rand2():
             d = np.clip(int(random.normalvariate(3.5, 1)), 3, 5)
-            return gp.evolve.evolve_new_tree_depth(d, float, p_term=0)
+            return gp.evolve.evolve_new_tree_depth(float, d, p_term=0)
 
         gp.end_generation()
 
     for _ in range(2):
         @gp.create_trees(rate=1)
         def rand2_CHAINA():  # noqa
-            d = np.clip(int(random.normalvariate(3.5, 1)), 3, 5)
-            tree = gp.evolve.evolve_new_tree_depth(d, float, p_term=0)
+            d = np.clip(int(random.normalvariate(4.5, 1)), 3, gp.evolve.depth_max)
+            tree = gp.evolve.evolve_new_tree_depth(float, d, p_term=0)
             tree = tree_simplification(tree, allow_chain=chained_on)
             tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
             return tree
@@ -50,7 +50,7 @@ def _test_simple(dir_name, chained_on=True):
         @gp.create_trees(rate=1)
         def mx_branch_n1():
             tree = selection_tournament(gp.pop_genepool, n=3)
-            n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
+            n = np.clip(int(random.normalvariate(16, 4)), 0, gp.evolve.nodes_max)
             tree = gp.evolve.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
             return tree
 
@@ -109,8 +109,8 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False):
 
             @gp.create_trees(rate=0.1, simplicate=simplicate)
             def rand2_CHAINB():
-                # sfeh:discuss: deep random trees have a tendency to also allow weird-ass looking nonsense
-                tree = gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
+                tree = gp.evolve.evolve_new_tree_depth(float, np.clip(int(random.normalvariate(3.5, 1)), 3, 5),
+                                                       p_term=0)
                 # tree = tree_simplification(tree, allow_chain=gp.allow_chain)
                 return tree
 
@@ -138,7 +138,7 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False):
             def mx_branch_n2():
                 tree = selection_tournament(gp.pop_genepool, n=3)
                 # n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
-                n = np.random.choice([1, 3, 5, 10, 12, 15, 17, 19, 20])
+                n = np.random.choice([1, 5, 10, 15, 17, 19, 20, 30, 40, 50, 60])
                 tree = gp.evolve.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
                 return tree
 
@@ -155,7 +155,7 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False):
 
             @gp.create_trees(rate=0.1)
             def rand2b():
-                tree = gp.evolve.evolve_new_tree_depth(np.random.choice([3, 4, 4, 5]), float, p_term=0)
+                tree = gp.evolve.evolve_new_tree_depth(float, np.random.choice([3, 4, 4, 5]), p_term=0)
                 return tree
 
             @gp.create_trees(rate=0.3, crossover=True)
@@ -186,7 +186,7 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False):
 
 
 if __name__ == "__main__":
-    _test_simple(dir_name='simple-MTC200_RMSE_scratch', chained_on=False)
-    _test_simple(dir_name='simple-MTC200_RMSE_scratch_chained', chained_on=True)
+    # _test_simple(dir_name='simple-MTC200_RMSE_scratch', chained_on=False)
+    # _test_simple(dir_name='simple-MTC200_RMSE_scratch_chained', chained_on=True)
     _test_random_pop(dir_name='MTC200_RMSE_scratch_chained', chained_on=True)
     _test_random_pop(dir_name='MTC200_RMSE_scratch', chained_on=False)

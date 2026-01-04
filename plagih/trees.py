@@ -1990,10 +1990,15 @@ class ExprCondPair_Dummy(Node_Dummy):  # noqa
     """
     Named like this to differ from the sympy original (ExprCondPair)
     sfeh:discuss
-    The only purpose is to wrap the results for a Node-structure, where every Node has childs with other nodes"""
+    The only purpose is to wrap the results for a Node-structure, where every Node has childs with other nodes
+
+    Currently just an idea for setting a default-value
+        class ExprCondPair_Default(ExprCondPair):
+            ...
+    """
     arity = 2
     symfun = lambda *a: ExprCondPair(a[0], a[1])
-    np_fun = None
+    np_fun = None  # discuss
     showme = 'ExprCondPair_Dummy'  # sfeh... mmake this a tuple?
     sy_str = 'ExprCondPair({0}, {1})'
     repr_str = 'ExprCondPair_Dummy{},[{}, {}]'
@@ -2001,9 +2006,6 @@ class ExprCondPair_Dummy(Node_Dummy):  # noqa
     expr_dmy = 'ExprCondPair_Dummy'
 
 
-class ExprCondPair_Default(ExprCondPair):
-    # todo?
-    ...
 
 
 sym2node = {sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos, sympy.asin: Asin, sympy.atan: Atan,
@@ -2249,6 +2251,13 @@ class Evolution:
     sfeh: all Symbol-inputs are chosen from a list with equal probability.
         -> don't overcomplicate this process.
         -> provide more options when asked for, like giving random()-probabilities
+
+    Evolution discussion: Random tree creation strategies
+    - Size measure: depth, node count, weighted node count (parsimony)
+    - Architectures: Full, Grow, Ramped Half-and-Half
+    - Node selection: Random, weighted random
+
+
     """
 
     operator_presets = {'math_simple':
@@ -2292,7 +2301,8 @@ class Evolution:
         self.allow_a_chain = allow_chain
 
     def evolve_prune_tree(self, tree: Node, allow_chain):
-        """prune depth
+        """
+        prune depth
         -> prune everything below a certain level... (should not happen in the first place)
         prune nodes
         -> get node difference, get nodelist, untill small enough: split the difference, prune nodes until
@@ -2308,6 +2318,12 @@ class Evolution:
                 new_node.depth = dnode.depth
                 dnode.set_new_node(new_node)
 
+        # TODO not as trivial as pruning the max. tree depth: Which nodes to prune randomly?
+        #   This strongly affects the tree structure and should thus be decided in the creation process
+        #   Pruning strategies:
+        #   - Randomly prune nodes until complexity is met
+        #   - Prune the deepest nodes first, every depth level completely
+        #   - check crossover
         prune_amount = len(tree) - self.nodes_max
         while prune_amount > 0:
             print_warning('wwww', f'Tree too complex: {len(tree)} > {self.nodes_max}, pruning {prune_amount}.')
@@ -2323,7 +2339,7 @@ class Evolution:
 
         return tree
 
-    def evolve_new_tree_depth(self, depth_goal, xt_out, p_term=0.0) -> Node:
+    def evolve_new_tree_depth(self, xt_out, depth_goal, p_term=0.0) -> Node:
 
         if self.origin_tree is not None:
 
@@ -2351,6 +2367,9 @@ class Evolution:
         """
         sfeh: just use depth_rest and calculate it earlier with depth_max_local and self.depth_max
         sfeh: make this specific to tree complexity measure?
+        discuss: number of leftover nodes is not a good threshold, as it limits depth-spreading branches in growing.
+                    -> Prune the tree at the end and allow any growth in the beginning
+                    -> Tree depth
         num_rest: -1 ignores the node number restriction
         depth_max_local: can be set lower than self.depth_max
         sfeh:open make depth_goal -> depth_rest"""
@@ -2478,6 +2497,7 @@ class Evolution:
         a_nd.set_new_node(b_nd)
         b_nd.set_new_node(cpy)
 
+        # only required, if pruning is not done in finalize_tree()
         aa = self.evolve_prune_tree(tree=aa, allow_chain=True)
         bb = self.evolve_prune_tree(tree=bb, allow_chain=True)
 
@@ -2677,7 +2697,7 @@ class ExplainableGP:
                 @self.create_trees(rate=0.5)
                 def init_rand1():
                     n = np.clip(int(random.normalvariate(4.0, 1.0)), 4, 6)
-                    tree = self.evolve.evolve_new_tree_depth(n, float, p_term=0)
+                    tree = self.evolve.evolve_new_tree_depth(float, n, p_term=0)
                     tree = tree_simplification(tree, allow_chain=self.allow_chain)
                     # sfeh trees can shrink to single-noded trees
                     if tree.get_max_depth() == 0:
@@ -2686,21 +2706,21 @@ class ExplainableGP:
 
                 @self.create_trees(rate=0.5)
                 def init_rand2():
-                    n = np.clip(int(random.normalvariate(3.5, 1.0)), 3, 6)
-                    tree = self.evolve.evolve_new_tree_depth(n, float, p_term=0)
+                    n = np.clip(int(random.normalvariate(4.5, 1.0)), 3, self.evolve.depth_max)
+                    tree = self.evolve.evolve_new_tree_depth(float, n, p_term=0)
                     tree = tree_simplification(tree, allow_chain=self.allow_chain)
                     return tree
             else:
                 @self.create_trees(rate=0.5)
                 def init_rand1a():
-                    n = np.clip(int(random.normalvariate(3.0, 1.0)), 3, 5)
-                    tree = self.evolve.evolve_new_tree_depth(n, float, p_term=0)  # sfeh: xtype not always float
+                    n = np.clip(int(random.normalvariate(4.0, 1.0)), 3, 5)
+                    tree = self.evolve.evolve_new_tree_depth(float, n, p_term=0)  # sfeh: xtype not always float
                     return tree
 
                 @self.create_trees(rate=0.5)
                 def init_rand2a():
-                    n = np.clip(int(random.normalvariate(2.5, 1.0)), 3, 5)
-                    return self.evolve.evolve_new_tree_depth(n, float, p_term=0)
+                    n = np.clip(int(random.normalvariate(3.5, 1.0)), 3, self.evolve.depth_max)
+                    return self.evolve.evolve_new_tree_depth(float, n, p_term=0)
 
         self.paretofront = pareto_from_pop(self.pop_next)
         self.pop_genepool = self.pop_next[:]
@@ -2794,7 +2814,9 @@ class ExplainableGP:
         raise_if_useless is here in order to show, where the maximum nodes is exceeded!
         """
 
+        # Make this tree usable for evaluation
         evotree.force_input_node(self.evolve)
+        evotree = self.evolve.evolve_prune_tree(evotree, self.allow_chain)
         evotree.repair_depth()
 
         tree_id = evotree.get_lut_id()
@@ -2858,12 +2880,12 @@ class ExplainableGP:
 
                 self.lut_fitness[sy_expr] = fitness  # sfeh:discuss: lut update in finalize_tree_get_meta()?
 
-            except (ValueError, OverflowError) as ex:
+            except (ValueError, ArithmeticError, OverflowError) as ex:
                 # 'OverflowError('cannot convert float infinity to integer')'
                 # ValueError('NaN in results')
-                # TODO this try/except-block is just here for self.lut_remove marking. Clean this up later.
+                # this try/except-block is just here for self.lut_remove marking. Clean this up later.
                 self.lut_remove[tree_id] = True
-                print_warning('w', f'Could not evaluate fitness for tree {sy_expr}: {ex}')
+                print_warning('ww', f'Could not evaluate fitness for tree {sy_expr}: {ex}')
                 raise
             except Exception as ex:
                 raise CuriosityError
@@ -3129,7 +3151,7 @@ def selection_tournament(pop, n=3):
     evotree = copy.deepcopy(evotree)
     return evotree
 
-def eval_predict_df_sympy_only(sy_expr: sympy.Basic, df: pd.DataFrame) -> pd.Series:
+def eval_predict_df_sympySingle(sy_expr: sympy.Basic, df: pd.DataFrame) -> pd.Series:
     """TODO TODOTODO Alles aufräumen, was mit evaluation zu tun hat. Prüfung da lassen.
     Echte SymPy-Evaluierung über ein DataFrame – Zeile für Zeile.
     Keine NumPy-/lambdify-Abkürzungen.

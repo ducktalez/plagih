@@ -16,17 +16,17 @@ operator_dict = Evolution.operator_presets['math_simple']
 
 symbols_lambda = lambda x: sympy.Symbol(x, real=True, imaginary=False)
 
-rootdir = Path.cwd() / 'MTC200_RMSE_scratch'
+rootdir = Path.cwd() / '.testruns'
 normalize_numpy = lambda x: np.round(np.clip(x, 0, 2), 0)
 
 nodes_max = 50
 depth_max = 10
 
-def _test_simple(chained_on=True):
+def _test_simple(dir_name, chained_on=True):
     """SIMPLE"""
 
     evolve = Evolution(symbol_list=sympy.symbols(['cartVel', 'cartPos']), operators=operator_dict, allow_chain=chained_on)
-    gp = ExplainableGP(evolve, df_train, rootdir=rootdir, pop_size=50,  gen_end=20, normalize_numpy=normalize_numpy, allow_chain=chained_on)
+    gp = ExplainableGP(evolve, df_train, rootdir=rootdir / dir_name, pop_size=50,  gen_end=20, normalize_numpy=normalize_numpy, allow_chain=chained_on)
 
     gp.gen_create_initial()
 
@@ -39,7 +39,7 @@ def _test_simple(chained_on=True):
         gp.end_generation()
 
     for _ in range(2):
-        @gp.create_trees(rate=1, simplicate=True)
+        @gp.create_trees(rate=1)
         def rand2_CHAINA():  # noqa
             d = np.clip(int(random.normalvariate(3.5, 1)), 3, 5)
             tree = gp.evolve.evolve_new_tree_depth(d, float, p_term=0)
@@ -60,7 +60,7 @@ def _test_simple(chained_on=True):
         gp.end_generation()
 
     for _ in range(10):
-        @gp.create_trees(rate=1, crossover=True, simplicate=True)
+        @gp.create_trees(rate=1, crossover=True)
         def xover_CHAINA():
             tree_a = selection_tournament(gp.pop_genepool, n=3)
             tree_b = selection_tournament(gp.pop_genepool, n=3)
@@ -77,13 +77,13 @@ def _test_simple(chained_on=True):
     # sys.exit()
 
 
-def _test_random_pop(chained_on=True):
+def _test_random_pop(dir_name, chained_on=True, simplicate=False):
     """Testrun"""
 
     operator_dict.update({Ifte: 2, PowRounded: 1, Round: 1})
 
-    evolve = Evolution(symbol_list=['cartVel', 'cartPos'], operators=operator_dict, depth_max=7, nodes_max=50, allow_chain=chained_on)
-    gp = ExplainableGP(evolve, df_train, rootdir=rootdir, pop_size=50,  gen_end=20,  normalize_numpy=normalize_numpy, allow_chain=chained_on)
+    evolve = Evolution(symbol_list=['cartVel', 'cartPos'], operators=operator_dict, depth_max=9, nodes_max=50, allow_chain=chained_on)
+    gp = ExplainableGP(evolve, df_train, rootdir=rootdir / dir_name, pop_size=50,  gen_end=20,  normalize_numpy=normalize_numpy, allow_chain=chained_on)
     try:
         # gp.backup_load()
         printpl('i', 'Ignore loading backup!')
@@ -104,27 +104,26 @@ def _test_random_pop(chained_on=True):
 
         if chained_on:
 
-            @gp.create_trees(rate=0.30, simplicate=True)
+            @gp.create_trees(rate=0.30, simplicate=simplicate)
             def mx_branch_d_CHAIN():
                 tree = selection_tournament(gp.pop_genepool, n=3)
                 tree = gp.evolve.evolve_mutate_branch_depth(tree, 4, chained_on, p_term=0.5)
-                tree = tree_simplification(tree, allow_chain=gp.allow_chain)
                 return tree
 
-            @gp.create_trees(rate=0.1, simplicate=True)
+            @gp.create_trees(rate=0.1, simplicate=simplicate)
             def rand2_CHAINB():
                 # sfeh:discuss: deep random trees have a tendency to also allow weird-ass looking nonsense
                 tree = gp.evolve.evolve_new_tree_depth(np.clip(int(random.normalvariate(3.5, 1)), 3, 5), float, p_term=0)
-                tree = tree_simplification(tree, allow_chain=gp.allow_chain)
+                # tree = tree_simplification(tree, allow_chain=gp.allow_chain)
                 return tree
 
-            @gp.create_trees(rate=0.3, crossover=True, simplicate=True)
-            def xover_CHAIN():
+            @gp.create_trees(rate=0.3, crossover=True)
+            def xover_CHAIN(simplicate=simplicate):
                 tree_a = selection_tournament(gp.pop_genepool, n=3)
                 tree_b = selection_tournament(gp.pop_genepool, n=3)
                 evo1, evo2 = gp.evolve.evolve_crossover(tree_a, tree_b)
-                evo1 = tree_simplification(evo1, allow_chain=gp.allow_chain)
-                evo2 = tree_simplification(evo2, allow_chain=gp.allow_chain)
+                # evo1 = tree_simplification(evo1, allow_chain=gp.allow_chain)
+                # evo2 = tree_simplification(evo2, allow_chain=gp.allow_chain)
                 return evo1, evo2
 
         else:
@@ -190,7 +189,7 @@ def _test_random_pop(chained_on=True):
 
 
 if __name__ == "__main__":
-    _test_simple(chained_on=False)
-    _test_simple(chained_on=True)
-    _test_random_pop(chained_on=True)
-    _test_random_pop(chained_on=False)
+    _test_simple(dir_name='simple-MTC200_RMSE_scratch', chained_on=False)
+    _test_simple(dir_name='simple-MTC200_RMSE_scratch_chained', chained_on=True)
+    _test_random_pop(dir_name='MTC200_RMSE_scratch_chained', chained_on=True)
+    _test_random_pop(dir_name='MTC200_RMSE_scratch', chained_on=False)

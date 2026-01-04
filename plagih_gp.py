@@ -8,25 +8,22 @@ from plagih.util import *
 import pandas as pd
 import sympy
 
+"""Mountain Car dataset experiment setup"""
 col_names = ['cartVel', 'cartPos']
 df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv').astype('float32')
 df_train, df_control = train_test_split(df, test_size=0.2, random_state=0)
 DATA_SYMBOLS = sympy.symbols(df[col_names].columns, real=True)  # sfeh input_names dirty here
 operator_dict = Evolution.operator_presets['math_simple']
-
-symbols_lambda = lambda x: sympy.Symbol(x, real=True, imaginary=False)
-
-rootdir = Path.cwd() / '.testruns'
 normalize_numpy = lambda x: np.round(np.clip(x, 0, 2), 0)
 
-nodes_max = 50
-depth_max = 10
+rootdir = Path.cwd() / '.testruns'
+
 
 def _test_simple(dir_name, chained_on=True):
     """SIMPLE"""
 
     evolve = Evolution(symbol_list=sympy.symbols(['cartVel', 'cartPos']), operators=operator_dict, allow_chain=chained_on)
-    gp = ExplainableGP(evolve, df_train, rootdir=rootdir / dir_name, pop_size=50,  gen_end=20, normalize_numpy=normalize_numpy, allow_chain=chained_on)
+    gp = ExplainableGP(evolve, df_train, rootdir=rootdir / dir_name, pop_max_size=50, gen_end=20, normalize_numpy=normalize_numpy, allow_chain=chained_on)
 
     gp.gen_create_initial()
 
@@ -83,7 +80,7 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False):
     operator_dict.update({Ifte: 2, PowRounded: 1, Round: 1})
 
     evolve = Evolution(symbol_list=['cartVel', 'cartPos'], operators=operator_dict, depth_max=9, nodes_max=50, allow_chain=chained_on)
-    gp = ExplainableGP(evolve, df_train, rootdir=rootdir / dir_name, pop_size=50,  gen_end=20,  normalize_numpy=normalize_numpy, allow_chain=chained_on)
+    gp = ExplainableGP(evolve, df_train, rootdir=rootdir / dir_name, pop_max_size=50, gen_end=20, normalize_numpy=normalize_numpy, allow_chain=chained_on)
     try:
         # gp.backup_load()
         printpl('i', 'Ignore loading backup!')

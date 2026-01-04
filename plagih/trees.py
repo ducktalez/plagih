@@ -348,6 +348,9 @@ class Node(NodeStructure):
         if clean_chain:
             self.revoke_useless_nodes()
 
+        # if len(debug_me) != len(self):
+        #     pass  # this thing is useful, removing multiplications
+
         # Updating the structural Infos that have been updated with false Informations
         if repair:
             self.parent_node = self_copy.parent_node  # debug if parent are linked correctly
@@ -2530,7 +2533,7 @@ class ExplainableGP:
         - class data-specific/eval -> df_train, normalize_numpy
         - class
     """
-    def __init__(self, evolve: Evolution, df_train, rootdir: Path, pop_size = 100, gen_end=100, allow_chain=False, normalize_numpy=np.array):
+    def __init__(self, evolve: Evolution, df_train, rootdir: Path, pop_max_size = 100, gen_end=100, allow_chain=False, normalize_numpy=np.array):
         self.time_start = time.perf_counter()
 
         self.rootdir = rootdir
@@ -2540,7 +2543,7 @@ class ExplainableGP:
 
         self.evolve = evolve
         self.gen_end = gen_end
-        self.pop_max_size = pop_size
+        self.pop_max_size = pop_max_size
         self.gen_id = 0
         self.normalize_numpy = normalize_numpy
         self.allow_chain = allow_chain
@@ -2721,7 +2724,7 @@ class ExplainableGP:
         they have gone through a process of changes. Here, the final tree (candidate_tree) is refurbished."""
 
         def loop(create_tree_f):
-            n = int(rate * self.gen_end)
+            n = int(rate * self.pop_max_size)
             n_success = 0
             fails_list = []
             tag = create_tree_f.__name__
@@ -2784,7 +2787,7 @@ class ExplainableGP:
                 #     print(f'OnlyPrintException: Why are we not here??? {ex}')
         return loop
 
-    def tree_to_candidate(self, evotree: Node, origin_tree=None, tag=None, raise_if_useless=True):
+    def tree_to_candidate(self, evotree: Node, origin_tree=None, tag=None, raise_if_useless=True, compare_with_sympy=True):
         """the "fixed" node information is not relevant
 
         Tree MUST NOT be altered from here!
@@ -2819,19 +2822,12 @@ class ExplainableGP:
         else:
 
             try:
-                """Sympy lambdify"""
-                results_raw_df = eval_predict_df(sy_expr, self.df_train, self.evolve.symbol_list)
-                df_results = self.normalize_numpy(results_raw_df)
-                df_fitness = np.sqrt(np.mean((df_results - self.df_train['action']) ** 2))
-                df_fitness = round(df_fitness, FLOAT_PRECISION)
-                df_results = df_results.to_numpy()
-
                 """Numpy eval"""
                 true_values = self.df_train['action'].to_numpy()
 
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore", RuntimeWarning)  # sfeh:discuss...
-                    results_raw_np = evotree.eval_now(self.df_train)  # exception? -> check np.isnan(df_results).any()
+                    results_raw_np = evotree.eval_now(self.df_train)  # exception? -> check np.isnan(sym_results).any()
                     np_results = self.normalize_numpy(results_raw_np)
                     np_fitness = np.sqrt(np.mean((np_results - true_values) ** 2))
                     np_fitness = round(np_fitness, FLOAT_PRECISION)
@@ -2839,30 +2835,38 @@ class ExplainableGP:
                     if 'nan' in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf:  # sfeh:code not so good looking
                         raise ValueError('NaN in results')
 
-                if sum(df_results - np_results) > 0.001:
+                if compare_with_sympy:
+                    """Sympy lambdify"""
+                    results_raw_df = eval_predict_df_sympyBatch(sy_expr, self.df_train, self.evolve.symbol_list)
+                    sym_results = self.normalize_numpy(results_raw_df)
+                    sym_fitness = np.sqrt(np.mean((sym_results - self.df_train['action']) ** 2))
+                    sym_fitness = round(sym_fitness, FLOAT_PRECISION)
+                    sym_results = sym_results.to_numpy()
+                    if sum(sym_results - np_results) > 0.001:
+                        diffs = np.abs(sym_results - np_results)
+                        mask = diffs > 0.001
+                        if np.any(mask):
+                            indices = np.where(mask)[0]
+                            print_warning('w', f'{len(indices)} differences found above tolerance 0.001:')
+                        # results_syraw_df = eval_predict_df_sympy_only(sy_expr, self.df_train)  # sfeh takes forever
+                        result_diffs = sym_results - np_results
+                        print(f'Different results in evaluation: {sum(sym_results - np_results)} ({sy_expr})')
 
-                    diffs = np.abs(df_results - np_results)
-                    mask = diffs > 0.001
-
-                    if np.any(mask):
-                        indices = np.where(mask)[0]
-                        print_warning('w', f'{len(indices)} differences found above tolerance 0.001:')
-
-                    # results_syraw_df = eval_predict_df_sympy_only(sy_expr, self.df_train)  # sfeh takes forever
-
-                    result_diffs = df_results - np_results
-                    print(f'Different results in evaluation: {sum(df_results - np_results)} ({sy_expr})')
+                    fitness = sym_fitness
 
                 fitness = np_fitness
 
-                fitness = df_fitness
-
                 self.lut_fitness[sy_expr] = fitness  # sfeh:discuss: lut update in finalize_tree_get_meta()?
-            except Exception as ex:
+
+            except (ValueError, OverflowError) as ex:
+                # 'OverflowError('cannot convert float infinity to integer')'
+                # ValueError('NaN in results')
                 # TODO this try/except-block is just here for self.lut_remove marking. Clean this up later.
                 self.lut_remove[tree_id] = True
                 print_warning('w', f'Could not evaluate fitness for tree {sy_expr}: {ex}')
                 raise
+            except Exception as ex:
+                raise CuriosityError
 
         candidate = Candidate(evotree, fitness=fitness, parsimony=parsimony, tag=tag)
         return candidate
@@ -3036,22 +3040,18 @@ def plot_parsimony_histogram(population, path_out: Path, max_population: int, ma
     `max_population`: Maximale Populationsgröße für feste X-Achsen-Skalierung
     `max_parsimony`: Maximale Parsimony für feste Y-Achsen-Skalierung
     """
+    tags = [tr.get_tag() for tr in population]
 
-    tags = []
-
-    for tr in population:
-        tags.append(tr.get_tag())
-
-    # Create a color map for tags
     import matplotlib.cm as cm
+    from matplotlib.patches import Patch
     import numpy as np
-    colors = cm.tab10(np.linspace(0, 1, len(set(tags))))
-    tag_colors = {t: colors[i] for i, t in enumerate(list(set(tags)))}
+    unique_tags = list(dict.fromkeys(tags))  # stabile Reihenfolge
+    colors = cm.tab10(np.linspace(0, 1, max(1, len(unique_tags))))
+    tag_colors = {t: colors[i] for i, t in enumerate(unique_tags)}
 
     with plt.rc_context(rc={'axes.grid': True}):
         fig, ax = plt.subplots(figsize=(16, 6))
 
-        # Build bars grouped by evolution
         xticks_positions = []
         xticks_labels = []
 
@@ -3065,24 +3065,16 @@ def plot_parsimony_histogram(population, path_out: Path, max_population: int, ma
         ax.set_xlabel('Evolution')
         ax.set_ylabel('count')
         ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.0f}'))
-
-        # Fixed scaling for comparability across generations
-        if max_population is not None:
-            ax.set_xlim(0, max_population)
-        else:
-            ax.set_xlim(0, current_position)
-
-        if max_parsimony is not None:
-            ax.set_ylim(0, max_parsimony)
+        ax.set_xlim(0, max_population)
+        ax.set_ylim(0, max_parsimony)
 
         ax.set_xticks(xticks_positions)
         ax.set_xticklabels(xticks_labels, rotation=45, ha='right')
         ax.set_title(f'Parsimony histogram ({path_out.name})')
 
-        # Add legend (remove duplicates)
-        handles, labels = ax.get_legend_handles_labels()
-        by_label = dict(zip(labels, handles))
-        ax.legend(by_label.values(), by_label.keys(), loc='upper right', framealpha=0.9)
+        # Eindeutige Tag-Legende über Proxy-Patches
+        legend_handles = [Patch(facecolor=tag_colors[t], edgecolor='none', label=t) for t in unique_tags]
+        ax.legend(handles=legend_handles, loc='upper right', framealpha=0.9, title='Tags')
 
         fig.tight_layout()
         fig.savefig(path_out)
@@ -3156,7 +3148,7 @@ def eval_predict_df_sympy_only(sy_expr: sympy.Basic, df: pd.DataFrame) -> pd.Ser
 
     return pd.Series(results, index=df.index)
 
-def eval_predict_df(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list):
+def eval_predict_df_sympyBatch(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list):
     """
     Evaluation with Sympy
     """

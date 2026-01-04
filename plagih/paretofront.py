@@ -47,15 +47,6 @@ def pareto_sort(tree_list):
     return tree_list
 
 
-def pareto_export(paretofront):
-    """
-    Save all the paretofront candidates to a file.
-    (Quick feedback that requires little overhead)
-    """
-    return [f'Parsimony: \t{parsim} MeanError: \t{fitness} Expr: \t{tree.meta.expr_raw}' for (parsim, fitness, tree)
-            in paretofront]
-
-
 def plot_paretofront(paretofront, path, parsimony_max) -> []:
     """Write pyplot with paretofront candidates"""
 

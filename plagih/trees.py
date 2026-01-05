@@ -460,7 +460,6 @@ class Node(NodeStructure):
             _r = _sym(*_cs)
         elif self.is_operator():
             _cs = [cc.get_sympy_expr(simplimore=simplimore) for cc in _cs]
-
             _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
 
         else:
@@ -521,8 +520,8 @@ class Node(NodeStructure):
                     v_eval = v.evalf()
                     typus_str = term_format(v_eval, cut=cut_terms)
 
-
-
+                except Exception as ex:
+                    print(f'SUCCESS sfeh:debug, delete?2 KEEP? {ex}')
 
         return f"[{typus_str}]"
 
@@ -1187,61 +1186,23 @@ class BaseOperator(Node):
     def set_chain(self, param: bool):
         self.chain = param
 
+
     def get_np_child_fast(self, df: np.ndarray, *args) -> List[np.ndarray]:
-        """Ensures all child nodes return properly shaped NumPy arrays."""
-        ccl = [cc.eval_predict_numpy_fast(df, *args) for cc in self.get_childs()]
+        # Kinder auswerten und als ndarray zurückgeben (keine Konvertierung/Reshape)
+        values = [cc.eval_predict_numpy_fast(df, *args) for cc in self.get_childs()]
+        # Optional: Form vereinheitlichen, falls Skalar vorkommt (nur wenn nötig)
+        # Hier weggelassen, da alles ndarray ist.
+        return values
 
-        ccl = [np.asarray(c, dtype=np.float64) if not isinstance(c, np.ndarray) else c for c in ccl]
-
-        # Reshape to consistent format
-        max_shape = max(len(c.shape) for c in ccl)
-        ccl = [np.reshape(c, (-1,)) if len(c.shape) < max_shape else c for c in ccl]
-
-        return ccl
 
     def eval_predict_numpy_fast(self, df: np.ndarray, *args) -> np.ndarray:
-        """
-        Ensures that all child nodes return numerical NumPy arrays before calling np_fun.
+        children = self.get_np_child_fast(df, *args)
 
-        Args:
-            df (np.ndarray): The input data.
-            *args: Additional arguments.
+        # Usub sollte nur ein Argument haben
+        if isinstance(self, Usub) and len(children) != 1:
+            print(f"DEBUG ERROR: Usub erhielt {len(children)} Eingaben")
 
-        Returns:
-            np.ndarray: The computed result of applying np_fun to evaluated children.
-        """
-        child_values = self.get_np_child_fast(df, *args)
-
-        evaluated_children = []
-        for val in child_values:
-            if isinstance(val, Node):
-                print(f"Warning: Unevaluated Node {val} in {self.__class__.__name__}")
-                val = val.eval_predict_numpy_fast(df, *args)
-            evaluated_children.append(val)
-
-        if isinstance(self, Usub) and len(evaluated_children) > 1:
-            print(f"DEBUG ERROR: Usub received multiple inputs: {evaluated_children}")
-
-        # todo-asarray
-        #   also: should not be required. they should all be arrays. maybe, typehints are sufficient?
-        evaluated_children_debug = copy.deepcopy(evaluated_children)
-        evaluated_children = [np.asarray(v, dtype=bool) if v.dtype == np.bool_ else np.asarray(v, dtype=np.float64) for v in evaluated_children]
-        if evaluated_children_debug != evaluated_children:
-            print(f"DEBUG WARNING: Type conversion applied in {self.__class__.__name__} from {evaluated_children_debug} to {evaluated_children}")
-        for v in evaluated_children:
-            if v.dtype == np.bool_:
-                arr = np.asarray(v)
-                if arr.dtype != bool:
-                    CuriosityError("WARNUNG: Bool-Datentyp erwartet, aber anderer Typ gefunden:", arr.dtype)
-            else:
-                arr = np.asarray(v)
-                if arr.dtype != np.float64:  # int32: I, float32: I
-                    CuriosityError("WARNUNG: float64 erwartet, aber anderer Typ gefunden:", arr.dtype)
-
-        res = self.np_fun(*evaluated_children)
-
-        return res
-
+        return self.np_fun(*children)
 
 class OperatorArity(BaseOperator):
 
@@ -1436,7 +1397,7 @@ class DivFraction(MathOperator):
     """
     xtype = ((float,), float)
     symfun = lambda *a: sympy.Pow(a[0], sympy.S.NegativeOne)
-    np_fun = staticmethod(lambda a: np.reciprocal(np.asarray(a, dtype=np.float64)))  # todo remove np.asarray
+    np_fun = staticmethod(lambda a: np.reciprocal(a))
     # np_fun = staticmethod(lambda a: np.reciprocal(a, dtype=np.float64))
     # sfeh np.reciprocal(2) -> 0 np.reciprocal(float(2)) -> 0.5
     # -> it is okay, 1/(int) is just always zero
@@ -1618,7 +1579,7 @@ class Ne(RelationalOperator):
 class And(LogicOperator, ChainableOp):
     """ Logisches UND für zwei oder mehr Eingaben """
     symfun = staticmethod(lambda *a: sympy.And(*a))
-    np_fun = staticmethod(lambda *a: np.logical_and.reduce([np.asarray(x, dtype=bool) for x in a]))
+    np_fun = staticmethod(lambda *a: np.logical_and.reduce(a))
     showme = 'And'
     sy_str = '({0} & {1})'  # Arity-2 Formatierung
     repr_str = 'And{},[{}, {}]'
@@ -1626,7 +1587,7 @@ class And(LogicOperator, ChainableOp):
     xtype_input = bool
     expr_dmy = 'And'
     symfun_chain = staticmethod(lambda a: sympy.And(*a))
-    np_fun_chain = staticmethod(lambda *a: np.logical_and.reduce([np.asarray(x, dtype=bool) for x in a]))
+    np_fun_chain = staticmethod(lambda *a: np.logical_and.reduce(a))
 
     showme_chain = 'AndChain'
     sy_str_chain = 'And({})'  # Variadische Notation
@@ -1656,7 +1617,7 @@ class Xor(LogicOperator, NoSymCapitalized, ChainableOp):
     """Caution: loading '(a ^ b)', the sympy-Xor-representation, is interpreted as a**b"""
     symfun = lambda *a: sympy.Xor(*a)
     # np_fun = staticmethod(lambda *a: np.logical_xor.reduce(*a, axis=0))
-    np_fun = staticmethod(lambda *a: np.logical_xor.reduce([np.asarray(x, dtype=bool) for x in a])) # np.logical_and.reduce())
+    np_fun = staticmethod(lambda *a: np.logical_xor.reduce(a)) # np.logical_and.reduce())
     showme = 'Xor'
     sy_str = 'Xor({}, {})'  # 'a ^ b'
     repr_str = 'Xor{},[{}, {}]'
@@ -1683,7 +1644,7 @@ class ITE(LogicOperator):
 
 class Min(BaseMinMax, ChainableOp):
     symfun = lambda *a: sympy.Min(*a)
-    np_fun = staticmethod(lambda *a: np.minimum.reduce(np.vstack([np.asarray(x, dtype=np.float64) for x in a]), axis=0))
+    np_fun = staticmethod(lambda *a: np.minimum.reduce(np.vstack(a), axis=0))
     showme = 'Min'
     sy_str = 'Min({0},{1})'
     repr_str = 'Min{},[{}, {}]'
@@ -1699,7 +1660,7 @@ class Min(BaseMinMax, ChainableOp):
 class Max(BaseMinMax, ChainableOp):
     symfun = lambda *a: sympy.Max(*a)
     # np_fun = lambda *a: np.maximum(*a)  # sfeh max, maximum, maximum.reduce
-    np_fun = staticmethod(lambda *a: np.maximum.reduce(np.vstack([np.asarray(x, dtype=np.float64) for x in a]), axis=0))
+    np_fun = staticmethod(lambda *a: np.maximum.reduce(np.vstack(a), axis=0))
     showme = 'Max'
     sy_str = 'Max({0}, {1})'
     repr_str = 'Max{},[{}, {}]'
@@ -1794,7 +1755,7 @@ class Ifte(OperatorArity):  # sfeh:Discuss: ChainableOp
     xtype = ((bool, float, float), float)
     symfun = lambda *a: sympy.Piecewise((a[1], a[0]), (a[2], True))
     # np_fun = np.where
-    np_fun = staticmethod(lambda cond, if_true, if_false: np.where(np.asarray(cond, dtype=bool), np.asarray(if_true), np.asarray(if_false)))
+    np_fun = staticmethod(lambda cond, if_true, if_false: np.where(cond, if_true, if_false))
     showme = 'Ifte'
     sy_str = 'Ifte({0},{1},{2})'
     repr_str = 'Ifte{},[{}, {}, {}]'
@@ -1825,7 +1786,6 @@ class Round(MathOperator):
     # symfun: Callable[[sympy.Expr], sympy.Expr] = lambda a: a.round(0) if a.is_number else Round(a)  # sfeh (next line)
     # this is here to hint the type, as sympy will throw a warning otherwise, leading to this
     symfun = lambda *a: Round_Dummy(a[0])
-    # np_fun = lambda num: np.round(np.asarray(num)).astype(int)
     # np_fun: Callable[[np.ndarray], np.ndarray] = staticmethod(lambda num: np.int_(np.round(num)))
     np_fun = staticmethod(lambda x: np.vectorize(lambda v: int(round(float(v))))(x))
     showme = 'Round'
@@ -1931,22 +1891,12 @@ class ExprCondPair_Dummy(Node_Dummy):  # noqa
     xtype = ([(float, bool)], float)
     expr_dmy = 'ExprCondPair_Dummy'
 
-
-
-
-sym2node = {sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos, sympy.asin: Asin, sympy.atan: Atan,
-            sympy.tanh: Tanh, sympy.sinh: Sinh, sympy.cosh: Cosh, sympy.Min: Min, sympy.Max: Max, sympy.Add: Add,
-            sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul, sympy.sqrt: Sqrt,
-            sympy.exp: Exp, sympy.Xor: Xor, sympy.Not: Not, sympy.Equality: Eq, sympy.Ne: Ne, sympy.And: And,
-            sympy.Or: Or, sympy.ITE: ITE, sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.Gt: Gt,
-            sympy.GreaterThan: Ge}
-
-
 d_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul,
-              sympy.Xor: Xor, sympy.Not: Not, sympy.And: And, sympy.Or: Or, sympy.StrictLessThan: Lt, sympy.LessThan: Le,
-              sympy.StrictGreaterThan: Gt, sympy.GreaterThan: Ge, sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan,
-              sympy.acos: Acos, sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: Tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
-              sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: Exp}
+              sympy.Xor: Xor, sympy.Not: Not, sympy.Equality: Eq,  sympy.Unequality: Ne, sympy.And: And, sympy.Or: Or, sympy.StrictLessThan: Lt, sympy.LessThan: Le,
+              sympy.StrictGreaterThan: Gt, sympy.GreaterThan: Ge,
+              sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos, sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: Tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
+              sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: Exp,
+              sympy.sqrt: Sqrt,  sympy.root: NthRoot}
 # The chained version is the regular version updated with the following operators
 d_sym2node_chain = d_sym2node | {sympy.Piecewise: Piecewise, ExprCondPair: ExprCondPair_Dummy}
 # sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChain, sympy.Max: MaxChain,
@@ -3137,13 +3087,6 @@ def eval_predict_sympyBatch(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list)
                 df_results = df.apply(lambda row: func(*[row[s] for s in symbol_list_str]), axis=1)  # sfeh was str(var)
 
     return df_results
-
-
-def sfeh_nparrah_workaround(ccl, dtype=np.float64):
-    ccl2 = [np.asarray(c, dtype=dtype) if not isinstance(c, np.ndarray) else c for c in ccl]
-    if ccl != ccl2:
-        raise CuriosityError
-    return ccl2
 
 
 #

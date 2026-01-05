@@ -41,7 +41,7 @@ class SympyError(Exception):
 
 
 class CuriosityError(Exception):
-    """NeverHappensError/CuriosityError/DeletemeRrror/TodoError/DebugError
+    """NeverHappensError/CuriosityError/DeletemeRrror/DebugError
     For code, that should never be reached. Just to check, why."""
     pass
 

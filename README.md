@@ -17,7 +17,7 @@
 - introduce breath-first-representation!
 - use logging
 
-# Sub-todos
+# Sub-tasks
 
 - discuss: allow_chain is probably not required at so many places...
 - gen_create_initial -> create random pop if pop empty? with leftovers?

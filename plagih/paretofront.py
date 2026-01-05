@@ -65,10 +65,7 @@ def plot_paretofront(paretofront, path, parsimony_max) -> []:
 
         run_name_latex = str(path.name).replace('_', '-')  # workaround for latex version
         ax.step(xx, yy, linestyle='dashed', marker='.', label=f'{run_name_latex}', where='post')
-        try:
-            ax.set(xlabel='complexity', ylabel='regression error', xlim=(0, right), ylim=(0, (max(yy) - min(min(yy), 0)) * 1.05))
-        except ValueError as todo:
-            pass
+        ax.set(xlabel='complexity', ylabel='regression error', xlim=(0, right), ylim=(0, (max(yy) - min(min(yy), 0)) * 1.05))
 
         try:
             path_png = path / f'paretofront.png'

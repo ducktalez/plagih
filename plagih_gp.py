@@ -68,6 +68,21 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False):
     """Testrun"""
 
     operator_dict.update({Ifte: 2, PowRounded: 1, Round: 1})
+    operator_dict.update({Sign: 1, And: 1, Or: 1,
+                          Xor: 1, Cos: 1, Tan: 1,
+                          Lt: 1, Le: 1, Eq: 1, Ne: 1,
+                          Exp: 1, Acos: 1, Asin: 1, Atan: 1})
+
+    # operator_presets = {'math_simple':
+    #                     {Add: 2, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
+    #                      Sin: 0.5, Not: 0.5, Lt: 0.5, Le: 0.5, And: 1, Or: 1, Min: 1, Max: 1}}
+    #
+    # sym2node = {sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos, sympy.asin: Asin, sympy.atan: Atan,
+    #             sympy.tanh: Tanh, sympy.sinh: Sinh, sympy.cosh: Cosh, sympy.Min: Min, sympy.Max: Max, sympy.Add: Add,
+    #             sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul, sympy.sqrt: Sqrt,
+    #             sympy.exp: Exp, sympy.Xor: Xor, sympy.Not: Not, sympy.Equality: Eq, sympy.Ne: Ne, sympy.And: And,
+    #             sympy.Or: Or, sympy.ITE: ITE, sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.Gt: Gt,
+    #             sympy.GreaterThan: Ge}
 
     evolve = Evolution(symbol_list=['cartVel', 'cartPos'], operators=operator_dict, depth_max=9, nodes_max=50, allow_chain=chained_on)
     gp = ExplainableGP(evolve, df_train, rootdir=rootdir / dir_name, pop_max_size=50, gen_end=20, eval_autocast=eval_autocast, allow_chain=chained_on, eval_error_metric=eval_error_metric)

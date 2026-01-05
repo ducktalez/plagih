@@ -84,6 +84,8 @@ class Round_Dummy(sympy.Function):  # Not a Math-operator
             elif a.is_number:
                 return sympy.Integer(round(a.evalf()))
         except Exception as ex:
+            # TypeError('Argument of Integer should be of numeric type, got 2 - I.')
+            #   -> 'asin(tan(1))' has imaginary part. sfeh: open
             return
 
     """This method allows the class to be compatible with SymPy's internal operations. 
@@ -233,15 +235,69 @@ class NodeStructure:
 
         return
 
-    def import_tree(self, input):
-        # todo...import-statement?
-        ...
-        return
+    # def import_tree(self, input):
+    #
+    #     ...
+    #     return
 
-    def export_tree(self, input):
-        # todo...import-statement?
-        ...
-        return
+    def export_tree(self, cut_terms: bool = False) -> str:
+        """
+        Gibt den Baum als direkt ausführbare Konstruktor-Syntax aus:
+          - Operator: Klassename(child1, child2, ...)
+          - Terminals:
+              Number(2.5), Boolean(True/False), Symbol(cartVel)
+          - Fix-Flag: Klassename(..., is_fix=True)
+        Die Ausgabe kann in Python eingefügt werden, sofern alle Klassen verfügbar sind.
+        """
+
+        def format_terminal(node: 'Node') -> str:
+            val = node.get_childs()[0]
+            # Booleans
+            if isinstance(node, Boolean):
+                v = bool(val) if isinstance(val, (bool, sympy.BooleanTrue, sympy.BooleanFalse)) else bool(
+                    sympy.sympify(val))
+                return f"Boolean({str(v)})"
+            # Numbers
+            if isinstance(node, Number):
+                try:
+                    v = float(val)
+                except Exception:
+                    v = float(sympy.sympify(val).evalf())
+                s = f"{v}"
+                if cut_terms:
+                    s = remove_trailing_zeroes(s)
+                return f"Number({s})"
+            # Symbols: Name ohne Quotes
+            if isinstance(node, Symbol):
+                # Wert kann SymPy-Symbol oder String sein
+                name = str(val)
+                return f"Symbol({name})"
+            # Fallback: generisch
+            return f"{type(node).__name__}({val})"
+
+        def walk(node: 'Node') -> str:
+            cls_name = type(node).__name__
+            # Terminals
+            if node.is_term():
+                out = format_terminal(node)
+                # Fix-Flag für Terminals
+                if node.is_fix:
+                    if out.endswith(')'):
+                        out = out[:-1] + ", is_fix=True)"
+                return out
+
+            # Kinder serialisieren
+            children_str = ", ".join(walk(c) for c in node.get_childs())
+            # Fix-Flag für Operatoren
+            if node.is_fix:
+                if children_str:
+                    return f"{cls_name}({children_str}, is_fix=True)"
+                else:
+                    return f"{cls_name}(is_fix=True)"
+            else:
+                return f"{cls_name}({children_str})"
+
+        return walk(self)
 
     def repair_all(self, parent: 'NodeStructure'=None, root: 'NodeStructure'= None, depth:int=0, arg_pos=0):
         """backlink was introduced on 23.04.2024,
@@ -405,16 +461,7 @@ class Node(NodeStructure):
         elif self.is_operator():
             _cs = [cc.get_sympy_expr(simplimore=simplimore) for cc in _cs]
 
-            try:
-                _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
-            except (ValueError, TypeError) as ex:
-                # sfeh:05.03.2024 ValueError("The argument 'log(Min(-0.095, cartVel))' is not comparable.")
-                if "Invalid comparison of non-real" in ex:
-                    raise SympyError(f'TODO ex: {ex}')
-                if sym_expr_check_regex(ex):
-                    raise SympyError(f'getsympyexpr-err| {ex}')
-                else:
-                    raise SympyError(f'TODO ex: {ex}')
+            _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
 
         else:
             raise NotImplementedError
@@ -443,7 +490,7 @@ class Node(NodeStructure):
                 xtype = xt_self(node.get_xtype_tuple())
                 new_node = tb.node_selector.choose_symbol_node(xtype)
             except (ValueError, IndexError) as ex:
-                raise TreeError(f'Single-node tree,  no matching input found (probably boolean - ex: {}): {self}')
+                raise TreeError(f'Single-node tree,  no matching input found (probably boolean - ex: {ex}): {self}')
 
             # node.set_new_node(new_node)
             node.set_new_node(new_node)
@@ -452,14 +499,9 @@ class Node(NodeStructure):
         """sfeh's check"""
         return issubclass(type(self), Number)
 
-
-    def get_ma_name_sfeh(self):
-        s = self.showme
-        return s
-
     def str_as_list(self, cut_terms=False):
 
-        typus_str = self.get_ma_name_sfeh()  # sfeh: can str(typus) work? -> str with args recursively?
+        typus_str = self.showme  # sfeh: can str(typus) work? -> str with args recursively?
 
         if self.get_childs():
             if issubclass(type(self), BaseOperator):
@@ -479,8 +521,8 @@ class Node(NodeStructure):
                     v_eval = v.evalf()
                     typus_str = term_format(v_eval, cut=cut_terms)
 
-                except Exception as ex:
-                    print(f'SUCCESS sfeh:debug, delete?2 KEEP? {ex}')
+
+
 
         return f"[{typus_str}]"
 
@@ -732,13 +774,13 @@ class Node(NodeStructure):
 
                     # if isinstance(cc, DivFraction):
                     #     has_div_frac = [isinstance(ix, DivFraction) for ix in mychlds]
-                    #     if sum(has_div_frac) > 1:
+                    #     if sum(has_div_frac) > 1 or len(mychlds) > 2:  # this makes chained mul to 1/(mul( )) -> check if more than 2 inputs
                     #         continue  # leave them alone
                     #     denominators.append(cc.get_childs()[0])
                     #     # e. g.: "a * 1/3" -> "3/a"
                     #     div_by = cc.get_childs()[0]
                     #     node_sub = Mul(*mychlds_remove(cc))
-                    #     self.replace_with(Div, [node_sub, div_by])  # todo this makes chained mul to 1/(mul( )) -> check if more than 2 inputs
+                    #     self.replace_with(Div, [node_sub, div_by])
                     # el
                     if isinstance(cc, Number):
                         mul1 = cc.get_value()
@@ -757,13 +799,13 @@ class Node(NodeStructure):
                             pass
                     elif isinstance(cc, DivFraction):
                         has_div_frac = [isinstance(ix, DivFraction) for ix in mychlds]
-                        if sum(has_div_frac) > 1:
+                        if sum(has_div_frac) > 1 or len(mychlds) > 2:  # this makes chained mul to 1/(mul( )) -> check if more than 2 inputs
                             continue  # leave them alone
                         denominators.append(cc.get_childs()[0])
                         # e. g.: "a * 1/3" -> "3/a"
                         div_by = cc.get_childs()[0]
                         node_sub = Mul(*mychlds_remove(cc))
-                        self.replace_with(Div, [node_sub, div_by])  # todo this makes chained mul to 1/(mul( )) -> check if more than 2 inputs
+                        self.replace_with(Div, [node_sub, div_by])
                     else:
                         continue  # make sure to skip the following return statement
 
@@ -984,8 +1026,6 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
 
         elif allow_chain:  # sfeh:xxx do this one level above? ignore all allow_chains in here?
             op = d_sym2node_chain[type(s_expr)]
-            if isinstance(s_expr, sympy.Piecewise):
-                pass  # todo
             _n = op(*cc_nodes)
             return _n
 
@@ -1184,10 +1224,10 @@ class BaseOperator(Node):
 
         # todo-asarray
         #   also: should not be required. they should all be arrays. maybe, typehints are sufficient?
-        evaluated_children = [
-            np.asarray(v, dtype=bool) if v.dtype == np.bool_ else np.asarray(v, dtype=np.float64)
-            for v in evaluated_children
-        ]
+        evaluated_children_debug = copy.deepcopy(evaluated_children)
+        evaluated_children = [np.asarray(v, dtype=bool) if v.dtype == np.bool_ else np.asarray(v, dtype=np.float64) for v in evaluated_children]
+        if evaluated_children_debug != evaluated_children:
+            print(f"DEBUG WARNING: Type conversion applied in {self.__class__.__name__} from {evaluated_children_debug} to {evaluated_children}")
         for v in evaluated_children:
             if v.dtype == np.bool_:
                 arr = np.asarray(v)
@@ -2205,7 +2245,7 @@ class Evolution:
                 new_node.depth = dnode.depth
                 dnode.set_new_node(new_node)
 
-        # TODO not as trivial as pruning the max. tree depth: Which nodes to prune randomly?
+        # sfeh not as trivial as pruning the max. tree depth: Which nodes to prune randomly?
         #   This strongly affects the tree structure and should thus be decided in the creation process
         #   Pruning strategies:
         #   - Randomly prune nodes until complexity is met
@@ -2715,7 +2755,10 @@ class ExplainableGP:
             fitness = self.lut_tree_infos[tree_id].get('fitness')
             if not all([sy_expr, parsimony, fitness]):
                 # print_warning('ww', f'Could not evaluate fitness for tree {sy_expr}: {ex}')
-                raise TreeLutError(f'Tree LUT Entry implies Problem: {self.lut_tree_infos[tree_id].get('error')}')
+                asd = self.lut_tree_infos[tree_id].get('error')
+                if asd is None:
+                    pass
+                raise TreeLutError(f'Tree LUT Entry implies Problem: {asd}')
         else:
             # requires: valid, sympy expr, parsimony, fitness
             self.lut_tree_infos[tree_id] = {}  # empty placeholder, if correctly filled later
@@ -2786,9 +2829,10 @@ class ExplainableGP:
                 fitness = np_fitness
 
                 self.lut_symex_fitness[sy_expr] = fitness  # sfeh:discuss: lut update in finalize_tree_get_meta()?
-                self.lut_tree_infos[tree_id]['sy_expr'] = sy_expr
-                self.lut_tree_infos[tree_id]['parsimony'] = parsimony
-                self.lut_tree_infos[tree_id]['fitness'] = fitness
+
+            self.lut_tree_infos[tree_id]['sy_expr'] = sy_expr
+            self.lut_tree_infos[tree_id]['parsimony'] = parsimony
+            self.lut_tree_infos[tree_id]['fitness'] = fitness
 
         candidate = Candidate(evotree, fitness=fitness, parsimony=parsimony, tag=tag)
         return candidate
@@ -3265,7 +3309,7 @@ if __name__ == '__main__':
     }
     df = pd.DataFrame(data)
     tree = PowRounded(Number(3), Number(2))
-    # todo test hieraus machen, soll am ende von einem testlauf durchlaufen
+    # sfeh test hieraus machen, soll am ende von einem testlauf durchlaufen
 
     expr = 'Mul(289, cartVel, Add(cartPos, Mul(2.27, cartVel)), Sin(PowRounded(12, cartPos)))'
     tr = PowRounded(Number(12), Symbol(sympy.S('cartPos')))

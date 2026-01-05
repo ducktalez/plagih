@@ -17,7 +17,12 @@ CHAIN_implement = 'sfeh'  # used as placeholder for implementation-tasks
 TREE_MIN_PARSIMONY = 3
 
 
-class TreeSizeError(Exception):
+class TreeError(Exception):
+    """All Tree-specific errors"""
+    pass
+
+
+class TreeSizeError(TreeError):
     """Non-important, but errors that often come up, e.g.
     - tree is too small after simplification
     - Tree has too many nodes. This should be covered somewhere though!

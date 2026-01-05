@@ -2554,7 +2554,7 @@ class ExplainableGP:
         - class data-specific/eval -> df_train, normalize_numpy
         - class
     """
-    def __init__(self, evolve: Evolution, df_train, rootdir: Path, pop_max_size = 100, gen_end=100, allow_chain=False, normalize_numpy=np.array):
+    def __init__(self, evolve: Evolution, df_train, rootdir: Path, pop_max_size = 100, gen_end=100, allow_chain=False, eval_autocast=np.array):
         self.time_start = time.perf_counter()
 
         self.rootdir = rootdir
@@ -2566,7 +2566,7 @@ class ExplainableGP:
         self.gen_end = gen_end
         self.pop_max_size = pop_max_size
         self.gen_id = 0
-        self.normalize_numpy = normalize_numpy
+        self.eval_autocast = eval_autocast
         self.allow_chain = allow_chain
 
         print(f'\n'
@@ -2579,11 +2579,8 @@ class ExplainableGP:
         self.pop_genepool = []  # sfeh:discuss maybe better names?
         self.pop_next = []
 
-        self.lut_sym = {}
         self.lut_tree_infos = {}
-        self.lut_remove = {}
-        self.lut_parsim = {}
-        self.lut_fitness = {}  # Lookup-table for tree(-expressions) and its fitness/parsimony. Improving runtime a lot!
+        self.lut_symex_fitness = {}  # Lookup-table for tree(-expressions) and its fitness/parsimony. Improving runtime a lot!
 
         # monitoring
         self.time_genstart = time.perf_counter()
@@ -2822,29 +2819,28 @@ class ExplainableGP:
         evotree.repair_depth()
 
         tree_id = evotree.get_lut_id()
+
         if tree_id in self.lut_tree_infos:
-            # requires: valid, sympy expr, parsimony, fitness
             sy_expr = self.lut_tree_infos[tree_id].get('sy_expr')
             parsimony = self.lut_tree_infos[tree_id].get('parsimony')
             fitness = self.lut_tree_infos[tree_id].get('fitness')
-
-            if all(sy_expr, parsimony, fitness):
-                print_warning('ww', f'Could not evaluate fitness for tree {sy_expr}: {ex}')
-
+            if not all(sy_expr, parsimony, fitness):
+                # print_warning('ww', f'Could not evaluate fitness for tree {sy_expr}: {ex}')
+                raise TreeError('Tree LUT Entry implies some Problem with tree.')
         else:
+            # requires: valid, sympy expr, parsimony, fitness
             self.lut_tree_infos[tree_id] = {}  # empty placeholder, if correctly filled later
 
             parsimony = eval_parsimony(evotree, self.evolve.complexity_metric, origin_tree=origin_tree)
             if raise_if_useless and parsimony > self.evolve.nodes_max:  # sfeh:open
-                self.lut_remove[tree_id] = True
                 raise TreeSizeError(f'Tree too complex: {parsimony} > {self.evolve.nodes_max}')
 
             sy_expr = evotree.get_sympy_expr()
             # sympy_expression_check(sy_expr, raise_ex=True)  # sfeh:discuss save bad trees in LUT aswell? Different LUT for bad trees?
 
-            if sy_expr in self.lut_fitness:
+            if sy_expr in self.lut_symex_fitness:
                 # other tree might have same expression -> lookup fitness
-                fitness = self.lut_fitness[sy_expr]
+                fitness = self.lut_symex_fitness[sy_expr]
             else:
 
                 """Numpy eval"""
@@ -2852,8 +2848,8 @@ class ExplainableGP:
 
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore", RuntimeWarning)  # sfeh:discuss...
-                    results_raw_np = evotree.eval_now(self.df_train)  # exception? -> check np.isnan(sym_results).any()
-                    np_results = self.normalize_numpy(results_raw_np)
+                    np_results_raw = evotree.eval_now(self.df_train)  # exception? -> check np.isnan(sym_results).any()
+                    np_results = self.eval_autocast(np_results_raw)
                     np_fitness = np.sqrt(np.mean((np_results - true_values) ** 2))
                     np_fitness = round(np_fitness, FLOAT_PRECISION)
 
@@ -2863,7 +2859,7 @@ class ExplainableGP:
                 if compare_with_sympy:
                     """Sympy lambdify"""
                     sym_results_raw = eval_predict_df_sympyBatch(sy_expr, self.df_train, self.evolve.symbol_list)
-                    sym_results = self.normalize_numpy(sym_results_raw)
+                    sym_results = self.eval_autocast(sym_results_raw)
                     sym_fitness = np.sqrt(np.mean((sym_results - self.df_train['action']) ** 2))
                     sym_fitness = round(sym_fitness, FLOAT_PRECISION)
                     sym_results = sym_results.to_numpy()
@@ -2878,14 +2874,14 @@ class ExplainableGP:
                         print(f'Different results in evaluation: {sum(sym_results - np_results)} ({sy_expr})')
 
                     fitness = sym_fitness
+                    self.lut_tree_infos[tree_id]['fitness-sympy'] = sym_fitness
 
                 fitness = np_fitness
 
-                self.lut_fitness[sy_expr] = fitness  # sfeh:discuss: lut update in finalize_tree_get_meta()?
+                self.lut_symex_fitness[sy_expr] = fitness  # sfeh:discuss: lut update in finalize_tree_get_meta()?
                 self.lut_tree_infos[tree_id]['sy_expr'] = sy_expr
                 self.lut_tree_infos[tree_id]['parsimony'] = parsimony
                 self.lut_tree_infos[tree_id]['fitness'] = fitness
-                self.lut_tree_infos[tree_id]['fitness-sympy'] = sym_fitness
 
         candidate = Candidate(evotree, fitness=fitness, parsimony=parsimony, tag=tag)
         return candidate
@@ -2942,7 +2938,7 @@ class ExplainableGP:
         self.monitor_df.loc[self.gen_id] = tmp_dict
         printpl('gg',
                 f"Created {len(self.pop_genepool)}/{self.gen_end} ({tmp_dict['pop_unique']} unique) in generation {self.gen_id}. "
-                f"Trees in LUT: {len(self.lut_fitness)} Generation took {gen_time:4.2f}s")
+                f"Trees in LUT: {len(self.lut_symex_fitness)} Generation took {gen_time:4.2f}s")
 
         printpl('ggg', f'--- Generation {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}. ---')
 

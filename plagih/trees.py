@@ -209,7 +209,7 @@ class NodeStructure:
         return False
 
     def is_term(self):
-        # sfeh:discuss is_atom, rename all to atom?
+        """is_term instead of operator due to fuckin exprCondPairs"""
         return issubclass(self.get_typus(), Terminal)
 
     def get_typus(self):
@@ -452,7 +452,7 @@ class Node(NodeStructure):
         if self.is_term():
             _r = _sym(*_cs)
 
-        elif isinstance(self, Piecewise):  # sfeh:open delete ONE of them?
+        elif isinstance(self, Piecewise):
             # _sym = sympy.Piecewise
             _cs = [(cc.get_childs()[0], cc.get_childs()[1]) for cc in _cs]
             _cs = [(cc[0].get_sympy_expr(simplimore=simplimore), cc[1].get_sympy_expr(simplimore=simplimore)) for cc in _cs]
@@ -461,10 +461,7 @@ class Node(NodeStructure):
         elif self.is_operator():
             _cs = [cc.get_sympy_expr(simplimore=simplimore) for cc in _cs]
 
-            try:
-                _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
-            except Exception as ex:  # todo
-                _r = _sym(*_cs)
+            _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
 
         else:
             raise NotImplementedError
@@ -498,7 +495,6 @@ class Node(NodeStructure):
             node.set_new_node(new_node)
 
     def is_number(self):
-        """sfeh's check"""
         return issubclass(type(self), Number)
 
     def str_as_list(self, cut_terms=False):
@@ -610,7 +606,7 @@ class Node(NodeStructure):
                 node_list = []
 
         # recursively add the other nodes
-        if self.has_childs():  # sfeh:chain-operators discuss
+        if self.has_childs():
             for cc in self.get_childs():
                 a = cc.list_mutable_nodes(xtype=xtype)
                 node_list.extend(a)
@@ -626,7 +622,7 @@ class Node(NodeStructure):
                        'showme': showme}}
         edges = []
 
-        if self.is_term():  # sfeh is_term instead of operator due to fuckin exprCondPairs
+        if self.is_term():
             pass
         else:
             for ii, cc in enumerate(self.childs):
@@ -1276,8 +1272,9 @@ class NoSymCapitalized:
     pass
 
 
-class Terminal(Node):  # sfeh sympy.Atom
-    """Terminal nodes are leaf nodes which can not have children. e.g.:
+class Terminal(Node):
+    """Sympy.Atom equivalent
+    Terminal nodes are leaf nodes which can not have children. e.g.:
     - constants (e.g. 2.3)
     - observations (e.g. b, aka data input)
     """
@@ -1319,7 +1316,6 @@ class Number(Terminal):
 class Symbol(Terminal):
     """
     The Symbol is set with sympy.Symbol() on creation in child[0]
-    sfeh:discuss: should typus have a sign (-pos); can appear in observations
     This was used to deal with negative values
         self.name = nlabl if nlabl[0] != '-' else nlabl[1:]
     """
@@ -1404,7 +1400,7 @@ class DivFraction(MathOperator):
 
 class NthRoot(MathOperator):
     """Repräsentiert die n-te Wurzel: NthRoot(x, n) → x**(1/n)
-    sfeh:open reinimplementieren"""
+    currently untested"""
 
     xtype = ((float, float), float)  # (Basis, Wurzelgrad) → float
     symfun = staticmethod(lambda *a: sympy.root(a[0], a[1]))  # SymPy Wurzel-Funktion
@@ -1866,7 +1862,7 @@ class Usub(MathOperator):
     # symfun: Callable[[Tuple[float]], float] = staticmethod(lambda a: -a)
     symfun = staticmethod(lambda a, *_: sympy.Mul(-1, a))
     np_fun = staticmethod(lambda x: np.negative(x))
-    showme = 'Usub'  # sfeh
+    showme = 'Usub'
     sy_str = '(-{})'
     repr_str = 'Usub{},[{}]'
 
@@ -1880,7 +1876,6 @@ class Clip(BaseMinMax, CustomOperator):
     sy_str = '(sympy.Min(sympy.Max({0}, {1}), {2}))'
     repr_str = 'Clip{},[{}, {}]'
     xtype = ((float, float, float), float)
-    # sfeh: param 1 and 2 should be set according to the min and max of available param?
 
 
 class ExprCondPair_Dummy(Node_Dummy):  # noqa
@@ -1918,18 +1913,11 @@ d_sym2node_chain = d_sym2node | {sympy.Piecewise: Piecewise, ExprCondPair: ExprC
 #                                  sympy.And: AndChain, sympy.Or: OrChain,  sympy.Xor: XorChain, }
 
 
-def sym_expr_check_regex(expr_sym: sympy.Basic) -> bool:
-    r = re.search(r'zoo|inf|nan|I[^f]|\\*I|re\(', str(expr_sym))
-    return r
-
 def sympy_expression_check_raise(expr_sym):
-
+    """
+    old/analog Version: re.search(r'zoo|inf|nan|I[^f]|\\*I|re\(', str(expr_sym))"""
     if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im, sympy.re):
-        # sfeh:discuss sympy.re: real part -> don't ignore; if there is a real part, there is a imaginary part.
-        if sym_expr_check_regex:
-            raise SympyError(f'Simplification failed: {expr_sym}')
-        else:
-            raise ValueError(f'Simplification failed (...is okay), but a more severe problem is assumed: {expr_sym}')
+    # sympy.re: real part -> don't ignore; if there is a real part, there is a imaginary part.
     return expr_sym
 
 
@@ -1969,7 +1957,7 @@ def expr_sympify(expr):
     except ValueError as ex:
         raise ValueError(f'NaN in {ex}')
     except AttributeError as ex:
-        # print(f'sfeh: This sympy bug happens, when sympifying "True": {ex}')
+        # print(f'This sympy bug happens, when sympifying "True": {ex}')
         raise
         # return sympy.true if expr else sympy.false
 
@@ -2065,7 +2053,7 @@ class NodeSelect:
     def __init__(self, operators: dict, symbol_list: [sympy.Symbol]):
         """make all probabilities sum to 1 for each categoray (Add: 2, Mul: 1, Tan: 0.5) in
 
-        sfeh: replace operators-"dict" with a cost-value in the operators class that can be set and is considered
+        discuss: replace operators-"dict" with a cost-value in the operators class that can be set and is considered
             in the random choose-function?
         """
 
@@ -2100,7 +2088,7 @@ class NodeSelect:
 
     def choose_terminal_node(self, xt, p_observation=0.5) -> Terminal:
         """
-        # sfeh expected str|int|long|float|Decimal|Number object but got 'Node'
+        # solved bug: expected str|int|long|float|Decimal|Number object but got 'Node'
         """
         if np.random.random() > p_observation:
             try:
@@ -2125,8 +2113,7 @@ class NodeSelect:
             return Boolean(_v)
 
     def choose_symbol_node(self, xt) -> Type[Symbol]:
-        """similar to choose_terminal_node()
-        sfeh: delete?"""
+        """similar to choose_terminal_node()"""
         _v = np.random.choice(self.pick_symbol[xt][0], p=self.pick_symbol[xt][1])
         n = Symbol(_v)
         return n
@@ -2255,7 +2242,6 @@ class Evolution:
     def evolve_create_random(self, xt_out, depth_max_local, num_rest=-1, depth=0, p_term=0.0) -> Node:
         """
         sfeh: just use depth_rest and calculate it earlier with depth_max_local and self.depth_max
-        sfeh: make this related to tree complexity measure?
         discuss: number of leftover nodes is not a good threshold, as it limits depth-spreading branches in growing.
                     -> Prune the tree at the end and allow any growth in the beginning
                     -> Tree depth
@@ -2274,7 +2260,7 @@ class Evolution:
             if CHAIN_implement:
                 pass  # optional; just add more node here already
 
-            nums = randomly_split_range(num_rest - 1, len(child_xts))  # sfeh len childlist is weak. chain, also.
+            nums = randomly_split_range(num_rest - 1, len(child_xts))
 
             for ii, xt in enumerate(child_xts):
                 cc = self.evolve_create_random(xt, depth_max_local, num_rest=nums[ii], depth=depth+1, p_term=p_term)
@@ -2381,7 +2367,7 @@ class Evolution:
                 raise ValueError(f'Crossover cant find matching nodes. This Should always be possible.')
             a_nd = np.random.choice(a_nds)
 
-        cpy = copy.deepcopy(a_nd)  # sfeh deepcopy required??
+        cpy = copy.deepcopy(a_nd)  # deepcopy required??
 
         a_nd.set_new_node(b_nd)
         b_nd.set_new_node(cpy)
@@ -2406,9 +2392,7 @@ def randomly_split_range(range_max: int, num_splits: int) -> list[int]:
     """split integer range randomly into num_splits parts
     [1..100] -> [33, 15, 52]
     used for building trees
-    0 is allowed! (ends a branch with a terminal node)
-    sfeh:discuss create 2 more random split values and remove largest and smallest entry. (better distribution?)
-      -> No. Also, allow 0 nodes."""
+    0 is allowed! (ends a branch with a terminal node)"""
 
     if range_max < 0:
         return [-1 for _ in range(num_splits)]
@@ -2425,7 +2409,7 @@ def randomly_split_range(range_max: int, num_splits: int) -> list[int]:
     # so maybe while-loop (just check if it happens?)
     if imprecise_diff != 0:
         if sum(sample_dist) < range_max:
-            # sfeh:minor mistake: if relatively empty, this appends to the first bin
+            # if relatively empty, this appends to the first bin
             sample_dist[sample_dist.index(min(sample_dist))] += imprecise_diff  # extreme_bin = smallest
         elif sum(sample_dist) > range_max:
             sample_dist[sample_dist.index(max(sample_dist))] += imprecise_diff  # extreme_bin = greatest
@@ -2540,9 +2524,6 @@ class ExplainableGP:
                         self.pop_next_append(sym_candidate, force=True)
 
                     print(blue_string(f'Simplified symtree: {sym_candidate.get_parsim()}: {symtree}'))
-
-                except KeyError as ex:
-                    print_caution(f'SFEH: this tree could whatever {ex}')  # -> piecewise function, mostly
 
                 _obsoletes = [i for i in self.paretofront if
                               i.get_fitness() > candidate_tree.get_fitness() and i.get_parsim() >= candidate_tree.get_parsim()]

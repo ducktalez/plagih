@@ -17,6 +17,7 @@
 
 # Sub-tasks
 
+- save-evaluation: nan-handling, forcing real numbers
 - discuss: allow_chain is probably not required at so many places...
 - gen_create_initial -> create random pop if pop empty? with leftovers?
 - tree -> evaluate nodes for best improvement 

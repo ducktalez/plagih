@@ -59,7 +59,7 @@ from plagih.paretofront import *
 from plagih.tree_complexity.tree_edit_distance import *
 from plagih.util import *
 
-from typing import Optional, List, Union, Callable, Any, Tuple
+from typing import Optional, List, Union, Callable, Any, Tuple, Type
 from dataclasses import dataclass, field
 
 
@@ -305,7 +305,8 @@ class Node(NodeStructure):
                                 childs_new = self.get_childs()
                                 childs_new.remove(cc)
                                 self.set_childs(childs_new)
-                                raise CuriosityError  # deleteme-error
+                                # raise CuriosityError
+                                # happened in crossover
 
             for child in self.get_childs():
                 child.revoke_useless_nodes()  # sfeh:open?: should this be handeled EXACTLY when required? keep as backup?
@@ -327,14 +328,16 @@ class Node(NodeStructure):
 
         return
 
+
     def set_new_node(self, nd_new: 'Node', repair=False, clean_chain=True):
         """
-        Replaces self with a new node while preserving tree structure.
+        Replaces self with a new node/branch (including child nodes).
 
         Args:
             nd_new (Node): The node to replace self with.
             repair (bool): Whether to repair depth and parent relationships.
             clean_chain (bool): Whether to remove unnecessary chain operators.
+            pointmutation (bool): Whether this replacement is due to point mutation.
         """
         # Backup of old node, required for repair
         self_copy = copy.deepcopy(self)
@@ -355,7 +358,7 @@ class Node(NodeStructure):
         if repair:
             self.parent_node = self_copy.parent_node  # debug if parent are linked correctly
             self.root_node = self_copy.root_node  # sfeh:open recursively update
-            self.depth = self_copy.depth  # todo recursively update, use input params
+            self.depth = self_copy.depth
 
             self.repair_all()
 
@@ -439,7 +442,6 @@ class Node(NodeStructure):
             except ValueError as ex:
                 raise ValueError(f'Single-node tree with non-matching xtype: {self}')
 
-
             xtype = xt_self(node.get_xtype_tuple())
             new_node = tb.node_selector.choose_symbol_node(xtype)
             # node.set_new_node(new_node)
@@ -455,8 +457,6 @@ class Node(NodeStructure):
         return s
 
     def str_as_list(self, cut_terms=False):
-
-
 
         typus_str = self.get_ma_name_sfeh()  # sfeh: can str(typus) work? -> str with args recursively?
 
@@ -1051,10 +1051,10 @@ def tree_simplification(tree: Node, allow_chain) -> Node:
     # if not allow_chain:
     # print(f'Copy : {len(tree_copy)}\t{tree_copy}')
     # print(f'Before simplification: {len(tree)}\t{tree}')
-    for _ in range(5):
+    for _ in range(10):
         tree_history.append(copy.deepcopy(tree))
         tree.tree_node_grouping(tolerance=0)
-        if _ == 4:
+        if _ == 7:
             print(tree_history)
             raise CuriosityError
         if str(tree) == str(tree_history[-1]):
@@ -1826,9 +1826,7 @@ class Ifte(OperatorArity):  # sfeh:Discuss: ChainableOp
     xtype = ((bool, float, float), float)
     symfun = lambda *a: sympy.Piecewise((a[1], a[0]), (a[2], True))
     # np_fun = np.where
-    np_fun = staticmethod(lambda cond, if_true, if_false:
-                          np.where(np.asarray(cond, dtype=bool), np.asarray(if_true), np.asarray(if_false)))
-
+    np_fun = staticmethod(lambda cond, if_true, if_false: np.where(np.asarray(cond, dtype=bool), np.asarray(if_true), np.asarray(if_false)))
     showme = 'Ifte'
     sy_str = 'Ifte({0},{1},{2})'
     repr_str = 'Ifte{},[{}, {}, {}]'
@@ -2199,17 +2197,17 @@ class NodeSelect:
         ]),
             bool: norm_choices([[lambda: random.choice((True, False)), 1]])}
 
-    def choose_operator(self, xt) -> type(BaseOperator):
+    def choose_operator_class(self, xt) -> Type[BaseOperator]:
         op = np.random.choice(self.pick_op[xt][0], p=self.pick_op[xt][1])  # no (), which would evaluate the op
         return op
 
-    def choose_operator_match(self, xtype):
+    def choose_operator_class_match(self, xtype) -> Type[BaseOperator]:
         if CHAIN_implement:
             pass
         op = np.random.choice(self.pick_op_match[xtype][0], p=self.pick_op_match[xtype][1])
         return op
 
-    def choose_terminal_node(self, xt, p_observation=0.5):
+    def choose_terminal_node(self, xt, p_observation=0.5) -> Terminal:
         """
         # sfeh expected str|int|long|float|Decimal|Number object but got 'Node'
         """
@@ -2235,7 +2233,7 @@ class NodeSelect:
             # -> sympy.sympify('And(True, BooleanAtom(False))')
             return Boolean(_v)
 
-    def choose_symbol_node(self, xt) -> Symbol:
+    def choose_symbol_node(self, xt) -> Type[Symbol]:
         """similar to choose_terminal_node()
         sfeh: delete?"""
         _v = np.random.choice(self.pick_symbol[xt][0], p=self.pick_symbol[xt][1])
@@ -2291,6 +2289,7 @@ class Evolution:
             symbol_list = [sympy.Symbol(s) if isinstance(s, str) else s for s in symbol_list]
             symbol_list = sorted(symbol_list, key=lambda x: str(x))
         self.symbol_list = symbol_list
+        self.symbol_list_str = [str(s) for s in symbol_list]  # -> for df-evaluation (string-keys are expected...)
         self.node_selector = NodeSelect(operators, symbol_list)
 
         self.complexity_metric = complexity_metric
@@ -2379,7 +2378,7 @@ class Evolution:
             node = self.node_selector.choose_terminal_node(xt_out)
         else:
 
-            node_cls = self.node_selector.choose_operator(xt_out)
+            node_cls = self.node_selector.choose_operator_class(xt_out)
             child_xts = node_cls.get_child_xts()
             childs = []
 
@@ -2419,8 +2418,10 @@ class Evolution:
 
         if node.is_operator():
             # allow_chain-option
-            new_label = self.node_selector.choose_operator_match(xtype)  # Function is same type, same arity
-            node.set_typus(new_label)
+            debug_me = copy.deepcopy(node)
+            new_label = self.node_selector.choose_operator_class_match(xtype)  # Function is same type, same arity
+            node = new_label(*node.childs)  # debug_me not tested, not used
+
         elif node.is_term:
             new_node = self.node_selector.choose_terminal_node(xt_self(xtype))
             node.set_new_node(new_node)
@@ -2579,6 +2580,7 @@ class ExplainableGP:
         self.pop_next = []
 
         self.lut_sym = {}
+        self.lut_tree_infos = {}
         self.lut_remove = {}
         self.lut_parsim = {}
         self.lut_fitness = {}  # Lookup-table for tree(-expressions) and its fitness/parsimony. Improving runtime a lot!
@@ -2820,30 +2822,31 @@ class ExplainableGP:
         evotree.repair_depth()
 
         tree_id = evotree.get_lut_id()
-        if tree_id in self.lut_remove:
-            printpl('iii', f'Tree-id already marked for removal in LUT: {tree_id}')
+        if tree_id in self.lut_tree_infos:
+            # requires: valid, sympy expr, parsimony, fitness
+            sy_expr = self.lut_tree_infos[tree_id].get('sy_expr')
+            parsimony = self.lut_tree_infos[tree_id].get('parsimony')
+            fitness = self.lut_tree_infos[tree_id].get('fitness')
 
-        if tree_id in self.lut_sym:
-            sy_expr = self.lut_sym[tree_id]
-        else:
-            sy_expr = evotree.get_sympy_expr()
-            # sympy_expression_check(sy_expr, raise_ex=True)  # sfeh:discuss save bad trees in LUT aswell? Different LUT for bad trees?
-            self.lut_sym[tree_id] = sy_expr
+            if all(sy_expr, parsimony, fitness):
+                print_warning('ww', f'Could not evaluate fitness for tree {sy_expr}: {ex}')
 
-        if tree_id in self.lut_parsim:
-            parsimony = self.lut_parsim[tree_id]
         else:
+            self.lut_tree_infos[tree_id] = {}  # empty placeholder, if correctly filled later
+
             parsimony = eval_parsimony(evotree, self.evolve.complexity_metric, origin_tree=origin_tree)
-            self.lut_parsim[tree_id] = parsimony
             if raise_if_useless and parsimony > self.evolve.nodes_max:  # sfeh:open
                 self.lut_remove[tree_id] = True
                 raise TreeSizeError(f'Tree too complex: {parsimony} > {self.evolve.nodes_max}')
 
-        if sy_expr in self.lut_fitness:
-            fitness = self.lut_fitness[sy_expr]
-        else:
+            sy_expr = evotree.get_sympy_expr()
+            # sympy_expression_check(sy_expr, raise_ex=True)  # sfeh:discuss save bad trees in LUT aswell? Different LUT for bad trees?
 
-            try:
+            if sy_expr in self.lut_fitness:
+                # other tree might have same expression -> lookup fitness
+                fitness = self.lut_fitness[sy_expr]
+            else:
+
                 """Numpy eval"""
                 true_values = self.df_train['action'].to_numpy()
 
@@ -2859,8 +2862,8 @@ class ExplainableGP:
 
                 if compare_with_sympy:
                     """Sympy lambdify"""
-                    results_raw_df = eval_predict_df_sympyBatch(sy_expr, self.df_train, self.evolve.symbol_list)
-                    sym_results = self.normalize_numpy(results_raw_df)
+                    sym_results_raw = eval_predict_df_sympyBatch(sy_expr, self.df_train, self.evolve.symbol_list)
+                    sym_results = self.normalize_numpy(sym_results_raw)
                     sym_fitness = np.sqrt(np.mean((sym_results - self.df_train['action']) ** 2))
                     sym_fitness = round(sym_fitness, FLOAT_PRECISION)
                     sym_results = sym_results.to_numpy()
@@ -2879,16 +2882,10 @@ class ExplainableGP:
                 fitness = np_fitness
 
                 self.lut_fitness[sy_expr] = fitness  # sfeh:discuss: lut update in finalize_tree_get_meta()?
-
-            except (ValueError, ArithmeticError, OverflowError) as ex:
-                # 'OverflowError('cannot convert float infinity to integer')'
-                # ValueError('NaN in results')
-                # this try/except-block is just here for self.lut_remove marking. Clean this up later.
-                self.lut_remove[tree_id] = True
-                print_warning('ww', f'Could not evaluate fitness for tree {sy_expr}: {ex}')
-                raise
-            except Exception as ex:
-                raise CuriosityError
+                self.lut_tree_infos[tree_id]['sy_expr'] = sy_expr
+                self.lut_tree_infos[tree_id]['parsimony'] = parsimony
+                self.lut_tree_infos[tree_id]['fitness'] = fitness
+                self.lut_tree_infos[tree_id]['fitness-sympy'] = sym_fitness
 
         candidate = Candidate(evotree, fitness=fitness, parsimony=parsimony, tag=tag)
         return candidate
@@ -3170,16 +3167,16 @@ def eval_predict_df_sympySingle(sy_expr: sympy.Basic, df: pd.DataFrame) -> pd.Se
 
     return pd.Series(results, index=df.index)
 
-def eval_predict_df_sympyBatch(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list):
+def eval_predict_df_sympyBatch(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list) -> pd.Series:
     """
     Evaluation with Sympy
     """
 
-    if symbol_list is None:
-        symbol_list = sorted(sy_expr.free_symbols, key=lambda x: str(x))
-    else:
-        symbol_list = [sympy.Symbol(s) if isinstance(s, str) else s for s in symbol_list]
-        symbol_list = sorted(symbol_list, key=lambda x: str(x))
+    # if symbol_list is None:
+    #     symbol_list = sorted(sy_expr.free_symbols, key=lambda x: str(x))
+    # else:
+    #     symbol_list = [sympy.Symbol(s) if isinstance(s, str) else s for s in symbol_list]
+    #     symbol_list = sorted(symbol_list, key=lambda x: str(x))
 
     symbol_list_str = [str(s) for s in symbol_list]
 

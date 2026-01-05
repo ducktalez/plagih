@@ -142,7 +142,6 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False):
             @gp.create_trees(rate=0.15)
             def mx_branch_n2():
                 tree = selection_tournament(gp.pop_genepool, n=3)
-                # n = np.clip(int(random.normalvariate(12, 4)), 0, 20)
                 n = np.random.choice([1, 5, 10, 15, 17, 19, 20, 30, 40, 50, 60])
                 tree = gp.evolve.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
                 return tree

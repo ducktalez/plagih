@@ -1767,7 +1767,6 @@ class Piecewise(BaseOperator, ChainableOp):
     xtype_input = ExprCondPair
 
     def eval_predict_numpy_fast(self, df: np.ndarray | pd.DataFrame, *args) -> np.ndarray:
-        # Korrekt: Paare sind (expr, cond)
         pairs = [
             (np.asarray(c.childs[0].eval_predict_numpy_fast(df, *args), dtype=np.float64),
                 np.asarray(c.childs[1].eval_predict_numpy_fast(df, *args), dtype=bool))

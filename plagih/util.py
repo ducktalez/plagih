@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 PRINT_DUMMY = 'wwwaaagggiiifffpp'  # noqa: dummy for print-policy wwaaaggggggiiifff
-DEBUG_DUMMY = False  # noqa: dummy for debug-policy
+DEBUG_DUMMY = True  # noqa: dummy for debug-policy
 FLOAT_PRECISION = 3
 PLOTS_INTERVAL = 1
 BACKUP_INTERVAL = 10
@@ -400,7 +400,7 @@ def printez(message_type, text):
         time_now = time.strftime("%d.%m %H:%M", time.localtime())
         txt = f'[{time_now}] {text}'
     elif 'p' in message_type:
-        f'Performance: {BColors.CYAN}{text}{BColors.RESET_COLOR}'
+        txt = f'Performance: {BColors.CYAN}{text}{BColors.RESET_COLOR}'
     else:
         raise Exception(f'print_type-mode {message_type} not known.')
 

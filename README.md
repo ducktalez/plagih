@@ -22,7 +22,6 @@
 - tree -> evaluate nodes for best improvement 
 - population cluster/races
 - Make regular Function Classes Sympy Functions
-- SFEHASD: Keep all same-quality Pareto-entries!! 
 - replacing
   - replace -1*x, coming from sympy functions
 - Tests for:
@@ -86,7 +85,6 @@
   - sympy.S('(Abs(a)*Abs(b))')
   - sympy.simplify('(Abs(a)*Abs(b))')
   - sympy.core.numbers.Zero
-- structure in gp tree (add(a, add(a, c))) as gp-relevant?
 - lut for every subbranch ()
   - "free symbols" in tree?
 - simplifications as evolution-factor
@@ -159,6 +157,9 @@
 - BIGTREE
   A complete tree, feeding bottom-up on nodes that seem very userful
   like putting the genepool actually all together
+  - after stagnation, change the tree architecture with sympy tricks. 
+    Or after branches are imbalanced.
+- "Scale"-operator, that just multiplies with a number
 
 # Working with this Framework...
 The following are bitches:

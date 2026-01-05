@@ -69,9 +69,9 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False):
 
     operator_dict.update({Ifte: 2, PowRounded: 1, Round: 1})
     operator_dict.update({Sign: 1, And: 1, Or: 1,
-                          Xor: 1, Cos: 1, Tan: 1,
+                          Xor: 1, Cos: 1, Tan: 0.2,
                           Lt: 1, Le: 1, Eq: 1, Ne: 1,
-                          Exp: 1, Acos: 1, Asin: 1, Atan: 1})
+                          Exp: 1, Acos: 0.1, Asin: 1, Atan: 0.5})
 
     # operator_presets = {'math_simple':
     #                     {Add: 2, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
@@ -205,7 +205,7 @@ if __name__ == "__main__":
 
     rootdir = Path.cwd() / '.testruns'
 
-    _test_simple(dir_name='simple-MTC200_RMSE_scratch', chained_on=False)
-    _test_simple(dir_name='simple-MTC200_RMSE_scratch_chained', chained_on=True)
     _test_random_pop(dir_name='MTC200_RMSE_scratch_chained', chained_on=True)
     _test_random_pop(dir_name='MTC200_RMSE_scratch', chained_on=False)
+    _test_simple(dir_name='simple-MTC200_RMSE_scratch', chained_on=False)
+    _test_simple(dir_name='simple-MTC200_RMSE_scratch_chained', chained_on=True)

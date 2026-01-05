@@ -464,7 +464,7 @@ class Node(NodeStructure):
             try:
                 _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
             except Exception as ex:  # todo
-                _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
+                _r = _sym(*_cs)
 
         else:
             raise NotImplementedError
@@ -487,7 +487,6 @@ class Node(NodeStructure):
             return
         else:
             node_list = [x for x in node_list if isinstance(x, Number)]  # sfeh only replaces numbers. ok for now.
-            # sfeh: do this in create new tree?
             try:
                 node = rnd_choice(node_list)  # debug if ignores chains
                 xtype = xt_self(node.get_xtype_tuple())
@@ -791,7 +790,7 @@ class Node(NodeStructure):
                             raise CuriosityError  # "revoke_useless_nodes" should remove
 
                         elif mul1 in (-1, sympy.S.NegativeOne):  # sfeh aka sympy.S.NegativeOne -1, was -1 before
-                            self.replace_with(Usub, mychlds_remove(cc))
+                            self.replace_with(Usub, [Mul(*mychlds_remove(cc))])
                         elif 0 < mul1 < 1:
                             if (1 / mul1) % 1  == 0:  # check if the result is a natural number
                                 node_sub = Mul(*mychlds_remove(cc))
@@ -1024,7 +1023,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
             _n = Round(cc_nodes[0])
             return _n
 
-        elif allow_chain:  # sfeh: do this one level above? ignore all allow_chains in here?
+        elif allow_chain:
             op = d_sym2node_chain[type(s_expr)]
             _n = op(*cc_nodes)
             return _n
@@ -1191,19 +1190,19 @@ class BaseOperator(Node):
     def get_np_child_fast(self, df: np.ndarray, *args) -> List[np.ndarray]:
         # Kinder auswerten und als ndarray zurückgeben (keine Konvertierung/Reshape)
         values = [cc.eval_predict_numpy_fast(df, *args) for cc in self.get_childs()]
-        # Optional: Form vereinheitlichen, falls Skalar vorkommt (nur wenn nötig)
-        # Hier weggelassen, da alles ndarray ist.
+
+        if any((not isinstance(v, np.ndarray)) or (getattr(v, "ndim", 0) == 0) for v in values):
+            values = [np.atleast_1d(np.asarray(v)) for v in values]  # debug why
+
         return values
 
 
     def eval_predict_numpy_fast(self, df: np.ndarray, *args) -> np.ndarray:
         children = self.get_np_child_fast(df, *args)
 
-        # Usub sollte nur ein Argument haben
-        if isinstance(self, Usub) and len(children) != 1:
-            print(f"DEBUG ERROR: Usub erhielt {len(children)} Eingaben")
+        result = self.np_fun(*children)
 
-        return self.np_fun(*children)
+        return result
 
 class OperatorArity(BaseOperator):
 
@@ -1419,8 +1418,7 @@ class Pow(MathOperator):
     # symfun = lambda *a: sympy.Pow(a[0], a[1])
     # np_fun = np.power
     symfun = staticmethod(lambda *a: sympy.Pow(a[0], a[1]) if len(a) == 2 else None)
-    np_fun = staticmethod(lambda base, exp: np.power(
-        np.abs(base), exp) if np.all((base >= 0) | (exp % 1 == 0)) else np.nan)
+    np_fun = staticmethod(lambda base, exp: np.power(base, exp))
     showme = 'Pow'
     sy_str = '({0})**({1})'
     repr_str = 'Pow{},[{},{}]'
@@ -1743,7 +1741,7 @@ class Sub(MathOperator):
 
 
 class Ifte(OperatorArity):
-    """Also class Piecewise"""
+    """Also Piecewise"""
     xtype = ((bool, float, float), float)
     symfun = lambda *a: sympy.Piecewise((a[1], a[0]), (a[2], True))
     # np_fun = np.where
@@ -1768,35 +1766,46 @@ class Piecewise(BaseOperator, ChainableOp):
     xtype_chain = ExprCondPair  # discuss (float, bool)
     xtype_input = ExprCondPair
 
+    def eval_predict_numpy_fast(self, df: np.ndarray | pd.DataFrame, *args) -> np.ndarray:
+        # Korrekt: Paare sind (expr, cond)
+        pairs = [
+            (np.asarray(c.childs[0].eval_predict_numpy_fast(df, *args), dtype=np.float64),
+                np.asarray(c.childs[1].eval_predict_numpy_fast(df, *args), dtype=bool))
+            for c in self.get_childs()]
+
+        result = pairs[-1][0].astype(np.float64, copy=False)
+        used = np.zeros(result.shape, dtype=bool)
+
+        for expr, cond in pairs[:-1]:
+            mask = cond & ~used
+            if mask.any():
+                result[mask] = expr[mask]
+                used |= mask
+        return result
+
 
 class Round(MathOperator):
     """
 
     """
     xtype = ((float,), float)
-    # symfun = lambda *a: a.round(0) if a.is_number else Round_Dummy(a)
-    # symfun: Callable[[sympy.Expr], sympy.Expr] = lambda a: a.round(0) if a.is_number else Round(a)
-    # this is here to hint the type, as sympy will throw a warning otherwise, leading to this
     symfun = lambda *a: Round_Dummy(a[0])
-    # np_fun: Callable[[np.ndarray], np.ndarray] = staticmethod(lambda num: np.int_(np.round(num)))
     np_fun = staticmethod(lambda x: np.vectorize(lambda v: int(round(float(v))))(x))
     showme = 'Round'
     sy_str = 'Round_Dummy({},1)'
     repr_str = 'Round_Dummy{},[{}]'
 
-    def eval_predict_numpy_fast(self, df, *args) -> [np.ndarray]:
-        """"""
+    def eval_predict_numpy_fast(self, df, *args) -> np.ndarray:
         child_values = self.get_np_child_fast(df, *args)
-        res = self.np_fun(*child_values)
-
+        arr = np.asarray(child_values[0], dtype=np.float64)
+        res = self.np_fun(arr)
         return res
+
 
 class PowRounded(MathOperator):
     """Requires class Round_Dummy!
     Rounds the exponent; sfeh:idea clip exponent?"""
     symfun = lambda *a: sympy.Pow(a[0], Round_Dummy(a[1]))
-    # np_fun = lambda base, exponent, *args: np.power(base, np.int_(np.round(exponent)))
-    # np_fun = staticmethod(lambda base, exponent: np.power(base, np.int_(np.round(exponent))))
     np_fun = staticmethod(lambda base, exponent: np.power(base, np.vectorize(lambda x: int(round(float(x))))(exponent)))
     showme = 'PowRounded'
     sy_str = '{0})**Round_Dummy({1})'
@@ -2723,48 +2732,52 @@ class ExplainableGP:
                 perf_t = {0: time.perf_counter()}
                 """Numpy eval"""
                 true_values = self.df_train['action'].to_numpy()
+                try:
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore", RuntimeWarning)  # sfeh:discuss
+                        np_results_raw = evotree.eval_predict_numpy_fast(self.df_train)  # exception? -> check np.isnan(sym_results).any()
+                        np_results = self.eval_autocast(np_results_raw)
+                        # np_fitness = np.sqrt(np.mean((np_results - true_values) ** 2))
+                        np_fitness = self.eval_error_metric(np_results, true_values)
+                        np_fitness = round(np_fitness, FLOAT_PRECISION)
 
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore", RuntimeWarning)  # sfeh:discuss...
-                    np_results_raw = evotree.eval_predict_numpy_fast(self.df_train)  # exception? -> check np.isnan(sym_results).any()
-                    np_results = self.eval_autocast(np_results_raw)
-                    # np_fitness = np.sqrt(np.mean((np_results - true_values) ** 2))
-                    np_fitness = self.eval_error_metric(np_results, true_values)
-                    np_fitness = round(np_fitness, FLOAT_PRECISION)
+                        if 'nan' in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf:  # sfeh:code not so good looking
+                            err_txt = f'NaN in results'
+                            self.lut_tree_infos[tree_id]['error'] = err_txt
+                            raise TreeError(f'{err_txt}')
 
-                    if 'nan' in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf:  # sfeh:code not so good looking
-                        err_txt = f'NaN in results'
-                        self.lut_tree_infos[tree_id]['error'] = err_txt
-                        raise TreeError(f'{err_txt}')
+                        perf_t[1] = time.perf_counter()
 
-                    perf_t[1] = time.perf_counter()
+                    if compare_with_sympy:
+                        """Sympy lambdify"""
+                        sym_results_raw = eval_predict_sympyBatch(sy_expr, self.df_train, self.evolve.symbol_list)
+                        sym_results = self.eval_autocast(sym_results_raw)
+                        sym_fitness_DEL = np.sqrt(np.mean((sym_results - self.df_train['action']) ** 2))
+                        sym_fitness = self.eval_error_metric(sym_results, self.df_train['action'])
+                        sym_fitness = round(sym_fitness, FLOAT_PRECISION)
+                        sym_results = sym_results.to_numpy()
 
-                if compare_with_sympy:
-                    """Sympy lambdify"""
-                    sym_results_raw = eval_predict_sympyBatch(sy_expr, self.df_train, self.evolve.symbol_list)
-                    sym_results = self.eval_autocast(sym_results_raw)
-                    sym_fitness_DEL = np.sqrt(np.mean((sym_results - self.df_train['action']) ** 2))
-                    sym_fitness = self.eval_error_metric(sym_results, self.df_train['action'])
-                    sym_fitness = round(sym_fitness, FLOAT_PRECISION)
-                    sym_results = sym_results.to_numpy()
+                        perf_t[2] = time.perf_counter()
 
-                    perf_t[2] = time.perf_counter()
+                        printpl('pp', f'NP: {perf_t[1]-perf_t[0]:4.2f}s, SY: {perf_t[2]-perf_t[1]:4.2f}s. '
+                                     f'Fitness NP: {np_fitness}, SY: {sym_fitness} ({sy_expr}), eval tree id {tree_id}')
 
-                    printpl('pp', f'NP: {perf_t[1]-perf_t[0]:4.2f}s, SY: {perf_t[2]-perf_t[1]:4.2f}s. '
-                                 f'Fitness NP: {np_fitness}, SY: {sym_fitness} ({sy_expr}), eval tree id {tree_id}')
+                        if sum(sym_results - np_results) > 0.001:
+                            diffs = np.abs(sym_results - np_results)
+                            mask = diffs > 0.001
+                            if np.any(mask):
+                                indices = np.where(mask)[0]
+                                print_warning('w', f'{len(indices)} differences found above tolerance 0.001:')
+                            # results_syraw_df = eval_predict_df_sympy_only(sy_expr, self.df_train)  # sfeh takes forever
+                            result_diffs = sym_results - np_results
+                            print(f'Different results in evaluation: {sum(sym_results - np_results)} ({sy_expr})')
 
-                    if sum(sym_results - np_results) > 0.001:
-                        diffs = np.abs(sym_results - np_results)
-                        mask = diffs > 0.001
-                        if np.any(mask):
-                            indices = np.where(mask)[0]
-                            print_warning('w', f'{len(indices)} differences found above tolerance 0.001:')
-                        # results_syraw_df = eval_predict_df_sympy_only(sy_expr, self.df_train)  # sfeh takes forever
-                        result_diffs = sym_results - np_results
-                        print(f'Different results in evaluation: {sum(sym_results - np_results)} ({sy_expr})')
-
-                    fitness = sym_fitness
-                    self.lut_tree_infos[tree_id]['fitness-sympy'] = sym_fitness
+                        fitness = sym_fitness
+                        self.lut_tree_infos[tree_id]['fitness-sympy'] = sym_fitness
+                except (SympyError, TreeError, ValueError) as ex:
+                    print_warning('ww', f'Could not evaluate fitness for tree {sy_expr}: {ex}')
+                    self.lut_tree_infos[tree_id]['error'] = str(ex)
+                    raise
 
                 fitness = np_fitness
 

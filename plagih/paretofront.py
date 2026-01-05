@@ -8,36 +8,30 @@ from plagih.util import *
 
 def pareto_from_pop(pop_list):
     """
-    sfeh:different entries at the same pareto-slot is possible
+    Behalte alle Kandidaten mit minimaler Fitness pro Komplexität.
+    Keine strukturelle Deduplication.
     """
     pop_list = pareto_sort(pop_list)
 
     try:
-        xx = pop_list[0]
+        _ = pop_list[0]
     except Exception as ex:
         raise Exception(f'The list is empty, i guess: {pop_list}. {ex}')
 
-    ref_par = xx.get_parsim()
-    ref_fit = xx.get_fitness()
+    # minimale Fitness je Komplexität bestimmen
+    best_fitness = {}
+    for t in pop_list:
+        p = t.get_parsim()
+        f = t.get_fitness()
+        bf = best_fitness.get(p)
+        if bf is None or f < bf:
+            best_fitness[p] = f
 
-    pop_pareto = [xx]
-
-    for tree in pop_list:
-        parsim = tree.get_parsim()
-        if parsim == ref_par:  # parsim can not be smaller
-            fitness = tree.get_fitness()
-            if fitness == ref_fit:
-                pop_pareto.append(tree)
-                ref_fit = fitness
-            continue
-
-        else:
-            fitness = tree.get_fitness()
-            if fitness < ref_fit:
-                pop_pareto.append(tree)
-                ref_fit = fitness
-
-            ref_par = parsim
+    # alle Kandidaten mit minimaler Fitness je Komplexität sammeln
+    pop_pareto = []
+    for t in pop_list:
+        if t.get_fitness() == best_fitness[t.get_parsim()]:
+            pop_pareto.append(t)
 
     return pop_pareto
 
@@ -76,6 +70,15 @@ def plot_paretofront(paretofront, path, parsimony_max) -> []:
             print_caution(f'Could not save plot: {perm_error}')
         except Exception as ex:
             raise ex
+    return
+
+
+def analyze_pareto(cpu_cores=4):
+    """
+    sfeh:open
+    Writing all analysis files after evaluating the paretofront.
+    (Currently strongly customized by sfeh for the mountaincar and industrial benchmark)
+    """
     return
 
 

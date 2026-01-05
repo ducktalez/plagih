@@ -45,6 +45,7 @@ Custom Operators /Functions/Nodes/Terminals/Nested:
 import copy
 import random
 import warnings
+from audioop import error
 from collections import deque
 
 import numpy as np
@@ -278,7 +279,7 @@ class Node(NodeStructure):
         child_syms = [child.__sympy__() for child in self.childs]
         return self.symfun(*child_syms)
 
-    def revoke_useless_nodes(self) -> None:  # todo remove as it should be use
+    def revoke_useless_nodes(self) -> None:
         """Mandatory Part of the basic simplification-process.
         E. g. when
             - chainable operators have too few operators: Mul(a) -> a
@@ -435,15 +436,15 @@ class Node(NodeStructure):
         if any(a):
             return
         else:
-            node_list = [x for x in node_list if type(x) == Number]  # sfeh only replaces numbers. ok for now.
+            node_list = [x for x in node_list if isinstance(x, Number)]  # sfeh only replaces numbers. ok for now.
             # sfeh: do this in create new tree?
             try:
                 node = rnd_choice(node_list)  # debug if ignores chains
-            except ValueError as ex:
-                raise ValueError(f'Single-node tree with non-matching xtype: {self}')
+                xtype = xt_self(node.get_xtype_tuple())
+                new_node = tb.node_selector.choose_symbol_node(xtype)
+            except (ValueError, IndexError) as ex:
+                raise TreeError(f'Single-node tree,  no matching input found (probably boolean - ex: {}): {self}')
 
-            xtype = xt_self(node.get_xtype_tuple())
-            new_node = tb.node_selector.choose_symbol_node(xtype)
             # node.set_new_node(new_node)
             node.set_new_node(new_node)
 
@@ -472,16 +473,11 @@ class Node(NodeStructure):
                         # only show decimals for very small numbers: e.g. 0.00002, but 0.123456 -> 0.123
                         typus_str = term_format(f'{v}', cut=cut_terms)
 
-                        # sfeh:discuss: now, small values are displayed as 0
-                        # sfeh:discuss this is removed for mow
-                        #   typus_str = f'{v:.3g}'  # '.5g'->5 decimals, trailing zeros, but rare (ugly) "E+04"
-                        #   TypeError('unsupported format string passed to One.__format__')
                     else:
                         typus_str = f'{v}'
                 except TypeError as ex:  # noqa  # sfeh
                     v_eval = v.evalf()
                     typus_str = term_format(v_eval, cut=cut_terms)
-
 
                 except Exception as ex:
                     print(f'SUCCESS sfeh:debug, delete?2 KEEP? {ex}')
@@ -919,10 +915,7 @@ class Node(NodeStructure):
     def get_child_xts(cls):
         return cls.xtype[0]
 
-    def eval_np(self, *args)  -> Callable[[np.ndarray], np.ndarray]:
-        ...
-
-    def eval_now(self, df, *args)  -> [np.ndarray]:
+    def eval_predict_numpy_fast(self, df, *args)  -> [np.ndarray]:
         ...
 
 
@@ -991,6 +984,8 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
 
         elif allow_chain:  # sfeh:xxx do this one level above? ignore all allow_chains in here?
             op = d_sym2node_chain[type(s_expr)]
+            if isinstance(s_expr, sympy.Piecewise):
+                pass  # todo
             _n = op(*cc_nodes)
             return _n
 
@@ -1152,14 +1147,9 @@ class BaseOperator(Node):
     def set_chain(self, param: bool):
         self.chain = param
 
-    def get_np_child_lambdas(self, *args):
-        ccl = [cc.eval_np(*args) for cc in self.get_childs()]
-        # ccl -> [[np-lambda/vector], [np-lambda/vector]]
-        return ccl
-
-    def get_np_child_now(self, df: np.ndarray, *args) -> List[np.ndarray]:
+    def get_np_child_fast(self, df: np.ndarray, *args) -> List[np.ndarray]:
         """Ensures all child nodes return properly shaped NumPy arrays."""
-        ccl = [cc.eval_now(df, *args) for cc in self.get_childs()]
+        ccl = [cc.eval_predict_numpy_fast(df, *args) for cc in self.get_childs()]
 
         ccl = [np.asarray(c, dtype=np.float64) if not isinstance(c, np.ndarray) else c for c in ccl]
 
@@ -1169,61 +1159,7 @@ class BaseOperator(Node):
 
         return ccl
 
-    def eval_np(self, *args: Any) -> Callable[[np.ndarray], np.ndarray]:
-        """
-        Evaluate the node using NumPy and return a callable function.
-
-        Args:
-            *args: Additional arguments that can be used in evaluation.
-
-        Returns:
-            Callable[[np.ndarray], np.ndarray]: A function that computes the node's output given a NumPy array.
-
-        # Step 1: Retrieve the evaluated child functions
-        # Step 2: Ensure np_fun is callable
-        # Step 3: Define the NumPy function wrapper
-            # Step 4: Evaluate all children with the input DataFrame
-            # Step 5: Ensure child_values are NumPy arrays
-            # Step 6: Apply the NumPy function
-            # Step 7: Ensure the output is a NumPy array
-        """
-
-        child_lambdas = [child.eval_np(*args) for child in self.children]
-
-        print(f"DEBUG: eval_np called on {self.__class__.__name__} with {len(child_lambdas)} children")
-
-        if not callable(self.np_fun):
-            raise TypeError(f"Error in {self.__class__.__name__}: np_fun is not callable")
-
-        def node_lambda(df: np.ndarray) -> np.ndarray:
-            """
-            The function that will be returned by eval_np().
-            It applies np_fun to evaluated children given an input NumPy array.
-            """
-            child_values = [func(df) for func in child_lambdas]
-
-            child_values = [np.asarray(v) if not isinstance(v, np.ndarray) else v for v in child_values]
-
-            print(f"DEBUG: Node {self.__class__.__name__}, child shapes: {[v.shape for v in child_values]}")
-
-            try:
-                result = self.np_fun(*child_values)  # todo remove 01-2026
-            except TypeError as e:
-                print(f"ERROR in {self.__class__.__name__}: TypeError {e}, retrying with alternative structure")
-                try:
-                    result = self.np_fun(child_values)
-                except Exception as e2:
-                    print(f"FINAL ERROR in {self.__class__.__name__}: {e2}")
-                    raise
-
-            if not isinstance(result, np.ndarray):
-                result = np.asarray(result)
-
-            return result
-
-        return node_lambda
-
-    def eval_now(self, df: np.ndarray, *args) -> np.ndarray:
+    def eval_predict_numpy_fast(self, df: np.ndarray, *args) -> np.ndarray:
         """
         Ensures that all child nodes return numerical NumPy arrays before calling np_fun.
 
@@ -1234,13 +1170,13 @@ class BaseOperator(Node):
         Returns:
             np.ndarray: The computed result of applying np_fun to evaluated children.
         """
-        child_values = self.get_np_child_now(df, *args)
+        child_values = self.get_np_child_fast(df, *args)
 
         evaluated_children = []
         for val in child_values:
             if isinstance(val, Node):
                 print(f"Warning: Unevaluated Node {val} in {self.__class__.__name__}")
-                val = val.eval_now(df, *args)
+                val = val.eval_predict_numpy_fast(df, *args)
             evaluated_children.append(val)
 
         if isinstance(self, Usub) and len(evaluated_children) > 1:
@@ -1355,10 +1291,6 @@ class Terminal(Node):  # sfeh sympy.Atom
     def set_value(self, val):
         self.set_childs(val)
 
-    def eval_now(self, df, *args)  -> [np.ndarray]:
-        res = self.eval_np()(df)
-        return res
-
 
 class Boolean(Terminal):
     # sfeh:discuss just for True/False?
@@ -1367,9 +1299,8 @@ class Boolean(Terminal):
     np_fun = np.array
     showme = 'Boolean'
     # tflow = lambda arg: tf.constant(arg, dtype=tf.bool)
-
-    def eval_np(self, *args):
-        return lambda df: np.full(df.shape[0], self.get_value(), dtype=bool)
+    def eval_predict_numpy_fast(self, df, *args) -> np.ndarray:
+        return np.full(df.shape[0], bool(self.get_value()), dtype=bool)
 
 
 class Number(Terminal):
@@ -1381,9 +1312,8 @@ class Number(Terminal):
     showme = 'Number'
     # sfeh: problem with rational: Sqrt(8.0) -> 2*sqrt(6)/3. sfeh: actually is_atomic?
     # tflow = lambda a: tf.constant(a, dtype=tf.float32)
-
-    def eval_np(self, *args):  # sfeh: required to make np.array()?
-        return lambda df: np.full(df.shape[0], self.get_value(), dtype=np.float64)
+    def eval_predict_numpy_fast(self, df, *args) -> np.ndarray:
+        return np.full(df.shape[0], float(self.get_value()), dtype=np.float64)
 
 
 class Symbol(Terminal):
@@ -1397,11 +1327,9 @@ class Symbol(Terminal):
     np_fun = None
     xtype = ((), float)
     showme = 'Symbol'
-
-    def eval_np(self, *args):
-        """Returns a lambda that extracts the correct column from a DataFrame as NumPy array."""
+    def eval_predict_numpy_fast(self, df: pd.DataFrame, *args) -> np.ndarray:
         name = str(self.get_value())
-        return lambda df: df[name].to_numpy(dtype=np.float64)
+        return df[name].to_numpy(dtype=np.float64)
 
 
 def cast_input(value: Any) -> Node:
@@ -1833,26 +1761,9 @@ class Ifte(OperatorArity):  # sfeh:Discuss: ChainableOp
     expr_dummy = 'Ifte'
     xtype_chain = (float, bool)
 
-    def eval_np(self, *args):
-        cond, if_true, if_false = self.get_np_child_lambdas()
-        fun = lambda df: self.np_fun(cond(df), if_true(df), if_false(df))
-        return fun
 
-    """sfeh:discuss: the only Operator, which has tuples as input
-
-    sfeh:open force a (foo, True) option, restrict mutating "True"
-            CAUTION! Notimplemented?
-        A method to determine whether a multivariate conditional is consistent
-        with a complete coverage of all variables has not been implemented so
-        the rewrite is being stopped after encountering `cartPos >=
-        Max(cartPos, 10.4*cartPos*cartVel)`. This error would not occur if a
-        default expression like `(foo, True)` were given.
-    """
-
-
-class Piecewise(ChainableOp):
-    # ogclass = Ifte
-    # xtype = ((float, bool), float)
+class Piecewise(BaseOperator, ChainableOp):
+    """ogclass = Ifte"""
     symfun = lambda *a: sympy.Piecewise(*a)
     np_fun = None
     showme = 'Piecewise'
@@ -1863,17 +1774,6 @@ class Piecewise(ChainableOp):
     xtype = ([(ExprCondPair,)], float)
     xtype_chain = ExprCondPair  # discuss (float, bool)
     xtype_input = ExprCondPair
-
-    def eval_np(self, *args):
-        pairs = [(c.childs[0].eval_np(*args), c.childs[1].eval_np(*args)) for c in self.get_childs()]
-
-        def piecewise_lambda(df):
-            result = pairs[-1][1](df)  # Default case
-            for cond, expr in reversed(pairs[:-1]):
-                result = np.where(cond(df), expr(df), result)
-            return result
-
-        return piecewise_lambda
 
 
 class Round(MathOperator):
@@ -1892,18 +1792,9 @@ class Round(MathOperator):
     sy_str = 'Round_Dummy({},1)'
     repr_str = 'Round_Dummy{},[{}]'
 
-    def eval_np(self, *args: Any):
-        def _safe_round(input):
-            # if not isinstance(input, (int, float, np.ndarray)):
-            #     raise TypeError(f"Unsupported input type for np.round: {type(input)}")
-            arr = np.asarray(input)
-            return np.round(arr).astype(int)  # Ensure int type  # sfeh int enough in asarray?
-
-        return lambda df: _safe_round(*[ccl(df) for ccl in self.get_np_child_lambdas()])  # Replace self.some_value with your actual input
-
-    def eval_now(self, df, *args) -> [np.ndarray]:
+    def eval_predict_numpy_fast(self, df, *args) -> [np.ndarray]:
         """"""
-        child_values = self.get_np_child_now(df, *args)
+        child_values = self.get_np_child_fast(df, *args)
         res = self.np_fun(*child_values)
 
         return res
@@ -1919,9 +1810,6 @@ class PowRounded(MathOperator):
     sy_str = '{0})**Round_Dummy({1})'
     repr_str = 'PowRounded{},[{}, {}]'
     xtype = ((float, float), float)
-
-    def eval_np(self, *args):
-        return lambda df: self.np_fun(*self.get_np_child_lambdas())
 
 
 # sfeh:open
@@ -2554,7 +2442,7 @@ class ExplainableGP:
         - class data-specific/eval -> df_train, normalize_numpy
         - class
     """
-    def __init__(self, evolve: Evolution, df_train, rootdir: Path, pop_max_size = 100, gen_end=100, allow_chain=False, eval_autocast=np.array):
+    def __init__(self, evolve: Evolution, df_train, rootdir: Path, pop_max_size = 100, gen_end=100, allow_chain=False, eval_autocast=np.array, eval_error_metric=None):
         self.time_start = time.perf_counter()
 
         self.rootdir = rootdir
@@ -2567,6 +2455,7 @@ class ExplainableGP:
         self.pop_max_size = pop_max_size
         self.gen_id = 0
         self.eval_autocast = eval_autocast
+        self.eval_error_metric = eval_error_metric
         self.allow_chain = allow_chain
 
         print(f'\n'
@@ -2753,25 +2642,25 @@ class ExplainableGP:
                 try:
                     if crossover:
                         t1, t2 = create_tree_f()
-                        ctree1 = self.tree_to_candidate(t1, tag=tag)
                         if simplicate:
-                            ctree1 = tree_simplification(ctree1, allow_chain=self.allow_chain)
+                            t1 = tree_simplification(t1, allow_chain=self.allow_chain)
+                        ctree1 = self.tree_to_candidate(t1, tag=tag)
                         self.pop_next_append(ctree1)
                         n_success += 1
-                        ctree2 = self.tree_to_candidate(t2, tag=tag)
                         if simplicate:
-                            ctree2 = tree_simplification(ctree2, allow_chain=self.allow_chain)
+                            t2 = tree_simplification(t2, allow_chain=self.allow_chain)
+                        ctree2 = self.tree_to_candidate(t2, tag=tag)
                         self.pop_next_append(ctree2)
                         n_success += 1
                     else:
                         evotree = create_tree_f()
-                        ctree = self.tree_to_candidate(evotree, tag=tag)
                         if simplicate:
-                            ctree = tree_simplification(ctree, allow_chain=self.allow_chain)
+                            evotree = tree_simplification(evotree, allow_chain=self.allow_chain)
+                        ctree = self.tree_to_candidate(evotree, tag=tag)
                         self.pop_next_append(ctree)
                         n_success += 1
 
-                except (TreeSizeError, SympyError) as ex:
+                except (TreeError, TreeSizeError, SympyError) as ex:
 
                     fails_list.append(ex)
                     print_warning('www', f'Failed evolution tag \'{tag}\': {ex}')
@@ -2806,7 +2695,7 @@ class ExplainableGP:
                 #     print(f'OnlyPrintException: Why are we not here??? {ex}')
         return loop
 
-    def tree_to_candidate(self, evotree: Node, origin_tree=None, tag=None, raise_if_useless=True, compare_with_sympy=True):
+    def tree_to_candidate(self, evotree: Node, origin_tree=None, tag=None, raise_if_useless=True, compare_with_sympy=DEBUG_DUMMY):  # DEBUG
         """the "fixed" node information is not relevant
 
         Tree MUST NOT be altered from here!
@@ -2824,45 +2713,63 @@ class ExplainableGP:
             sy_expr = self.lut_tree_infos[tree_id].get('sy_expr')
             parsimony = self.lut_tree_infos[tree_id].get('parsimony')
             fitness = self.lut_tree_infos[tree_id].get('fitness')
-            if not all(sy_expr, parsimony, fitness):
+            if not all([sy_expr, parsimony, fitness]):
                 # print_warning('ww', f'Could not evaluate fitness for tree {sy_expr}: {ex}')
-                raise TreeError('Tree LUT Entry implies some Problem with tree.')
+                raise TreeLutError(f'Tree LUT Entry implies Problem: {self.lut_tree_infos[tree_id].get('error')}')
         else:
             # requires: valid, sympy expr, parsimony, fitness
             self.lut_tree_infos[tree_id] = {}  # empty placeholder, if correctly filled later
 
             parsimony = eval_parsimony(evotree, self.evolve.complexity_metric, origin_tree=origin_tree)
             if raise_if_useless and parsimony > self.evolve.nodes_max:  # sfeh:open
-                raise TreeSizeError(f'Tree too complex: {parsimony} > {self.evolve.nodes_max}')
-
-            sy_expr = evotree.get_sympy_expr()
-            # sympy_expression_check(sy_expr, raise_ex=True)  # sfeh:discuss save bad trees in LUT aswell? Different LUT for bad trees?
+                err_txt = f'Tree too complex: {parsimony} > {self.evolve.nodes_max}'
+                self.lut_tree_infos[tree_id]['error'] = err_txt
+                raise TreeSizeError(err_txt)
+            try:
+                sy_expr = evotree.get_sympy_expr()
+                # sympy_expression_check(sy_expr, raise_ex=True)  # sfeh:discuss save bad trees in LUT aswell? Different LUT for bad trees?
+            except SympyError as ex:
+                print_warning('ww', f'Could not create sympy expression for tree: {ex}')
+                self.lut_tree_infos[tree_id]['error'] = str(ex)
+                raise
 
             if sy_expr in self.lut_symex_fitness:
                 # other tree might have same expression -> lookup fitness
                 fitness = self.lut_symex_fitness[sy_expr]
             else:
-
+                perf_t = {0: time.perf_counter()}
                 """Numpy eval"""
                 true_values = self.df_train['action'].to_numpy()
 
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore", RuntimeWarning)  # sfeh:discuss...
-                    np_results_raw = evotree.eval_now(self.df_train)  # exception? -> check np.isnan(sym_results).any()
+                    np_results_raw = evotree.eval_predict_numpy_fast(self.df_train)  # exception? -> check np.isnan(sym_results).any()
                     np_results = self.eval_autocast(np_results_raw)
-                    np_fitness = np.sqrt(np.mean((np_results - true_values) ** 2))
+                    # np_fitness = np.sqrt(np.mean((np_results - true_values) ** 2))
+                    np_fitness = self.eval_error_metric(np_results, true_values)
                     np_fitness = round(np_fitness, FLOAT_PRECISION)
 
                     if 'nan' in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf:  # sfeh:code not so good looking
-                        raise ValueError('NaN in results')
+                        err_txt = f'NaN in results'
+                        self.lut_tree_infos[tree_id]['error'] = err_txt
+                        raise TreeError(f'{err_txt}')
+
+                    perf_t[1] = time.perf_counter()
 
                 if compare_with_sympy:
                     """Sympy lambdify"""
-                    sym_results_raw = eval_predict_df_sympyBatch(sy_expr, self.df_train, self.evolve.symbol_list)
+                    sym_results_raw = eval_predict_sympyBatch(sy_expr, self.df_train, self.evolve.symbol_list)
                     sym_results = self.eval_autocast(sym_results_raw)
-                    sym_fitness = np.sqrt(np.mean((sym_results - self.df_train['action']) ** 2))
+                    sym_fitness_DEL = np.sqrt(np.mean((sym_results - self.df_train['action']) ** 2))
+                    sym_fitness = self.eval_error_metric(sym_results, self.df_train['action'])
                     sym_fitness = round(sym_fitness, FLOAT_PRECISION)
                     sym_results = sym_results.to_numpy()
+
+                    perf_t[2] = time.perf_counter()
+
+                    printpl('pp', f'NP: {perf_t[1]-perf_t[0]:4.2f}s, SY: {perf_t[2]-perf_t[1]:4.2f}s. '
+                                 f'Fitness NP: {np_fitness}, SY: {sym_fitness} ({sy_expr}), eval tree id {tree_id}')
+
                     if sum(sym_results - np_results) > 0.001:
                         diffs = np.abs(sym_results - np_results)
                         mask = diffs > 0.001
@@ -3144,26 +3051,26 @@ def selection_tournament(pop, n=3):
     evotree = copy.deepcopy(evotree)
     return evotree
 
-def eval_predict_df_sympySingle(sy_expr: sympy.Basic, df: pd.DataFrame) -> pd.Series:
-    """TODO TODOTODO Alles aufräumen, was mit evaluation zu tun hat. Prüfung da lassen.
-    Echte SymPy-Evaluierung über ein DataFrame – Zeile für Zeile.
-    Keine NumPy-/lambdify-Abkürzungen.
-    Gibt eine Series mit evaluierten float-Werten zurück.
-    """
-    results = []
+# def eval_predict_sympySingle(sy_expr: sympy.Basic, df: pd.DataFrame) -> pd.Series:
+#     """ Alles aufräumen, was mit evaluation zu tun hat. Prüfung da lassen.
+#     Echte SymPy-Evaluierung über ein DataFrame – Zeile für Zeile.
+#     Keine NumPy-/lambdify-Abkürzungen.
+#     Gibt eine Series mit evaluierten float-Werten zurück.
+#     """
+#     results = []
+#
+#     # Automatisch alle freien Symbole erkennen und in Strings umwandeln
+#     symbol_names = [str(s) for s in sy_expr.free_symbols]
+#
+#     for _, row in df.iterrows():
+#         local_dict = {name: row[name] for name in symbol_names}
+#         result = sy_expr.evalf(subs=local_dict)  # oder .subs(...).evalf()
+#         results.append(float(result))  # konvertiere zu float
+#         printpl('iii', f'Sympy row-by-row evaluation: {result} ({row.values})')
+#
+#     return pd.Series(results, index=df.index)
 
-    # Automatisch alle freien Symbole erkennen und in Strings umwandeln
-    symbol_names = [str(s) for s in sy_expr.free_symbols]
-
-    for _, row in df.iterrows():
-        local_dict = {name: row[name] for name in symbol_names}
-        result = sy_expr.evalf(subs=local_dict)  # oder .subs(...).evalf()
-        results.append(float(result))  # konvertiere zu float
-        printpl('iii', f'Sympy row-by-row evaluation: {result} ({row.values})')
-
-    return pd.Series(results, index=df.index)
-
-def eval_predict_df_sympyBatch(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list) -> pd.Series:
+def eval_predict_sympyBatch(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list) -> pd.Series:
     """
     Evaluation with Sympy
     """
@@ -3195,36 +3102,36 @@ def sfeh_nparrah_workaround(ccl, dtype=np.float64):
     return ccl2
 
 
-
-def evaluate_sympy_expression(expression, df, symbols):
-    """
-    Does NOT work!
-
-    Try to evaluate this:
-    - expr = sympy.Min(2, 2 * cartPos)
-    """
-    np_input = [df[str(name)].to_numpy() for name in symbols]
-    func = sympy.lambdify(tuple(symbols), expression, modules='numpy')
-
-    with warnings.catch_warnings():
-        with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
-            with ignore_warnings(DeprecationWarning):  # something 'like use "**" instead of "Pow"'
-                result = func(*np_input)
-
-    return result
-
-def eval_sympyLoop(expr, df):
-
-    cartVel, cartPos = sympy.symbols('cartVel cartPos')
-    ex = sympy.sympify(str(expr))
-    f = sympy.lambdify([cartVel, cartPos], ex, 'numpy')
-    cartVel = np.array(df['cartVel'])
-    cartPos = np.array(df['cartPos'])
-    action = np.array(df['action'])
-    raw_results = f(cartVel, cartPos)
-    results = np.round(np.clip(raw_results, 0, 2), 0)
-
-    return results
+#
+# def evaluate_sympy_expression(expression, df, symbols):
+#     """
+#     Does NOT work!
+#
+#     Try to evaluate this:
+#     - expr = sympy.Min(2, 2 * cartPos)
+#     """
+#     np_input = [df[str(name)].to_numpy() for name in symbols]
+#     func = sympy.lambdify(tuple(symbols), expression, modules='numpy')
+#
+#     with warnings.catch_warnings():
+#         with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
+#             with ignore_warnings(DeprecationWarning):  # something 'like use "**" instead of "Pow"'
+#                 result = func(*np_input)
+#
+#     return result
+#
+# def eval_sympyLoop(expr, df):
+#
+#     cartVel, cartPos = sympy.symbols('cartVel cartPos')
+#     ex = sympy.sympify(str(expr))
+#     f = sympy.lambdify([cartVel, cartPos], ex, 'numpy')
+#     cartVel = np.array(df['cartVel'])
+#     cartPos = np.array(df['cartPos'])
+#     action = np.array(df['action'])
+#     raw_results = f(cartVel, cartPos)
+#     results = np.round(np.clip(raw_results, 0, 2), 0)
+#
+#     return results
 
 
 if __name__ == '__main__':

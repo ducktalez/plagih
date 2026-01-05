@@ -9,7 +9,8 @@ from matplotlib import pyplot as plt
 # from distutils.spawn import find_executable
 import numpy as np
 
-PRINT_DUMMY = 'wwwaaagggiiifff'  # noqa: dummy for print-policy wwaaaggggggiiifff
+PRINT_DUMMY = 'wwwaaagggiiifffpp'  # noqa: dummy for print-policy wwaaaggggggiiifff
+DEBUG_DUMMY = False  # noqa: dummy for debug-policy
 FLOAT_PRECISION = 3
 PLOTS_INTERVAL = 1
 BACKUP_INTERVAL = 10
@@ -21,6 +22,9 @@ class TreeError(Exception):
     """All Tree-specific errors"""
     pass
 
+class TreeLutError(TreeError):
+    """Errors regarding lookup-tables for trees"""
+    pass
 
 class TreeSizeError(TreeError):
     """Non-important, but errors that often come up, e.g.
@@ -395,6 +399,8 @@ def printez(message_type, text):
     elif 'g' in message_type:
         time_now = time.strftime("%d.%m %H:%M", time.localtime())
         txt = f'[{time_now}] {text}'
+    elif 'p' in message_type:
+        f'Performance: {BColors.CYAN}{text}{BColors.RESET_COLOR}'
     else:
         raise Exception(f'print_type-mode {message_type} not known.')
 

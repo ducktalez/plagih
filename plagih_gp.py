@@ -8,22 +8,12 @@ from plagih.util import *
 import pandas as pd
 import sympy
 
-"""Mountain Car dataset experiment setup"""
-col_names = ['cartVel', 'cartPos']
-df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv').astype('float32')
-df_train, df_control = train_test_split(df, test_size=0.2, random_state=0)
-DATA_SYMBOLS = sympy.symbols(df[col_names].columns, real=True)  # sfeh input_names dirty here
-operator_dict = Evolution.operator_presets['math_simple']
-eval_autocast = lambda x: np.round(np.clip(x, 0, 2), 0)
-
-rootdir = Path.cwd() / '.testruns'
-
 
 def _test_simple(dir_name, chained_on=True):
     """SIMPLE"""
 
     evolve = Evolution(symbol_list=sympy.symbols(['cartVel', 'cartPos']), operators=operator_dict, allow_chain=chained_on)
-    gp = ExplainableGP(evolve, df_train, rootdir=rootdir / dir_name, pop_max_size=50, gen_end=20, eval_autocast=eval_autocast, allow_chain=chained_on)
+    gp = ExplainableGP(evolve, df_train, rootdir=rootdir / dir_name, pop_max_size=50, gen_end=20, eval_autocast=eval_autocast, allow_chain=chained_on, eval_error_metric=eval_error_metric)
 
     gp.gen_create_initial()
 
@@ -80,7 +70,7 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False):
     operator_dict.update({Ifte: 2, PowRounded: 1, Round: 1})
 
     evolve = Evolution(symbol_list=['cartVel', 'cartPos'], operators=operator_dict, depth_max=9, nodes_max=50, allow_chain=chained_on)
-    gp = ExplainableGP(evolve, df_train, rootdir=rootdir / dir_name, pop_max_size=50, gen_end=20, eval_autocast=eval_autocast, allow_chain=chained_on)
+    gp = ExplainableGP(evolve, df_train, rootdir=rootdir / dir_name, pop_max_size=50, gen_end=20, eval_autocast=eval_autocast, allow_chain=chained_on, eval_error_metric=eval_error_metric)
     try:
         # gp.backup_load()
         printpl('i', 'Ignore loading backup!')
@@ -186,7 +176,21 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False):
 
 
 if __name__ == "__main__":
-    # _test_simple(dir_name='simple-MTC200_RMSE_scratch', chained_on=False)
-    # _test_simple(dir_name='simple-MTC200_RMSE_scratch_chained', chained_on=True)
+
+    """All runs: Experiment: Mountain Car dataset setup"""
+    col_names = ['cartVel', 'cartPos']
+    df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv').astype('float32')
+    DATA_SYMBOLS = sympy.symbols(df[col_names].columns, real=True)  # sfeh input_names dirty here
+    operator_dict = Evolution.operator_presets['math_simple']
+    eval_autocast = lambda x: np.round(np.clip(x, 0, 2), 0)
+
+    """All runs: Evaluation configurations"""
+    df_train, df_control = train_test_split(df, test_size=0.2, random_state=0)
+    eval_error_metric = lambda y_true, y_pred: np.sqrt(np.mean((y_true - y_pred) ** 2))  # RMSE
+
+    rootdir = Path.cwd() / '.testruns'
+
+    _test_simple(dir_name='simple-MTC200_RMSE_scratch', chained_on=False)
+    _test_simple(dir_name='simple-MTC200_RMSE_scratch_chained', chained_on=True)
     _test_random_pop(dir_name='MTC200_RMSE_scratch_chained', chained_on=True)
     _test_random_pop(dir_name='MTC200_RMSE_scratch', chained_on=False)

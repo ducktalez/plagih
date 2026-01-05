@@ -460,7 +460,11 @@ class Node(NodeStructure):
             _r = _sym(*_cs)
         elif self.is_operator():
             _cs = [cc.get_sympy_expr(simplimore=simplimore) for cc in _cs]
-            _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
+
+            try:
+                _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
+            except Exception as ex:  # todo
+                _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
 
         else:
             raise NotImplementedError
@@ -966,13 +970,13 @@ def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
         -> introduce own complexity measure, do not import...
     """
     if complexity_measure == 'tree_node_count_raw':  # number of nodes
-        return tree.len_nodecount_raw()  # returns the number of nodes  # sfeh weights
+        return tree.len_nodecount_raw()
     elif complexity_measure == 'tree_node_count_fair':
-        return tree.len_nodecount_fair()  # returns the number of nodes  # sfehxx weights
+        return tree.len_nodecount_fair()
     elif complexity_measure == 'tree_edit_distance':  # tree_edit_distance, fintree-edit-distance
         apted1 = tree.get_apted_notation()
         apted2 = origin_tree.get_apted_notation()
-        distance, mapping = apted_distance(apted1, apted2)  # sfeh the mapping could be useful somewhere
+        distance, mapping = apted_distance(apted1, apted2)
         return distance
     else:
         raise Exception(f'Complexity measurement not available: {complexity_measure}')
@@ -1000,9 +1004,6 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
             _n = Symbol(s_expr)
             return _n
         else:
-            # expr_eval = s_expr.evalf()  # sfeh
-            # if abs(s_expr - expr_eval) > 0.001:  # sfeh use float recision here 0.1**FLOAT_PRECISION
-            #     expr_eval = s_expr
             if s_expr.is_Boolean:
                 _n = Boolean(s_expr)
                 return _n
@@ -1854,8 +1855,8 @@ class Sqrt(MathOperator):
 
 class Usub(MathOperator):
     xtype = ((float,), float)
-    # symfun: Callable[[Tuple[float]], float] = staticmethod(lambda a: -a[0])
-    symfun: Callable[[Tuple[float]], float] = staticmethod(lambda a: -a)
+    # symfun: Callable[[Tuple[float]], float] = staticmethod(lambda a: -a)
+    symfun = staticmethod(lambda a, *_: sympy.Mul(-1, a))
     np_fun = staticmethod(lambda x: np.negative(x))
     showme = 'Usub'  # sfeh
     sy_str = '(-{})'
@@ -1893,12 +1894,16 @@ class ExprCondPair_Dummy(Node_Dummy):  # noqa
     xtype = ([(float, bool)], float)
     expr_dmy = 'ExprCondPair_Dummy'
 
+
+# Mapping from sympy classes to plagih Node-classes
+# The non-chained version
 d_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul,
               sympy.Xor: Xor, sympy.Not: Not, sympy.Equality: Eq,  sympy.Unequality: Ne, sympy.And: And, sympy.Or: Or, sympy.StrictLessThan: Lt, sympy.LessThan: Le,
               sympy.StrictGreaterThan: Gt, sympy.GreaterThan: Ge,
               sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos, sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: Tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
-              sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: Exp,
-              sympy.sqrt: Sqrt,  sympy.root: NthRoot}
+              sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: Exp}
+# sympy.sqrt: Sqrt,  sympy.root: NthRoot not required, as Pow can handle it
+
 # The chained version is the regular version updated with the following operators
 d_sym2node_chain = d_sym2node | {sympy.Piecewise: Piecewise, ExprCondPair: ExprCondPair_Dummy}
 # sympy.Add: AddChain, sympy.Mul: MulChain, sympy.Min: MinChain, sympy.Max: MaxChain,

@@ -5,17 +5,15 @@
 
 ## Ablage/Todos
 
-- display pareto candidates as png trees
-- evaluation alternatives
-  - compare runtime
-  - done! np-fun in every class, vectorize
-  - tf-fun in every class
-  - regular python code implementation
 - type-hints!!
+- display pareto candidates as png trees
 - self.evolve.origin_tree
 - simplification
 - introduce breath-first-representation!
 - use logging
+- evaluation alternatives
+  - tf-fun in every class
+  - regular python code implementation
 
 # Sub-tasks
 
@@ -26,16 +24,11 @@
 - Make regular Function Classes Sympy Functions
 - SFEHASD: Keep all same-quality Pareto-entries!! 
 - replacing
-  - replace x**2 with Squared(x)
   - replace -1*x, coming from sympy functions
 - Tests for:
   - Auto-testruns: loop/reload through [random, origin, origin_fixed] [MC, IB]
   - TF-evaluation equals python-evaluation equals sympy evaluation
 - BackPropagation through nodes, rank value for whole tree 
-- generell
-  - get it running
-  - remove TODOs
-  - remove sfeh:...
 - separate monitoring class
 - introduce NN in alpha-tree, at well-mutable nodes
 - evaluate one very large graph (TF?) containing the whole population

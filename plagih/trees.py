@@ -2484,61 +2484,62 @@ class ExplainableGP:
 
     def run_update_paretofront(self, pop):
         """
-        CAUTION: This Function was tried to be separated many times now. it never worked.
-        This was tried =3= times now. Please increase the counter when you try.
-        Reason: The paretocandidates should be simplified if possible and gens_since_last_pareto is reset.
-
-        sfeh:discuss pareto-efficient, but different pareto entries?
+        Aktualisiert self.paretofront mit nicht-dominierten Kandidaten aus 'pop'.
+        Minimiert sowohl Fitness als auch Parsimony. Gibt True zurück, wenn sich die Front geändert hat.
         """
-        pop_parcandidates = pareto_from_pop(pop)  # pareto-candidates in the pop, renamed to be clear
+        new_cands = pareto_from_pop(pop) or []
+        if not new_cands:
+            return False
 
-        for candidate_tree in pop_parcandidates:
-            success = False
-            fit = candidate_tree.get_fitness()
-            par = candidate_tree.get_parsim()
+        old_front = list(self.paretofront) if self.paretofront else []
+        old_best_par = min((c.get_parsim() for c in old_front), default=float("inf"))
+        old_best_fit = min((c.get_fitness() for c in old_front), default=float("inf"))
 
-            if par < self.paretofront[0].get_parsim():
-                printez('a', f'Paretofront: New simplest entry. parsimony: {par} fitness: {fit:6.4f}, '
-                               f'old simplest entry had {self.paretofront[0].get_parsim()}')
-                success = True
+        combined = old_front + new_cands
 
-            elif fit < self.paretofront[-1].get_fitness():
-                printez('a', f'Paretofront: New fittest entry. parsimony: {par} fitness: {fit:6.4f}')
-                success = True
-            else:
-                for p in self.paretofront:
-                    if par >= p.get_parsim():
-                        continue
-                    else:
-                        if fit < p.get_fitness():
-                            success = True
+        def dominated(a, b):
+            pa, fa = a.get_parsim(), a.get_fitness()
+            pb, fb = b.get_parsim(), b.get_fitness()
+            return (pb <= pa and fb <= fa) and (pb < pa or fb < fa)
 
-            if success:
-                self.gens_since_last_pareto = 0
+        new_front = []
+        for c in combined:
+            if any(dominated(c, o) for o in combined if o is not c):
+                continue
+            # Duplikate (gleiche Metriken) vermeiden
+            if not any((c.get_parsim() == e.get_parsim() and c.get_fitness() == e.get_fitness()) for e in new_front):
+                new_front.append(c)
 
-                try:
-                    symtree = evolve_reduce_simplicate(candidate_tree.get_evotree(), self.allow_chain, force=True)
-                    sym_candidate = self.tree_to_candidate(symtree, tag='sfeh:sym')
-                    if sym_candidate.get_parsim() < candidate_tree.get_parsim():
-                        printez('a', f'Paretofront: Further simplified! {sym_candidate.get_parsim()} < {candidate_tree.get_parsim()}')
-                        self.pop_next_append(sym_candidate, force=True)
+        # Sortierung für stabile Ausgabe/Weiterverarbeitung
+        new_front.sort(key=lambda x: (x.get_parsim(), x.get_fitness()))
 
-                    print(blue_string(f'Simplified symtree: {sym_candidate.get_parsim()}: {symtree}'))
+        # Änderung erkennen
+        old_keys = {(c.get_parsim(), c.get_fitness(), c.full_string()) for c in old_front}
+        new_keys = {(c.get_parsim(), c.get_fitness(), c.full_string()) for c in new_front}
+        changed = new_keys != old_keys
 
-                _obsoletes = [i for i in self.paretofront if
-                              i.get_fitness() > candidate_tree.get_fitness() and i.get_parsim() >= candidate_tree.get_parsim()]
-                if _obsoletes:
-                    x = [f'{i.full_string()}' for i in _obsoletes]
-                    printez('a', f'Paretofront: Removing obsolete entries {x}')
-                self.paretofront = [ftree for ftree in self.paretofront if ftree not in _obsoletes]
-                self.paretofront.append(candidate_tree)
-                self.paretofront = pareto_sort(self.paretofront)
+        if changed:
+            self.paretofront = new_front
+            new_best_par = min(c.get_parsim() for c in new_front)
+            new_best_fit = min(c.get_fitness() for c in new_front)
 
-        return
+            if old_front and new_best_par < old_best_par:
+                printez('a', f'Paretofront: Neuer simpelster Eintrag. parsimony: {new_best_par} '
+                             f'old simplest had {old_best_par}')
+            if old_front and new_best_fit < old_best_fit:
+                printez('a', f'Paretofront: Neuer fittester Eintrag. fitness: {new_best_fit:6.4f} '
+                             f'old best had {old_best_fit:6.4f}')
+            if not old_front:
+                printez('a', f'Paretofront initialisiert mit {len(new_front)} Kandidaten.')
+
+            self.gens_since_last_pareto = 0
+
+        return changed
 
     def end_generation(self):
         # sfeh:open end generation in every generation
-        self.run_update_paretofront(self.pop_next)
+        if(self.run_update_paretofront(self.pop_next)):
+            self.gens_since_last_pareto = 0
 
         self.pop_genepool = self.pop_next[:]
         self.print_pop(self.pop_next)

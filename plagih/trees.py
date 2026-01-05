@@ -788,7 +788,7 @@ class Node(NodeStructure):
 
                         elif mul1 in (-1, sympy.S.NegativeOne):  # sfeh aka sympy.S.NegativeOne -1, was -1 before
                             self.replace_with(Usub, mychlds_remove(cc))
-                        elif 0 < mul1 < 1:  # sfeh:xxx:discuss: introduce "factor" as class? multiplies x with a number
+                        elif 0 < mul1 < 1:
                             if (1 / mul1) % 1  == 0:  # check if the result is a natural number
                                 node_sub = Mul(*mychlds_remove(cc))
                                 new_num = (1 / mul1)
@@ -1023,7 +1023,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
             _n = Round(cc_nodes[0])
             return _n
 
-        elif allow_chain:  # sfeh:xxx do this one level above? ignore all allow_chains in here?
+        elif allow_chain:  # sfeh: do this one level above? ignore all allow_chains in here?
             op = d_sym2node_chain[type(s_expr)]
             _n = op(*cc_nodes)
             return _n
@@ -1294,9 +1294,8 @@ class Terminal(Node):  # sfeh sympy.Atom
 
 
 class Boolean(Terminal):
-    # sfeh:discuss just for True/False?
-    xtype = ((), bool)  # sfeh ((None,), bool)?
-    symfun = lambda *a: sympy.S.true if a[0] else ~sympy.S.true  # sympy.logic.boolalg.Boolean  # sfeh:discuss
+    xtype = ((), bool)
+    symfun = lambda *a: sympy.S.true if a[0] else ~sympy.S.true  # sympy.logic.boolalg.Boolean
     np_fun = np.array
     showme = 'Boolean'
     # tflow = lambda arg: tf.constant(arg, dtype=tf.bool)
@@ -1311,7 +1310,7 @@ class Number(Terminal):
     # sympy.Rational(0.1) -> 3602879701896397/36028797018963968
     # sympy.Rational('0.1') -> 1/10
     showme = 'Number'
-    # sfeh: problem with rational: Sqrt(8.0) -> 2*sqrt(6)/3. sfeh: actually is_atomic?
+    # sfeh: problem with rational: Sqrt(8.0) -> 2*sqrt(6)/3. : actually is_atomic?
     # tflow = lambda a: tf.constant(a, dtype=tf.float32)
     def eval_predict_numpy_fast(self, df, *args) -> np.ndarray:
         return np.full(df.shape[0], float(self.get_value()), dtype=np.float64)
@@ -1343,7 +1342,7 @@ def cast_input(value: Any) -> Node:
         elif isinstance(value, (sympy.Number, float, int)):
             return Number(value)
         elif isinstance(value, str):
-            return Symbol(value)  # sfeh symbol opts
+            return Symbol(value)
         elif isinstance(value, sympy.Symbol):
             return value
         else:
@@ -1398,10 +1397,6 @@ class DivFraction(MathOperator):
     xtype = ((float,), float)
     symfun = lambda *a: sympy.Pow(a[0], sympy.S.NegativeOne)
     np_fun = staticmethod(lambda a: np.reciprocal(a))
-    # np_fun = staticmethod(lambda a: np.reciprocal(a, dtype=np.float64))
-    # sfeh np.reciprocal(2) -> 0 np.reciprocal(float(2)) -> 0.5
-    # -> it is okay, 1/(int) is just always zero
-    # np_fun = lambda *a: np.reciprocal(float(*a))  # sfeh rename class?
     showme = 'DivFraction'
     sy_str = '1/({})'
     repr_str = 'DivFraction{},[{}]'
@@ -1480,8 +1475,6 @@ class Sin(Trigonometry, NoSymCapitalized):
 
 
 class Tan(Trigonometry, NoSymCapitalized):
-    # sfeh:discuss actually rename classes.
-    # they do not have to match sympy expressions/classes
     symfun = lambda *a: sympy.tan(a[0])
     np_fun = np.tan
     showme = 'Tan'
@@ -1557,7 +1550,6 @@ class Not(LogicOperator):
 
 class Eq(RelationalOperator):
     """a == b"""
-    # sfeh:debug Eq and Ne (), which also work for boolean inputs in sympy
     symfun = lambda *a: sympy.Eq(a[0], a[1])
     np_fun = np.equal
     showme = 'Eq'  # '==' not working in sympy!
@@ -1632,7 +1624,7 @@ class Xor(LogicOperator, NoSymCapitalized, ChainableOp):
 
 
 class ITE(LogicOperator):
-    """sfeh:is this really required? currently not in use"""
+    """only logical if-then-else"""
     symfun = lambda *a: sympy.ITE(a[0], a[1], a[2])
     np_fun = staticmethod(lambda a, b, c: ((a & b) | (not a) & c))  # this fucked me ((a & b) | (not a & c))
     showme = 'ITE'
@@ -1659,7 +1651,6 @@ class Min(BaseMinMax, ChainableOp):
 
 class Max(BaseMinMax, ChainableOp):
     symfun = lambda *a: sympy.Max(*a)
-    # np_fun = lambda *a: np.maximum(*a)  # sfeh max, maximum, maximum.reduce
     np_fun = staticmethod(lambda *a: np.maximum.reduce(np.vstack(a), axis=0))
     showme = 'Max'
     sy_str = 'Max({0}, {1})'
@@ -1750,7 +1741,7 @@ class Sub(MathOperator):
     repr_str = 'Sub{},[{}, {}]'
 
 
-class Ifte(OperatorArity):  # sfeh:Discuss: ChainableOp
+class Ifte(OperatorArity):
     """Also class Piecewise"""
     xtype = ((bool, float, float), float)
     symfun = lambda *a: sympy.Piecewise((a[1], a[0]), (a[2], True))
@@ -1783,7 +1774,7 @@ class Round(MathOperator):
     """
     xtype = ((float,), float)
     # symfun = lambda *a: a.round(0) if a.is_number else Round_Dummy(a)
-    # symfun: Callable[[sympy.Expr], sympy.Expr] = lambda a: a.round(0) if a.is_number else Round(a)  # sfeh (next line)
+    # symfun: Callable[[sympy.Expr], sympy.Expr] = lambda a: a.round(0) if a.is_number else Round(a)
     # this is here to hint the type, as sympy will throw a warning otherwise, leading to this
     symfun = lambda *a: Round_Dummy(a[0])
     # np_fun: Callable[[np.ndarray], np.ndarray] = staticmethod(lambda num: np.int_(np.round(num)))
@@ -1844,10 +1835,21 @@ class Sqrt(MathOperator):
 
 
 # class Divide_no_nan(Operator):
-#     # class-name = 'Divide_no_nan'  # sfeh??
+#     # class-name = 'Divide_no_nan'
 #     tflow = tf.math.divide_no_nan
 #     symfun = lambda *a, b: sympy.Mul(a, )
 #     xtype = ((float, float), float)
+
+
+# class Nan_replace(Operator):
+# """Replaces NaN with a given value"""
+#     tflow = tf.where(tf.math.is_nan(a), b, a)
+#     symfun = lambda *a: sympy.Piecewise((b, sympy.Eq(a, sympy.nan)), (a, True))
+#     xtype = ((float, float), float)
+#    showme = 'Nan_replace'
+#    sy_str = 'Piecewise(({1}, Eq({0}, nan)), ({0}, True))'
+#    repr_str = 'Nan_replace{},[{}, {}]'
+#    np_fun = lambda a, b: np.where(np.isnan(a), b, a)
 
 
 class Usub(MathOperator):
@@ -1944,8 +1946,6 @@ def expr_sympify(expr):
 
     Lastly, it is recommended that you not use I, E, S, N, C, O, or Q
 
-    sfeh: more sympy bugs
-    sympify option evaluate=None does not work with custom functions
     """
 
     try:
@@ -2124,7 +2124,7 @@ class Evolution:
     was "TreeBuildRestrictions"
     functions to build trees, with the advantage of being able to use general build restrictions.
 
-    sfeh: all Symbol-inputs are chosen from a list with equal probability.
+    all Symbol-inputs are chosen from a list with equal probability.
         -> don't overcomplicate this process.
         -> provide more options when asked for, like giving random()-probabilities
 
@@ -2222,7 +2222,6 @@ class Evolution:
 
             evotree = copy.deepcopy(self.origin_tree)
             layer0 = evotree.get_mutable_rootnodes(extend_lvls=0)
-            # sfeh:debug more, also... takes time, just define the nodes in tree for mutation once?
 
             for ii, nd in enumerate(layer0):  # -> get layer every time (nsted ids might have changed)
                 new_subbranch = self.evolve_create_random(nd.get_xtype_self(), depth_goal, num_rest=-1,
@@ -2243,13 +2242,12 @@ class Evolution:
     def evolve_create_random(self, xt_out, depth_max_local, num_rest=-1, depth=0, p_term=0.0) -> Node:
         """
         sfeh: just use depth_rest and calculate it earlier with depth_max_local and self.depth_max
-        sfeh: make this specific to tree complexity measure?
+        sfeh: make this related to tree complexity measure?
         discuss: number of leftover nodes is not a good threshold, as it limits depth-spreading branches in growing.
                     -> Prune the tree at the end and allow any growth in the beginning
                     -> Tree depth
         num_rest: -1 ignores the node number restriction
-        depth_max_local: can be set lower than self.depth_max
-        sfeh:open make depth_goal -> depth_rest"""
+        depth_max_local: can be set lower than self.depth_max"""
 
         # setting a terminal-node if it is required OR p_term is met
         if depth >= min(self.depth_max, depth_max_local) or num_rest == 0 or random.random() < p_term:
@@ -2260,7 +2258,7 @@ class Evolution:
             child_xts = node_cls.get_child_xts()
             childs = []
 
-            if CHAIN_implement:  # sfeh:open
+            if CHAIN_implement:
                 pass  # optional; just add more node here already
 
             nums = randomly_split_range(num_rest - 1, len(child_xts))  # sfeh len childlist is weak. chain, also.
@@ -2344,8 +2342,7 @@ class Evolution:
         - select parent aa and bb
         - select swappable branche for a_parent from b_parent
             - select aa node in aa (and crossover here, no matter what)
-        - delete a_parent branch and pareto_insert b_parent branch (which tactic?)
-        sfeh:idea into main fintree?"""
+        - delete a_parent branch and pareto_insert b_parent branch (which tactic?)"""
 
         a_nds = aa.list_mutable_nodes()
         a_nds = a_nds[1:]  # skip_first ...why actually ignore root node?
@@ -2353,7 +2350,7 @@ class Evolution:
         #   -> this can actually happen quite often, when trees have low complexity
 
         if len(a_nds) == 0:
-            raise ValueError(f'Crossover tree 1 has no mutable nodes!')  # sfeh special (value?) error?
+            raise TreeError(f'Crossover tree 1 has no mutable nodes!')
 
         a_nd = np.random.choice(a_nds)
         xt_out = a_nd.get_xtype_self()
@@ -2427,10 +2424,7 @@ def randomly_split_range(range_max: int, num_splits: int) -> list[int]:
 
 class ExplainableGP:
     """
-    sfeh:open
-        - class Population -> pop_max should be part of a pop_creation_list?
-        - class data-specific/eval -> df_train, normalize_numpy
-        - class
+
     """
     def __init__(self, evolve: Evolution, df_train, rootdir: Path, pop_max_size = 100, gen_end=100, allow_chain=False, eval_autocast=np.array, eval_error_metric=None):
         self.time_start = time.perf_counter()
@@ -2455,7 +2449,7 @@ class ExplainableGP:
               f'\t{rootdir}\n')
 
         self.paretofront = []  # not a separate class; requires too much information
-        self.pop_genepool = []  # sfeh:discuss maybe better names?
+        self.pop_genepool = []
         self.pop_next = []
 
         self.lut_tree_infos = {}
@@ -2511,7 +2505,6 @@ class ExplainableGP:
                                f'old simplest entry had {self.paretofront[0].get_parsim()}')
                 success = True
 
-            # if all([self.fitness_compare(fit, p.get_fitness()) for p in self.paretofront]):  # sfeh-kernel
             elif fit < self.paretofront[-1].get_fitness():
                 printez('a', f'Paretofront: New fittest entry. parsimony: {par} fitness: {fit:6.4f}')
                 success = True
@@ -2563,9 +2556,9 @@ class ExplainableGP:
 
     def gen_create_initial(self, origin_tree=None):
         """
-        sfeh:prio4 this is a very specific function...
+
         """
-        printpl('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')  # sfeh debug
+        printpl('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')
 
         if origin_tree is not None:
             cand_origin = self.tree_to_candidate(origin_tree, raise_if_useless=False, tag='origin')
@@ -2577,7 +2570,7 @@ class ExplainableGP:
                     n = np.clip(int(random.normalvariate(4.0, 1.0)), 4, 6)
                     tree = self.evolve.evolve_new_tree_depth(float, n, p_term=0)
                     tree = tree_simplification(tree, allow_chain=self.allow_chain)
-                    # sfeh trees can shrink to single-noded trees
+
                     if tree.get_max_depth() == 0:
                         raise TreeSizeError(f'Tree did not get complex enough (only root node).')
                     return tree
@@ -2592,7 +2585,7 @@ class ExplainableGP:
                 @self.create_trees(rate=0.5)
                 def init_rand1a():
                     n = np.clip(int(random.normalvariate(4.0, 1.0)), 3, 5)
-                    tree = self.evolve.evolve_new_tree_depth(float, n, p_term=0)  # sfeh: xtype not always float
+                    tree = self.evolve.evolve_new_tree_depth(float, n, p_term=0)
                     return tree
 
                 @self.create_trees(rate=0.5)
@@ -2611,7 +2604,7 @@ class ExplainableGP:
         evotree = ct.get_evotree()
         # from visualization.pygraphviz import render_pygraphviz
         if force and ct.get_parsim() < TREE_MIN_PARSIMONY:
-            # sfeh raise ValueError(f'Tree not complex enough for population, sfeh')
+            # raise ValueError(f'Tree not complex enough for population, sfeh')
             return
         printpl('gggg', f'|->{evotree.len_nodecount_fair():2.0f}: {evotree.str_as_expr()}')
         self.pop_next.append(ct)
@@ -2664,15 +2657,7 @@ class ExplainableGP:
                     if ("'a' cannot be empty unless no samples are taken" in str(ex)
                             or "The argument 'zoo' is not comparable" in str(ex)):
                         print_warning('ww', f'OnlyPrintException: {ex}')
-                except TypeError as ex:
-                    # Value passed to parameter 'x' has DataType bool not in list of allowed values: bfloat16, float16..
-                    # ==> sfeh probably this error: cond(): 'false_fn' argument required
-                    # ==> Happens, when ITE is coming up. Ignoring for now.
-                    if str(ex) == "Cannot convert complex to float":
-                        pass
-                # except AttributeError as ex:
 
-                #     print(f'OnlyPrintException: (Okay, if sympy.im in expr) {ex}')
                 except KeyError as ex:
                     # KeyError(re) -> okay?, real part implies complex numbers, ignoring is okay
                     # (probably sympy.lambdify expression not evaluable)
@@ -3045,35 +3030,10 @@ def selection_tournament(pop, n=3):
     evotree = copy.deepcopy(evotree)
     return evotree
 
-# def eval_predict_sympySingle(sy_expr: sympy.Basic, df: pd.DataFrame) -> pd.Series:
-#     """ Alles aufräumen, was mit evaluation zu tun hat. Prüfung da lassen.
-#     Echte SymPy-Evaluierung über ein DataFrame – Zeile für Zeile.
-#     Keine NumPy-/lambdify-Abkürzungen.
-#     Gibt eine Series mit evaluierten float-Werten zurück.
-#     """
-#     results = []
-#
-#     # Automatisch alle freien Symbole erkennen und in Strings umwandeln
-#     symbol_names = [str(s) for s in sy_expr.free_symbols]
-#
-#     for _, row in df.iterrows():
-#         local_dict = {name: row[name] for name in symbol_names}
-#         result = sy_expr.evalf(subs=local_dict)  # oder .subs(...).evalf()
-#         results.append(float(result))  # konvertiere zu float
-#         printpl('iii', f'Sympy row-by-row evaluation: {result} ({row.values})')
-#
-#     return pd.Series(results, index=df.index)
-
 def eval_predict_sympyBatch(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list) -> pd.Series:
     """
     Evaluation with Sympy
     """
-
-    # if symbol_list is None:
-    #     symbol_list = sorted(sy_expr.free_symbols, key=lambda x: str(x))
-    # else:
-    #     symbol_list = [sympy.Symbol(s) if isinstance(s, str) else s for s in symbol_list]
-    #     symbol_list = sorted(symbol_list, key=lambda x: str(x))
 
     symbol_list_str = [str(s) for s in symbol_list]
 
@@ -3087,38 +3047,6 @@ def eval_predict_sympyBatch(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list)
                 df_results = df.apply(lambda row: func(*[row[s] for s in symbol_list_str]), axis=1)  # sfeh was str(var)
 
     return df_results
-
-
-#
-# def evaluate_sympy_expression(expression, df, symbols):
-#     """
-#     Does NOT work!
-#
-#     Try to evaluate this:
-#     - expr = sympy.Min(2, 2 * cartPos)
-#     """
-#     np_input = [df[str(name)].to_numpy() for name in symbols]
-#     func = sympy.lambdify(tuple(symbols), expression, modules='numpy')
-#
-#     with warnings.catch_warnings():
-#         with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
-#             with ignore_warnings(DeprecationWarning):  # something 'like use "**" instead of "Pow"'
-#                 result = func(*np_input)
-#
-#     return result
-#
-# def eval_sympyLoop(expr, df):
-#
-#     cartVel, cartPos = sympy.symbols('cartVel cartPos')
-#     ex = sympy.sympify(str(expr))
-#     f = sympy.lambdify([cartVel, cartPos], ex, 'numpy')
-#     cartVel = np.array(df['cartVel'])
-#     cartPos = np.array(df['cartPos'])
-#     action = np.array(df['action'])
-#     raw_results = f(cartVel, cartPos)
-#     results = np.round(np.clip(raw_results, 0, 2), 0)
-#
-#     return results
 
 
 if __name__ == '__main__':

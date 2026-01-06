@@ -447,6 +447,45 @@ Große Weltveränderer stehen auf jeden Fall für Veränderung
 - Extrempunkte
 - Extremlösungen
 
+# Sammlung Pasteten
+
+
+#######################################
+# sfeh:idea check these options
+#     import sympy
+#     a, b = sp.symbols('a b')
+#     expr = b - a**2 * a**3 + 2 + 3 * a * b**(-2)
+#     [expr,
+#      expr.as_expr(),
+#      expr.as_poly(),
+#      expr.as_base_exp(),
+#      expr.as_coeff_add(),
+#      expr.as_coeff_Add(),
+#      expr.as_coeff_mul(),
+#      expr.as_coeff_Mul(),
+#      # expr.as_coeff_exponent(),
+#      # expr.leadterm(),  # not working
+#      # expr.subs(),
+#      expr.as_coefficients_dict(),
+#      expr.as_content_primitive(),
+#      expr.as_dummy(),
+#      expr.as_expr(),
+#      expr.as_leading_term(),
+#      expr.as_numer_denom(),
+#      expr.as_two_terms(),
+#      expr.as_independent(),
+#      expr.expand(),
+#      expr.factor(),
+#      expr.assumptions0,
+#      expr.normal(),
+#      expr.nsimplify(),
+#      # expr.extract_multiplicatively(),
+#      # USEFUL
+#      expr.atoms(),  # for leaf nodes
+#      ]
+###########################
+
+
 # whathappened
 
 ```

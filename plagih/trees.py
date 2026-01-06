@@ -7,10 +7,6 @@ fintree splits the karoo fintree into the
 The core of the fintree, which "is" the fintree, is stored recursively
 Example core: [+, 1, [*, [-, 2, 3], 2]] = 1 + ((2-3) * 2)
 
-sfeh: write test that checks all operators for sympificytion (...+branch-combinations, and more?)
-sfeh: use function-types (-> 'commutative'?)
-
-
 def __hash__(self):
     CAUTION: Do not use this function and do not delete this function
     CAUTION: This hash function has currently no use.
@@ -155,7 +151,7 @@ class NodeStructure:
         self.root_node = n
 
     def get_childs(self):
-        return self.childs  # sfeh:open
+        return self.childs
 
     def set_childs(self, child_list: (list, tuple)):
         if isinstance(child_list, (list, tuple)):
@@ -188,9 +184,8 @@ class NodeStructure:
 
     def get_max_depth(self, depth=0):
         """Go through all nodes, save depth
-        sfeh: this computes the depth and does not take advantage of saved depths"""
-        # if hasattr(self, '_cached_depth'):
-        #     return self._cached_depth  # sfeh:discuss
+        this computes the depth and does not take advantage of saved depths"""
+
         if self.has_childs():
             max_depth = max(cc.get_max_depth(depth=depth + 1) for cc in self.get_childs())
         else:
@@ -226,8 +221,10 @@ class NodeStructure:
         mainly used in branch
         The depth is written inevery node (for whatever reason), and instead of having to propagate
         the depth through every crossover/branch mutation function, instead, we call it when replacing nodes
+
+        Can repair the depth starting from a random node!!
         """
-        depth = depth or self.depth or 0  # sfeh: "None" was set as depth somewhere. Could not find it.
+        depth = depth or self.depth or 0
         self.depth = depth
         if self.has_childs():
             for cc in self.get_childs():
@@ -366,7 +363,7 @@ class Node(NodeStructure):
                                 # happened in crossover
 
             for child in self.get_childs():
-                child.revoke_useless_nodes()  # sfeh:open?: should this be handeled EXACTLY when required? keep as backup?
+                child.revoke_useless_nodes()
 
             arity = self.get_arity()
             num_childs = len(self.get_childs())
@@ -499,7 +496,7 @@ class Node(NodeStructure):
 
     def str_as_list(self, cut_terms=False):
 
-        typus_str = self.showme  # sfeh: can str(typus) work? -> str with args recursively?
+        typus_str = self.showme
 
         if self.get_childs():
             if issubclass(type(self), BaseOperator):
@@ -518,9 +515,6 @@ class Node(NodeStructure):
                 except TypeError as ex:  # noqa  # sfeh
                     v_eval = v.evalf()
                     typus_str = term_format(v_eval, cut=cut_terms)
-
-                except Exception as ex:
-                    print(f'SUCCESS sfeh:debug, delete?2 KEEP? {ex}')
 
         return f"[{typus_str}]"
 
@@ -1799,7 +1793,8 @@ class Round(MathOperator):
 
 class PowRounded(MathOperator):
     """Requires class Round_Dummy!
-    Rounds the exponent; sfeh:idea clip exponent?"""
+    Roundind the exponent
+    idea: clip the exponent to integer values (e.g. -2-6)"""
     symfun = lambda *a: sympy.Pow(a[0], Round_Dummy(a[1]))
     np_fun = staticmethod(lambda base, exponent: np.power(base, np.vectorize(lambda x: int(round(float(x))))(exponent)))
     showme = 'PowRounded'
@@ -1881,7 +1876,6 @@ class Clip(BaseMinMax, CustomOperator):
 class ExprCondPair_Dummy(Node_Dummy):  # noqa
     """
     Named like this to differ from the sympy original (ExprCondPair)
-    sfeh:discuss
     The only purpose is to wrap the results for a Node-structure, where every Node has childs with other nodes
 
     Currently just an idea for setting a default-value
@@ -1891,7 +1885,7 @@ class ExprCondPair_Dummy(Node_Dummy):  # noqa
     arity = 2
     symfun = lambda *a: ExprCondPair(a[0], a[1])
     np_fun = None  # discuss
-    showme = 'ExprCondPair_Dummy'  # sfeh... mmake this a tuple?
+    showme = 'ExprCondPair_Dummy'
     sy_str = 'ExprCondPair({0}, {1})'
     repr_str = 'ExprCondPair_Dummy{},[{}, {}]'
     xtype = ([(float, bool)], float)
@@ -1904,7 +1898,7 @@ d_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, 
               sympy.Xor: Xor, sympy.Not: Not, sympy.Equality: Eq,  sympy.Unequality: Ne, sympy.And: And, sympy.Or: Or, sympy.StrictLessThan: Lt, sympy.LessThan: Le,
               sympy.StrictGreaterThan: Gt, sympy.GreaterThan: Ge,
               sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos, sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: Tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
-              sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: Exp}
+              sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: Exp,}
 # sympy.sqrt: Sqrt,  sympy.root: NthRoot not required, as Pow can handle it
 
 # The chained version is the regular version updated with the following operators
@@ -1917,7 +1911,8 @@ def sympy_expression_check_raise(expr_sym):
     """
     old/analog Version: re.search(r'zoo|inf|nan|I[^f]|\\*I|re\(', str(expr_sym))"""
     if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im, sympy.re):
-    # sympy.re: real part -> don't ignore; if there is a real part, there is a imaginary part.
+        # sympy.re: real part -> don't ignore; if there is a real part, there is a imaginary part.
+        raise SympyError(f'Simplification failed: {expr_sym}')
     return expr_sym
 
 
@@ -2749,7 +2744,7 @@ class ExplainableGP:
                             if np.any(mask):
                                 indices = np.where(mask)[0]
                                 print_warning('w', f'{len(indices)} differences found above tolerance 0.001:')
-                            # results_syraw_df = eval_predict_df_sympy_only(sy_expr, self.df_train)  # sfeh takes forever
+                            # results_syraw_df = eval_predict_df_sympy_only(sy_expr, self.df_train)  #  takes forever
                             result_diffs = sym_results - np_results
                             print(f'Different results in evaluation: {sum(sym_results - np_results)} ({sy_expr})')
 
@@ -2812,7 +2807,7 @@ class ExplainableGP:
                 raise Exception(f'EOFError: \n{ex}')
 
             help_dict, self.gen_id, self.pop_genepool, self.paretofront, self.monitor_df = run_data
-            self.backup_save(opt_path_backup=self.rootdir / f'backup/backup-{self.gen_id}.pkl')  # sfeh:dis date?
+            self.backup_save(opt_path_backup=self.rootdir / f'backup/backup-{self.gen_id}.pkl')
             printpl('g', f'Successfully loaded backup file. Generation: {self.gen_id}')
         else:
             raise FileNotFoundError(f'No backup-file found at {path_backup}')  # sfeh:beautify occurs 2x
@@ -2843,7 +2838,7 @@ class ExplainableGP:
         1. when >100 generations, no new paretofront were found
         """
         if self.gens_since_last_pareto > 100:  # .iloc[-1] > 100:  # sfeh discussion
-            print('SFEH This condition made your program exit!')
+            printpl('i', 'Custom Condition made your program exit! (No new pareto entries in 100 generations)')
             return True
         else:
             return False
@@ -2861,7 +2856,6 @@ def plot_performance(monitor_df, path_monitoring: Path):
 
         axs0 = axs[0]
         axs0.plot(monitor_df['fit_avg'], marker='', label='regression error (average)')
-        # sfeh:improvement not just the stderr on both sides...
         avg = monitor_df['fit_avg']
         std = monitor_df['fit_var']
         fit_quantile_25 = monitor_df['fit_quantile_25']
@@ -2915,7 +2909,7 @@ def plot_performance(monitor_df, path_monitoring: Path):
         # Top level style
         axs3.set_xlim(xmin=0, xmax=max(xx)), axs3.set_xlabel('generation')
         axs3.yaxis.set_major_formatter(StrMethodFormatter('{x:,.0f}'))
-        axs0.set_title(f'monitoring GP generations {path_monitoring.name}')  # sfeh
+        axs0.set_title(f'Monitoring GP Generations {path_monitoring.name}')
         fig.tight_layout()
         fig.savefig(path_monitoring)
         plt.close('all')
@@ -3043,7 +3037,7 @@ def eval_predict_sympyBatch(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list)
     with warnings.catch_warnings():
         with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
             with ignore_warnings(DeprecationWarning):  # something 'like use "**" instead of "Pow"'
-                df_results = df.apply(lambda row: func(*[row[s] for s in symbol_list_str]), axis=1)  # sfeh was str(var)
+                df_results = df.apply(lambda row: func(*[row[s] for s in symbol_list_str]), axis=1)
 
     return df_results
 
@@ -3135,8 +3129,6 @@ if __name__ == '__main__':
                 sub.append(x)
         return sub
 
-    # sfeh: staticmethod for symfun?
-
     ndclasses = all_typus_subclasses()
     for c in ndclasses:
         if c in [ExprCondPair_Dummy]:
@@ -3168,7 +3160,7 @@ if __name__ == '__main__':
                 print('FAILED!', c.__name__, res_sy, res_np, (res_sy-res_np), inputs_sy)
                 pass
         except Exception as ex:
-            if c in [ExprCondPair_Dummy, Piecewise, Boolean, Number, Symbol]:  # sfeh
+            if c in [ExprCondPair_Dummy, Piecewise, Boolean, Number, Symbol]:
                 pass
             else:
                 raise Exception(c.__name__, 'Exception!', ex)
@@ -3216,204 +3208,3 @@ print(Round_Dummy(sympy.Symbol('x') + 1.13))  # sollte eine Zahl liefern, wenn x
 #     # this may make the expression bigger??
 #     # _r2 = 64.0*cartPos**2*(cartPos + Abs(cartVel) + 1.15)
 #     # _r3 = cartPos**2*(64.0*cartPos + 64.0*Abs(cartVel) + 73.5)
-
-
-# sfeh:RANDOM IDEA when loading the data, check for every possible assupmtion. Better: load them manually.
-
-# sympy_constants = {
-#     sympy.numbers.Zero: 0,
-#     sympy.numbers.Half: 0.5,
-#     sympy.numbers.One: 1,
-#     sympy.numbers.NegativeOne: -1,
-#     sympy.numbers.Exp1: 2.71828182845904,  # sympy.numbers.Exp1().evalf(16)
-#     sympy.numbers.Pi: 3.1415926535897932,  # sympy.numbers.Pi().evalf(17)
-#     sympy.numbers.GoldenRatio: 1.61803398874989,  # sympy.numbers.GoldenRatio().evalf(16)
-#     sympy.numbers.TribonacciConstant: 1.83928675521416,  # sympy.numbers.TribonacciConstant().evalf(16)
-#     sympy.numbers.EulerGamma: 0.577215664901532,  # sympy.numbers.EulerGamma().evalf(16)
-# }
-# sfeh
-#  sympy.numbers.Infinity: tensorflow.constant(np.Infinity),
-#  sympy.numbers.NegativeInfinity: tensorflow.constant(-np.Infinity),
-#  sympy.numbers.ComplexInfinity: tensorflow.complex(0, np.Infinity),sympy.numbers.ImaginaryUnit,
-#  sympy.numbers.Catalan: tensorflow.constant(sympy.numbers.Catalan),
-#  sympy.numbers.NaN: tensorflow.constant(sympy.numbers.NaN),
-
-# totf = {
-#     # sympy.Symbol: 'tf': lambda x: tf.cons
-#     sympy.Min: tf.minimum,
-#     sympy.Max: tf.maximum,
-#     sympy.Add: tf.add,
-#     sympy.Mul: tf.multiply,
-#     sympy.Pow: tf.pow,
-#     sympy.Abs: tf.abs,
-#
-#     sympy.Not: tf.logical_not,
-#     sympy.And: tf.logical_and,
-#     sympy.Or: tf.logical_or,
-#     sympy.Xor: tf.math.logical_xor,
-#
-#     sympy.Equality: tf.equal,
-#     sympy.Unequality: tf.not_equal,
-#     sympy.GreaterThan: tf.greater_equal,
-#     sympy.StrictGreaterThan: tf.greater,
-#     sympy.LessThan: tf.less_equal,
-#     sympy.StrictLessThan: tf.less,
-#     # sympy.N: tf.math.round,  # incorrect, sympy.N(x, 1) is right
-#     sympy.log: tf.math.log,
-#     sympy.cos: tf.cos,
-#     sympy.cosh: tf.cosh,
-#     sympy.sin: tf.sin,
-#     sympy.sinh: tf.sinh,
-#     sympy.tan: tf.tan,
-#     sympy.tanh: tf.tanh,
-#     sympy.acos: tf.acos,
-#     sympy.asin: tf.asin,
-#     sympy.atan: tf.atan,
-#     sympy.sign: tf.sign,
-#     # The real Part
-#     sympy.re: lambda a: tf.convert_to_tensor(a, dtype=tf.dtypes.float32),  # sfeh sympy-gotcha, comes up randomly
-#     # Round_Dummy: tf.round,
-#     sympy.exp: tf.exp,  # sfeh this occurs randomly...
-#     sympy.ITE: tf.cond
-# }
-
-# def sympy_to_tensorflow(expr_sy, d_tensors):
-#     """
-#     - check terminal-node
-#     -- check symbol
-#     --
-#
-#     Bugs/gotchas:
-#
-#     sympify('True')             -> True
-#     sympify('1')==True          ->
-#     sympify('~(True)')          -> -2
-#     sympify('~(False)')         -> -1
-#     sympify('a <= Min(a, b)')   ->
-#
-#     sympy.logic.boolalg.ITE has only boolean inputs
-#     evaluate=None/false
-#
-#     sympy.logic.boolalg.ITE is not If-then-else
-#     sympy.cosh can emerge out of sin-stuff
-#     sympy.sympify('True')->True is no sympy expression anymore
-#     # sfeh:bug gotcha sympy.re comes up randomly
-#     """
-#     # shape = tensors[list(tensors.keys())[0]].get_shape()  # sfeh:open:workaround:
-#
-#     # ==Bug-handling==  sympy.sympify('True')->True is no sympy expression anymore
-#     if isinstance(expr_sy, bool):  # e.g. '1'
-#         return tf.constant(expr_sy, dtype=tf.dtypes.bool)
-#     if isinstance(expr_sy, (bool, sympy.logic.boolalg.BooleanAtom)):
-#         expr_sy = True if isinstance(expr_sy,
-#                                      sympy.logic.boolalg.BooleanTrue) else False  # sfeh:collect sympy bug gotcha bug
-#         return tf.constant(expr_sy, dtype=tf.dtypes.bool)
-#
-#     # the following lines are not required, if sympy filters for bad expressions earlier
-#     if expr_sy.is_imaginary or expr_sy.is_infinite:
-#         raise ValueError(f'Cannot convert this to Tensorflow: {expr_sy}')
-#
-#     # ==Terminal nodes==
-#     elif expr_sy.is_Atom:
-#         if expr_sy.is_Symbol:
-#             # result = feed_dict[expr.name]  # sfeh:discuss placeholder
-#
-#             # result = tf.compat.v1.placeholder(tf.bool, name=str(expr))
-#             # sfeh:runtime?
-#             result = tf.constant(d_tensors[str(expr_sy)],
-#                                  dtype=tf.bool if expr_sy.assumptions0.get('bool') else tf.float32)
-#             return result
-#
-#         else:
-#             expr_eval = expr_sy.evalf()  # standard 15 digits
-#             if expr_sy.is_Boolean:
-#                 return tf.constant(bool(expr_eval), dtype=tf.dtypes.bool)
-#             elif expr_sy.is_number:  # is_float does not match int
-#                 return tf.constant(float(expr_eval), dtype=tf.dtypes.float32)
-#             else:
-#                 raise NotImplementedError(f'Atom, but no bool or number? {expr_sy}')
-#
-#     else:  # Operator # len(expr.args) > 0:  # sfeh: line can be removed or replaced
-#         if isinstance(expr_sy, sympy.Piecewise):
-#             args_reversed = list(expr_sy.args[::-1])  # tuples to list
-#             # whY WOULD ONE    reverse the args? --> NOT REVERSER
-#             # reverse: most specific (/last) to lowest,  tuple must be nested the deepest node:
-#             try:
-#                 args_reversed = [[sympy_to_tensorflow(xx, d_tensors) for xx in list(ii)] for ii in args_reversed]
-#             except TypeError as ex:
-#                 print(f'lolololol {ex}')
-#                 # [(2.07, True), (8.0, ITE(cartVel <= 0.34, 0.755*cartPos > 2.0, cartPos/(cartVel**2*sign(cartVel) + 0.866) > 2.0))]
-#                 # (8.0, ITE(cartVel <= 0.34, 0.755*cartPos > 2.0, cartPos/(cartVel**2*sign(cartVel) + 0.866) > 2.0))
-#                 # args_reversed = [[sympy_to_tensorflow(xx, d_tensors) for xx in list(ii)] for ii in args_reversed]
-#                 # args_reversed = [[sympy_to_tensorflow(xx, d_tensors) for xx in list(ii)] for ii in args_reversed]
-#                 raise
-#
-#             otherwise = args_reversed[0][0]  # the last "True" condition
-#             for cet in args_reversed[1:]:
-#                 otherwise = tf.where(cet[1], cet[0], otherwise)
-#             return otherwise
-#
-#         elif isinstance(expr_sy, sympy.ITE):
-#             raise NotImplementedError(f'Sfeh: sympy.ITE not yet implemented, occurs as side-effect of boolean logic')
-#
-#         tf_fun = totf[type(expr_sy)]
-#         # try:
-#         #     tf_fun = totf[type(expr)]
-#         # except KeyError:
-#         #     # sfeh:debug can this work??
-#         #     #   - im(Round_Dummy(cartVel))
-#         #     tf_fun = type(expr).tflow  # sfeh:debug-01.02 why does im come up here? (mut_br) im(Round_Dummy(cartPos))
-#         #     # sfeh:idea exception, try to map sympy to tf function with same name (sympy.cos -> tf.cos)
-#
-#         tf_args = [sympy_to_tensorflow(a, d_tensors) for a in expr_sy.args]
-#         # SFEH:Missing and Problems:
-#         #   - Exception: eval-ex: type object 'cosh' has no attribute 'tflow'
-#         #   - AttributeError: type object 'Round_Dummy' has no attribute 'tflow'
-#         try:
-#             result = tf_fun(*tf_args)  # fits, if the arguments match the expected arguments exactly Add(a, b)
-#         except TypeError:
-#             result = tf_args.pop()  # only commutative arity-2 functions here (Add, Mul, Max, Min)
-#             while tf_args:
-#                 # sfeh:optimization
-#                 try:
-#                     result = tf_fun(result, tf_args.pop())
-#                 except Exception as ex:
-#                     result = tf_fun(result, tf_args.pop())
-#         return result
-#     raise NotImplementedError(f'Cannot convert {expr_sy}')  # noqa: unreachable code, but was reached often while dev
-
-#######################################
-# sfeh:idea check these options
-#     import sympy
-#     a, b = sp.symbols('a b')
-#     expr = b - a**2 * a**3 + 2 + 3 * a * b**(-2)
-#     [expr,
-#      expr.as_expr(),
-#      expr.as_poly(),
-#      expr.as_base_exp(),
-#      expr.as_coeff_add(),
-#      expr.as_coeff_Add(),
-#      expr.as_coeff_mul(),
-#      expr.as_coeff_Mul(),
-#      # expr.as_coeff_exponent(),
-#      # expr.leadterm(),  # not working
-#      # expr.subs(),
-#      expr.as_coefficients_dict(),
-#      expr.as_content_primitive(),
-#      expr.as_dummy(),
-#      expr.as_expr(),
-#      expr.as_leading_term(),
-#      expr.as_numer_denom(),
-#      expr.as_two_terms(),
-#      expr.as_independent(),
-#      expr.expand(),
-#      expr.factor(),
-#      expr.assumptions0,
-#      expr.normal(),
-#      expr.nsimplify(),
-#      # expr.extract_multiplicatively(),
-#      # USEFUL
-#      expr.atoms(),  # for leaf nodes
-#      ]
-###########################
-

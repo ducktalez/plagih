@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 # from distutils.spawn import find_executable
 import numpy as np
 
-PRINT_DUMMY = 'wwwaaagggiiifffpp'  # noqa: dummy for print-policy wwaaaggggggiiifff
+PRINT_DUMMY = 'wwaaagggiiifffpp'  # noqa: dummy for print-policy wwwwaaaggggggiiifff
 DEBUG_DUMMY = True  # noqa: dummy for debug-policy
 FLOAT_PRECISION = 3
 PLOTS_INTERVAL = 1

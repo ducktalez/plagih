@@ -1104,7 +1104,7 @@ def tree_simplification(tree: Node, allow_chain) -> Node:
 
         if astr != bstr:
             # sfeh 'a**0.5' does not become 'sqrt(a)'! use rational=True or sympy.S.Half
-            print_warning('w', f'Diff in sympy expression?\n\t{astr}\n\t{bstr}')  # sfeh raise ex...
+            print_warning('w', f'Diff in sympy expression?\n\t{astr}\n\t{bstr}')  # raise ex? does not occur after grouping
             # sfeh Example 03.05.2025
             # 	sin(cartVel**(6450000000*Round_Dummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
             # 	sin(cartVel**(6.45e+9*Round_Dummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
@@ -1947,7 +1947,6 @@ class Clip(BaseMinMax, CustomOperator):
     # sfeh:open use this
     symfun = lambda *a: sympy.Min(sympy.Max(a[0], a[1]), a[2])
     np_fun = np.clip  # lambda a, b, c: np.clip(a, b, c)
-    # tf_fun = lambda a, b, c: tf.clip_by_value(a, b, c)
     showme = 'Clip'
     sy_str = '(sympy.Min(sympy.Max({0}, {1}), {2}))'
     repr_str = 'Clip{},[{}, {}]'
@@ -2399,7 +2398,7 @@ class Evolution:
         """
         nodes_init = len(tree)
         if tree is None:
-            raise NotImplementedError('SFEH:open Implement standard selection mechanism')
+            raise NotImplementedError('Implement standard selection mechanism')
         nd = tree.list_mutable_nodes()
         nd = rnd_choice(nd)
         xt_out = nd.get_xtype_self()
@@ -2722,7 +2721,7 @@ class ExplainableGP:
                     if len(fails_list) > 2 * n_success + 5:  # allow more fails: fails_list > n
                         print_caution(f'Evolution fails too often: {tag}, failed: {len(fails_list)}x. ({n_success} ok).'
                                       f'\n{fails_list}')
-                        return  # sfeh raise?
+                        return  # optional raise
 
                 except (ValueError, ArithmeticError) as ex:
                     # if 'Crossover tree 1 has no mutable nodes!' in str(ex):
@@ -2771,13 +2770,12 @@ class ExplainableGP:
             self.lut_tree_infos[tree_id] = {}  # empty placeholder, if correctly filled later
 
             parsimony = eval_parsimony(evotree, self.evolve.complexity_metric, origin_tree=origin_tree)
-            if raise_if_useless and parsimony > self.evolve.nodes_max:  # sfeh:open
+            if raise_if_useless and parsimony > self.evolve.nodes_max:
                 err_txt = f'Tree too complex: {parsimony} > {self.evolve.nodes_max}'
                 self.lut_tree_infos[tree_id]['error'] = err_txt
                 raise TreeSizeError(err_txt)
             try:
                 sy_expr = evotree.get_sympy_expr()
-                # sympy_expression_check(sy_expr, raise_ex=True)  # sfeh:discuss save bad trees in LUT aswell? Different LUT for bad trees?
             except SympyError as ex:
                 print_warning('www', f'Could not create sympy expression for tree: {ex}')
                 self.lut_tree_infos[tree_id]['error'] = str(ex)
@@ -2859,8 +2857,8 @@ class ExplainableGP:
 
                             fitness = sym_fitness
                             self.lut_tree_infos[tree_id]['fitness-sympy'] = sym_fitness
-                except (SympyError, TreeError, ValueError) as ex:  # sfeh no value errors pls
-                    print_warning('ww', f'Could not evaluate fitness for tree {sy_expr}: {ex}')
+                except (SympyError, TreeError, ValueError) as ex:
+                    print_warning('wwww', f'Could not evaluate fitness for tree {sy_expr}: {ex}')
                     self.lut_tree_infos[tree_id]['error'] = str(ex)
                     raise
 

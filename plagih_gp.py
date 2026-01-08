@@ -25,6 +25,13 @@ def _test_simple(dir_name, chained_on=True):
 
         gp.end_generation()
 
+    for _ in range(1):
+        @gp.create_trees(rate=1)
+        def rand_huge():
+            d = np.clip(int(random.normalvariate(7, 1)), 7, 10)
+            return gp.evolve.evolve_new_tree_depth(float, d, p_term=0)
+        gp.end_generation()
+
     for _ in range(2):
         @gp.create_trees(rate=1)
         def rand2_CHAINA():  # noqa
@@ -55,13 +62,6 @@ def _test_simple(dir_name, chained_on=True):
             tree_b = tree_simplification(tree_b, allow_chain=chained_on)
             evo1, evo2 = gp.evolve.evolve_crossover(tree_a, tree_b)
             return evo1, evo2
-        gp.end_generation()
-
-    for _ in range(1):
-        @gp.create_trees(rate=1)
-        def rand_huge():
-            d = np.clip(int(random.normalvariate(7, 1)), 7, 10)
-            return gp.evolve.evolve_new_tree_depth(float, d, p_term=0)
         gp.end_generation()
 
     gp.evoloop_monitoring_plots()

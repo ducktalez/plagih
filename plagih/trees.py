@@ -522,7 +522,7 @@ class Node(NodeStructure):
 
                     else:
                         typus_str = f'{v}'
-                except TypeError as ex:  # noqa  # sfehsfeh delete? never occurred
+                except TypeError as ex:  # noqa  # sfeh delete?
                     v_eval = v.evalf()
                     typus_str = term_format(v_eval, cut=cut_terms)
 
@@ -644,7 +644,7 @@ class Node(NodeStructure):
                 nodes in a branch /
                 random nodes in a branch /
                 intelligent filtering
-        sfeh:discuss commutative operators require iterations? do the whole thing untill it ends?
+
         """
         if self.has_childs():
             for cc in self.get_childs():

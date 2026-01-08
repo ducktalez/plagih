@@ -663,8 +663,8 @@ class Node(NodeStructure):
              a + b + c -> sum(a, b, c)  (chaining)
 
         # sfeh:idea Heavyside function. input a val, input b threshold
-        # sfeh: sub, usub replace?
-        sfeh:idea tolerance for grouping?
+
+
         sfeh:idea expr = b + a + a
             terms = expr.as_ordered_terms()
         """
@@ -674,7 +674,7 @@ class Node(NodeStructure):
             if self.is_number() and tolerance > 0:
                 val = self.childs[0]
                 # from sympy.physics.units import speed_of_light, meter, second more ideas!
-                # sfeh also find more math building blocks, typical formulae
+
                 # VERY USEFUL: strg+TribonacciConstant to go to init with useful info
                 # sympy.pi,         sympy.GoldenRatio,  sympy.Catalan,      sympy.EulerGamma,   sympy.TribonacciConstant
                 # 3.14159265358979, 1.61803398874989,   0.915965594177219,  0.577215664901533,  1.83928675521416
@@ -683,8 +683,8 @@ class Node(NodeStructure):
                     if (const-val) < tolerance:
                         self.childs[0] = const
                         return
-                # sfeh: [sympy.S.One, sympy.S.Half, sympy.S.NegativeOne, sympy.S.NegativeHalf]:
-                # sfeh: ALso take care of sqrt(2), 1/n
+                # [sympy.S.One, sympy.S.Half, sympy.S.NegativeOne, sympy.S.NegativeHalf]:
+                # sfeh: ALso take care of sqrt(2)
                 # -> rescale of all input variables (no, also dont make them too big)
                 if val - sympy.nsimplify(val, tolerance=tolerance, rational=True) < tolerance:
                     val_new = sympy.nsimplify(val, tolerance=tolerance, rational=True)
@@ -1070,7 +1070,7 @@ def tree_simplification(tree: Node, allow_chain) -> Node:
     expr_sym = tree.get_sympy_expr()
     # expr_sym2 = sympy.simplify(expr_sym)
     # if str(expr_sym) != str(expr_sym2):
-    #     print(f'sfeh: {expr_sym} // {expr_sym2}')
+    #     print(f'okke: {expr_sym} // {expr_sym2}')
     # expr_sym3  = tree.get_sympy_expr(simplimore=True)
     tree = sympy_to_tree(expr_sym, allow_chain=allow_chain)
     # if not allow_chain:
@@ -1079,7 +1079,7 @@ def tree_simplification(tree: Node, allow_chain) -> Node:
     for _ in range(10):
         tree_history.append(copy.deepcopy(tree))
         tree.tree_node_grouping(tolerance=0)
-        if _ == 7:
+        if _ == 6:
             print(tree_history)
             raise CuriosityError
         if str(tree) == str(tree_history[-1]):
@@ -1102,9 +1102,8 @@ def tree_simplification(tree: Node, allow_chain) -> Node:
         for ii, tt in enumerate(tree_history):
             print(f'\t{ii}:\t{tt.str_as_list()}')
 
-        if astr != bstr:  # sfeh str() should not be required
+        if astr != bstr:
             # sfeh 'a**0.5' does not become 'sqrt(a)'! use rational=True or sympy.S.Half
-            # sfeh: rational can be a valid improvement, creating unified trees
             print_warning('w', f'Diff in sympy expression?\n\t{astr}\n\t{bstr}')  # sfeh raise ex...
             # sfeh Example 03.05.2025
             # 	sin(cartVel**(6450000000*Round_Dummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
@@ -1209,30 +1208,17 @@ class BaseOperator(Node):
 
         child_lambdas = self.get_np_child_lambdas(*args)
 
-        if not callable(self.np_fun):
-            raise TypeError(f"Error in {self.__class__.__name__}: np_fun is not callable")  # sfeh delete me
-
         def node_lambda(df: np.ndarray) -> np.ndarray:
             """
             The function that will be returned by eval_np().
             It applies np_fun to evaluated children given an input NumPy array.
             """
             child_values = [func(df) for func in child_lambdas]
-            child_values = [np.asarray(v) if not isinstance(v, np.ndarray) else v for v in child_values]  # sfeh debug
-
-            try:
-                result = self.np_fun(*child_values)
-            except TypeError as e:
-                print(f"ERROR in {self.__class__.__name__}: TypeError {e}, retrying with alternative structure")
-                try:
-                    result = self.np_fun(child_values)
-                except Exception as e2:
-                    print(f"FINAL ERROR in {self.__class__.__name__}: {e2}")
+            for v in child_values:
+                if not isinstance(v, np.ndarray):
                     raise
 
-            # Step 7: Ensure the output is a NumPy array
-            if not isinstance(result, np.ndarray):
-                result = np.asarray(result)
+            result = self.np_fun(*child_values)
             return result
 
         return node_lambda
@@ -2858,7 +2844,7 @@ class ExplainableGP:
                                     indices = np.where(mask)[0]
                                     print_warning('w', f'{len(indices)} differences found above tolerance 0.001: (NP VERSION)')
                                 result_diffs = sym_results - np_results
-                                print(f'Different results in evaluation (NP VERSION): {sum(nplmd_results_raw - np_results)} ({sy_expr})')
+                                print(f'Different in (NP VERSION): {sum(nplmd_results_raw - np_results)} ({sy_expr})')
 
                             if sum(sym_results_raw - np_results_raw) > 0.001:
                                 sym_results_raw_np = sym_results_raw.to_numpy()

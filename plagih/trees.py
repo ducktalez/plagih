@@ -63,7 +63,6 @@ from dataclasses import dataclass, field
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
 
-
 class Round_Dummy(sympy.Function):  # Not a Math-operator
     """
     Workaround for rounding exponents
@@ -79,10 +78,14 @@ class Round_Dummy(sympy.Function):  # Not a Math-operator
                 return  # leave symbolic
             elif a.is_number:
                 return sympy.Integer(round(a.evalf()))
-        except Exception as ex:
+            else:
+                return
+        except (TypeError, ZeroDivisionError) as ex:
             # TypeError('Argument of Integer should be of numeric type, got 2 - I.')
             #   -> 'asin(tan(1))' has imaginary part. sfeh: open
-            return
+            raise SympyImaginaryNumber(ex)
+        except Exception as ex:
+            raise
 
     """This method allows the class to be compatible with SymPy's internal operations. 
     However, its default implementation often suffices, and you don't need to override it 
@@ -101,7 +104,11 @@ class Round_Dummy(sympy.Function):  # Not a Math-operator
     @staticmethod
     def np_round_dummy(x):
         """Exact numpy-equivalent of Round_Dummy logic"""
-        return np.vectorize(lambda v: int(round(float(v))))(x)
+        # return np.vectorize(lambda v: int(round(float(v))))(x)
+
+        x = np.asarray(x, dtype=np.float64)
+        # Banker's Rounding wie Python round/NumPy rint
+        return np.rint(x)
 
 
 @dataclass
@@ -168,7 +175,7 @@ class NodeStructure:
         """Returns the list of first mutable nodes
         last_leaves: if you want so save all leave nodes aswell
         sum_layers=False, get_closest=True, return_all_layers=False
-        sfeh: option
+
         """
         n = []
         if not self.is_fix:
@@ -421,7 +428,7 @@ class Node(NodeStructure):
             self.root_node = None
             self.depth = None
 
-        # sfeh all BaseNodeStructure infos should not be updated
+        # all BaseNodeStructure infos should not be updated
         pass
 
     def replace_with(self, new_class, new_args):
@@ -480,7 +487,10 @@ class Node(NodeStructure):
         if any(a):
             return
         else:
-            node_list = [x for x in node_list if isinstance(x, Number)]  # sfeh only replaces numbers. ok for now.
+            node_list = [x for x in node_list if isinstance(x, Number)]  # only replaces numbers. ok for now.
+            if node_list == []:
+                raise TreeError(f'No terminal nodes found to replace in tree: {self}')
+
             try:
                 node = rnd_choice(node_list)  # debug if ignores chains
                 xtype = xt_self(node.get_xtype_tuple())
@@ -512,7 +522,7 @@ class Node(NodeStructure):
 
                     else:
                         typus_str = f'{v}'
-                except TypeError as ex:  # noqa  # sfeh
+                except TypeError as ex:  # noqa  # sfehsfeh delete? never occurred
                     v_eval = v.evalf()
                     typus_str = term_format(v_eval, cut=cut_terms)
 
@@ -520,26 +530,22 @@ class Node(NodeStructure):
 
     def __repr__(self):
         """
-        sfeh: Do NOT use __str__!
+        Do NOT use __str__!
         This is acceptable, as it is never used anyways.
         only fixed nodes are missing
         """
 
-        return self.represent_str(show_all=False)  # sfeh yeah, prints trees in debugger
+        return self.represent_str(show_all=False)
 
     def get_lut_id(self):
         """
-        # this whole function WAS replaced with repr_as_list()
+        Do NOT use str() or str_as_list(), as values get rounded
+        Do NOT return a node-list and convert them to strings
 
-        sfeh: Do NOT use str() or str_as_list(), as values get rounded
-            Do NOT return a node-list and convert them to strings
-            -> use repr()
         Unique+simple representation of a tree (to check in a lut if it was calculated already)
         regular print/string option should look better, this is just for getting a unique identifier
         returns string Identificator
-        sfeh:discuss is this just repr?
-        ID=Identificator, which"""
-
+        """
 
         s = self.represent_str(show_all=False)
         return s
@@ -556,31 +562,30 @@ class Node(NodeStructure):
         if self.is_term():
             expr = f'{self.get_childs()[0]}'
             expr = term_format(expr, cut=cut_terms)
-            return expr
+            return f'{expr}'
         else:
-            expr = [cc.get_expr_symlike(try_sympify=try_sympify, cut_terms=cut_terms) for cc in self.get_childs()]
+            childs = [cc.get_expr_symlike(try_sympify=try_sympify, cut_terms=cut_terms) for cc in self.get_childs()]
             # if issubclass(type(self), (ExprCondPair)):
 
-            try:
-                if isinstance(self, (Add, Mul, And, Or, Xor)):
-                    expr = self.inline_sep.join(expr)
-                    expr = f'({expr})'
-                else:
+            if isinstance(self, (Add, Mul, And, Or, Xor)):
+                expr = self.inline_sep.join(childs)
+                expr = f'({expr})'
 
-                    expr = self.sy_str.format(expr)
-            except Exception as okay:  # sfeh is actually a required exception! (...but why)
-                expr = self.sy_str.format(*expr)  # e. g. Min
+            else:
+                expr = self.sy_str.format(*childs)
 
-        if try_sympify:
-            expr_sy = sympy.sympify(expr)  # sfeh No local dict required?
-            return expr_sy
+        # Not working, requires handlich exprCondPair
+        # if try_sympify:
+        #     try:
+        #         expr_sy = sympy.sympify(expr)  # local dict required?
+        #         return f'{expr_sy}'
+        #     except Exception as ex:
+        #         return f'{expr}'
 
         return f'{expr}'
 
     def list_mutable_nodes(self, xtype=None) -> ['NodeStructure']:
         """return all nodes that are mutable, aka suite for point- or branchmutation
-        sfeh: is returning nodes large overhead? eg in large trees? if it is, return nodepaths only!
-
         === ValueError: 'a' cannot be empty unless no samples are taken
         ===> probably, no nodes were there to bemutated
         """
@@ -634,7 +639,7 @@ class Node(NodeStructure):
 
     def evolve_mutate_filter_gauss(self):
         """Recursively filter the nodes in the branch of fintree
-        sfeh:   random filter all terminal nodes /
+        random filter all terminal nodes /
                 single node /
                 nodes in a branch /
                 random nodes in a branch /
@@ -647,7 +652,7 @@ class Node(NodeStructure):
 
         else:
             if self.is_number():
-                self.childs[0] = round(random.gauss(self.get_value(), 0.1), FLOAT_PRECISION)  # sfeh: -> no symbols -> userspecific
+                self.childs[0] = round(random.gauss(self.get_value(), 0.1), FLOAT_PRECISION)
 
         return
 
@@ -779,7 +784,7 @@ class Node(NodeStructure):
                         if mul1 in (1, sympy.S.One):
                             raise CuriosityError  # "revoke_useless_nodes" should remove
 
-                        elif mul1 in (-1, sympy.S.NegativeOne):  # sfeh aka sympy.S.NegativeOne -1, was -1 before
+                        elif mul1 in (-1, sympy.S.NegativeOne):
                             self.replace_with(Usub, [Mul(*mychlds_remove(cc))])
                         elif 0 < mul1 < 1:
                             if (1 / mul1) % 1  == 0:  # check if the result is a natural number
@@ -787,7 +792,7 @@ class Node(NodeStructure):
                                 new_num = (1 / mul1)
                                 self.replace_with(Div, [node_sub, Number(new_num)])
                         else:
-                            # sfeh:ScaleNode-idea here
+                            # ScaleNode-idea here
                             pass
                     elif isinstance(cc, DivFraction):
                         has_div_frac = [isinstance(ix, DivFraction) for ix in mychlds]
@@ -835,7 +840,7 @@ class Node(NodeStructure):
         return r
 
     def is_ExprCdPair(self):  # noqa
-        # sfeh: Sometimes, it hits the Dummy-class, sometimes (chained?) the sympy class. Not sure, why.
+        #  Sometimes, it hits the Dummy-class, sometimes (chained?) the sympy class. Not sure, why.
         r = issubclass(type(self), (ExprCondPair, ExprCondPair_Dummy))
         return r
 
@@ -849,7 +854,7 @@ class Node(NodeStructure):
         else:
             cc_list = [cc.len_nodecount_fair() for cc in self.get_childs()]
 
-            if self.is_typus(Usub):  # sfeh
+            if self.is_typus(Usub):
                 n = sum(cc_list)
             else:
                 n = 1 + sum(cc_list)
@@ -869,11 +874,7 @@ class Node(NodeStructure):
         return self.xtype[1]
 
     def represent_str(self, show_all=True, cut_terms=False):
-        """
-        sfeh:open
-            - represent does not work and needs a lot of testing
-            - Is not required for now!
-        Printing the nodes as nested array structure such that it can be saved/loaded
+        """Printing the nodes as nested array structure such that it can be saved/loaded
         very closely related to str(), but adds the following information:
         - ":fix", when nodes are fixed"""
 
@@ -889,8 +890,7 @@ class Node(NodeStructure):
             s = f'{cs}'
 
             if self.is_fix and show_all:
-                s += ':fix'  # sfeh:discuss there must be a more natural way to show that...
-
+                s += ':fix'  # discuss: there must be a more natural way to show that...
 
         else:
             cs = [cc.represent_str(show_all=show_all, cut_terms=cut_terms) for cc in self.get_childs()]
@@ -902,7 +902,7 @@ class Node(NodeStructure):
         return s
 
     def __str__(self):
-        # sfeh which style for trees?
+        # discuss which style for trees?
         """
         Those string can be used:
         [Abs, [Abs, [Square, [cartPos]]]]
@@ -916,6 +916,7 @@ class Node(NodeStructure):
         s = self.represent_str(show_all=False, cut_terms=True)
         # s1 = self.represent_str()
         # s2 = self.get_expr_symlike()
+        # print(f'Compare prints:\n{s}\n{s1}\n{s2}')
         # s3 = self.get_expr_symlike(try_sympify=True)
         # s4 = self.get_sympy_expr()
         # s5 = self.get_expr_raw_fstring()
@@ -925,6 +926,7 @@ class Node(NodeStructure):
         return s
 
     def _sympy_(self, *args):  # -> sympy.Basic:
+        """do not remove!"""
         _sym = self.symfun
         # _sym = _sym(*args)
         # childstr = [sympy.sympify(cc) for cc in args]
@@ -938,7 +940,7 @@ class Node(NodeStructure):
         #     return self.symfun(self.args[0])
         #
         # else:
-        #     raise NotImplementedError(f'sfeh:Specify exception. Class-type {type(self)}')
+        #     raise NotImplementedError(f'Specify exception. Class-type {type(self)}')
 
         return _sym
 
@@ -949,13 +951,23 @@ class Node(NodeStructure):
     def get_child_xts(cls):
         return cls.xtype[0]
 
-    def eval_predict_numpy_fast(self, df, *args)  -> [np.ndarray]:
+    def eval_np_lambdas(self, *args)  -> Callable[[np.ndarray], np.ndarray]:
+        """Eager evaluation with NumPy arrays
+            - Building a graph without evaluation
+            - Does not calculate useless stuff
+            But: harder for debugging!
+        """
+        ...
+
+    def eval_predict_numpy_now(self, df, *args)  -> np.ndarray:
+        """Evaluates children first, then applies own numpy function
+        aka Debugging-version of eval_np"""
         ...
 
 
 def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
     """
-    sfeh: very inefficient to always get origin-tree apted
+    very inefficient to always get origin-tree apted
         -> introduce own complexity measure, do not import...
     """
     if complexity_measure == 'tree_node_count_raw':  # number of nodes
@@ -975,7 +987,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
     """
     tree_from_expr, tree_from_sympy
     Important: start with the most specific rule
-    # sfeh:discuss computational improvement when option to ignore args? do "raises" in args save time?
+
     # check is expr is an accepted operator, otherwise reconstruction probably fails"""
     if isinstance(s_expr, bool):
         return Boolean(s_expr)
@@ -1019,7 +1031,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
             return _n
 
         elif isinstance(s_expr, ExprCondPair):
-            return ExprCondPair_Dummy(cc_nodes)  # sfeh:debug/test
+            return ExprCondPair_Dummy(cc_nodes)
 
         elif isinstance(s_expr, sympy.Piecewise):
             # "Chained_VERSION" version is handled before
@@ -1029,14 +1041,6 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
             for pairs in reversed_pairs[1:]:
                 otherwise = Ifte(pairs[1], pairs[0], otherwise)
             return otherwise
-
-        # sfehx include Usub, ignore usub in tree len()
-
-        # elif isinstance(s_expr, Mul):
-        #     # if s_expr.args[0].is_Rational:
-        #     if s_expr.args[0].is_Rational:
-        #         div_by = 1 / s_expr  # noqa
-        #         print(f'sfeh:open div by {div_by}')
 
         elif isinstance(s_expr, tuple(d_sym2node)):
             clss = d_sym2node[type(s_expr)]
@@ -1050,10 +1054,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
                 n = clss(*cc_nodes)  # Max, Min, sign, add, mul, pow
                 return n
 
-    # sfeh:discuss
-    # NotImplementedError: Expr missing: ITE(p > 13, tan(p - v) >= 2.578643, tan(p - v) >= 1)
-    # this should not have occured, because it evaluates to bool, not to float
-        sympy_expression_check_raise(s_expr)
+        sympy_expression_check_raise(s_expr)  # not required anymore? checks earlier
     raise NotImplementedError(f'Expr missing: {s_expr}')
 
 
@@ -1177,22 +1178,64 @@ class BaseOperator(Node):
         self.chain = param
 
 
-    def get_np_child_fast(self, df: np.ndarray, *args) -> List[np.ndarray]:
+    def get_np_child_now(self, df: np.ndarray, *args) -> List[np.ndarray]:
         # Kinder auswerten und als ndarray zurückgeben (keine Konvertierung/Reshape)
-        values = [cc.eval_predict_numpy_fast(df, *args) for cc in self.get_childs()]
+        values = [cc.eval_predict_numpy_now(df, *args) for cc in self.get_childs()]
 
         if any((not isinstance(v, np.ndarray)) or (getattr(v, "ndim", 0) == 0) for v in values):
             values = [np.atleast_1d(np.asarray(v)) for v in values]  # debug why
 
         return values
 
+    def get_np_child_lambdas(self, *args):
+        """Returning list of callables for each child node"""
+        ccl = [cc.eval_np_lambdas(*args) for cc in self.get_childs()]
+        
+        return ccl
 
-    def eval_predict_numpy_fast(self, df: np.ndarray, *args) -> np.ndarray:
-        children = self.get_np_child_fast(df, *args)
+    def eval_predict_numpy_now(self, df: np.ndarray, *args) -> np.ndarray:
+        children = self.get_np_child_now(df, *args)
 
         result = self.np_fun(*children)
 
         return result
+
+    def eval_np_lambdas(self, *args: Any) -> Callable[[np.ndarray], np.ndarray]:
+        """
+        Evaluate the node using NumPy and return a callable function.
+        Args:
+            *args: Additional arguments that can be used in evaluation.
+        """
+
+        child_lambdas = self.get_np_child_lambdas(*args)
+
+        if not callable(self.np_fun):
+            raise TypeError(f"Error in {self.__class__.__name__}: np_fun is not callable")  # sfeh delete me
+
+        def node_lambda(df: np.ndarray) -> np.ndarray:
+            """
+            The function that will be returned by eval_np().
+            It applies np_fun to evaluated children given an input NumPy array.
+            """
+            child_values = [func(df) for func in child_lambdas]
+            child_values = [np.asarray(v) if not isinstance(v, np.ndarray) else v for v in child_values]  # sfeh debug
+
+            try:
+                result = self.np_fun(*child_values)
+            except TypeError as e:
+                print(f"ERROR in {self.__class__.__name__}: TypeError {e}, retrying with alternative structure")
+                try:
+                    result = self.np_fun(child_values)
+                except Exception as e2:
+                    print(f"FINAL ERROR in {self.__class__.__name__}: {e2}")
+                    raise
+
+            # Step 7: Ensure the output is a NumPy array
+            if not isinstance(result, np.ndarray):
+                result = np.asarray(result)
+            return result
+
+        return node_lambda
 
 class OperatorArity(BaseOperator):
 
@@ -1271,6 +1314,12 @@ class Terminal(Node):
     Terminal nodes are leaf nodes which can not have children. e.g.:
     - constants (e.g. 2.3)
     - observations (e.g. b, aka data input)
+
+    _np_lambda_cache: Currently NOT used and not working
+      -> Problem: eval_np_lambdas() was called twice of eval_predict_numpy_now()
+      -> Solution: Cache only within one of those calls?
+      -> Performance improvement not very significant anyways
+      -> Caching (as presented) cached wrong values
     """
     is_Atom = True
 
@@ -1282,29 +1331,42 @@ class Terminal(Node):
 
     def set_value(self, val):
         self.set_childs(val)
-
+        # self._np_lambda_cache = None
 
 class Boolean(Terminal):
     xtype = ((), bool)
     symfun = lambda *a: sympy.S.true if a[0] else ~sympy.S.true  # sympy.logic.boolalg.Boolean
-    np_fun = np.array
+    np_fun = staticmethod(lambda x: bool(x))
     showme = 'Boolean'
-    # tflow = lambda arg: tf.constant(arg, dtype=tf.bool)
-    def eval_predict_numpy_fast(self, df, *args) -> np.ndarray:
-        return np.full(df.shape[0], bool(self.get_value()), dtype=bool)
+
+    def eval_predict_numpy_now(self, df, *args) -> np.ndarray:
+        val = bool(self.get_value())
+        return np.full(len(df), val, dtype=np.bool_)
+
+    def eval_np_lambdas(self, *args):
+        val = bool(self.get_value())
+        return lambda df: np.full(len(df), val, dtype=np.bool_)
 
 
 class Number(Terminal):
     xtype = ((), float)
     symfun = lambda *a: sympy.Float(float(a[0]), FLOAT_PRECISION)
-    np_fun = np.array
+    # np_fun = np.array
+    np_fun = staticmethod(lambda x: float(x))
     # sympy.Rational(0.1) -> 3602879701896397/36028797018963968
     # sympy.Rational('0.1') -> 1/10
     showme = 'Number'
     # sfeh: problem with rational: Sqrt(8.0) -> 2*sqrt(6)/3. : actually is_atomic?
     # tflow = lambda a: tf.constant(a, dtype=tf.float32)
-    def eval_predict_numpy_fast(self, df, *args) -> np.ndarray:
-        return np.full(df.shape[0], float(self.get_value()), dtype=np.float64)
+    # def eval_predict_numpy_now(self, df, *args) -> np.ndarray:
+    #     return np.full(df.shape[0], float(self.get_value()), dtype=np.float64)
+    #
+    def eval_predict_numpy_now(self, df, *args) -> np.ndarray:
+        val = float(self.get_value())
+        return np.full(len(df), val, dtype=np.float64)
+
+    def eval_np_lambdas(self, *args):
+        return lambda df: np.full(df.shape[0], float(self.get_value()), dtype=np.float64)
 
 
 class Symbol(Terminal):
@@ -1313,13 +1375,17 @@ class Symbol(Terminal):
     This was used to deal with negative values
         self.name = nlabl if nlabl[0] != '-' else nlabl[1:]
     """
-    symfun = lambda *a: a[0]  # sfeh, no symbol-conversion; no reason for.
+    symfun = staticmethod(lambda *a: a[0])  # no symbol-conversion; no reason for.
     np_fun = None
     xtype = ((), float)
     showme = 'Symbol'
-    def eval_predict_numpy_fast(self, df: pd.DataFrame, *args) -> np.ndarray:
+
+    def eval_predict_numpy_now(self, df: pd.DataFrame, *args) -> np.ndarray:
+        return df[str(self.get_value())].to_numpy(dtype=np.float64)
+
+    def eval_np_lambdas(self, *args):
         name = str(self.get_value())
-        return df[name].to_numpy(dtype=np.float64)
+        return lambda df: df[name].to_numpy(dtype=np.float64)
 
 
 def cast_input(value: Any) -> Node:
@@ -1341,7 +1407,7 @@ def cast_input(value: Any) -> Node:
 
 class Add(MathOperator, ChainableOp):
     """Addition operator for two or more operands."""
-    symfun = lambda *a: sympy.Add(*a)
+    symfun = staticmethod(lambda *a: sympy.Add(*a))
     np_fun = staticmethod(lambda *a: np.sum(np.stack(a), axis=0))
     showme = 'Add'
     sy_str = '({0} + {1})'
@@ -1742,6 +1808,12 @@ class Ifte(OperatorArity):
     expr_dummy = 'Ifte'
     xtype_chain = (float, bool)
 
+    # def eval_np_lambdas(self, *args):
+    #    no _now version required?
+    #     cond, if_true, if_false = self.get_np_child_lambdas(*args)
+    #     fun = lambda df: self.np_fun(cond(df), if_true(df), if_false(df))
+    #     return fun
+
 
 class Piecewise(BaseOperator, ChainableOp):
     """ogclass = Ifte"""
@@ -1756,21 +1828,34 @@ class Piecewise(BaseOperator, ChainableOp):
     xtype_chain = ExprCondPair  # discuss (float, bool)
     xtype_input = ExprCondPair
 
-    def eval_predict_numpy_fast(self, df: np.ndarray | pd.DataFrame, *args) -> np.ndarray:
+    def eval_predict_numpy_now(self, df: pd.DataFrame, *args) -> np.ndarray:
+        # discuss: boolean-results can return the coordinate of the resulting array!
+        # sfeh merge eval_np to this
         pairs = [
-            (np.asarray(c.childs[0].eval_predict_numpy_fast(df, *args), dtype=np.float64),
-                np.asarray(c.childs[1].eval_predict_numpy_fast(df, *args), dtype=bool))
+            (c.childs[0].eval_predict_numpy_now(df, *args),
+             c.childs[1].eval_predict_numpy_now(df, *args))
             for c in self.get_childs()]
 
+        # Default values are in last position
         result = pairs[-1][0].astype(np.float64, copy=False)
-        used = np.zeros(result.shape, dtype=bool)
 
-        for expr, cond in pairs[:-1]:
-            mask = cond & ~used
-            if mask.any():
-                result[mask] = expr[mask]
-                used |= mask
+        # from default to first condition
+        for expr, cond in reversed(pairs[:-1]):
+            result = np.where(cond, expr, result)
         return result
+
+    def eval_np_lambdas(self, *args):
+        pairs = [(c.childs[0].eval_np_lambdas(*args),
+                  c.childs[1].eval_np_lambdas(*args))
+                 for c in self.get_childs()]
+
+        def piecewise_lambda(df):
+            result = pairs[-1][0](df)  # Default case
+            for expr, cond in reversed(pairs[:-1]):
+                result = np.where(cond(df), expr(df), result)
+            return result
+
+        return piecewise_lambda
 
 
 class Round(MathOperator):
@@ -1784,11 +1869,21 @@ class Round(MathOperator):
     sy_str = 'Round_Dummy({},1)'
     repr_str = 'Round_Dummy{},[{}]'
 
-    def eval_predict_numpy_fast(self, df, *args) -> np.ndarray:
-        child_values = self.get_np_child_fast(df, *args)
-        arr = np.asarray(child_values[0], dtype=np.float64)
-        res = self.np_fun(arr)
-        return res
+    # def eval_predict_numpy_now(self, df, *args) -> np.ndarray:
+    #     child_values = self.get_np_child_now(df, *args)
+    #     arr = np.asarray(child_values[0], dtype=np.float64)
+    #     res = self.np_fun(arr)
+    #     return res
+    #
+    # def eval_np_lambdas(self, *args: Any):
+    #     child_lambda = self.get_np_child_lambdas(*args)[0]
+    #
+    #     def node_lambda(df: np.ndarray) -> np.ndarray:
+    #         x = child_lambda(df)
+    #         result = self.np_fun(x)
+    #         return result.astype(np.int64, copy=False)
+    #
+    #     return node_lambda
 
 
 class PowRounded(MathOperator):
@@ -1798,7 +1893,7 @@ class PowRounded(MathOperator):
     symfun = lambda *a: sympy.Pow(a[0], Round_Dummy(a[1]))
     np_fun = staticmethod(lambda base, exponent: np.power(base, np.vectorize(lambda x: int(round(float(x))))(exponent)))
     showme = 'PowRounded'
-    sy_str = '{0})**Round_Dummy({1})'
+    sy_str = '({0})**Round_Dummy({1})'
     repr_str = 'PowRounded{},[{}, {}]'
     xtype = ((float, float), float)
 
@@ -1907,9 +2002,9 @@ d_sym2node_chain = d_sym2node | {sympy.Piecewise: Piecewise, ExprCondPair: ExprC
 #                                  sympy.And: AndChain, sympy.Or: OrChain,  sympy.Xor: XorChain, }
 
 
-def sympy_expression_check_raise(expr_sym):
+def sympy_expression_check_raise(expr_sym: sympy.Basic) -> sympy.Basic:
     """
-    old/analog Version: re.search(r'zoo|inf|nan|I[^f]|\\*I|re\(', str(expr_sym))"""
+    old/analog Version: re.search(r'zoo|inf|nan|I[^f]|\\*I|re\\(', str(expr_sym))"""
     if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im, sympy.re):
         # sympy.re: real part -> don't ignore; if there is a real part, there is a imaginary part.
         raise SympyError(f'Simplification failed: {expr_sym}')
@@ -1981,7 +2076,7 @@ class Candidate:
 
     def full_string(self):
         # Paretofront: Removing obsol ... ))]: \x1b[1msign(Max(c
-        # sfeh: https://stackoverflow.com/questions/62213322/python-3-bug-print-background-color-issue
+        # https://stackoverflow.com/questions/62213322/python-3-bug-print-background-color-issue
         return f'{self.__str__()}: {BColors.BOLD}{self.get_evotree().get_sympy_expr()}{BColors.RESET}'
 
     def get_evotree(self):
@@ -2137,9 +2232,9 @@ class Evolution:
 
     def __init__(self, symbol_list=None, origin_xtype=float, operators=None, origin_tree=None,
                  depth_max=10, nodes_max=100, complexity_metric='tree_node_count_fair', allow_chain=None):
-        """  # sfeh:xxx offtopic name allow_chain allow_variadic
+        """
         origin_tree: A tree, which
-        sfeh:warning if options are left empty?
+
         """
         self.origin_xtype = origin_xtype
         self.origin_tree = origin_tree
@@ -2157,7 +2252,7 @@ class Evolution:
             raise NotImplementedError
 
         if symbol_list is None:
-            symbol_list = sympy.symbols('a b', real=True, imaginary=False)  # sfeh:sympy symbols options
+            symbol_list = sympy.symbols('a b', real=True, imaginary=False)  # sympy symbols options
         else:
             symbol_list = [sympy.Symbol(s) if isinstance(s, str) else s for s in symbol_list]
             symbol_list = sorted(symbol_list, key=lambda x: str(x))
@@ -2179,9 +2274,9 @@ class Evolution:
         prune nodes
         -> get node difference, get nodelist, untill small enough: split the difference, prune nodes until
 
-        sfeh:discussion there is a difference between parsimony and complexity...
-        sfeh:discuss analyze the amount of trees that have to be pruned?
-        sfeh:open add labelweight_max to"""
+
+
+        """
         nodelist = tree.list_mutable_nodes()
         for dnode in nodelist:
             if dnode.depth == self.nodes_max and dnode.get_arity() > 0:
@@ -2236,7 +2331,7 @@ class Evolution:
 
     def evolve_create_random(self, xt_out, depth_max_local, num_rest=-1, depth=0, p_term=0.0) -> Node:
         """
-        sfeh: just use depth_rest and calculate it earlier with depth_max_local and self.depth_max
+
         discuss: number of leftover nodes is not a good threshold, as it limits depth-spreading branches in growing.
                     -> Prune the tree at the end and allow any growth in the beginning
                     -> Tree depth
@@ -2450,7 +2545,8 @@ class ExplainableGP:
         # monitoring
         self.time_genstart = time.perf_counter()
         self.gens_since_last_pareto = 0
-        self.monitor_df = pd.DataFrame(columns=['pop_len', 'pop_unique', 'time',
+        self.monitor_df = pd.DataFrame(columns=['pop_len', 'pop_unique', 'lut_symex_fitness-len',
+                                                'time',
                                                 'fit_avg', 'fit_var',
                                                 'fit_quantile_25', 'fit_quantile_50', 'fit_quantile_75', 'fit_best',
                                                 'parsim_avg', 'parsim_var', 'parsim_quantile_25', 'parsim_quantile_50',
@@ -2697,7 +2793,7 @@ class ExplainableGP:
                 sy_expr = evotree.get_sympy_expr()
                 # sympy_expression_check(sy_expr, raise_ex=True)  # sfeh:discuss save bad trees in LUT aswell? Different LUT for bad trees?
             except SympyError as ex:
-                print_warning('ww', f'Could not create sympy expression for tree: {ex}')
+                print_warning('www', f'Could not create sympy expression for tree: {ex}')
                 self.lut_tree_infos[tree_id]['error'] = str(ex)
                 raise
 
@@ -2705,13 +2801,13 @@ class ExplainableGP:
                 # other tree might have same expression -> lookup fitness
                 fitness = self.lut_symex_fitness[sy_expr]
             else:
-                perf_t = {0: time.perf_counter()}
                 """Numpy eval"""
+                perf_t = {0: time.perf_counter()}
                 true_values = self.df_train['action'].to_numpy()
                 try:
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore", RuntimeWarning)  # sfeh:discuss
-                        np_results_raw = evotree.eval_predict_numpy_fast(self.df_train)  # exception? -> check np.isnan(sym_results).any()
+                        np_results_raw = evotree.eval_predict_numpy_now(self.df_train)  # exception? -> check np.isnan(sym_results).any()
                         np_results = self.eval_autocast(np_results_raw)
                         # np_fitness = np.sqrt(np.mean((np_results - true_values) ** 2))
                         np_fitness = self.eval_error_metric(np_results, true_values)
@@ -2724,40 +2820,67 @@ class ExplainableGP:
 
                         perf_t[1] = time.perf_counter()
 
-                    if compare_with_sympy:
-                        """Sympy lambdify"""
-                        sym_results_raw = eval_predict_sympyBatch(sy_expr, self.df_train, self.evolve.symbol_list)
-                        sym_results = self.eval_autocast(sym_results_raw)
-                        sym_fitness_DEL = np.sqrt(np.mean((sym_results - self.df_train['action']) ** 2))
-                        sym_fitness = self.eval_error_metric(sym_results, self.df_train['action'])
-                        sym_fitness = round(sym_fitness, FLOAT_PRECISION)
-                        sym_results = sym_results.to_numpy()
+                        if compare_with_sympy:
 
-                        perf_t[2] = time.perf_counter()
+                            """Numpy eager eval"""
+                            # sfeh _lambda verion comparisson, functionality-wise and time-wise, eval sympy first
+                            try:
+                                nplmd_results_raw = evotree.eval_np_lambdas()
+                                nplmd_results_raw = nplmd_results_raw(self.df_train)
+                            except Exception as ex:
+                                nplmd_results_raw = evotree.eval_np_lambdas()
+                                nplmd_results_raw = nplmd_results_raw(self.df_train)
 
-                        printpl('pp', f'NP: {perf_t[1]-perf_t[0]:4.2f}s, SY: {perf_t[2]-perf_t[1]:4.2f}s. '
-                                     f'Fitness NP: {np_fitness}, SY: {sym_fitness} ({sy_expr}), eval tree id {tree_id}')
+                            perf_t[2] = time.perf_counter()
 
-                        if sum(sym_results - np_results) > 0.001:
-                            diffs = np.abs(sym_results - np_results)
-                            mask = diffs > 0.001
-                            if np.any(mask):
-                                indices = np.where(mask)[0]
-                                print_warning('w', f'{len(indices)} differences found above tolerance 0.001:')
-                            # results_syraw_df = eval_predict_df_sympy_only(sy_expr, self.df_train)  #  takes forever
-                            result_diffs = sym_results - np_results
-                            print(f'Different results in evaluation: {sum(sym_results - np_results)} ({sy_expr})')
+                            """Sympy lambdify"""
+                            sym_results_raw = eval_predict_sympyBatch(sy_expr, self.df_train, self.evolve.symbol_list)
+                            sym_results = self.eval_autocast(sym_results_raw)
+                            sym_fitness_DEL = np.sqrt(np.mean((sym_results - self.df_train['action']) ** 2))
+                            sym_fitness = self.eval_error_metric(sym_results, self.df_train['action'])
+                            sym_fitness = round(sym_fitness, FLOAT_PRECISION)
+                            # sym_results = sym_results.to_numpy()
 
-                        fitness = sym_fitness
-                        self.lut_tree_infos[tree_id]['fitness-sympy'] = sym_fitness
-                except (SympyError, TreeError, ValueError) as ex:
+                            perf_t[3] = time.perf_counter()
+
+                            printpl('pp', f'NP: {perf_t[1]-perf_t[0]:4.4f}s, NE: {perf_t[2]-perf_t[1]:4.4f}s, SY: {perf_t[3]-perf_t[2]:4.4f}s. '
+                                          f'Fitness NP: {np_fitness}, SY: {sym_fitness} ({sy_expr}), eval tree id {tree_id}')
+
+                            try:
+                                sum(nplmd_results_raw - np_results_raw)
+                            except Exception as ex:
+                                raise TreeError('SFEH THESE ARE [True] trees')
+
+                            if sum(nplmd_results_raw - np_results_raw) > 0.001:
+                                diffs = np.abs(nplmd_results_raw - np_results_raw)
+                                mask = diffs > 0.001
+                                if np.any(mask):
+                                    indices = np.where(mask)[0]
+                                    print_warning('w', f'{len(indices)} differences found above tolerance 0.001: (NP VERSION)')
+                                result_diffs = sym_results - np_results
+                                print(f'Different results in evaluation (NP VERSION): {sum(nplmd_results_raw - np_results)} ({sy_expr})')
+
+                            if sum(sym_results_raw - np_results_raw) > 0.001:
+                                sym_results_raw_np = sym_results_raw.to_numpy()
+                                diffs = np.abs(sym_results_raw_np - np_results_raw)
+                                mask = diffs > 0.001
+                                if np.any(mask):
+                                    indices = np.where(mask)[0]
+                                    print_warning('w', f'{len(indices)} differences found above tolerance 0.001:')
+                                # results_syraw_df = eval_predict_df_sympy_only(sy_expr, self.df_train)  #  takes forever
+                                result_diffs = sym_results - np_results
+                                print(f'Different results in evaluation: {sum(sym_results - np_results)} ({sy_expr})')
+
+                            fitness = sym_fitness
+                            self.lut_tree_infos[tree_id]['fitness-sympy'] = sym_fitness
+                except (SympyError, TreeError, ValueError) as ex:  # sfeh no value errors pls
                     print_warning('ww', f'Could not evaluate fitness for tree {sy_expr}: {ex}')
                     self.lut_tree_infos[tree_id]['error'] = str(ex)
                     raise
 
                 fitness = np_fitness
 
-                self.lut_symex_fitness[sy_expr] = fitness  # sfeh:discuss: lut update in finalize_tree_get_meta()?
+                self.lut_symex_fitness[sy_expr] = fitness
 
             self.lut_tree_infos[tree_id]['sy_expr'] = sy_expr
             self.lut_tree_infos[tree_id]['parsimony'] = parsimony
@@ -2810,11 +2933,11 @@ class ExplainableGP:
             self.backup_save(opt_path_backup=self.rootdir / f'backup/backup-{self.gen_id}.pkl')
             printpl('g', f'Successfully loaded backup file. Generation: {self.gen_id}')
         else:
-            raise FileNotFoundError(f'No backup-file found at {path_backup}')  # sfeh:beautify occurs 2x
+            raise FileNotFoundError(f'No backup-file found at {path_backup}')
 
     def analyze_generation(self):
         gen_time = time.perf_counter() - self.time_genstart
-        tmp_dict = pop_analyze(self.pop_genepool, gen_time, self.gens_since_last_pareto)
+        tmp_dict = pop_analyze(self.pop_genepool, gen_time, self.gens_since_last_pareto, self.lut_symex_fitness)
         self.monitor_df.loc[self.gen_id] = tmp_dict
         printpl('gg',
                 f"Created {len(self.pop_genepool)}/{self.gen_end} ({tmp_dict['pop_unique']} unique) in generation {self.gen_id}. "
@@ -2837,7 +2960,7 @@ class ExplainableGP:
         Special condition to exit the evolve-loop
         1. when >100 generations, no new paretofront were found
         """
-        if self.gens_since_last_pareto > 100:  # .iloc[-1] > 100:  # sfeh discussion
+        if self.gens_since_last_pareto > 100:
             printpl('i', 'Custom Condition made your program exit! (No new pareto entries in 100 generations)')
             return True
         else:
@@ -2871,9 +2994,8 @@ def plot_performance(monitor_df, path_monitoring: Path):
         axs0.fill_between(xx, avg - std, avg + std, alpha=0.2)  # do not use avg in both directions...
         axs0.fill_between(xx, fit_quantile_25, fit_quantile_75, color='b', alpha=0.2)
         # axs0.set_title('regression Error (average)')  # sfeh not stderr... upper/lower bound?
-        # sfeh: the best candidate is the best one in the current population. discussion: best overall?
         axs0.step(x=xx, y=monitor_df['fit_best'], linestyle='dashed', marker='', where='post', color='g',
-                  label='Best candidate')  # , label=ax_label
+                  label='Best candidate in pop')  # , label=ax_label
         # axs0.step(x=xx, y=fit_quantile_50, linestyle='dashed', marker='', where='post', color='b',
         #           label='Best candidate')
         axs0.set_ylim(ymin=0), axs0.legend(loc='lower left')  # , shadow=True
@@ -2901,9 +3023,14 @@ def plot_performance(monitor_df, path_monitoring: Path):
         axs2.plot(monitor_df['pop_unique'], label='unique')
         axs2.margins(y=0.25), axs2.set_ylim(ymin=0), axs2.legend(loc='lower left')
 
+        # optional: plot lut_symex_fitness-len
+
         axs3 = axs[3]
-        between_outliers = monitor_df['time'].between(0, 2 * monitor_df['time'].mean())
-        axs3.plot(monitor_df['time'][between_outliers], label='time (s)')  # sfeh could be a better rule...
+        # # Remove extreme time outliers for better visibility
+        #   e.g. debugging, reloading
+        # between_outliers = monitor_df['time'].between(0, 10 * monitor_df['time'].mean())
+        # axs3.plot(monitor_df['time'][between_outliers], label='time (s)')
+        axs3.plot(monitor_df['time'], label='time (s)')
         axs3.set_ylim(ymin=0), axs3.legend(loc='lower left')
 
         # Top level style
@@ -2975,7 +3102,7 @@ def plot_parsimony_histogram(population, path_out: Path, max_population: int, ma
         plt.close('all')
 
 
-def pop_analyze(popul, gen_time, gens_since_last_pareto):
+def pop_analyze(popul, gen_time, gens_since_last_pareto, lut_symex_fitness):
     """Analysing the population (in each generation)
     - amount of trees
     - fittest tree
@@ -2989,11 +3116,11 @@ def pop_analyze(popul, gen_time, gens_since_last_pareto):
     pop_parsim = [tree.get_parsim() for tree in popul]
     pop_treelen = [len(candidate_tree.tree) for candidate_tree in popul]
     pop_fitness_best = np.min(pop_fitness)
-    pop_unique = len(set([str(x.tree) for x in popul]))  # sfeh:analyze this?
+    pop_unique = len(set([str(x.tree) for x in popul]))
 
-    # sfeh:idea add the amount of actually new trees (compare with the LUT tree_ids)
     result = {'pop_len': len(popul),
               'pop_unique': pop_unique,
+              'lut_symex_fitness-len': len(lut_symex_fitness),
               'time': gen_time,
               'gens_since_last_pareto': gens_since_last_pareto,
               'fit_avg': np.average(pop_fitness),
@@ -3030,9 +3157,10 @@ def eval_predict_sympyBatch(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list)
 
     symbol_list_str = [str(s) for s in symbol_list]
 
-    sfeh_dict = {'Abs': Abs.np_fun, 'Round_Dummy': Round_Dummy.np_round_dummy,
+    # Required functions for lambdify (poor native handling ofdimensionslity, ...)
+    sy_np_handling = {'Abs': Abs.np_fun, 'Round_Dummy': Round_Dummy.np_round_dummy,
                  'Min': Min.np_fun, 'Max': Max.np_fun}
-    func = sympy.lambdify(symbol_list, sy_expr, modules=[sfeh_dict, 'numpy'])
+    func = sympy.lambdify(symbol_list, sy_expr, modules=[sy_np_handling, 'numpy'])
 
     with warnings.catch_warnings():
         with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur

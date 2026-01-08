@@ -39,6 +39,8 @@ class SympyError(Exception):
     usually, when imaginary numbers accidentally come up in an expression"""
     pass
 
+class SympyImaginaryNumber(SympyError):
+    pass
 
 class CuriosityError(Exception):
     """NeverHappensError/CuriosityError/DeletemeRrror/DebugError
@@ -177,7 +179,7 @@ def term_format(x, cut=False):
             xstr = remove_trailing_zeroes(x)
         return xstr
     except ValueError:
-        return x
+        return x  # constants/terms
 
 
 def string_remove_trailing_zeroes(number_string):

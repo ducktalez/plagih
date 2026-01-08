@@ -55,8 +55,15 @@ def _test_simple(dir_name, chained_on=True):
             tree_b = tree_simplification(tree_b, allow_chain=chained_on)
             evo1, evo2 = gp.evolve.evolve_crossover(tree_a, tree_b)
             return evo1, evo2
-
         gp.end_generation()
+
+    for _ in range(1):
+        @gp.create_trees(rate=1)
+        def rand_huge():
+            d = np.clip(int(random.normalvariate(7, 1)), 7, 10)
+            return gp.evolve.evolve_new_tree_depth(float, d, p_term=0)
+        gp.end_generation()
+
     gp.evoloop_monitoring_plots()
 
     print('***Program ending***\n'
@@ -64,7 +71,7 @@ def _test_simple(dir_name, chained_on=True):
     # sys.exit()
 
 
-def _test_random_pop(dir_name, chained_on=True, simplicate=False):
+def _test_random_pop(dir_name, chained_on=True, simplicate=False, try_load_backup=False):
     """Testrun"""
 
     operator_dict.update({Ifte: 2, PowRounded: 1, Round: 1})
@@ -87,8 +94,10 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False):
     evolve = Evolution(symbol_list=['cartVel', 'cartPos'], operators=operator_dict, depth_max=9, nodes_max=50, allow_chain=chained_on)
     gp = ExplainableGP(evolve, df_train, rootdir=rootdir / dir_name, pop_max_size=50, gen_end=20, eval_autocast=eval_autocast, allow_chain=chained_on, eval_error_metric=eval_error_metric)
     try:
-        # gp.backup_load()
-        printpl('i', 'Ignore loading backup!')
+        if try_load_backup:
+            gp.backup_load()
+        else:
+            printpl('i', 'Ignore loading backup!')
     except FileNotFoundError as ex:
         printpl('i', f'No backup file found at {ex}. Starting a new run.')
 
@@ -106,13 +115,13 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False):
 
         if chained_on:
 
-            @gp.create_trees(rate=0.30, simplicate=simplicate)
+            @gp.create_trees(rate=0.4, simplicate=simplicate)
             def mx_branch_d_CHAIN():
                 tree = selection_tournament(gp.pop_genepool, n=3)
                 tree = gp.evolve.evolve_mutate_branch_depth(tree, 4, chained_on, p_term=0.5)
                 return tree
 
-            @gp.create_trees(rate=0.1, simplicate=simplicate)
+            @gp.create_trees(rate=0.3, simplicate=simplicate)
             def rand2_CHAINB():
                 tree = gp.evolve.evolve_new_tree_depth(float, np.clip(int(random.normalvariate(3.5, 1)), 3, 5),
                                                        p_term=0)
@@ -196,7 +205,14 @@ if __name__ == "__main__":
     df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv').astype('float32')
     DATA_SYMBOLS = sympy.symbols(df[col_names].columns, real=True)  # sfeh input_names dirty here
     operator_dict = Evolution.operator_presets['math_simple']
-    eval_autocast = lambda x: np.round(np.clip(x, 0, 2), 0)
+
+    # eval_autocast = lambda x: np.round(np.clip(x, 0, 2), 0)
+    # Der Fehler entsteht, weil np.round intern die ufunc rint aufruft und dein x kein NumPy‑Array mit geeignetem dtype ist
+    # (z.,B. ein Python‑int, eine Liste gemischter Typen oder ein object‑Array). Mach x zuerst zu einem Float‑Array und runde dann.
+    # Fix: robuste eval_autocast, die alles nach float64 castet, clippt und runden/typen sauber setzt.
+    eval_autocast = lambda x: np.rint(
+        np.clip(np.asarray(x, dtype=np.float64), 0.0, 2.0)
+    ).astype(np.int64)
 
     """All runs: Evaluation configurations"""
     df_train, df_control = train_test_split(df, test_size=0.2, random_state=0)
@@ -204,7 +220,8 @@ if __name__ == "__main__":
 
     rootdir = Path.cwd() / '.testruns'
 
-    _test_random_pop(dir_name='MTC200_RMSE_scratch_chained', chained_on=True)
     _test_random_pop(dir_name='MTC200_RMSE_scratch', chained_on=False)
+    _test_random_pop(dir_name='MTC200_RMSE_scratch_chained', chained_on=True)
+    _test_random_pop(dir_name='MTC200_RMSE_scratch_chained', chained_on=True, try_load_backup=True)
     _test_simple(dir_name='simple-MTC200_RMSE_scratch', chained_on=False)
     _test_simple(dir_name='simple-MTC200_RMSE_scratch_chained', chained_on=True)

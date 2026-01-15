@@ -41,10 +41,8 @@ Custom Operators /Functions/Nodes/Terminals/Nested:
 import copy
 import random
 import warnings
-from audioop import error
 from collections import deque
 
-import numpy as np
 import pandas as pd
 import sympy
 from sympy.functions.elementary.piecewise import ExprCondPair
@@ -56,7 +54,8 @@ from plagih.paretofront import *
 from plagih.tree_complexity.tree_edit_distance import *
 from plagih.util import *
 
-from typing import Optional, List, Union, Callable, Any, Tuple, Type
+from typing import Optional, List, Union, Callable, Any, Type, TypeGuard
+
 from dataclasses import dataclass, field
 
 
@@ -85,7 +84,7 @@ class Round_Dummy(sympy.Function):  # Not a Math-operator
             #   -> 'asin(tan(1))' has imaginary part. sfeh: open
             raise SympyImaginaryNumber(ex)
         except Exception as ex:
-            raise
+            raise NotImplementedError(f'How did this happen? {ex}')
 
     """This method allows the class to be compatible with SymPy's internal operations. 
     However, its default implementation often suffices, and you don't need to override it 
@@ -125,13 +124,13 @@ class NodeStructure:
     childs: List['Node'] = field(default_factory=list)
     is_fix: bool = False  # Whether the node is fixed in the structure.
     depth: Optional[int] = None
-    root_node: Optional['Node'] = None
+    root_node: Optional['NodeStructure'] = None
     parent_node: Optional['Node'] = None
     # _loc: Optional[int] = None
 
     def __init__(self, *args: iter, **kwargs):
         self.childs = list(args)
-        self.is_fix = kwargs.get('is_fix', None)
+        self.is_fix = kwargs.get('is_fix', False)
         self.depth = kwargs.get('depth', None)
         self.root_node = kwargs.get('root_node', None)
         self.parent_node = kwargs.get('parent_node', None)
@@ -154,10 +153,10 @@ class NodeStructure:
     def set_parent(self, n):
         self.parent_node = n
 
-    def set_root(self, n: 'Node'):
+    def set_root(self, n: 'NodeStructure'):
         self.root_node = n
 
-    def get_childs(self):
+    def get_childs(self) -> List['Node']:
         return self.childs
 
     def set_childs(self, child_list: (list, tuple)):
@@ -258,13 +257,13 @@ class NodeStructure:
             val = node.get_childs()[0]
             # Booleans
             if isinstance(node, Boolean):
-                v = bool(val) if isinstance(val, (bool, sympy.BooleanTrue, sympy.BooleanFalse)) else bool(
+                v = bool(val) if isinstance(val, (bool, sympy.logic.boolalg.BooleanTrue, sympy.logic.boolalg.BooleanFalse)) else bool(
                     sympy.sympify(val))
                 return f"Boolean({str(v)})"
             # Numbers
             if isinstance(node, Number):
                 try:
-                    v = float(val)
+                    v = float(val)  # noqa child[0] is the value in a Number-node
                 except Exception:
                     v = float(sympy.sympify(val).evalf())
                 s = f"{v}"
@@ -291,7 +290,7 @@ class NodeStructure:
                 return out
 
             # Kinder serialisieren
-            children_str = ", ".join(walk(c) for c in node.get_childs())
+            children_str = ", ".join(walk(cc) for cc in node.get_childs())
             # Fix-Flag für Operatoren
             if node.is_fix:
                 if children_str:
@@ -316,8 +315,9 @@ class NodeStructure:
 
 class Node(NodeStructure):
     """
-    Represents a node in a symbolic computation tree.
-    Each node can evaluate its expression via sympy or NumPy and supports simplification and replacement operations.
+    Represents a node in a computation tree.
+    Each node can evaluate its expression via sympy or NumPy and supports
+    simplification and replacement operations.
     """
     symfun: Optional[Callable[..., sympy.Basic]] = None
     np_fun: Optional[Callable[..., np.ndarray]] = None
@@ -466,6 +466,7 @@ class Node(NodeStructure):
             _cs = [cc.get_sympy_expr(simplimore=simplimore) for cc in _cs]
 
             _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
+            # -> AttributeError: 'Xor' object has no attribute '_eval_as_set'
 
         else:
             raise NotImplementedError
@@ -488,7 +489,7 @@ class Node(NodeStructure):
             return
         else:
             node_list = [x for x in node_list if isinstance(x, Number)]  # only replaces numbers. ok for now.
-            if node_list == []:
+            if not node_list:
                 raise TreeError(f'No terminal nodes found to replace in tree: {self}')
 
             try:
@@ -501,7 +502,7 @@ class Node(NodeStructure):
             # node.set_new_node(new_node)
             node.set_new_node(new_node)
 
-    def is_number(self):
+    def is_number(self):   # not working -> TypeGuard['Number']:
         return issubclass(type(self), Number)
 
     def str_as_list(self, cut_terms=False):
@@ -522,7 +523,7 @@ class Node(NodeStructure):
 
                     else:
                         typus_str = f'{v}'
-                except TypeError as ex:  # noqa  # sfeh delete?
+                except TypeError as ex:  # noqa  # sfeh delete 15.01.2026
                     v_eval = v.evalf()
                     typus_str = term_format(v_eval, cut=cut_terms)
 
@@ -672,7 +673,7 @@ class Node(NodeStructure):
         if self.is_term():  # good for runtime
 
             if self.is_number() and tolerance > 0:
-                val = self.childs[0]
+                val = self.get_value()
                 # from sympy.physics.units import speed_of_light, meter, second more ideas!
 
                 # VERY USEFUL: strg+TribonacciConstant to go to init with useful info
@@ -1104,7 +1105,7 @@ def tree_simplification(tree: Node, allow_chain) -> Node:
 
         if astr != bstr:
             # sfeh 'a**0.5' does not become 'sqrt(a)'! use rational=True or sympy.S.Half
-            print_warning('w', f'Diff in sympy expression?\n\t{astr}\n\t{bstr}')  # raise ex? does not occur after grouping
+            print_warning('w', f'Diff in sympy expression?\n\t{astr}\n\t{bstr}')  # raise ex? does not occur after grouping?
             # sfeh Example 03.05.2025
             # 	sin(cartVel**(6450000000*Round_Dummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
             # 	sin(cartVel**(6.45e+9*Round_Dummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
@@ -1354,6 +1355,9 @@ class Number(Terminal):
     def eval_np_lambdas(self, *args):
         return lambda df: np.full(df.shape[0], float(self.get_value()), dtype=np.float64)
 
+    def __float__(self):
+        return float(self.get_value())
+
 
 class Symbol(Terminal):
     """
@@ -1386,7 +1390,8 @@ def cast_input(value: Any) -> Node:
         elif isinstance(value, str):
             return Symbol(value)
         elif isinstance(value, sympy.Symbol):
-            return value
+            # return value
+            raise NotImplementedError
         else:
             raise NotImplementedError
 
@@ -1648,7 +1653,7 @@ class Or(LogicOperator, ChainableOp):
 
 class Xor(LogicOperator, NoSymCapitalized, ChainableOp):
     """Caution: loading '(a ^ b)', the sympy-Xor-representation, is interpreted as a**b"""
-    symfun = lambda *a: sympy.Xor(*a)
+    symfun = staticmethod(lambda *a: sympy.Xor(*a))
     # np_fun = staticmethod(lambda *a: np.logical_xor.reduce(*a, axis=0))
     np_fun = staticmethod(lambda *a: np.logical_xor.reduce(a)) # np.logical_and.reduce())
     showme = 'Xor'
@@ -1785,7 +1790,7 @@ class Sub(MathOperator):
 class Ifte(OperatorArity):
     """Also Piecewise"""
     xtype = ((bool, float, float), float)
-    symfun = lambda *a: sympy.Piecewise((a[1], a[0]), (a[2], True))
+    symfun = lambda *a: sympy.Piecewise((a[1], a[0]), (a[2], True))  # sfeh: exprcondpair hier um die tupel rum?
     # np_fun = np.where
     np_fun = staticmethod(lambda cond, if_true, if_false: np.where(cond, if_true, if_false))
     showme = 'Ifte'
@@ -2033,8 +2038,8 @@ def expr_sympify(expr):
         raise ValueError(f'NaN in {ex}')
     except AttributeError as ex:
         # print(f'This sympy bug happens, when sympifying "True": {ex}')
-        raise
         # return sympy.true if expr else sympy.false
+        raise
 
 
 class Candidate:

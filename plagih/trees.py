@@ -156,7 +156,7 @@ class NodeStructure:
     def set_root(self, n: 'NodeStructure'):
         self.root_node = n
 
-    def get_childs(self) -> List['Node']:
+    def get_childs(self) -> List['NodeStructure']:
         return self.childs
 
     def set_childs(self, child_list: (list, tuple)):
@@ -170,7 +170,7 @@ class NodeStructure:
         else:
             raise TypeError(f'childs must be set as list, not {type(child_list)}: {child_list}')
 
-    def get_mutable_rootnodes(self, extend_lvls=2) -> Optional[list['Node']]:
+    def get_mutable_rootnodes(self, extend_lvls=2) -> Optional[list['NodeStructure']]:
         """Returns the list of first mutable nodes
         last_leaves: if you want so save all leave nodes aswell
         sum_layers=False, get_closest=True, return_all_layers=False

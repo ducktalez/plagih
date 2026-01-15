@@ -62,7 +62,7 @@ A sympy Issue was opened here https://github.com/sympy/sympy/issues/27326 on 28.
 #         # Handle numerical evaluation (for lambdify or direct calls)
 #         if isinstance(a, (int, float, np.ndarray)):
 #             return np.round(a)
-#         raise TypeError("Unsupported type for numerical evaluation in Round_Dummy")
+#         raise TypeError("Unsupported type for numerical evaluation in RoundDummy")
 #
 # a = sympy.sympify('Rnd_Dmy(1.234)', locals={'Rnd_Dmy': Rnd_Dmy})  # -> 1
 # b = sympy.sympify('2**Rnd_Dmy(1.234)', locals={'Rnd_Dmy': Rnd_Dmy})  # -> 2

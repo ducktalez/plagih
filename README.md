@@ -502,7 +502,7 @@ WHATTPPENDED SFEH
 WHATTPPENDED SFEH
 	old: [Square, [Square, [PowRounded, [7.00], [cartPos]]]]
 	sym: [Pow, [7.00], [MulChain, [4], [Round, [cartPos]]]]
-	old: ((7)**Round_Dummy(cartPos))**2)**2
-	sym: (7)**((4 * Round_Dummy(cartPos,1)))
+	old: ((7)**RoundDummy(cartPos))**2)**2
+	sym: (7)**((4 * RoundDummy(cartPos,1)))
 	sym: Node(Square, [Node(Square, [Node(PowRounded, [Node(Number, [7]), Node(Symbol, ["cartPos"])])])])
 ```

@@ -41,6 +41,7 @@ Custom Operators /Functions/Nodes/Terminals/Nested:
 import copy
 import random
 import warnings
+from abc import ABC
 from collections import deque
 
 import pandas as pd
@@ -54,7 +55,7 @@ from plagih.paretofront import *
 from plagih.tree_complexity.tree_edit_distance import *
 from plagih.util import *
 
-from typing import Optional, List, Union, Callable, Any, Type, TypeGuard
+from typing import Optional, List, Union, Callable, Any, Type, TypeGuard, cast
 
 from dataclasses import dataclass, field
 
@@ -62,7 +63,7 @@ from dataclasses import dataclass, field
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
 
-class Round_Dummy(sympy.Function):  # Not a Math-operator
+class RoundDummy(sympy.Function):  # Not a Math-operator
     """
     Workaround for rounding exponents
     For more details, look at: plagih/discoveries/rounding_exponents.py
@@ -74,17 +75,17 @@ class Round_Dummy(sympy.Function):  # Not a Math-operator
                 return sympy.Integer(round(a.evalf()))
                 # return sympy.Integer(round(a))
             elif a.is_symbol:
-                return  # leave symbolic
+                return  None
             elif a.is_number:
-                return sympy.Integer(round(a.evalf()))
+                return sympy.Integer(round(a.evalf()))  # type: ignore[attr-defined]
             else:
-                return
+                return None
         except (TypeError, ZeroDivisionError) as ex:
             # TypeError('Argument of Integer should be of numeric type, got 2 - I.')
             #   -> 'asin(tan(1))' has imaginary part. sfeh: open
             raise SympyImaginaryNumber(ex)
-        except Exception as ex:
-            raise NotImplementedError(f'How did this happen? {ex}')
+        except Exception:
+            raise CuriosityError
 
     """This method allows the class to be compatible with SymPy's internal operations. 
     However, its default implementation often suffices, and you don't need to override it 
@@ -98,11 +99,11 @@ class Round_Dummy(sympy.Function):  # Not a Math-operator
             return int(round(a))
         elif isinstance(a, np.ndarray):
             return np.vectorize(lambda v: int(round(float(v))))(a)
-        raise TypeError("Unsupported type for numerical evaluation in Round_Dummy")
+        raise TypeError("Unsupported type for numerical evaluation in RoundDummy")
 
     @staticmethod
     def np_round_dummy(x):
-        """Exact numpy-equivalent of Round_Dummy logic"""
+        """Exact numpy-equivalent of RoundDummy logic"""
         # return np.vectorize(lambda v: int(round(float(v))))(x)
 
         x = np.asarray(x, dtype=np.float64)
@@ -111,9 +112,12 @@ class Round_Dummy(sympy.Function):  # Not a Math-operator
 
 
 @dataclass
-class NodeStructure:
+class Node(ABC):
     """
     Recursively holds the nodes of a tree.
+    Represents a node in a computation tree.
+    Each node can evaluate its expression via sympy or NumPy and supports
+    simplification and replacement operations.
     - `parent_node`: Pointer to the parent node. None implies this is the root node.
     - `childs`: List of child nodes, default is an empty list.
     - `is_fix`: Flag indicating whether the node structure is fixed (e.g., immovable in evolution).
@@ -121,19 +125,91 @@ class NodeStructure:
     - `root_node`: Pointer to the root node for easy access throughout the tree.
     - `_loc`: (also _iloc/_xloc) for quickinfo about the coordination in the tree
     """
+    # Tree-structure
     childs: List['Node'] = field(default_factory=list)
     is_fix: bool = False  # Whether the node is fixed in the structure.
     depth: Optional[int] = None
-    root_node: Optional['NodeStructure'] = None
+    root_node: Optional['Node'] = None
     parent_node: Optional['Node'] = None
-    # _loc: Optional[int] = None
 
-    def __init__(self, *args: iter, **kwargs):
+    # Tree-content
+    symfun: Optional[Callable[..., sympy.Basic]] = None
+    np_fun: Optional[Callable[..., np.ndarray]] = None
+    showme: str = ""
+    sy_str: str = ""  # String representation of the symbolic function.
+    formulae_str: str = ""  # String representation of the formula.
+    repr_str: str = ""  # Representation format string.
+    xtype: tuple = ()
+    xtype_chain: Union[bool, float] = False
+
+    is_Atom = ...  # sympy-check
+
+    def __init__(self, *args, **kwargs):
         self.childs = list(args)
         self.is_fix = kwargs.get('is_fix', False)
         self.depth = kwargs.get('depth', None)
         self.root_node = kwargs.get('root_node', None)
         self.parent_node = kwargs.get('parent_node', None)
+
+    def __sympy__(self):  # todo delete both if never called?
+        if self.symfun is None:
+            raise NotImplementedError(f"symfun not defined in {type(self).__name__}")
+        child_syms = [child.__sympy__() for child in self.childs]
+        return self.symfun(*child_syms)
+
+    def _sympy_(self, *args):  # -> sympy.Basic:
+        """do not remove!"""
+        _sym = self.symfun
+        # _sym = _sym(*args)
+        # childstr = [sympy.sympify(cc) for cc in args]
+        # _sym = _sym(*childstr)
+
+        # if isinstance(self, Operator):
+        #     childstr = [sympy.sympify(cc) for cc in args]
+        #     _sym = _sym(*childstr)
+        #
+        # elif isinstance(self, TerminalNode):
+        #     return self.symfun(self.args[0])
+        #
+        # else:
+        #     raise NotImplementedError(f'Specify exception. Class-type {type(self)}')
+
+        return _sym
+
+    def __repr__(self):
+        """
+        Do NOT use __str__!
+        This is acceptable, as it is never used anyways.
+        only fixed nodes are missing
+        """
+        return self.represent_str(show_all=False)
+
+    def __len__(self):
+        return self.len_nodecount_fair()
+
+    def __str__(self):
+        # discuss which style for trees?
+        """
+        Those string can be used:
+        [Abs, [Abs, [Square, [cartPos]]]]
+        [Abs, [Abs, [Square, [Symbol(cartPos)]]]]
+        Abs(Abs((cartPos)**2))
+        Abs(cartPos**2)
+        cartPos**2
+        Abs(Abs(Square(cartPos)))
+        [Abs, [Abs, [Square, [cartPos]]]]
+        """
+        s = self.represent_str(show_all=False, cut_terms=True)
+        # s1 = self.represent_str()
+        # s2 = self.get_expr_symlike()
+        # print(f'Compare prints:\n{s}\n{s1}\n{s2}')
+        # s3 = self.get_expr_symlike(try_sympify=True)
+        # s4 = self.get_sympy_expr()
+        # s5 = self.get_expr_raw_fstring()
+        # s6 = self.str_as_list()
+        # s_export = self.get_tree_export()
+        # print(f'{s}\n{s1}\n{s2}\n{s3}\n{s4}\n{s5}\n{s6}\n{s_export}')
+        return s
 
     def add_child(self, child: 'Node') -> None:
         """Adds a child node and updates its parent_node reference."""
@@ -153,13 +229,13 @@ class NodeStructure:
     def set_parent(self, n):
         self.parent_node = n
 
-    def set_root(self, n: 'NodeStructure'):
+    def set_root(self, n: 'Node'):
         self.root_node = n
 
-    def get_childs(self) -> List['NodeStructure']:
+    def get_childs(self) -> List['Node']:
         return self.childs
 
-    def set_childs(self, child_list: (list, tuple)):
+    def set_childs(self, child_list: Union[list, tuple]):
         if isinstance(child_list, (list, tuple)):
             ccs = [cast_input(x) for x in child_list]
             self.childs = ccs
@@ -170,7 +246,17 @@ class NodeStructure:
         else:
             raise TypeError(f'childs must be set as list, not {type(child_list)}: {child_list}')
 
-    def get_mutable_rootnodes(self, extend_lvls=2) -> Optional[list['NodeStructure']]:
+    def repair_all(self, parent: 'Node'=None, root: 'Node'= None, depth:int=0):
+        """backlink was introduced on 23.04.2024,
+        linking the root and parent nodes"""
+        self.root_node = root
+        self.parent_node = parent
+        self.depth=depth
+
+        for ii, cc in enumerate(self.get_childs()):
+            cc.repair_all(parent=self, root=root, depth=depth+1)
+
+    def get_mutable_rootnodes(self, extend_lvls=2) -> Optional[list['Node']]:
         """Returns the list of first mutable nodes
         last_leaves: if you want so save all leave nodes aswell
         sum_layers=False, get_closest=True, return_all_layers=False
@@ -209,15 +295,17 @@ class NodeStructure:
                 return True
         return False
 
-    def is_term(self):
+    def is_term(self) -> TypeGuard['Terminal']:
         """is_term instead of operator due to fuckin exprCondPairs"""
-        return issubclass(self.get_typus(), Terminal)
+        result = issubclass(self.get_typus(), Terminal)
+        return result
 
-    def get_typus(self):
-        t = self.__class__
-        return t
+    def get_typus(self) -> Type['Node']:
+        nt = self.__class__
+        return nt
 
     def has_childs(self):
+        """Explicitly"""
         # better to check for recursive use, as e.g. ExprCondPair is not a regular operator
         return not self.is_term()
 
@@ -264,6 +352,8 @@ class NodeStructure:
             if isinstance(node, Number):
                 try:
                     v = float(val)  # noqa child[0] is the value in a Number-node
+                except TypeError:
+                    v = float(sympy.sympify(val).evalf())
                 except Exception:
                     v = float(sympy.sympify(val).evalf())
                 s = f"{v}"
@@ -301,43 +391,6 @@ class NodeStructure:
                 return f"{cls_name}({children_str})"
 
         return walk(self)
-
-    def repair_all(self, parent: 'NodeStructure'=None, root: 'NodeStructure'= None, depth:int=0, arg_pos=0):
-        """backlink was introduced on 23.04.2024,
-        linking the root and parent nodes"""
-        self.root_node = root
-        self.parent_node = parent
-        self.depth=depth
-
-        for ii, cc in enumerate(self.get_childs()):
-            cc.repair_all(parent=self, root=root, depth=depth+1, arg_pos=ii)
-
-
-class Node(NodeStructure):
-    """
-    Represents a node in a computation tree.
-    Each node can evaluate its expression via sympy or NumPy and supports
-    simplification and replacement operations.
-    """
-    symfun: Optional[Callable[..., sympy.Basic]] = None
-    np_fun: Optional[Callable[..., np.ndarray]] = None
-    showme: str = ""
-    sy_str: str = ""  # String representation of the symbolic function.
-    formulae_str: str = ""  # String representation of the formula.
-    repr_str: str = ""  # Representation format string.
-    xtype: tuple = ()
-    xtype_chain: Union[bool, float] = False
-
-    is_Atom = ...  # sympy-check
-
-    def __init__(self, *args: iter, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def __sympy__(self):
-        if self.symfun is None:
-            raise NotImplementedError(f"symfun not defined in {type(self).__name__}")
-        child_syms = [child.__sympy__() for child in self.childs]
-        return self.symfun(*child_syms)
 
     def revoke_useless_nodes(self) -> None:
         """Mandatory Part of the basic simplification-process.
@@ -398,7 +451,6 @@ class Node(NodeStructure):
             nd_new (Node): The node to replace self with.
             repair (bool): Whether to repair depth and parent relationships.
             clean_chain (bool): Whether to remove unnecessary chain operators.
-            pointmutation (bool): Whether this replacement is due to point mutation.
         """
         # Backup of old node, required for repair
         self_copy = copy.deepcopy(self)
@@ -428,7 +480,7 @@ class Node(NodeStructure):
             self.root_node = None
             self.depth = None
 
-        # all BaseNodeStructure infos should not be updated
+        # all BaseNode infos should not be updated
         pass
 
     def replace_with(self, new_class, new_args):
@@ -502,7 +554,7 @@ class Node(NodeStructure):
             # node.set_new_node(new_node)
             node.set_new_node(new_node)
 
-    def is_number(self):   # not working -> TypeGuard['Number']:
+    def is_number(self) -> TypeGuard['Number']:   # not working -> TypeGuard['Number']:
         return issubclass(type(self), Number)
 
     def str_as_list(self, cut_terms=False):
@@ -528,15 +580,6 @@ class Node(NodeStructure):
                     typus_str = term_format(v_eval, cut=cut_terms)
 
         return f"[{typus_str}]"
-
-    def __repr__(self):
-        """
-        Do NOT use __str__!
-        This is acceptable, as it is never used anyways.
-        only fixed nodes are missing
-        """
-
-        return self.represent_str(show_all=False)
 
     def get_lut_id(self):
         """
@@ -585,10 +628,10 @@ class Node(NodeStructure):
 
         return f'{expr}'
 
-    def list_mutable_nodes(self, xtype=None) -> ['NodeStructure']:
+    def list_mutable_nodes(self, xtype=None) -> List['Node']:
         """return all nodes that are mutable, aka suite for point- or branchmutation
         === ValueError: 'a' cannot be empty unless no samples are taken
-        ===> probably, no nodes were there to bemutated
+        ===> probably, no nodes exist to be mutated
         """
 
         # -> Check, if this node should be added
@@ -653,7 +696,9 @@ class Node(NodeStructure):
 
         else:
             if self.is_number():
-                self.childs[0] = round(random.gauss(self.get_value(), 0.1), FLOAT_PRECISION)
+                # TODO: Dieses Pattern ist problematisch - childs ist List[Node], aber hier wird float zugewiesen.
+                #       Besser wäre: self.set_value(round(...)) oder Terminal-Nodes speziell behandeln
+                self.set_value(round(random.gauss(self.get_value(), 0.1), FLOAT_PRECISION))
 
         return
 
@@ -836,8 +881,9 @@ class Node(NodeStructure):
         else:
             return 1  # childs can currently be floats
 
-    def is_typus(self, t):
-        r = issubclass(type(self), t)
+    def is_typus(self, nt):
+        """Check Node-type"""
+        r = issubclass(type(self), nt)
         return r
 
     def is_ExprCdPair(self):  # noqa
@@ -861,9 +907,6 @@ class Node(NodeStructure):
                 n = 1 + sum(cc_list)
 
         return n
-
-    def __len__(self):
-        return self.len_nodecount_fair()
 
     def get_arity(self):
         return len(self.get_typus().get_child_xts())
@@ -902,49 +945,6 @@ class Node(NodeStructure):
 
         return s
 
-    def __str__(self):
-        # discuss which style for trees?
-        """
-        Those string can be used:
-        [Abs, [Abs, [Square, [cartPos]]]]
-        [Abs, [Abs, [Square, [Symbol(cartPos)]]]]
-        Abs(Abs((cartPos)**2))
-        Abs(cartPos**2)
-        cartPos**2
-        Abs(Abs(Square(cartPos)))
-        [Abs, [Abs, [Square, [cartPos]]]]
-        """
-        s = self.represent_str(show_all=False, cut_terms=True)
-        # s1 = self.represent_str()
-        # s2 = self.get_expr_symlike()
-        # print(f'Compare prints:\n{s}\n{s1}\n{s2}')
-        # s3 = self.get_expr_symlike(try_sympify=True)
-        # s4 = self.get_sympy_expr()
-        # s5 = self.get_expr_raw_fstring()
-        # s6 = self.str_as_list()
-        # s_export = self.get_tree_export()
-        # print(f'{s}\n{s1}\n{s2}\n{s3}\n{s4}\n{s5}\n{s6}\n{s_export}')
-        return s
-
-    def _sympy_(self, *args):  # -> sympy.Basic:
-        """do not remove!"""
-        _sym = self.symfun
-        # _sym = _sym(*args)
-        # childstr = [sympy.sympify(cc) for cc in args]
-        # _sym = _sym(*childstr)
-
-        # if isinstance(self, Operator):
-        #     childstr = [sympy.sympify(cc) for cc in args]
-        #     _sym = _sym(*childstr)
-        #
-        # elif isinstance(self, TerminalNode):
-        #     return self.symfun(self.args[0])
-        #
-        # else:
-        #     raise NotImplementedError(f'Specify exception. Class-type {type(self)}')
-
-        return _sym
-
     def get_symstr(self):
         return self.symfun.__name__
 
@@ -952,18 +952,18 @@ class Node(NodeStructure):
     def get_child_xts(cls):
         return cls.xtype[0]
 
-    def eval_np_lambdas(self, *args)  -> Callable[[np.ndarray], np.ndarray]:
+    def eval_np_lambdas(self, *args) -> Callable[[np.ndarray], np.ndarray]:
         """Eager evaluation with NumPy arrays
             - Building a graph without evaluation
             - Does not calculate useless stuff
             But: harder for debugging!
         """
-        ...
+        raise NotImplementedError(f"eval_np_lambdas not implemented for {type(self).__name__}")
 
-    def eval_predict_numpy_now(self, df, *args)  -> np.ndarray:
+    def eval_predict_numpy_now(self, df: pd.DataFrame, *args) -> np.ndarray:
         """Evaluates children first, then applies own numpy function
         aka Debugging-version of eval_np"""
-        ...
+        raise NotImplementedError(f"eval_predict_numpy_now not implemented for {type(self).__name__}")
 
 
 def eval_parsimony(tree: Node, complexity_measure, origin_tree=None):
@@ -1022,7 +1022,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
         for arg in s_expr.args:
             cc_nodes.append(sympy_to_tree(arg, allow_chain=allow_chain))
 
-        if isinstance(s_expr, Round_Dummy):
+        if isinstance(s_expr, RoundDummy):
             _n = Round(cc_nodes[0])
             return _n
 
@@ -1107,8 +1107,8 @@ def tree_simplification(tree: Node, allow_chain) -> Node:
             # sfeh 'a**0.5' does not become 'sqrt(a)'! use rational=True or sympy.S.Half
             print_warning('w', f'Diff in sympy expression?\n\t{astr}\n\t{bstr}')  # raise ex? does not occur after grouping?
             # sfeh Example 03.05.2025
-            # 	sin(cartVel**(6450000000*Round_Dummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
-            # 	sin(cartVel**(6.45e+9*Round_Dummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
+            # 	sin(cartVel**(6450000000*RoundDummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
+            # 	sin(cartVel**(6.45e+9*RoundDummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
     return tree
 
 def evolve_reduce_simplicate(tree: Node, allow_chain, completely=True, force=False) -> Node:
@@ -1193,7 +1193,7 @@ class BaseOperator(Node):
         
         return ccl
 
-    def eval_predict_numpy_now(self, df: np.ndarray, *args) -> np.ndarray:
+    def eval_predict_numpy_now(self, df: pd.DataFrame, *args) -> np.ndarray:
         children = self.get_np_child_now(df, *args)
 
         result = self.np_fun(*children)
@@ -1313,7 +1313,7 @@ class Terminal(Node):
     def __len__(self):
         return 1
 
-    def get_value(self) -> (sympy.AtomicExpr, float, bool):
+    def get_value(self) -> Union[sympy.AtomicExpr, float, bool]:
         return self.get_childs()[0]
 
     def set_value(self, val):
@@ -1322,11 +1322,11 @@ class Terminal(Node):
 
 class Boolean(Terminal):
     xtype = ((), bool)
-    symfun = lambda *a: sympy.S.true if a[0] else ~sympy.S.true  # sympy.logic.boolalg.Boolean
+    symfun = staticmethod(lambda *a: sympy.S.true if a[0] else ~sympy.S.true)  # sympy.logic.boolalg.Boolean
     np_fun = staticmethod(lambda x: bool(x))
     showme = 'Boolean'
 
-    def eval_predict_numpy_now(self, df, *args) -> np.ndarray:
+    def eval_predict_numpy_now(self, df: pd.DataFrame, *args) -> np.ndarray:
         val = bool(self.get_value())
         return np.full(len(df), val, dtype=np.bool_)
 
@@ -1337,7 +1337,7 @@ class Boolean(Terminal):
 
 class Number(Terminal):
     xtype = ((), float)
-    symfun = lambda *a: sympy.Float(float(a[0]), FLOAT_PRECISION)
+    symfun = staticmethod(lambda *a: sympy.Float(float(a[0]), FLOAT_PRECISION))
     # np_fun = np.array
     np_fun = staticmethod(lambda x: float(x))
     # sympy.Rational(0.1) -> 3602879701896397/36028797018963968
@@ -1348,7 +1348,7 @@ class Number(Terminal):
     # def eval_predict_numpy_now(self, df, *args) -> np.ndarray:
     #     return np.full(df.shape[0], float(self.get_value()), dtype=np.float64)
     #
-    def eval_predict_numpy_now(self, df, *args) -> np.ndarray:
+    def eval_predict_numpy_now(self, df: pd.DataFrame, *args) -> np.ndarray:
         val = float(self.get_value())
         return np.full(len(df), val, dtype=np.float64)
 
@@ -1442,7 +1442,7 @@ class DivFraction(MathOperator):
         np.reciprocal(2.0)  # Output: 0.5
     """
     xtype = ((float,), float)
-    symfun = lambda *a: sympy.Pow(a[0], sympy.S.NegativeOne)
+    symfun = staticmethod(lambda *a: sympy.Pow(a[0], sympy.S.NegativeOne))
     np_fun = staticmethod(lambda a: np.reciprocal(a))
     showme = 'DivFraction'
     sy_str = '1/({})'
@@ -1473,7 +1473,7 @@ class Pow(MathOperator):
 
 
 class Abs(MathOperator):
-    symfun = lambda *a: sympy.Abs(a[0])
+    symfun = staticmethod(lambda *a: sympy.Abs(a[0]))
     np_fun = np.absolute  # np.fabs works only for non-complex numbers
     showme = 'Abs'
     sy_str = 'Abs({})'
@@ -1483,7 +1483,7 @@ class Abs(MathOperator):
 
 class Sign(MathOperator, NoSymCapitalized):
     # does not work in string, but irrelevant. sympy.simplify('sign(-a)') -> -sign(a)
-    symfun = lambda *a: sympy.sign(a[0])
+    symfun = staticmethod(lambda *a: sympy.sign(a[0]))
     np_fun = np.sign
     showme = 'Sign'
     sy_str = 'sign({})'
@@ -1494,7 +1494,7 @@ class Sign(MathOperator, NoSymCapitalized):
 class Log(MathOperator, NoSymCapitalized):
     # Log isactually Ln (base e). Log/Ln is the same, idk fuck Log10
     # discuss: Log-operator + abs/max so inputs are >0
-    symfun = lambda *a: sympy.log(a[0])
+    symfun = staticmethod(lambda *a: sympy.log(a[0]))
     np_fun = np.log
     showme = 'Log'
     sy_str = 'log({})'
@@ -1503,7 +1503,7 @@ class Log(MathOperator, NoSymCapitalized):
 
 
 class Cos(Trigonometry, NoSymCapitalized):
-    symfun = lambda *a: sympy.cos(a[0])
+    symfun = staticmethod(lambda *a: sympy.cos(a[0]))
     np_fun = np.cos
     showme = 'Cos'
     sy_str = 'cos({})'
@@ -1512,7 +1512,7 @@ class Cos(Trigonometry, NoSymCapitalized):
 
 
 class Sin(Trigonometry, NoSymCapitalized):
-    symfun = lambda *a: sympy.sin(a[0])
+    symfun = staticmethod(lambda *a: sympy.sin(a[0]))
     np_fun = np.sin
     showme = 'Sin'
     sy_str = 'sin({})'
@@ -1521,7 +1521,7 @@ class Sin(Trigonometry, NoSymCapitalized):
 
 
 class Tan(Trigonometry, NoSymCapitalized):
-    symfun = lambda *a: sympy.tan(a[0])
+    symfun = staticmethod(lambda *a: sympy.tan(a[0]))
     np_fun = np.tan
     showme = 'Tan'
     sy_str = 'tan({})'
@@ -1530,7 +1530,7 @@ class Tan(Trigonometry, NoSymCapitalized):
 
 
 class Acos(Trigonometry, NoSymCapitalized):
-    symfun = lambda *a: sympy.acos(a[0])
+    symfun = staticmethod(lambda *a: sympy.acos(a[0]))
     np_fun = np.arccos  # arccosh
     showme = 'Acos'
     sy_str = 'acos({})'
@@ -1540,7 +1540,7 @@ class Acos(Trigonometry, NoSymCapitalized):
 
 class Asin(Trigonometry, NoSymCapitalized):
     """"""
-    symfun = lambda *a: sympy.asin(a[0])
+    symfun = staticmethod(lambda *a: sympy.asin(a[0]))
     np_fun = np.arcsin
     showme = 'Asin'
     sy_str = 'asin({})'
@@ -1549,7 +1549,7 @@ class Asin(Trigonometry, NoSymCapitalized):
 
 
 class Atan(Trigonometry, NoSymCapitalized):
-    symfun = lambda *a: sympy.atan(a[0])
+    symfun = staticmethod(lambda *a: sympy.atan(a[0]))
     np_fun = np.arctan
     showme = 'Atan'
     sy_str = 'atan({})'
@@ -1558,7 +1558,7 @@ class Atan(Trigonometry, NoSymCapitalized):
 
 
 class Tanh(Trigonometry, NoSymCapitalized):
-    symfun = lambda *a: sympy.tanh(a[0])
+    symfun = staticmethod(lambda *a: sympy.tanh(a[0]))
     np_fun = np.tanh
     showme = 'Tanh'
     sy_str = 'tanh({})'
@@ -1567,7 +1567,7 @@ class Tanh(Trigonometry, NoSymCapitalized):
 
 
 class Sinh(Trigonometry, NoSymCapitalized):
-    symfun = lambda *a: sympy.sinh(a[0])
+    symfun = staticmethod(lambda *a: sympy.sinh(a[0]))
     np_fun = np.sinh
     showme = 'Sinh'
     sy_str = 'sinh({})'
@@ -1576,7 +1576,7 @@ class Sinh(Trigonometry, NoSymCapitalized):
 
 
 class Cosh(Trigonometry, NoSymCapitalized):
-    symfun = lambda *a: sympy.cosh(a[0])
+    symfun = staticmethod(lambda *a: sympy.cosh(a[0]))
     np_fun = np.cosh
     showme = 'Cosh'
     sy_str = 'cosh({})'
@@ -1586,7 +1586,7 @@ class Cosh(Trigonometry, NoSymCapitalized):
 
 class Not(LogicOperator):
     """not"""
-    symfun = lambda *a: sympy.Not(a[0])
+    symfun = staticmethod(lambda *a: sympy.Not(a[0]))
     np_fun = np.logical_not
     showme = 'Not'
     sy_str = '~({})'
@@ -1596,7 +1596,7 @@ class Not(LogicOperator):
 
 class Eq(RelationalOperator):
     """a == b"""
-    symfun = lambda *a: sympy.Eq(a[0], a[1])
+    symfun = staticmethod(lambda *a: sympy.Eq(a[0], a[1]))
     np_fun = np.equal
     showme = 'Eq'  # '==' not working in sympy!
     sy_str = 'Eq({0}, {1})'
@@ -1606,7 +1606,7 @@ class Eq(RelationalOperator):
 
 class Ne(RelationalOperator):
     """a != b"""
-    symfun = lambda *a: sympy.Ne(a[0], a[1])
+    symfun = staticmethod(lambda *a: sympy.Ne(a[0], a[1]))
     np_fun = np.not_equal
     showme = 'Ne'  # != not working in sympy
     sy_str = 'Ne({0}, {1})'
@@ -1636,7 +1636,7 @@ class And(LogicOperator, ChainableOp):
 
 class Or(LogicOperator, ChainableOp):
     """np.logical_or only for arity-2"""
-    symfun = lambda *a: sympy.Or(a[0], a[1])
+    symfun = staticmethod(lambda *a: sympy.Or(a[0], a[1]))
     np_fun = staticmethod(lambda *a: np.any(a, axis=0))
     showme = 'Or'
     sy_str = '({0}|{1})'
@@ -1671,7 +1671,7 @@ class Xor(LogicOperator, NoSymCapitalized, ChainableOp):
 
 class ITE(LogicOperator):
     """only logical if-then-else"""
-    symfun = lambda *a: sympy.ITE(a[0], a[1], a[2])
+    symfun = staticmethod(lambda *a: sympy.ITE(a[0], a[1], a[2]))
     np_fun = staticmethod(lambda a, b, c: ((a & b) | (not a) & c))  # this fucked me ((a & b) | (not a & c))
     showme = 'ITE'
     sy_str = 'ITE({0}, {1}, {2})'
@@ -1681,7 +1681,7 @@ class ITE(LogicOperator):
 
 
 class Min(BaseMinMax, ChainableOp):
-    symfun = lambda *a: sympy.Min(*a)
+    symfun = staticmethod(lambda *a: sympy.Min(*a))
     np_fun = staticmethod(lambda *a: np.minimum.reduce(np.vstack(a), axis=0))
     showme = 'Min'
     sy_str = 'Min({0},{1})'
@@ -1696,7 +1696,7 @@ class Min(BaseMinMax, ChainableOp):
 
 
 class Max(BaseMinMax, ChainableOp):
-    symfun = lambda *a: sympy.Max(*a)
+    symfun = staticmethod(lambda *a: sympy.Max(*a))
     np_fun = staticmethod(lambda *a: np.maximum.reduce(np.vstack(a), axis=0))
     showme = 'Max'
     sy_str = 'Max({0}, {1})'
@@ -1716,7 +1716,7 @@ class Max(BaseMinMax, ChainableOp):
 
 
 class Lt(RelationalOperator):
-    symfun = lambda *a: sympy.Lt(a[0], a[1])
+    symfun = staticmethod(lambda *a: sympy.Lt(a[0], a[1]))
     np_fun = np.less
     showme = 'Lt'
     sy_str = '({0} < {1})'
@@ -1725,7 +1725,7 @@ class Lt(RelationalOperator):
 
 
 class Le(RelationalOperator):
-    symfun = lambda *a: sympy.Le(a[0], a[1])
+    symfun = staticmethod(lambda *a: sympy.Le(a[0], a[1]))
     np_fun = np.less_equal
     showme = 'Le'
     sy_str = '({0} <= {1})'
@@ -1734,7 +1734,7 @@ class Le(RelationalOperator):
 
 
 class Gt(RelationalOperator, PleaseUsePartnerOp):
-    symfun = lambda *a: sympy.Gt(a[0], a[1])
+    symfun = staticmethod(lambda *a: sympy.Gt(a[0], a[1]))
     np_fun = np.greater
     showme = 'Gt'
     sy_str = '({0} > {1})'
@@ -1744,7 +1744,7 @@ class Gt(RelationalOperator, PleaseUsePartnerOp):
 
 class Ge(RelationalOperator, PleaseUsePartnerOp):
     xtype = ((float, float), bool)
-    symfun = lambda *a: sympy.Ge(a[0], a[1])
+    symfun = staticmethod(lambda *a: sympy.Ge(a[0], a[1]))
     np_fun = np.greater_equal
     showme = 'Ge'
     sy_str = '({0} >= {1})'
@@ -1752,7 +1752,7 @@ class Ge(RelationalOperator, PleaseUsePartnerOp):
 
 
 class Square(MathOperator):
-    symfun = lambda *a: sympy.Pow(a[0], 2)
+    symfun = staticmethod(lambda *a: sympy.Pow(a[0], 2))
     np_fun = np.square
     xtype = ((float,), float)
     showme = 'Square'
@@ -1761,7 +1761,7 @@ class Square(MathOperator):
 
 
 class Exp(MathOperator):
-    symfun = lambda *a: sympy.exp(a[0])
+    symfun = staticmethod(lambda *a: sympy.exp(a[0]))
     np_fun = np.exp
     showme = 'Exp'
     sy_str = '{}**E'
@@ -1770,7 +1770,7 @@ class Exp(MathOperator):
 
 
 class Exp2(MathOperator):
-    symfun = lambda *a: sympy.Pow(2, a[0])
+    symfun = staticmethod(lambda *a: sympy.Pow(2, a[0]))
     np_fun = np.exp2
     xtype = ((float,), float)
     showme = 'Exp2'
@@ -1780,7 +1780,7 @@ class Exp2(MathOperator):
 
 class Sub(MathOperator):
     xtype = ((float, float), float)
-    symfun = lambda *a: sympy.Add(a[0], -a[1])
+    symfun = staticmethod(lambda *a: sympy.Add(a[0], -a[1]))
     np_fun = np.subtract
     showme = 'Sub'
     sy_str = '({0} - {1})'
@@ -1790,7 +1790,7 @@ class Sub(MathOperator):
 class Ifte(OperatorArity):
     """Also Piecewise"""
     xtype = ((bool, float, float), float)
-    symfun = lambda *a: sympy.Piecewise((a[1], a[0]), (a[2], True))  # sfeh: exprcondpair hier um die tupel rum?
+    symfun = staticmethod(lambda *a: sympy.Piecewise((a[1], a[0]), (a[2], True)))  # sfeh: exprcondpair hier um die tupel rum?
     # np_fun = np.where
     np_fun = staticmethod(lambda cond, if_true, if_false: np.where(cond, if_true, if_false))
     showme = 'Ifte'
@@ -1808,7 +1808,7 @@ class Ifte(OperatorArity):
 
 class Piecewise(BaseOperator, ChainableOp):
     """ogclass = Ifte"""
-    symfun = lambda *a: sympy.Piecewise(*a)
+    symfun = staticmethod(lambda *a: sympy.Piecewise(*a))
     np_fun = None
     showme = 'Piecewise'
     sy_str = 'Piecewise({})'
@@ -1854,11 +1854,11 @@ class Round(MathOperator):
 
     """
     xtype = ((float,), float)
-    symfun = lambda *a: Round_Dummy(a[0])
+    symfun = staticmethod(lambda *a: RoundDummy(a[0]))
     np_fun = staticmethod(lambda x: np.vectorize(lambda v: int(round(float(v))))(x))
     showme = 'Round'
-    sy_str = 'Round_Dummy({},1)'
-    repr_str = 'Round_Dummy{},[{}]'
+    sy_str = 'RoundDummy({},1)'
+    repr_str = 'RoundDummy{},[{}]'
 
     # def eval_predict_numpy_now(self, df, *args) -> np.ndarray:
     #     child_values = self.get_np_child_now(df, *args)
@@ -1878,13 +1878,13 @@ class Round(MathOperator):
 
 
 class PowRounded(MathOperator):
-    """Requires class Round_Dummy!
+    """Requires class RoundDummy!
     Roundind the exponent
     idea: clip the exponent to integer values (e.g. -2-6)"""
-    symfun = lambda *a: sympy.Pow(a[0], Round_Dummy(a[1]))
+    symfun = staticmethod(lambda *a: sympy.Pow(a[0], RoundDummy(a[1])))
     np_fun = staticmethod(lambda base, exponent: np.power(base, np.vectorize(lambda x: int(round(float(x))))(exponent)))
     showme = 'PowRounded'
-    sy_str = '({0})**Round_Dummy({1})'
+    sy_str = '({0})**RoundDummy({1})'
     repr_str = 'PowRounded{},[{}, {}]'
     xtype = ((float, float), float)
 
@@ -1901,7 +1901,7 @@ class Div(MathOperator):
     """
     sympy.div() doesn't work for non-polynomials
     """
-    symfun = lambda *a: sympy.Mul(a[0], sympy.Pow(a[1], -1))
+    symfun = staticmethod(lambda *a: sympy.Mul(a[0], sympy.Pow(a[1], -1)))
     np_fun = staticmethod(np.divide)
     showme = 'Div'
     sy_str = '({0}/{1})'
@@ -1913,7 +1913,7 @@ class Sqrt(MathOperator):
     """Capitalized class name, even though its a sympy function
     In SymPy, sqrt(x) is just a shortcut to x**Rational(1, 2)"""
     xtype = ((float,), float)
-    symfun = lambda *a: sympy.sqrt(a[0])  # same as: lambda a: sympy.Pow(a, sympy.S.Half)
+    symfun = staticmethod(lambda *a: sympy.sqrt(a[0]))  # same as: lambda a: sympy.Pow(a, sympy.S.Half)
     np_fun = staticmethod(np.sqrt)
     showme = 'Sqrt'
     sy_str = 'sqrt({})'
@@ -1950,7 +1950,7 @@ class Usub(MathOperator):
 
 class Clip(BaseMinMax, CustomOperator):
     # sfeh:open use this
-    symfun = lambda *a: sympy.Min(sympy.Max(a[0], a[1]), a[2])
+    symfun = staticmethod(lambda *a: sympy.Min(sympy.Max(a[0], a[1]), a[2]))
     np_fun = np.clip  # lambda a, b, c: np.clip(a, b, c)
     showme = 'Clip'
     sy_str = '(sympy.Min(sympy.Max({0}, {1}), {2}))'
@@ -1968,7 +1968,7 @@ class ExprCondPair_Dummy(Node_Dummy):  # noqa
             ...
     """
     arity = 2
-    symfun = lambda *a: ExprCondPair(a[0], a[1])
+    symfun = staticmethod(lambda *a: ExprCondPair(a[0], a[1]))
     np_fun = None  # discuss
     showme = 'ExprCondPair_Dummy'
     sy_str = 'ExprCondPair({0}, {1})'
@@ -2080,7 +2080,7 @@ class Candidate:
         return self.parsimony
 
 
-def check_operator_pool(ops: iter):
+def check_operator_pool(ops: dict):
     """Check if the user-specified loaded operators allow closure
     (either float-only/bool only or all 4 types of operators)
     @:param operator_pool: list with operators and their weight of being selected
@@ -2100,7 +2100,7 @@ def check_operator_pool(ops: iter):
         raise Exception(f'Loaded operators do not allow closure!')
 
 
-def norm_choices(val_p_tuples: (any, float)) -> [any, float]:
+def norm_choices(val_p_tuples) -> list:
     """make a tuple-list callable for weighted numpy choice
     [['a', 1], ['b', 2]] -> [('a', 'b'), (0.333, 666)]"""
     xx = list(zip(*val_p_tuples))
@@ -2130,7 +2130,7 @@ def operatorpool_to_picks(d_operator_pool):
 
 class NodeSelect:
 
-    def __init__(self, operators: dict, symbol_list: [sympy.Symbol]):
+    def __init__(self, operators: dict, symbol_list: List[sympy.Symbol]):
         """make all probabilities sum to 1 for each categoray (Add: 2, Mul: 1, Tan: 0.5) in
 
         discuss: replace operators-"dict" with a cost-value in the operators class that can be set and is considered
@@ -2192,7 +2192,7 @@ class NodeSelect:
             # -> sympy.sympify('And(True, BooleanAtom(False))')
             return Boolean(_v)
 
-    def choose_symbol_node(self, xt) -> Type[Symbol]:
+    def choose_symbol_node(self, xt) -> Symbol:
         """similar to choose_terminal_node()"""
         _v = np.random.choice(self.pick_symbol[xt][0], p=self.pick_symbol[xt][1])
         n = Symbol(_v)
@@ -2431,21 +2431,21 @@ class Evolution:
         if len(a_nds) == 0:
             raise TreeError(f'Crossover tree 1 has no mutable nodes!')
 
-        a_nd = np.random.choice(a_nds)
+        a_nd = random.choice(a_nds)
         xt_out = a_nd.get_xtype_self()
         b_nds = bb.list_mutable_nodes(xtype=xt_out)
 
         if len(b_nds) > 0:
-            b_nd = np.random.choice(b_nds)
+            b_nd = random.choice(b_nds)
 
         else:
             xt_out = float if xt_out == bool else bool  # switching to the other swap type
             b_nds = bb.list_mutable_nodes(xtype=xt_out)
-            b_nd = np.random.choice(b_nds)
+            b_nd = random.choice(b_nds)
             a_nds = [x for x in a_nds if x.get_xtype_self() == xt_out]
             if len(a_nds) == 0:
                 raise ValueError(f'Crossover cant find matching nodes. This Should always be possible.')
-            a_nd = np.random.choice(a_nds)
+            a_nd = random.choice(a_nds)
 
         cpy = copy.deepcopy(a_nd)  # deepcopy required??
 
@@ -2858,7 +2858,7 @@ class ExplainableGP:
                                     print_warning('w', f'{len(indices)} differences found above tolerance 0.001:')
                                 # results_syraw_df = eval_predict_df_sympy_only(sy_expr, self.df_train)  #  takes forever
                                 result_diffs = sym_results - np_results
-                                print(f'Different results in evaluation: {sum(sym_results - np_results)} ({sy_expr})')
+                                print(f'Different results in evaluation: {sum(sym_results_raw - np_results_raw)} sy-expr: ({sy_expr})')
 
                             fitness = sym_fitness
                             self.lut_tree_infos[tree_id]['fitness-sympy'] = sym_fitness
@@ -3147,7 +3147,7 @@ def eval_predict_sympyBatch(sy_expr: sympy.Basic, df: pd.DataFrame, symbol_list)
     symbol_list_str = [str(s) for s in symbol_list]
 
     # Required functions for lambdify (poor native handling ofdimensionslity, ...)
-    sy_np_handling = {'Abs': Abs.np_fun, 'Round_Dummy': Round_Dummy.np_round_dummy,
+    sy_np_handling = {'Abs': Abs.np_fun, 'RoundDummy': RoundDummy.np_round_dummy,
                  'Min': Min.np_fun, 'Max': Max.np_fun}
     func = sympy.lambdify(symbol_list, sy_expr, modules=[sy_np_handling, 'numpy'])
 
@@ -3265,9 +3265,9 @@ if __name__ == '__main__':
                 xtype_childs = c.xtype[0]
                 inputs_sy = [d.get(x)() for x in xtype_childs]
             inputs_np = np.array([[x] for x in inputs_sy])
-            symfun = c.symfun
+            symf = c.symfun
             np_fun = c.np_fun
-            res_sy = symfun(*inputs_sy)  # symfun(*inputs_sy), np_fun(*inputs_np)
+            res_sy = symf(*inputs_sy)  # symfun(*inputs_sy), np_fun(*inputs_np)
             res_np = np_fun(*inputs_np)
             res_sy = xtype_me(res_sy)
             res_np = xtype_me(res_np)
@@ -3317,9 +3317,9 @@ if __name__ == '__main__':
     print(t.get_sympy_expr())
 
 
-print(Round_Dummy(sympy.Float(-0.1)))       # sollte -0
-print(Round_Dummy(sympy.Float(0.49)))       # sollte 0
-print(Round_Dummy(sympy.Symbol('x') + 1.13))  # sollte eine Zahl liefern, wenn x ersetzt wird
+print(RoundDummy(sympy.Float(-0.1)))       # sollte -0
+print(RoundDummy(sympy.Float(0.49)))       # sollte 0
+print(RoundDummy(sympy.Symbol('x') + 1.13))  # sollte eine Zahl liefern, wenn x ersetzt wird
 
 # sympy problems:
 #     # this may make the expression bigger??

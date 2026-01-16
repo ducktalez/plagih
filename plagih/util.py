@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 PRINT_DUMMY = 'wwaaagggiiifffpp'  # noqa: dummy for print-policy wwwwaaaggggggiiifff
-DEBUG_DUMMY = True  # noqa: dummy for debug-policy
+DEBUG_DUMMY = False  # noqa: dummy for debug-policy
 FLOAT_PRECISION = 3
 PLOTS_INTERVAL = 1
 BACKUP_INTERVAL = 10

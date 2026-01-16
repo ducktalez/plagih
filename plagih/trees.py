@@ -2886,6 +2886,13 @@ class ExplainableGP:
         plot_performance(self.monitor_df, self.rootdir / 'monitoring.png')
         plot_paretofront(self.paretofront, self.rootdir, self.evolve.nodes_max)
 
+        # Visualize all Paretofront trees in a combined image
+        try:
+            from tests.visualize_trees import visualize_paretofront
+            visualize_paretofront(self.paretofront, filename="paretofront_trees", output_dir=self.rootdir)
+        except ImportError:
+            pass  # Visualization module not available
+
         # Create numbered histograms for each generation up to 20 with fixed scaling
         if self.gen_id <= 20:
             gen_filename = f'monitoring_parsimony_histogram_{self.gen_id:03d}.png'

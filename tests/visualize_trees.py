@@ -383,6 +383,274 @@ def visualize_multiple_trees(
     return paths
 
 
+def visualize_paretofront(
+    paretofront: list,
+    filename: str = "paretofront_trees",
+    output_dir: Optional[str] = None,
+    figsize_per_tree: tuple = (5, 4),
+    dpi: int = 150,
+    max_cols: int = 4,
+    save_individual: bool = True,
+) -> str:
+    """
+    Visualize all Paretofront candidates in a single combined image.
+
+    Args:
+        paretofront: List of Candidate objects from the Paretofront
+        filename: Output filename (without extension)
+        output_dir: Directory for output (default: tree_output/)
+        figsize_per_tree: Size (width, height) for each individual tree subplot
+        dpi: Resolution of the output image
+        max_cols: Maximum number of columns in the grid
+        save_individual: If True, also save each tree as individual image in paretoCandidates/
+
+    Returns:
+        Path to the generated image file
+    """
+    if not paretofront:
+        print("Paretofront is empty, nothing to visualize.")
+        return ""
+
+    # Setup output directory
+    if output_dir is None:
+        output_dir = Path(__file__).parent.parent / "tree_output"
+    else:
+        output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Sort paretofront by parsimony for consistent display
+    sorted_front = sorted(paretofront, key=lambda c: (c.get_parsim(), c.get_fitness()))
+
+    # Save individual images if requested
+    if save_individual:
+        individual_dir = output_dir / "paretoCandidates"
+        individual_dir.mkdir(parents=True, exist_ok=True)
+
+        for idx, candidate in enumerate(sorted_front):
+            tree = candidate.get_evotree()
+            parsim = candidate.get_parsim()
+            fitness = candidate.get_fitness()
+            individual_filename = f"pareto_{idx+1:03d}_P{parsim:.0f}_F{fitness:.4g}"
+            _visualize_single_tree_to_file(
+                tree, individual_filename, individual_dir,
+                title=f"P={parsim:.0f}, F={fitness:.4g}",
+                dpi=dpi
+            )
+        print(f"Individual Paretofront trees saved to: {individual_dir}")
+
+    # Calculate grid layout
+    n_trees = len(paretofront)
+    n_cols = min(n_trees, max_cols)
+    n_rows = (n_trees + n_cols - 1) // n_cols  # Ceiling division
+
+    # Calculate dynamic figure size based on tree complexity
+    max_depth = max(_get_tree_depth(c.get_evotree()) for c in sorted_front)
+    max_width = max(_get_tree_width(c.get_evotree()) for c in sorted_front)
+
+    # Scale subplot size based on tree complexity
+    width_scale = max(1.0, max_width / 4)
+    height_scale = max(1.0, max_depth / 3)
+
+    fig_width = figsize_per_tree[0] * n_cols * width_scale
+    fig_height = figsize_per_tree[1] * n_rows * height_scale
+
+    # Ensure minimum size
+    fig_width = max(fig_width, 8)
+    fig_height = max(fig_height, 6)
+
+    # Create figure with subplots
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(fig_width, fig_height))
+
+    # Ensure axes is always 2D array
+    if n_trees == 1:
+        axes = np.array([[axes]])
+    elif n_rows == 1:
+        axes = axes.reshape(1, -1)
+    elif n_cols == 1:
+        axes = axes.reshape(-1, 1)
+
+    for idx, candidate in enumerate(sorted_front):
+        row = idx // n_cols
+        col = idx % n_cols
+        ax = axes[row, col]
+
+        # Get tree from candidate
+        tree = candidate.get_evotree()
+
+        # Compute layout for this tree
+        positions, labels, colors, edges = _compute_tree_layout(tree)
+
+        # Calculate node size based on tree complexity
+        tree_width = _get_tree_width(tree)
+        node_size = max(0.3, min(0.5, 2.0 / max(tree_width, 1)))
+
+        # Draw edges
+        for parent_id, child_id in edges:
+            x1, y1 = positions[parent_id]
+            x2, y2 = positions[child_id]
+            ax.plot([x1, x2], [y1, y2], '-', linewidth=1.2, zorder=1, color='#666666')
+
+        # Draw nodes
+        for node_id, (x, y) in positions.items():
+            color = colors[node_id]
+            label = labels[node_id]
+
+            # Adjust node size based on label length
+            label_width = max(node_size, len(label) * 0.08)
+
+            circle = mpatches.FancyBboxPatch(
+                (x - label_width/2, y - node_size/4),
+                label_width, node_size/2,
+                boxstyle=mpatches.BoxStyle("Round", pad=0.02),
+                facecolor=color,
+                edgecolor='#333333',
+                linewidth=1.0,
+                zorder=2
+            )
+            ax.add_patch(circle)
+
+            # Adjust font size based on label length
+            fontsize = max(6, min(9, 72 / max(len(label), 1)))
+            ax.text(x, y, label, ha='center', va='center', fontsize=fontsize,
+                    fontweight='bold', zorder=3)
+
+        # Adjust view with proper margins
+        if positions:
+            xs = [p[0] for p in positions.values()]
+            ys = [p[1] for p in positions.values()]
+            margin_x = max(0.5, (max(xs) - min(xs)) * 0.1)
+            margin_y = max(0.5, (max(ys) - min(ys)) * 0.1)
+            ax.set_xlim(min(xs) - margin_x, max(xs) + margin_x)
+            ax.set_ylim(min(ys) - margin_y, max(ys) + margin_y)
+
+        ax.set_aspect('equal')
+        ax.axis('off')
+
+        # Add title with parsimony and fitness
+        parsim = candidate.get_parsim()
+        fitness = candidate.get_fitness()
+        ax.set_title(f"P={parsim:.0f}, F={fitness:.4g}", fontsize=10, fontweight='bold')
+
+    # Hide unused subplots
+    for idx in range(n_trees, n_rows * n_cols):
+        row = idx // n_cols
+        col = idx % n_cols
+        axes[row, col].axis('off')
+
+    plt.suptitle(f"Paretofront ({n_trees} candidates)", fontsize=14, fontweight='bold')
+    plt.tight_layout()
+
+    # Save
+    output_path = output_dir / f"{filename}.png"
+    plt.savefig(output_path, dpi=dpi, bbox_inches='tight', facecolor='white')
+    plt.close(fig)
+
+    print(f"Paretofront visualization saved to: {output_path}")
+    return str(output_path)
+
+
+def _get_tree_depth(node: Node) -> int:
+    """Calculate the depth of a tree."""
+    if node.is_term():
+        return 1
+    children = node.get_childs()
+    if not children:
+        return 1
+    return 1 + max(_get_tree_depth(c) for c in children)
+
+
+def _get_tree_width(node: Node) -> int:
+    """Calculate the width (number of leaves) of a tree."""
+    if node.is_term():
+        return 1
+    children = node.get_childs()
+    if not children:
+        return 1
+    return sum(_get_tree_width(c) for c in children)
+
+
+def _visualize_single_tree_to_file(
+    tree: Node,
+    filename: str,
+    output_dir: Path,
+    title: str = "",
+    figsize: tuple = (8, 6),
+    dpi: int = 150,
+) -> str:
+    """
+    Visualize a single tree and save to file with dynamic sizing.
+    """
+    # Calculate dynamic figure size based on tree complexity
+    depth = _get_tree_depth(tree)
+    width = _get_tree_width(tree)
+
+    fig_width = max(figsize[0], width * 1.2)
+    fig_height = max(figsize[1], depth * 1.5)
+
+    # Create figure
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+
+    # Compute layout
+    positions, labels, colors, edges = _compute_tree_layout(tree)
+
+    # Calculate node size based on tree complexity
+    node_size = max(0.3, min(0.5, 3.0 / max(width, 1)))
+
+    # Draw edges
+    for parent_id, child_id in edges:
+        x1, y1 = positions[parent_id]
+        x2, y2 = positions[child_id]
+        ax.plot([x1, x2], [y1, y2], '-', linewidth=1.5, zorder=1, color='#666666')
+
+    # Draw nodes
+    for node_id, (x, y) in positions.items():
+        color = colors[node_id]
+        label = labels[node_id]
+
+        # Adjust node size based on label length
+        label_width = max(node_size, len(label) * 0.1)
+
+        circle = mpatches.FancyBboxPatch(
+            (x - label_width/2, y - node_size/4),
+            label_width, node_size/2,
+            boxstyle=mpatches.BoxStyle("Round", pad=0.02),
+            facecolor=color,
+            edgecolor='#333333',
+            linewidth=1.5,
+            zorder=2
+        )
+        ax.add_patch(circle)
+
+        # Adjust font size based on label length
+        fontsize = max(7, min(11, 88 / max(len(label), 1)))
+        ax.text(x, y, label, ha='center', va='center', fontsize=fontsize,
+                fontweight='bold', zorder=3)
+
+    # Adjust view
+    if positions:
+        xs = [p[0] for p in positions.values()]
+        ys = [p[1] for p in positions.values()]
+        margin_x = max(0.5, (max(xs) - min(xs)) * 0.15)
+        margin_y = max(0.5, (max(ys) - min(ys)) * 0.15)
+        ax.set_xlim(min(xs) - margin_x, max(xs) + margin_x)
+        ax.set_ylim(min(ys) - margin_y, max(ys) + margin_y)
+
+    ax.set_aspect('equal')
+    ax.axis('off')
+
+    if title:
+        ax.set_title(title, fontsize=12, fontweight='bold')
+
+    plt.tight_layout()
+
+    # Save
+    output_path = output_dir / f"{filename}.png"
+    plt.savefig(output_path, dpi=dpi, bbox_inches='tight', facecolor='white')
+    plt.close(fig)
+
+    return str(output_path)
+
+
 # ============================================================================
 # Test / Demo
 # ============================================================================

@@ -333,7 +333,7 @@ class Node(ABC):
                 except TypeError:
                     v = float(sympy.sympify(val).evalf())
                 except Exception:
-                    v = float(sympy.sympify(val).evalf())
+                    raise CuriosityError
                 s = f"{v}"
                 if cut_terms:
                     s = remove_trailing_zeroes(s)
@@ -1016,14 +1016,14 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain) -> Node:
 
         elif isinstance(s_expr, sympy.Piecewise):
             # "Chained_VERSION" version is handled before
-            reversed_pairs = list(s_expr.args[::-1])  # tuples to list, reversed: tuple must be nested the deepest
-            reversed_pairs = [
-                [sympy_to_tree(xx, allow_chain=allow_chain)
-                 for xx in list(i)] for i in reversed_pairs
-            ]
-            otherwise = reversed_pairs[0][0]  # the last "True" condition
-            for pairs in reversed_pairs[1:]:
-                otherwise = Ifte(pairs[1], pairs[0], otherwise)
+            # Baue Piecewise von hinten nach vorne auf (letztes Paar wird innerster Else-Zweig)
+            pairs = [(sympy_to_tree(cond, allow_chain=allow_chain),
+                      sympy_to_tree(ceex, allow_chain=allow_chain))
+                     for ceex, cond in s_expr.args]
+
+            otherwise = pairs[-1][1]  # Last pair: (True, expr) → expr is else
+            for cond, expre in reversed(pairs[:-1]):
+                otherwise = Ifte(cond, expre, otherwise)
             return otherwise
 
         elif isinstance(s_expr, tuple(d_sym2node)):
@@ -1057,9 +1057,6 @@ def tree_simplification(tree: Node, allow_chain) -> Node:
     #     print(f'okke: {expr_sym} // {expr_sym2}')
     # expr_sym3  = tree.get_sympy_expr(simplimore=True)
     tree = sympy_to_tree(expr_sym, allow_chain=allow_chain)
-    # if not allow_chain:
-    # print(f'Copy : {len(tree_copy)}\t{tree_copy}')
-    # print(f'Before simplification: {len(tree)}\t{tree}')
     for _ in range(10):
         tree_history.append(copy.deepcopy(tree))
         tree.tree_node_grouping(tolerance=0)
@@ -1184,11 +1181,11 @@ class BaseOperator(NodeWithChilds):
         children = self.get_np_child_now(df, *args)
         try:
             result = self.np_fun(*children)
-        except TypeError as todo:
-            if 'loop of ufunc does not support argument' in str(todo):
+        except TypeError as sfeh:
+            if 'loop of ufunc does not support argument' in str(sfeh):
                 # TypeError: loop of ufunc does not support argument 0 of type int which has no callable sin method
                 print('ASDASDASDASD TODO')
-                raise TypeError(ex)
+            raise TypeError(ex)
 
         return result
 
@@ -1254,6 +1251,7 @@ class ChainableOp:
     sympy-equivalent: class LatticeOp
     """
     xtype_chain = None
+    xtype_input = None
 
 
 class MathOperator(BaseOperator):
@@ -2518,7 +2516,7 @@ class ExplainableGP:
         self.evolve = evolve
         self.gen_end = gen_end
         self.pop_max_size = pop_max_size
-        self.gen_id = 0
+        self.gen_id: int = 0
         self.eval_autocast = eval_autocast
         self.eval_error_metric = eval_error_metric
         self.allow_chain = allow_chain
@@ -2930,7 +2928,7 @@ class ExplainableGP:
     def analyze_generation(self):
         gen_time = time.perf_counter() - self.time_genstart
         tmp_dict = pop_analyze(self.pop_genepool, gen_time, self.gens_since_last_pareto, self.lut_symex_fitness)
-        self.monitor_df.loc[self.gen_id] = tmp_dict
+        self.monitor_df.loc[self.gen_id] = pd.Series(tmp_dict)
         printpl('gg',
                 f"Created {len(self.pop_genepool)}/{self.gen_end} ({tmp_dict['pop_unique']} unique) in generation {self.gen_id}. "
                 f"Trees in LUT: {len(self.lut_symex_fitness)} Generation took {gen_time:4.2f}s")
@@ -3100,7 +3098,7 @@ def plot_parsimony_histogram(population, path_out: Path, max_population: int, ma
         plt.close('all')
 
 
-def pop_analyze(popul, gen_time, gens_since_last_pareto, lut_symex_fitness):
+def pop_analyze(popul, gen_time, gens_since_last_pareto, lut_symex_fitness) -> dict:
     """Analysing the population (in each generation)
     - amount of trees
     - fittest tree
@@ -3256,40 +3254,40 @@ if __name__ == '__main__':
         return sub
 
     ndclasses = all_typus_subclasses()
-    for c in ndclasses:
-        if c in [ExprCondPair_Dummy]:
+    for ncls in ndclasses:
+        if ncls in [ExprCondPair_Dummy]:
             continue
 
-        if c in [DivFraction]:
+        if ncls in [DivFraction]:
             pass
 
         d = {float: lambda: np.random.random(),
              bool: lambda: np.random.choice([True, False])}
         try:
-            xtype_me = c.xtype[1]
-            if issubclass(c, ChainableOp):
-                xtype_childs = c.xtype_input
+            xtype_me = ncls.xtype[1]
+            if issubclass(ncls, ChainableOp):
+                xtype_childs = ncls.xtype_input
                 inputs_sy = [d.get(xtype_childs)() for _ in range(4)]
             else:
-                xtype_childs = c.xtype[0]
+                xtype_childs = ncls.xtype[0]
                 inputs_sy = [d.get(x)() for x in xtype_childs]
             inputs_np = np.array([[x] for x in inputs_sy])
-            symf = c.symfun
-            np_fun = c.np_fun
+            symf = ncls.symfun
+            np_fun = ncls.np_fun
             res_sy = symf(*inputs_sy)  # symfun(*inputs_sy), np_fun(*inputs_np)
             res_np = np_fun(*inputs_np)
             res_sy = xtype_me(res_sy)
             res_np = xtype_me(res_np)
             if abs(res_sy-res_np) < 0.0001:
-                print(c.__name__, res_sy, res_np)
+                print(ncls.__name__, res_sy, res_np)
             else:
-                print('FAILED!', c.__name__, res_sy, res_np, (res_sy-res_np), inputs_sy)
+                print('FAILED!', ncls.__name__, res_sy, res_np, (res_sy - res_np), inputs_sy)
                 pass
         except Exception as ex:
-            if c in [ExprCondPair_Dummy, Piecewise, Boolean, Number, Symbol]:
+            if ncls in [ExprCondPair_Dummy, Piecewise, Boolean, Number, Symbol]:
                 pass
             else:
-                raise Exception(c.__name__, 'Exception!', ex)
+                raise Exception(ncls.__name__, 'Exception!', ex)
     # Example pandas DataFrame
     data = {
         'cartPos': [0, np.pi / 4, np.pi / 2, np.pi],
@@ -3303,27 +3301,12 @@ if __name__ == '__main__':
     tr = PowRounded(Number(12), Symbol(sympy.S('cartPos')))
     ex = 'Mul(12, cartPos)'
     t = PowRounded(Number(12), Symbol(sympy.Symbol('cartPos')))
-    # sy = sympy.sympify(ex, locals=locals_dict)
-    # t = sympy_to_tree(sy, allow_chain=True)
-    t = Mul(
-        Number(289),
-        Symbol(sympy.Symbol('cartVel')),
-        Add(
-            Symbol(sympy.Symbol('cartPos')),
-            Mul(
-                Number(2.27),
-                Symbol(sympy.Symbol('cartVel'))
-            )
-        ),
-        Sin(
-            PowRounded(
-                Number(12),
-                Symbol(sympy.Symbol('cartPos'))
-            )
-        )
-    )
-    print(t)
-    print(t.get_sympy_expr())
+    t2 = Mul(Number(289), Symbol(sympy.Symbol('cartVel')),
+            Add( Symbol(sympy.Symbol('cartPos')),
+                 Mul(Number(2.27), Symbol(sympy.Symbol('cartVel')))),
+            Sin(PowRounded(Number(12), Symbol(sympy.Symbol('cartPos')))))
+    print(t2)
+    print(t2.get_sympy_expr())
 
 
 print(RoundDummy(sympy.Float(-0.1)))       # sollte -0

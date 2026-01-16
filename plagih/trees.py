@@ -497,6 +497,13 @@ class Node(ABC):
 
             _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
             # -> AttributeError: 'Xor' object has no attribute '_eval_as_set'
+            # -> TypeError: Invalid comparison of non-real asin(15)
+            try:
+                _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
+                # -> AttributeError: 'Xor' object has no attribute '_eval_as_set'
+                # -> TypeError: Invalid comparison of non-real asin(15)
+            except TypeError as imex:
+                raise SympyImaginaryNumber(imex)
 
         else:
             raise NotImplementedError
@@ -2888,10 +2895,10 @@ class ExplainableGP:
 
         # Visualize all Paretofront trees in a combined image
         try:
-            from tests.visualize_trees import visualize_paretofront
+            from visualization.visualize_trees import visualize_paretofront
             visualize_paretofront(self.paretofront, filename="paretofront_trees", output_dir=self.rootdir)
         except ImportError:
-            pass  # Visualization module not available
+            raise CuriosityError  # Visualization module not available
 
         # Create numbered histograms for each generation up to 20 with fixed scaling
         if self.gen_id <= 20:

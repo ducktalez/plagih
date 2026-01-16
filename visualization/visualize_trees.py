@@ -386,7 +386,7 @@ def visualize_multiple_trees(
 def visualize_paretofront(
     paretofront: list,
     filename: str = "paretofront_trees",
-    output_dir: Optional[str] = None,
+    output_dir: Optional[Path] = None,
     figsize_per_tree: tuple = (5, 4),
     dpi: int = 150,
     max_cols: int = 4,

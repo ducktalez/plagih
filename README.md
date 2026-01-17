@@ -6,7 +6,6 @@
 ## Ablage/Todos
 
 - type-hints!!
-- display pareto candidates as png trees
 - self.evolve.origin_tree
 - simplification
 - introduce breath-first-representation!

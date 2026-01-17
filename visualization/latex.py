@@ -1,7 +1,6 @@
 """
 Visualising Trees with latex.
 """
-from plagih.sympy_extras import plagih_sympify
 from plagih.trees import *
 import re
 

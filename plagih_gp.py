@@ -91,8 +91,8 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False, try_load_backu
     #             sympy.Or: Or, sympy.ITE: ITE, sympy.StrictLessThan: Lt, sympy.LessThan: Le, sympy.Gt: Gt,
     #             sympy.GreaterThan: Ge}
 
-    evolve = Evolution(symbol_list=['cartVel', 'cartPos'], operators=operator_dict, depth_max=9, nodes_max=50, allow_chain=chained_on)
-    gp = ExplainableGP(evolve, df_train, rootdir=rootdir / dir_name, pop_max_size=50, gen_end=20, eval_autocast=eval_autocast, allow_chain=chained_on, eval_error_metric=eval_error_metric)
+    evolve = Evolution(symbol_list=['cartVel', 'cartPos'], operators=operator_dict, depth_max=9, nodes_max=50)
+    gp = ExplainableGP(evolve, df_train, rootdir=rootdir / dir_name, pop_max_size=50, gen_end=20, eval_autocast=eval_autocast, eval_error_metric=eval_error_metric)
     try:
         if try_load_backup:
             gp.backup_load()
@@ -164,7 +164,7 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False, try_load_backu
             @gp.create_trees(rate=0.1)
             def filter_optimize():
                 tree = selection_tournament(gp.pop_genepool, n=3)
-                return gp.evolve.evolve_mutate_filter(tree, allow_chain=chained_on)
+                return gp.evolve.evolve_mutate_filter(tree)
 
             @gp.create_trees(rate=0.1)
             def rand2b():

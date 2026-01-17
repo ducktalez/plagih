@@ -541,7 +541,7 @@ class Node(ABC):
         return issubclass(type(self), Number)
 
     def str_as_list(self, cut_terms: bool = False) -> str:
-        """Breath-first representation, i guess?: [Add, [Sin, [5]], [vel]]
+        """Breath-first representation, I guess?: [Add, [Sin, [5]], [vel]]
         Useful to compare trees with prints"""
         typus_str = self.showme
 
@@ -2262,7 +2262,7 @@ class Evolution:
 
         self.allow_a_chain = allow_chain
 
-    def evolve_prune_tree(self, tree: Node, allow_chain: bool) -> Node:
+    def evolve_prune_tree(self, tree: Node) -> Node:
         """
         prune depth
         -> prune everything below a certain level... (should not happen in the first place)
@@ -2354,7 +2354,7 @@ class Evolution:
 
         return node
 
-    def evolve_mutate_filter(self, tree: Node, allow_chain: bool) -> Node:
+    def evolve_mutate_filter(self, tree: Node) -> Node:
         """Mutates a number of float terminal of a fintree
         - filter point/branch/all, branch can also affect a point only as well as all nodes
         - filter observations?
@@ -2364,7 +2364,7 @@ class Evolution:
         _nd = random.choice(tree.list_mutable_nodes())
         _nd.evolve_mutate_filter_gauss()
 
-        return tree
+        return _nd
 
     def evolve_mutate_point(self, tree: Node) -> Node:
         """Mutate a single mutable point in any Tree."""
@@ -2455,8 +2455,8 @@ class Evolution:
         b_nd.set_new_node(cpy)
 
         # only required, if pruning is not done in finalize_tree()
-        aa = self.evolve_prune_tree(tree=aa, allow_chain=True)
-        bb = self.evolve_prune_tree(tree=bb, allow_chain=True)
+        aa = self.evolve_prune_tree(tree=aa)
+        bb = self.evolve_prune_tree(tree=bb)
 
         return aa, bb
 
@@ -2519,7 +2519,7 @@ class ExplainableGP:
     """
 
     """
-    def __init__(self, evolve: Evolution, df_train, rootdir: Path, pop_max_size = 100, gen_end=100, allow_chain=False, eval_autocast=np.array, eval_error_metric=None):
+    def __init__(self, evolve: Evolution, df_train, rootdir: Path, pop_max_size = 100, gen_end=100, eval_autocast=np.array, allow_chain=False, eval_error_metric=None):
         self.time_start = time.perf_counter()
 
         self.rootdir = rootdir
@@ -2533,6 +2533,9 @@ class ExplainableGP:
         self.gen_id: int = 0
         self.eval_autocast = eval_autocast
         self.eval_error_metric = eval_error_metric
+
+        # sfeh only used implicitly ( different evolution for chain vs. non-chain)
+        # chained-versions are only created after sympy. no evolution atm
         self.allow_chain = allow_chain
 
         print(f'\n'
@@ -2622,7 +2625,7 @@ class ExplainableGP:
 
     def end_generation(self):
         # sfeh:open end generation in every generation
-        if(self.run_update_paretofront(self.pop_next)):
+        if self.run_update_paretofront(self.pop_next):
             self.gens_since_last_pareto = 0
 
         self.pop_genepool = self.pop_next[:]
@@ -2758,7 +2761,7 @@ class ExplainableGP:
 
         # Make this tree usable for evaluation
         evotree.force_input_node(self.evolve)
-        evotree = self.evolve.evolve_prune_tree(evotree, self.allow_chain)
+        evotree = self.evolve.evolve_prune_tree(evotree)
         evotree.repair_depth()
 
         tree_id = evotree.get_lut_id()
@@ -2801,7 +2804,6 @@ class ExplainableGP:
                         warnings.simplefilter("ignore", RuntimeWarning)  # sfeh:discuss
                         np_results_raw = evotree.eval_predict_numpy_now(self.df_train)  # exception? -> check np.isnan(sym_results).any()
                         np_results = self.eval_autocast(np_results_raw)
-                        # np_fitness = np.sqrt(np.mean((np_results - true_values) ** 2))
                         np_fitness = self.eval_error_metric(np_results, true_values)
                         np_fitness = round(np_fitness, FLOAT_PRECISION)
 
@@ -2830,7 +2832,6 @@ class ExplainableGP:
                             sym_results = self.eval_autocast(sym_results_raw)
                             sym_fitness = self.eval_error_metric(sym_results, self.df_train['action'])
                             sym_fitness = round(sym_fitness, FLOAT_PRECISION)
-                            # sym_results = sym_results.to_numpy()
 
                             perf_t[3] = time.perf_counter()
 
@@ -2886,19 +2887,14 @@ class ExplainableGP:
         plot_performance(self.monitor_df, self.rootdir / 'monitoring.png')
         plot_paretofront(self.paretofront, self.rootdir, self.evolve.nodes_max)
 
-        # Visualize all Paretofront trees in a combined image
-        try:
-            from visualization.visualize_trees import visualize_paretofront
-            visualize_paretofront(self.paretofront, filename="paretofront_trees", output_dir=self.rootdir)
-        except ImportError:
-            raise CuriosityError  # Visualization module not available
+        from visualization.visualize_trees import visualize_paretofront
+        visualize_paretofront(self.paretofront, filename="paretofront_trees", output_dir=self.rootdir)
 
-        # Create numbered histograms for each generation up to 20 with fixed scaling
         if self.gen_id <= 20:
             gen_filename = f'monitoring_parsimony_histogram_{self.gen_id:03d}.png'
             # Use pop_size as max_population and nodes_max as max_parsimony for fixed scaling
             plot_parsimony_histogram(self.pop_genepool, self.rootdir / gen_filename,
-                                     max_population=self.pop_max_size,  # rename pl0x
+                                     max_population=self.pop_max_size,
                                      max_parsimony=self.evolve.nodes_max)
 
     def backup_save(self, opt_path_backup=None):
@@ -3009,9 +3005,6 @@ def plot_performance(monitor_df, path_monitoring: Path):
                        marker='')  # linestyle='None'
         axs0_twin.tick_params(axis='y', labelcolor='tab:gray')
         axs0_twin.set_ylim(ymin=0, ymax=max(monitor_df['gens_since_last_pareto'].max() or 1, 50))
-        # axs0_twin.set_ylim(ymin=0, ymax=max(monitor_df['gens_since_last_pareto'].notnull().max() or 1, 50))
-        # # print(monitor_df['gens_since_last_pareto'].notnull().max())
-
         axs0_twin.legend(loc='lower right')
         axs1 = axs[1]
         axs1.plot(monitor_df['parsim_avg'], label='Complexity (average)')

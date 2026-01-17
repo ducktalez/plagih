@@ -5,10 +5,7 @@
 
 ## Ablage/Todos
 
-- type-hints!!
 - self.evolve.origin_tree
-- simplification
-- introduce breath-first-representation!
 - use logging
 - evaluation alternatives
   - tf-fun in every class
@@ -79,7 +76,6 @@
   print(sympy.simplify('a <= Abs(a)', locals={'a': a}))  # -> a <= Abs(a), should be True  # noqa
   ```
 - Inputrange, outputrange, derivable, goalrequirement, iscyclic
-- operators -> always evalf() inside as default?
 - ``sympy.piecewise_exclusive()``
 - Abs only with simplify
   - sympy.S('(Abs(a)*Abs(b))')
@@ -166,7 +162,7 @@ The following are bitches:
 - Usub-class (-x).I am not even sure, if should be an operator.
 - Round-class. There is a dummy-class, as that did not work on its own.
 - Min/Max class. Those specifically due to sympy.
-- 
+- ExprCondPair in Piecewise
 
 # Simplifications/representations
 
@@ -222,17 +218,13 @@ Should we see the trees from top down (all levels)?
 
 ### Semi-interesting
 
-- introduce integer
 - trees with one node just very rarely?
 - https://deap.readthedocs.io/en/master/api/tools.html
 - continuous evolution (with mp), select from 3 and also replace 3
 - Move all benchmarks, experiments, etc., to another project
 
 ## Always check for notes in code
-- xxx
-- sfeh
-- asd
-- delete
+- sfeh/asd/delete(me)/debug(me)
 - debug this / debug me
 - check, if every sympy-to-tree reconstruction works
 

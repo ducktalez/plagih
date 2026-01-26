@@ -3,13 +3,55 @@
 - Fast
 - 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
 
+
 ## Ablage/Todos
 
+- Tests: Unit-tests, etc.
+- better logging
+- better docstrings
+- better comments
+- better structure
 - self.evolve.origin_tree
 - use logging
 - evaluation alternatives
   - tf-fun in every class
   - regular python code implementation
+
+
+## Copilot-Anfrage für Baum-Merging-Strategien
+Ich will alle Bäume einer Population in einen Baum zusammen mergen. Es sollen dabei mehrere generelle Ziele verfolgt werden, die jeweils unterschiedliche merge-strategien erfordern.
+Die Ideen sind z. B:
+- Feed-forward-berechnung aller Teilergebnisse einer Population (wie in einem neuronalen Netz)
+- Visuelle Übersicht über den mathematischen Raum, die eine Population abdeckt
+- Sparsame Berechnung der gesamten Population in einem Graphen. Kein Ausdruck muss "doppelt" berechnet werden.
+- Analyse und Rekombination von Genomen: Welche Knoten-kanten/Genome werden am häufigsten benutzt? Wo sind die besten Verbesserungsmöglichkeiten?
+
+Ich gehe davon aus, dass in jedem Fall eine Funktion in Klasse Node() den Bauminhalt passend für die merge-strategie der Gesamtpopulation vorbereitet. Leider kenne ich die Strategien für die Tree Edit Distance nicht.
+
+Strategie für Feed-forward-berechnung:
+- Jeder Baum gibt von unten nach oben (terminal zu root) eine Liste seiner Ausdrücke. Mit jedem Schritt nach oben werden die auf dieser Ebene vorhandenen Ausdrücke gesammelt, mit sympy vereinheitlicht und in einer Liste zurückgegeben. Beispiel: (a+b*c) -> [[a, b], [b*c], [a+b*c]]
+- aus der Population werden nun alle uniquen Einträge pro Ebene mit ihren Elternknoten verbunden. Es ergibt sich ein Netz, welches alle Bäume einer Population beinhaltet
+- Optional: Eingetragene Kanten-verbindungen analysieren
+
+Es gibt des weiteren noch folgende Überlegungen. Bitte übertrage sie als Kommentar und bewerte/nutze sie nach deiner Empfindung.
+
+Folgende tree-representationen könnten hilfreich sein:
+- "Strukturtreu mit sympy": (a+(b+c)) -> [[a, b, c], [(b+c)], [(a+b+c)]]
+- "Unified mit Sympy": (c+(b+a)+0) -> [[a, b, c, 0], [a+b+c+0]]
+- ...
+
+Sympy: unification und simplification
+- sympy.simplify() am Anfang auszuführen könnte helfen - wie der kleinstmöglichste Baum (oder effizientester/am besten gekapseltster) generiert werden kann ist unklar. Vermutlich ist auch ein chained-tree schon gut geeignet.
+- Denkbare sympy-strukturierung für den Baum wäre Faktorisierung. Eine sympy-edit distanz gibt es soweit ich weiß nicht. Ist es vielleicht sinnvoll, Knoten nicht zu gruppieren?
+
+Überlegungen
+- Number-nodes könnten optional ohne Wert in den Baum aufgenommen werden. Es könnte auch eine Idee sein, Symbole ebenfalls zu ignorieren und Merge-baum nur mit den Operatoren erzeugen
+- chainable-Knoten (zB. Add/Mul/Max als Floor/Ceiling Funktion)) könnten zusammengefasst werden (Was bereits durch sympy gemacht werden würde.
+- Statt ebenen-basiert könnte man auch Alle Bäume nacheinander abarbeiten - ein Startbaum würde immer um die notwendigen Änderungen erweitert werden.
+ 
+
+Bitte notiere auf jeden Fall meine Komentare, bewerte sie oder füge sinnvolle Ideen hinzu.
+
 
 # Sub-tasks
 
@@ -18,9 +60,6 @@
 - gen_create_initial -> create random pop if pop empty? with leftovers?
 - tree -> evaluate nodes for best improvement 
 - population cluster/races
-- Make regular Function Classes Sympy Functions
-- replacing
-  - replace -1*x, coming from sympy functions
 - Tests for:
   - Auto-testruns: loop/reload through [random, origin, origin_fixed] [MC, IB]
   - TF-evaluation equals python-evaluation equals sympy evaluation
@@ -28,9 +67,12 @@
 - separate monitoring class
 - introduce NN in alpha-tree, at well-mutable nodes
 - evaluate one very large graph (TF?) containing the whole population
+  - from low to high  (terminal to root)
+    - list unique nodes/branches
+    - use outputs as inputs for next layer
+- Terminal-Mutation: Build tree with inputs, but only change terminals
 - use sympy.count_ops() to count operators
 - parallelisation
-- evolve-operatoren: werte runden, runden einbauen,
 - test-cases with notation, docstring
 - numba.pydata.org https://www.youtube.com/watch?v=x58W9A2lnQc
 - If no float-symbols found, return (1) true or (2) an operator? 

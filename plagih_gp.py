@@ -44,9 +44,9 @@ def demo_minimal():
 
     log_info("Starting minimal demo")
 
-    print("\n" + "="*60)
+    print(TEXT_NEWLINE)
     print("PLAGIH GP - Minimal Demo")
-    print("="*60 + "\n")
+    print(TEXT_NEWLINE)
 
     # -------------------------------------------------------------------------
     # STEP 1: Load data
@@ -116,8 +116,7 @@ def demo_minimal():
     # -------------------------------------------------------------------------
     print("Creating initial population...")
     gp.gen_create_initial()
-    print(f"  -> {len(gp.pop_genepool)} candidates created")
-    print(f"  -> Pareto front: {len(gp.paretofront)} non-dominated solutions\n")
+    print(f"  -> {len(gp.pop_genepool)} candidates created, {len(gp.paretofront)} non-dominated solutions")
 
     # -------------------------------------------------------------------------
     # STEP 6: Run evolution for a few generations
@@ -125,7 +124,7 @@ def demo_minimal():
     print("Running evolution...")
 
     for gen in range(3):
-        print(f"\n--- Generation {gp.gen_id} ---")
+        print(f"--- Generation {gp.gen_id} ---")
 
         # Strategy 1: Reproduction (copy good trees)
         @gp.create_trees(rate=0.2)
@@ -158,17 +157,15 @@ def demo_minimal():
         # End generation: update Pareto front, prepare for next
         gp.end_generation()
 
-        print(f"  Population: {len(gp.pop_genepool)}, Pareto front: {len(gp.paretofront)}")
+        printez("ggg", f"  Population: {len(gp.pop_genepool)}, Pareto front: {len(gp.paretofront)}")
 
     # -------------------------------------------------------------------------
     # STEP 7: Inspect results
     # -------------------------------------------------------------------------
-    print("\n" + "="*60)
-    print("RESULTS - Pareto Front (Trade-off: Fitness vs Complexity)")
-    print("="*60)
+    print(f"RESULTS - Pareto Front (Trade-off: Fitness vs Complexity)\n{TEXT_NEWLINE}")
 
     for i, candidate in enumerate(gp.paretofront[:5]):  # Show top 5
-        print(f"\n{i+1}. Complexity: {candidate.parsimony:2d} | Fitness: {candidate.fitness:.4f} | Expression: {candidate.tree.get_sympy_expr()}")
+        print(f"{i+1}. Complexity: {candidate.parsimony:2d} | Fitness: {candidate.fitness:.4f} | Expression: {candidate.tree.get_sympy_expr()}")
 
     if len(gp.paretofront) > 5:
         print(f"\n... and {len(gp.paretofront) - 5} more solutions")
@@ -179,9 +176,7 @@ def demo_minimal():
     gp.backup_save()
     gp.evoloop_monitoring_plots()
 
-    print(f"\n" + "="*60)
-    print(f"Demo complete! Results saved to: {output_dir}")
-    print("="*60 + "\n")
+    print(f"{TEXT_NEWLINE}\nDemo complete! Results saved to: {output_dir}\n{TEXT_NEWLINE}")
 
     return gp
 

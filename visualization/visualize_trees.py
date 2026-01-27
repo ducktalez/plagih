@@ -31,6 +31,7 @@ except ImportError:
 # Import tree structures
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
+from plagih.util import *
 from plagih.trees import (
     Node, Terminal, Number, Symbol, Boolean,
     BaseOperator, MathOperator, LogicOperator,
@@ -436,7 +437,7 @@ def visualize_paretofront(
                 title=f"P={parsim:.0f}, F={fitness:.4g}",
                 dpi=dpi
             )
-        print(f"Individual Paretofront trees saved to: {individual_dir}")
+        printez('ff', f"Individual Paretofront trees saved to: {individual_dir}")
 
     # Calculate grid layout
     n_trees = len(paretofront)

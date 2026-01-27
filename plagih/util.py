@@ -10,7 +10,9 @@ from typing import Optional
 import yaml
 from pathlib import Path
 
-PRINT_DUMMY = 'wwaaagggiiifffpp'  # noqa: dummy for print-policy wwwwaaaggggggiiifff
+PRINT_DUMMY = 'wwaaggiiffp'  # noqa: dummy for print-policy (w=warning, a=action, g=generation, i=info, f=file, p=performance)
+# print-all: 'wwwwaaaggggiiiifffpp'
+TEXT_NEWLINE = '============================================================'
 DEBUG_DUMMY = False  # noqa: dummy for debug-policy
 FLOAT_PRECISION = 3
 PLOTS_INTERVAL = 1
@@ -395,42 +397,8 @@ def printez(message_type, text):
     if message_type not in PRINT_DUMMY:
         return
 
-    # Try to use logging backend
-    try:
-        from plagih.logging_utils import logger
-
-        if 'i' in message_type:
-            txt = f'{BColors.CYAN}Info: {text}{BColors.RESET_COLOR}'
-            logger.info(text)
-        elif 'f' in message_type:
-            txt = f'Writing File: {text}{BColors.RESET_COLOR}{BColors.RESET_COLOR}'
-            logger.info(f"File: {text}")
-        elif 'a' in message_type:
-            txt = f'{BColors.GREEN}{text}{BColors.RESET_COLOR}'  # Paretofront:
-            logger.info(text)
-        elif 'w' in message_type:
-            print_warning(message_type, text)
-            return
-        else:
-            txt = text
-            logger.debug(text)
-
-        print(txt)
-    except ImportError:
-        # Fallback without logging
-        if 'i' in message_type:
-            txt = f'{BColors.CYAN}Info: {text}{BColors.RESET_COLOR}'
-        elif 'f' in message_type:
-            txt = f'Writing File: {text}{BColors.RESET_COLOR}{BColors.RESET_COLOR}'
-        elif 'a' in message_type:
-            txt = f'{BColors.GREEN}{text}{BColors.RESET_COLOR}'
-        elif 'w' in message_type:
-            print_warning(message_type, text)
-            return
-        else:
-            txt = text
-
-        print(txt)
+    # Use printpl for all message types (it handles logging and colors)
+    printpl(message_type, text)
 
 
 def yaml_load(path: Path):
@@ -461,13 +429,16 @@ class ColoredConsoleFormatter(logging.Formatter):
         if hasattr(record, 'print_type'):
             # Messages from printpl with explicit type
             msg_type = record.print_type
-            if msg_type == 'i':
+            if msg_type == 'i' or 'i' in msg_type:
                 return f'{BColors.CYAN}Info: {message}{BColors.RESET_COLOR}'
-            elif msg_type == 'f':
-                return f'Writing File: {message}'
-            elif msg_type == 'a':
+            elif 'f' in msg_type:
+                return f'{BColors.WHITE}Writing File: {message}{BColors.RESET_COLOR}'
+            elif 'a' in msg_type:
                 return f'{BColors.GREEN}{message}{BColors.RESET_COLOR}'
-            elif msg_type == 'w':
+            elif 'g' in msg_type:
+                # Generation info - use magenta for visibility
+                return f'{BColors.MAGENTA}[Gen] {message}{BColors.RESET_COLOR}'
+            elif 'w' in msg_type:
                 return f'{BColors.WARNING}Warning: {message}{BColors.RESET_COLOR}'
             else:
                 return message
@@ -537,19 +508,48 @@ def printpl(msg_type: str, message_str: str):
     Lightweight print function with logging backend.
 
     Instead of checking if you should print every time, this is done here.
-    Message types: 'i' (info), 'w' (warning), 'f' (file), 'a' (action/success).
+    Message types:
+        'i' (info - cyan),
+        'w' (warning - yellow),
+        'f' (file - no color),
+        'a' (action/success - green),
+        'g'/'gg' (generation info - magenta)
 
     Args:
-        msg_type: Message type indicator ('i', 'w', 'f', 'a').
+        msg_type: Message type indicator ('i', 'w', 'f', 'a', 'g', 'gg').
         message_str: The message to log/print.
     """
 
     if msg_type not in PRINT_DUMMY:
         return
 
-    # Map message types to log levels
-    level_map = {'i': logging.INFO, 'f': logging.INFO, 'a': logging.INFO, 'w': logging.WARNING}
-    level = level_map.get(msg_type, logging.INFO)
+    # Map message types to log levels - handle repeated characters
+    level_map = {
+        'i': logging.INFO,
+        'ii': logging.INFO,
+        'f': logging.INFO,
+        'ff': logging.INFO,
+        'fff': logging.INFO,
+        'a': logging.INFO,
+        'aa': logging.INFO,
+        'g': logging.INFO,
+        'gg': logging.INFO,
+        'ggg': logging.INFO,
+        'gggg': logging.INFO,
+        'w': logging.WARNING,
+        'ww': logging.WARNING,
+        'www': logging.WARNING,
+        'wwww': logging.WARNING,
+    }
+
+    # Fallback: if not in map, infer from first character
+    if msg_type not in level_map:
+        if 'w' in msg_type:
+            level = logging.WARNING
+        else:
+            level = logging.INFO
+    else:
+        level = level_map[msg_type]
 
     # Create a log record with print_type for colored formatting
     record = logging.LogRecord(

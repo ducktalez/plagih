@@ -6,17 +6,39 @@
 
 ## Ablage/Todos
 
-- Tests: Unit-tests, etc.
+- Anweisungen für Copilot (Instructions erstellen), am besten, sodass sie aich auch selbst notfalls erweitern.
 - better logging
-- better docstrings
-- better comments
+  - Logging (und user-feedback) wird momentan durch printpl() (und verwandte Funktionen) umgesetzt. 
+    Diese formatieren die Ausgaben schön (und teilweise komplex) und können verschiedene Level (info, warning, error) unterscheiden.
+    Mir wird immer wieder empfohlen, stattdessen das logging-modul zu verwenden. Ist das sinnvoll?
+    Ich habe auch in Betracht gezogen, Teile als log umzusetzen. Gibt es allgemein unterschiede zwischen log und print? Was würdest du machen?
+- lint/black/etc einbauen
+  - Empfohlene Tools: black, flake8, isort?
+  - Wie würdest du das einbauen?
+- pandas-Monitoring ersetzen?
+  - pandas-monitoring wird momentan verwendet, um die Daten zu analysieren und zu visualisieren.
+    Es ist aber nicht sehr flexibel und ich habe das Gefühl, dass es nicht optimal für meinen Anwendungsfall ist.
+    Ich möchte es durch eine eigene Lösung ersetzen, die besser auf meine Bedürfnisse zugeschnitten ist.
+    Hast du Vorschläge, wie ich das machen könnte?
 - better structure
+  - plagih_gp.py ist momentan das Hauptskript, welches den Ablauf steuert. Es ist aber sehr lang und unübersichtlich.
+    Ich möchte es in mehrere Dateien aufteilen, z.B.:
+    - main.py (Hauptablauf)
+    - trees.py (Baumstruktur und Operationen)
+    - evolution.py (Evolutionsprozess)
+    - evaluation.py (Evaluation der Bäume)
+    - visualization.py (Visualisierung der Bäume)
+    - utils.py (Hilfsfunktionen)
+  - Wie würdest du das strukturieren?
 - self.evolve.origin_tree
-- use logging
+- Schönerer Aufruf von ExplainableGP (nach deinem Vorschlag)
+- Dokumentation als .md/.pdf
+- Pseudo-Backpropagation durch Bäume
 - evaluation alternatives
   - tf-fun in every class
   - regular python code implementation
 
+# Copilot Aufgaben
 
 ## Copilot-Anfrage für Baum-Merging-Strategien
 Ich will alle Bäume einer Population in einen Baum zusammen mergen. Es sollen dabei mehrere generelle Ziele verfolgt werden, die jeweils unterschiedliche merge-strategien erfordern.
@@ -28,30 +50,50 @@ Die Ideen sind z. B:
 
 Ich gehe davon aus, dass in jedem Fall eine Funktion in Klasse Node() den Bauminhalt passend für die merge-strategie der Gesamtpopulation vorbereitet. Leider kenne ich die Strategien für die Tree Edit Distance nicht.
 
-Strategie für Feed-forward-berechnung:
-- Jeder Baum gibt von unten nach oben (terminal zu root) eine Liste seiner Ausdrücke. Mit jedem Schritt nach oben werden die auf dieser Ebene vorhandenen Ausdrücke gesammelt, mit sympy vereinheitlicht und in einer Liste zurückgegeben. Beispiel: (a+b*c) -> [[a, b], [b*c], [a+b*c]]
-- aus der Population werden nun alle uniquen Einträge pro Ebene mit ihren Elternknoten verbunden. Es ergibt sich ein Netz, welches alle Bäume einer Population beinhaltet
-- Optional: Eingetragene Kanten-verbindungen analysieren
+## Allgemeine Hilfsfunktionen:
+### expression-sets nach Tiefe
+- Jeder Baum gibt von unten nach oben (terminal zu root) eine Liste seiner Ausdrücke.
+- Mit jedem Schritt nach oben werden die auf dieser Ebene vorhandenen Ausdrücke gesammelt, mit sympy vereinheitlicht und in einer Liste zurückgegeben.
+- Die Liste ist eine Liste von Listen, die jeweils die Ausdrücke pro Ebene enthalten.
+  - Beispiel 1: (a+b*c) -> [[a, b], [b*c], [a+b*c]]
+  - Beispiel 2: (a+(b+c)) -> [[(a), (b), (c)], [(b+c)], [(a+b+c)]]
+- Wichtig ist, dass die Ausdrücke pro Ebene vereinheitlicht werden (zB. a+b == b+a), aber dennoch ihren Kindern zugeordnet bleiben.
 
-Es gibt des weiteren noch folgende Überlegungen. Bitte übertrage sie als Kommentar und bewerte/nutze sie nach deiner Empfindung.
+## Strategien
+### "One-evaluation-tree"
+- aus der Population werden nun alle uniquen Einträge pro Ebene mit ihren Elternknoten verbunden. 
+- Es ergibt sich ein Netz, welches alle Bäume einer Population beinhaltet
+- Die Darstellung als einheitlicher Graph sollte dazu führen, dass keine Evaluation doppelt stattfinden muss (und sollte mit Tensorflow möglich sein).
 
-Folgende tree-representationen könnten hilfreich sein:
-- "Strukturtreu mit sympy": (a+(b+c)) -> [[a, b, c], [(b+c)], [(a+b+c)]]
-- "Unified mit Sympy": (c+(b+a)+0) -> [[a, b, c, 0], [a+b+c+0]]
-- ...
+### "Expand-random-tree"
+- Ein Startbaum wird zufällig ausgewählt.
+- Für jeden weiteren Baum werden die notwendigen Knoten/Äste hinzugefügt, um den Baum zu evaluieren.
+- Es ergibt sich ein großer Baum, der alle Bäume der Population beinhaltet, aber nur die notwendigen Knoten/Äste enthält.
+- Die Darstellung ist nicht deterministisch und stark abhängig vom Startbaum.
+- 
+### "Clustered-tree"
+- Alle Bäume werden in Cluster gruppiert, die sich möglichst ähnlich sind (zB. mit apted).
+- Für jedes Cluster wird ein "Mittelbaum" erstellt, der die gemeinsamen Strukturen enthält.
+- Die individuellen Bäume werden als Abwandlungen des Mittelbaums dargestellt, indem nur die Unterschiede hinzugefügt werden.
+- Es ergibt sich eine hierarchische Struktur, die die Ähnlichkeiten und Unterschiede zwischen den Bäumen hervorhebt.
 
-Sympy: unification und simplification
-- sympy.simplify() am Anfang auszuführen könnte helfen - wie der kleinstmöglichste Baum (oder effizientester/am besten gekapseltster) generiert werden kann ist unklar. Vermutlich ist auch ein chained-tree schon gut geeignet.
-- Denkbare sympy-strukturierung für den Baum wäre Faktorisierung. Eine sympy-edit distanz gibt es soweit ich weiß nicht. Ist es vielleicht sinnvoll, Knoten nicht zu gruppieren?
+## Substrategien
+### "Sympified-merged-tree"
+- Alle Bäume werden in sympy-Ausdrücke umgewandelt.
+- Besonderheit hier ist, dass verschiedene Sympy-Strategien angewendet werden können, um die Bäume zu vereinheitlichen (zB. faktorisiert, expandiert, etc.).
 
-Überlegungen
-- Number-nodes könnten optional ohne Wert in den Baum aufgenommen werden. Es könnte auch eine Idee sein, Symbole ebenfalls zu ignorieren und Merge-baum nur mit den Operatoren erzeugen
-- chainable-Knoten (zB. Add/Mul/Max als Floor/Ceiling Funktion)) könnten zusammengefasst werden (Was bereits durch sympy gemacht werden würde.
-- Statt ebenen-basiert könnte man auch Alle Bäume nacheinander abarbeiten - ein Startbaum würde immer um die notwendigen Änderungen erweitert werden.
- 
+### "Operator-focused-tree"
+- Number-nodes könnten optional ohne Wert in den Baum aufgenommen werden.
+- Es könnte auch eine Idee sein, Symbole ebenfalls zu ignorieren und Merge-baum nur mit den Operatoren erzeugen
 
-Bitte notiere auf jeden Fall meine Komentare, bewerte sie oder füge sinnvolle Ideen hinzu.
+### "Chainable-merged-tree"
+- chainable-Knoten (zB. Add/Mul/Max als Floor/Ceiling Funktion)) könnten zusammengefasst werden (Was bereits durch sympy gemacht werden würde.)
 
+Vorerst soll nur die "One-evaluation-tree"-Strategie umgesetzt werden.
+Für diesen Baum soll ebenfalls eine Visualisierungsfunktion (String-ausgabe) erstellt werden, die ähnlich den bisherigen ist.
+Die restlichen Ideen sollen als Anregung dienen und können später umgesetzt werden. Sie müssen aber als Kommentare o. ä. im Code erhalten bleiben.
+
+## Copilot-Anfrage für Baum-Merging-Strategien
 
 # Sub-tasks
 
@@ -64,7 +106,6 @@ Bitte notiere auf jeden Fall meine Komentare, bewerte sie oder füge sinnvolle I
   - Auto-testruns: loop/reload through [random, origin, origin_fixed] [MC, IB]
   - TF-evaluation equals python-evaluation equals sympy evaluation
 - BackPropagation through nodes, rank value for whole tree 
-- separate monitoring class
 - introduce NN in alpha-tree, at well-mutable nodes
 - evaluate one very large graph (TF?) containing the whole population
   - from low to high  (terminal to root)
@@ -73,7 +114,6 @@ Bitte notiere auf jeden Fall meine Komentare, bewerte sie oder füge sinnvolle I
 - Terminal-Mutation: Build tree with inputs, but only change terminals
 - use sympy.count_ops() to count operators
 - parallelisation
-- test-cases with notation, docstring
 - numba.pydata.org https://www.youtube.com/watch?v=x58W9A2lnQc
 - If no float-symbols found, return (1) true or (2) an operator? 
 - sympy exprtools abchecken
@@ -164,8 +204,12 @@ Bitte notiere auf jeden Fall meine Komentare, bewerte sie oder füge sinnvolle I
     We just need a measurement, a metric, to value the amount of actual hits and non/bad hits.
     Similar to entropy, in order to know, which trees should be merged together.
 - progress-print anzeigen des aktuell erzeugten Baum, zum durchlaufen
-- nonzero-operator? making zero-ish inputs slightly positive?
-- 
+- nonzero-operator? making zero-ish inputs slightly positive? Also nan/complex-number exits?
+- Creating "backpropagable"-tree -> tanh/sigmoid + exprcondtuples can mime nn-layers for if-conditions?
+- Iterate between approximating with NNs and representing the NNs with GP-trees
+  - NNs find the big differenced to a gp-tree and the solution
+  - GP tries to find ifte-structures that mimic the NN behaviour
+  - repeat
 - Sleeppropagation GP Problem "mathematisch" nachbauen (mit GP zum Beispiel), dann neues env erzeugen 
  (mit dem fake-zeug), dann
  neu trainieren und selbst trainieren. 

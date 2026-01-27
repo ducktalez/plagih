@@ -1,6 +1,14 @@
 """
-This starts the whole genetic programming.
-This (extra) file was added to have a file in the root directory that can be started.
+Plagih GP - Explainable Genetic Programming Framework
+
+This file demonstrates how to use the plagih GP framework.
+Contains:
+1. demo_minimal() - A quick, well-documented example (~30s runtime)
+2. _test_simple() - Basic test run with various evolution strategies
+3. _test_random_pop() - Complete test run with all features
+
+Run this file to see the GP in action:
+    python plagih_gp.py
 """
 from sklearn.model_selection import train_test_split
 from plagih.trees import *
@@ -8,6 +16,182 @@ from plagih.util import *
 import pandas as pd
 import sympy
 
+
+# =============================================================================
+# MINIMAL DEMO - Start here to understand the framework
+# =============================================================================
+
+def demo_minimal():
+    """
+    Minimal demonstration of the plagih GP framework.
+
+    This demo shows the core concepts in ~30 seconds:
+    1. Setting up the evolution (operators, symbols, constraints)
+    2. Creating the GP system with fitness evaluation
+    3. Running evolution: create, mutate, crossover
+    4. Inspecting the Pareto front (trade-off between fitness and complexity)
+
+    The goal: Find a symbolic expression that predicts 'action' from 'cartPos' and 'cartVel'.
+    """
+    print("\n" + "="*60)
+    print("PLAGIH GP - Minimal Demo")
+    print("="*60 + "\n")
+
+    # -------------------------------------------------------------------------
+    # STEP 1: Load data
+    # -------------------------------------------------------------------------
+    # Data has input features (cartPos, cartVel) and target (action)
+    df = pd.read_csv(Path(__file__).parent.absolute() / 'benchmarks/mc/gp_files/samples200.csv')
+    df = df.astype('float32')
+    df_train, df_test = train_test_split(df, test_size=0.2, random_state=42)
+
+    print(f"Training data: {len(df_train)} samples")
+    print(f"Features: {list(df_train.columns[:-1])}")
+    print(f"Target: action (values: {df_train['action'].unique()})\n")
+
+    # -------------------------------------------------------------------------
+    # STEP 2: Define operators and symbols
+    # -------------------------------------------------------------------------
+    # Operators: mathematical functions available to build trees
+    operator_dict = {
+        Add: 2,      # Addition (weight 2 = more likely to be selected)
+        Mul: 2,      # Multiplication
+        Div: 1,      # Division
+        Sub: 1,      # Subtraction
+        Abs: 1,      # Absolute value
+        Square: 1,   # x^2
+        Sin: 0.5,    # Sine (weight 0.5 = less likely)
+        Cos: 0.5,    # Cosine
+        Min: 1,      # Minimum
+        Max: 1,      # Maximum
+        # Boolean operators for conditions
+        Lt: 1,       # Less than (<)
+        Le: 1,       # Less or equal (<=)
+        And: 1,      # Logical AND
+        Or: 1,       # Logical OR
+        Not: 1,      # Logical NOT
+        Ifte: 1,     # If-then-else
+    }
+
+    # Symbols: input variables from the DataFrame
+    symbols = ['cartPos', 'cartVel']
+
+    print(f"Available operators: {len(operator_dict)}")
+    print(f"Input symbols: {symbols}\n")
+
+    # -------------------------------------------------------------------------
+    # STEP 3: Create Evolution controller
+    # -------------------------------------------------------------------------
+    # Evolution manages tree creation and mutation
+    evolve = Evolution(
+        symbol_list=symbols,
+        operators=operator_dict,
+        depth_max=5,           # Maximum tree depth
+        nodes_max=25,          # Maximum number of nodes
+    )
+
+    # -------------------------------------------------------------------------
+    # STEP 4: Create GP system
+    # -------------------------------------------------------------------------
+    # Define how to evaluate fitness (RMSE - lower is better)
+    eval_autocast = lambda x: np.clip(np.asarray(x, dtype=np.float64), 0.0, 2.0)
+    eval_error_metric = lambda pred, true: np.sqrt(np.mean((pred - true) ** 2))
+
+    # Create output directory
+    output_dir = Path.cwd() / '.testruns' / 'demo_minimal'
+
+    gp = ExplainableGP(
+        evolve=evolve,
+        df_train=df_train,
+        rootdir=output_dir,
+        pop_max_size=20,       # Population size per generation
+        gen_end=5,             # Number of generations
+        eval_autocast=eval_autocast,
+        eval_error_metric=eval_error_metric,
+        allow_chain=False,
+    )
+
+    print(f"GP initialized. Output: {output_dir}\n")
+
+    # -------------------------------------------------------------------------
+    # STEP 5: Create initial population
+    # -------------------------------------------------------------------------
+    print("Creating initial population...")
+    gp.gen_create_initial()
+    print(f"  -> {len(gp.pop_genepool)} candidates created")
+    print(f"  -> Pareto front: {len(gp.paretofront)} non-dominated solutions\n")
+
+    # -------------------------------------------------------------------------
+    # STEP 6: Run evolution for a few generations
+    # -------------------------------------------------------------------------
+    print("Running evolution...")
+
+    for gen in range(3):
+        print(f"\n--- Generation {gp.gen_id} ---")
+
+        # Strategy 1: Reproduction (copy good trees)
+        @gp.create_trees(rate=0.2)
+        def reproduction():
+            """Select a good tree and copy it."""
+            return selection_tournament(gp.pop_genepool, n=3)
+
+        # Strategy 2: Mutation (modify existing trees)
+        @gp.create_trees(rate=0.4)
+        def mutation():
+            """Select a tree and mutate a branch."""
+            tree = selection_tournament(gp.pop_genepool, n=3)
+            return gp.evolve.evolve_mutate_branch_depth(tree, depth_goal=3, p_term=0.3)
+
+        # Strategy 3: New random trees
+        @gp.create_trees(rate=0.2)
+        def random_new():
+            """Create a new random tree."""
+            depth = np.random.choice([2, 3, 4])
+            return gp.evolve.evolve_new_tree_depth(float, depth, p_term=0.1)
+
+        # Strategy 4: Crossover (combine two trees)
+        @gp.create_trees(rate=0.2, crossover=True)
+        def crossover():
+            """Select two trees and swap branches."""
+            tree_a = selection_tournament(gp.pop_genepool, n=3)
+            tree_b = selection_tournament(gp.pop_genepool, n=3)
+            return gp.evolve.evolve_crossover(tree_a, tree_b)
+
+        # End generation: update Pareto front, prepare for next
+        gp.end_generation()
+
+        print(f"  Population: {len(gp.pop_genepool)}, Pareto front: {len(gp.paretofront)}")
+
+    # -------------------------------------------------------------------------
+    # STEP 7: Inspect results
+    # -------------------------------------------------------------------------
+    print("\n" + "="*60)
+    print("RESULTS - Pareto Front (Trade-off: Fitness vs Complexity)")
+    print("="*60)
+
+    for i, candidate in enumerate(gp.paretofront[:5]):  # Show top 5
+        print(f"\n{i+1}. Complexity: {candidate.parsimony:2d} | Fitness: {candidate.fitness:.4f}")
+        print(f"   Expression: {candidate.tree.get_sympy_expr()}")
+
+    if len(gp.paretofront) > 5:
+        print(f"\n... and {len(gp.paretofront) - 5} more solutions")
+
+    # -------------------------------------------------------------------------
+    # STEP 8: Save results
+    # -------------------------------------------------------------------------
+    gp.backup_save()
+    gp.evoloop_monitoring_plots()
+
+    print(f"\n" + "="*60)
+    print(f"Demo complete! Results saved to: {output_dir}")
+    print("="*60 + "\n")
+
+    return gp
+
+
+# =============================================================================
+# EXISTING TEST RUNS (kept for backwards compatibility)
+# =============================================================================
 
 def _test_simple(dir_name, chained_on=True):
     """SIMPLE"""
@@ -199,29 +383,54 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False, try_load_backu
 
 
 if __name__ == "__main__":
+    import sys
 
-    """All runs: Experiment: Mountain Car dataset setup"""
-    col_names = ['cartVel', 'cartPos']
-    df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv').astype('float32')
-    DATA_SYMBOLS = sympy.symbols(df[col_names].columns, real=True)  # sfeh input_names dirty here
-    operator_dict = Evolution.operator_presets['math_simple']
+    # Parse command line arguments
+    if len(sys.argv) > 1:
+        mode = sys.argv[1].lower()
+    else:
+        mode = 'demo'  # Default to demo
 
-    # eval_autocast = lambda x: np.round(np.clip(x, 0, 2), 0)
-    # Der Fehler entsteht, weil np.round intern die ufunc rint aufruft und dein x kein NumPy‑Array mit geeignetem dtype ist
-    # (z.,B. ein Python‑int, eine Liste gemischter Typen oder ein object‑Array). Mach x zuerst zu einem Float‑Array und runde dann.
-    # Fix: robuste eval_autocast, die alles nach float64 castet, clippt und runden/typen sauber setzt.
-    eval_autocast = lambda x: np.rint(
-        np.clip(np.asarray(x, dtype=np.float64), 0.0, 2.0)
-    ).astype(np.int64)
+    if mode == 'demo':
+        # Quick demonstration (~30 seconds)
+        demo_minimal()
 
-    """All runs: Evaluation configurations"""
-    df_train, df_control = train_test_split(df, test_size=0.2, random_state=0)
-    eval_error_metric = lambda y_true, y_pred: np.sqrt(np.mean((y_true - y_pred) ** 2))  # RMSE
+    elif mode == 'test' or mode == 'full':
+        # Full test runs (several minutes)
+        """All runs: Experiment: Mountain Car dataset setup"""
+        col_names = ['cartVel', 'cartPos']
+        df = pd.read_csv(Path(__file__).parent.absolute() / f'benchmarks/mc/gp_files/samples200.csv').astype('float32')
+        DATA_SYMBOLS = sympy.symbols(df[col_names].columns, real=True)
+        operator_dict = Evolution.operator_presets['math_simple']
 
-    rootdir = Path.cwd() / '.testruns'
+        eval_autocast = lambda x: np.rint(
+            np.clip(np.asarray(x, dtype=np.float64), 0.0, 2.0)
+        ).astype(np.int64)
 
-    _test_random_pop(dir_name='MTC200_RMSE_scratch', chained_on=False)
-    _test_random_pop(dir_name='MTC200_RMSE_scratch_chained', chained_on=True)
-    _test_random_pop(dir_name='MTC200_RMSE_scratch_chained', chained_on=True, try_load_backup=True)
-    _test_simple(dir_name='simple-MTC200_RMSE_scratch', chained_on=False)
-    _test_simple(dir_name='simple-MTC200_RMSE_scratch_chained', chained_on=True)
+        df_train, df_control = train_test_split(df, test_size=0.2, random_state=0)
+        eval_error_metric = lambda y_true, y_pred: np.sqrt(np.mean((y_true - y_pred) ** 2))
+
+        rootdir = Path.cwd() / '.testruns'
+
+        if mode == 'full':
+            _test_random_pop(dir_name='MTC200_RMSE_scratch', chained_on=False)
+            _test_random_pop(dir_name='MTC200_RMSE_scratch_chained', chained_on=True)
+        else:
+            _test_simple(dir_name='simple-MTC200_RMSE_scratch', chained_on=False)
+
+    else:
+        print(f"""
+Plagih GP - Explainable Genetic Programming
+
+Usage: python plagih_gp.py [mode]
+
+Modes:
+  demo   - Quick demonstration (~30 seconds) [default]
+  test   - Basic test run with _test_simple
+  full   - Complete test runs with all features
+
+Examples:
+  python plagih_gp.py demo
+  python plagih_gp.py test
+  python plagih_gp.py full
+""")

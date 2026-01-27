@@ -7,41 +7,34 @@ from plagih.util import *
 
 
 def pareto_from_pop(pop_list):
-    """
-    Behalte alle Kandidaten mit minimaler Fitness pro Komplexität.
-    Keine strukturelle Deduplication.
-    """
-    pop_list = pareto_sort(pop_list)
+    """Return the nondominated candidates with respect to parsimony and fitness."""
 
-    try:
-        _ = pop_list[0]
-    except Exception as ex:
-        raise Exception(f'The list is empty, i guess: {pop_list}. {ex}')
+    pop_list = sorted(pop_list, key=lambda x: (x.get_parsim(), x.get_fitness()))
 
-    # minimale Fitness je Komplexität bestimmen
-    best_fitness = {}
-    for t in pop_list:
-        p = t.get_parsim()
-        f = t.get_fitness()
-        bf = best_fitness.get(p)
-        if bf is None or f < bf:
-            best_fitness[p] = f
+    if not pop_list:
+        raise Exception('pareto_from_pop called with empty population')
 
-    # alle Kandidaten mit minimaler Fitness je Komplexität sammeln
+    def dominates(a, b):
+        return (
+            a.get_parsim() <= b.get_parsim()
+            and a.get_fitness() <= b.get_fitness()
+            and (
+                a.get_parsim() < b.get_parsim()
+                or a.get_fitness() < b.get_fitness()
+            )
+        )
+
     pop_pareto = []
-    for t in pop_list:
-        if t.get_fitness() == best_fitness[t.get_parsim()]:
-            pop_pareto.append(t)
+    for candidate in pop_list:
+        if any(dominates(existing, candidate) for existing in pop_pareto):
+            continue
+        pop_pareto = [existing for existing in pop_pareto if not dominates(candidate, existing)]
+        pop_pareto.append(candidate)
 
     return pop_pareto
 
 
-def pareto_sort(tree_list):
-    tree_list = sorted(tree_list, key=lambda x: (x.get_parsim(), x.get_fitness()))  # keys can be negative (*-1)
-    return tree_list
-
-
-def plot_paretofront(paretofront, path, parsimony_max) -> []:
+def plot_paretofront(paretofront, path, parsimony_max):
     """Write pyplot with paretofront candidates"""
 
     tuples = [[tree.get_parsim(), tree.get_fitness()] for tree in paretofront]
@@ -246,3 +239,114 @@ def analyze_pareto(cpu_cores=4):
     #     raise Exception(f'This should actually never happen right now. name: {self.conf.name}')
 
     return
+
+
+def plot_performance(monitor_df, save_path):
+    """Plots population performance metrics over generations.
+
+    Creates a figure showing fitness and parsimony statistics
+    across generations for monitoring GP progress.
+
+    Args:
+        monitor_df: DataFrame with generation statistics.
+        save_path: Path to save the plot image.
+    """
+    if len(monitor_df) == 0:
+        print_warning('w', 'Cannot plot performance: empty monitor_df')
+        return
+
+    with plt.rc_context(rc=pyplot_rc_tex):
+        fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+
+        # Fitness over generations
+        ax1 = axes[0, 0]
+        ax1.plot(monitor_df.index, monitor_df['fit_best'], 'b-', label='Best')
+        ax1.plot(monitor_df.index, monitor_df['fit_avg'], 'g--', label='Average')
+        ax1.fill_between(monitor_df.index,
+                         monitor_df['fit_quantile_25'],
+                         monitor_df['fit_quantile_75'],
+                         alpha=0.3, label='25-75 percentile')
+        ax1.set_xlabel('Generation')
+        ax1.set_ylabel('Fitness')
+        ax1.set_title('Fitness Evolution')
+        ax1.legend()
+        ax1.grid(True, alpha=0.3)
+
+        # Parsimony over generations
+        ax2 = axes[0, 1]
+        ax2.plot(monitor_df.index, monitor_df['parsim_best'], 'b-', label='Best')
+        ax2.plot(monitor_df.index, monitor_df['parsim_avg'], 'g--', label='Average')
+        ax2.fill_between(monitor_df.index,
+                         monitor_df['parsim_quantile_25'],
+                         monitor_df['parsim_quantile_75'],
+                         alpha=0.3, label='25-75 percentile')
+        ax2.set_xlabel('Generation')
+        ax2.set_ylabel('Parsimony')
+        ax2.set_title('Parsimony Evolution')
+        ax2.legend()
+        ax2.grid(True, alpha=0.3)
+
+        # Population diversity
+        ax3 = axes[1, 0]
+        ax3.plot(monitor_df.index, monitor_df['pop_unique'], 'r-', label='Unique')
+        ax3.plot(monitor_df.index, monitor_df['pop_len'], 'b--', label='Total')
+        ax3.set_xlabel('Generation')
+        ax3.set_ylabel('Count')
+        ax3.set_title('Population Diversity')
+        ax3.legend()
+        ax3.grid(True, alpha=0.3)
+
+        # Time per generation
+        ax4 = axes[1, 1]
+        ax4.bar(monitor_df.index, monitor_df['time'], alpha=0.7)
+        ax4.set_xlabel('Generation')
+        ax4.set_ylabel('Time (s)')
+        ax4.set_title('Time per Generation')
+        ax4.grid(True, alpha=0.3)
+
+        plt.tight_layout()
+
+        try:
+            fig.savefig(save_path)
+            printez('f', f"Performance plot saved: {save_path}")
+        except PermissionError as e:
+            print_caution(f'Could not save plot: {e}')
+        finally:
+            plt.close(fig)
+
+
+def plot_parsimony_histogram(population, save_path, max_population=100, max_parsimony=50):
+    """Plots histogram of parsimony (complexity) distribution in population.
+
+    Args:
+        population: List of Candidate objects.
+        save_path: Path to save the plot image.
+        max_population: Maximum expected population size for y-axis scaling.
+        max_parsimony: Maximum expected parsimony for x-axis scaling.
+    """
+    if not population:
+        print_warning('w', 'Cannot plot histogram: empty population')
+        return
+
+    parsimony_values = [c.get_parsim() for c in population]
+
+    with plt.rc_context(rc=pyplot_rc_tex):
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        bins = range(0, max_parsimony + 2)
+        ax.hist(parsimony_values, bins=bins, edgecolor='black', alpha=0.7)
+        ax.set_xlabel('Parsimony (Complexity)')
+        ax.set_ylabel('Count')
+        ax.set_title('Population Parsimony Distribution')
+        ax.set_xlim(0, max_parsimony)
+        ax.set_ylim(0, max_population * 0.5)
+        ax.grid(True, alpha=0.3, axis='y')
+
+        try:
+            fig.savefig(save_path)
+            printez('f', f"Parsimony histogram saved: {save_path}")
+        except PermissionError as e:
+            print_caution(f'Could not save plot: {e}')
+        finally:
+            plt.close(fig)
+

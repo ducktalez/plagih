@@ -670,37 +670,54 @@ def analyze_population_sharing(
 def visualize_merged_graph(
     graph: MergedEvaluationGraph,
     output_path: str = None,
-    show: bool = True
+    show: bool = True,
+    orientation: str = "BT",
+    display_mode: str = "label"
 ) -> Optional[str]:
-    """Visualize the merged graph using graphviz if available.
+    """Visualize the merged graph using the unified tree renderer.
 
     Args:
         graph: The MergedEvaluationGraph to visualize.
         output_path: Path to save the image (without extension).
         show: Whether to display the graph.
+        orientation: Layout orientation (TB, BT, LR, RL).
+        display_mode: "label" for operator names only, "expression" for full sympy expressions.
 
     Returns:
-        Path to the generated image, or None if graphviz unavailable.
+        Path to the generated image, or None if not saved.
     """
-    try:
-        from graphviz import Source
+    from visualization.tree_renderer import render_merged_tree
+    from pathlib import Path
 
-        dot_source = graph.to_graphviz_dot()
-        src = Source(dot_source)
+    if output_path:
+        output_dir = Path(output_path).parent
+        filename = Path(output_path).stem
+        return render_merged_tree(
+            graph=graph,
+            filename=filename,
+            output_dir=output_dir,
+            orientation=orientation,
+            display_mode=display_mode,
+            show=show
+        )
+    elif show:
+        # Create temporary visualization
+        from visualization.tree_renderer import TreeRenderer, TreeRendererConfig, Orientation, MergedDisplayMode
+        import matplotlib.pyplot as plt
 
-        if output_path:
-            src.render(output_path, format='png', cleanup=True)
-            return f"{output_path}.png"
+        config = TreeRendererConfig()
+        config.orientation = Orientation(orientation)
+        config.merged_display_mode = (
+            MergedDisplayMode.FULL_EXPRESSION if display_mode == "expression"
+            else MergedDisplayMode.LABEL_ONLY
+        )
 
-        if show:
-            src.view()
-
+        renderer = TreeRenderer(config)
+        fig, ax = renderer.render_merged_graph(graph)
+        plt.show()
         return None
 
-    except ImportError:
-        print("graphviz not available. Install with: pip install graphviz")
-        print("DOT source:\n", graph.to_graphviz_dot())
-        return None
+    return None
 
 
 # =============================================================================

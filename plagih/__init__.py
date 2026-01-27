@@ -25,3 +25,16 @@ from plagih.evaluation_context import (
     add_unified_evaluation_to_node,
 )
 
+# Visualization (lazy import to avoid circular dependencies)
+def __getattr__(name):
+    """Lazy import for visualization components."""
+    _VIZ_EXPORTS = {
+        'render_tree', 'render_merged_tree',
+        'TreeRenderer', 'TreeRendererConfig',
+        'Orientation', 'MergedDisplayMode',
+    }
+    if name in _VIZ_EXPORTS:
+        from visualization import tree_renderer
+        return getattr(tree_renderer, name)
+    raise AttributeError(f"module 'plagih' has no attribute {name!r}")
+

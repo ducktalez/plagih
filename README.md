@@ -6,10 +6,11 @@
 
 ## Ablage/Todos
 
-- Merged-tree visualisierung 
-  - mit chatgpt erstellen
-  - tree-viz zentral implementieren
+- ~~Merged-tree visualisierung~~  ✓
+  - ~~mit chatgpt erstellen~~
+  - ~~tree-viz zentral implementieren~~ → `visualization/tree_renderer.py`
   - Weitere merge-tree Version (ohne Terminal nodes)
+- Bereits erstellte Evaluierungskombination nutzen
 - lint/black/etc einbauen
   - Empfohlene Tools: black, flake8, isort?
   - Wie würdest du das einbauen?
@@ -24,7 +25,7 @@
     - utils.py (Hilfsfunktionen)
   - Wie würdest du das strukturieren?
 - self.evolve.origin_tree
-- Anweisungen für Copilot (Instructions erstellen), am besten, sodass sie aich auch selbst notfalls erweitern.
+- Anweisungen für Copilot (Instructions erstellen), am besten, sodass sie sich auch selbst notfalls erweitern.
 - Dokumentation als .md/.pdf
 - Pseudo-Backpropagation durch Bäume
 - evaluation alternatives
@@ -62,7 +63,6 @@
 - numba.pydata.org https://www.youtube.com/watch?v=x58W9A2lnQc
 - If no float-symbols found, return (1) true or (2) an operator? 
 - sympy exprtools abchecken
-- build trees like sympy.factor() structure?
 - Division-multiplicator node as non-len() chain input?
 - print(sympy.parsing.sympy_parser.transformations)
 - Symbol-time (for IB), choosing the time-step as input variable

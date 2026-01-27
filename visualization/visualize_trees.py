@@ -1,41 +1,45 @@
 """
 Tree Visualization for plagih GP Framework
 
-Uses graphviz for clean hierarchical tree layouts (if available),
-otherwise falls back to matplotlib + networkx.
-Generates PNG images for quick inspection of evolved trees.
+This module provides backward-compatible visualization functions.
+The actual rendering is now handled by the unified tree_renderer module.
+
+For new code, prefer using:
+    from visualization.tree_renderer import render_tree, render_merged_tree
+
+Legacy functions (visualize_tree, visualize_tree_matplotlib, etc.) are
+maintained for backward compatibility.
 """
 
-import os
 from pathlib import Path
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Optional, List
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
 
-# Try graphviz
+# Try graphviz (still used for some legacy functions)
 try:
     from graphviz import Digraph
     HAS_GRAPHVIZ = True
 except ImportError:
     HAS_GRAPHVIZ = False
-
-# Try networkx
-try:
-    import networkx as nx
-    HAS_NETWORKX = True
-except ImportError:
-    HAS_NETWORKX = False
+    Digraph = None  # type: ignore
 
 # Import tree structures
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from plagih.util import *
 from plagih.trees import (
-    Node, Terminal, Number, Symbol, Boolean,
-    BaseOperator, MathOperator, LogicOperator,
-    Add, Mul
+    Node, Number, Symbol, Boolean,
+    MathOperator, LogicOperator,
+)
+
+# Import new unified renderer
+from visualization.tree_renderer import (
+    render_tree as _render_tree,
+    TreeRendererConfig,
+    Orientation,
 )
 
 
@@ -315,10 +319,13 @@ def visualize_tree(
     format: str = "png",
     rankdir: str = "TB",
     cleanup: bool = True,
-    backend: str = "auto",  # "auto", "graphviz", "matplotlib"
+    backend: str = "auto",  # "auto", "graphviz", "matplotlib", "new"
 ) -> str:
     """
     Visualize a tree and save as image file.
+
+    This function now uses the unified tree_renderer by default.
+    Set backend="graphviz" to use the legacy graphviz backend.
 
     Args:
         root: Root node of the tree to visualize
@@ -326,9 +333,9 @@ def visualize_tree(
         output_dir: Directory for output (default: tree_output/)
         view: If True, open the image after creation (graphviz only)
         format: Output format (png, svg, pdf - graphviz only)
-        rankdir: Layout direction TB=top-down, LR=left-right (graphviz only)
+        rankdir: Layout direction TB=top-down, LR=left-right, BT=bottom-up, RL=right-left
         cleanup: Remove intermediate .dot file (graphviz only)
-        backend: "auto", "graphviz", or "matplotlib"
+        backend: "auto"/"new" uses new renderer, "graphviz"/"matplotlib" use legacy
 
     Returns:
         Path to the generated image file
@@ -340,18 +347,18 @@ def visualize_tree(
         output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Select backend
-    use_graphviz = False
-    if backend == "graphviz":
-        use_graphviz = True
-    elif backend == "matplotlib":
-        use_graphviz = False
-    else:  # auto
-        # Try graphviz first, fall back to matplotlib
-        if HAS_GRAPHVIZ:
-            use_graphviz = True
+    # Use new renderer by default
+    if backend in ("auto", "new", "matplotlib"):
+        return _render_tree(
+            tree=root,
+            filename=filename,
+            output_dir=output_dir,
+            orientation=rankdir,
+            show=view
+        )
 
-    if use_graphviz:
+    # Legacy graphviz backend
+    if backend == "graphviz" and HAS_GRAPHVIZ:
         try:
             dot = tree_to_graphviz(root, name=filename, rankdir=rankdir)
             dot.format = format
@@ -361,10 +368,16 @@ def visualize_tree(
             print(f"Tree saved to: {result_path}")
             return result_path
         except Exception as e:
-            print(f"Graphviz failed ({e}), falling back to matplotlib...")
+            print(f"Graphviz failed ({e}), falling back to new renderer...")
 
-    # Matplotlib fallback
-    return visualize_tree_matplotlib(root, filename, output_dir)
+    # Fallback to new renderer
+    return _render_tree(
+        tree=root,
+        filename=filename,
+        output_dir=output_dir,
+        orientation=rankdir,
+        show=view
+    )
 
 
 def visualize_multiple_trees(

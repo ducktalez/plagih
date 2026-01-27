@@ -13,7 +13,7 @@ from pathlib import Path
 PRINT_DUMMY = 'wwaaggiiffpp'  # noqa: dummy for print-policy (w=warning, a=action, g=generation, i=info, f=file, p=performance)
 # print-all: 'wwwwaaaggggiiiifffpp'
 TEXT_NEWLINE = '============================================================'
-DEBUG_DUMMY = True  # noqa: dummy for debug-policy
+DEBUG_DUMMY = False  # noqa: dummy for debug-policy
 FLOAT_PRECISION = 3
 PLOTS_INTERVAL = 1
 BACKUP_INTERVAL = 10

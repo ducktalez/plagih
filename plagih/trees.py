@@ -3209,48 +3209,92 @@ class ExplainableGP:
         lut_tree_infos: Cache for tree metadata (sympy expr, fitness, parsimony).
         lut_symex_fitness: Cache mapping sympy expressions to fitness values.
         monitor_df: DataFrame tracking generation statistics.
+
+    Example:
+        # Simple usage with defaults
+        gp = ExplainableGP.create(
+            symbols=['x', 'y'],
+            df_train=my_data,
+            rootdir='./results'
+        )
+
+        # Or with custom Evolution
+        gp = ExplainableGP(
+            evolve=my_evolution,
+            df_train=my_data,
+            rootdir=Path('./results'),
+            pop_max_size=50,
+            gen_end=20
+        )
     """
-    def __init__(self, evolve: Evolution, df_train, rootdir: Path, pop_max_size = 100, gen_end=100, eval_autocast=np.array, allow_chain=False, eval_error_metric=None):
+
+    # Default error metric: RMSE
+    DEFAULT_ERROR_METRIC = staticmethod(lambda pred, true: np.sqrt(np.mean((pred - true) ** 2)))
+
+    # Default autocast: identity (np.array)
+    DEFAULT_AUTOCAST = staticmethod(lambda x: np.asarray(x, dtype=np.float64))
+
+    def __init__(
+        self,
+        evolve: Evolution,
+        df_train: pd.DataFrame,
+        rootdir: Union[Path, str],
+        *,  # Force keyword-only args after this
+        pop_max_size: int = 100,
+        gen_end: int = 100,
+        eval_autocast: Optional[Callable] = None,
+        eval_error_metric: Optional[Callable] = None,
+        allow_chain: bool = False,
+        target_column: str = 'action',
+        verbose: bool = True
+    ):
         """Initialize the GP system.
 
         Args:
             evolve: Evolution instance with operator pool and constraints.
-            df_train: Training data with 'action' column as target.
-            rootdir: Path for output files.
-            pop_max_size: Maximum individuals per generation.
-            gen_end: Number of generations to run.
-            eval_autocast: Function to cast predictions (e.g., np.array, np.sign).
-            allow_chain: Whether to allow chained operators.
-            eval_error_metric: Error function (predictions, targets) -> float.
+            df_train: Training data with target column.
+            rootdir: Path for output files (str or Path).
+            pop_max_size: Maximum individuals per generation. Default: 100.
+            gen_end: Number of generations to run. Default: 100.
+            eval_autocast: Function to cast predictions. Default: np.array.
+            eval_error_metric: Error function(pred, true) -> float. Default: RMSE.
+            allow_chain: Whether to allow chained operators. Default: False.
+            target_column: Name of target column in df_train. Default: 'action'.
+            verbose: Print initialization info. Default: True.
         """
         self.time_start = time.perf_counter()
 
-        self.rootdir = rootdir
+        # Handle rootdir as str or Path
+        self.rootdir = Path(rootdir) if isinstance(rootdir, str) else rootdir
         self.rootdir.mkdir(parents=True, exist_ok=True)
 
         self.df_train = df_train
+        self.target_column = target_column
 
         self.evolve = evolve
         self.gen_end = gen_end
         self.pop_max_size = pop_max_size
         self.gen_id: int = 0
-        self.eval_autocast = eval_autocast
-        self.eval_error_metric = eval_error_metric
+
+        # Use defaults if not provided
+        self.eval_autocast = eval_autocast or self.DEFAULT_AUTOCAST
+        self.eval_error_metric = eval_error_metric or self.DEFAULT_ERROR_METRIC
 
         self.allow_chain = allow_chain
 
-        print(f'\n'
-              f'\tInitializing Plagih.\n'
-              f'\tName: {BColors.CYAN}{rootdir.name}{BColors.RESET_COLOR}.\n'
-              f'\tLocated in: \n'
-              f'\t{rootdir}\n')
+        if verbose:
+            print(f'\n'
+                  f'\tInitializing Plagih.\n'
+                  f'\tName: {BColors.CYAN}{self.rootdir.name}{BColors.RESET_COLOR}.\n'
+                  f'\tLocated in: \n'
+                  f'\t{self.rootdir}\n')
 
-        self.paretofront = []  # not a separate class; requires too much information
+        self.paretofront = []
         self.pop_genepool = []
         self.pop_next = []
 
         self.lut_tree_infos = {}
-        self.lut_symex_fitness = {}  # Lookup-table for tree(-expressions) and its fitness/parsimony. Improving runtime a lot!
+        self.lut_symex_fitness = {}
 
         # monitoring
         self.time_genstart = time.perf_counter()
@@ -3262,6 +3306,123 @@ class ExplainableGP:
                                                 'parsim_avg', 'parsim_var', 'parsim_quantile_25', 'parsim_quantile_50',
                                                 'parsim_quantile_75', 'parsim_best',
                                                 'gens_since_last_pareto'])
+
+    @classmethod
+    def create(
+        cls,
+        symbols: List[Union[str, sympy.Symbol]],
+        df_train: pd.DataFrame,
+        rootdir: Union[Path, str],
+        *,
+        operators: Optional[Dict] = None,
+        preset: str = 'math_full',
+        depth_max: int = 7,
+        nodes_max: int = 40,
+        pop_max_size: int = 100,
+        gen_end: int = 50,
+        clip_range: Optional[Tuple[float, float]] = None,
+        error_metric: str = 'rmse',
+        allow_chain: bool = False,
+        target_column: str = 'action',
+        verbose: bool = True
+    ) -> 'ExplainableGP':
+        """Factory method for easy GP creation with sensible defaults.
+
+        Args:
+            symbols: List of input variable names or sympy Symbols.
+            df_train: Training DataFrame with features and target.
+            rootdir: Output directory path.
+            operators: Custom operator dict. If None, uses preset.
+            preset: Operator preset name ('math_simple', 'math_full', 'with_logic').
+            depth_max: Maximum tree depth. Default: 7.
+            nodes_max: Maximum nodes per tree. Default: 40.
+            pop_max_size: Population size. Default: 100.
+            gen_end: Number of generations. Default: 50.
+            clip_range: Optional (min, max) to clip predictions.
+            error_metric: 'rmse', 'mse', 'mae', or custom callable.
+            allow_chain: Allow chained operators. Default: False.
+            target_column: Target column name. Default: 'action'.
+            verbose: Print info. Default: True.
+
+        Returns:
+            Configured ExplainableGP instance.
+
+        Example:
+            gp = ExplainableGP.create(
+                symbols=['x', 'y'],
+                df_train=data,
+                rootdir='./run_001',
+                preset='math_simple',
+                pop_max_size=50,
+                gen_end=20
+            )
+        """
+        # Create Evolution with preset or custom operators
+        # Evolution accepts: operators as dict, string (preset name), or list
+        ops = operators if operators is not None else preset
+        evolve = Evolution(
+            symbol_list=symbols,
+            operators=ops,
+            depth_max=depth_max,
+            nodes_max=nodes_max,
+            allow_chain=allow_chain
+        )
+
+        # Setup autocast
+        if clip_range:
+            def _clip_autocast(x):
+                return np.clip(np.asarray(x, dtype=np.float64), clip_range[0], clip_range[1])
+            eval_autocast = _clip_autocast
+        else:
+            eval_autocast = None  # Will use default
+
+        # Setup error metric
+        if callable(error_metric):
+            eval_error_metric = error_metric
+        elif error_metric == 'rmse':
+            eval_error_metric = lambda pred, true: np.sqrt(np.mean((pred - true) ** 2))
+        elif error_metric == 'mse':
+            eval_error_metric = lambda pred, true: np.mean((pred - true) ** 2)
+        elif error_metric == 'mae':
+            eval_error_metric = lambda pred, true: np.mean(np.abs(pred - true))
+        else:
+            raise ValueError(f"Unknown error_metric: {error_metric}. Use 'rmse', 'mse', 'mae', or callable.")
+
+        return cls(
+            evolve=evolve,
+            df_train=df_train,
+            rootdir=rootdir,
+            pop_max_size=pop_max_size,
+            gen_end=gen_end,
+            eval_autocast=eval_autocast,
+            eval_error_metric=eval_error_metric,
+            allow_chain=allow_chain,
+            target_column=target_column,
+            verbose=verbose
+        )
+
+    @classmethod
+    def from_config(cls, config: dict, df_train: pd.DataFrame) -> 'ExplainableGP':
+        """Create GP instance from configuration dictionary.
+
+        Args:
+            config: Dictionary with GP configuration.
+            df_train: Training DataFrame.
+
+        Returns:
+            Configured ExplainableGP instance.
+
+        Example:
+            config = {
+                'symbols': ['x', 'y'],
+                'rootdir': './results',
+                'preset': 'math_simple',
+                'pop_max_size': 50,
+                'gen_end': 20
+            }
+            gp = ExplainableGP.from_config(config, my_data)
+        """
+        return cls.create(df_train=df_train, **config)
 
     def get_name(self):
         """Returns the name of this GP run (derived from rootdir)."""

@@ -63,7 +63,7 @@ def demo_minimal():
     log_debug(f"Training data shape: {df_train.shape}, Test data shape: {df_test.shape}")
 
     # -------------------------------------------------------------------------
-    # STEP 2: Define operators and symbols
+    # STEP 2: Define operators (optional - can also use presets)
     # -------------------------------------------------------------------------
     # Operators: mathematical functions available to build trees
     operator_dict = {
@@ -86,42 +86,27 @@ def demo_minimal():
         Ifte: 1,     # If-then-else
     }
 
-    # Symbols: input variables from the DataFrame
-    symbols = ['cartPos', 'cartVel']
-
     print(f"Available operators: {len(operator_dict)}")
-    print(f"Input symbols: {symbols}\n")
+    print(f"Input symbols: ['cartPos', 'cartVel']\n")
 
     # -------------------------------------------------------------------------
-    # STEP 3: Create Evolution controller
+    # STEP 3: Create GP system (simplified with factory method)
     # -------------------------------------------------------------------------
-    # Evolution manages tree creation and mutation
-    evolve = Evolution(
-        symbol_list=symbols,
-        operators=operator_dict,
-        depth_max=5,           # Maximum tree depth
-        nodes_max=25,          # Maximum number of nodes
-    )
-
-    # -------------------------------------------------------------------------
-    # STEP 4: Create GP system
-    # -------------------------------------------------------------------------
-    # Define how to evaluate fitness (RMSE - lower is better)
-    eval_autocast = lambda x: np.clip(np.asarray(x, dtype=np.float64), 0.0, 2.0)
-    eval_error_metric = lambda pred, true: np.sqrt(np.mean((pred - true) ** 2))
-
     # Create output directory
     output_dir = Path.cwd() / '.testruns' / 'demo_minimal'
 
-    gp = ExplainableGP(
-        evolve=evolve,
+    # NEW: Much simpler initialization with ExplainableGP.create()
+    gp = ExplainableGP.create(
+        symbols=['cartPos', 'cartVel'],  # Input variables from DataFrame
         df_train=df_train,
         rootdir=output_dir,
-        pop_max_size=20,       # Population size per generation
-        gen_end=5,             # Number of generations
-        eval_autocast=eval_autocast,
-        eval_error_metric=eval_error_metric,
-        allow_chain=False,
+        operators=operator_dict,         # Custom operators (or use preset='math_simple')
+        depth_max=5,
+        nodes_max=25,
+        pop_max_size=20,
+        gen_end=5,
+        clip_range=(0.0, 2.0),           # Clip predictions to [0, 2]
+        error_metric='rmse',             # Use RMSE (also: 'mse', 'mae')
     )
 
     print(f"GP initialized. Output: {output_dir}\n")

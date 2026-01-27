@@ -6,11 +6,6 @@
 
 ## Ablage/Todos
 
-- better logging
-  - Logging (und user-feedback) wird momentan durch printpl() (und verwandte Funktionen) umgesetzt. 
-    Diese formatieren die Ausgaben schön (und teilweise komplex) und können verschiedene Level (info, warning, error) unterscheiden.
-    Mir wird immer wieder empfohlen, stattdessen das logging-modul zu verwenden. Ist das sinnvoll?
-    Ich habe auch in Betracht gezogen, Teile als log umzusetzen. Gibt es allgemein unterschiede zwischen log und print? Was würdest du machen?
 - lint/black/etc einbauen
   - Empfohlene Tools: black, flake8, isort?
   - Wie würdest du das einbauen?

@@ -138,11 +138,11 @@ def get_subclasses(cls):
 
 
 def pickle_dump(path, data):
-    """Saving python data (probably run) in a very small pickle file"""
+    """Saving python data (probably run) in a very small pickle _file"""
     path = path_make_dir(path)
 
-    with Path.open(path, 'wb') as file:
-        pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
+    with Path.open(path, 'wb') as _file:
+        pickle.dump(data, _file, protocol=pickle.HIGHEST_PROTOCOL)
 
     printez('f', f'Backup: {path}')  # .as_posix()
 
@@ -206,12 +206,7 @@ def printpl(msg_t, message_str):
     Note: This now uses the logging backend from logging_utils.
     """
     # Import here to avoid circular imports
-    try:
-        from plagih.logging_utils import printpl as log_printpl
-        log_printpl(msg_t, message_str)
-    except ImportError:
-        # Fallback if logging_utils not available
-        printez(msg_t, message_str)
+    printez(msg_t, message_str)
     return
 
 
@@ -219,20 +214,16 @@ def print_warning(msg_type, text):
     """
     Printing warnings with logging backend.
     """
+    # Fallback implementation
     try:
-        from plagih.logging_utils import print_warning as log_print_warning
-        log_print_warning(msg_type, text)
-    except ImportError:
-        # Fallback implementation
-        try:
-            if msg_type not in PRINT_DUMMY:
-                return
-            if 'w' in msg_type:
-                print(f'{BColors.WARNING}Warning ({msg_type}): {text}{BColors.RESET_COLOR}')
-            else:
-                print(f'{BColors.WARNING}Warning ({msg_type}):{BColors.RESET_COLOR} {text}')
-        except Exception as ex:
-            print(f'{BColors.WARNING}Warning (w): Could not print warning: {ex}{BColors.RESET_COLOR}')
+        if msg_type not in PRINT_DUMMY:
+            return
+        if 'w' in msg_type:
+            print(f'{BColors.WARNING}Warning ({msg_type}): {text}{BColors.RESET_COLOR}')
+        else:
+            print(f'{BColors.WARNING}Warning ({msg_type}):{BColors.RESET_COLOR} {text}')
+    except Exception as ex:
+        print(f'{BColors.WARNING}Warning (w): Could not print warning: {ex}{BColors.RESET_COLOR}')
     return
 
 
@@ -387,12 +378,7 @@ def print_caution(txt):
     Printing errors that are not worth stopping by raising an exception.
     Uses logging backend for proper error tracking.
     """
-    try:
-        from plagih.logging_utils import print_caution as log_print_caution
-        log_print_caution(txt)
-    except ImportError:
-        # Fallback implementation
-        print(f'{BColors.RED}CAUTION! {BColors.WARNING}{txt}{BColors.RESET_COLOR}')
+    print(f'{BColors.RED}CAUTION! {BColors.WARNING}{txt}{BColors.RESET_COLOR}')
 
 
 def pickle_load(path: Path):
@@ -460,6 +446,53 @@ def yaml_load(path: Path):
 logger = logging.getLogger('plagih')
 
 
+class ColoredConsoleFormatter(logging.Formatter):
+    """Custom formatter that adds colors matching printpl/printez style."""
+
+    def __init__(self):
+        super().__init__()
+
+    def format(self, record):
+
+        # Get the original message
+        message = record.getMessage()
+
+        # Apply colors based on level and type, matching printpl/printez exactly
+        if hasattr(record, 'print_type'):
+            # Messages from printpl with explicit type
+            msg_type = record.print_type
+            if msg_type == 'i':
+                return f'{BColors.CYAN}Info: {message}{BColors.RESET_COLOR}'
+            elif msg_type == 'f':
+                return f'Writing File: {message}'
+            elif msg_type == 'a':
+                return f'{BColors.GREEN}{message}{BColors.RESET_COLOR}'
+            elif msg_type == 'w':
+                return f'{BColors.WARNING}Warning: {message}{BColors.RESET_COLOR}'
+            else:
+                return message
+        else:
+            # Standard log levels
+            if record.levelno >= logging.ERROR:
+                return f'{BColors.RED}ERROR: {message}{BColors.RESET_COLOR}'
+            elif record.levelno >= logging.WARNING:
+                return f'{BColors.WARNING}Warning: {message}{BColors.RESET_COLOR}'
+            elif record.levelno >= logging.INFO:
+                return f'{BColors.CYAN}Info: {message}{BColors.RESET_COLOR}'
+            else:
+                return f'{BColors.WHITE}Debug: {message}{BColors.RESET_COLOR}'
+
+
+class FileFormatter(logging.Formatter):
+    """File formatter without colors but with detailed info."""
+
+    def __init__(self):
+        super().__init__(
+            '[%(asctime)s][%(levelname)-7s][%(name)s] %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+
+
 def setup_logging(
     log_file: Optional[Path] = None,
     console_level: int = logging.INFO,
@@ -467,7 +500,7 @@ def setup_logging(
     verbose: bool = False
 ):
     """
-    Initialize logging system for plagih framework.
+    Initialize logging system for plagih framework with colored output.
 
     Call this once at the start of your script/experiment.
 
@@ -482,11 +515,10 @@ def setup_logging(
     # Remove existing handlers to avoid duplicates
     logger.handlers.clear()
 
-    # Console Handler - minimal formatting for user feedback
+    # Console Handler - colored formatting matching printpl/printez
     console_handler = logging.StreamHandler()
     console_handler.setLevel(console_level if not verbose else logging.DEBUG)
-    console_formatter = logging.Formatter('%(message)s')  # Only message (colors already included)
-    console_handler.setFormatter(console_formatter)
+    console_handler.setFormatter(ColoredConsoleFormatter())
     logger.addHandler(console_handler)
 
     # File Handler - detailed formatting for debugging
@@ -496,11 +528,7 @@ def setup_logging(
 
         file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
         file_handler.setLevel(file_level)
-        file_formatter = logging.Formatter(
-            '[%(asctime)s][%(levelname)-7s][%(name)s] %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
-        file_handler.setFormatter(file_formatter)
+        file_handler.setFormatter(FileFormatter())
         logger.addHandler(file_handler)
 
 
@@ -519,29 +547,29 @@ def printpl(msg_type: str, message_str: str):
     if msg_type not in PRINT_DUMMY:
         return
 
-    # Format based on type
-    if 'i' in msg_type:
-        formatted = f'{BColors.CYAN}Info: {message_str}{BColors.RESET_COLOR}'
-        logger.info(message_str)
-    elif 'f' in msg_type:
-        formatted = f'Writing File: {message_str}{BColors.RESET_COLOR}{BColors.RESET_COLOR}'
-        logger.info(f"File: {message_str}")
-    elif 'a' in msg_type:
-        formatted = f'{BColors.GREEN}{message_str}{BColors.RESET_COLOR}'
-        logger.info(message_str)
-    elif 'w' in msg_type:
-        print_warning(msg_type, message_str)
-        return  # print_warning handles logging
-    else:
-        formatted = message_str
-        logger.info(message_str)
+    # Map message types to log levels
+    level_map = {'i': logging.INFO, 'f': logging.INFO, 'a': logging.INFO, 'w': logging.WARNING}
+    level = level_map.get(msg_type, logging.INFO)
 
-    print(formatted)
+    # Create a log record with print_type for colored formatting
+    record = logging.LogRecord(
+        name=logger.name,
+        level=level,
+        pathname='',
+        lineno=0,
+        msg=message_str,
+        args=(),
+        exc_info=None
+    )
+    record.print_type = msg_type
+
+    # Send to logger (will handle both console and file)
+    logger.handle(record)
 
 
 def print_warning(msg_type: str, text: str):
     """
-    Print warnings with logging backend.
+    Print warnings with logging backend and matching colors.
 
     Args:
         msg_type: Warning type indicator ('w' for warning).
@@ -552,17 +580,25 @@ def print_warning(msg_type: str, text: str):
         if msg_type not in PRINT_DUMMY:
             return
 
-        if 'w' in msg_type:
-            formatted = f'{BColors.WARNING}Warning ({msg_type}): {text}{BColors.RESET_COLOR}'
-            logger.warning(f"({msg_type}) {text}")
-        else:
-            formatted = f'{BColors.WARNING}Warning ({msg_type}):{BColors.RESET_COLOR} {text}'
-            logger.warning(f"({msg_type}) {text}")
+        # Create warning record with proper formatting
+        record = logging.LogRecord(
+            name=logger.name,
+            level=logging.WARNING,
+            pathname='',
+            lineno=0,
+            msg=f"({msg_type}) {text}",
+            args=(),
+            exc_info=None
+        )
+        record.print_type = 'w'
 
-        print(formatted)
+        # Send to logger
+        logger.handle(record)
+
     except Exception as ex:
+        # Fallback to direct print
+        from plagih.util import BColors
         print(f'{BColors.WARNING}Warning (w): Could not print warning: {ex}{BColors.RESET_COLOR}')
-        logger.error(f"Could not print warning: {ex}")
 
 
 def print_caution(txt: str):
@@ -572,10 +608,7 @@ def print_caution(txt: str):
     Args:
         txt: Caution message text.
     """
-
-    formatted = f'{BColors.RED}CAUTION! {BColors.WARNING}{txt}{BColors.RESET_COLOR}'
     logger.error(f"CAUTION! {txt}")
-    print(formatted)
 
 
 def printez(message_type: str, text: str):
@@ -601,7 +634,7 @@ def log_debug(msg: str, *args, **kwargs):
 
 
 def log_info(msg: str, *args, **kwargs):
-    """Log info message."""
+    """Log info message with standard formatting."""
     logger.info(msg, *args, **kwargs)
 
 
@@ -613,6 +646,7 @@ def log_warning(msg: str, *args, **kwargs):
 def log_error(msg: str, *args, **kwargs):
     """Log error message."""
     logger.error(msg, *args, **kwargs)
+
 
 
 if __name__ == '__main__':

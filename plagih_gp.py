@@ -182,6 +182,288 @@ def demo_minimal():
 
 
 # =============================================================================
+# CARTPOLE DEMO - 4 inputs, binary classification
+# =============================================================================
+
+def demo_cartpole():
+    """
+    CartPole demonstration of the plagih GP framework.
+
+    This demo shows GP on the classic CartPole balancing problem:
+    - 4 input variables (position, velocity, angle, angular velocity)
+    - Binary output (push left or right)
+    - Simple known solutions exist (e.g., poleAngle < 0)
+
+    Runtime: ~30 seconds for 5 generations
+    """
+    setup_logging(
+        log_file=Path('./logs/demo_cartpole.log'),
+        console_level=logging.INFO,
+        verbose=False
+    )
+
+    log_info("Starting CartPole demo")
+
+    print(TEXT_NEWLINE)
+    print("PLAGIH GP - CartPole Demo")
+    print(TEXT_NEWLINE)
+
+    # -------------------------------------------------------------------------
+    # STEP 1: Load CartPole data
+    # -------------------------------------------------------------------------
+    df = pd.read_csv(Path(__file__).parent.absolute() / 'benchmarks/cp/gp_files/samples.csv')
+    df = df.astype('float32')
+
+    # Rename columns for clarity
+    df = df.rename(columns={
+        'observation2': 'poleAngle',
+        'observation3': 'poleVel',
+        'action0': 'action'
+    })
+
+    df_train, df_test = train_test_split(df, test_size=0.2, random_state=42)
+
+    print(f"Training data: {len(df_train)} samples")
+    print(f"Features: {list(df_train.columns[:-1])}")
+    print(f"Target: action (binary: 0=left, 1=right)\n")
+
+    # -------------------------------------------------------------------------
+    # STEP 2: Define operators
+    # -------------------------------------------------------------------------
+    operator_dict = {
+        Add: 2,
+        Mul: 2,
+        Div: 1,
+        Sub: 1,
+        Abs: 1,
+        # Boolean/comparison for decision making
+        Lt: 2,       # Less than - important for CartPole
+        Le: 1,
+        And: 1,
+        Or: 1,
+        Ifte: 1,     # If-then-else
+    }
+
+    print(f"Available operators: {len(operator_dict)}")
+    print(f"Input symbols: ['cartPos', 'cartVel', 'poleAngle', 'poleVel']\n")
+
+    # -------------------------------------------------------------------------
+    # STEP 3: Create GP system
+    # -------------------------------------------------------------------------
+    output_dir = Path.cwd() / '.testruns' / 'demo_cartpole'
+
+    gp = ExplainableGP.create(
+        symbols=['cartPos', 'cartVel', 'poleAngle', 'poleVel'],
+        df_train=df_train,
+        rootdir=output_dir,
+        operators=operator_dict,
+        depth_max=4,
+        nodes_max=20,
+        pop_max_size=20,
+        gen_end=5,
+        clip_range=(0.0, 1.0),  # Binary classification
+        error_metric='rmse',
+    )
+
+    print(f"GP initialized. Output: {output_dir}\n")
+
+    # -------------------------------------------------------------------------
+    # STEP 4: Run evolution
+    # -------------------------------------------------------------------------
+    print("Creating initial population...")
+    gp.gen_create_initial()
+    print(f"  -> {len(gp.pop_genepool)} candidates, {len(gp.paretofront)} non-dominated\n")
+
+    print("Running evolution...")
+
+    for gen in range(3):
+        print(f"--- Generation {gp.gen_id} ---")
+
+        @gp.create_trees(rate=0.2)
+        def reproduction():
+            return selection_tournament(gp.pop_genepool, n=3)
+
+        @gp.create_trees(rate=0.4)
+        def mutation():
+            tree = selection_tournament(gp.pop_genepool, n=3)
+            return gp.evolve.evolve_mutate_branch_depth(tree, depth_goal=2, p_term=0.3)
+
+        @gp.create_trees(rate=0.2)
+        def random_new():
+            depth = np.random.choice([2, 3])
+            return gp.evolve.evolve_new_tree_depth(float, depth, p_term=0.1)
+
+        @gp.create_trees(rate=0.2, crossover=True)
+        def crossover():
+            tree_a = selection_tournament(gp.pop_genepool, n=3)
+            tree_b = selection_tournament(gp.pop_genepool, n=3)
+            return gp.evolve.evolve_crossover(tree_a, tree_b)
+
+        gp.end_generation()
+
+    # -------------------------------------------------------------------------
+    # STEP 5: Show results
+    # -------------------------------------------------------------------------
+    print("\n" + "=" * 60)
+    print("PARETO FRONT (best trade-offs between fitness and complexity)")
+    print("=" * 60)
+
+    for candidate in sorted(gp.paretofront, key=lambda c: c.parsimony):
+        print(f"  Fitness: {candidate.fitness:.4f}, Complexity: {candidate.parsimony:2d}, "
+              f"Expr: {candidate.get_evotree().get_sympy_expr()}")
+
+    gp.backup_save()
+    gp.evoloop_monitoring_plots()
+
+    print(f"\n{TEXT_NEWLINE}\nCartPole demo complete! Results saved to: {output_dir}\n{TEXT_NEWLINE}")
+
+    return gp
+
+
+# =============================================================================
+# SYMBOLIC REGRESSION DEMO - Classic GP benchmark
+# =============================================================================
+
+def demo_symbolic_regression():
+    """
+    Symbolic Regression demonstration - classic GP benchmark.
+
+    Goal: Find the formula f(x) = x³ + x² + x
+
+    This is a standard GP benchmark because:
+    - There is an exact solution
+    - The solution is relatively simple
+    - Success is easy to measure
+
+    Runtime: ~20 seconds for 5 generations
+    """
+    setup_logging(
+        log_file=Path('./logs/demo_symbolic_regression.log'),
+        console_level=logging.INFO,
+        verbose=False
+    )
+
+    log_info("Starting Symbolic Regression demo")
+
+    print(TEXT_NEWLINE)
+    print("PLAGIH GP - Symbolic Regression Demo")
+    print("Goal: Find f(x) = x³ + x² + x")
+    print(TEXT_NEWLINE)
+
+    # -------------------------------------------------------------------------
+    # STEP 1: Load polynomial data
+    # -------------------------------------------------------------------------
+    df = pd.read_csv(Path(__file__).parent.absolute() / 'benchmarks/sr/gp_files/polynomial.csv')
+    df = df.astype('float32')
+    df_train, df_test = train_test_split(df, test_size=0.2, random_state=42)
+
+    print(f"Training data: {len(df_train)} samples")
+    print(f"Input: x (range: -2 to 2)")
+    print(f"Target: x³ + x² + x\n")
+
+    # -------------------------------------------------------------------------
+    # STEP 2: Define operators - math focused
+    # -------------------------------------------------------------------------
+    operator_dict = {
+        Add: 3,      # Addition - very important
+        Mul: 3,      # Multiplication - very important
+        Sub: 2,      # Subtraction
+        Div: 1,      # Division
+        Square: 2,   # x² - helpful
+        Lt: 1,       # Comparison (required for bool type)
+        # Note: We don't include Cube, so GP must find x*x*x or x*x²
+    }
+
+    print(f"Available operators: {list(operator_dict.keys())}")
+    print(f"Note: No 'Cube' operator - GP must discover x³ = x*x*x\n")
+
+    # -------------------------------------------------------------------------
+    # STEP 3: Create GP system
+    # -------------------------------------------------------------------------
+    output_dir = Path.cwd() / '.testruns' / 'demo_symbolic_regression'
+
+    gp = ExplainableGP.create(
+        symbols=['x'],
+        df_train=df_train,
+        rootdir=output_dir,
+        operators=operator_dict,
+        depth_max=5,
+        nodes_max=15,
+        pop_max_size=30,
+        gen_end=5,
+        error_metric='mse',  # Mean squared error for regression
+    )
+
+    print(f"GP initialized. Output: {output_dir}\n")
+
+    # -------------------------------------------------------------------------
+    # STEP 4: Run evolution
+    # -------------------------------------------------------------------------
+    print("Creating initial population...")
+    gp.gen_create_initial()
+    print(f"  -> {len(gp.pop_genepool)} candidates, {len(gp.paretofront)} non-dominated\n")
+
+    print("Running evolution...")
+
+    for gen in range(5):
+        print(f"--- Generation {gp.gen_id} ---")
+
+        @gp.create_trees(rate=0.15)
+        def reproduction():
+            return selection_tournament(gp.pop_genepool, n=3)
+
+        @gp.create_trees(rate=0.45)
+        def mutation():
+            tree = selection_tournament(gp.pop_genepool, n=3)
+            return gp.evolve.evolve_mutate_branch_depth(tree, depth_goal=2, p_term=0.2)
+
+        @gp.create_trees(rate=0.2)
+        def random_new():
+            depth = np.random.choice([2, 3, 4])
+            return gp.evolve.evolve_new_tree_depth(float, depth, p_term=0.1)
+
+        @gp.create_trees(rate=0.2, crossover=True)
+        def crossover():
+            tree_a = selection_tournament(gp.pop_genepool, n=3)
+            tree_b = selection_tournament(gp.pop_genepool, n=3)
+            return gp.evolve.evolve_crossover(tree_a, tree_b)
+
+        gp.end_generation()
+
+    # -------------------------------------------------------------------------
+    # STEP 5: Show results
+    # -------------------------------------------------------------------------
+    print("\n" + "=" * 60)
+    print("PARETO FRONT")
+    print("Target: x³ + x² + x = x*(x² + x + 1) = x*(x+1)² - x")
+    print("=" * 60)
+
+    for candidate in sorted(gp.paretofront, key=lambda c: c.fitness):
+        expr = candidate.get_evotree().get_sympy_expr()
+        try:
+            simplified = sympy.simplify(expr)
+        except:
+            simplified = expr
+        print(f"  MSE: {candidate.fitness:.6f}, Complexity: {candidate.parsimony:2d}, "
+              f"Expr: {simplified}")
+
+    # Check if we found the exact solution
+    print("\n" + "-" * 60)
+    best = min(gp.paretofront, key=lambda c: c.fitness)
+    if best.fitness < 0.001:
+        print("✅ Found a very good approximation!")
+    else:
+        print("🔄 More generations might improve the solution.")
+
+    gp.backup_save()
+    gp.evoloop_monitoring_plots()
+
+    print(f"\n{TEXT_NEWLINE}\nSymbolic Regression demo complete! Results saved to: {output_dir}\n{TEXT_NEWLINE}")
+
+    return gp
+
+
+# =============================================================================
 # EXISTING TEST RUNS (kept for backwards compatibility)
 # =============================================================================
 

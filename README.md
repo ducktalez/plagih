@@ -6,10 +6,7 @@
 
 ## Ablage/Todos
 
-- Neues Benchmark für Testläufe
-  - Mein go-to-example ist momentan Mountaincar, aber ich möchte ein weiteres Benchmark-Environment hinzufügen, um die Vielseitigkeit des Frameworks zu demonstrieren.
-  - In diesem Projekt befindet sich auch das industrial-benchmark. Es ist ansich zu komplex, allerdings sollte man es dennoch einfach testen können.
-  - Vorschlag für ein weiteres Beispiel: CartPole-v1? Sonst auch gerne ein anderes einfaches Environment, das bei GP-frameworks als Standard gilt.
+- Merged-tree mit chatgpt erstellen
 - lint/black/etc einbauen
   - Empfohlene Tools: black, flake8, isort?
   - Wie würdest du das einbauen?
@@ -17,7 +14,7 @@
   - pandas-monitoring wird momentan verwendet, um die Daten zu analysieren und zu visualisieren.
     Es ist aber nicht sehr flexibel und ich habe das Gefühl, dass es nicht optimal für meinen Anwendungsfall ist.
     Ich möchte es durch eine eigene Lösung ersetzen, die besser auf meine Bedürfnisse zugeschnitten ist.
-    Hast du Vorschläge, wie ich das machen könnte?
+    Hast du Vorschläge, wie ich das machen könnte? Vielleicht eine Monitoring-klasse? Was ist hier üblich?
 - better structure
   - plagih_gp.py ist momentan das Hauptskript, welches den Ablauf steuert. Es ist aber sehr lang und unübersichtlich.
     Ich möchte es in mehrere Dateien aufteilen, z.B.:
@@ -29,7 +26,6 @@
     - utils.py (Hilfsfunktionen)
   - Wie würdest du das strukturieren?
 - self.evolve.origin_tree
-- Schönerer Aufruf von ExplainableGP (nach deinem Vorschlag)
 - Anweisungen für Copilot (Instructions erstellen), am besten, sodass sie aich auch selbst notfalls erweitern.
 - Dokumentation als .md/.pdf
 - Pseudo-Backpropagation durch Bäume
@@ -67,6 +63,7 @@
 - build trees like sympy.factor() structure?
 - Division-multiplicator node as non-len() chain input?
 - print(sympy.parsing.sympy_parser.transformations)
+- Symbol-time (for IB), choosing the time-step as input variable
 - "Ban" trees, if they are too dominant
 - Different print types for trees, also visualization
 - make categorical options categorical. For mountain car, it is scalable, but a categorical options (aka a 3 nodes last layer) should be an option

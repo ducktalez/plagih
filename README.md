@@ -6,6 +6,10 @@
 
 ## Ablage/Todos
 
+- Neues Benchmark für Testläufe
+  - Mein go-to-example ist momentan Mountaincar, aber ich möchte ein weiteres Benchmark-Environment hinzufügen, um die Vielseitigkeit des Frameworks zu demonstrieren.
+  - In diesem Projekt befindet sich auch das industrial-benchmark. Es ist ansich zu komplex, allerdings sollte man es dennoch einfach testen können.
+  - Vorschlag für ein weiteres Beispiel: CartPole-v1? Sonst auch gerne ein anderes einfaches Environment, das bei GP-frameworks als Standard gilt.
 - lint/black/etc einbauen
   - Empfohlene Tools: black, flake8, isort?
   - Wie würdest du das einbauen?
@@ -34,59 +38,6 @@
   - regular python code implementation
 
 # Copilot Aufgaben
-
-## Copilot-Anfrage für Baum-Merging-Strategien
-Ich will alle Bäume einer Population in einen Baum zusammen mergen. Es sollen dabei mehrere generelle Ziele verfolgt werden, die jeweils unterschiedliche merge-strategien erfordern.
-Die Ideen sind z. B:
-- Feed-forward-berechnung aller Teilergebnisse einer Population (wie in einem neuronalen Netz)
-- Visuelle Übersicht über den mathematischen Raum, die eine Population abdeckt
-- Sparsame Berechnung der gesamten Population in einem Graphen. Kein Ausdruck muss "doppelt" berechnet werden.
-- Analyse und Rekombination von Genomen: Welche Knoten-kanten/Genome werden am häufigsten benutzt? Wo sind die besten Verbesserungsmöglichkeiten?
-
-Ich gehe davon aus, dass in jedem Fall eine Funktion in Klasse Node() den Bauminhalt passend für die merge-strategie der Gesamtpopulation vorbereitet. Leider kenne ich die Strategien für die Tree Edit Distance nicht.
-
-## Allgemeine Hilfsfunktionen:
-### expression-sets nach Tiefe
-- Jeder Baum gibt von unten nach oben (terminal zu root) eine Liste seiner Ausdrücke.
-- Mit jedem Schritt nach oben werden die auf dieser Ebene vorhandenen Ausdrücke gesammelt, mit sympy vereinheitlicht und in einer Liste zurückgegeben.
-- Die Liste ist eine Liste von Listen, die jeweils die Ausdrücke pro Ebene enthalten.
-  - Beispiel 1: (a+b*c) -> [[a, b], [b*c], [a+b*c]]
-  - Beispiel 2: (a+(b+c)) -> [[(a), (b), (c)], [(b+c)], [(a+b+c)]]
-- Wichtig ist, dass die Ausdrücke pro Ebene vereinheitlicht werden (zB. a+b == b+a), aber dennoch ihren Kindern zugeordnet bleiben.
-
-## Strategien
-### "One-evaluation-tree"
-- aus der Population werden nun alle uniquen Einträge pro Ebene mit ihren Elternknoten verbunden. 
-- Es ergibt sich ein Netz, welches alle Bäume einer Population beinhaltet
-- Die Darstellung als einheitlicher Graph sollte dazu führen, dass keine Evaluation doppelt stattfinden muss (und sollte mit Tensorflow möglich sein).
-
-### "Expand-random-tree"
-- Ein Startbaum wird zufällig ausgewählt.
-- Für jeden weiteren Baum werden die notwendigen Knoten/Äste hinzugefügt, um den Baum zu evaluieren.
-- Es ergibt sich ein großer Baum, der alle Bäume der Population beinhaltet, aber nur die notwendigen Knoten/Äste enthält.
-- Die Darstellung ist nicht deterministisch und stark abhängig vom Startbaum.
-- 
-### "Clustered-tree"
-- Alle Bäume werden in Cluster gruppiert, die sich möglichst ähnlich sind (zB. mit apted).
-- Für jedes Cluster wird ein "Mittelbaum" erstellt, der die gemeinsamen Strukturen enthält.
-- Die individuellen Bäume werden als Abwandlungen des Mittelbaums dargestellt, indem nur die Unterschiede hinzugefügt werden.
-- Es ergibt sich eine hierarchische Struktur, die die Ähnlichkeiten und Unterschiede zwischen den Bäumen hervorhebt.
-
-## Substrategien
-### "Sympified-merged-tree"
-- Alle Bäume werden in sympy-Ausdrücke umgewandelt.
-- Besonderheit hier ist, dass verschiedene Sympy-Strategien angewendet werden können, um die Bäume zu vereinheitlichen (zB. faktorisiert, expandiert, etc.).
-
-### "Operator-focused-tree"
-- Number-nodes könnten optional ohne Wert in den Baum aufgenommen werden.
-- Es könnte auch eine Idee sein, Symbole ebenfalls zu ignorieren und Merge-baum nur mit den Operatoren erzeugen
-
-### "Chainable-merged-tree"
-- chainable-Knoten (zB. Add/Mul/Max als Floor/Ceiling Funktion)) könnten zusammengefasst werden (Was bereits durch sympy gemacht werden würde.)
-
-Vorerst soll nur die "One-evaluation-tree"-Strategie umgesetzt werden.
-Für diesen Baum soll ebenfalls eine Visualisierungsfunktion (String-ausgabe) erstellt werden, die ähnlich den bisherigen ist.
-Die restlichen Ideen sollen als Anregung dienen und können später umgesetzt werden. Sie müssen aber als Kommentare o. ä. im Code erhalten bleiben.
 
 ## Copilot-Anfrage für Baum-Merging-Strategien
 

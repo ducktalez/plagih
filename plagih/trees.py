@@ -3232,7 +3232,7 @@ class ExplainableGP:
     DEFAULT_ERROR_METRIC = staticmethod(lambda pred, true: np.sqrt(np.mean((pred - true) ** 2)))
 
     # Default autocast: identity (np.array)
-    DEFAULT_AUTOCAST = staticmethod(lambda x: np.asarray(x, dtype=np.float64))
+    DEFAULT_AUTOCAST = staticmethod(lambda _x: np.asarray(_x, dtype=np.float64))
 
     def __init__(
         self,
@@ -3799,6 +3799,314 @@ class ExplainableGP:
         candidate = Candidate(evotree, fitness=fitness, parsimony=parsimony, tag=tag)
         return candidate
 
+    def _save_merged_population_tree(self):
+        """Creates and saves a merged population tree visualization.
+
+        Merges all trees in the current population into a single DAG
+        and saves both a text representation and a graphviz visualization.
+
+        Output files:
+        - population_merged/Population-merged-gen-XXX.txt (text summary)
+        - population_merged/Population-merged-gen-XXX.png (graphviz visualization)
+        - population_merged/Population-merged-gen-XXX.dot (DOT source as fallback)
+        """
+        from plagih.population_merge import build_one_evaluation_tree
+
+        try:
+            # Build merged graph from current population
+            graph = build_one_evaluation_tree(self.pop_genepool)
+
+            # Create output directory
+            merged_dir = self.rootdir / 'population_merged'
+            merged_dir.mkdir(parents=True, exist_ok=True)
+
+            # Generate filename with generation number
+            base_filename = f'Population-merged-gen-{self.gen_id:03d}'
+
+            #
+            # # Always save DOT file (useful for manual rendering or debugging)
+            # dot_path = merged_dir / f'{base_filename}.dot'
+            dot_source = graph.to_graphviz_dot()
+            # with open(dot_path, 'w', encoding='utf-8') as f:
+            #     f.write(dot_source)
+
+            # Try to render PNG with graphviz
+            png_created = False
+            try:
+                from graphviz import Source
+                src = Source(dot_source)
+                png_path = merged_dir / base_filename
+                # Use a timeout-safe approach: render to file
+                src.render(str(png_path), format='png', cleanup=True)
+                png_created = True
+                printpl('ggg', f'Saved merged population tree: {base_filename}.png')
+            except ImportError:
+                printpl('ggg', f'Graphviz not installed. Saved DOT file: {base_filename}.dot')
+            except Exception as viz_err:
+                # Graphviz crashed (common with large graphs) - DOT file is already saved
+                printpl('ggg', f'Graphviz render failed, DOT file saved: {base_filename}.dot')
+
+                # Try alternative: matplotlib-based visualization
+                if not png_created:
+                    try:
+                        self._save_merged_tree_matplotlib(graph, merged_dir / f'{base_filename}.png')
+                        printpl('ggg', f'Saved merged tree (matplotlib): {base_filename}.png')
+                    except Exception as mpl_err:
+                        pass  # DOT file is sufficient
+
+        except Exception as e:
+            printpl('w', f'Could not create merged population tree: {e}')
+
+    def _save_merged_tree_matplotlib(self, graph, output_path):
+        """Fallback visualization using matplotlib when graphviz fails.
+
+        Creates a hierarchical layout of the merged graph with:
+        - Root nodes at the top, terminals at the bottom
+        - Rounded rectangles for nodes (auto-sized to content)
+        - No overlapping nodes
+
+        Args:
+            graph: MergedEvaluationGraph instance
+            output_path: Path to save the PNG file
+        """
+        import matplotlib.pyplot as plt
+        from matplotlib.patches import FancyBboxPatch
+        from matplotlib.lines import Line2D
+        import textwrap
+
+        # Get statistics for title
+        stats = graph.get_statistics()
+
+        # Group nodes by depth
+        max_depth = max((n.depth for n in graph.nodes.values()), default=0)
+        layers = {d: [] for d in range(max_depth + 1)}
+        for node in graph.nodes.values():
+            layers[node.depth].append(node)
+
+        # Configuration
+        base_font_size = 7
+        max_label_width = 16  # characters per line before wrapping
+        min_x_gap = 0.3  # minimum horizontal gap between node EDGES (not centers)
+        min_y_gap = 0.4  # minimum vertical gap between node EDGES
+        box_padding_x = 0.08  # padding inside box (horizontal)
+        box_padding_y = 0.06  # padding inside box (vertical)
+
+        # Create a temporary figure to measure text sizes accurately
+        temp_fig, temp_ax = plt.subplots(figsize=(10, 10))
+        temp_fig.canvas.draw()
+        renderer = temp_fig.canvas.get_renderer()
+        dpi = temp_fig.dpi
+
+        # Prepare labels and measure actual text sizes
+        node_labels = {}
+        node_sizes = {}  # (width, height) for each node
+
+        for node in graph.nodes.values():
+            # Create label
+            label = str(node.sympy_expr)
+
+            # Truncate very long expressions
+            if len(label) > 35:
+                label = label[:32] + '...'
+
+            # Add usage count
+            usage = len(node.original_nodes)
+            if usage > 1:
+                label += f' ({usage}x)'
+
+            # Add root marker
+            if node.is_root:
+                label = '[R] ' + label
+
+            # Wrap long labels to multiple lines
+            if len(label) > max_label_width:
+                wrapped = textwrap.wrap(label, width=max_label_width)
+                label = '\n'.join(wrapped)
+
+            node_labels[node.node_id] = label
+
+            # Measure actual text size
+            txt = temp_ax.text(0, 0, label, fontsize=base_font_size,
+                              fontfamily='monospace', linespacing=1.1)
+            bbox = txt.get_window_extent(renderer=renderer)
+            txt.remove()
+
+            # Convert from pixels to data coordinates
+            width_inches = bbox.width / dpi
+            height_inches = bbox.height / dpi
+
+            # Scale to data coordinates - use smaller scale
+            scale = 6.0
+            width = width_inches * scale + 2 * box_padding_x
+            height = height_inches * scale + 2 * box_padding_y
+
+            # Ensure minimum size
+            width = max(0.4, width)
+            height = max(0.25, height)
+
+            node_sizes[node.node_id] = (width, height)
+
+        plt.close(temp_fig)
+
+        # Calculate positions with proper spacing to avoid overlap
+        positions = {}
+
+        # Calculate max height per layer for consistent y-spacing
+        layer_max_heights = {}
+        for depth in range(max_depth + 1):
+            nodes = layers[depth]
+            if nodes:
+                layer_max_heights[depth] = max(node_sizes[n.node_id][1] for n in nodes)
+            else:
+                layer_max_heights[depth] = 0.5
+
+        # Calculate x positions for each layer
+        for depth in range(max_depth + 1):
+            nodes = sorted(layers[depth], key=lambda n: n.node_id)
+            if not nodes:
+                continue
+
+            # Calculate total width needed for this layer (node widths + gaps)
+            layer_widths = [node_sizes[n.node_id][0] for n in nodes]
+            total_width = sum(layer_widths) + min_x_gap * (len(nodes) - 1)
+
+            # Calculate y position based on cumulative heights of lower layers
+            y = 0
+            for d in range(depth):
+                y += layer_max_heights.get(d, 0.5) + min_y_gap
+
+            # Position nodes centered around 0
+            current_x = -total_width / 2
+            for node in nodes:
+                w, h = node_sizes[node.node_id]
+                x = current_x + w / 2  # center of the box
+                positions[node.node_id] = (x, y)
+                current_x += w + min_x_gap
+
+        # Determine figure size based on graph extent
+        all_x = []
+        all_y = []
+        if positions:
+            # Include box extents in calculations
+            all_x_min = [p[0] - node_sizes[nid][0]/2 for nid, p in positions.items()]
+            all_x_max = [p[0] + node_sizes[nid][0]/2 for nid, p in positions.items()]
+            all_y_min = [p[1] - node_sizes[nid][1]/2 for nid, p in positions.items()]
+            all_y_max = [p[1] + node_sizes[nid][1]/2 for nid, p in positions.items()]
+
+            all_x = [p[0] for p in positions.values()]
+            all_y = [p[1] for p in positions.values()]
+
+            x_range = max(all_x_max) - min(all_x_min) + 2
+            y_range = max(all_y_max) - min(all_y_min) + 2
+
+            # Dynamic figure size based on content
+            fig_width = max(14, min(50, x_range * 1.0))
+            fig_height = max(8, min(35, y_range * 1.0))
+        else:
+            fig_width, fig_height = 14, 10
+
+        fig, ax = plt.subplots(1, 1, figsize=(fig_width, fig_height))
+
+        # Draw edges first (so they're behind nodes)
+        for node in graph.nodes.values():
+            if node.node_id not in positions:
+                continue
+            x1, y1 = positions[node.node_id]
+            h1 = node_sizes[node.node_id][1]
+
+            for child_id in node.child_ids:
+                if child_id not in positions:
+                    continue
+                x2, y2 = positions[child_id]
+                h2 = node_sizes[child_id][1]
+
+                # Draw line from bottom of parent to top of child
+                y1_bottom = y1 - h1 / 2
+                y2_top = y2 + h2 / 2
+
+                ax.plot([x1, x2], [y1_bottom, y2_top],
+                       color='#888888', linewidth=1.2, zorder=1)
+
+        # Draw nodes
+        for node in graph.nodes.values():
+            if node.node_id not in positions:
+                continue
+            x, y = positions[node.node_id]
+            w, h = node_sizes[node.node_id]
+            label = node_labels[node.node_id]
+
+            # Color based on type
+            if node.is_root:
+                facecolor = '#FFB74D'  # Orange for roots
+                edgecolor = '#E65100'
+            elif node.node_type == 'terminal':
+                facecolor = '#A5D6A7'  # Green for terminals
+                edgecolor = '#2E7D32'
+            else:
+                facecolor = '#90CAF9'  # Blue for operators
+                edgecolor = '#1565C0'
+
+            # Draw rounded rectangle
+            box = FancyBboxPatch(
+                (x - w/2, y - h/2), w, h,
+                boxstyle="round,pad=0.02,rounding_size=0.15",
+                facecolor=facecolor,
+                edgecolor=edgecolor,
+                linewidth=2.0,
+                zorder=2
+            )
+            ax.add_patch(box)
+
+            # Draw label
+            ax.text(x, y, label,
+                   ha='center', va='center',
+                   fontsize=base_font_size,
+                   fontfamily='monospace',
+                   linespacing=1.1,
+                   zorder=3)
+
+        # Title with statistics
+        title = (f"Merged Population Tree - Generation {self.gen_id}\n"
+                 f"Trees: {stats['tree_count']} | Nodes: {stats['total_nodes']} | "
+                 f"Shared: {stats['shared_nodes']} | Savings: {stats['savings_percent']:.1f}%")
+        ax.set_title(title, fontsize=11, fontweight='bold', pad=15)
+
+        # Add legend
+        legend_elements = [
+            Line2D([0], [0], marker='s', color='w', markerfacecolor='#FFB74D',
+                   markersize=12, label='Root (output)'),
+            Line2D([0], [0], marker='s', color='w', markerfacecolor='#90CAF9',
+                   markersize=12, label='Operator'),
+            Line2D([0], [0], marker='s', color='w', markerfacecolor='#A5D6A7',
+                   markersize=12, label='Terminal (input)'),
+        ]
+        ax.legend(handles=legend_elements, loc='upper right', fontsize=8)
+
+        # Add depth labels on the left (only if we have positions)
+        if positions and all_x:
+            x_min = min(all_x) - max(node_sizes[nid][0]/2 for nid in positions.keys())
+            for depth in range(max_depth + 1):
+                if layers[depth]:
+                    # Calculate y position same way as nodes
+                    y = 0
+                    for d in range(depth):
+                        y += layer_max_heights.get(d, 0.5) + min_y_gap
+                    ax.text(x_min - 0.5, y, f'Depth {depth}',
+                           ha='right', va='center', fontsize=8, color='#555555',
+                           fontweight='bold')
+
+        ax.set_aspect('equal')
+        ax.axis('off')
+        ax.autoscale()
+
+        # Add margins
+        ax.margins(0.05)
+
+        plt.tight_layout()
+        plt.savefig(output_path, dpi=150, bbox_inches='tight',
+                   facecolor='white', edgecolor='none')
+        plt.close(fig)
+
     def evoloop_monitoring_plots(self):
         """Creates all monitoring visualizations for the GP run.
 
@@ -3879,6 +4187,9 @@ class ExplainableGP:
         printpl('gg',
                 f"Created {len(self.pop_genepool)}/{self.gen_end} ({tmp_dict['pop_unique']} unique) in generation {self.gen_id}. "
                 f"Trees in LUT: {len(self.lut_symex_fitness)} Generation took {gen_time:4.2f}s")
+
+        # Generate merged population tree visualization
+        self._save_merged_population_tree()
 
         printpl('ggg', f'--- Generation {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}. ---')
 

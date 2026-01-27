@@ -36,6 +36,7 @@ Custom Operators /Functions/Nodes/Terminals/Nested:
 import copy
 import random
 import warnings
+import os
 from abc import ABC
 from collections import deque
 
@@ -47,6 +48,7 @@ from sympy.utilities.exceptions import ignore_warnings
 from plagih.paretofront import *
 from plagih.tree_complexity.tree_edit_distance import *
 from plagih.util import *
+from plagih.monitoring import GPMonitor
 
 from typing import Optional, List, Union, Callable, Type, Any, Dict, Tuple, TypeGuard
 
@@ -3298,14 +3300,24 @@ class ExplainableGP:
 
         # monitoring
         self.time_genstart = time.perf_counter()
-        self.gens_since_last_pareto = 0
-        self.monitor_df = pd.DataFrame(columns=['pop_len', 'pop_unique', 'lut_symex_fitness-len',
-                                                'time',
-                                                'fit_avg', 'fit_var',
-                                                'fit_quantile_25', 'fit_quantile_50', 'fit_quantile_75', 'fit_best',
-                                                'parsim_avg', 'parsim_var', 'parsim_quantile_25', 'parsim_quantile_50',
-                                                'parsim_quantile_75', 'parsim_best',
-                                                'gens_since_last_pareto'])
+        self.monitor = GPMonitor()
+
+    # =========================================================================
+    # Backwards Compatibility Properties
+    # =========================================================================
+
+    @property
+    def monitor_df(self):
+        """Backwards compatible access to monitoring DataFrame.
+
+        Returns the monitor data as a pandas DataFrame with old column names.
+        """
+        return self.monitor.to_dataframe()
+
+    @property
+    def gens_since_last_pareto(self):
+        """Backwards compatible access to generations since last Pareto update."""
+        return self.monitor.gens_since_last_pareto
 
     @classmethod
     def create(
@@ -3489,7 +3501,7 @@ class ExplainableGP:
             if not old_front:
                 printez('a', f'Paretofront initialisiert mit {len(new_front)} Kandidaten.')
 
-            self.gens_since_last_pareto = 0
+            # Note: gens_since_last_pareto is now tracked by self.monitor
 
         return changed
 
@@ -3504,13 +3516,13 @@ class ExplainableGP:
         - Increments generation counter
         """
         # sfeh:open end generation in every generation
-        if self.run_update_paretofront(self.pop_next):
-            self.gens_since_last_pareto = 0
+        pareto_updated = self.run_update_paretofront(self.pop_next)
+        # Note: gens_since_last_pareto is now tracked by self.monitor
 
         self.pop_genepool = self.pop_next[:]
         print_pop(self.pop_next)
         self.pop_next = []
-        self.analyze_generation()
+        self.analyze_generation(pareto_updated=pareto_updated)
         self.gen_id += 1
 
         self.time_genstart = time.perf_counter()
@@ -3565,7 +3577,7 @@ class ExplainableGP:
         self.paretofront = pareto_from_pop(self.pop_next)
         self.pop_genepool = self.pop_next[:]
         self.pop_next = []
-        self.analyze_generation()
+        self.analyze_generation(pareto_updated=True)  # Initial population always updates Pareto
         self.gen_id += 1
         return self.pop_genepool
 
@@ -3803,12 +3815,12 @@ class ExplainableGP:
         """Creates and saves a merged population tree visualization.
 
         Merges all trees in the current population into a single DAG
-        and saves both a text representation and a graphviz visualization.
+        and saves a PNG visualization using graphviz or matplotlib fallback.
 
         Output files:
-        - population_merged/Population-merged-gen-XXX.txt (text summary)
-        - population_merged/Population-merged-gen-XXX.png (graphviz visualization)
-        - population_merged/Population-merged-gen-XXX.dot (DOT source as fallback)
+        - population_merged/Population-merged-gen-XXX.png (visualization)
+
+        Note: Intermediate dot files are cleaned up to keep only PNG output.
         """
         from plagih.population_merge import build_one_evaluation_tree
 
@@ -3837,22 +3849,38 @@ class ExplainableGP:
                 src = Source(dot_source)
                 png_path = merged_dir / base_filename
                 # Use a timeout-safe approach: render to file
+                # cleanup=True removes the .dot file after rendering
                 src.render(str(png_path), format='png', cleanup=True)
+
+                # Rename the rendered file from base_filename to base_filename.png
+                # (graphviz.render creates filename.png but also leaves filename without extension)
+                temp_file = str(png_path)  # This might exist without .png extension
+                final_png = str(png_path) + '.png'
+
+                # Clean up any files without extension
+                if os.path.exists(temp_file) and temp_file != final_png:
+                    try:
+                        os.remove(temp_file)
+                    except:
+                        pass
+
                 png_created = True
                 printpl('ggg', f'Saved merged population tree: {base_filename}.png')
             except ImportError:
-                printpl('ggg', f'Graphviz not installed. Saved DOT file: {base_filename}.dot')
+                printpl('ggg', f'Graphviz not installed. Trying matplotlib fallback...')
+                png_created = False  # Fall through to matplotlib
             except Exception as viz_err:
-                # Graphviz crashed (common with large graphs) - DOT file is already saved
-                printpl('ggg', f'Graphviz render failed, DOT file saved: {base_filename}.dot')
+                # Graphviz crashed (common with large graphs)
+                printpl('ggg', f'Graphviz render failed: {viz_err}. Trying matplotlib fallback...')
+                png_created = False  # Fall through to matplotlib
 
-                # Try alternative: matplotlib-based visualization
-                if not png_created:
-                    try:
-                        self._save_merged_tree_matplotlib(graph, merged_dir / f'{base_filename}.png')
-                        printpl('ggg', f'Saved merged tree (matplotlib): {base_filename}.png')
-                    except Exception as mpl_err:
-                        pass  # DOT file is sufficient
+            # Try alternative: matplotlib-based visualization
+            if not png_created:
+                try:
+                    self._save_merged_tree_matplotlib(graph, merged_dir / f'{base_filename}.png')
+                    printpl('ggg', f'Saved merged tree (matplotlib): {base_filename}.png')
+                except Exception as mpl_err:
+                    printpl('w', f'Could not save merged tree visualization: {mpl_err}')
 
         except Exception as e:
             printpl('w', f'Could not create merged population tree: {e}')
@@ -3986,15 +4014,12 @@ class ExplainableGP:
         # Determine figure size based on graph extent
         all_x = []
         all_y = []
-        if positions:
+        if positions and any(p[0] is not None for p in positions.values()):
             # Include box extents in calculations
-            all_x_min = [p[0] - node_sizes[nid][0]/2 for nid, p in positions.items()]
-            all_x_max = [p[0] + node_sizes[nid][0]/2 for nid, p in positions.items()]
-            all_y_min = [p[1] - node_sizes[nid][1]/2 for nid, p in positions.items()]
-            all_y_max = [p[1] + node_sizes[nid][1]/2 for nid, p in positions.items()]
-
-            all_x = [p[0] for p in positions.values()]
-            all_y = [p[1] for p in positions.values()]
+            all_x_min = [p[0] - node_sizes[nid][0]/2 for nid, p in positions.items() if p[0] is not None]
+            all_x_max = [p[0] + node_sizes[nid][0]/2 for nid, p in positions.items() if p[0] is not None]
+            all_y_min = [p[1] - node_sizes[nid][1]/2 for nid, p in positions.items() if p[0] is not None]
+            all_y_max = [p[1] + node_sizes[nid][1]/2 for nid, p in positions.items() if p[0] is not None]
 
             x_range = max(all_x_max) - min(all_x_min) + 2
             y_range = max(all_y_max) - min(all_y_min) + 2
@@ -4116,7 +4141,8 @@ class ExplainableGP:
         - Pareto front tree visualization
         - Parsimony histogram (for first 20 generations)
         """
-        plot_performance(self.monitor_df, self.rootdir / 'monitoring.png')
+        # Use monitor's built-in plotting or convert to DataFrame for compatibility
+        self.monitor.plot_performance(self.rootdir / 'monitoring.png')
         plot_paretofront(self.paretofront, self.rootdir, self.evolve.nodes_max)
 
         from visualization.visualize_trees import visualize_paretofront
@@ -4141,7 +4167,9 @@ class ExplainableGP:
         path_backup = opt_path_backup or self.rootdir / 'backup/backup.pkl'
 
         # {} is the help_dict; include this, even if empty, to store/load successfully after future updates
-        run_backup_data = {}, self.gen_id, self.pop_genepool, self.paretofront, self.monitor_df
+        # Save monitor as DataFrame for backwards compatibility
+        monitor_df = self.monitor.to_dataframe()
+        run_backup_data = {}, self.gen_id, self.pop_genepool, self.paretofront, monitor_df
         path_backup = path_make_dir(path_backup)
         pickle_dump(path_backup, run_backup_data)
 
@@ -4169,23 +4197,39 @@ class ExplainableGP:
             except EOFError as e:
                 raise Exception(f'EOFError: \n{e}')
 
-            help_dict, self.gen_id, self.pop_genepool, self.paretofront, self.monitor_df = run_data
+            help_dict, self.gen_id, self.pop_genepool, self.paretofront, loaded_monitor_df = run_data
+            # Recreate monitor from loaded DataFrame (for backwards compatibility)
+            # The monitor will be repopulated if evolution continues
+            self.monitor = GPMonitor()
             self.backup_save(opt_path_backup=self.rootdir / f'backup/backup-{self.gen_id}.pkl')
             printpl('g', f'Successfully loaded backup file. Generation: {self.gen_id}')
         else:
             raise FileNotFoundError(f'No backup-file found at {path_backup}')
 
-    def analyze_generation(self):
+    def analyze_generation(self, pareto_updated: bool = False):
         """Analyzes and logs statistics for the current generation.
 
-        Computes population metrics and stores them in monitor_df.
+        Computes population metrics and stores them in monitor.
         Triggers scheduled IO operations (plots, backups) based on intervals.
+
+        Args:
+            pareto_updated: Whether the Pareto front was updated this generation.
         """
         gen_time = time.perf_counter() - self.time_genstart
-        tmp_dict = pop_analyze(self.pop_genepool, gen_time, self.gens_since_last_pareto, self.lut_symex_fitness)
-        self.monitor_df.loc[self.gen_id] = pd.Series(tmp_dict)
+
+        # Record generation metrics using GPMonitor
+        self.monitor.record_generation(
+            gen_id=self.gen_id,
+            population=self.pop_genepool,
+            gen_time=gen_time,
+            pareto_updated=pareto_updated,
+            lut_size=len(self.lut_symex_fitness)
+        )
+
+        # Get latest metrics for logging
+        latest = self.monitor.latest
         printpl('gg',
-                f"Created {len(self.pop_genepool)}/{self.gen_end} ({tmp_dict['pop_unique']} unique) in generation {self.gen_id}. "
+                f"Created {latest.get('pop_size', 0)}/{self.gen_end} ({latest.get('pop_unique', 0)} unique) in generation {self.gen_id}. "
                 f"Trees in LUT: {len(self.lut_symex_fitness)} Generation took {gen_time:4.2f}s")
 
         # Generate merged population tree visualization
@@ -4211,7 +4255,7 @@ class ExplainableGP:
         Returns:
             True if evolution should stop early, False otherwise.
         """
-        if self.gens_since_last_pareto > 100:
+        if self.monitor.gens_since_last_pareto > 100:
             printpl('i', 'Custom Condition made your program exit! (No new pareto entries in 100 generations)')
             return True
         else:
@@ -4240,9 +4284,4 @@ if __name__ == '__main__':
     print(f"  Length: {len(tree)}")
     print()
     print("All basic imports and operations work correctly.")
-
-
-
-
-
 

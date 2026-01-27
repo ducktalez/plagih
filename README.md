@@ -6,15 +6,38 @@
 
 ## Ablage/Todos
 
-- Merged-tree mit chatgpt erstellen
+- Vereinheitlichung der Evaluierung der Bäume?
+  - Momentan gibt es drei verschiedene Evaluierungen:
+    - Sympy-Evaluierung (dauert am längsten, aber sehr genau)
+    - Numpy-Evaluierung, direkte Evaluierung (schneller)
+    - Numpy-Lambda_Evaluierung (baut Graphen, der nachher mit verschiedenen Daten ausgewertet werden kann)
+  - Alle Evaluierungen laufen prinzipiell ähnlich ab
+    - Kindknoten werden rekursiv aufgerufen
+    - Einige Operatoren haben spezielle, aber gleich ablaufende Implementierungen
+    - Exceptions werden abgefangen
+    - Eine Rückgabe der Ergebnisse
+  - Die großen Unterschiede sind:
+    - Sympy-Evaluierung arbeitet mit sympy-Objekten, die anderen mit numpy-Arrays
+    - Sympy-Evaluierung kann komplexe Zahlen und NaNs erzeugen, die anderen nicht
+    - Sympy-Evaluierung hat einige spezielle Vereinfachungen, die anderen nicht
+    - Numpy-Lambda-Evaluierung baut einen Graphen auf, der nachher ausgewertet wird
+  - Ist es sinnvoll, alle Evaluierungen in einem Funktionsstrang zu vereinen?
+    - Es sollen Lambda-ausdrücke unterstützt werden
+    - Die Laufzeit soll sich nicht signifikant erhöhen
+    - Die Wartbarkeit soll verbessert werden
+    - Optimalerweise können alle drei Evaluierungen parallel stattfinden
+  - Dann könnte man nämlich auch eine LUT für alle drei Evaluierungen gleichzeitig aufbauen
+    - Das spart Zeit und Code-Duplikation
+    - Die erzeugten Bäume könnten ihre Ergebnisse auch für einen potentiellen Backpropagation-Prozess an den Elternknoten weitergeben
+  - Ich will, dass der Tradeoff zwischen Laufzeit und Praktikabilität für diese Implementierungsidee diskutiert wird.
+  - Wenn möglich, soll ein Implementierungsvorschlag gemacht werden.
+- Merged-tree visualisierung 
+  - mit chatgpt erstellen
+  - tree-viz zentral implementieren
+  - Weitere merge-tree Version (ohne Terminal nodes)
 - lint/black/etc einbauen
   - Empfohlene Tools: black, flake8, isort?
   - Wie würdest du das einbauen?
-- pandas-Monitoring ersetzen?
-  - pandas-monitoring wird momentan verwendet, um die Daten zu analysieren und zu visualisieren.
-    Es ist aber nicht sehr flexibel und ich habe das Gefühl, dass es nicht optimal für meinen Anwendungsfall ist.
-    Ich möchte es durch eine eigene Lösung ersetzen, die besser auf meine Bedürfnisse zugeschnitten ist.
-    Hast du Vorschläge, wie ich das machen könnte? Vielleicht eine Monitoring-klasse? Was ist hier üblich?
 - better structure
   - plagih_gp.py ist momentan das Hauptskript, welches den Ablauf steuert. Es ist aber sehr lang und unübersichtlich.
     Ich möchte es in mehrere Dateien aufteilen, z.B.:
@@ -80,7 +103,6 @@
 - adding the pareto-trees visualized to the paretofront plot
 - mutate chained operators specifically, crossover too. add summands, remove summands, .... as option.
 - List of all potential inputs as layer, just multiplied with 1 or 1
-- check if at least one node is forced!
 - Introduce Tree-"styles", one expression can be represented in many ways
   - Raw (=as generated)
   - Isolate inputs in formulae as long as possible

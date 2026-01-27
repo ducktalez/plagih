@@ -10,11 +10,13 @@ Contains:
 Run this file to see the GP in action:
     python plagih_gp.py
 """
+
 from sklearn.model_selection import train_test_split
 from plagih.trees import *
 from plagih.util import *
 import pandas as pd
 import sympy
+import logging
 
 
 # =============================================================================
@@ -33,6 +35,15 @@ def demo_minimal():
 
     The goal: Find a symbolic expression that predicts 'action' from 'cartPos' and 'cartVel'.
     """
+    # Setup logging (optional, but recommended)
+    setup_logging(
+        log_file=Path('./logs/demo_minimal.log'),
+        console_level=logging.INFO,
+        verbose=False
+    )
+
+    log_info("Starting minimal demo")
+
     print("\n" + "="*60)
     print("PLAGIH GP - Minimal Demo")
     print("="*60 + "\n")
@@ -48,6 +59,8 @@ def demo_minimal():
     print(f"Training data: {len(df_train)} samples")
     print(f"Features: {list(df_train.columns[:-1])}")
     print(f"Target: action (values: {df_train['action'].unique()})\n")
+
+    log_debug(f"Training data shape: {df_train.shape}, Test data shape: {df_test.shape}")
 
     # -------------------------------------------------------------------------
     # STEP 2: Define operators and symbols
@@ -170,8 +183,7 @@ def demo_minimal():
     print("="*60)
 
     for i, candidate in enumerate(gp.paretofront[:5]):  # Show top 5
-        print(f"\n{i+1}. Complexity: {candidate.parsimony:2d} | Fitness: {candidate.fitness:.4f}")
-        print(f"   Expression: {candidate.tree.get_sympy_expr()}")
+        print(f"\n{i+1}. Complexity: {candidate.parsimony:2d} | Fitness: {candidate.fitness:.4f} | Expression: {candidate.tree.get_sympy_expr()}")
 
     if len(gp.paretofront) > 5:
         print(f"\n... and {len(gp.paretofront) - 5} more solutions")
@@ -195,6 +207,14 @@ def demo_minimal():
 
 def _test_simple(dir_name, chained_on=True):
     """SIMPLE"""
+
+    # Setup logging for this test
+    setup_logging(
+        log_file=rootdir / dir_name / 'run.log',
+        console_level=logging.INFO,
+        verbose=False
+    )
+    log_info(f"Starting test run: {dir_name}")
 
     evolve = Evolution(symbol_list=sympy.symbols(['cartVel', 'cartPos']), operators=operator_dict, allow_chain=chained_on)
     gp = ExplainableGP(evolve, df_train, rootdir=rootdir / dir_name, pop_max_size=50, gen_end=20, eval_autocast=eval_autocast, allow_chain=chained_on, eval_error_metric=eval_error_metric)
@@ -220,10 +240,10 @@ def _test_simple(dir_name, chained_on=True):
         @gp.create_trees(rate=1)
         def rand2_CHAINA():  # noqa
             d = np.clip(int(random.normalvariate(4.5, 1)), 3, gp.evolve.depth_max)
-            tree = gp.evolve.evolve_new_tree_depth(float, d, p_term=0)
-            tree = tree_simplification(tree, allow_chain=chained_on)
-            tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
-            return tree
+            _tree = gp.evolve.evolve_new_tree_depth(float, d, p_term=0)
+            _tree = tree_simplification(_tree, allow_chain=chained_on)
+            _tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
+            return _tree
 
         gp.end_generation()
 
@@ -257,6 +277,16 @@ def _test_simple(dir_name, chained_on=True):
 
 def _test_random_pop(dir_name, chained_on=True, simplicate=False, try_load_backup=False):
     """Testrun"""
+
+    # Setup logging for this comprehensive test
+    setup_logging(
+        log_file=rootdir / dir_name / 'run.log',
+        console_level=logging.INFO,
+        file_level=logging.DEBUG,
+        verbose=False
+    )
+    log_info(f"Starting comprehensive test run: {dir_name}")
+    log_debug(f"Options - chained_on={chained_on}, simplicate={simplicate}, try_load_backup={try_load_backup}")
 
     operator_dict.update({Ifte: 2, PowRounded: 1, Round: 1})
     operator_dict.update({Sign: 1, And: 1, Or: 1,
@@ -294,22 +324,22 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False, try_load_backu
 
         @gp.create_trees(rate=0.1)
         def repro1():
-            tree = selection_tournament(gp.pop_genepool, n=3)
-            return tree
+            _tree = selection_tournament(gp.pop_genepool, n=3)
+            return _tree
 
         if chained_on:
 
             @gp.create_trees(rate=0.4, simplicate=simplicate)
             def mx_branch_d_CHAIN():
-                tree = selection_tournament(gp.pop_genepool, n=3)
-                tree = gp.evolve.evolve_mutate_branch_depth(tree, 4, chained_on, p_term=0.5)
-                return tree
+                _tree = selection_tournament(gp.pop_genepool, n=3)
+                _tree = gp.evolve.evolve_mutate_branch_depth(_tree, 4, chained_on, p_term=0.5)
+                return _tree
 
             @gp.create_trees(rate=0.3, simplicate=simplicate)
             def rand2_CHAINB():
                 tree = gp.evolve.evolve_new_tree_depth(float, np.clip(int(random.normalvariate(3.5, 1)), 3, 5),
                                                        p_term=0)
-                # tree = tree_simplification(tree, allow_chain=gp.allow_chain)
+                # _tree = tree_simplification(_tree, allow_chain=gp.allow_chain)
                 return tree
 
             @gp.create_trees(rate=0.3, crossover=True)
@@ -334,26 +364,26 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False, try_load_backu
 
             @gp.create_trees(rate=0.15)
             def mx_branch_n2():
-                tree = selection_tournament(gp.pop_genepool, n=3)
+                _tree = selection_tournament(gp.pop_genepool, n=3)
                 n = np.random.choice([1, 5, 10, 15, 17, 19, 20, 30, 40, 50, 60])
-                tree = gp.evolve.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
-                return tree
+                _tree = gp.evolve.evolve_mutate_branch_nodes(_tree, n, p_term=0.2)
+                return _tree
 
             @gp.create_trees(rate=0.1)  # was error source?
             def mut_br():
-                tree = selection_tournament(gp.pop_genepool, n=3)
-                tree = gp.evolve.evolve_mutate_branch_nodes(tree, 4, p_term=0)
-                return tree
+                _tree = selection_tournament(gp.pop_genepool, n=3)
+                _tree = gp.evolve.evolve_mutate_branch_nodes(_tree, 4, p_term=0)
+                return _tree
 
             @gp.create_trees(rate=0.1)
             def filter_optimize():
-                tree = selection_tournament(gp.pop_genepool, n=3)
-                return gp.evolve.evolve_mutate_filter(tree)
+                _tree = selection_tournament(gp.pop_genepool, n=3)
+                return gp.evolve.evolve_mutate_filter(_tree)
 
             @gp.create_trees(rate=0.1)
             def rand2b():
-                tree = gp.evolve.evolve_new_tree_depth(float, np.random.choice([3, 4, 4, 5]), p_term=0)
-                return tree
+                _tree = gp.evolve.evolve_new_tree_depth(float, np.random.choice([3, 4, 4, 5]), p_term=0)
+                return _tree
 
             @gp.create_trees(rate=0.3, crossover=True)
             def xover():
@@ -413,24 +443,23 @@ if __name__ == "__main__":
         rootdir = Path.cwd() / '.testruns'
 
         if mode == 'full':
+            _test_simple(dir_name='simple-MTC200_RMSE_scratch', chained_on=False)
             _test_random_pop(dir_name='MTC200_RMSE_scratch', chained_on=False)
             _test_random_pop(dir_name='MTC200_RMSE_scratch_chained', chained_on=True)
-        else:
-            _test_simple(dir_name='simple-MTC200_RMSE_scratch', chained_on=False)
 
     else:
         print(f"""
-Plagih GP - Explainable Genetic Programming
-
-Usage: python plagih_gp.py [mode]
-
-Modes:
-  demo   - Quick demonstration (~30 seconds) [default]
-  test   - Basic test run with _test_simple
-  full   - Complete test runs with all features
-
-Examples:
-  python plagih_gp.py demo
-  python plagih_gp.py test
-  python plagih_gp.py full
-""")
+            Plagih GP - Explainable Genetic Programming
+            
+            Usage: python plagih_gp.py [mode]
+            
+            Modes:
+              demo   - Quick demonstration (~30 seconds) [default]
+              test   - Basic test run with _test_simple
+              full   - Complete test runs with all features
+            
+            Examples:
+              python plagih_gp.py demo
+              python plagih_gp.py test
+              python plagih_gp.py full
+            """)

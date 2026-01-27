@@ -6,7 +6,6 @@
 
 ## Ablage/Todos
 
-- Anweisungen für Copilot (Instructions erstellen), am besten, sodass sie aich auch selbst notfalls erweitern.
 - better logging
   - Logging (und user-feedback) wird momentan durch printpl() (und verwandte Funktionen) umgesetzt. 
     Diese formatieren die Ausgaben schön (und teilweise komplex) und können verschiedene Level (info, warning, error) unterscheiden.
@@ -32,6 +31,7 @@
   - Wie würdest du das strukturieren?
 - self.evolve.origin_tree
 - Schönerer Aufruf von ExplainableGP (nach deinem Vorschlag)
+- Anweisungen für Copilot (Instructions erstellen), am besten, sodass sie aich auch selbst notfalls erweitern.
 - Dokumentation als .md/.pdf
 - Pseudo-Backpropagation durch Bäume
 - evaluation alternatives

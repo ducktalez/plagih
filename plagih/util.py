@@ -1,13 +1,14 @@
 import pickle
 import re
 import shutil
-import time
 
+import time
+import numpy as np
+import matplotlib.pyplot as plt
+import logging
+from typing import Optional
 import yaml
 from pathlib import Path
-from matplotlib import pyplot as plt
-# from distutils.spawn import find_executable
-import numpy as np
 
 PRINT_DUMMY = 'wwaaagggiiifffpp'  # noqa: dummy for print-policy wwwwaaaggggggiiifff
 DEBUG_DUMMY = False  # noqa: dummy for debug-policy
@@ -201,24 +202,37 @@ def printpl(msg_t, message_str):
     """Lightweight print function.
     Instead of checking if you should print every time, this is done here.
     message_type options can be found in config
+
+    Note: This now uses the logging backend from logging_utils.
     """
-    printez(msg_t, message_str)
+    # Import here to avoid circular imports
+    try:
+        from plagih.logging_utils import printpl as log_printpl
+        log_printpl(msg_t, message_str)
+    except ImportError:
+        # Fallback if logging_utils not available
+        printez(msg_t, message_str)
     return
 
 
 def print_warning(msg_type, text):
     """
-    Printing warnings
+    Printing warnings with logging backend.
     """
     try:
-        if msg_type not in PRINT_DUMMY:
-            return
-        if 'w' in msg_type:
-            print(f'{BColors.WARNING}Warning ({msg_type}): {text}{BColors.RESET_COLOR}')  # all yellow
-        else:
-            print(f'{BColors.WARNING}Warning ({msg_type}):{BColors.RESET_COLOR} {text}')  # only "Warning" yellow
-    except Exception as ex:
-        print_warning('w', f'Could not print warning: {ex}')
+        from plagih.logging_utils import print_warning as log_print_warning
+        log_print_warning(msg_type, text)
+    except ImportError:
+        # Fallback implementation
+        try:
+            if msg_type not in PRINT_DUMMY:
+                return
+            if 'w' in msg_type:
+                print(f'{BColors.WARNING}Warning ({msg_type}): {text}{BColors.RESET_COLOR}')
+            else:
+                print(f'{BColors.WARNING}Warning ({msg_type}):{BColors.RESET_COLOR} {text}')
+        except Exception as ex:
+            print(f'{BColors.WARNING}Warning (w): Could not print warning: {ex}{BColors.RESET_COLOR}')
     return
 
 
@@ -370,10 +384,15 @@ def blue_string(txt):
 
 def print_caution(txt):
     """
-    Printing errors that are not worth stopping by raising an exception
-    BColors.FAIL
+    Printing errors that are not worth stopping by raising an exception.
+    Uses logging backend for proper error tracking.
     """
-    print(f'{BColors.RED}CAUTION! {BColors.WARNING}{txt}{BColors.RESET_COLOR}')
+    try:
+        from plagih.logging_utils import print_caution as log_print_caution
+        log_print_caution(txt)
+    except ImportError:
+        # Fallback implementation
+        print(f'{BColors.RED}CAUTION! {BColors.WARNING}{txt}{BColors.RESET_COLOR}')
 
 
 def pickle_load(path: Path):
@@ -385,30 +404,47 @@ def pickle_load(path: Path):
 
 
 def printez(message_type, text):
-    """giving prints colours, accessable from everywhere"""
+    """giving prints colours, accessible from everywhere.
+    Now with logging backend support."""
     if message_type not in PRINT_DUMMY:
         return
 
-    if 'i' in message_type:
-        txt = f'{BColors.CYAN}Info: {text}{BColors.RESET_COLOR}'
-    elif 'f' in message_type:
-        txt = f'Writing File: {text}{BColors.RESET_COLOR}{BColors.RESET_COLOR}'
-    elif 'a' in message_type:
-        txt = f'{BColors.GREEN}{text}{BColors.RESET_COLOR}'  # Paretofront:
-    elif 'w' in message_type:
-        print_warning(message_type, text)
-        return
-    elif 'g' in message_type:
-        time_now = time.strftime("%d.%m %H:%M", time.localtime())
-        txt = f'[{time_now}] {text}'
-    elif 'p' in message_type:
-        txt = f'Performance: {BColors.CYAN}{text}{BColors.RESET_COLOR}'
-    else:
-        raise Exception(f'print_type-mode {message_type} not known.')
+    # Try to use logging backend
+    try:
+        from plagih.logging_utils import logger
 
-    print(f'{txt}')
+        if 'i' in message_type:
+            txt = f'{BColors.CYAN}Info: {text}{BColors.RESET_COLOR}'
+            logger.info(text)
+        elif 'f' in message_type:
+            txt = f'Writing File: {text}{BColors.RESET_COLOR}{BColors.RESET_COLOR}'
+            logger.info(f"File: {text}")
+        elif 'a' in message_type:
+            txt = f'{BColors.GREEN}{text}{BColors.RESET_COLOR}'  # Paretofront:
+            logger.info(text)
+        elif 'w' in message_type:
+            print_warning(message_type, text)
+            return
+        else:
+            txt = text
+            logger.debug(text)
 
-    return
+        print(txt)
+    except ImportError:
+        # Fallback without logging
+        if 'i' in message_type:
+            txt = f'{BColors.CYAN}Info: {text}{BColors.RESET_COLOR}'
+        elif 'f' in message_type:
+            txt = f'Writing File: {text}{BColors.RESET_COLOR}{BColors.RESET_COLOR}'
+        elif 'a' in message_type:
+            txt = f'{BColors.GREEN}{text}{BColors.RESET_COLOR}'
+        elif 'w' in message_type:
+            print_warning(message_type, text)
+            return
+        else:
+            txt = text
+
+        print(txt)
 
 
 def yaml_load(path: Path):
@@ -418,6 +454,165 @@ def yaml_load(path: Path):
         loaded_yaml = yaml.load(file, Loader=yaml.FullLoader)  # yaml.safe_load sfeh?
 
     return loaded_yaml
+
+
+# Get the plagih logger
+logger = logging.getLogger('plagih')
+
+
+def setup_logging(
+    log_file: Optional[Path] = None,
+    console_level: int = logging.INFO,
+    file_level: int = logging.DEBUG,
+    verbose: bool = False
+):
+    """
+    Initialize logging system for plagih framework.
+
+    Call this once at the start of your script/experiment.
+
+    Args:
+        log_file: Optional path to log file. If None, only console logging.
+        console_level: Logging level for console output (default: INFO).
+        file_level: Logging level for file output (default: DEBUG).
+        verbose: If True, show more detailed console output.
+    """
+    logger.setLevel(logging.DEBUG)  # Capture everything, filter per handler
+
+    # Remove existing handlers to avoid duplicates
+    logger.handlers.clear()
+
+    # Console Handler - minimal formatting for user feedback
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(console_level if not verbose else logging.DEBUG)
+    console_formatter = logging.Formatter('%(message)s')  # Only message (colors already included)
+    console_handler.setFormatter(console_formatter)
+    logger.addHandler(console_handler)
+
+    # File Handler - detailed formatting for debugging
+    if log_file:
+        log_file = Path(log_file)
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+
+        file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
+        file_handler.setLevel(file_level)
+        file_formatter = logging.Formatter(
+            '[%(asctime)s][%(levelname)-7s][%(name)s] %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+        file_handler.setFormatter(file_formatter)
+        logger.addHandler(file_handler)
+
+
+def printpl(msg_type: str, message_str: str):
+    """
+    Lightweight print function with logging backend.
+
+    Instead of checking if you should print every time, this is done here.
+    Message types: 'i' (info), 'w' (warning), 'f' (file), 'a' (action/success).
+
+    Args:
+        msg_type: Message type indicator ('i', 'w', 'f', 'a').
+        message_str: The message to log/print.
+    """
+
+    if msg_type not in PRINT_DUMMY:
+        return
+
+    # Format based on type
+    if 'i' in msg_type:
+        formatted = f'{BColors.CYAN}Info: {message_str}{BColors.RESET_COLOR}'
+        logger.info(message_str)
+    elif 'f' in msg_type:
+        formatted = f'Writing File: {message_str}{BColors.RESET_COLOR}{BColors.RESET_COLOR}'
+        logger.info(f"File: {message_str}")
+    elif 'a' in msg_type:
+        formatted = f'{BColors.GREEN}{message_str}{BColors.RESET_COLOR}'
+        logger.info(message_str)
+    elif 'w' in msg_type:
+        print_warning(msg_type, message_str)
+        return  # print_warning handles logging
+    else:
+        formatted = message_str
+        logger.info(message_str)
+
+    print(formatted)
+
+
+def print_warning(msg_type: str, text: str):
+    """
+    Print warnings with logging backend.
+
+    Args:
+        msg_type: Warning type indicator ('w' for warning).
+        text: Warning message text.
+    """
+
+    try:
+        if msg_type not in PRINT_DUMMY:
+            return
+
+        if 'w' in msg_type:
+            formatted = f'{BColors.WARNING}Warning ({msg_type}): {text}{BColors.RESET_COLOR}'
+            logger.warning(f"({msg_type}) {text}")
+        else:
+            formatted = f'{BColors.WARNING}Warning ({msg_type}):{BColors.RESET_COLOR} {text}'
+            logger.warning(f"({msg_type}) {text}")
+
+        print(formatted)
+    except Exception as ex:
+        print(f'{BColors.WARNING}Warning (w): Could not print warning: {ex}{BColors.RESET_COLOR}')
+        logger.error(f"Could not print warning: {ex}")
+
+
+def print_caution(txt: str):
+    """
+    Print errors that are not worth stopping by raising an exception.
+
+    Args:
+        txt: Caution message text.
+    """
+
+    formatted = f'{BColors.RED}CAUTION! {BColors.WARNING}{txt}{BColors.RESET_COLOR}'
+    logger.error(f"CAUTION! {txt}")
+    print(formatted)
+
+
+def printez(message_type: str, text: str):
+    """
+    Print with colors, accessible from everywhere (legacy compatibility).
+
+    Args:
+        message_type: Type indicator ('i', 'f', 'a', 'w').
+        text: Message text.
+    """
+    printpl(message_type, text)
+
+
+def blue_string(txt: str) -> str:
+    """Format string in cyan/blue color."""
+    return f"{BColors.CYAN}{txt}{BColors.RESET_COLOR}"
+
+
+# Convenience functions for direct logging (without print)
+def log_debug(msg: str, *args, **kwargs):
+    """Log debug message (only to file, not console by default)."""
+    logger.debug(msg, *args, **kwargs)
+
+
+def log_info(msg: str, *args, **kwargs):
+    """Log info message."""
+    logger.info(msg, *args, **kwargs)
+
+
+def log_warning(msg: str, *args, **kwargs):
+    """Log warning message."""
+    logger.warning(msg, *args, **kwargs)
+
+
+def log_error(msg: str, *args, **kwargs):
+    """Log error message."""
+    logger.error(msg, *args, **kwargs)
 
 
 if __name__ == '__main__':

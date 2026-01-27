@@ -9,7 +9,7 @@ from plagih.util import *
 def pareto_from_pop(pop_list):
     """Return the nondominated candidates with respect to parsimony and fitness."""
 
-    pop_list = sorted(pop_list, key=lambda x: (x.get_parsim(), x.get_fitness()))
+    pop_list = sorted(pop_list, key=lambda _x: (_x.get_parsim(), _x.get_fitness()))
 
     if not pop_list:
         raise Exception('pareto_from_pop called with empty population')

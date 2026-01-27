@@ -3752,6 +3752,81 @@ class ExplainableGP:
 
                         if compare_with_sympy:
 
+                            # =========================================================
+                            # BENCHMARK: New EvaluationContext System vs. Old Methods
+                            # =========================================================
+                            from plagih.evaluation_context import EvaluationContext, create_context
+                            import time as bench_time
+
+                            bench_results = {}
+
+                            # 1. NumPy Eager (new context)
+                            t0 = bench_time.perf_counter()
+                            ctx_np = create_context('numpy_eager', use_lut=False)
+                            result_np = ctx_np.evaluate(evotree, self.df_train)
+                            bench_results['1_numpy_ctx'] = bench_time.perf_counter() - t0
+
+                            # 2. NumPy Lambda (new context)
+                            t0 = bench_time.perf_counter()
+                            ctx_lambda = create_context('numpy_lambda', use_lut=False)
+                            result_lambda_fn = ctx_lambda.evaluate(evotree)
+                            result_lambda = result_lambda_fn(self.df_train)
+                            bench_results['2_lambda_ctx'] = bench_time.perf_counter() - t0
+
+                            # 3. SymPy (new context)
+                            t0 = bench_time.perf_counter()
+                            ctx_sympy = create_context('sympy', use_lut=False)
+                            result_sympy = ctx_sympy.evaluate(evotree)
+                            bench_results['3_sympy_ctx'] = bench_time.perf_counter() - t0
+
+                            # 4. All together without LUT
+                            t0 = bench_time.perf_counter()
+                            ctx_all = EvaluationContext(
+                                modes=['numpy_eager', 'numpy_lambda', 'sympy'],
+                                use_lut=False
+                            )
+                            results_all = ctx_all.evaluate(evotree, self.df_train)
+                            bench_results['4_all_no_lut'] = bench_time.perf_counter() - t0
+
+                            # 5. All together WITH LUT (second call should be faster)
+                            t0 = bench_time.perf_counter()
+                            ctx_lut = EvaluationContext(
+                                modes=['numpy_eager', 'numpy_lambda', 'sympy'],
+                                use_lut=True
+                            )
+                            results_lut1 = ctx_lut.evaluate(evotree, self.df_train)  # First call (cache miss)
+                            results_lut2 = ctx_lut.evaluate(evotree, self.df_train)  # Second call (cache hit!)
+                            bench_results['5_all_with_lut'] = bench_time.perf_counter() - t0
+
+                            # Compare with OLD methods timing
+                            t0 = bench_time.perf_counter()
+                            old_np = evotree.eval_predict_numpy_now(self.df_train)
+                            bench_results['OLD_numpy'] = bench_time.perf_counter() - t0
+
+                            t0 = bench_time.perf_counter()
+                            old_lambda = evotree.eval_np_lambdas()(self.df_train)
+                            bench_results['OLD_lambda'] = bench_time.perf_counter() - t0
+
+                            t0 = bench_time.perf_counter()
+                            old_sympy = evotree.get_sympy_expr()
+                            bench_results['OLD_sympy'] = bench_time.perf_counter() - t0
+
+                            # Print benchmark results
+                            printpl('pp', f'=== EvaluationContext Benchmark ===')
+                            printpl('pp', f'  1. NumPy (ctx):     {bench_results["1_numpy_ctx"]*1000:6.2f}ms | OLD: {bench_results["OLD_numpy"]*1000:6.2f}ms')
+                            printpl('pp', f'  2. Lambda (ctx):    {bench_results["2_lambda_ctx"]*1000:6.2f}ms | OLD: {bench_results["OLD_lambda"]*1000:6.2f}ms')
+                            printpl('pp', f'  3. SymPy (ctx):     {bench_results["3_sympy_ctx"]*1000:6.2f}ms | OLD: {bench_results["OLD_sympy"]*1000:6.2f}ms')
+                            printpl('pp', f'  4. All (no LUT):    {bench_results["4_all_no_lut"]*1000:6.2f}ms')
+                            printpl('pp', f'  5. All (with LUT):  {bench_results["5_all_with_lut"]*1000:6.2f}ms (2 evals)')
+                            printpl('pp', f'  LUT Stats: {ctx_lut.get_cache_size()} entries, hit-rate: {ctx_lut.get_cache_hit_rate("numpy_eager"):.0%}')
+
+                            # Verify results match
+                            np.testing.assert_array_almost_equal(result_np, old_np, decimal=6,
+                                err_msg="NumPy context result doesn't match old method!")
+                            np.testing.assert_array_almost_equal(result_lambda, old_lambda, decimal=6,
+                                err_msg="Lambda context result doesn't match old method!")
+                            # =========================================================
+
                             """Numpy eager eval"""
                             # sfeh _lambda verion comparisson, functionality-wise and time-wise, eval sympy first
                             nplambda_results_raw = evotree.eval_np_lambdas()

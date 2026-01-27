@@ -6,31 +6,6 @@
 
 ## Ablage/Todos
 
-- Vereinheitlichung der Evaluierung der Bäume?
-  - Momentan gibt es drei verschiedene Evaluierungen:
-    - Sympy-Evaluierung (dauert am längsten, aber sehr genau)
-    - Numpy-Evaluierung, direkte Evaluierung (schneller)
-    - Numpy-Lambda_Evaluierung (baut Graphen, der nachher mit verschiedenen Daten ausgewertet werden kann)
-  - Alle Evaluierungen laufen prinzipiell ähnlich ab
-    - Kindknoten werden rekursiv aufgerufen
-    - Einige Operatoren haben spezielle, aber gleich ablaufende Implementierungen
-    - Exceptions werden abgefangen
-    - Eine Rückgabe der Ergebnisse
-  - Die großen Unterschiede sind:
-    - Sympy-Evaluierung arbeitet mit sympy-Objekten, die anderen mit numpy-Arrays
-    - Sympy-Evaluierung kann komplexe Zahlen und NaNs erzeugen, die anderen nicht
-    - Sympy-Evaluierung hat einige spezielle Vereinfachungen, die anderen nicht
-    - Numpy-Lambda-Evaluierung baut einen Graphen auf, der nachher ausgewertet wird
-  - Ist es sinnvoll, alle Evaluierungen in einem Funktionsstrang zu vereinen?
-    - Es sollen Lambda-ausdrücke unterstützt werden
-    - Die Laufzeit soll sich nicht signifikant erhöhen
-    - Die Wartbarkeit soll verbessert werden
-    - Optimalerweise können alle drei Evaluierungen parallel stattfinden
-  - Dann könnte man nämlich auch eine LUT für alle drei Evaluierungen gleichzeitig aufbauen
-    - Das spart Zeit und Code-Duplikation
-    - Die erzeugten Bäume könnten ihre Ergebnisse auch für einen potentiellen Backpropagation-Prozess an den Elternknoten weitergeben
-  - Ich will, dass der Tradeoff zwischen Laufzeit und Praktikabilität für diese Implementierungsidee diskutiert wird.
-  - Wenn möglich, soll ein Implementierungsvorschlag gemacht werden.
 - Merged-tree visualisierung 
   - mit chatgpt erstellen
   - tree-viz zentral implementieren
@@ -55,34 +30,38 @@
 - evaluation alternatives
   - tf-fun in every class
   - regular python code implementation
-
-# Copilot Aufgaben
-
-## Copilot-Anfrage für Baum-Merging-Strategien
+- In Vorbereitung für eine potentielle Parallelisierung soll der generelle Ablauf der Evolution überdacht werden.
+  - Bisher findet der Ablauf durch Loops statt, die nacheinander die Population generieren und evaluieren.
+  - Wichtig war hier, dass Wiederverwendbarkeit und Debugging einfach sind.
+  - Die Gesamtprozedur erscheint aber dennoch sehr komplex
+  - Der Nutzer soll keine abstrakte YAML-Datei schreiben müssen, sondern einfach Python-Code.
+  - Unterpunkt Parallelisierung
+    - Die Bäume einer Population können theoretisch parallel evaluiert werden. Wie würdest du das am besten umsetzen?
+    - Die letzte Population ist ein shared memory object
+    - Die Liste mit zu erstellenden Bäumen kann von Arbeitern abgearbeitet werden
+    - Bisher wurden loops verwendet, um die Bäume nacheinander zu erzeugen. Evtl. muss sich das ändern
+    - Die Implementierung soll im single-core Betrieb immer noch möglichst leicht zu debuggen sein.
 
 # Sub-tasks
 
 - save-evaluation: nan-handling, forcing real numbers
 - discuss: allow_chain is probably not required at so many places...
-- gen_create_initial -> create random pop if pop empty? with leftovers?
+- gen_create_initial -> create random pop if pop empty? with leftovers? 
+  - How are missing individuals in an evolution handled usually? (try force?)
 - tree -> evaluate nodes for best improvement 
 - population cluster/races
-- Tests for:
-  - Auto-testruns: loop/reload through [random, origin, origin_fixed] [MC, IB]
-  - TF-evaluation equals python-evaluation equals sympy evaluation
-- BackPropagation through nodes, rank value for whole tree 
+- BackPropagation through nodes, rank value for whole tree
+- tf/vectorized implementation allows parallel evaluation of trees.
+  - This required another numpy-dimensionality handling
+  - [1] vs. [1, 2, 3] vs. [[1,1,2],[1,2,3],[2,3,3]]
+    - [1] vs. [1, 2, 3]: Was a problem in np-evaluation for matching shapes
+    - [[1,1,2],[1,2,3],[2,3,3]] might become another problem, if we want to evaluate multiple trees at once
 - introduce NN in alpha-tree, at well-mutable nodes
-- evaluate one very large graph (TF?) containing the whole population
-  - from low to high  (terminal to root)
-    - list unique nodes/branches
-    - use outputs as inputs for next layer
 - Terminal-Mutation: Build tree with inputs, but only change terminals
 - use sympy.count_ops() to count operators
-- parallelisation
 - numba.pydata.org https://www.youtube.com/watch?v=x58W9A2lnQc
 - If no float-symbols found, return (1) true or (2) an operator? 
 - sympy exprtools abchecken
-- sfeh:discussion especially with mc: there can be more than one pareto entry with the same parsimony/fitness!
 - build trees like sympy.factor() structure?
 - Division-multiplicator node as non-len() chain input?
 - print(sympy.parsing.sympy_parser.transformations)

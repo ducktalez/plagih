@@ -1,0 +1,11 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.13
+    hooks:
+      # Linter – runs first, auto-fixes what it can
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      # Formatter – runs second, formats everything
+      - id: ruff-format

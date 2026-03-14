@@ -5,25 +5,29 @@ pos = observation0
 velocity = observation1
 pos, vel = observation
 """
-from plagih.util import *
-from pathlib import Path
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import matplotlib.colors as colors
-import numpy as np
-import gym
+
 import math
 import pickle
+from pathlib import Path
+
+import gym
+import matplotlib.colors as colors
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import numpy as np
+
 # import multiprocessing as mp
 from plagih.util import *
 
 
-def mtc_plot_decisions_space(agent, folder, name, cmap='bwr', dummy=False, n=100, nan_style=None, no_colorbar=False, backup_results1=None):
+def mtc_plot_decisions_space(
+    agent, folder, name, cmap="bwr", dummy=False, n=100, nan_style=None, no_colorbar=False, backup_results1=None
+):
     """
     plotting the decision space
     """
     np.random.seed(0)
-    env = gym.make('MountainCar-v0')
+    env = gym.make("MountainCar-v0")
     env.seed(0)
 
     # Making the data for the plot
@@ -51,14 +55,26 @@ def mtc_plot_decisions_space(agent, folder, name, cmap='bwr', dummy=False, n=100
 
     ticks = np.linspace(0, 2, 3)
     boundaries = np.linspace(-0.5, 2.5, 4)
-    mtc_plot(x_linspace, y_linspace, results, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
+    mtc_plot(
+        x_linspace,
+        y_linspace,
+        results,
+        cmap,
+        folder,
+        name,
+        dummy=dummy,
+        boundaries=boundaries,
+        ticks=ticks,
+        nan_style=nan_style,
+        no_colorbar=no_colorbar,
+    )
     return backup_results1
 
 
 def mtc_heatmap_helper(agent, num_splits, n, dummy=None):
     # Making the data for the plot
     np.random.seed(0)
-    env = gym.make('MountainCar-v0')
+    env = gym.make("MountainCar-v0")
     env.seed(0)
 
     behaviour = []
@@ -109,16 +125,52 @@ def mtc_heatmap_helper(agent, num_splits, n, dummy=None):
     return x_linspace, y_linspace, result
 
 
-def mtc_plot_heatmap(agent, n=100, name='heatmap_test', folder=Path.cwd() / 'img/', splits=128, dummy=False, cmap='Greys', boundaries=None, ticks=None, nan_style=None, no_colorbar=False):
-    """
-
-    """
+def mtc_plot_heatmap(
+    agent,
+    n=100,
+    name="heatmap_test",
+    folder=Path.cwd() / "img/",
+    splits=128,
+    dummy=False,
+    cmap="Greys",
+    boundaries=None,
+    ticks=None,
+    nan_style=None,
+    no_colorbar=False,
+):
+    """ """
     x_linspace, y_linspace, result = mtc_heatmap_helper(agent, splits, n, dummy=dummy)
-    mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
+    mtc_plot(
+        x_linspace,
+        y_linspace,
+        result,
+        cmap,
+        folder,
+        name,
+        dummy=dummy,
+        boundaries=boundaries,
+        ticks=ticks,
+        nan_style=nan_style,
+        no_colorbar=no_colorbar,
+    )
     return
 
 
-def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, boundaries=None, ticks=None, vmin=None, vmax=None, nan_style=None, no_colorbar=False):
+def mtc_plot(
+    x_linspace,
+    y_linspace,
+    result,
+    cmap,
+    folder,
+    name,
+    dummy=False,
+    boundaries=None,
+    ticks=None,
+    vmin=None,
+    vmax=None,
+    nan_style=None,
+    no_colorbar=False,
+):
     """
     Mountaincar-specific space-plot
     plots the whole state space
@@ -133,7 +185,7 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
         plt.yticks(MTC_XTICKS[0], MTC_XTICKS[1])
         plt.xticks(MTC_YTICKS[0], MTC_YTICKS[0])
         c = ax.pcolormesh(x_linspace, y_linspace, result, cmap=cmap, norm=norm, rasterized=True)
-        ax.set(xlabel='position', ylabel='velocity')
+        ax.set(xlabel="position", ylabel="velocity")
 
         if no_colorbar:  # sfeh weird solution... placeholder for the space
             boundaries = np.array([0, 1])  # don't know why, but makes the bar disappear somehow
@@ -156,16 +208,16 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
         if nan_style:
             ax.set(facecolor=nan_style[0], color=nan_style[0])
             p.set(hatch=nan_style[1], edgecolor=nan_style[2], rasterized=True)
-            fig.rcParams['hatch.linewidth'] = nan_style[3]
+            fig.rcParams["hatch.linewidth"] = nan_style[3]
         else:
-            p.set(hatch='//', color='xkcd:dark grey', rasterized=True)
+            p.set(hatch="//", color="xkcd:dark grey", rasterized=True)
 
         ax.add_patch(p)
 
-        path_mcmeshplot = path_make_dir(folder / f'{name}.pdf')
+        path_mcmeshplot = path_make_dir(folder / f"{name}.pdf")
         fig.savefig(path_mcmeshplot)
-        print(f'saved {path_mcmeshplot}')
-        plt.close('all')
+        print(f"saved {path_mcmeshplot}")
+        plt.close("all")
 
     return
 
@@ -175,7 +227,7 @@ def mtc_play(agent, render=False, n=1):
     going through n amounts of MC-runs
     """
     np.random.seed(0)
-    env = gym.make('MountainCar-v0')
+    env = gym.make("MountainCar-v0")
     env.seed(0)
     reward_sum = 0
     list_episode_rewards = []
@@ -199,7 +251,7 @@ def mtc_play(agent, render=False, n=1):
             fail_sum += 1
     reward_average = reward_sum / n
     env.close()
-    print(f'Average reward: {np.average(list_episode_rewards)}')
+    print(f"Average reward: {np.average(list_episode_rewards)}")
 
     return reward_average, fail_sum, list_episode_rewards
 
@@ -227,15 +279,27 @@ def mtc_play(agent, render=False, n=1):
 #     plt.savefig(folder / f'{name}.pdf')
 
 
-def mtc_plot_differences(agent, diff_agent, dummy_result=None, boarders=1, num_splits=256, name='diff', folder=Path.cwd() / 'img/',
-                         abs_diff=True, cmap='bwr', nan_style=None, no_colorbar=False, backup_results2=None):
+def mtc_plot_differences(
+    agent,
+    diff_agent,
+    dummy_result=None,
+    boarders=1,
+    num_splits=256,
+    name="diff",
+    folder=Path.cwd() / "img/",
+    abs_diff=True,
+    cmap="bwr",
+    nan_style=None,
+    no_colorbar=False,
+    backup_results2=None,
+):
     """
     Creates the difference-plot
     """
     if backup_results2:
         pass
     np.random.seed(0)
-    env = gym.make('MountainCar-v0')
+    env = gym.make("MountainCar-v0")
     env.seed(0)
 
     # Making the data for the plot
@@ -246,6 +310,7 @@ def mtc_plot_differences(agent, diff_agent, dummy_result=None, boarders=1, num_s
     positions, velocities = np.meshgrid(x_linspace, y_linspace)
 
     if backup_results2 is None:
+
         @np.vectorize
         def decide_diff(position, velocity):
             action_a = agent.decide((position, velocity))
@@ -261,25 +326,39 @@ def mtc_plot_differences(agent, diff_agent, dummy_result=None, boarders=1, num_s
             dummy = False
         backup_results2 = (result, dummy)
     else:
-        result, dummy = backup_results2 
+        result, dummy = backup_results2
 
     if abs_diff:
         # result = abs(result)
-        ticks = np.linspace(0, 2*boarders, min(3*boarders, 10))
-        boundaries = np.linspace(-(0.5+0), 0.5+2*boarders, 1+min(3*boarders, 10))
+        ticks = np.linspace(0, 2 * boarders, min(3 * boarders, 10))
+        boundaries = np.linspace(-(0.5 + 0), 0.5 + 2 * boarders, 1 + min(3 * boarders, 10))
         vmin = 0
         vmax = 2 * boarders
     else:
         vmin = -2 * boarders
         vmax = +2 * boarders
-        ticks = np.linspace(-(2*boarders), 2*boarders, 1+min(4*boarders, 10))
-        boundaries = np.linspace(-(0.5+2*boarders), 0.5+2*boarders, 2+min(4*boarders, 10))
-    mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, vmin=vmin, vmax=vmax, nan_style=nan_style, no_colorbar=no_colorbar)
+        ticks = np.linspace(-(2 * boarders), 2 * boarders, 1 + min(4 * boarders, 10))
+        boundaries = np.linspace(-(0.5 + 2 * boarders), 0.5 + 2 * boarders, 2 + min(4 * boarders, 10))
+    mtc_plot(
+        x_linspace,
+        y_linspace,
+        result,
+        cmap,
+        folder,
+        name,
+        dummy=dummy,
+        boundaries=boundaries,
+        ticks=ticks,
+        vmin=vmin,
+        vmax=vmax,
+        nan_style=nan_style,
+        no_colorbar=no_colorbar,
+    )
 
     return backup_results2
 
 
-def eval_agent_list(agent_list, goal_agent, n=100, dir_save=Path('img/')):
+def eval_agent_list(agent_list, goal_agent, n=100, dir_save=Path("img/")):
     """
     Automatically evalueate gp-agents (difference plot, decision plot, performance)
     """
@@ -290,10 +369,18 @@ def eval_agent_list(agent_list, goal_agent, n=100, dir_save=Path('img/')):
     _, _, sarsa_dummy = mtc_heatmap_helper(goal_agent, 256, n, dummy=1)
 
     for name, agent in agent_list:
-        print('Evaluating agent: {}'.format(name))
+        print("Evaluating agent: {}".format(name))
 
         mtc_plot_decisions_space(agent, folder=dir_save, name=name, dummy=True)
-        mtc_plot_differences(agent, goal_agent, dummy_result=sarsa_dummy, boarders=1, folder=dir_save, name=f'diff-{name}', abs_diff=False)
+        mtc_plot_differences(
+            agent,
+            goal_agent,
+            dummy_result=sarsa_dummy,
+            boarders=1,
+            folder=dir_save,
+            name=f"diff-{name}",
+            abs_diff=False,
+        )
         avg_reward, fails, _ = mtc_play(agent, n=n)
         agent_performance.append([name, avg_reward, fails, dir_save / name])
 
@@ -302,11 +389,13 @@ def eval_agent_list(agent_list, goal_agent, n=100, dir_save=Path('img/')):
 
     plt.bar(x, y)
     # names = [x[0] for x in agent_performance]; plt.xticks(x, names)
-    plt.savefig(dir_save / 'agent_perf.pdf')
-    plt.close('all')
+    plt.savefig(dir_save / "agent_perf.pdf")
+    plt.close("all")
 
-    summary_text = '\n'.join([f'Tree {x[0]} has real average reward {x[1]} and failed {x[2]} times.' for x in agent_performance])
-    with (dir_save / 'summary.txt').open('w') as file:
+    summary_text = "\n".join(
+        [f"Tree {x[0]} has real average reward {x[1]} and failed {x[2]} times." for x in agent_performance]
+    )
+    with (dir_save / "summary.txt").open("w") as file:
         file.write(summary_text)
 
 

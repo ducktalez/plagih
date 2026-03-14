@@ -10,14 +10,17 @@ Usage:
 """
 
 import time
+
 import numpy as np
 
 # Use gymnasium (successor to gym) - more actively maintained
 try:
     import gymnasium as gym
+
     USE_GYMNASIUM = True
 except ImportError:
     import gym
+
     USE_GYMNASIUM = False
     print("Warning: gymnasium not found, falling back to gym. Install with: pip install gymnasium")
 
@@ -31,10 +34,10 @@ def compare_simple(agents, n_episodes=100):
     """
     for name, agent in agents:
         np.random.seed(0)
-        env = gym.make('CartPole-v1')
+        env = gym.make("CartPole-v1")
         episode_rewards = [play_once(env, agent) for _ in range(n_episodes)]
         failcount = sum([1 for x in episode_rewards if x < 195])
-        print(f'{name} \thad average episode rewards = {np.mean(episode_rewards):.1f}. Failed {failcount} times.')
+        print(f"{name} \thad average episode rewards = {np.mean(episode_rewards):.1f}. Failed {failcount} times.")
         env.close()
 
 
@@ -50,10 +53,10 @@ def render_ntimes(agents, n, verbose=False, sleep=0):
     for name, agent in agents:
         np.random.seed(0)
         env.seed(0)
-        env = gym.make('CartPole-v1', render_mode='human')
+        env = gym.make("CartPole-v1", render_mode="human")
         for _ in range(n):
             episode_rewards = play_once(env, agent, render=True, verbose=verbose, sleep=sleep)
-            print('Reward sum', episode_rewards)
+            print("Reward sum", episode_rewards)
         env.close()
 
 
@@ -77,9 +80,9 @@ def play_once(env, agent, render=False, verbose=False, sleep=0):
     else:
         observation = reset_result  # old gym style
 
-    episode_reward = 0.
+    episode_reward = 0.0
     if verbose:
-        print('New agent')
+        print("New agent")
 
     for step in range(2000):  # CartPole-v1 has max 500 steps
         action = agent.decide(observation, verbose=verbose)
@@ -102,7 +105,6 @@ def play_once(env, agent, render=False, verbose=False, sleep=0):
 
 
 class angle_only:
-
     def decide(self, observation, verbose=False):
         cart_pos, cart_vel, pole_angle, pole_vel = observation[0], observation[1], observation[2], observation[3]
         if pole_angle < 0:
@@ -112,7 +114,6 @@ class angle_only:
 
 
 class poleVel_only:
-
     def decide(self, observation, verbose=False):
         cart_pos, cart_vel, pole_angle, pole_vel = observation[0], observation[1], observation[2], observation[3]
         if pole_vel < 0:
@@ -122,7 +123,6 @@ class poleVel_only:
 
 
 class SimonsFirst200:
-
     def decide(self, observation, verbose=False):
         cart_pos, cart_vel, pole_angle, pole_vel = observation[0], observation[1], observation[2], observation[3]
 
@@ -140,7 +140,6 @@ class SimonsFirst200:
 
 
 class SimonsBest:
-
     def decide(self, observation, verbose=False):
         cart_pos, cart_vel, pole_angle, pole_vel = observation[0], observation[1], observation[2], observation[3]
 
@@ -162,10 +161,12 @@ class SimonsBest:
             return 1
 
 
-cartpole_agents = {1: ('angle_only', angle_only()),
-                   2: ('poleVel_only', poleVel_only()),
-                   3: ('SimonsFirst200', SimonsFirst200()),
-                   4: ('SimonsBest', SimonsBest())}
+cartpole_agents = {
+    1: ("angle_only", angle_only()),
+    2: ("poleVel_only", poleVel_only()),
+    3: ("SimonsFirst200", SimonsFirst200()),
+    4: ("SimonsBest", SimonsBest()),
+}
 
 oneAgent = {cartpole_agents[3]}
 twoAgents = {cartpole_agents[4], cartpole_agents[3]}

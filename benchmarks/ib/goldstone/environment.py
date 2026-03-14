@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import division
-'''
+
+"""
 The MIT License (MIT)
 
 Copyright 2017 Siemens AG
@@ -24,9 +25,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-'''
+"""
 
 from .dynamics import dynamics
+
 
 class environment:
     def __init__(self, number_steps, max_required_step, safe_zone):

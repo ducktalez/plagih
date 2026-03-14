@@ -1,14 +1,16 @@
 # coding=utf-8
-from benchmarks.ib.IDS import IDS
-import numpy as np
-import matplotlib.pyplot as plt
-from benchmarks.ib.test_agents import *
-from pathlib import Path
 import csv
 import math
 from itertools import accumulate
+from pathlib import Path
 
-'''
+import matplotlib.pyplot as plt
+import numpy as np
+
+from benchmarks.ib.IDS import IDS
+from benchmarks.ib.test_agents import *
+
+"""
 The MIT License (MIT)
 
 Copyright 2017 Siemens AG
@@ -32,7 +34,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-'''
+"""
 
 
 def envstate_normalize(env_state, to_daniel=True):
@@ -44,12 +46,13 @@ def envstate_normalize(env_state, to_daniel=True):
     """
 
     ib_norm_dict = {
-        'p': [55.0, 28.72],
-        'v': [48.75, 12.31],
-        'g': [50.53, 29.91],
-        'h': [49.45, 29.22],
-        'f': [37.51, 31.17],
-        'c': [166.33, 139.44]}
+        "p": [55.0, 28.72],
+        "v": [48.75, 12.31],
+        "g": [50.53, 29.91],
+        "h": [49.45, 29.22],
+        "f": [37.51, 31.17],
+        "c": [166.33, 139.44],
+    }
 
     if to_daniel:
         norm_values = {}
@@ -77,7 +80,7 @@ def eval_agents():
         Agent_505050(),
         Agent_Udluft(),
         Agent_sim1(),
-        Agent_Test()
+        Agent_Test(),
     ]
 
     for k, agent in enumerate(agents):
@@ -85,7 +88,9 @@ def eval_agents():
         sum_safe = eval_agent(agent, safe_eval=True, randomize=0, repeat_avg=5)
         sum_allr50 = eval_agent(agent, randomize=50, repeat_avg=10)
         sum_safer50 = eval_agent(agent, safe_eval=True, randomize=50, repeat_avg=10)
-        print(f'Results : {agent.name} \t{sum_all:5.1f} \t (safe: {sum_safe:5.1f}) \t(r50: all: {sum_allr50:4.1f} \tsafe: {sum_safer50:4.1f})')
+        print(
+            f"Results : {agent.name} \t{sum_all:5.1f} \t (safe: {sum_safe:5.1f}) \t(r50: all: {sum_allr50:4.1f} \tsafe: {sum_safer50:4.1f})"
+        )
 
 
 class AgentMerger(Ib_Agent):
@@ -94,7 +99,7 @@ class AgentMerger(Ib_Agent):
     """
 
     def __init__(self, name, a0, a1, a2):
-        self.name = f'merged_{name}'
+        self.name = f"merged_{name}"
         super().__init__()
         self.a0 = a0
         self.a1 = a1
@@ -103,28 +108,27 @@ class AgentMerger(Ib_Agent):
     def decide(self, env_state):
         self.state_history.appendleft(env_state)
 
-#        if len(self.state_history) > 10:
-#            self.state_history.pop_list()
+        #        if len(self.state_history) > 10:
+        #            self.state_history.pop_list()
 
         at = np.array([0, 0, 0], dtype=np.float32)
-        SetPoint = self.get_h('p', 0)
+        SetPoint = self.get_h("p", 0)
 
-        exec('at[0] = min(max(-1, ' + self.a0 + '), 1)')
-        exec('at[1] = min(max(-1, ' + self.a1 + '), 1)')
-        exec('at[2] = min(max(-1, ' + self.a2 + '), 1)')
+        exec("at[0] = min(max(-1, " + self.a0 + "), 1)")
+        exec("at[1] = min(max(-1, " + self.a1 + "), 1)")
+        exec("at[2] = min(max(-1, " + self.a2 + "), 1)")
 
         return at
 
 
 def eval_combined_agents(codes, complete=True, randomize=0, repeat_avg=1):
-
     if complete:
         a0, a1, a2 = codes
     else:
         a0, a1, a2 = codes
-        a2 = '0'
+        a2 = "0"
 
-    dummy_agent = AgentMerger('Herbert', a0, a1, a2)
+    dummy_agent = AgentMerger("Herbert", a0, a1, a2)
 
     return eval_agent(dummy_agent, randomize=randomize, repeat_avg=repeat_avg)
 
@@ -147,7 +151,6 @@ def eval_agent(agent, safe_eval=False, randomize=0, repeat_avg=1):
     # for p in [30, 60, 10, 30, 70, 90, 30, 50, 20, 60, 10, 50, 100, 90, 50, 20, 90, 50, 30, 50, 40, 100, 30, 30, 80, 80, 20, 70, 10, 70, 40, 10, 70, 60, 70, 40, 100, 30, 40, 50, 10, 40, 20, 30, 20, 80, 20, 70, 10, 30, 80, 10, 30, 30, 70, 40, 40, 30, 10, 40, 80, 100, 70, 60, 50, 10, 30, 40, 100, 90, 60, 60, 60, 30, 70, 30, 70, 30, 10, 60, 80, 20, 50, 100, 90, 80, 50, 70, 40, 90, 100, 50, 10, 100, 50, 60, 100, 70, 60, 100]:
     for rr in range(repeat_avg):
         for p in range(10, 101, 10):
-
             env = IDS(p=p)
             for num in range(randomize):  # get a more bad state
                 normal_state = envstate_normalize(env.state)
@@ -165,14 +168,15 @@ def eval_agent(agent, safe_eval=False, randomize=0, repeat_avg=1):
                 reward = env.visibleState()[-1]
                 sums_p.append(reward)
 
-            cumcum_discounted = list(accumulate(sums_p[discount_len:][::-1], lambda x_last, x: (x + (discount_factor * x_last))))
+            cumcum_discounted = list(
+                accumulate(sums_p[discount_len:][::-1], lambda x_last, x: x + (discount_factor * x_last))
+            )
             sum_discounted_p.append(cumcum_discounted[-1])
 
     return float(np.average(sum_discounted_p))
 
 
 def agent_create_samples_csv(t=10000):
-
     history_t = 5
     csv_data = np.zeros((t, 6 * history_t + 3))
 
@@ -187,7 +191,7 @@ def agent_create_samples_csv(t=10000):
         for ii in range(history_t):
             for enum_x, state_x in enumerate(env_state.values()):
                 if t + ii < t:
-                    csv_data[t+ii][enum_x * history_t + ii] = state_x
+                    csv_data[t + ii][enum_x * history_t + ii] = state_x
 
         # state_debug.pop_append_evotree(list(env_state.values()))
         at = agent.decide(env_state)
@@ -205,14 +209,14 @@ def agent_create_samples_csv(t=10000):
     #     print('Variable {}: {:.5f} {:.5f}'.format(x, np.mean(debug_array[x]), np.var(debug_array[x])))
 
     print(Path.cwd())
-    print(Path('gp_files/ib_agent29_samples.csv'))
-    print(Path('gp_files').is_dir())
+    print(Path("gp_files/ib_agent29_samples.csv"))
+    print(Path("gp_files").is_dir())
 
-    with Path('gp_files/ib_agent29_samples.csv').open('w', newline='') as csvFile:
+    with Path("gp_files/ib_agent29_samples.csv").open("w", newline="") as csvFile:
         writer = csv.writer(csvFile)
         writer.writerows(csv_data)
 
-    print('DONE!')
+    print("DONE!")
 
 
 if __name__ == "__main__":

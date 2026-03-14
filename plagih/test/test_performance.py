@@ -6,6 +6,7 @@ Tests verify:
 2. Evaluation is efficient
 3. Operations scale reasonably
 """
+
 import sys
 from pathlib import Path
 
@@ -14,23 +15,31 @@ _root = Path(__file__).resolve().parent.parent.parent
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
-import pytest
-import numpy as np
-import pandas as pd
-import sympy
 import time
 
-from plagih.trees import (
-    Node, Number, Symbol,
-    Add, Mul, Sin, Cos,
-    Evolution, ExplainableGP,
-    sympy_to_tree, tree_simplification
-)
+import numpy as np
+import pandas as pd
+import pytest
+import sympy
 
+from plagih.trees import (
+    Add,
+    Cos,
+    Evolution,
+    ExplainableGP,
+    Mul,
+    Node,
+    Number,
+    Sin,
+    Symbol,
+    sympy_to_tree,
+    tree_simplification,
+)
 
 # =============================================================================
 # Tree Creation Performance
 # =============================================================================
+
 
 class TestTreeCreationPerformance:
     """Performance tests for tree creation."""
@@ -40,11 +49,7 @@ class TestTreeCreationPerformance:
         start = time.perf_counter()
 
         for _ in range(100):
-            tree = evolution_instance.evolve_create_random(
-                xt_out=float,
-                depth_max_local=5,
-                depth=0
-            )
+            tree = evolution_instance.evolve_create_random(xt_out=float, depth_max_local=5, depth=0)
 
         elapsed = time.perf_counter() - start
 
@@ -57,11 +62,7 @@ class TestTreeCreationPerformance:
         start = time.perf_counter()
 
         for _ in range(10):
-            tree = evolution_instance.evolve_new_tree_depth(
-                xt_out=float,
-                depth_goal=7,
-                p_term=0.1
-            )
+            tree = evolution_instance.evolve_new_tree_depth(xt_out=float, depth_goal=7, p_term=0.1)
 
         elapsed = time.perf_counter() - start
 
@@ -72,15 +73,13 @@ class TestTreeCreationPerformance:
 # Evaluation Performance
 # =============================================================================
 
+
 class TestEvaluationPerformance:
     """Performance tests for tree evaluation."""
 
     def test_evaluate_1000_rows_under_100ms(self, large_df):
         """Tests evaluation on 1000 rows completes quickly."""
-        tree = Sin(Add(
-            Mul(Symbol(sympy.Symbol('a')), Symbol(sympy.Symbol('b'))),
-            Number(2.0)
-        ))
+        tree = Sin(Add(Mul(Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b"))), Number(2.0)))
 
         start = time.perf_counter()
 
@@ -90,14 +89,14 @@ class TestEvaluationPerformance:
         elapsed = time.perf_counter() - start
         avg_time = elapsed / 10
 
-        assert avg_time < 0.1, f"Evaluation avg {avg_time*1000:.1f}ms (limit: 100ms)"
+        assert avg_time < 0.1, f"Evaluation avg {avg_time * 1000:.1f}ms (limit: 100ms)"
 
     def test_evaluate_complex_tree_reasonable(self, large_df):
         """Tests complex tree evaluation is reasonable."""
         # Create a more complex tree
         tree = Add(
-            Sin(Mul(Symbol(sympy.Symbol('a')), Number(2.0))),
-            Cos(Add(Symbol(sympy.Symbol('b')), Number(1.0))),
+            Sin(Mul(Symbol(sympy.Symbol("a")), Number(2.0))),
+            Cos(Add(Symbol(sympy.Symbol("b")), Number(1.0))),
         )
         tree = Add(tree, Mul(tree, Number(0.5)))  # Make it more complex
 
@@ -111,10 +110,7 @@ class TestEvaluationPerformance:
 
     def test_lambda_evaluation_comparable(self, large_df):
         """Tests lambda evaluation is comparable to direct evaluation."""
-        tree = Add(
-            Mul(Symbol(sympy.Symbol('a')), Symbol(sympy.Symbol('b'))),
-            Number(5.0)
-        )
+        tree = Add(Mul(Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b"))), Number(5.0))
 
         # Direct evaluation
         start = time.perf_counter()
@@ -140,15 +136,13 @@ class TestEvaluationPerformance:
 # Sympy Conversion Performance
 # =============================================================================
 
+
 class TestSympyPerformance:
     """Performance tests for SymPy operations."""
 
     def test_sympy_conversion_reasonable(self):
         """Tests sympy expression generation is fast."""
-        tree = Sin(Add(
-            Mul(Symbol(sympy.Symbol('a')), Symbol(sympy.Symbol('b'))),
-            Cos(Symbol(sympy.Symbol('a')))
-        ))
+        tree = Sin(Add(Mul(Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b"))), Cos(Symbol(sympy.Symbol("a")))))
 
         start = time.perf_counter()
 
@@ -161,7 +155,7 @@ class TestSympyPerformance:
 
     def test_sympy_to_tree_reasonable(self):
         """Tests sympy_to_tree conversion is fast."""
-        a, b = sympy.symbols('a b', real=True)
+        a, b = sympy.symbols("a b", real=True)
         expr = sympy.sin(a + b * 2) + sympy.cos(a)
 
         start = time.perf_counter()
@@ -178,15 +172,13 @@ class TestSympyPerformance:
 # Mutation Performance
 # =============================================================================
 
+
 class TestMutationPerformance:
     """Performance tests for mutation operations."""
 
     def test_point_mutation_fast(self, evolution_instance):
         """Tests point mutation is fast."""
-        tree = Add(
-            Mul(Symbol(sympy.Symbol('a')), Number(2.0)),
-            Symbol(sympy.Symbol('b'))
-        )
+        tree = Add(Mul(Symbol(sympy.Symbol("a")), Number(2.0)), Symbol(sympy.Symbol("b")))
         tree.repair_depth()
 
         start = time.perf_counter()
@@ -200,18 +192,13 @@ class TestMutationPerformance:
 
     def test_branch_mutation_reasonable(self, evolution_instance):
         """Tests branch mutation completes in reasonable time."""
-        tree = Add(
-            Mul(Symbol(sympy.Symbol('a')), Number(2.0)),
-            Symbol(sympy.Symbol('b'))
-        )
+        tree = Add(Mul(Symbol(sympy.Symbol("a")), Number(2.0)), Symbol(sympy.Symbol("b")))
         tree.repair_depth()
 
         start = time.perf_counter()
 
         for _ in range(50):
-            mutated = evolution_instance.evolve_mutate_branch_depth(
-                tree, depth_goal=3
-            )
+            mutated = evolution_instance.evolve_mutate_branch_depth(tree, depth_goal=3)
 
         elapsed = time.perf_counter() - start
 
@@ -222,6 +209,7 @@ class TestMutationPerformance:
 # Crossover Performance
 # =============================================================================
 
+
 class TestCrossoverPerformance:
     """Performance tests for crossover operations."""
 
@@ -229,11 +217,8 @@ class TestCrossoverPerformance:
         """Tests crossover is fast."""
         import copy
 
-        tree1 = Add(
-            Mul(Symbol(sympy.Symbol('a')), Number(2.0)),
-            Symbol(sympy.Symbol('b'))
-        )
-        tree2 = Sin(Add(Symbol(sympy.Symbol('a')), Number(3.0)))
+        tree1 = Add(Mul(Symbol(sympy.Symbol("a")), Number(2.0)), Symbol(sympy.Symbol("b")))
+        tree2 = Sin(Add(Symbol(sympy.Symbol("a")), Number(3.0)))
 
         tree1.repair_depth()
         tree2.repair_depth()
@@ -253,6 +238,7 @@ class TestCrossoverPerformance:
 # =============================================================================
 # GP Run Performance
 # =============================================================================
+
 
 class TestGPRunPerformance:
     """Performance tests for complete GP runs."""
@@ -295,6 +281,7 @@ class TestGPRunPerformance:
 # Memory Tests (Basic)
 # =============================================================================
 
+
 class TestMemoryUsage:
     """Basic memory usage tests."""
 
@@ -302,10 +289,7 @@ class TestMemoryUsage:
         """Tests tree objects are not excessively large."""
         import sys
 
-        tree = Add(
-            Mul(Symbol(sympy.Symbol('a')), Number(2.0)),
-            Symbol(sympy.Symbol('b'))
-        )
+        tree = Add(Mul(Symbol(sympy.Symbol("a")), Number(2.0)), Symbol(sympy.Symbol("b")))
 
         # Get rough size (not perfect but indicative)
         size = sys.getsizeof(tree)
@@ -318,11 +302,7 @@ class TestMemoryUsage:
         trees = []
 
         for _ in range(500):
-            tree = evolution_instance.evolve_create_random(
-                xt_out=float,
-                depth_max_local=4,
-                depth=0
-            )
+            tree = evolution_instance.evolve_create_random(xt_out=float, depth_max_local=4, depth=0)
             trees.append(tree)
 
         # Should have created all trees
@@ -336,15 +316,13 @@ class TestMemoryUsage:
 # Scalability Tests
 # =============================================================================
 
+
 class TestScalability:
     """Tests for scalability of operations."""
 
     def test_evaluation_scales_linearly(self, sample_df):
         """Tests evaluation time scales roughly linearly with data size."""
-        tree = Add(
-            Mul(Symbol(sympy.Symbol('a')), Symbol(sympy.Symbol('b'))),
-            Number(5.0)
-        )
+        tree = Add(Mul(Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b"))), Number(5.0))
 
         # Small dataset
         small_df = sample_df.head(5)
@@ -366,15 +344,11 @@ class TestScalability:
     def test_node_count_scales_tree_operations(self, evolution_instance):
         """Tests operations scale with tree size."""
         # Small tree
-        small_tree = Add(Symbol(sympy.Symbol('a')), Number(1.0))
+        small_tree = Add(Symbol(sympy.Symbol("a")), Number(1.0))
         small_tree.repair_depth()
 
         # Larger tree
-        large_tree = evolution_instance.evolve_create_random(
-            xt_out=float,
-            depth_max_local=5,
-            depth=0
-        )
+        large_tree = evolution_instance.evolve_create_random(xt_out=float, depth_max_local=5, depth=0)
         large_tree.repair_depth()
 
         # List nodes - should work for both

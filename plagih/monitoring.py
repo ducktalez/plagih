@@ -11,11 +11,12 @@ Usage:
     monitor.to_dataframe()  # For compatibility with existing code
 """
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Callable, TYPE_CHECKING
-from pathlib import Path
 import json
 import time
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
+
 import numpy as np
 
 if TYPE_CHECKING:
@@ -31,6 +32,7 @@ class GenerationMetrics:
         timestamp: When this generation was recorded (seconds since monitor start).
         metrics: Dictionary of metric name -> value.
     """
+
     gen_id: int
     timestamp: float
     metrics: Dict[str, Any] = field(default_factory=dict)
@@ -60,18 +62,11 @@ class GPMonitor:
 
     Example:
         >>> monitor = GPMonitor()
-        >>> monitor.record_generation(
-        ...     gen_id=0,
-        ...     population=population,
-        ...     gen_time=1.5,
-        ...     pareto_updated=True
-        ... )
-        >>> monitor.plot_performance('monitoring.png')
+        >>> monitor.record_generation(gen_id=0, population=population, gen_time=1.5, pareto_updated=True)
+        >>> monitor.plot_performance("monitoring.png")
     """
 
-    def __init__(self,
-                 custom_metrics: Optional[Dict[str, Callable]] = None,
-                 auto_compute: bool = True):
+    def __init__(self, custom_metrics: Optional[Dict[str, Callable]] = None, auto_compute: bool = True):
         """Initialize the monitor.
 
         Args:
@@ -144,13 +139,15 @@ class GPMonitor:
     # Recording
     # =========================================================================
 
-    def record_generation(self,
-                          gen_id: int,
-                          population: List['Candidate'],
-                          gen_time: float,
-                          pareto_updated: bool = False,
-                          lut_size: int = 0,
-                          extra_metrics: Optional[Dict[str, Any]] = None):
+    def record_generation(
+        self,
+        gen_id: int,
+        population: List["Candidate"],
+        gen_time: float,
+        pareto_updated: bool = False,
+        lut_size: int = 0,
+        extra_metrics: Optional[Dict[str, Any]] = None,
+    ):
         """Record metrics for a generation.
 
         Args:
@@ -168,15 +165,12 @@ class GPMonitor:
             self.gens_since_last_pareto += 1
 
         # Create metrics entry
-        metrics = GenerationMetrics(
-            gen_id=gen_id,
-            timestamp=time.perf_counter() - self.start_time
-        )
+        metrics = GenerationMetrics(gen_id=gen_id, timestamp=time.perf_counter() - self.start_time)
 
         # Basic metrics
-        metrics['gen_time'] = gen_time
-        metrics['gens_since_pareto'] = self.gens_since_last_pareto
-        metrics['lut_size'] = lut_size
+        metrics["gen_time"] = gen_time
+        metrics["gens_since_pareto"] = self.gens_since_last_pareto
+        metrics["lut_size"] = lut_size
 
         # Population metrics
         if self.auto_compute and population:
@@ -199,7 +193,7 @@ class GPMonitor:
         self.generations.append(metrics)
 
         # Check for improvement and fire callbacks
-        current_best = metrics.get('fit_best', np.inf)
+        current_best = metrics.get("fit_best", np.inf)
         if np.isfinite(current_best) and current_best < self._best_fitness_ever:
             improvement = self._best_fitness_ever - current_best
             self._best_fitness_ever = current_best
@@ -224,7 +218,7 @@ class GPMonitor:
             except Exception:
                 pass
 
-    def _compute_population_metrics(self, population: List['Candidate']) -> Dict[str, Any]:
+    def _compute_population_metrics(self, population: List["Candidate"]) -> Dict[str, Any]:
         """Compute standard population metrics."""
         fitnesses = np.array([c.get_fitness() for c in population])
         parsimony = np.array([c.get_parsim() for c in population])
@@ -238,49 +232,47 @@ class GPMonitor:
 
         return {
             # Population size
-            'pop_size': len(population),
-            'pop_unique': n_unique,
-            'diversity_ratio': n_unique / len(population) if population else 0,
-
+            "pop_size": len(population),
+            "pop_unique": n_unique,
+            "diversity_ratio": n_unique / len(population) if population else 0,
             # Fitness statistics
-            'fit_best': float(np.min(fitnesses)),
-            'fit_worst': float(np.max(fitnesses)),
-            'fit_mean': float(np.mean(fitnesses)),
-            'fit_std': float(np.std(fitnesses)),
-            'fit_median': float(np.median(fitnesses)),
-            'fit_q25': float(np.percentile(fitnesses, 25)),
-            'fit_q75': float(np.percentile(fitnesses, 75)),
-
+            "fit_best": float(np.min(fitnesses)),
+            "fit_worst": float(np.max(fitnesses)),
+            "fit_mean": float(np.mean(fitnesses)),
+            "fit_std": float(np.std(fitnesses)),
+            "fit_median": float(np.median(fitnesses)),
+            "fit_q25": float(np.percentile(fitnesses, 25)),
+            "fit_q75": float(np.percentile(fitnesses, 75)),
             # Parsimony statistics
-            'parsim_best': int(np.min(parsimony)),
-            'parsim_worst': int(np.max(parsimony)),
-            'parsim_mean': float(np.mean(parsimony)),
-            'parsim_std': float(np.std(parsimony)),
-            'parsim_median': float(np.median(parsimony)),
-            'parsim_q25': float(np.percentile(parsimony, 25)),
-            'parsim_q75': float(np.percentile(parsimony, 75)),
+            "parsim_best": int(np.min(parsimony)),
+            "parsim_worst": int(np.max(parsimony)),
+            "parsim_mean": float(np.mean(parsimony)),
+            "parsim_std": float(np.std(parsimony)),
+            "parsim_median": float(np.median(parsimony)),
+            "parsim_q25": float(np.percentile(parsimony, 25)),
+            "parsim_q75": float(np.percentile(parsimony, 75)),
         }
 
     def _empty_population_metrics(self) -> Dict[str, Any]:
         """Return NaN/zero metrics for empty population."""
         return {
-            'pop_size': 0,
-            'pop_unique': 0,
-            'diversity_ratio': 0,
-            'fit_best': np.nan,
-            'fit_worst': np.nan,
-            'fit_mean': np.nan,
-            'fit_std': np.nan,
-            'fit_median': np.nan,
-            'fit_q25': np.nan,
-            'fit_q75': np.nan,
-            'parsim_best': np.nan,
-            'parsim_worst': np.nan,
-            'parsim_mean': np.nan,
-            'parsim_std': np.nan,
-            'parsim_median': np.nan,
-            'parsim_q25': np.nan,
-            'parsim_q75': np.nan,
+            "pop_size": 0,
+            "pop_unique": 0,
+            "diversity_ratio": 0,
+            "fit_best": np.nan,
+            "fit_worst": np.nan,
+            "fit_mean": np.nan,
+            "fit_std": np.nan,
+            "fit_median": np.nan,
+            "fit_q25": np.nan,
+            "fit_q75": np.nan,
+            "parsim_best": np.nan,
+            "parsim_worst": np.nan,
+            "parsim_mean": np.nan,
+            "parsim_std": np.nan,
+            "parsim_median": np.nan,
+            "parsim_q25": np.nan,
+            "parsim_q75": np.nan,
         }
 
     # =========================================================================
@@ -331,13 +323,27 @@ class GPMonitor:
 
         if not self.generations:
             # Return empty DataFrame with expected columns
-            return pd.DataFrame(columns=[
-                'pop_len', 'pop_unique', 'lut_symex_fitness-len', 'time',
-                'fit_avg', 'fit_var', 'fit_quantile_25', 'fit_quantile_50',
-                'fit_quantile_75', 'fit_best', 'parsim_avg', 'parsim_var',
-                'parsim_quantile_25', 'parsim_quantile_50', 'parsim_quantile_75',
-                'parsim_best', 'gens_since_last_pareto'
-            ])
+            return pd.DataFrame(
+                columns=[
+                    "pop_len",
+                    "pop_unique",
+                    "lut_symex_fitness-len",
+                    "time",
+                    "fit_avg",
+                    "fit_var",
+                    "fit_quantile_25",
+                    "fit_quantile_50",
+                    "fit_quantile_75",
+                    "fit_best",
+                    "parsim_avg",
+                    "parsim_var",
+                    "parsim_quantile_25",
+                    "parsim_quantile_50",
+                    "parsim_quantile_75",
+                    "parsim_best",
+                    "gens_since_last_pareto",
+                ]
+            )
 
         # Collect all unique metric names
         all_metrics = set()
@@ -357,20 +363,20 @@ class GPMonitor:
 
         # Rename columns for backwards compatibility with existing code
         rename_map = {
-            'pop_size': 'pop_len',
-            'gen_time': 'time',
-            'fit_mean': 'fit_avg',
-            'fit_std': 'fit_var',
-            'parsim_mean': 'parsim_avg',
-            'parsim_std': 'parsim_var',
-            'fit_q25': 'fit_quantile_25',
-            'fit_median': 'fit_quantile_50',
-            'fit_q75': 'fit_quantile_75',
-            'parsim_q25': 'parsim_quantile_25',
-            'parsim_median': 'parsim_quantile_50',
-            'parsim_q75': 'parsim_quantile_75',
-            'gens_since_pareto': 'gens_since_last_pareto',
-            'lut_size': 'lut_symex_fitness-len',
+            "pop_size": "pop_len",
+            "gen_time": "time",
+            "fit_mean": "fit_avg",
+            "fit_std": "fit_var",
+            "parsim_mean": "parsim_avg",
+            "parsim_std": "parsim_var",
+            "fit_q25": "fit_quantile_25",
+            "fit_median": "fit_quantile_50",
+            "fit_q75": "fit_quantile_75",
+            "parsim_q25": "parsim_quantile_25",
+            "parsim_median": "parsim_quantile_50",
+            "parsim_q75": "parsim_quantile_75",
+            "gens_since_pareto": "gens_since_last_pareto",
+            "lut_size": "lut_symex_fitness-len",
         }
 
         rename_map = {k: v for k, v in rename_map.items() if k in df.columns}
@@ -380,6 +386,7 @@ class GPMonitor:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
+
         def convert_value(v):
             if isinstance(v, (np.floating, np.integer)):
                 return float(v)
@@ -388,19 +395,15 @@ class GPMonitor:
             return v
 
         return {
-            'generations': [
-                {
-                    'gen_id': g.gen_id,
-                    'timestamp': g.timestamp,
-                    **{k: convert_value(v) for k, v in g.metrics.items()}
-                }
+            "generations": [
+                {"gen_id": g.gen_id, "timestamp": g.timestamp, **{k: convert_value(v) for k, v in g.metrics.items()}}
                 for g in self.generations
             ],
-            'summary': {
-                'total_generations': len(self.generations),
-                'total_time': self.generations[-1].timestamp if self.generations else 0,
-                'best_fitness': float(self.best_fitness) if np.isfinite(self.best_fitness) else None,
-            }
+            "summary": {
+                "total_generations": len(self.generations),
+                "total_time": self.generations[-1].timestamp if self.generations else 0,
+                "best_fitness": float(self.best_fitness) if np.isfinite(self.best_fitness) else None,
+            },
         }
 
     def to_json(self, path: Optional[Path] = None, indent: int = 2) -> str:
@@ -411,7 +414,7 @@ class GPMonitor:
         if path:
             path = Path(path)
             path.parent.mkdir(parents=True, exist_ok=True)
-            with open(path, 'w') as f:
+            with open(path, "w") as f:
                 f.write(json_str)
 
         return json_str
@@ -448,60 +451,59 @@ class GPMonitor:
 
         # Fitness Evolution
         ax1 = axes[0, 0]
-        fit_best = self.get_metric_series('fit_best')
-        fit_mean = self.get_metric_series('fit_mean')
-        fit_q25 = self.get_metric_series('fit_q25')
-        fit_q75 = self.get_metric_series('fit_q75')
+        fit_best = self.get_metric_series("fit_best")
+        fit_mean = self.get_metric_series("fit_mean")
+        fit_q25 = self.get_metric_series("fit_q25")
+        fit_q75 = self.get_metric_series("fit_q75")
 
-        ax1.plot(gen_ids, fit_best, 'b-', linewidth=2, label='Best')
-        ax1.plot(gen_ids, fit_mean, 'g--', label='Mean')
-        ax1.fill_between(gen_ids, fit_q25, fit_q75, alpha=0.3, label='25-75%')
-        ax1.set_xlabel('Generation')
-        ax1.set_ylabel('Fitness (lower is better)')
-        ax1.set_title('Fitness Evolution')
-        ax1.legend(loc='upper right')
+        ax1.plot(gen_ids, fit_best, "b-", linewidth=2, label="Best")
+        ax1.plot(gen_ids, fit_mean, "g--", label="Mean")
+        ax1.fill_between(gen_ids, fit_q25, fit_q75, alpha=0.3, label="25-75%")
+        ax1.set_xlabel("Generation")
+        ax1.set_ylabel("Fitness (lower is better)")
+        ax1.set_title("Fitness Evolution")
+        ax1.legend(loc="upper right")
         ax1.grid(True, alpha=0.3)
 
         # Parsimony Evolution
         ax2 = axes[0, 1]
-        parsim_best = self.get_metric_series('parsim_best')
-        parsim_mean = self.get_metric_series('parsim_mean')
-        parsim_q25 = self.get_metric_series('parsim_q25')
-        parsim_q75 = self.get_metric_series('parsim_q75')
+        parsim_best = self.get_metric_series("parsim_best")
+        parsim_mean = self.get_metric_series("parsim_mean")
+        parsim_q25 = self.get_metric_series("parsim_q25")
+        parsim_q75 = self.get_metric_series("parsim_q75")
 
-        ax2.plot(gen_ids, parsim_best, 'b-', linewidth=2, label='Best')
-        ax2.plot(gen_ids, parsim_mean, 'g--', label='Mean')
-        ax2.fill_between(gen_ids, parsim_q25, parsim_q75, alpha=0.3, label='25-75%')
-        ax2.set_xlabel('Generation')
-        ax2.set_ylabel('Parsimony (complexity)')
-        ax2.set_title('Parsimony Evolution')
-        ax2.legend(loc='upper right')
+        ax2.plot(gen_ids, parsim_best, "b-", linewidth=2, label="Best")
+        ax2.plot(gen_ids, parsim_mean, "g--", label="Mean")
+        ax2.fill_between(gen_ids, parsim_q25, parsim_q75, alpha=0.3, label="25-75%")
+        ax2.set_xlabel("Generation")
+        ax2.set_ylabel("Parsimony (complexity)")
+        ax2.set_title("Parsimony Evolution")
+        ax2.legend(loc="upper right")
         ax2.grid(True, alpha=0.3)
 
         # Population Diversity
         ax3 = axes[1, 0]
-        pop_size = self.get_metric_series('pop_size')
-        pop_unique = self.get_metric_series('pop_unique')
+        pop_size = self.get_metric_series("pop_size")
+        pop_unique = self.get_metric_series("pop_unique")
 
-        ax3.plot(gen_ids, pop_size, 'b-', label='Total')
-        ax3.plot(gen_ids, pop_unique, 'r--', label='Unique')
-        ax3.set_xlabel('Generation')
-        ax3.set_ylabel('Population Count')
-        ax3.set_title('Population Diversity')
-        ax3.legend(loc='upper left')
+        ax3.plot(gen_ids, pop_size, "b-", label="Total")
+        ax3.plot(gen_ids, pop_unique, "r--", label="Unique")
+        ax3.set_xlabel("Generation")
+        ax3.set_ylabel("Population Count")
+        ax3.set_title("Population Diversity")
+        ax3.legend(loc="upper left")
         ax3.grid(True, alpha=0.3)
 
         # Time per Generation
         ax4 = axes[1, 1]
-        gen_time = self.get_metric_series('gen_time')
+        gen_time = self.get_metric_series("gen_time")
 
-        ax4.bar(gen_ids, gen_time, alpha=0.7, color='steelblue')
+        ax4.bar(gen_ids, gen_time, alpha=0.7, color="steelblue")
         if len(gen_time) > 0 and not np.all(np.isnan(gen_time)):
-            ax4.axhline(np.nanmean(gen_time), color='red', linestyle='--',
-                        label=f'Mean: {np.nanmean(gen_time):.2f}s')
-        ax4.set_xlabel('Generation')
-        ax4.set_ylabel('Time (seconds)')
-        ax4.set_title('Time per Generation')
+            ax4.axhline(np.nanmean(gen_time), color="red", linestyle="--", label=f"Mean: {np.nanmean(gen_time):.2f}s")
+        ax4.set_xlabel("Generation")
+        ax4.set_ylabel("Time (seconds)")
+        ax4.set_title("Time per Generation")
         ax4.legend()
         ax4.grid(True, alpha=0.3)
 
@@ -509,7 +511,7 @@ class GPMonitor:
 
         save_path = Path(save_path)
         save_path.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(save_path, dpi=150, bbox_inches='tight')
+        fig.savefig(save_path, dpi=150, bbox_inches="tight")
 
         if show:
             plt.show()
@@ -525,8 +527,8 @@ class GPMonitor:
         if not self.generations:
             return "No generations recorded."
 
-        gen_times = self.get_metric_series('gen_time')
-        parsim_best_series = self.get_metric_series('parsim_best')
+        gen_times = self.get_metric_series("gen_time")
+        parsim_best_series = self.get_metric_series("parsim_best")
 
         lines = [
             "=" * 50,
@@ -548,7 +550,7 @@ class GPMonitor:
             "Population:",
             f"  Final size: {self.latest.get('pop_size', 0)}",
             f"  Final unique: {self.latest.get('pop_unique', 0)}",
-            f"  Final diversity: {self.latest.get('diversity_ratio', 0)*100:.1f}%",
+            f"  Final diversity: {self.latest.get('diversity_ratio', 0) * 100:.1f}%",
             "=" * 50,
         ]
 

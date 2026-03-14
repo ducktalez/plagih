@@ -54,19 +54,18 @@ SUB-STRATEGIES (can be combined with main strategies):
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Set, Tuple, Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple, Union
 
 import sympy
 
-from plagih.util import TEXT_NEWLINE
-
 if TYPE_CHECKING:
-    from plagih.trees import Node, Candidate
+    from plagih.trees import Candidate, Node
 
 
 # =============================================================================
 # Data Structures for Merged Evaluation Graph
 # =============================================================================
+
 
 @dataclass
 class MergedNode:
@@ -87,9 +86,10 @@ class MergedNode:
         is_root: Whether this node is a root of one or more original trees.
         root_of_trees: List of tree indices where this node is the root.
     """
+
     node_id: str
     sympy_expr: sympy.Basic
-    original_nodes: List[Tuple[int, 'Node']] = field(default_factory=list)
+    original_nodes: List[Tuple[int, Node]] = field(default_factory=list)
     child_ids: List[str] = field(default_factory=list)
     parent_ids: Set[str] = field(default_factory=set)
     depth: int = 0
@@ -113,6 +113,7 @@ class ExpressionLayer:
         depth: The depth level (0 = terminals, increasing towards root).
         expressions: Dict mapping sympy_expr -> MergedNode for this level.
     """
+
     depth: int
     expressions: Dict[sympy.Basic, MergedNode] = field(default_factory=dict)
 
@@ -147,12 +148,7 @@ class MergedEvaluationGraph:
         return node_id
 
     def get_or_create_node(
-        self,
-        sympy_expr: sympy.Basic,
-        depth: int,
-        node_type: str,
-        operator_name: str = "",
-        child_ids: List[str] = None
+        self, sympy_expr: sympy.Basic, depth: int, node_type: str, operator_name: str = "", child_ids: List[str] = None
     ) -> str:
         """Get existing node for expression or create a new one.
 
@@ -178,7 +174,7 @@ class MergedEvaluationGraph:
             depth=depth,
             node_type=node_type,
             operator_name=operator_name,
-            child_ids=child_ids or []
+            child_ids=child_ids or [],
         )
 
         self.nodes[node_id] = node
@@ -200,12 +196,7 @@ class MergedEvaluationGraph:
             if node_id not in self.root_ids:
                 self.root_ids.append(node_id)
 
-    def add_original_node_mapping(
-        self,
-        node_id: str,
-        tree_index: int,
-        original_node: 'Node'
-    ) -> None:
+    def add_original_node_mapping(self, node_id: str, tree_index: int, original_node: Node) -> None:
         """Track which original nodes map to a merged node."""
         if node_id in self.nodes:
             self.nodes[node_id].original_nodes.append((tree_index, original_node))
@@ -213,34 +204,26 @@ class MergedEvaluationGraph:
     def get_statistics(self) -> Dict:
         """Get statistics about the merged graph."""
         total_nodes = len(self.nodes)
-        terminal_nodes = sum(1 for n in self.nodes.values() if n.node_type == 'terminal')
-        operator_nodes = sum(1 for n in self.nodes.values() if n.node_type == 'operator')
+        terminal_nodes = sum(1 for n in self.nodes.values() if n.node_type == "terminal")
+        operator_nodes = sum(1 for n in self.nodes.values() if n.node_type == "operator")
         root_nodes = len(self.root_ids)
 
         # Count how many nodes are shared (used by multiple trees)
-        shared_nodes = sum(
-            1 for n in self.nodes.values()
-            if len(n.original_nodes) > 1
-        )
+        shared_nodes = sum(1 for n in self.nodes.values() if len(n.original_nodes) > 1)
 
         # Calculate potential savings
-        total_original_nodes = sum(
-            len(n.original_nodes) for n in self.nodes.values()
-        )
-        savings_percent = (
-            (1 - total_nodes / total_original_nodes) * 100
-            if total_original_nodes > 0 else 0
-        )
+        total_original_nodes = sum(len(n.original_nodes) for n in self.nodes.values())
+        savings_percent = (1 - total_nodes / total_original_nodes) * 100 if total_original_nodes > 0 else 0
 
         return {
-            'total_nodes': total_nodes,
-            'terminal_nodes': terminal_nodes,
-            'operator_nodes': operator_nodes,
-            'root_nodes': root_nodes,
-            'shared_nodes': shared_nodes,
-            'tree_count': self.tree_count,
-            'total_original_nodes': total_original_nodes,
-            'savings_percent': savings_percent
+            "total_nodes": total_nodes,
+            "terminal_nodes": terminal_nodes,
+            "operator_nodes": operator_nodes,
+            "root_nodes": root_nodes,
+            "shared_nodes": shared_nodes,
+            "tree_count": self.tree_count,
+            "total_original_nodes": total_original_nodes,
+            "savings_percent": savings_percent,
         }
 
     def to_string(self, show_details: bool = True) -> str:
@@ -259,7 +242,7 @@ class MergedEvaluationGraph:
 
         # Statistics
         stats = self.get_statistics()
-        lines.append(f"\nStatistics:")
+        lines.append("\nStatistics:")
         lines.append(f"  Trees merged: {stats['tree_count']}")
         lines.append(f"  Total nodes in graph: {stats['total_nodes']}")
         lines.append(f"  - Terminal nodes: {stats['terminal_nodes']}")
@@ -304,9 +287,7 @@ class MergedEvaluationGraph:
                 if node.child_ids:
                     children_str = f" <- [{', '.join(node.child_ids)}]"
 
-                lines.append(
-                    f"  {node.node_id}: {expr_str}{root_marker}{usage_str}{children_str}"
-                )
+                lines.append(f"  {node.node_id}: {expr_str}{root_marker}{usage_str}{children_str}")
 
                 if show_details and len(node.original_nodes) > 1:
                     trees = set(t for t, _ in node.original_nodes)
@@ -331,10 +312,7 @@ class MergedEvaluationGraph:
             List of node_ids sorted so dependencies come before dependents.
         """
         # Topological sort by depth (terminals first)
-        return sorted(
-            self.nodes.keys(),
-            key=lambda nid: (self.nodes[nid].depth, nid)
-        )
+        return sorted(self.nodes.keys(), key=lambda nid: (self.nodes[nid].depth, nid))
 
     def to_graphviz_dot(self) -> str:
         """Generate Graphviz DOT format for visualization.
@@ -359,9 +337,9 @@ class MergedEvaluationGraph:
             depth_nodes = [n for n in self.nodes.values() if n.depth == depth]
             for node in depth_nodes:
                 # Style based on type
-                if node.node_type == 'terminal':
+                if node.node_type == "terminal":
                     shape = "ellipse"
-                    color = "lightgreen" if 'Number' in str(type(node.sympy_expr)) else "lightblue"
+                    color = "lightgreen" if "Number" in str(type(node.sympy_expr)) else "lightblue"
                 else:
                     shape = "box"
                     color = "lightyellow"
@@ -378,10 +356,7 @@ class MergedEvaluationGraph:
                 if usage > 1:
                     label += f"\\n({usage}x)"
 
-                lines.append(
-                    f'    {node.node_id} [label="{label}", shape={shape}, '
-                    f'style=filled, fillcolor={color}];'
-                )
+                lines.append(f'    {node.node_id} [label="{label}", shape={shape}, style=filled, fillcolor={color}];')
 
             lines.append("  }")
 
@@ -398,10 +373,8 @@ class MergedEvaluationGraph:
 # Core Functions for Building Merged Graph
 # =============================================================================
 
-def get_expressions_by_depth(
-    tree: 'Node',
-    normalize: bool = True
-) -> List[List[Tuple[sympy.Basic, 'Node']]]:
+
+def get_expressions_by_depth(tree: Node, normalize: bool = True) -> List[List[Tuple[sympy.Basic, Node]]]:
     """Extract all expressions from a tree, organized by depth (bottom-up).
 
     Traverses the tree and collects sympy expressions at each depth level,
@@ -421,8 +394,9 @@ def get_expressions_by_depth(
         - Depth 1: [(b*c, node_mul)]
         - Depth 2: [(a + b*c, node_add)]
     """
+
     # First pass: compute actual depth for each node (max distance to any leaf)
-    def compute_depth(node: 'Node') -> int:
+    def compute_depth(node: Node) -> int:
         """Compute depth as max distance from any leaf (terminals = 0)."""
         if node.is_term():
             return 0
@@ -432,9 +406,9 @@ def get_expressions_by_depth(
 
     # Second pass: collect expressions by depth
     max_depth = compute_depth(tree)
-    layers: List[List[Tuple[sympy.Basic, 'Node']]] = [[] for _ in range(max_depth + 1)]
+    layers: List[List[Tuple[sympy.Basic, Node]]] = [[] for _ in range(max_depth + 1)]
 
-    def collect_expressions(node: 'Node', depth_from_leaf: int = None):
+    def collect_expressions(node: Node, depth_from_leaf: int = None):
         """Recursively collect expressions."""
         if depth_from_leaf is None:
             depth_from_leaf = compute_depth(node)
@@ -459,8 +433,7 @@ def get_expressions_by_depth(
 
 
 def build_one_evaluation_tree(
-    population: List[Union['Node', 'Candidate']],
-    normalize_strategy: str = 'sympify'
+    population: List[Union[Node, Candidate]], normalize_strategy: str = "sympify"
 ) -> MergedEvaluationGraph:
     """Build a merged evaluation graph from a population of trees.
 
@@ -483,9 +456,9 @@ def build_one_evaluation_tree(
     Example:
         >>> import sympy
         >>> from plagih.trees import Add, Mul, Number, Symbol
-        >>> tree1 = Add(Symbol(sympy.Symbol('a')), Number(1))
-        >>> tree2 = Add(Symbol(sympy.Symbol('a')), Number(1))  # Same as tree1
-        >>> tree3 = Mul(Symbol(sympy.Symbol('a')), Number(2))
+        >>> tree1 = Add(Symbol(sympy.Symbol("a")), Number(1))
+        >>> tree2 = Add(Symbol(sympy.Symbol("a")), Number(1))  # Same as tree1
+        >>> tree3 = Mul(Symbol(sympy.Symbol("a")), Number(2))
         >>> graph = build_one_evaluation_tree([tree1, tree2, tree3])
         >>> graph.tree_count
         3
@@ -497,7 +470,7 @@ def build_one_evaluation_tree(
     graph = MergedEvaluationGraph()
 
     # Extract trees from Candidates if needed
-    trees: List['Node'] = []
+    trees: List[Node] = []
     for item in population:
         if isinstance(item, Candidate):
             trees.append(item.get_evotree())
@@ -508,20 +481,12 @@ def build_one_evaluation_tree(
 
     # Process each tree
     for tree_idx, tree in enumerate(trees):
-        _process_tree_into_graph(
-            graph=graph,
-            tree=tree,
-            tree_index=tree_idx,
-            normalize_strategy=normalize_strategy
-        )
+        _process_tree_into_graph(graph=graph, tree=tree, tree_index=tree_idx, normalize_strategy=normalize_strategy)
 
     return graph
 
 
-def _normalize_expression(
-    expr: sympy.Basic,
-    strategy: str
-) -> sympy.Basic:
+def _normalize_expression(expr: sympy.Basic, strategy: str) -> sympy.Basic:
     """Normalize a sympy expression according to the chosen strategy.
 
     Args:
@@ -531,26 +496,21 @@ def _normalize_expression(
     Returns:
         Normalized sympy expression.
     """
-    if strategy == 'none':
+    if strategy == "none":
         return expr
-    elif strategy == 'sympify':
+    elif strategy == "sympify":
         return sympy.sympify(expr)
-    elif strategy == 'simplify':
+    elif strategy == "simplify":
         return sympy.simplify(expr)
-    elif strategy == 'expand':
+    elif strategy == "expand":
         return sympy.expand(expr)
-    elif strategy == 'factor':
+    elif strategy == "factor":
         return sympy.factor(expr)
     else:
         return sympy.sympify(expr)
 
 
-def _process_tree_into_graph(
-    graph: MergedEvaluationGraph,
-    tree: 'Node',
-    tree_index: int,
-    normalize_strategy: str
-) -> str:
+def _process_tree_into_graph(graph: MergedEvaluationGraph, tree: Node, tree_index: int, normalize_strategy: str) -> str:
     """Process a single tree and add its nodes to the merged graph.
 
     Args:
@@ -562,24 +522,22 @@ def _process_tree_into_graph(
     Returns:
         The node_id of the root node in the merged graph.
     """
-    def process_node(node: 'Node', depth_from_leaf: int) -> str:
+
+    def process_node(node: Node, depth_from_leaf: int) -> str:
         """Recursively process a node and its children."""
 
         # Get sympy expression
         try:
             sympy_expr = node.get_sympy_expr()
             sympy_expr = _normalize_expression(sympy_expr, normalize_strategy)
-        except Exception as e:
+        except Exception:
             # Fallback: use string representation
             sympy_expr = sympy.Symbol(f"_err_{id(node)}")
 
         if node.is_term():
             # Terminal node
             node_id = graph.get_or_create_node(
-                sympy_expr=sympy_expr,
-                depth=0,
-                node_type='terminal',
-                operator_name=type(node).__name__
+                sympy_expr=sympy_expr, depth=0, node_type="terminal", operator_name=type(node).__name__
             )
         else:
             # Operator node - first process children
@@ -599,9 +557,9 @@ def _process_tree_into_graph(
             node_id = graph.get_or_create_node(
                 sympy_expr=sympy_expr,
                 depth=node_depth,
-                node_type='operator',
+                node_type="operator",
                 operator_name=type(node).__name__,
-                child_ids=child_ids
+                child_ids=child_ids,
             )
 
         # Track mapping from original node
@@ -619,7 +577,7 @@ def _process_tree_into_graph(
     return root_id
 
 
-def _compute_node_depth(node: 'Node') -> int:
+def _compute_node_depth(node: Node) -> int:
     """Compute depth of a node (terminals = 0, increasing towards root)."""
     if node.is_term():
         return 0
@@ -632,9 +590,8 @@ def _compute_node_depth(node: 'Node') -> int:
 # Utility Functions
 # =============================================================================
 
-def analyze_population_sharing(
-    population: List[Union['Node', 'Candidate']]
-) -> Dict:
+
+def analyze_population_sharing(population: List[Union[Node, Candidate]]) -> Dict:
     """Analyze how much computation can be shared across a population.
 
     Args:
@@ -647,21 +604,18 @@ def analyze_population_sharing(
     stats = graph.get_statistics()
 
     # Add additional analysis
-    stats['most_shared_expressions'] = []
+    stats["most_shared_expressions"] = []
 
     # Find most shared expressions
     shared_nodes = [
-        (len(n.original_nodes), n.sympy_expr, n.node_id)
-        for n in graph.nodes.values()
-        if len(n.original_nodes) > 1
+        (len(n.original_nodes), n.sympy_expr, n.node_id) for n in graph.nodes.values() if len(n.original_nodes) > 1
     ]
     # Sort by count (descending), then node_id (for determinism)
     # Avoid comparing sympy expressions directly as they can't be compared
     shared_nodes.sort(key=lambda x: (-x[0], x[2]))
 
-    stats['most_shared_expressions'] = [
-        {'count': count, 'expr': str(expr), 'node_id': nid}
-        for count, expr, nid in shared_nodes[:10]
+    stats["most_shared_expressions"] = [
+        {"count": count, "expr": str(expr), "node_id": nid} for count, expr, nid in shared_nodes[:10]
     ]
 
     return stats
@@ -672,7 +626,7 @@ def visualize_merged_graph(
     output_path: str = None,
     show: bool = True,
     orientation: str = "BT",
-    display_mode: str = "label"
+    display_mode: str = "label",
 ) -> Optional[str]:
     """Visualize the merged graph using the unified tree renderer.
 
@@ -686,8 +640,9 @@ def visualize_merged_graph(
     Returns:
         Path to the generated image, or None if not saved.
     """
-    from visualization.tree_renderer import render_merged_tree
     from pathlib import Path
+
+    from visualization.tree_renderer import render_merged_tree
 
     if output_path:
         output_dir = Path(output_path).parent
@@ -698,18 +653,18 @@ def visualize_merged_graph(
             output_dir=output_dir,
             orientation=orientation,
             display_mode=display_mode,
-            show=show
+            show=show,
         )
     elif show:
         # Create temporary visualization
-        from visualization.tree_renderer import TreeRenderer, TreeRendererConfig, Orientation, MergedDisplayMode
         import matplotlib.pyplot as plt
+
+        from visualization.tree_renderer import MergedDisplayMode, Orientation, TreeRenderer, TreeRendererConfig
 
         config = TreeRendererConfig()
         config.orientation = Orientation(orientation)
         config.merged_display_mode = (
-            MergedDisplayMode.FULL_EXPRESSION if display_mode == "expression"
-            else MergedDisplayMode.LABEL_ONLY
+            MergedDisplayMode.FULL_EXPRESSION if display_mode == "expression" else MergedDisplayMode.LABEL_ONLY
         )
 
         renderer = TreeRenderer(config)
@@ -724,48 +679,31 @@ def visualize_merged_graph(
 # Example Usage and Testing
 # =============================================================================
 
+
 def _demo():
     """Demonstrate the population merge functionality."""
     from plagih.trees import Add, Mul, Number, Symbol
 
     # Create some example trees
-    a = Symbol(sympy.Symbol('a'))
-    b = Symbol(sympy.Symbol('b'))
-    c = Symbol(sympy.Symbol('c'))
+    a = Symbol(sympy.Symbol("a"))
+    b = Symbol(sympy.Symbol("b"))
+    c = Symbol(sympy.Symbol("c"))
 
     # Tree 1: a + b
-    tree1 = Add(
-        Symbol(sympy.Symbol('a')),
-        Symbol(sympy.Symbol('b'))
-    )
+    tree1 = Add(Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b")))
 
     # Tree 2: (a + b) * c  -- shares (a + b) with tree1
-    tree2 = Mul(
-        Add(
-            Symbol(sympy.Symbol('a')),
-            Symbol(sympy.Symbol('b'))
-        ),
-        Symbol(sympy.Symbol('c'))
-    )
+    tree2 = Mul(Add(Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b"))), Symbol(sympy.Symbol("c")))
 
     # Tree 3: a + b + 1  -- shares a, b with others
-    tree3 = Add(
-        Add(
-            Symbol(sympy.Symbol('a')),
-            Symbol(sympy.Symbol('b'))
-        ),
-        Number(1)
-    )
+    tree3 = Add(Add(Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b"))), Number(1))
 
     # Tree 4: a * 2  -- shares only 'a'
-    tree4 = Mul(
-        Symbol(sympy.Symbol('a')),
-        Number(2)
-    )
+    tree4 = Mul(Symbol(sympy.Symbol("a")), Number(2))
 
     population = [tree1, tree2, tree3, tree4]
 
-    print(f"Creating merged evaluation graph from 4 trees...")
+    print("Creating merged evaluation graph from 4 trees...")
 
     # Build merged graph
     graph = build_one_evaluation_tree(population)
@@ -775,7 +713,6 @@ def _demo():
 
     # Print DOT format for graphviz
     print(f"GRAPHVIZ DOT FORMAT: {graph.to_graphviz_dot()}")
-
 
     return graph
 

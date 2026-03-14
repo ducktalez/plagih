@@ -8,6 +8,7 @@ Tests verify:
 4. Tree pruning
 5. Constraint enforcement (depth, nodes)
 """
+
 import sys
 from pathlib import Path
 
@@ -16,34 +17,41 @@ _root = Path(__file__).resolve().parent.parent.parent
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
-import pytest
-import numpy as np
-import sympy
 import copy
 
-from plagih.trees import (
-    Node, Number, Symbol, Boolean,
-    Add, Mul, Div, Sin, Cos, Lt, And,
-    Evolution, NodeSelect,
-    selection_tournament, Candidate
-)
+import numpy as np
+import pytest
+import sympy
 
+from plagih.trees import (
+    Add,
+    And,
+    Boolean,
+    Candidate,
+    Cos,
+    Div,
+    Evolution,
+    Lt,
+    Mul,
+    Node,
+    NodeSelect,
+    Number,
+    Sin,
+    Symbol,
+    selection_tournament,
+)
 
 # =============================================================================
 # Evolution Initialization Tests
 # =============================================================================
+
 
 class TestEvolutionInit:
     """Tests for Evolution class initialization."""
 
     def test_basic_initialization(self, float_symbols, basic_operator_dict):
         """Tests basic Evolution initialization."""
-        evo = Evolution(
-            symbol_list=float_symbols,
-            operators=basic_operator_dict,
-            depth_max=5,
-            nodes_max=30
-        )
+        evo = Evolution(symbol_list=float_symbols, operators=basic_operator_dict, depth_max=5, nodes_max=30)
 
         assert evo.depth_max == 5
         assert evo.nodes_max == 30
@@ -51,20 +59,14 @@ class TestEvolutionInit:
 
     def test_initialization_with_string_symbols(self, basic_operator_dict):
         """Tests Evolution with string symbol names."""
-        evo = Evolution(
-            symbol_list=['x', 'y', 'z'],
-            operators=basic_operator_dict
-        )
+        evo = Evolution(symbol_list=["x", "y", "z"], operators=basic_operator_dict)
 
         assert len(evo.symbol_list) == 3
         assert all(isinstance(s, sympy.Symbol) for s in evo.symbol_list)
 
     def test_initialization_with_preset(self, float_symbols):
         """Tests Evolution with operator preset."""
-        evo = Evolution(
-            symbol_list=float_symbols,
-            operators='math_simple'
-        )
+        evo = Evolution(symbol_list=float_symbols, operators="math_simple")
 
         assert evo.node_selector is not None
 
@@ -79,59 +81,40 @@ class TestEvolutionInit:
 # Tree Creation Tests
 # =============================================================================
 
+
 class TestTreeCreation:
     """Tests for random tree creation."""
 
     def test_create_random_simple(self, evolution_instance):
         """Tests creating a random tree."""
-        tree = evolution_instance.evolve_create_random(
-            xt_out=float,
-            depth_max_local=3,
-            depth=0
-        )
+        tree = evolution_instance.evolve_create_random(xt_out=float, depth_max_local=3, depth=0)
 
         assert tree is not None
         assert isinstance(tree, Node)
 
     def test_create_random_respects_depth(self, evolution_instance):
         """Tests tree respects depth limit."""
-        tree = evolution_instance.evolve_create_random(
-            xt_out=float,
-            depth_max_local=2,
-            depth=0
-        )
+        tree = evolution_instance.evolve_create_random(xt_out=float, depth_max_local=2, depth=0)
 
         max_depth = tree.get_max_depth()
         assert max_depth <= 2
 
     def test_create_random_float_output(self, evolution_instance):
         """Tests tree produces float output type."""
-        tree = evolution_instance.evolve_create_random(
-            xt_out=float,
-            depth_max_local=3,
-            depth=0
-        )
+        tree = evolution_instance.evolve_create_random(xt_out=float, depth_max_local=3, depth=0)
 
         # Root should produce float
         assert tree.get_xtype_self() == float
 
     def test_create_random_bool_output(self, evolution_instance):
         """Tests tree produces bool output type."""
-        tree = evolution_instance.evolve_create_random(
-            xt_out=bool,
-            depth_max_local=3,
-            depth=0
-        )
+        tree = evolution_instance.evolve_create_random(xt_out=bool, depth_max_local=3, depth=0)
 
         assert tree.get_xtype_self() == bool
 
     def test_evolve_new_tree_depth(self, evolution_instance):
         """Tests evolve_new_tree_depth creates valid tree."""
-        tree = evolution_instance.evolve_new_tree_depth(
-            xt_out=float,
-            depth_goal=4,
-            p_term=0.1
-        )
+        tree = evolution_instance.evolve_new_tree_depth(xt_out=float, depth_goal=4, p_term=0.1)
 
         assert tree is not None
         assert isinstance(tree, Node)
@@ -140,11 +123,7 @@ class TestTreeCreation:
         """Tests creating multiple unique trees."""
         trees = []
         for _ in range(10):
-            tree = evolution_instance.evolve_create_random(
-                xt_out=float,
-                depth_max_local=4,
-                depth=0
-            )
+            tree = evolution_instance.evolve_create_random(xt_out=float, depth_max_local=4, depth=0)
             trees.append(str(tree))
 
         # Should have some variety
@@ -157,18 +136,8 @@ class TestTreeCreation:
         depths_high_pterm = []
 
         for _ in range(20):
-            tree_low = evolution_instance.evolve_create_random(
-                xt_out=float,
-                depth_max_local=5,
-                depth=0,
-                p_term=0.0
-            )
-            tree_high = evolution_instance.evolve_create_random(
-                xt_out=float,
-                depth_max_local=5,
-                depth=0,
-                p_term=0.5
-            )
+            tree_low = evolution_instance.evolve_create_random(xt_out=float, depth_max_local=5, depth=0, p_term=0.0)
+            tree_high = evolution_instance.evolve_create_random(xt_out=float, depth_max_local=5, depth=0, p_term=0.5)
             depths_low_pterm.append(tree_low.get_max_depth())
             depths_high_pterm.append(tree_high.get_max_depth())
 
@@ -180,12 +149,13 @@ class TestTreeCreation:
 # Mutation Tests
 # =============================================================================
 
+
 class TestMutation:
     """Tests for mutation operations."""
 
     def test_mutate_point_preserves_type(self, evolution_instance):
         """Tests point mutation preserves output type."""
-        tree = Add(Symbol(sympy.Symbol('a')), Number(1.0))
+        tree = Add(Symbol(sympy.Symbol("a")), Number(1.0))
         tree.repair_depth()
 
         mutated = evolution_instance.evolve_mutate_point(tree)
@@ -195,7 +165,7 @@ class TestMutation:
 
     def test_mutate_point_changes_tree(self, evolution_instance):
         """Tests point mutation can change tree."""
-        original = Add(Symbol(sympy.Symbol('a')), Number(1.0))
+        original = Add(Symbol(sympy.Symbol("a")), Number(1.0))
         original.repair_depth()
 
         changed = False
@@ -210,35 +180,25 @@ class TestMutation:
 
     def test_mutate_branch_depth(self, evolution_instance):
         """Tests branch mutation with depth goal."""
-        tree = Add(
-            Mul(Symbol(sympy.Symbol('a')), Number(2.0)),
-            Symbol(sympy.Symbol('b'))
-        )
+        tree = Add(Mul(Symbol(sympy.Symbol("a")), Number(2.0)), Symbol(sympy.Symbol("b")))
         tree.repair_depth()
 
-        mutated = evolution_instance.evolve_mutate_branch_depth(
-            tree, depth_goal=2, p_term=0.3
-        )
+        mutated = evolution_instance.evolve_mutate_branch_depth(tree, depth_goal=2, p_term=0.3)
 
         assert mutated is not None
 
     def test_mutate_branch_nodes(self, evolution_instance):
         """Tests branch mutation with node goal."""
-        tree = Add(
-            Mul(Symbol(sympy.Symbol('a')), Number(2.0)),
-            Symbol(sympy.Symbol('b'))
-        )
+        tree = Add(Mul(Symbol(sympy.Symbol("a")), Number(2.0)), Symbol(sympy.Symbol("b")))
         tree.repair_depth()
 
-        mutated = evolution_instance.evolve_mutate_branch_nodes(
-            tree, nodes_goal=5, p_term=0.2
-        )
+        mutated = evolution_instance.evolve_mutate_branch_nodes(tree, nodes_goal=5, p_term=0.2)
 
         assert mutated is not None
 
     def test_mutate_filter_gauss(self, evolution_instance, sample_df):
         """Tests Gaussian filter mutation changes numbers."""
-        tree = Add(Symbol(sympy.Symbol('a')), Number(1.0))
+        tree = Add(Symbol(sympy.Symbol("a")), Number(1.0))
         tree.repair_depth()
 
         original_value = float(tree.get_childs()[1].get_value())
@@ -260,35 +220,27 @@ class TestMutation:
 # Crossover Tests
 # =============================================================================
 
+
 class TestCrossover:
     """Tests for crossover operations."""
 
     def test_crossover_produces_two_trees(self, evolution_instance):
         """Tests crossover produces two trees."""
-        tree1 = Add(
-            Mul(Symbol(sympy.Symbol('a')), Number(2.0)),
-            Symbol(sympy.Symbol('b'))
-        )
-        tree2 = Sin(Add(Symbol(sympy.Symbol('a')), Number(3.0)))
+        tree1 = Add(Mul(Symbol(sympy.Symbol("a")), Number(2.0)), Symbol(sympy.Symbol("b")))
+        tree2 = Sin(Add(Symbol(sympy.Symbol("a")), Number(3.0)))
 
         tree1.repair_depth()
         tree2.repair_depth()
 
-        result1, result2 = evolution_instance.evolve_crossover(
-            copy.deepcopy(tree1),
-            copy.deepcopy(tree2)
-        )
+        result1, result2 = evolution_instance.evolve_crossover(copy.deepcopy(tree1), copy.deepcopy(tree2))
 
         assert result1 is not None
         assert result2 is not None
 
     def test_crossover_changes_trees(self, evolution_instance):
         """Tests crossover can change both trees."""
-        tree1 = Add(
-            Mul(Symbol(sympy.Symbol('a')), Number(2.0)),
-            Symbol(sympy.Symbol('b'))
-        )
-        tree2 = Sin(Add(Symbol(sympy.Symbol('a')), Number(3.0)))
+        tree1 = Add(Mul(Symbol(sympy.Symbol("a")), Number(2.0)), Symbol(sympy.Symbol("b")))
+        tree2 = Sin(Add(Symbol(sympy.Symbol("a")), Number(3.0)))
 
         tree1.repair_depth()
         tree2.repair_depth()
@@ -311,16 +263,13 @@ class TestCrossover:
 
     def test_crossover_maintains_validity(self, evolution_instance, sample_df):
         """Tests crossover produces evaluable trees."""
-        tree1 = Add(Symbol(sympy.Symbol('a')), Number(1.0))
-        tree2 = Mul(Symbol(sympy.Symbol('a')), Number(2.0))
+        tree1 = Add(Symbol(sympy.Symbol("a")), Number(1.0))
+        tree2 = Mul(Symbol(sympy.Symbol("a")), Number(2.0))
 
         tree1.repair_depth()
         tree2.repair_depth()
 
-        r1, r2 = evolution_instance.evolve_crossover(
-            copy.deepcopy(tree1),
-            copy.deepcopy(tree2)
-        )
+        r1, r2 = evolution_instance.evolve_crossover(copy.deepcopy(tree1), copy.deepcopy(tree2))
 
         # Both should be evaluable
         result1 = r1.eval_predict_numpy_now(sample_df)
@@ -334,17 +283,14 @@ class TestCrossover:
 # Pruning Tests
 # =============================================================================
 
+
 class TestPruning:
     """Tests for tree pruning."""
 
     def test_prune_respects_depth(self, evolution_instance):
         """Tests pruning respects depth limit."""
         # Create a potentially deep tree
-        tree = evolution_instance.evolve_create_random(
-            xt_out=float,
-            depth_max_local=10,
-            depth=0
-        )
+        tree = evolution_instance.evolve_create_random(xt_out=float, depth_max_local=10, depth=0)
 
         pruned = evolution_instance.evolve_prune_tree(tree)
 
@@ -354,11 +300,7 @@ class TestPruning:
         """Tests pruning respects node limit."""
         evolution_instance.nodes_max = 15
 
-        tree = evolution_instance.evolve_create_random(
-            xt_out=float,
-            depth_max_local=6,
-            depth=0
-        )
+        tree = evolution_instance.evolve_create_random(xt_out=float, depth_max_local=6, depth=0)
 
         pruned = evolution_instance.evolve_prune_tree(tree)
 
@@ -369,6 +311,7 @@ class TestPruning:
 # Node Selector Tests
 # =============================================================================
 
+
 class TestNodeSelector:
     """Tests for NodeSelect class."""
 
@@ -377,7 +320,7 @@ class TestNodeSelector:
         op = evolution_instance.node_selector.choose_operator_class(float)
 
         assert op is not None
-        assert hasattr(op, 'xtype')
+        assert hasattr(op, "xtype")
         assert op.xtype[1] == float
 
     def test_choose_terminal_node(self, evolution_instance):
@@ -413,6 +356,7 @@ class TestNodeSelector:
 # Tournament Selection Tests
 # =============================================================================
 
+
 class TestTournamentSelection:
     """Tests for tournament selection."""
 
@@ -421,8 +365,8 @@ class TestTournamentSelection:
         # Create fake population
         pop = []
         for i in range(10):
-            tree = Add(Symbol(sympy.Symbol('a')), Number(float(i)))
-            cand = Candidate(tree, fitness=float(i), parsimony=3, tag='test')
+            tree = Add(Symbol(sympy.Symbol("a")), Number(float(i)))
+            cand = Candidate(tree, fitness=float(i), parsimony=3, tag="test")
             pop.append(cand)
 
         selected = selection_tournament(pop, n=3)
@@ -435,8 +379,8 @@ class TestTournamentSelection:
         # Create population with varying fitness
         pop = []
         for i in range(20):
-            tree = Add(Symbol(sympy.Symbol('a')), Number(float(i)))
-            cand = Candidate(tree, fitness=float(i), parsimony=3, tag='test')
+            tree = Add(Symbol(sympy.Symbol("a")), Number(float(i)))
+            cand = Candidate(tree, fitness=float(i), parsimony=3, tag="test")
             pop.append(cand)
 
         # Run many selections

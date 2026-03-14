@@ -32,28 +32,24 @@ Custom Operators /Functions/Nodes/Terminals/Nested:
     Also, make a case in sympy_to_tree to reconstruct trees from sympy expressions.
 """
 
-
 import copy
 import random
+import time
 import warnings
-import os
 from abc import ABC
 from collections import deque
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeGuard, Union
 
 import pandas as pd
 import sympy
 from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.utilities.exceptions import ignore_warnings
 
+from plagih.monitoring import GPMonitor
 from plagih.paretofront import *
 from plagih.tree_complexity.tree_edit_distance import *
 from plagih.util import *
-from plagih.monitoring import GPMonitor
-
-from typing import Optional, List, Union, Callable, Type, Any, Dict, Tuple, TypeGuard
-
-from dataclasses import dataclass, field
-
 
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
@@ -62,7 +58,8 @@ np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before
 # Helper functions for type checking (forward references resolved at runtime)
 # =============================================================================
 
-def is_terminal(node: 'Node') -> TypeGuard['Terminal']:
+
+def is_terminal(node: "Node") -> TypeGuard["Terminal"]:
     """Checks if a node is a Terminal (leaf) node.
 
     Standalone function for use for type-hinting terminal-node functions
@@ -71,7 +68,7 @@ def is_terminal(node: 'Node') -> TypeGuard['Terminal']:
     return node.is_term()
 
 
-def is_number(node: 'Node') -> TypeGuard['Number']:
+def is_number(node: "Node") -> TypeGuard["Number"]:
     """Checks if a node is a Number terminal.
 
     Standalone function for use for type-hinting number-node functions
@@ -89,6 +86,7 @@ class RoundDummy(sympy.Function):  # Not a Math-operator
 
     For implementation details, see: plagih/discoveries/rounding_exponents.py
     """
+
     @classmethod
     def eval(cls, a):
         try:
@@ -96,7 +94,7 @@ class RoundDummy(sympy.Function):  # Not a Math-operator
                 return sympy.Integer(round(a.evalf()))
                 # return sympy.Integer(round(a))
             elif a.is_symbol:
-                return  None
+                return None
             elif a.is_number:
                 return sympy.Integer(round(a.evalf()))  # type: ignore[attr-defined]
             else:
@@ -112,9 +110,9 @@ class RoundDummy(sympy.Function):  # Not a Math-operator
         # if isinstance(a, (int, float, np.ndarray)):
         #     return np.round(a).astype(np.int64)
         if isinstance(a, (int, float)):
-            return int(round(a))
+            return round(a)
         elif isinstance(a, np.ndarray):
-            return np.vectorize(lambda v: int(round(float(v))))(a)
+            return np.vectorize(lambda v: round(float(v)))(a)
         raise TypeError("Unsupported type for numerical evaluation in RoundDummy")
 
     @staticmethod
@@ -142,6 +140,7 @@ class Node(ABC):
     - `root_node`: Pointer to the root node for easy access throughout the tree.
     - `_loc`: (also _iloc/_xloc) for quickinfo about the coordination in the tree
     """
+
     # Tree-content
     symfun: Optional[Callable[..., sympy.Basic]]
     np_fun: Optional[Callable[..., np.ndarray]]
@@ -153,21 +152,21 @@ class Node(ABC):
     xtype_chain: Union[bool, float] = False
 
     # Tree-structure
-    childs: List[Union['Node', Any]] = field(default_factory=list)  # Terminal-Nodes speichern Werte statt Nodes
+    childs: List[Union["Node", Any]] = field(default_factory=list)  # Terminal-Nodes speichern Werte statt Nodes
     is_fix: bool = False  # Whether the node is fixed in the structure.
     depth: Optional[int] = None
     # unused for now, preparation for backlinks
-    root_node: Optional['Node'] = None
-    parent_node: Optional['Node'] = None
+    root_node: Optional["Node"] = None
+    parent_node: Optional["Node"] = None
 
     is_Atom = ...  # sympy-check
 
     def __init__(self, *args, **kwargs):
         self.childs = list(args)
-        self.is_fix = kwargs.get('is_fix', False)
-        self.depth = kwargs.get('depth', None)
-        self.root_node = kwargs.get('root_node', None)
-        self.parent_node = kwargs.get('parent_node', None)
+        self.is_fix = kwargs.get("is_fix", False)
+        self.depth = kwargs.get("depth")
+        self.root_node = kwargs.get("root_node")
+        self.parent_node = kwargs.get("parent_node")
 
     def __repr__(self):
         """Returns a detailed string representation of the node.
@@ -204,7 +203,7 @@ class Node(ABC):
         # print(f'{s}\n{s1}\n{s2}\n{s3}\n{s4}\n{s5}\n{s6}\n{s_export}')
         return s
 
-    def add_child(self, child: 'Node') -> None:
+    def add_child(self, child: "Node") -> None:
         """Adds a child node and updates its parent_node reference."""
         self.childs.append(child)
         child.parent_node = self
@@ -222,10 +221,10 @@ class Node(ABC):
     def set_parent(self, n):
         self.parent_node = n
 
-    def set_root(self, n: 'Node'):
+    def set_root(self, n: "Node"):
         self.root_node = n
 
-    def get_childs(self) -> List['Node']:
+    def get_childs(self) -> List["Node"]:
         """Returns the list of child nodes.
 
         For operators, these are Node instances.
@@ -251,9 +250,9 @@ class Node(ABC):
                     cc.set_root(self)
                     cc.set_parent(self)  # set pointer in child-nodes
         else:
-            raise TypeError(f'childs must be set as list, not {type(child_list)}: {child_list}')
+            raise TypeError(f"childs must be set as list, not {type(child_list)}: {child_list}")
 
-    def repair_all(self, parent: 'Node'=None, root: 'Node'=None, depth:int=0):
+    def repair_all(self, parent: "Node" = None, root: "Node" = None, depth: int = 0):
         """Repairs all backlinks (parent, root, depth) in the subtree.
 
         Introduced on 23.04.2024 to maintain tree structure integrity.
@@ -266,14 +265,14 @@ class Node(ABC):
         """
         self.root_node = root
         self.parent_node = parent
-        self.depth=depth
+        self.depth = depth
 
         # Only recurse on operator nodes (terminals have values, not Node children)
         if self.has_childs():
             for ii, cc in enumerate(self.get_childs()):
-                cc.repair_all(parent=self, root=root or self, depth=depth+1)
+                cc.repair_all(parent=self, root=root or self, depth=depth + 1)
 
-    def get_mutable_rootnodes(self, extend_lvls=2) -> Optional[list['Node']]:
+    def get_mutable_rootnodes(self, extend_lvls=2) -> Optional[list["Node"]]:
         """Returns the list of first mutable nodes
         last_leaves: if you want so save all leave nodes aswell
         sum_layers=False, get_closest=True, return_all_layers=False
@@ -323,7 +322,7 @@ class Node(ABC):
         result = issubclass(self.__class__, Terminal)
         return result
 
-    def get_typus(self) -> Type['Node']:
+    def get_typus(self) -> Type["Node"]:
         """Returns the class type of this node."""
         nt = self.__class__
         return nt
@@ -376,7 +375,7 @@ class Node(ABC):
             String representation that can be eval'd to recreate the tree.
         """
 
-        def format_terminal(node_term: 'Terminal') -> str:
+        def format_terminal(node_term: "Terminal") -> str:
             """Formats a terminal node for readability.
 
             - Mathematical expression-style (Max(1.49, 0.1*cartPos))
@@ -388,13 +387,16 @@ class Node(ABC):
             val = node_term.get_value()
             # Booleans
             if isinstance(node_term, Boolean):
-                v = bool(val) if isinstance(val, (bool, sympy.logic.boolalg.BooleanTrue, sympy.logic.boolalg.BooleanFalse)) else bool(
-                    sympy.sympify(val))
-                return f"Boolean({str(v)})"
+                v = (
+                    bool(val)
+                    if isinstance(val, (bool, sympy.logic.boolalg.BooleanTrue, sympy.logic.boolalg.BooleanFalse))
+                    else bool(sympy.sympify(val))
+                )
+                return f"Boolean({v!s})"
             # Numbers
             if isinstance(node_term, Number):
                 try:
-                    v = float(val)  # noqa child[0] is the value in a Number-node
+                    v = float(val)
                 except TypeError:
                     v = float(sympy.sympify(val).evalf())
                 except Exception:
@@ -411,14 +413,14 @@ class Node(ABC):
             # Fallback: generisch
             return f"{type(node_term).__name__}({val})"
 
-        def walk(node: 'Node') -> str:
+        def walk(node: "Node") -> str:
             cls_name = type(node).__name__
 
             if is_terminal(node):
                 out = format_terminal(node)
                 # Fix-Flag für Terminals
                 if node.is_fix:
-                    if out.endswith(')'):
+                    if out.endswith(")"):
                         out = out[:-1] + ", is_fix=True)"
                 return out
 
@@ -481,12 +483,11 @@ class Node(ABC):
                 ...  # no action needed
 
             elif num_childs > arity:
-                ... # no action needed for now, e.g., chained operators
+                ...  # no action needed for now, e.g., chained operators
 
         return
 
-
-    def set_new_node(self, nd_new: 'Node', repair: bool = False, clean_chain: bool = True) -> None:
+    def set_new_node(self, nd_new: "Node", repair: bool = False, clean_chain: bool = True) -> None:
         """
         Replaces self with a new node/branch (including child nodes).
 
@@ -526,7 +527,7 @@ class Node(ABC):
         # all BaseNode infos should not be updated
         pass
 
-    def replace_with(self, new_class: Type['Node'], new_args: list) -> None:
+    def replace_with(self, new_class: Type["Node"], new_args: list) -> None:
         """Replace the current node with a simpler equivalent."""
         new_node = new_class(*new_args)  # Create new instance
         new_node.parent_node = self.parent_node  # Preserve parent reference
@@ -534,8 +535,7 @@ class Node(ABC):
             self.parent_node.childs = [new_node if child is self else child for child in self.parent_node.childs]
         self.set_new_node(new_node)
 
-    def replace_with_node(self, new_node: 'Node') -> None:
-
+    def replace_with_node(self, new_node: "Node") -> None:
         new_node.revoke_useless_nodes()
         self.set_new_node(new_node)
 
@@ -566,14 +566,16 @@ class Node(ABC):
         elif isinstance(self, Piecewise):
             # _sym = sympy.Piecewise
             _cs = [(cc.get_childs()[0], cc.get_childs()[1]) for cc in _cs]
-            _cs = [(cc[0].get_sympy_expr(simplimore=simplimore), cc[1].get_sympy_expr(simplimore=simplimore)) for cc in _cs]
+            _cs = [
+                (cc[0].get_sympy_expr(simplimore=simplimore), cc[1].get_sympy_expr(simplimore=simplimore)) for cc in _cs
+            ]
             _cs = [ExprCondPair(cc[0], cc[1]) for cc in _cs]
             _r = _sym(*_cs)
         elif self.is_operator():
             _cs = [cc.get_sympy_expr(simplimore=simplimore) for cc in _cs]
 
             try:
-                _r = _sym(*_cs)  # noqa (_sym is definitely assigned)
+                _r = _sym(*_cs)
                 # -> AttributeError: 'Xor' object has no attribute '_eval_as_set'
                 # -> TypeError: Invalid comparison of non-real asin(15)
             except TypeError as e:
@@ -586,13 +588,13 @@ class Node(ABC):
 
         return _r
 
-    def list_terminal_nodes(self) -> List['Node']:
+    def list_terminal_nodes(self) -> List["Node"]:
         """Returns a list of all terminal (leaf) nodes in this subtree."""
         base = self.list_mutable_nodes()
         base = [x for x in base if x.is_term()]
         return base
 
-    def force_input_node(self, ev: 'Evolution') -> None:
+    def force_input_node(self, ev: "Evolution") -> None:
         """Ensures the tree has at least one input Symbol node.
 
         If the tree only has constants as terminals, replaces one with
@@ -611,14 +613,14 @@ class Node(ABC):
         else:
             node_list = [x for x in node_list if isinstance(x, Number)]  # only replaces numbers. ok for now.
             if not node_list:
-                raise TreeError(f'No terminal nodes found to replace in tree: {self}')
+                raise TreeError(f"No terminal nodes found to replace in tree: {self}")
 
             try:
                 node = rnd_choice(node_list)  # debug if ignores chains
                 xtype = xt_self(node.get_xtype_tuple())
                 new_node = ev.node_selector.choose_symbol_node(xtype)
             except (ValueError, IndexError) as e:
-                raise TreeError(f'Single-node tree,  no matching input found (probably boolean - ex: {e}): {self}')
+                raise TreeError(f"Single-node tree,  no matching input found (probably boolean - ex: {e}): {self}")
 
             # node.set_new_node(new_node)
             node.set_new_node(new_node)
@@ -640,17 +642,17 @@ class Node(ABC):
 
         if self.get_childs():
             if issubclass(type(self), BaseOperator):
-                childstr = ', '.join([cc.str_as_list(cut_terms=cut_terms) for cc in self.get_childs()])
-                typus_str = f'{typus_str}, {childstr}'
+                childstr = ", ".join([cc.str_as_list(cut_terms=cut_terms) for cc in self.get_childs()])
+                typus_str = f"{typus_str}, {childstr}"
             else:
                 # terminal nodes
                 v = self.get_childs()[0]
                 if self.is_number():
-                    typus_str = term_format(f'{v}', cut=cut_terms)
+                    typus_str = term_format(f"{v}", cut=cut_terms)
                 else:
-                    typus_str = f'{v}'
+                    typus_str = f"{v}"
         else:
-            raise CuriosityError('Holla sfeh')
+            raise CuriosityError("Holla sfeh")
 
         return f"[{typus_str}]"
 
@@ -686,16 +688,16 @@ class Node(ABC):
             cut_terms: If True, truncates numbers for readability.
         """
         if is_terminal(self):
-            _expr = f'{self.get_childs()[0]}'
+            _expr = f"{self.get_childs()[0]}"
             _expr = term_format(_expr, cut=cut_terms)
-            return f'{_expr}'
+            return f"{_expr}"
         else:
             childs = [cc.get_expr_symlike(try_sympify=try_sympify, cut_terms=cut_terms) for cc in self.get_childs()]
             # if issubclass(type(self), (ExprCondPair)):
 
             if isinstance(self, (Add, Mul, And, Or, Xor)):
                 _expr = self.inline_sep.join(childs)
-                _expr = f'({_expr})'
+                _expr = f"({_expr})"
 
             else:
                 _expr = self.sy_str.format(*childs)
@@ -708,9 +710,9 @@ class Node(ABC):
         #     except Exception as ex:
         #         return f'{_expr}'
 
-        return f'{_expr}'
+        return f"{_expr}"
 
-    def list_mutable_nodes(self, xtype=None) -> List['Node']:
+    def list_mutable_nodes(self, xtype=None) -> List["Node"]:
         """Returns all nodes that can be mutated (point or branch mutation).
 
         Excludes fixed nodes, ExprCondPairs, and Piecewise nodes.
@@ -727,14 +729,11 @@ class Node(ABC):
         """
 
         # -> Check, if this node should be added
-        if self.is_fix:
-            node_list = []
-        elif self.is_ExprCdPair():  # It is just a dummy holding a tuple
+        if self.is_fix or self.is_ExprCdPair():
             node_list = []
         elif self.is_typus(Piecewise):
             node_list = []  # Piecewise has ambiguous xtype that can not be checked
         else:
-
             if xtype is None or xtype == self.get_xtype_self():
                 node_list = [self]
             else:
@@ -759,17 +758,16 @@ class Node(ABC):
         Returns:
             Tuple of (nodes_dict, edges_list) for graph rendering.
         """
-        showme = f'{self.childs[0]}' if self.is_term() else f'{self.showme}'
+        showme = f"{self.childs[0]}" if self.is_term() else f"{self.showme}"
 
-        res = {setid: {'node': self,
-                       'showme': showme}}
+        res = {setid: {"node": self, "showme": showme}}
         edges = []
 
         if self.is_term():
             pass
         else:
             for ii, cc in enumerate(self.childs):
-                cid = f'{setid}-{ii}'
+                cid = f"{setid}-{ii}"
                 cr, ce = cc.get_all_nodes_visualize(cid)
                 res.update(cr)
                 edges.append((setid, cid))
@@ -800,9 +798,9 @@ class Node(ABC):
 
         else:
             if is_number(self):
-                val = (round(random.gauss(self.get_value(), 0.1), FLOAT_PRECISION))
+                val = round(random.gauss(self.get_value(), 0.1), FLOAT_PRECISION)
 
-               #  self.childs[0] = val only this used to work
+                #  self.childs[0] = val only this used to work
                 self.set_value(val)
 
         return
@@ -826,7 +824,6 @@ class Node(ABC):
         """
 
         if issubclass(self.__class__, Terminal):  # good for runtime
-
             if is_number(self) and tolerance > 0:
                 val = self.get_value()
                 # from sympy.physics.units import speed_of_light, meter, second more ideas!
@@ -836,7 +833,7 @@ class Node(ABC):
                 # 3.14159265358979, 1.61803398874989,   0.915965594177219,  0.577215664901533,  1.83928675521416
                 # idea sympy.nsimplify('3.333333*x+0.522', tolerance=0.1, rational=True) for
                 for const in [sympy.pi, sympy.GoldenRatio, sympy.Catalan, sympy.EulerGamma, sympy.TribonacciConstant]:
-                    if (const-val) < tolerance:
+                    if (const - val) < tolerance:
                         self.childs[0] = const
                         return
                 # [sympy.S.One, sympy.S.Half, sympy.S.NegativeOne, sympy.S.NegativeHalf]:
@@ -849,7 +846,6 @@ class Node(ABC):
             return
 
         elif self.is_operator():
-
             mychlds = self.get_childs()
 
             if isinstance(self, Usub) and len(mychlds) > 1:
@@ -918,10 +914,8 @@ class Node(ABC):
                     self.replace_with(PowRounded, [p_base, deep_child])
 
             elif isinstance(self, Mul):  # MulChain
-
                 denominators = []
                 for cc in mychlds:
-
                     # Removes the one factor from the childs, that is matched
                     mychlds_remove = lambda el: [x for x in mychlds if x != el]
 
@@ -943,16 +937,18 @@ class Node(ABC):
                         elif mul1 in (-1, sympy.S.NegativeOne):
                             self.replace_with(Usub, [Mul(*mychlds_remove(cc))])
                         elif 0 < mul1 < 1:
-                            if (1 / mul1) % 1  == 0:  # check if the result is a natural number
+                            if (1 / mul1) % 1 == 0:  # check if the result is a natural number
                                 node_sub = Mul(*mychlds_remove(cc))
-                                new_num = (1 / mul1)
+                                new_num = 1 / mul1
                                 self.replace_with(Div, [node_sub, Number(new_num)])
                         else:
                             # ScaleNode-idea here
                             pass
                     elif isinstance(cc, DivFraction):
                         has_div_frac = [isinstance(ix, DivFraction) for ix in mychlds]
-                        if sum(has_div_frac) > 1 or len(mychlds) > 2:  # this makes chained mul to 1/(mul( )) -> check if more than 2 inputs
+                        if (
+                            sum(has_div_frac) > 1 or len(mychlds) > 2
+                        ):  # this makes chained mul to 1/(mul( )) -> check if more than 2 inputs
                             continue  # leave them alone
                         denominators.append(cc.get_childs()[0])
                         # e. g.: "a * 1/3" -> "3/a"
@@ -994,7 +990,7 @@ class Node(ABC):
         else:
             return 1  # childs can currently be floats
 
-    def is_typus(self, nt: Type['Node']) -> bool:
+    def is_typus(self, nt: Type["Node"]) -> bool:
         """Checks if this node is an instance of the given Node type.
 
         Args:
@@ -1003,7 +999,7 @@ class Node(ABC):
         r = issubclass(type(self), nt)
         return r
 
-    def is_ExprCdPair(self) -> bool:  # noqa
+    def is_ExprCdPair(self) -> bool:
         """Checks if this node is an expression-condition pair for Piecewise.
 
         Note: Sometimes matches Dummy-class, sometimes sympy class (chained?).
@@ -1057,20 +1053,20 @@ class Node(ABC):
         s = self.showme  # class name
 
         if self.is_term():
-            cs = f'{self.get_childs()[0]}'
+            cs = f"{self.get_childs()[0]}"
             if cut_terms:
                 cs = term_format(cs, cut=cut_terms)
             else:
                 cs = remove_trailing_zeroes(cs)
 
-            s = f'{cs}'
+            s = f"{cs}"
 
             if self.is_fix and show_fixed_hint:
-                s += ':fix'  # discuss: there must be a more natural way to show that...
+                s += ":fix"  # discuss: there must be a more natural way to show that...
 
         else:
             cs = [cc.represent_str(show_fixed_hint=show_fixed_hint, cut_terms=cut_terms) for cc in self.get_childs()]
-            cs = ', '.join(cs)
+            cs = ", ".join(cs)
             s = f"{s}({cs})"
 
         s = f"{s}"  # v1
@@ -1135,17 +1131,17 @@ def eval_parsimony(_tree: Node, complexity_measure: str, origin_tree: Optional[N
         Tree edit distance is inefficient as origin_tree's APTED notation
         is computed on every call.
     """
-    if complexity_measure == 'tree_node_count_raw':  # number of nodes
+    if complexity_measure == "tree_node_count_raw":  # number of nodes
         return _tree.len_nodecount_raw()
-    elif complexity_measure == 'tree_node_count_fair':
+    elif complexity_measure == "tree_node_count_fair":
         return _tree.len_nodecount_fair()
-    elif complexity_measure == 'tree_edit_distance':  # tree_edit_distance, fintree-edit-distance
+    elif complexity_measure == "tree_edit_distance":  # tree_edit_distance, fintree-edit-distance
         apted1 = _tree.get_apted_notation()
         apted2 = origin_tree.get_apted_notation()
         distance, mapping = apted_distance(apted1, apted2)
         return distance
     else:
-        raise Exception(f'Complexity measurement not available: {complexity_measure}')
+        raise Exception(f"Complexity measurement not available: {complexity_measure}")
 
 
 def sympy_to_tree(s_expr: sympy.Basic, allow_chain: bool) -> Node:
@@ -1188,10 +1184,9 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain: bool) -> Node:
                 return _n
                 # "TypeError: Cannot convert complex to float" -> ignore the whole expression, let it fail
             else:
-                raise NotImplementedError(f'What happened here? {s_expr}')
+                raise NotImplementedError(f"What happened here? {s_expr}")
 
     else:  # **Operators**
-
         cc_nodes = []
         for arg in s_expr.args:
             cc_nodes.append(sympy_to_tree(arg, allow_chain=allow_chain))
@@ -1211,9 +1206,10 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain: bool) -> Node:
         elif isinstance(s_expr, sympy.Piecewise):
             # "Chained_VERSION" version is handled before
             # Baue Piecewise von hinten nach vorne auf (letztes Paar wird innerster Else-Zweig)
-            pairs = [(sympy_to_tree(cond, allow_chain=allow_chain),
-                      sympy_to_tree(ceex, allow_chain=allow_chain))
-                     for ceex, cond in s_expr.args]
+            pairs = [
+                (sympy_to_tree(cond, allow_chain=allow_chain), sympy_to_tree(ceex, allow_chain=allow_chain))
+                for ceex, cond in s_expr.args
+            ]
 
             otherwise = pairs[-1][1]  # Last pair: (True, expr) → expr is else
             for cond, expre in reversed(pairs[:-1]):
@@ -1233,7 +1229,7 @@ def sympy_to_tree(s_expr: sympy.Basic, allow_chain: bool) -> Node:
                 return n
 
         sympy_expression_check_raise(s_expr)  # not required anymore? checks earlier
-    raise NotImplementedError(f'Expr missing: {s_expr}')
+    raise NotImplementedError(f"Expr missing: {s_expr}")
 
 
 def tree_simplification(_tree: Node, allow_chain: bool) -> Node:
@@ -1290,17 +1286,20 @@ def tree_simplification(_tree: Node, allow_chain: bool) -> Node:
     if len(tree_history[0]) < len(_tree):
         astr = string_remove_trailing_zeroes(str(tree_history[0].get_sympy_expr()))
         bstr = string_remove_trailing_zeroes(str(_tree.get_sympy_expr()))
-        print(f'WHATHAPPENED SFEH\t{astr}')
+        print(f"WHATHAPPENED SFEH\t{astr}")
         for ii, tt in enumerate(tree_history):
-            print(f'\t{ii}:\t{tt.str_as_list()}')
+            print(f"\t{ii}:\t{tt.str_as_list()}")
 
         if astr != bstr:
             # sfeh 'a**0.5' does not become 'sqrt(a)'! use rational=True or sympy.S.Half
-            print_warning('w', f'Diff in sympy expression?\n\t{astr}\n\t{bstr}')  # raise ex? does not occur after grouping?
+            print_warning(
+                "w", f"Diff in sympy expression?\n\t{astr}\n\t{bstr}"
+            )  # raise ex? does not occur after grouping?
             # sfeh Example 03.05.2025
             # 	sin(cartVel**(6450000000*RoundDummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
             # 	sin(cartVel**(6.45e+9*RoundDummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
     return _tree
+
 
 def evolve_reduce_simplicate(_tree: Node, allow_chain: bool, completely: bool = True, force: bool = False) -> Node:
     """Reduces a tree to its simplest form using SymPy simplification.
@@ -1321,9 +1320,11 @@ def evolve_reduce_simplicate(_tree: Node, allow_chain: bool, completely: bool = 
             cc2 = tree_simplification(cc, allow_chain)
             cc.set_new_node(cc2)
     else:
-        node_list = [n for n in _tree.list_mutable_nodes() if issubclass(n.get_typus(), OperatorArity)]  # ignoring leaf nodes...
+        node_list = [
+            n for n in _tree.list_mutable_nodes() if issubclass(n.get_typus(), OperatorArity)
+        ]  # ignoring leaf nodes...
         if len(node_list) == 0:
-            print_warning('wwww', f'Tree for simplification does not provide operators: {_tree}')
+            print_warning("wwww", f"Tree for simplification does not provide operators: {_tree}")
             return _tree
         node = random.choice(node_list)
         node2 = tree_simplification(node, allow_chain)
@@ -1332,9 +1333,10 @@ def evolve_reduce_simplicate(_tree: Node, allow_chain: bool, completely: bool = 
         return _tree
     else:
         if len(tree_copy) < len(_tree):
-            print_warning('w',
-                          f'Tree grew larger during simplification:\n\t{tree_copy.str_as_list()}\n\t{_tree.str_as_list()}')
-            print_warning('ww', f'tree_copy: {len(tree_copy)} vs. {len(_tree)}')
+            print_warning(
+                "w", f"Tree grew larger during simplification:\n\t{tree_copy.str_as_list()}\n\t{_tree.str_as_list()}"
+            )
+            print_warning("ww", f"tree_copy: {len(tree_copy)} vs. {len(_tree)}")
             return tree_copy
         else:
             return _tree
@@ -1351,11 +1353,13 @@ def node_deepcopy(_tree: Node) -> Node:
 
 class CustomOperator:
     """Marker class for custom operators that are not part of standard sympy."""
+
     pass
 
 
 class NodeWithChilds(Node):
     """Base class for nodes that can have child nodes (operators and dummies)."""
+
     ...
 
 
@@ -1364,6 +1368,7 @@ class NodeDummy(NodeWithChilds):
 
     Used as a structural wrapper without actual computation logic.
     """
+
     pass
 
 
@@ -1373,6 +1378,7 @@ class PleaseUsePartnerOp(NodeDummy):
     For example, Ge (>=) and Gt (>) should be rewritten using Lt (<) and Le (<=)
     to reduce operator redundancy in the system.
     """
+
     pass
 
 
@@ -1395,12 +1401,11 @@ class BaseOperator(NodeWithChilds):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.chain = kwargs.get('chain')
+        self.chain = kwargs.get("chain")
 
     def set_chain(self, param: bool) -> None:
         """Sets whether this operator instance uses chained mode."""
         self.chain = param
-
 
     def get_np_child_now(self, _df: pd.DataFrame, *args) -> List[np.ndarray]:
         """Evaluates all children and returns results as NumPy arrays.
@@ -1421,7 +1426,7 @@ class BaseOperator(NodeWithChilds):
         Each lambda takes a DataFrame and returns computed results.
         """
         ccl = [cc.eval_np_lambdas(*args) for cc in self.get_childs()]
-        
+
         return ccl
 
     def eval_predict_numpy_now(self, _df: pd.DataFrame, *args) -> np.ndarray:
@@ -1429,9 +1434,9 @@ class BaseOperator(NodeWithChilds):
         try:
             result = self.np_fun(*children)
         except TypeError as sfeh:
-            if 'loop of ufunc does not support argument' in str(sfeh):
+            if "loop of ufunc does not support argument" in str(sfeh):
                 # TypeError: loop of ufunc does not support argument 0 of type int which has no callable sin method
-                print('ASDASDASDASD TODO')  # Debug breakpoint
+                print("ASDASDASDASD TODO")  # Debug breakpoint
             raise TypeError(sfeh)
 
         return result
@@ -1460,12 +1465,14 @@ class BaseOperator(NodeWithChilds):
 
         return node_lambda
 
+
 class OperatorArity(BaseOperator):
     """Base class for operators with a fixed arity (number of arguments).
 
     Most standard operators (Add, Mul, Sin, etc.) inherit from this class.
     The arity is determined by the length of the input types in xtype[0].
     """
+
     arity = None
 
 
@@ -1503,6 +1510,7 @@ class ChainableOp:
         xtype_chain: Type signature for chained operation.
         xtype_input: Expected input type for each chained argument.
     """
+
     xtype_chain = None
     xtype_input = None
 
@@ -1513,6 +1521,7 @@ class MathOperator(BaseOperator):
     Includes arithmetic operations (Add, Mul, Div), power functions (Pow, Sqrt),
     trigonometric functions (Sin, Cos), and other numeric transformations.
     """
+
     pass
 
 
@@ -1521,6 +1530,7 @@ class LogicOperator(OperatorArity):
 
     Includes And, Or, Xor, Not operations.
     """
+
     pass
 
 
@@ -1530,6 +1540,7 @@ class RelationalOperator(OperatorArity):
     Includes Lt (<), Le (<=), Gt (>), Ge (>=), Eq (==), Ne (!=).
     These operators compare numeric values and return boolean results.
     """
+
     pass
 
 
@@ -1538,6 +1549,7 @@ class Trigonometry(MathOperator):
 
     Includes Sin, Cos, Tan, Asin, Acos, Atan, Sinh, Cosh, Tanh.
     """
+
     pass
 
 
@@ -1546,6 +1558,7 @@ class BaseMinMax(MathOperator):
 
     These operators select the minimum or maximum value from their arguments.
     """
+
     pass
 
 
@@ -1556,6 +1569,7 @@ class NoSymCapitalized:
     while our class names are capitalized (Sin, Cos, Log).
     This marker helps identify such cases.
     """
+
     pass
 
 
@@ -1577,6 +1591,7 @@ class Terminal(Node):
         Unlike operators, terminal nodes store their value in childs[0]
         rather than having Node children.
     """
+
     is_Atom = True
     _value: Union[sympy.AtomicExpr, float, bool]
 
@@ -1591,6 +1606,7 @@ class Terminal(Node):
         self._value = val
         self.childs = [val]  # Terminal-Nodes haben keine Node-Kinder, sondern Werte
 
+
 class Boolean(Terminal):
     """Terminal node representing a boolean constant (True or False).
 
@@ -1599,10 +1615,11 @@ class Boolean(Terminal):
     Attributes:
         xtype: ((), bool) - no inputs, outputs boolean.
     """
+
     xtype = ((), bool)
     symfun = staticmethod(lambda *a: sympy.S.true if a[0] else ~sympy.S.true)  # sympy.logic.boolalg.Boolean
     np_fun = staticmethod(lambda x: bool(x))
-    showme = 'Boolean'
+    showme = "Boolean"
 
     def eval_predict_numpy_now(self, _df: pd.DataFrame, *args) -> np.ndarray:
         val = bool(self.get_value())
@@ -1610,7 +1627,7 @@ class Boolean(Terminal):
 
     def eval_np_lambdas(self, *args):
         val = bool(self.get_value())
-        return lambda _df: np.full(len(_df), val, dtype=np.bool_)  # noqa: PLW0640
+        return lambda _df: np.full(len(_df), val, dtype=np.bool_)
 
 
 class Number(Terminal):
@@ -1626,12 +1643,13 @@ class Number(Terminal):
         Rational numbers are converted to floats to avoid precision issues
         in sympy simplification (e.g., Sqrt(8.0) -> 2*sqrt(6)/3).
     """
+
     xtype = ((), float)
     symfun = staticmethod(lambda *a: sympy.Float(float(a[0]), FLOAT_PRECISION))
     np_fun = staticmethod(lambda _x: float(_x))
     # sympy.Rational(0.1) -> 3602879701896397/36028797018963968
     # sympy.Rational('0.1') -> 1/10
-    showme = 'Number'
+    showme = "Number"
     # sfeh: problem with rational: Sqrt(8.0) -> 2*sqrt(6)/3. : actually is_atomic?
     # tflow = lambda a: tf.constant(a, dtype=tf.float32)
     # def eval_predict_numpy_now(self, df, *args) -> np.ndarray:
@@ -1664,11 +1682,11 @@ class Symbol(Terminal):
     Example:
         Symbol('cartPos') references the 'cartPos' column in the DataFrame.
     """
+
     symfun = staticmethod(lambda *a: a[0])  # no symbol-conversion; no reason for.
     np_fun = None
     xtype = ((), float)
-    showme = 'Symbol'
-
+    showme = "Symbol"
 
     def eval_predict_numpy_now(self, _df: pd.DataFrame, *args) -> np.ndarray:
         return _df[str(self.get_value())].to_numpy(dtype=np.float64)
@@ -1703,19 +1721,20 @@ class Add(MathOperator, ChainableOp):
     Computes the sum of all child values. Supports chaining for
     more than two operands: Add(a, b, c) = a + b + c.
     """
+
     symfun = staticmethod(lambda *a: sympy.Add(*a))
     np_fun = staticmethod(lambda *a: np.sum(np.stack(a), axis=0))
-    showme = 'Add'
-    sy_str = '({0} + {1})'
-    formulae_str = '({} + {})'
-    repr_str = 'Add{},[{},{}]'
+    showme = "Add"
+    sy_str = "({0} + {1})"
+    formulae_str = "({} + {})"
+    repr_str = "Add{},[{},{}]"
     xtype = ((float, float), float)
     symfun_chain = lambda a: sympy.Add(*a)
     np_fun_chain = lambda *a: np.sum(*a)  # n
-    sy_str_chain = 'Add({})'
-    formulae_str_chain = 'Add({})'
-    repr_str_chain = 'AddChain{},[{}]'
-    inline_sep = ' + '
+    sy_str_chain = "Add({})"
+    formulae_str_chain = "Add({})"
+    repr_str_chain = "AddChain{},[{}]"
+    inline_sep = " + "
     xtype_chain = ([(float,)], float)
     xtype_input = float
 
@@ -1729,16 +1748,17 @@ class Mul(MathOperator, ChainableOp):
     Note: np.multiply only works for pairwise multiplication,
     so np.prod with stacking is used instead.
     """
+
     symfun = staticmethod(lambda *args: sympy.Mul(*args))
     np_fun = staticmethod(lambda *a: np.prod(np.stack(a), axis=0))
-    showme = 'Mul'  #
-    sy_str = '({0} * {1})'
-    repr_str = 'Mul{},[{}, {}]'
+    showme = "Mul"  #
+    sy_str = "({0} * {1})"
+    repr_str = "Mul{},[{}, {}]"
     xtype = ((float, float), float)
     symfun_chain = lambda a: sympy.Mul(*a)
-    sy_str_chain = 'Mul({})'
-    repr_str_chain = 'MulChain{},[{}]'
-    inline_sep = ' * '
+    sy_str_chain = "Mul({})"
+    repr_str_chain = "MulChain{},[{}]"
+    inline_sep = " * "
     xtype_chain = ([(float,)], float)
     xtype_input = float
 
@@ -1751,12 +1771,13 @@ class DivFraction(MathOperator):
     Warning: np.reciprocal does not work correctly with integers.
     np.reciprocal(2) returns 0, np.reciprocal(2.0) returns 0.5.
     """
+
     xtype = ((float,), float)
     symfun = staticmethod(lambda *a: sympy.Pow(a[0], sympy.S.NegativeOne))
     np_fun = staticmethod(lambda a: np.reciprocal(a))
-    showme = 'DivFraction'
-    sy_str = '1/({})'
-    repr_str = 'DivFraction{},[{}]'
+    showme = "DivFraction"
+    sy_str = "1/({})"
+    repr_str = "DivFraction{},[{}]"
 
 
 class NthRoot(MathOperator):
@@ -1764,41 +1785,45 @@ class NthRoot(MathOperator):
 
     Currently untested. Use with caution.
     """
+
     xtype = ((float, float), float)
     symfun = staticmethod(lambda *a: sympy.root(a[0], a[1]))
     np_fun = staticmethod(lambda base, n: np.power(base, 1 / n))
-    showme = 'NthRoot'
-    sy_str = 'root({}, {})'
-    repr_str = 'NthRoot{},[{}, {}]'
+    showme = "NthRoot"
+    sy_str = "root({}, {})"
+    repr_str = "NthRoot{},[{}, {}]"
 
 
 class Pow(MathOperator):
     """Power operator: Pow(base, exp) computes base^exp."""
+
     symfun = staticmethod(lambda *a: sympy.Pow(a[0], a[1]) if len(a) == 2 else None)
     np_fun = staticmethod(lambda base, exp: np.power(base, exp))
-    showme = 'Pow'
-    sy_str = '({0})**({1})'
-    repr_str = 'Pow{},[{},{}]'
+    showme = "Pow"
+    sy_str = "({0})**({1})"
+    repr_str = "Pow{},[{},{}]"
     xtype = ((float, float), float)
 
 
 class Abs(MathOperator):
     """Absolute value operator: Abs(x) returns |x|."""
+
     symfun = staticmethod(lambda *a: sympy.Abs(a[0]))
     np_fun = np.absolute  # np.fabs works only for non-complex numbers
-    showme = 'Abs'
-    sy_str = 'Abs({})'
-    repr_str = 'Abs{},[{}]'
+    showme = "Abs"
+    sy_str = "Abs({})"
+    repr_str = "Abs{},[{}]"
     xtype = ((float,), float)
 
 
 class Sign(MathOperator, NoSymCapitalized):
     """Sign function: returns -1, 0, or 1 depending on the sign of the input."""
+
     symfun = staticmethod(lambda *a: sympy.sign(a[0]))
     np_fun = np.sign
-    showme = 'Sign'
-    sy_str = 'sign({})'
-    repr_str = 'Sign{},[{}]'
+    showme = "Sign"
+    sy_str = "sign({})"
+    repr_str = "Sign{},[{}]"
     xtype = ((float,), float)
 
 
@@ -1807,131 +1832,144 @@ class Log(MathOperator, NoSymCapitalized):
 
     Note: Input should be positive to avoid undefined results.
     """
+
     symfun = staticmethod(lambda *a: sympy.log(a[0]))
     np_fun = np.log
-    showme = 'Log'
-    sy_str = 'log({})'
-    repr_str = 'Log{},[{}]'
+    showme = "Log"
+    sy_str = "log({})"
+    repr_str = "Log{},[{}]"
     xtype = ((float,), float)
 
 
 class Cos(Trigonometry, NoSymCapitalized):
     """Cosine function: Cos(x) computes cos(x) in radians."""
+
     symfun = staticmethod(lambda *a: sympy.cos(a[0]))
     np_fun = np.cos
-    showme = 'Cos'
-    sy_str = 'cos({})'
-    repr_str = 'Cos{},[{}]'
+    showme = "Cos"
+    sy_str = "cos({})"
+    repr_str = "Cos{},[{}]"
     xtype = ((float,), float)
 
 
 class Sin(Trigonometry, NoSymCapitalized):
     """Sine function: Sin(x) computes sin(x) in radians."""
+
     symfun = staticmethod(lambda *a: sympy.sin(a[0]))
     np_fun = np.sin
-    showme = 'Sin'
-    sy_str = 'sin({})'
-    repr_str = 'Sin{},[{}]'
+    showme = "Sin"
+    sy_str = "sin({})"
+    repr_str = "Sin{},[{}]"
     xtype = ((float,), float)
 
 
 class Tan(Trigonometry, NoSymCapitalized):
     """Tangent function: Tan(x) computes tan(x) in radians."""
+
     symfun = staticmethod(lambda *a: sympy.tan(a[0]))
     np_fun = np.tan
-    showme = 'Tan'
-    sy_str = 'tan({})'
-    repr_str = 'Tan{},[{}]'
+    showme = "Tan"
+    sy_str = "tan({})"
+    repr_str = "Tan{},[{}]"
     xtype = ((float,), float)
 
 
 class Acos(Trigonometry, NoSymCapitalized):
     """Inverse cosine (arccosine): Acos(x) returns arccos(x) in radians."""
+
     symfun = staticmethod(lambda *a: sympy.acos(a[0]))
     np_fun = np.arccos  # arccosh
-    showme = 'Acos'
-    sy_str = 'acos({})'
-    repr_str = 'Acos{},[{}]'
+    showme = "Acos"
+    sy_str = "acos({})"
+    repr_str = "Acos{},[{}]"
     xtype = ((float,), float)
 
 
 class Asin(Trigonometry, NoSymCapitalized):
     """Inverse sine (arcsine): Asin(x) returns arcsin(x) in radians."""
+
     symfun = staticmethod(lambda *a: sympy.asin(a[0]))
     np_fun = np.arcsin
-    showme = 'Asin'
-    sy_str = 'asin({})'
-    repr_str = 'Asin{},[{}]'
+    showme = "Asin"
+    sy_str = "asin({})"
+    repr_str = "Asin{},[{}]"
     xtype = ((float,), float)
 
 
 class Atan(Trigonometry, NoSymCapitalized):
     """Inverse tangent (arctangent): Atan(x) returns arctan(x) in radians."""
+
     symfun = staticmethod(lambda *a: sympy.atan(a[0]))
     np_fun = np.arctan
-    showme = 'Atan'
-    sy_str = 'atan({})'
-    repr_str = 'Atan{},[{}]'
+    showme = "Atan"
+    sy_str = "atan({})"
+    repr_str = "Atan{},[{}]"
     xtype = ((float,), float)
 
 
 class Tanh(Trigonometry, NoSymCapitalized):
     """Hyperbolic tangent: Tanh(x) returns tanh(x)."""
+
     symfun = staticmethod(lambda *a: sympy.tanh(a[0]))
     np_fun = np.tanh
-    showme = 'Tanh'
-    sy_str = 'tanh({})'
-    repr_str = 'Tanh{},[{}]'
+    showme = "Tanh"
+    sy_str = "tanh({})"
+    repr_str = "Tanh{},[{}]"
     xtype = ((float,), float)
 
 
 class Sinh(Trigonometry, NoSymCapitalized):
     """Hyperbolic sine: Sinh(x) returns sinh(x)."""
+
     symfun = staticmethod(lambda *a: sympy.sinh(a[0]))
     np_fun = np.sinh
-    showme = 'Sinh'
-    sy_str = 'sinh({})'
-    repr_str = 'Sinh{},[{}]'
+    showme = "Sinh"
+    sy_str = "sinh({})"
+    repr_str = "Sinh{},[{}]"
     xtype = ((float,), float)
 
 
 class Cosh(Trigonometry, NoSymCapitalized):
     """Hyperbolic cosine: Cosh(x) returns cosh(x)."""
+
     symfun = staticmethod(lambda *a: sympy.cosh(a[0]))
     np_fun = np.cosh
-    showme = 'Cosh'
-    sy_str = 'cosh({})'
-    repr_str = 'Cosh{},[{}, {}]'
+    showme = "Cosh"
+    sy_str = "cosh({})"
+    repr_str = "Cosh{},[{}, {}]"
     xtype = ((float,), float)
 
 
 class Not(LogicOperator):
     """Logical NOT operator: Not(a) returns ~a (negation)."""
+
     symfun = staticmethod(lambda *a: sympy.Not(a[0]))
     np_fun = np.logical_not
-    showme = 'Not'
-    sy_str = '~({})'
-    repr_str = 'Not{},[{}]'
+    showme = "Not"
+    sy_str = "~({})"
+    repr_str = "Not{},[{}]"
     xtype = ((bool,), bool)
 
 
 class Eq(RelationalOperator):
     """Equality comparison: Eq(a, b) returns True if a == b."""
+
     symfun = staticmethod(lambda *a: sympy.Eq(a[0], a[1]))
     np_fun = np.equal
-    showme = 'Eq'  # '==' not working in sympy!
-    sy_str = 'Eq({0}, {1})'
-    repr_str = 'Eq{},[{}, {}]'
+    showme = "Eq"  # '==' not working in sympy!
+    sy_str = "Eq({0}, {1})"
+    repr_str = "Eq{},[{}, {}]"
     xtype = ((float, float), bool)
 
 
 class Ne(RelationalOperator):
     """Inequality comparison: Ne(a, b) returns True if a != b."""
+
     symfun = staticmethod(lambda *a: sympy.Ne(a[0], a[1]))
     np_fun = np.not_equal
-    showme = 'Ne'  # != not working in sympy
-    sy_str = 'Ne({0}, {1})'
-    repr_str = 'Ne{},[{}, {}]'
+    showme = "Ne"  # != not working in sympy
+    sy_str = "Ne({0}, {1})"
+    repr_str = "Ne{},[{}, {}]"
     xtype = ((float, float), bool)
 
 
@@ -1940,21 +1978,22 @@ class And(LogicOperator, ChainableOp):
 
     Supports chaining: And(a, b, c) = a & b & c.
     """
+
     symfun = staticmethod(lambda *a: sympy.And(*a))
     np_fun = staticmethod(lambda *a: np.logical_and.reduce(a))
-    showme = 'And'
-    sy_str = '({0} & {1})'  # Arity-2 Formatierung
-    repr_str = 'And{},[{}, {}]'
+    showme = "And"
+    sy_str = "({0} & {1})"  # Arity-2 Formatierung
+    repr_str = "And{},[{}, {}]"
     xtype = ((bool, bool), bool)
     xtype_input = bool
-    expr_dmy = 'And'
+    expr_dmy = "And"
     symfun_chain = staticmethod(lambda a: sympy.And(*a))
     np_fun_chain = staticmethod(lambda *a: np.logical_and.reduce(a))
 
-    showme_chain = 'AndChain'
-    sy_str_chain = 'And({})'  # Variadische Notation
-    repr_str_chain = 'And{},[{}]'
-    inline_sep = ' & '
+    showme_chain = "AndChain"
+    sy_str_chain = "And({})"  # Variadische Notation
+    repr_str_chain = "And{},[{}]"
+    inline_sep = " & "
     xtype_chain = ([(bool,)], bool)
 
 
@@ -1963,19 +2002,20 @@ class Or(LogicOperator, ChainableOp):
 
     Supports chaining: Or(a, b, c) = a | b | c.
     """
+
     symfun = staticmethod(lambda *a: sympy.Or(a[0], a[1]))
     np_fun = staticmethod(lambda *a: np.any(a, axis=0))
-    showme = 'Or'
-    sy_str = '({0}|{1})'
-    repr_str = 'Or{},[{}, {}]'
+    showme = "Or"
+    sy_str = "({0}|{1})"
+    repr_str = "Or{},[{}, {}]"
     xtype = ((bool, bool), bool)
     xtype_chain = ([(bool,)], bool)
     xtype_input = bool
     symfun_chain = lambda a: sympy.Or(*a)
     np_fun_chain = lambda *a: np.logical_or(*a)
-    sy_str_chain = 'Or({})'
-    repr_str_chain = 'OrChain{},[{}]'
-    inline_sep = ' | '
+    sy_str_chain = "Or({})"
+    repr_str_chain = "OrChain{},[{}]"
+    inline_sep = " | "
 
 
 class Xor(LogicOperator, NoSymCapitalized, ChainableOp):
@@ -1984,16 +2024,17 @@ class Xor(LogicOperator, NoSymCapitalized, ChainableOp):
     Caution: The sympy representation '(a ^ b)' is interpreted as a**b in Python.
     Supports chaining for multiple operands.
     """
+
     symfun = staticmethod(lambda *a: sympy.Xor(*a))
     np_fun = staticmethod(lambda *a: np.logical_xor.reduce(a))
-    showme = 'Xor'
-    sy_str = 'Xor({}, {})'  # 'a ^ b'
-    repr_str = 'Xor{},[{}, {}]'
+    showme = "Xor"
+    sy_str = "Xor({}, {})"  # 'a ^ b'
+    repr_str = "Xor{},[{}, {}]"
     xtype = ((bool, bool), bool)
     symfun_chain = lambda a: sympy.Xor(*a)
     np_fun_chain = lambda *a: np.logical_xor(*a)
-    sy_str_chain = 'Xor({})'  # 'a ^ b'
-    inline_sep = ' ^ '
+    sy_str_chain = "Xor({})"  # 'a ^ b'
+    inline_sep = " ^ "
 
     xtype_chain = ([(bool,)], bool)
     xtype_input = bool
@@ -2007,11 +2048,12 @@ class ITE(LogicOperator):
 
     For numeric results, use Ifte instead.
     """
+
     symfun = staticmethod(lambda *a: sympy.ITE(a[0], a[1], a[2]))
-    np_fun = staticmethod(lambda a, b, c: ((a & b) | (not a) & c))
-    showme = 'ITE'
-    sy_str = 'ITE({0}, {1}, {2})'
-    repr_str = 'ITE{},[{}, {}, {}]'
+    np_fun = staticmethod(lambda a, b, c: (a & b) | (not a) & c)
+    showme = "ITE"
+    sy_str = "ITE({0}, {1}, {2})"
+    repr_str = "ITE{},[{}, {}, {}]"
     xtype = ((bool, bool, bool), bool)
 
 
@@ -2020,17 +2062,18 @@ class Min(BaseMinMax, ChainableOp):
 
     Supports chaining: Min(a, b, c) returns min(a, b, c).
     """
+
     symfun = staticmethod(lambda *a: sympy.Min(*a))
     np_fun = staticmethod(lambda *a: np.minimum.reduce(np.vstack(a), axis=0))
-    showme = 'Min'
-    sy_str = 'Min({0},{1})'
-    repr_str = 'Min{},[{}, {}]'
+    showme = "Min"
+    sy_str = "Min({0},{1})"
+    repr_str = "Min{},[{}, {}]"
     xtype = ((float, float), float)
     xtype_input = float
     symfun_chain = lambda a: sympy.Min(*a)
     np_fun_chain = np.minimum
-    sy_str_chain = 'Min({})'
-    repr_str_chain = 'MinChain{},[{}]'
+    sy_str_chain = "Min({})"
+    repr_str_chain = "MinChain{},[{}]"
     xtype_chain = ([(float,)], float)
 
 
@@ -2039,16 +2082,17 @@ class Max(BaseMinMax, ChainableOp):
 
     Supports chaining: Max(a, b, c) returns max(a, b, c).
     """
+
     symfun = staticmethod(lambda *a: sympy.Max(*a))
     np_fun = staticmethod(lambda *a: np.maximum.reduce(np.vstack(a), axis=0))
-    showme = 'Max'
-    sy_str = 'Max({0}, {1})'
-    repr_str = 'Max{},[{}, {}]'
+    showme = "Max"
+    sy_str = "Max({0}, {1})"
+    repr_str = "Max{},[{}, {}]"
     xtype = ((float, float), float)
     xtype_input = float
     symfun_chain = lambda a: sympy.Max(*a)
     np_fun_chain = np.maximum
-    sy_str_chain = 'Max({})'
+    sy_str_chain = "Max({})"
     xtype_chain = ([(float,)], float)
 
     def __call__(self, a):
@@ -2060,21 +2104,23 @@ class Max(BaseMinMax, ChainableOp):
 
 class Lt(RelationalOperator):
     """Less-than comparison: Lt(a, b) returns True if a < b."""
+
     symfun = staticmethod(lambda *a: sympy.Lt(a[0], a[1]))
     np_fun = np.less
-    showme = 'Lt'
-    sy_str = '({0} < {1})'
-    repr_str = 'Lt{},[{}, {}]'
+    showme = "Lt"
+    sy_str = "({0} < {1})"
+    repr_str = "Lt{},[{}, {}]"
     xtype = ((float, float), bool)
 
 
 class Le(RelationalOperator):
     """Less-than-or-equal comparison: Le(a, b) returns True if a <= b."""
+
     symfun = staticmethod(lambda *a: sympy.Le(a[0], a[1]))
     np_fun = np.less_equal
-    showme = 'Le'
-    sy_str = '({0} <= {1})'
-    repr_str = 'Le{},[{}, {}]'
+    showme = "Le"
+    sy_str = "({0} <= {1})"
+    repr_str = "Le{},[{}, {}]"
     xtype = ((float, float), bool)
 
 
@@ -2083,11 +2129,12 @@ class Gt(RelationalOperator, PleaseUsePartnerOp):
 
     Note: Consider using Lt(b, a) instead to reduce operator redundancy.
     """
+
     symfun = staticmethod(lambda *a: sympy.Gt(a[0], a[1]))
     np_fun = np.greater
-    showme = 'Gt'
-    sy_str = '({0} > {1})'
-    repr_str = 'Gt{},[{}, {}]'
+    showme = "Gt"
+    sy_str = "({0} > {1})"
+    repr_str = "Gt{},[{}, {}]"
     xtype = ((float, float), bool)
 
 
@@ -2096,52 +2143,57 @@ class Ge(RelationalOperator, PleaseUsePartnerOp):
 
     Note: Consider using Le(b, a) instead to reduce operator redundancy.
     """
+
     xtype = ((float, float), bool)
     symfun = staticmethod(lambda *a: sympy.Ge(a[0], a[1]))
     np_fun = np.greater_equal
-    showme = 'Ge'
-    sy_str = '({0} >= {1})'
-    repr_str = 'Ge{},[{}, {}]'
+    showme = "Ge"
+    sy_str = "({0} >= {1})"
+    repr_str = "Ge{},[{}, {}]"
 
 
 class Square(MathOperator):
     """Square operator: Square(x) computes x^2."""
+
     symfun = staticmethod(lambda *a: sympy.Pow(a[0], 2))
     np_fun = np.square
     xtype = ((float,), float)
-    showme = 'Square'
-    sy_str = '({})**2'
-    repr_str = 'Square{},[{}]'
+    showme = "Square"
+    sy_str = "({})**2"
+    repr_str = "Square{},[{}]"
 
 
 class Exp(MathOperator):
     """Exponential function: Exp(x) computes e^x."""
+
     symfun = staticmethod(lambda *a: sympy.exp(a[0]))
     np_fun = np.exp
-    showme = 'Exp'
-    sy_str = '{}**E'
-    repr_str = 'Exp{},[{}, {}]'
+    showme = "Exp"
+    sy_str = "{}**E"
+    repr_str = "Exp{},[{}, {}]"
     xtype = ((float,), float)
 
 
 class Exp2(MathOperator):
     """Base-2 exponential: Exp2(x) computes 2^x."""
+
     symfun = staticmethod(lambda *a: sympy.Pow(2, a[0]))
     np_fun = np.exp2
     xtype = ((float,), float)
-    showme = 'Exp2'
-    sy_str = '2**({})'
-    repr_str = 'Exp2{},[{}]'
+    showme = "Exp2"
+    sy_str = "2**({})"
+    repr_str = "Exp2{},[{}]"
 
 
 class Sub(MathOperator):
     """Subtraction operator: Sub(a, b) computes a - b."""
+
     xtype = ((float, float), float)
     symfun = staticmethod(lambda *a: sympy.Add(a[0], -a[1]))
     np_fun = np.subtract
-    showme = 'Sub'
-    sy_str = '({0} - {1})'
-    repr_str = 'Sub{},[{}, {}]'
+    showme = "Sub"
+    sy_str = "({0} - {1})"
+    repr_str = "Sub{},[{}, {}]"
 
 
 class Ifte(OperatorArity):
@@ -2152,13 +2204,14 @@ class Ifte(OperatorArity):
 
     For boolean results, use ITE instead.
     """
+
     xtype = ((bool, float, float), float)
     symfun = staticmethod(lambda *a: sympy.Piecewise((a[1], a[0]), (a[2], True)))
     np_fun = staticmethod(lambda cond, if_true, if_false: np.where(cond, if_true, if_false))
-    showme = 'Ifte'
-    sy_str = 'Ifte({0},{1},{2})'
-    repr_str = 'Ifte{},[{}, {}, {}]'
-    expr_dummy = 'Ifte'
+    showme = "Ifte"
+    sy_str = "Ifte({0},{1},{2})"
+    repr_str = "Ifte{},[{}, {}, {}]"
+    expr_dummy = "Ifte"
     xtype_chain = (float, bool)
 
     # def eval_np_lambdas(self, *args):
@@ -2177,12 +2230,13 @@ class Piecewise(BaseOperator, ChainableOp):
 
     Internal representation uses ExprCondPair_Dummy for each (expression, condition) pair.
     """
+
     symfun = staticmethod(lambda *a: sympy.Piecewise(*a))
     np_fun = None
-    showme = 'Piecewise'
-    sy_str = 'Piecewise({})'
-    formulae_str = 'Piecewise({})'
-    repr_str = 'Piecewise{},[{}]'
+    showme = "Piecewise"
+    sy_str = "Piecewise({})"
+    formulae_str = "Piecewise({})"
+    repr_str = "Piecewise{},[{}]"
     xtype = ([(ExprCondPair,)], float)
     xtype_chain = ExprCondPair
     xtype_input = ExprCondPair
@@ -2190,9 +2244,9 @@ class Piecewise(BaseOperator, ChainableOp):
     def eval_predict_numpy_now(self, _df: pd.DataFrame, *args) -> np.ndarray:
         # ...existing code...
         pairs = [
-            (c.childs[0].eval_predict_numpy_now(_df, *args),
-             c.childs[1].eval_predict_numpy_now(_df, *args))
-            for c in self.get_childs()]
+            (c.childs[0].eval_predict_numpy_now(_df, *args), c.childs[1].eval_predict_numpy_now(_df, *args))
+            for c in self.get_childs()
+        ]
 
         # Default values are in last position
         result = pairs[-1][0].astype(np.float64, copy=False)
@@ -2203,9 +2257,7 @@ class Piecewise(BaseOperator, ChainableOp):
         return result
 
     def eval_np_lambdas(self, *args):
-        pairs = [(c.childs[0].eval_np_lambdas(*args),
-                  c.childs[1].eval_np_lambdas(*args))
-                 for c in self.get_childs()]
+        pairs = [(c.childs[0].eval_np_lambdas(*args), c.childs[1].eval_np_lambdas(*args)) for c in self.get_childs()]
 
         def piecewise_lambda(_df):
             result = pairs[-1][0](_df)  # Default case
@@ -2221,12 +2273,13 @@ class Round(MathOperator):
 
     Uses banker's rounding (round half to even) via RoundDummy for sympy compatibility.
     """
+
     xtype = ((float,), float)
     symfun = staticmethod(lambda *a: RoundDummy(a[0]))
-    np_fun = staticmethod(lambda x: np.vectorize(lambda v: int(round(float(v))))(x))
-    showme = 'Round'
-    sy_str = 'RoundDummy({},1)'
-    repr_str = 'RoundDummy{},[{}]'
+    np_fun = staticmethod(lambda x: np.vectorize(lambda v: round(float(v)))(x))
+    showme = "Round"
+    sy_str = "RoundDummy({},1)"
+    repr_str = "RoundDummy{},[{}]"
 
 
 class PowRounded(MathOperator):
@@ -2235,11 +2288,12 @@ class PowRounded(MathOperator):
     Useful to constrain exponents to integer values during evolution,
     avoiding fractional powers that can produce complex numbers.
     """
+
     symfun = staticmethod(lambda *a: sympy.Pow(a[0], RoundDummy(a[1])))
-    np_fun = staticmethod(lambda base, exponent: np.power(base, np.vectorize(lambda _x: int(round(float(_x))))(exponent)))
-    showme = 'PowRounded'
-    sy_str = '({0})**RoundDummy({1})'
-    repr_str = 'PowRounded{},[{}, {}]'
+    np_fun = staticmethod(lambda base, exponent: np.power(base, np.vectorize(lambda _x: round(float(_x)))(exponent)))
+    showme = "PowRounded"
+    sy_str = "({0})**RoundDummy({1})"
+    repr_str = "PowRounded{},[{}, {}]"
     xtype = ((float, float), float)
 
 
@@ -2256,11 +2310,12 @@ class Div(MathOperator):
 
     Implemented as a * b^(-1) since sympy.div() only works for polynomials.
     """
+
     symfun = staticmethod(lambda *a: sympy.Mul(a[0], sympy.Pow(a[1], -1)))
     np_fun = staticmethod(np.divide)
-    showme = 'Div'
-    sy_str = '({0}/{1})'
-    repr_str = 'Div{},[{}, {}]'
+    showme = "Div"
+    sy_str = "({0}/{1})"
+    repr_str = "Div{},[{}, {}]"
     xtype = ((float, float), float)
 
 
@@ -2269,12 +2324,13 @@ class Sqrt(MathOperator):
 
     In SymPy, sqrt(x) is equivalent to x**Rational(1, 2).
     """
+
     xtype = ((float,), float)
     symfun = staticmethod(lambda *a: sympy.sqrt(a[0]))
     np_fun = staticmethod(np.sqrt)
-    showme = 'Sqrt'
-    sy_str = 'sqrt({})'
-    repr_str = 'Sqrt{},[{}, {}]'
+    showme = "Sqrt"
+    sy_str = "sqrt({})"
+    repr_str = "Sqrt{},[{}, {}]"
 
 
 class Usub(MathOperator):
@@ -2283,12 +2339,13 @@ class Usub(MathOperator):
     Note: This operator is typically not counted in parsimony/complexity
     measures as it doesn't add significant complexity.
     """
+
     xtype = ((float,), float)
     symfun = staticmethod(lambda a, *_: sympy.Mul(-1, a))
     np_fun = staticmethod(lambda x: np.negative(x))
-    showme = 'Usub'
-    sy_str = '(-{})'
-    repr_str = 'Usub{},[{}]'
+    showme = "Usub"
+    sy_str = "(-{})"
+    repr_str = "Usub{},[{}]"
 
 
 class Clip(BaseMinMax, CustomOperator):
@@ -2296,15 +2353,16 @@ class Clip(BaseMinMax, CustomOperator):
 
     Equivalent to Min(Max(x, min), max).
     """
+
     symfun = staticmethod(lambda *a: sympy.Min(sympy.Max(a[0], a[1]), a[2]))
     np_fun = np.clip
-    showme = 'Clip'
-    sy_str = '(sympy.Min(sympy.Max({0}, {1}), {2}))'
-    repr_str = 'Clip{},[{}, {}]'
+    showme = "Clip"
+    sy_str = "(sympy.Min(sympy.Max({0}, {1}), {2}))"
+    repr_str = "Clip{},[{}, {}]"
     xtype = ((float, float, float), float)
 
 
-class ExprCondPair_Dummy(NodeDummy):  # noqa
+class ExprCondPair_Dummy(NodeDummy):
     """Wrapper for expression-condition pairs in Piecewise expressions.
 
     Each pair consists of (expression, condition) where the expression
@@ -2312,23 +2370,50 @@ class ExprCondPair_Dummy(NodeDummy):  # noqa
 
     Named differently from sympy.ExprCondPair to avoid confusion.
     """
+
     arity = 2
     symfun = staticmethod(lambda *a: ExprCondPair(a[0], a[1]))
     np_fun = None
-    showme = 'ExprCondPair_Dummy'
-    sy_str = 'ExprCondPair({0}, {1})'
-    repr_str = 'ExprCondPair_Dummy{},[{}, {}]'
+    showme = "ExprCondPair_Dummy"
+    sy_str = "ExprCondPair({0}, {1})"
+    repr_str = "ExprCondPair_Dummy{},[{}, {}]"
     xtype = ([(float, bool)], float)
-    expr_dmy = 'ExprCondPair_Dummy'
+    expr_dmy = "ExprCondPair_Dummy"
 
 
 # Mapping from sympy classes to plagih Node-classes
 # The non-chained version
-d_sym2node = {sympy.Add: Add, sympy.Pow: Pow, sympy.Abs: Abs, sympy.sign: Sign, sympy.log: Log, sympy.Mul: Mul,
-              sympy.Xor: Xor, sympy.Not: Not, sympy.Equality: Eq,  sympy.Unequality: Ne, sympy.And: And, sympy.Or: Or, sympy.StrictLessThan: Lt, sympy.LessThan: Le,
-              sympy.StrictGreaterThan: Gt, sympy.GreaterThan: Ge,
-              sympy.cos: Cos, sympy.sin: Sin, sympy.tan: Tan, sympy.acos: Acos, sympy.asin: Asin, sympy.atan: Atan, sympy.tanh: Tanh, sympy.sinh: Sinh, sympy.cosh: Cosh,
-              sympy.Min: Min, sympy.Max: Max, sympy.ITE: ITE, sympy.exp: Exp,}
+d_sym2node = {
+    sympy.Add: Add,
+    sympy.Pow: Pow,
+    sympy.Abs: Abs,
+    sympy.sign: Sign,
+    sympy.log: Log,
+    sympy.Mul: Mul,
+    sympy.Xor: Xor,
+    sympy.Not: Not,
+    sympy.Equality: Eq,
+    sympy.Unequality: Ne,
+    sympy.And: And,
+    sympy.Or: Or,
+    sympy.StrictLessThan: Lt,
+    sympy.LessThan: Le,
+    sympy.StrictGreaterThan: Gt,
+    sympy.GreaterThan: Ge,
+    sympy.cos: Cos,
+    sympy.sin: Sin,
+    sympy.tan: Tan,
+    sympy.acos: Acos,
+    sympy.asin: Asin,
+    sympy.atan: Atan,
+    sympy.tanh: Tanh,
+    sympy.sinh: Sinh,
+    sympy.cosh: Cosh,
+    sympy.Min: Min,
+    sympy.Max: Max,
+    sympy.ITE: ITE,
+    sympy.exp: Exp,
+}
 # sympy.sqrt: Sqrt,  sympy.root: NthRoot not required, as Pow can handle it
 
 # The chained version is the regular version updated with the following operators
@@ -2345,7 +2430,7 @@ def sympy_expression_check_raise(expr_sym: sympy.Basic) -> sympy.Basic:
         return sympy.true if expr_sym else sympy.false
     if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im, sympy.re):
         # sympy.re: real part -> don't ignore; if there is a real part, there is an imaginary part.
-        raise SympyError(f'Simplification failed: {expr_sym}')
+        raise SympyError(f"Simplification failed: {expr_sym}")
     return expr_sym
 
 
@@ -2388,7 +2473,7 @@ def expr_sympify(_expr):
         return expr_sym
 
     except ValueError as e:
-        raise ValueError(f'NaN in {e}')
+        raise ValueError(f"NaN in {e}")
     except AttributeError as e:
         # This can happen when sympifying expressions that return non-sympy types
         if isinstance(_expr, bool):
@@ -2425,12 +2510,12 @@ class Candidate:
 
     def __str__(self):
         """Show the Parsimony and Fitness of a tree"""
-        return f'[{self.get_parsim():2.0f}: fit {self.get_fitness():4.2f} ({self.tree.__str__()})]'
+        return f"[{self.get_parsim():2.0f}: fit {self.get_fitness():4.2f} ({self.tree.__str__()})]"
 
     def full_string(self) -> str:
         # Paretofront: Removing obsol ... ))]: \x1b[1msign(Max(c
         # https://stackoverflow.com/questions/62213322/python-3-bug-print-background-color-issue
-        return f'{self.__str__()}: {BColors.BOLD}{self.get_evotree().get_sympy_expr()}{BColors.RESET}'
+        return f"{self.__str__()}: {BColors.BOLD}{self.get_evotree().get_sympy_expr()}{BColors.RESET}"
 
     def get_evotree(self) -> Node:
         return self.tree
@@ -2490,14 +2575,12 @@ def eval_predict_sympyBatch(sy_expr: sympy.Basic, _df: pd.DataFrame, symbol_list
     symbol_list_str = [str(s) for s in symbol_list]
 
     # Required functions for lambdify (poor native handling ofdimensionslity, ...)
-    sy_np_handling = {'Abs': Abs.np_fun, 'RoundDummy': RoundDummy.np_round_dummy,
-                 'Min': Min.np_fun, 'Max': Max.np_fun}
-    func = sympy.lambdify(symbol_list, sy_expr, modules=[sy_np_handling, 'numpy'])
+    sy_np_handling = {"Abs": Abs.np_fun, "RoundDummy": RoundDummy.np_round_dummy, "Min": Min.np_fun, "Max": Max.np_fun}
+    func = sympy.lambdify(symbol_list, sy_expr, modules=[sy_np_handling, "numpy"])
 
-    with warnings.catch_warnings():
-        with ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
-            with ignore_warnings(DeprecationWarning):  # something 'like use "**" instead of "Pow"'
-                df_results = _df.apply(lambda row: func(*[row[s] for s in symbol_list_str]), axis=1)
+    with warnings.catch_warnings(), ignore_warnings(RuntimeWarning):  # often in ITE-terms? When math errors occur
+        with ignore_warnings(DeprecationWarning):  # something 'like use "**" instead of "Pow"'
+            df_results = _df.apply(lambda row: func(*[row[s] for s in symbol_list_str]), axis=1)
 
     return df_results
 
@@ -2520,15 +2603,15 @@ def check_operator_pool(ops: Dict[Type[BaseOperator], float]) -> None:
         dict_operator_pool = {Add: 2, Sub: 1, Mul: 2, Div: 1}
     """
 
-    opxtypes = [oper.xtype for oper in ops.keys()]
+    opxtypes = [oper.xtype for oper in ops]
     has_2f = any([float == i[1] for i in opxtypes])
     has_2b = any([bool == i[1] for i in opxtypes])
     has_f2b = any([float in i[0] and bool == i[1] for i in opxtypes])
     has_b2f = any([bool in i[0] and float == i[1] for i in opxtypes])
     if not all([has_2f, has_2b, has_f2b, has_b2f]):
-        print_warning('w', f'Loaded operators do not feature both numeric (float) and bool type.')
+        print_warning("w", "Loaded operators do not feature both numeric (float) and bool type.")
     if all([has_2f, has_2b]) and not all([has_f2b or has_b2f]):
-        raise Exception(f'Loaded operators do not allow closure!')
+        raise Exception("Loaded operators do not allow closure!")
 
 
 def norm_choices(val_p_tuples: list) -> list:
@@ -2569,13 +2652,12 @@ def operatorpool_to_picks(d_operator_pool: Dict[Type[BaseOperator], float]) -> T
     for _cls, _p in d_operator_pool.items():
         xt = _cls.xtype
         pick_op[xt[1]].append([_cls, _p])
-        if pick_op_match.get(xt, None) is None:
+        if pick_op_match.get(xt) is None:
             pick_op_match[xt] = []
         pick_op_match[xt].append([_cls, _p])
 
-    pick_op = {float: norm_choices(pick_op[float]),
-               bool: norm_choices(pick_op[bool])}
-    for k_xt in pick_op_match.keys():
+    pick_op = {float: norm_choices(pick_op[float]), bool: norm_choices(pick_op[bool])}
+    for k_xt in pick_op_match:
         pick_op_match[k_xt] = norm_choices(pick_op_match[k_xt])
     return pick_op, pick_op_match
 
@@ -2609,16 +2691,21 @@ class NodeSelect:
         self.pick_symbol = {
             # float: norm_choices([[symbols_lambda(ii), 1] for ii in symbols]),
             float: norm_choices([[ii, 1] for ii in symbol_list]),
-            bool: []}  # NotImplementedError
+            bool: [],
+        }  # NotImplementedError
 
         # -> Choosing 50 random numeric values from the dataset for building trees ...just not zeros)
         # samples = [ii for ii in itertools.chain.from_iterable(df[build_variables_list].sample(n=50).values) if ii != 0]
-        self.pick_constant = {float: norm_choices([
-            [lambda: round(random.normalvariate(1, 1), FLOAT_PRECISION), 0.1],
-            [lambda: round(random.randint(1, 20), FLOAT_PRECISION), 0.1],
-            # [lambda: round(random.choice(samples), FLOAT_PRECISION), 0.5]
-        ]),
-            bool: norm_choices([[lambda: random.choice((True, False)), 1]])}
+        self.pick_constant = {
+            float: norm_choices(
+                [
+                    [lambda: round(random.normalvariate(1, 1), FLOAT_PRECISION), 0.1],
+                    [lambda: round(random.randint(1, 20), FLOAT_PRECISION), 0.1],
+                    # [lambda: round(random.choice(samples), FLOAT_PRECISION), 0.5]
+                ]
+            ),
+            bool: norm_choices([[lambda: random.choice((True, False)), 1]]),
+        }
 
     def choose_operator_class(self, xt: Union[Type[float], Type[bool]]) -> Type[BaseOperator]:
         """Randomly selects an operator class that produces the given output type.
@@ -2732,12 +2819,38 @@ class Evolution:
         complexity_metric: Method for measuring tree complexity.
     """
 
-    operator_presets = {'math_simple':
-                        {Add: 2, Mul: 2, Div: 1, Square: 0.75, Abs: 0.5, Sign: 0.5, Sqrt: 0.1, Log: 0.1,
-                         Sin: 0.5, Not: 0.5, Lt: 0.5, Le: 0.5, And: 1, Or: 1, Min: 1, Max: 1}}
+    operator_presets = {
+        "math_simple": {
+            Add: 2,
+            Mul: 2,
+            Div: 1,
+            Square: 0.75,
+            Abs: 0.5,
+            Sign: 0.5,
+            Sqrt: 0.1,
+            Log: 0.1,
+            Sin: 0.5,
+            Not: 0.5,
+            Lt: 0.5,
+            Le: 0.5,
+            And: 1,
+            Or: 1,
+            Min: 1,
+            Max: 1,
+        }
+    }
 
-    def __init__(self, symbol_list=None, origin_xtype=float, operators=None, origin_tree=None,
-                 depth_max=10, nodes_max=100, complexity_metric='tree_node_count_fair', allow_chain=None):
+    def __init__(
+        self,
+        symbol_list=None,
+        origin_xtype=float,
+        operators=None,
+        origin_tree=None,
+        depth_max=10,
+        nodes_max=100,
+        complexity_metric="tree_node_count_fair",
+        allow_chain=None,
+    ):
         """Initialize evolution with operator pool and constraints.
 
         Args:
@@ -2755,7 +2868,7 @@ class Evolution:
 
         # operators -> {Add: 1}
         if operators is None:
-            operators = self.operator_presets['math_simple']
+            operators = self.operator_presets["math_simple"]
         elif isinstance(operators, str):
             operators = self.operator_presets[operators]
         elif isinstance(operators, list):
@@ -2766,7 +2879,7 @@ class Evolution:
             raise NotImplementedError
 
         if symbol_list is None:
-            symbol_list = sympy.symbols('a b', real=True, imaginary=False)  # sympy symbols options
+            symbol_list = sympy.symbols("a b", real=True, imaginary=False)  # sympy symbols options
         else:
             symbol_list = [sympy.Symbol(s) if isinstance(s, str) else s for s in symbol_list]
             symbol_list = sorted(symbol_list, key=lambda x: str(x))
@@ -2800,7 +2913,7 @@ class Evolution:
         nodelist = _tree.list_mutable_nodes()
         for dnode in nodelist:
             if dnode.depth == self.nodes_max and dnode.get_arity() > 0:
-                print_warning('wwww', f'Node in fintree is too deep: {dnode.depth}')
+                print_warning("wwww", f"Node in fintree is too deep: {dnode.depth}")
                 new_node = self.node_selector.choose_terminal_node(dnode.get_xtype_self())
                 new_node.depth = dnode.depth
                 dnode.set_new_node(new_node)
@@ -2813,7 +2926,7 @@ class Evolution:
         #   - check crossover
         prune_amount = len(_tree) - self.nodes_max
         while prune_amount > 0:
-            print_warning('wwww', f'Tree too complex: {len(_tree)} > {self.nodes_max}, pruning {prune_amount}.')
+            print_warning("wwww", f"Tree too complex: {len(_tree)} > {self.nodes_max}, pruning {prune_amount}.")
             nodelist = _tree.list_mutable_nodes()
             prune_now = 1 + np.random.randint(prune_amount)  # 19 -> prune branch with 1 to max. 19 nodes
 
@@ -2826,7 +2939,9 @@ class Evolution:
 
         return _tree
 
-    def evolve_new_tree_depth(self, xt_out: Union[Type[float], Type[bool]], depth_goal: int, p_term: float = 0.0) -> Node:
+    def evolve_new_tree_depth(
+        self, xt_out: Union[Type[float], Type[bool]], depth_goal: int, p_term: float = 0.0
+    ) -> Node:
         """Creates a new random tree with target depth.
 
         If an origin_tree is set, fills its mutable slots with random branches.
@@ -2842,13 +2957,13 @@ class Evolution:
         """
 
         if self.origin_tree is not None:
-
             evotree = copy.deepcopy(self.origin_tree)
             layer0 = evotree.get_mutable_rootnodes(extend_lvls=0)
 
             for ii, nd in enumerate(layer0):  # -> get layer every time (nsted ids might have changed)
-                new_subbranch = self.evolve_create_random(nd.get_xtype_self(), depth_goal, num_rest=-1,
-                                                          depth=nd.depth, p_term=p_term)
+                new_subbranch = self.evolve_create_random(
+                    nd.get_xtype_self(), depth_goal, num_rest=-1, depth=nd.depth, p_term=p_term
+                )
                 nd.set_new_node(new_subbranch)
 
         else:
@@ -2856,7 +2971,9 @@ class Evolution:
 
         return evotree
 
-    def evolve_chained_new_tree_depth(self, depth_goal: int, xt_out: Union[Type[float], Type[bool]], p_term: float = 0.0) -> Node:
+    def evolve_chained_new_tree_depth(
+        self, depth_goal: int, xt_out: Union[Type[float], Type[bool]], p_term: float = 0.0
+    ) -> Node:
         """Creates a new random tree with chained operators allowed.
 
         Args:
@@ -2872,7 +2989,14 @@ class Evolution:
 
         return evotree
 
-    def evolve_create_random(self, xt_out: Union[Type[float], Type[bool]], depth_max_local: int, num_rest: int = -1, depth: int = 0, p_term: float = 0.0) -> Node:
+    def evolve_create_random(
+        self,
+        xt_out: Union[Type[float], Type[bool]],
+        depth_max_local: int,
+        num_rest: int = -1,
+        depth: int = 0,
+        p_term: float = 0.0,
+    ) -> Node:
         """Recursively creates a random tree/subtree.
 
         Args:
@@ -2894,7 +3018,6 @@ class Evolution:
         if depth >= min(self.depth_max, depth_max_local) or num_rest == 0 or random.random() < p_term:
             node = self.node_selector.choose_terminal_node(xt_out)
         else:
-
             node_cls = self.node_selector.choose_operator_class(xt_out)
             child_xts = node_cls.get_child_xts()
             childs = []
@@ -2905,7 +3028,7 @@ class Evolution:
             nums = randomly_split_range(num_rest - 1, len(child_xts))
 
             for ii, xt in enumerate(child_xts):
-                cc = self.evolve_create_random(xt, depth_max_local, num_rest=nums[ii], depth=depth+1, p_term=p_term)
+                cc = self.evolve_create_random(xt, depth_max_local, num_rest=nums[ii], depth=depth + 1, p_term=p_term)
                 childs.append(cc)
 
             node = node_cls(*childs)
@@ -2952,7 +3075,7 @@ class Evolution:
         if node.is_operator():
             # allow_chain-option
             new_label = self.node_selector.choose_operator_class_match(xtype)  # Function is same type, same arity
-            node = new_label(*node.childs)  # noqa debug_me not tested, not used
+            node = new_label(*node.childs)
 
         elif is_terminal(node):
             new_node = self.node_selector.choose_terminal_node(xt_self(xtype))
@@ -2978,8 +3101,9 @@ class Evolution:
         node_list = tree.list_mutable_nodes()
         node = random.choice(node_list)
         xtype_out = node.get_xtype_self()  # ValueError: 'a' cannot be empty unless no samples are taken
-        branch = self.evolve_create_random(xtype_out, depth_goal, num_rest=self.nodes_max - n_init, depth=0,
-                                           p_term=p_term)
+        branch = self.evolve_create_random(
+            xtype_out, depth_goal, num_rest=self.nodes_max - n_init, depth=0, p_term=p_term
+        )
         node.set_new_node(branch)
 
         return tree
@@ -3000,7 +3124,7 @@ class Evolution:
         """
         nodes_init = len(_tree)
         if _tree is None:
-            raise NotImplementedError('Implement standard selection mechanism')
+            raise NotImplementedError("Implement standard selection mechanism")
         nd = _tree.list_mutable_nodes()
         nd = rnd_choice(nd)
         xt_out = nd.get_xtype_self()
@@ -3037,7 +3161,7 @@ class Evolution:
         #   -> this can actually happen quite often, when trees have low complexity
 
         if len(a_nds) == 0:
-            raise TreeError(f'Crossover tree 1 has no mutable nodes!')
+            raise TreeError("Crossover tree 1 has no mutable nodes!")
 
         a_nd = random.choice(a_nds)
         xt_out = a_nd.get_xtype_self()
@@ -3052,7 +3176,7 @@ class Evolution:
             b_nd = random.choice(b_nds)
             a_nds = [x for x in a_nds if x.get_xtype_self() == xt_out]
             if len(a_nds) == 0:
-                raise ValueError(f'Crossover cant find matching nodes. This Should always be possible.')
+                raise ValueError("Crossover cant find matching nodes. This Should always be possible.")
             a_nd = random.choice(a_nds)
 
         cpy = copy.deepcopy(a_nd)  # deepcopy required??
@@ -3133,12 +3257,12 @@ def print_pop(pop):
     Args:
         pop: List of Candidate objects to print.
     """
-    n = [f'{k.full_string()}' for k in pop]
-    n = [f'{BColors.BLUE}{x}' if ii % 2 == 0 else f'{BColors.YELLOW}{x}' for ii, x in enumerate(n)]
-    n = [f'{k}\n' if ii % 10 == 9 else f'{k}\t' for ii, k in enumerate(n)]  # stop \n in line 0
-    n = ''.join(n)
-    n = re.sub(r'\n$', '', n)  # remove trailing \n (\t irrelevant)
-    n = f'{n}{BColors.RESET_COLOR}'
+    n = [f"{k.full_string()}" for k in pop]
+    n = [f"{BColors.BLUE}{x}" if ii % 2 == 0 else f"{BColors.YELLOW}{x}" for ii, x in enumerate(n)]
+    n = [f"{k}\n" if ii % 10 == 9 else f"{k}\t" for ii, k in enumerate(n)]  # stop \n in line 0
+    n = "".join(n)
+    n = re.sub(r"\n$", "", n)  # remove trailing \n (\t irrelevant)
+    n = f"{n}{BColors.RESET_COLOR}"
     print(n)
 
 
@@ -3158,13 +3282,23 @@ def pop_analyze(population: List[Candidate], gen_time: float, gens_since_pareto:
     """
     if not population:
         return {
-            'pop_len': 0, 'pop_unique': 0, 'lut_symex_fitness-len': len(lut_symex),
-            'time': gen_time,
-            'fit_avg': np.nan, 'fit_var': np.nan,
-            'fit_quantile_25': np.nan, 'fit_quantile_50': np.nan, 'fit_quantile_75': np.nan, 'fit_best': np.nan,
-            'parsim_avg': np.nan, 'parsim_var': np.nan,
-            'parsim_quantile_25': np.nan, 'parsim_quantile_50': np.nan, 'parsim_quantile_75': np.nan, 'parsim_best': np.nan,
-            'gens_since_last_pareto': gens_since_pareto
+            "pop_len": 0,
+            "pop_unique": 0,
+            "lut_symex_fitness-len": len(lut_symex),
+            "time": gen_time,
+            "fit_avg": np.nan,
+            "fit_var": np.nan,
+            "fit_quantile_25": np.nan,
+            "fit_quantile_50": np.nan,
+            "fit_quantile_75": np.nan,
+            "fit_best": np.nan,
+            "parsim_avg": np.nan,
+            "parsim_var": np.nan,
+            "parsim_quantile_25": np.nan,
+            "parsim_quantile_50": np.nan,
+            "parsim_quantile_75": np.nan,
+            "parsim_best": np.nan,
+            "gens_since_last_pareto": gens_since_pareto,
         }
 
     fitnesses = np.array([c.get_fitness() for c in population])
@@ -3174,23 +3308,23 @@ def pop_analyze(population: List[Candidate], gen_time: float, gens_since_pareto:
     unique_exprs = set(str(c.tree.get_sympy_expr()) for c in population)
 
     return {
-        'pop_len': len(population),
-        'pop_unique': len(unique_exprs),
-        'lut_symex_fitness-len': len(lut_symex),
-        'time': gen_time,
-        'fit_avg': np.mean(fitnesses),
-        'fit_var': np.var(fitnesses),
-        'fit_quantile_25': np.percentile(fitnesses, 25),
-        'fit_quantile_50': np.percentile(fitnesses, 50),
-        'fit_quantile_75': np.percentile(fitnesses, 75),
-        'fit_best': np.min(fitnesses),
-        'parsim_avg': np.mean(parsimony),
-        'parsim_var': np.var(parsimony),
-        'parsim_quantile_25': np.percentile(parsimony, 25),
-        'parsim_quantile_50': np.percentile(parsimony, 50),
-        'parsim_quantile_75': np.percentile(parsimony, 75),
-        'parsim_best': np.min(parsimony),
-        'gens_since_last_pareto': gens_since_pareto
+        "pop_len": len(population),
+        "pop_unique": len(unique_exprs),
+        "lut_symex_fitness-len": len(lut_symex),
+        "time": gen_time,
+        "fit_avg": np.mean(fitnesses),
+        "fit_var": np.var(fitnesses),
+        "fit_quantile_25": np.percentile(fitnesses, 25),
+        "fit_quantile_50": np.percentile(fitnesses, 50),
+        "fit_quantile_75": np.percentile(fitnesses, 75),
+        "fit_best": np.min(fitnesses),
+        "parsim_avg": np.mean(parsimony),
+        "parsim_var": np.var(parsimony),
+        "parsim_quantile_25": np.percentile(parsimony, 25),
+        "parsim_quantile_50": np.percentile(parsimony, 50),
+        "parsim_quantile_75": np.percentile(parsimony, 75),
+        "parsim_best": np.min(parsimony),
+        "gens_since_last_pareto": gens_since_pareto,
     }
 
 
@@ -3247,8 +3381,8 @@ class ExplainableGP:
         eval_autocast: Optional[Callable] = None,
         eval_error_metric: Optional[Callable] = None,
         allow_chain: bool = False,
-        target_column: str = 'action',
-        verbose: bool = True
+        target_column: str = "action",
+        verbose: bool = True,
     ):
         """Initialize the GP system.
 
@@ -3285,11 +3419,13 @@ class ExplainableGP:
         self.allow_chain = allow_chain
 
         if verbose:
-            print(f'\n'
-                  f'\tInitializing Plagih.\n'
-                  f'\tName: {BColors.CYAN}{self.rootdir.name}{BColors.RESET_COLOR}.\n'
-                  f'\tLocated in: \n'
-                  f'\t{self.rootdir}\n')
+            print(
+                f"\n"
+                f"\tInitializing Plagih.\n"
+                f"\tName: {BColors.CYAN}{self.rootdir.name}{BColors.RESET_COLOR}.\n"
+                f"\tLocated in: \n"
+                f"\t{self.rootdir}\n"
+            )
 
         self.paretofront = []
         self.pop_genepool = []
@@ -3327,17 +3463,17 @@ class ExplainableGP:
         rootdir: Union[Path, str],
         *,
         operators: Optional[Dict] = None,
-        preset: str = 'math_full',
+        preset: str = "math_full",
         depth_max: int = 7,
         nodes_max: int = 40,
         pop_max_size: int = 100,
         gen_end: int = 50,
         clip_range: Optional[Tuple[float, float]] = None,
-        error_metric: str = 'rmse',
+        error_metric: str = "rmse",
         allow_chain: bool = False,
-        target_column: str = 'action',
-        verbose: bool = True
-    ) -> 'ExplainableGP':
+        target_column: str = "action",
+        verbose: bool = True,
+    ) -> "ExplainableGP":
         """Factory method for easy GP creation with sensible defaults.
 
         Args:
@@ -3373,17 +3509,15 @@ class ExplainableGP:
         # Evolution accepts: operators as dict, string (preset name), or list
         ops = operators if operators is not None else preset
         evolve = Evolution(
-            symbol_list=symbols,
-            operators=ops,
-            depth_max=depth_max,
-            nodes_max=nodes_max,
-            allow_chain=allow_chain
+            symbol_list=symbols, operators=ops, depth_max=depth_max, nodes_max=nodes_max, allow_chain=allow_chain
         )
 
         # Setup autocast
         if clip_range:
+
             def _clip_autocast(x):
                 return np.clip(np.asarray(x, dtype=np.float64), clip_range[0], clip_range[1])
+
             eval_autocast = _clip_autocast
         else:
             eval_autocast = None  # Will use default
@@ -3391,11 +3525,11 @@ class ExplainableGP:
         # Setup error metric
         if callable(error_metric):
             eval_error_metric = error_metric
-        elif error_metric == 'rmse':
+        elif error_metric == "rmse":
             eval_error_metric = lambda pred, true: np.sqrt(np.mean((pred - true) ** 2))
-        elif error_metric == 'mse':
+        elif error_metric == "mse":
             eval_error_metric = lambda pred, true: np.mean((pred - true) ** 2)
-        elif error_metric == 'mae':
+        elif error_metric == "mae":
             eval_error_metric = lambda pred, true: np.mean(np.abs(pred - true))
         else:
             raise ValueError(f"Unknown error_metric: {error_metric}. Use 'rmse', 'mse', 'mae', or callable.")
@@ -3410,11 +3544,11 @@ class ExplainableGP:
             eval_error_metric=eval_error_metric,
             allow_chain=allow_chain,
             target_column=target_column,
-            verbose=verbose
+            verbose=verbose,
         )
 
     @classmethod
-    def from_config(cls, config: dict, df_train: pd.DataFrame) -> 'ExplainableGP':
+    def from_config(cls, config: dict, df_train: pd.DataFrame) -> "ExplainableGP":
         """Create GP instance from configuration dictionary.
 
         Args:
@@ -3493,13 +3627,18 @@ class ExplainableGP:
             new_best_fit = min(c.get_fitness() for c in new_front)
 
             if old_front and new_best_par < old_best_par:
-                printez('a', f'Paretofront: Neuer simpelster Eintrag. parsimony: {new_best_par} '
-                             f'old simplest had {old_best_par}')
+                printez(
+                    "a",
+                    f"Paretofront: Neuer simpelster Eintrag. parsimony: {new_best_par} old simplest had {old_best_par}",
+                )
             if old_front and new_best_fit < old_best_fit:
-                printez('a', f'Paretofront: Neuer fittester Eintrag. fitness: {new_best_fit:6.4f} '
-                             f'old best had {old_best_fit:6.4f}')
+                printez(
+                    "a",
+                    f"Paretofront: Neuer fittester Eintrag. fitness: {new_best_fit:6.4f} "
+                    f"old best had {old_best_fit:6.4f}",
+                )
             if not old_front:
-                printez('a', f'Paretofront initialisiert mit {len(new_front)} Kandidaten.')
+                printez("a", f"Paretofront initialisiert mit {len(new_front)} Kandidaten.")
 
             # Note: gens_since_last_pareto is now tracked by self.monitor
 
@@ -3539,13 +3678,14 @@ class ExplainableGP:
         Returns:
             The initial population (pop_genepool).
         """
-        printpl('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')
+        printpl("gg", f"Preparing to create first Generation. Gen {self.gen_id}.")
 
         if origin_tree is not None:
-            cand_origin = self.tree_to_candidate(origin_tree, raise_if_useless=False, tag='origin')
+            cand_origin = self.tree_to_candidate(origin_tree, raise_if_useless=False, tag="origin")
             self.pop_next_append(cand_origin)
         else:
             if self.allow_chain:
+
                 @self.create_trees(rate=0.5)
                 def init_rand1():
                     n = np.clip(int(random.normalvariate(4.0, 1.0)), 4, 6)
@@ -3553,7 +3693,7 @@ class ExplainableGP:
                     tree = tree_simplification(tree, allow_chain=self.allow_chain)
 
                     if tree.get_max_depth() == 0:
-                        raise TreeSizeError(f'Tree did not get complex enough (only root node).')
+                        raise TreeSizeError("Tree did not get complex enough (only root node).")
                     return tree
 
                 @self.create_trees(rate=0.5)
@@ -3563,6 +3703,7 @@ class ExplainableGP:
                     tree = tree_simplification(tree, allow_chain=self.allow_chain)
                     return tree
             else:
+
                 @self.create_trees(rate=0.5)
                 def init_rand1a():
                     n = np.clip(int(random.normalvariate(4.0, 1.0)), 3, 5)
@@ -3595,7 +3736,7 @@ class ExplainableGP:
         if force and ct.get_parsim() < TREE_MIN_PARSIMONY:
             # raise ValueError(f'Tree not complex enough for population, sfeh')
             return
-        printpl('gggg', f'|->{evotree.len_nodecount_fair():2.0f}: {evotree.str_as_expr()}')
+        printpl("gggg", f"|->{evotree.len_nodecount_fair():2.0f}: {evotree.str_as_expr()}")
         self.pop_next.append(ct)
 
     def create_trees(self, rate=0.0, crossover=False, simplicate=False, allow_chain=False):
@@ -3619,7 +3760,7 @@ class ExplainableGP:
             n_success = 0
             fails_list = []
             tag = create_tree_f.__name__
-            printpl('ggg', f'->Evolving {n}x \'{tag}\'...')
+            printpl("ggg", f"->Evolving {n}x '{tag}'...")
 
             while n_success < n:
                 try:
@@ -3644,33 +3785,38 @@ class ExplainableGP:
                         n_success += 1
 
                 except (TreeError, TreeSizeError, SympyError) as e:
-
                     fails_list.append(e)
-                    print_warning('www', f'Failed evolution tag \'{tag}\': {e}')
+                    print_warning("www", f"Failed evolution tag '{tag}': {e}")
                     if len(fails_list) > 2 * n_success + 5:  # allow more fails: fails_list > n
-                        print_caution(f'Evolution fails too often: {tag}, failed: {len(fails_list)}x. ({n_success} ok).'
-                                      f'\n{fails_list}')
+                        print_caution(
+                            f"Evolution fails too often: {tag}, failed: {len(fails_list)}x. ({n_success} ok)."
+                            f"\n{fails_list}"
+                        )
                         return  # optional raise
 
                 except (ValueError, ArithmeticError) as e:
                     # if 'Crossover tree 1 has no mutable nodes!' in str(ex):
-                    if ("'a' cannot be empty unless no samples are taken" in str(e)
-                            or "The argument 'zoo' is not comparable" in str(e)):
-                        print_warning('ww', f'OnlyPrintException: {e}')
+                    if "'a' cannot be empty unless no samples are taken" in str(
+                        e
+                    ) or "The argument 'zoo' is not comparable" in str(e):
+                        print_warning("ww", f"OnlyPrintException: {e}")
 
                 except KeyError as e:
                     # KeyError(re) -> okay?, real part implies complex numbers, ignoring is okay
                     # (probably sympy.lambdify expression not evaluable)
-                    print(f'OnlyPrintException: Keyerror?: {e}')
+                    print(f"OnlyPrintException: Keyerror?: {e}")
                 except RecursionError as e:
-                    print(f'OnlyPrintException: RecursionError (probably Piecewise/relational combination?): {e}')
+                    print(f"OnlyPrintException: RecursionError (probably Piecewise/relational combination?): {e}")
                 # except NotImplementedError as nie:
                 #     print_caution(f'Notimplemented? {nie}')
                 # except Exception as ex:
                 #     print(f'OnlyPrintException: Why are we not here??? {ex}')
+
         return loop
 
-    def tree_to_candidate(self, evotree: Node, origin_tree=None, tag=None, raise_if_useless=True, compare_with_sympy=DEBUG_DUMMY):  # DEBUG
+    def tree_to_candidate(
+        self, evotree: Node, origin_tree=None, tag=None, raise_if_useless=True, compare_with_sympy=DEBUG_DUMMY
+    ):  # DEBUG
         """Converts a tree to a fully evaluated Candidate.
 
         Process:
@@ -3706,26 +3852,26 @@ class ExplainableGP:
         tree_id = evotree.get_lut_id()
 
         if tree_id in self.lut_tree_infos:
-            sy_expr = self.lut_tree_infos[tree_id].get('sy_expr')  # Attention: can be "False"
-            parsimony = self.lut_tree_infos[tree_id].get('parsimony')
-            fitness = self.lut_tree_infos[tree_id].get('fitness')
+            sy_expr = self.lut_tree_infos[tree_id].get("sy_expr")  # Attention: can be "False"
+            parsimony = self.lut_tree_infos[tree_id].get("parsimony")
+            fitness = self.lut_tree_infos[tree_id].get("fitness")
             if any(v is None for v in [sy_expr, parsimony, fitness]):
-                _err = self.lut_tree_infos[tree_id].get('error')
-                raise TreeLutError(f'Tree LUT Entry implies Problem: {_err}')
+                _err = self.lut_tree_infos[tree_id].get("error")
+                raise TreeLutError(f"Tree LUT Entry implies Problem: {_err}")
         else:
             # requires: valid, sympy expr, parsimony, fitness
             self.lut_tree_infos[tree_id] = {}  # empty placeholder, if correctly filled later
 
             parsimony = eval_parsimony(evotree, self.evolve.complexity_metric, origin_tree=origin_tree)
             if raise_if_useless and parsimony > self.evolve.nodes_max:
-                err_txt = f'Tree too complex: {parsimony} > {self.evolve.nodes_max}'
-                self.lut_tree_infos[tree_id]['error'] = err_txt
+                err_txt = f"Tree too complex: {parsimony} > {self.evolve.nodes_max}"
+                self.lut_tree_infos[tree_id]["error"] = err_txt
                 raise TreeSizeError(err_txt)
             try:
                 sy_expr = evotree.get_sympy_expr()
             except SympyError as e:
-                print_warning('www', f'Could not create sympy expression for tree: {e}')
-                self.lut_tree_infos[tree_id]['error'] = str(e)
+                print_warning("www", f"Could not create sympy expression for tree: {e}")
+                self.lut_tree_infos[tree_id]["error"] = str(e)
                 raise
 
             if sy_expr in self.lut_symex_fitness:
@@ -3734,97 +3880,114 @@ class ExplainableGP:
             else:
                 """Numpy eval"""
                 perf_t = {0: time.perf_counter()}
-                true_values = self.df_train['action'].to_numpy()
+                true_values = self.df_train["action"].to_numpy()
                 try:
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore", RuntimeWarning)  # sfeh:discuss
-                        np_results_raw = evotree.eval_predict_numpy_now(self.df_train)  # exception? -> check np.isnan(sym_results).any()
+                        np_results_raw = evotree.eval_predict_numpy_now(
+                            self.df_train
+                        )  # exception? -> check np.isnan(sym_results).any()
                         np_results = self.eval_autocast(np_results_raw)
                         np_fitness = self.eval_error_metric(np_results, true_values)
                         np_fitness = round(np_fitness, FLOAT_PRECISION)
 
-                        if 'nan' in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf:  # sfeh:code not so good looking
-                            err_txt = f'NaN in results'
-                            self.lut_tree_infos[tree_id]['error'] = err_txt
-                            raise TreeError(f'{err_txt}')
+                        if (
+                            "nan" in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf
+                        ):  # sfeh:code not so good looking
+                            err_txt = "NaN in results"
+                            self.lut_tree_infos[tree_id]["error"] = err_txt
+                            raise TreeError(f"{err_txt}")
 
                         perf_t[1] = time.perf_counter()
 
                         if compare_with_sympy:
-
                             # =========================================================
                             # BENCHMARK: New EvaluationContext System vs. Old Methods
                             # =========================================================
-                            from plagih.evaluation_context import EvaluationContext, create_context
                             import time as bench_time
+
+                            from plagih.evaluation_context import EvaluationContext, create_context
 
                             bench_results = {}
 
                             # 1. NumPy Eager (new context)
                             t0 = bench_time.perf_counter()
-                            ctx_np = create_context('numpy_eager', use_lut=False)
+                            ctx_np = create_context("numpy_eager", use_lut=False)
                             result_np = ctx_np.evaluate(evotree, self.df_train)
-                            bench_results['1_numpy_ctx'] = bench_time.perf_counter() - t0
+                            bench_results["1_numpy_ctx"] = bench_time.perf_counter() - t0
 
                             # 2. NumPy Lambda (new context)
                             t0 = bench_time.perf_counter()
-                            ctx_lambda = create_context('numpy_lambda', use_lut=False)
+                            ctx_lambda = create_context("numpy_lambda", use_lut=False)
                             result_lambda_fn = ctx_lambda.evaluate(evotree)
                             result_lambda = result_lambda_fn(self.df_train)
-                            bench_results['2_lambda_ctx'] = bench_time.perf_counter() - t0
+                            bench_results["2_lambda_ctx"] = bench_time.perf_counter() - t0
 
                             # 3. SymPy (new context)
                             t0 = bench_time.perf_counter()
-                            ctx_sympy = create_context('sympy', use_lut=False)
+                            ctx_sympy = create_context("sympy", use_lut=False)
                             result_sympy = ctx_sympy.evaluate(evotree)
-                            bench_results['3_sympy_ctx'] = bench_time.perf_counter() - t0
+                            bench_results["3_sympy_ctx"] = bench_time.perf_counter() - t0
 
                             # 4. All together without LUT
                             t0 = bench_time.perf_counter()
-                            ctx_all = EvaluationContext(
-                                modes=['numpy_eager', 'numpy_lambda', 'sympy'],
-                                use_lut=False
-                            )
+                            ctx_all = EvaluationContext(modes=["numpy_eager", "numpy_lambda", "sympy"], use_lut=False)
                             results_all = ctx_all.evaluate(evotree, self.df_train)
-                            bench_results['4_all_no_lut'] = bench_time.perf_counter() - t0
+                            bench_results["4_all_no_lut"] = bench_time.perf_counter() - t0
 
                             # 5. All together WITH LUT (second call should be faster)
                             t0 = bench_time.perf_counter()
-                            ctx_lut = EvaluationContext(
-                                modes=['numpy_eager', 'numpy_lambda', 'sympy'],
-                                use_lut=True
-                            )
+                            ctx_lut = EvaluationContext(modes=["numpy_eager", "numpy_lambda", "sympy"], use_lut=True)
                             results_lut1 = ctx_lut.evaluate(evotree, self.df_train)  # First call (cache miss)
                             results_lut2 = ctx_lut.evaluate(evotree, self.df_train)  # Second call (cache hit!)
-                            bench_results['5_all_with_lut'] = bench_time.perf_counter() - t0
+                            bench_results["5_all_with_lut"] = bench_time.perf_counter() - t0
 
                             # Compare with OLD methods timing
                             t0 = bench_time.perf_counter()
                             old_np = evotree.eval_predict_numpy_now(self.df_train)
-                            bench_results['OLD_numpy'] = bench_time.perf_counter() - t0
+                            bench_results["OLD_numpy"] = bench_time.perf_counter() - t0
 
                             t0 = bench_time.perf_counter()
                             old_lambda = evotree.eval_np_lambdas()(self.df_train)
-                            bench_results['OLD_lambda'] = bench_time.perf_counter() - t0
+                            bench_results["OLD_lambda"] = bench_time.perf_counter() - t0
 
                             t0 = bench_time.perf_counter()
                             old_sympy = evotree.get_sympy_expr()
-                            bench_results['OLD_sympy'] = bench_time.perf_counter() - t0
+                            bench_results["OLD_sympy"] = bench_time.perf_counter() - t0
 
                             # Print benchmark results
-                            printpl('pp', f'=== EvaluationContext Benchmark ===')
-                            printpl('pp', f'  1. NumPy (ctx):     {bench_results["1_numpy_ctx"]*1000:6.2f}ms | OLD: {bench_results["OLD_numpy"]*1000:6.2f}ms')
-                            printpl('pp', f'  2. Lambda (ctx):    {bench_results["2_lambda_ctx"]*1000:6.2f}ms | OLD: {bench_results["OLD_lambda"]*1000:6.2f}ms')
-                            printpl('pp', f'  3. SymPy (ctx):     {bench_results["3_sympy_ctx"]*1000:6.2f}ms | OLD: {bench_results["OLD_sympy"]*1000:6.2f}ms')
-                            printpl('pp', f'  4. All (no LUT):    {bench_results["4_all_no_lut"]*1000:6.2f}ms')
-                            printpl('pp', f'  5. All (with LUT):  {bench_results["5_all_with_lut"]*1000:6.2f}ms (2 evals)')
-                            printpl('pp', f'  LUT Stats: {ctx_lut.get_cache_size()} entries, hit-rate: {ctx_lut.get_cache_hit_rate("numpy_eager"):.0%}')
+                            printpl("pp", "=== EvaluationContext Benchmark ===")
+                            printpl(
+                                "pp",
+                                f"  1. NumPy (ctx):     {bench_results['1_numpy_ctx'] * 1000:6.2f}ms | OLD: {bench_results['OLD_numpy'] * 1000:6.2f}ms",
+                            )
+                            printpl(
+                                "pp",
+                                f"  2. Lambda (ctx):    {bench_results['2_lambda_ctx'] * 1000:6.2f}ms | OLD: {bench_results['OLD_lambda'] * 1000:6.2f}ms",
+                            )
+                            printpl(
+                                "pp",
+                                f"  3. SymPy (ctx):     {bench_results['3_sympy_ctx'] * 1000:6.2f}ms | OLD: {bench_results['OLD_sympy'] * 1000:6.2f}ms",
+                            )
+                            printpl("pp", f"  4. All (no LUT):    {bench_results['4_all_no_lut'] * 1000:6.2f}ms")
+                            printpl(
+                                "pp", f"  5. All (with LUT):  {bench_results['5_all_with_lut'] * 1000:6.2f}ms (2 evals)"
+                            )
+                            printpl(
+                                "pp",
+                                f"  LUT Stats: {ctx_lut.get_cache_size()} entries, hit-rate: {ctx_lut.get_cache_hit_rate('numpy_eager'):.0%}",
+                            )
 
                             # Verify results match
-                            np.testing.assert_array_almost_equal(result_np, old_np, decimal=6,
-                                err_msg="NumPy context result doesn't match old method!")
-                            np.testing.assert_array_almost_equal(result_lambda, old_lambda, decimal=6,
-                                err_msg="Lambda context result doesn't match old method!")
+                            np.testing.assert_array_almost_equal(
+                                result_np, old_np, decimal=6, err_msg="NumPy context result doesn't match old method!"
+                            )
+                            np.testing.assert_array_almost_equal(
+                                result_lambda,
+                                old_lambda,
+                                decimal=6,
+                                err_msg="Lambda context result doesn't match old method!",
+                            )
                             # =========================================================
 
                             """Numpy eager eval"""
@@ -3837,26 +4000,33 @@ class ExplainableGP:
                             """Sympy lambdify"""
                             sym_results_raw = eval_predict_sympyBatch(sy_expr, self.df_train, self.evolve.symbol_list)
                             sym_results = self.eval_autocast(sym_results_raw)
-                            sym_fitness = self.eval_error_metric(sym_results, self.df_train['action'])
+                            sym_fitness = self.eval_error_metric(sym_results, self.df_train["action"])
                             sym_fitness = round(sym_fitness, FLOAT_PRECISION)
 
                             perf_t[3] = time.perf_counter()
 
-                            printpl('pp', f'NP: {perf_t[1]-perf_t[0]:4.4f}s, NE: {perf_t[2]-perf_t[1]:4.4f}s, SY: {perf_t[3]-perf_t[2]:4.4f}s. '
-                                          f'Fitness NP: {np_fitness}, SY: {sym_fitness} ({sy_expr}), eval tree id {tree_id}')
+                            printpl(
+                                "pp",
+                                f"NP: {perf_t[1] - perf_t[0]:4.4f}s, NE: {perf_t[2] - perf_t[1]:4.4f}s, SY: {perf_t[3] - perf_t[2]:4.4f}s. "
+                                f"Fitness NP: {np_fitness}, SY: {sym_fitness} ({sy_expr}), eval tree id {tree_id}",
+                            )
 
                             try:
                                 sum(nplambda_results_raw - np_results_raw)
-                            except Exception as e:
-                                raise TreeError('SFEH THESE ARE [True] trees')
+                            except Exception:
+                                raise TreeError("SFEH THESE ARE [True] trees")
 
                             if sum(nplambda_results_raw - np_results_raw) > 0.001:
                                 diffs = np.abs(nplambda_results_raw - np_results_raw)
                                 mask = diffs > 0.001
                                 if np.any(mask):
                                     indices = np.where(mask)[0]
-                                    print_warning('w', f'{len(indices)} differences found above tolerance 0.001: (NP VERSION)')
-                                print(f'Different in (NP VERSION): {sum(nplambda_results_raw - np_results)} ({sy_expr})')
+                                    print_warning(
+                                        "w", f"{len(indices)} differences found above tolerance 0.001: (NP VERSION)"
+                                    )
+                                print(
+                                    f"Different in (NP VERSION): {sum(nplambda_results_raw - np_results)} ({sy_expr})"
+                                )
 
                             if np.sum(np.abs(nplambda_results_raw - np_results_raw)) > 0.001:
                                 sym_results_raw_np = sym_results_raw.to_numpy()
@@ -3864,24 +4034,24 @@ class ExplainableGP:
                                 mask = diffs > 0.001
                                 if np.any(mask):
                                     indices = np.where(mask)[0]
-                                    print_warning('w', f'{len(indices)} differences found above tolerance 0.001:')
+                                    print_warning("w", f"{len(indices)} differences found above tolerance 0.001:")
                                 # results_syraw_df = eval_predict_df_sympy_only(sy_expr, self.df_train)  #  takes forever
                                 result_diffs = sum(sym_results_raw - np_results_raw)
-                                print(f'Different results in evaluation: {result_diffs} sy-expr: ({sy_expr})')
+                                print(f"Different results in evaluation: {result_diffs} sy-expr: ({sy_expr})")
 
-                            self.lut_tree_infos[tree_id]['fitness-sympy'] = sym_fitness
+                            self.lut_tree_infos[tree_id]["fitness-sympy"] = sym_fitness
                 except (SympyError, TreeError, ValueError) as e:
-                    print_warning('wwww', f'Could not evaluate fitness for tree {sy_expr}: {e}')
-                    self.lut_tree_infos[tree_id]['error'] = str(e)
+                    print_warning("wwww", f"Could not evaluate fitness for tree {sy_expr}: {e}")
+                    self.lut_tree_infos[tree_id]["error"] = str(e)
                     raise
 
                 fitness = np_fitness
 
                 self.lut_symex_fitness[sy_expr] = fitness
 
-            self.lut_tree_infos[tree_id]['sy_expr'] = sy_expr
-            self.lut_tree_infos[tree_id]['parsimony'] = parsimony
-            self.lut_tree_infos[tree_id]['fitness'] = fitness
+            self.lut_tree_infos[tree_id]["sy_expr"] = sy_expr
+            self.lut_tree_infos[tree_id]["parsimony"] = parsimony
+            self.lut_tree_infos[tree_id]["fitness"] = fitness
 
         candidate = Candidate(evotree, fitness=fitness, parsimony=parsimony, tag=tag)
         return candidate
@@ -3903,11 +4073,11 @@ class ExplainableGP:
             graph = build_one_evaluation_tree(self.pop_genepool)
 
             # Create output directory
-            merged_dir = self.rootdir / 'population_merged'
+            merged_dir = self.rootdir / "population_merged"
             merged_dir.mkdir(parents=True, exist_ok=True)
 
             # Generate filename with generation number
-            base_filename = f'Population-merged-gen-{self.gen_id:03d}'
+            base_filename = f"Population-merged-gen-{self.gen_id:03d}"
 
             # Render using the unified tree_renderer (produces only .png, no .dot)
             render_merged_tree(
@@ -3917,13 +4087,12 @@ class ExplainableGP:
                 orientation="BT",  # Bottom-up for merged trees
                 display_mode="expression",
                 title=f"Merged Population Tree - Generation {self.gen_id}",
-                show_statistics=True
+                show_statistics=True,
             )
-            printpl('ggg', f'Saved merged population tree: {base_filename}.png')
+            printpl("ggg", f"Saved merged population tree: {base_filename}.png")
 
         except Exception as e:
-            printpl('w', f'Could not create merged population tree: {e}')
-
+            printpl("w", f"Could not create merged population tree: {e}")
 
     def evoloop_monitoring_plots(self):
         """Creates all monitoring visualizations for the GP run.
@@ -3935,18 +4104,22 @@ class ExplainableGP:
         - Parsimony histogram (for first 20 generations)
         """
         # Use monitor's built-in plotting or convert to DataFrame for compatibility
-        self.monitor.plot_performance(self.rootdir / 'monitoring.png')
+        self.monitor.plot_performance(self.rootdir / "monitoring.png")
         plot_paretofront(self.paretofront, self.rootdir, self.evolve.nodes_max)
 
         from visualization.visualize_trees import visualize_paretofront
+
         visualize_paretofront(self.paretofront, filename="paretofront_trees", output_dir=self.rootdir)
 
         if self.gen_id <= 20:
-            gen_filename = f'monitoring_parsimony_histogram_{self.gen_id:03d}.png'
+            gen_filename = f"monitoring_parsimony_histogram_{self.gen_id:03d}.png"
             # Use pop_size as max_population and nodes_max as max_parsimony for fixed scaling
-            plot_parsimony_histogram(self.pop_genepool, self.rootdir / gen_filename,
-                                     max_population=self.pop_max_size,
-                                     max_parsimony=self.evolve.nodes_max)
+            plot_parsimony_histogram(
+                self.pop_genepool,
+                self.rootdir / gen_filename,
+                max_population=self.pop_max_size,
+                max_parsimony=self.evolve.nodes_max,
+            )
 
     def backup_save(self, opt_path_backup=None):
         """Saves a pickle backup of the current GP run state.
@@ -3957,7 +4130,7 @@ class ExplainableGP:
             opt_path_backup: Optional custom path. Defaults to rootdir/backup/backup.pkl.
         """
 
-        path_backup = opt_path_backup or self.rootdir / 'backup/backup.pkl'
+        path_backup = opt_path_backup or self.rootdir / "backup/backup.pkl"
 
         # {} is the help_dict; include this, even if empty, to store/load successfully after future updates
         # Save monitor as DataFrame for backwards compatibility
@@ -3980,24 +4153,24 @@ class ExplainableGP:
             Exception: If backup file is corrupted (EOFError).
         """
 
-        path_backup = opt_path_backup or self.rootdir / 'backup/backup.pkl'
+        path_backup = opt_path_backup or self.rootdir / "backup/backup.pkl"
 
         if Path.is_file(path_backup):
-            printpl('g', f'Loading data from backup-file {path_backup}')
+            printpl("g", f"Loading data from backup-file {path_backup}")
             try:
-                with Path.open(path_backup, 'rb') as file:
+                with Path.open(path_backup, "rb") as file:
                     run_data = pickle.load(file)
             except EOFError as e:
-                raise Exception(f'EOFError: \n{e}')
+                raise Exception(f"EOFError: \n{e}")
 
             help_dict, self.gen_id, self.pop_genepool, self.paretofront, loaded_monitor_df = run_data
             # Recreate monitor from loaded DataFrame (for backwards compatibility)
             # The monitor will be repopulated if evolution continues
             self.monitor = GPMonitor()
-            self.backup_save(opt_path_backup=self.rootdir / f'backup/backup-{self.gen_id}.pkl')
-            printpl('g', f'Successfully loaded backup file. Generation: {self.gen_id}')
+            self.backup_save(opt_path_backup=self.rootdir / f"backup/backup-{self.gen_id}.pkl")
+            printpl("g", f"Successfully loaded backup file. Generation: {self.gen_id}")
         else:
-            raise FileNotFoundError(f'No backup-file found at {path_backup}')
+            raise FileNotFoundError(f"No backup-file found at {path_backup}")
 
     def analyze_generation(self, pareto_updated: bool = False):
         """Analyzes and logs statistics for the current generation.
@@ -4016,19 +4189,21 @@ class ExplainableGP:
             population=self.pop_genepool,
             gen_time=gen_time,
             pareto_updated=pareto_updated,
-            lut_size=len(self.lut_symex_fitness)
+            lut_size=len(self.lut_symex_fitness),
         )
 
         # Get latest metrics for logging
         latest = self.monitor.latest
-        printpl('gg',
-                f"Created {latest.get('pop_size', 0)}/{self.gen_end} ({latest.get('pop_unique', 0)} unique) in generation {self.gen_id}. "
-                f"Trees in LUT: {len(self.lut_symex_fitness)} Generation took {gen_time:4.2f}s")
+        printpl(
+            "gg",
+            f"Created {latest.get('pop_size', 0)}/{self.gen_end} ({latest.get('pop_unique', 0)} unique) in generation {self.gen_id}. "
+            f"Trees in LUT: {len(self.lut_symex_fitness)} Generation took {gen_time:4.2f}s",
+        )
 
         # Generate merged population tree visualization
         self._save_merged_population_tree()
 
-        printpl('ggg', f'--- Generation {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}. ---')
+        printpl("ggg", f"--- Generation {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}. ---")
 
         # def monitoring_scheduled_io(self, gen_id, plots_interval=10, backup_interval=10):
         """
@@ -4037,7 +4212,7 @@ class ExplainableGP:
         if self.gen_id >= PLOTS_INTERVAL and self.gen_id % PLOTS_INTERVAL == 0:
             self.evoloop_monitoring_plots()
 
-        if self.gen_id >= BACKUP_INTERVAL and self.gen_id % BACKUP_INTERVAL == 0 or self.gen_id == 10:
+        if (self.gen_id >= BACKUP_INTERVAL and self.gen_id % BACKUP_INTERVAL == 0) or self.gen_id == 10:
             self.backup_save()
 
     def run_custom_exit_condition(self):
@@ -4049,18 +4224,19 @@ class ExplainableGP:
             True if evolution should stop early, False otherwise.
         """
         if self.monitor.gens_since_last_pareto > 100:
-            printpl('i', 'Custom Condition made your program exit! (No new pareto entries in 100 generations)')
+            printpl("i", "Custom Condition made your program exit! (No new pareto entries in 100 generations)")
             return True
         else:
             return False
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     """
     Tests have been moved to plagih/test/ directory.
-    
+
     Run tests with:
         pytest plagih/test/ -v
-    
+
     Or run a quick sanity check:
         python -c "from plagih.trees import *; print('Import successful')"
     """
@@ -4070,11 +4246,10 @@ if __name__ == '__main__':
     print("Quick sanity check:")
 
     # Quick sanity check
-    tree = Add(Symbol(sympy.Symbol('a')), Number(1.0))
+    tree = Add(Symbol(sympy.Symbol("a")), Number(1.0))
     expr = tree.get_sympy_expr()
     print(f"  Tree: {tree}")
     print(f"  SymPy: {expr}")
     print(f"  Length: {len(tree)}")
     print()
     print("All basic imports and operations work correctly.")
-

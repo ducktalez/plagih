@@ -1,8 +1,9 @@
-import numpy as np
 import math
-from pathlib import Path
-import pickle
 import os
+import pickle
+from pathlib import Path
+
+import numpy as np
 
 
 def safe_division(n, d):
@@ -10,9 +11,7 @@ def safe_division(n, d):
 
 
 class Good_Expert:
-
     def decide(self, observation):
-
         cartPos, cartVel = observation
 
         pos, vel = observation
@@ -31,23 +30,23 @@ class Good_Expert:
 
 
 class SimonsCheckpoints:
-
     def decide(self, input):
         cartPos, cartVel = input
-        action = (min(max((5.0 / cartVel), (4.0 / cartPos)), 1.265) + 5.0)
+        action = min(max((5.0 / cartVel), (4.0 / cartPos)), 1.265) + 5.0
         return max(int(0), min(int(2), int(round(action))))
 
 
 class AgentV1p40:
-
     def decide(self, observation):
         observation0, observation1 = observation
         if safe_division(1.945, observation1) < -observation1:
             sum1 = -observation1
         else:
             sum1 = math.sin(observation0 - 0.325)
-        if safe_division((-observation1 + math.sin(observation0 + 0.325)),
-                         observation1) < -observation0 * observation1 + 1.945:
+        if (
+            safe_division((-observation1 + math.sin(observation0 + 0.325)), observation1)
+            < -observation0 * observation1 + 1.945
+        ):
             sum2 = 0.265
         else:
             sum2 = math.sin(observation0 - 0.295)
@@ -59,7 +58,6 @@ class AgentV1p40:
 
 
 class PlagihAgent_A:
-
     def decide(self, observation):
         observation0, observation1 = observation
         if -observation1 + min(observation1, observation0 + 1.025) > observation1:
@@ -69,7 +67,6 @@ class PlagihAgent_A:
 
 
 class SimpleAgent:
-
     def decide(self, observation):
         observation0, observation1 = observation
         if observation1 < 0:
@@ -79,7 +76,6 @@ class SimpleAgent:
 
 
 class SimpleAgent_lel:
-
     def decide(self, observation):
         observation0, observation1 = observation
         if observation1 <= 0:
@@ -89,11 +85,9 @@ class SimpleAgent_lel:
 
 
 class XiaoPresetAgent:
-
     def decide(self, observation):
         pos, vel = observation
-        lb = min(-0.09 * (pos + 0.25) ** 2 + 0.03,
-                 0.3 * (pos + 0.9) ** 4 - 0.008)
+        lb = min(-0.09 * (pos + 0.25) ** 2 + 0.03, 0.3 * (pos + 0.9) ** 4 - 0.008)
         ub = -0.07 * (pos + 0.38) ** 2 + 0.07
         if lb <= vel <= ub:
             action = 2  # push right
@@ -103,13 +97,18 @@ class XiaoPresetAgent:
 
 
 class FixAgentRe:
-    '(2 if ((min(((-0.09*((cartPos+0.25)**round(2)))+0.03), ((0.3*((cartPos+0.9)**round(4)))-0.008))<=cartVel) and (cartVel<=((-0.07*((cartPos+0.38)**round(2)))+0.7))) else 0)'
+    "(2 if ((min(((-0.09*((cartPos+0.25)**round(2)))+0.03), ((0.3*((cartPos+0.9)**round(4)))-0.008))<=cartVel) and (cartVel<=((-0.07*((cartPos+0.38)**round(2)))+0.7))) else 0)"
 
     def decide(self, input):
         cartPos, cartVel = input
-        action = 2 if ((cartVel <= (0.7 - (0.07 * ((cartPos + 0.38) * 2)))) and (
-                min((0.03 - (0.09 * ((cartPos + 0.25) * 2))),
-                    ((0.3 * ((cartPos + 0.9) * 4)) - 0.008)) <= cartVel)) else 0
+        action = (
+            2
+            if (
+                (cartVel <= (0.7 - (0.07 * ((cartPos + 0.38) * 2))))
+                and (min((0.03 - (0.09 * ((cartPos + 0.25) * 2))), ((0.3 * ((cartPos + 0.9) * 4)) - 0.008)) <= cartVel)
+            )
+            else 0
+        )
         return max(0, min(2, int(round(action))))
 
 
@@ -120,8 +119,7 @@ class XiaoPresetNoLowerbound:
 
     def decide(self, observation):
         pos, vel = observation
-        lb = min(-0.09 * (pos + 0.25) ** 2 + 0.03,
-                 0.3 * (pos + 0.9) ** 4 - 0.008)
+        lb = min(-0.09 * (pos + 0.25) ** 2 + 0.03, 0.3 * (pos + 0.9) ** 4 - 0.008)
 
         if lb < vel:
             return 2
@@ -188,16 +186,18 @@ class TileCoder:
         scaled_floats = tuple(f * self.layers * self.layers for f in floats)
         features = []
         for layer in range(self.layers):
-            codeword = (layer,) + tuple(int((f + (1 + dim * i) * layer) / self.layers) \
-                                        for i, f in enumerate(scaled_floats)) + ints
+            codeword = (
+                (layer,)
+                + tuple(int((f + (1 + dim * i) * layer) / self.layers) for i, f in enumerate(scaled_floats))
+                + ints
+            )
             feature = self.get_feature(codeword)
             features.append(feature)
         return features
 
 
 class SARSAAgent:
-    def __init__(self, env, layers=8, features=2000, gamma=1.,
-                 learning_rate=0.03, epsilon=0.001):
+    def __init__(self, env, layers=8, features=2000, gamma=1.0, learning_rate=0.03, epsilon=0.001):
         self.action_n = env.action_space.n
         self.obs_low = env.observation_space.low
         self.obs_scale = env.observation_space.high - env.observation_space.low
@@ -226,48 +226,48 @@ class SARSAAgent:
     def learn(self, observation, action, reward, observation_next, done, action_next=None):
         u = reward
         if not done:
-            u += (self.gamma * self.get_q(observation_next, action_next))
+            u += self.gamma * self.get_q(observation_next, action_next)
         delta = u - self.get_q(observation, action)
         features = self.encode(observation, action)
-        self.w[features] += (self.learning_rate * delta)
+        self.w[features] += self.learning_rate * delta
 
 
 class SARSALambdaAgent(SARSAAgent):
-    def __init__(self, env, layers=8, features=2000, gamma=1.,
-                 learning_rate=0.03, epsilon=0.001, lambd=0.9):
-        super().__init__(env=env, layers=layers, features=features,
-                         gamma=gamma, learning_rate=learning_rate, epsilon=epsilon)
+    def __init__(self, env, layers=8, features=2000, gamma=1.0, learning_rate=0.03, epsilon=0.001, lambd=0.9):
+        super().__init__(
+            env=env, layers=layers, features=features, gamma=gamma, learning_rate=learning_rate, epsilon=epsilon
+        )
         self.lambd = lambd
         self.z = np.zeros(features)
 
     def learn(self, observation, action, reward, observation_next, done, action_next=None):
         u = reward
         if not done:
-            u += (self.gamma * self.get_q(observation_next, action_next))
-            self.z *= (self.gamma * self.lambd)
+            u += self.gamma * self.get_q(observation_next, action_next)
+            self.z *= self.gamma * self.lambd
             features = self.encode(observation, action)
-            self.z[features] = 1.  # replacement trace
+            self.z[features] = 1.0  # replacement trace
         delta = u - self.get_q(observation, action)
-        self.w += (self.learning_rate * delta * self.z)
+        self.w += self.learning_rate * delta * self.z
         if done:
             self.z = np.zeros_like(self.z)
 
 
 def load_sarsas(set_epsilon=0.001):
     root_path = Path(os.path.dirname(os.path.realpath(__file__)))
-    with Path.open(Path(root_path) / 'sarsa_agent_75.p', 'rb') as file:
+    with Path.open(Path(root_path) / "sarsa_agent_75.p", "rb") as file:
         sarsa_agent_75 = pickle.load(file)
         # sarsa_agent_75.epsilon = set_epsilon
 
-    with Path.open(Path(root_path) / 'sarsa_agent_200.p', 'rb') as file:
+    with Path.open(Path(root_path) / "sarsa_agent_200.p", "rb") as file:
         sarsa_agent_200 = pickle.load(file)
         # sarsa_agent_200.epsilon = set_epsilon
 
-    with Path.open(Path(root_path) / 'sarsa_agent_1000.p', 'rb') as file:
+    with Path.open(Path(root_path) / "sarsa_agent_1000.p", "rb") as file:
         sarsa_agent_1000 = pickle.load(file)
         # sarsa_agent_1000.epsilon = set_epsilon
 
-    with Path.open(Path(root_path) / 'sarsa_agent_10000.p', 'rb') as file:
+    with Path.open(Path(root_path) / "sarsa_agent_10000.p", "rb") as file:
         sarsa_agent_10000 = pickle.load(file)
         # sarsa_agent_10000.epsilon = set_epsilon
 

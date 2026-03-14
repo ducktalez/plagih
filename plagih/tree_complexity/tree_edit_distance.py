@@ -44,7 +44,7 @@ def print_apted_tree(tree):
     print_apted_tree_helper(tree)
 
     for k, v in tree_vis_dic.items():
-        print('->', k, v)
+        print("->", k, v)
 
 
 def is_float(x):
@@ -175,14 +175,13 @@ def is_bool(x):
 
 
 def tree_nodeid_ted_mapping(mapping):
-
     for ii, map_i in enumerate(mapping):
         a, b = map_i[0], map_i[1]
         if a is None:
-            print(f'{ii} inserted {b.get_name}')
+            print(f"{ii} inserted {b.get_name}")
             pass
         elif b is None:
-            print(f'{ii} deleted {a.get_name}')
+            print(f"{ii} deleted {a.get_name}")
         else:
             a_name = a.get_name
             b_name = b.get_name
@@ -190,7 +189,7 @@ def tree_nodeid_ted_mapping(mapping):
                 # print(f'{ii} No change, {a.name}')
                 pass
             else:
-                print(f'{ii} changed {a.get_name}')
+                print(f"{ii} changed {a.get_name}")
 
     return
 

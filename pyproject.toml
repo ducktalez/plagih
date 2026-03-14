@@ -21,9 +21,12 @@ dependencies = [
 dev = [
     "pytest>=7.0",
     "pytest-cov",
+    "ruff>=0.9",
+    "pre-commit>=3.0",
 ]
 
 [tool.pytest.ini_options]
+pythonpath = ["."]
 testpaths = ["plagih/test"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
@@ -32,3 +35,80 @@ python_functions = ["test_*"]
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["plagih*", "visualization*"]
+
+# ---------------------------------------------------------------------------
+# Ruff – linting & formatting
+# ---------------------------------------------------------------------------
+[tool.ruff]
+target-version = "py39"
+line-length = 120
+exclude = [
+    "__pycache__",
+    ".git",
+    ".venv",
+    "venv",
+    "*.egg-info",
+]
+
+[tool.ruff.lint]
+# Start conservative – expand over time
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort (import sorting)
+    "UP",  # pyupgrade (modern Python idioms)
+    "B",   # flake8-bugbear (common bugs)
+    "SIM", # flake8-simplify
+    "RUF", # Ruff-specific rules
+]
+ignore = [
+    "E501",   # line too long – handled by formatter
+    "E731",   # lambda assignment – common in scientific code
+    "B905",   # zip without strict= – requires Python 3.10+
+    "SIM108", # ternary operator – not always clearer
+    # ---------- temporarily ignored – enable incrementally ----------
+    "F405",   # star-import usage – prevalent pattern, fix with explicit imports
+    "F403",   # star-import itself – used widely in __init__.py and test files
+    "E402",   # module-import-not-at-top – some files do conditional imports
+    "UP006",  # non-pep585-annotation (List -> list) – enable after dropping 3.9
+    "UP007",  # non-pep604-annotation (Union -> |) – enable after dropping 3.9
+    "UP045",  # non-pep604-annotation (Optional -> |) – enable after dropping 3.9
+    "UP035",  # deprecated-import (typing.List etc.) – related to UP006
+    "RUF059", # unused-unpacked-variable – common in scientific code
+    "RUF013", # implicit-optional – requires careful review
+    "E721",   # type comparison (== float/bool) – used intentionally for xtype checks
+    "E712",   # comparison to True/False – used in test assertions
+    "E722",   # bare except – will be refactored
+    "B904",   # raise without from – style improvement, fix incrementally
+    "B007",   # unused loop variable – common pattern (for ii, cc in enumerate)
+    "B017",   # assert blind exception – test pattern
+    "B028",   # no explicit stacklevel – fix when cleaning warnings
+    "F811",   # redefined function – intentional in util.py (legacy compat layer)
+    "F841",   # unused variable – many in benchmarks/perf tests, fix incrementally
+    "SIM102", # collapsible if – readability preference
+    "SIM105", # contextlib.suppress – style preference
+    "SIM117", # multiple with statements – readability preference
+    "SIM210", # if-expr-with-true-false – fix incrementally
+    "RUF002", # ambiguous unicode (σ in docstring) – intentional
+    "RUF012", # mutable class default – fix with ClassVar annotation
+    "RUF015", # unnecessary iterable allocation – minor optimization
+    "RUF043", # pytest-raises-ambiguous – test pattern
+]
+
+[tool.ruff.lint.per-file-ignores]
+"benchmarks/**" = ["E", "F", "W", "UP", "B", "SIM", "RUF"]  # legacy benchmark code
+"__init__.py" = ["F401"]  # unused imports in __init__ are intentional
+"plagih_gp.py" = ["B", "E712"]  # main script, will be refactored
+"thesis_plots.py" = ["B", "E712"]  # plotting script
+"test_*.py" = ["F401"]  # test files often re-import fixtures
+"conftest.py" = ["F401"]  # conftest provides fixtures via imports
+
+[tool.ruff.lint.isort]
+known-first-party = ["plagih", "visualization", "benchmarks"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+

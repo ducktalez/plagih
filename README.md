@@ -1,19 +1,15 @@
 # Familiar Genetic Programming with TensorFlow
 
 - Fast
-- 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
 
 
 ## Ablage/Todos
 
-- ~~Merged-tree visualisierung~~  ✓
-  - ~~mit chatgpt erstellen~~
-  - ~~tree-viz zentral implementieren~~ → `visualization/tree_renderer.py`
+- Merged-tree visualisierung
+  - mit chatgpt erstellen
+  - tree-viz zentral implementieren
   - Weitere merge-tree Version (ohne Terminal nodes)
 - Bereits erstellte Evaluierungskombination nutzen
-- lint/black/etc einbauen
-  - Empfohlene Tools: black, flake8, isort?
-  - Wie würdest du das einbauen?
 - better structure
   - plagih_gp.py ist momentan das Hauptskript, welches den Ablauf steuert. Es ist aber sehr lang und unübersichtlich.
     Ich möchte es in mehrere Dateien aufteilen, z.B.:

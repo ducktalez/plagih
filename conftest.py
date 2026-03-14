@@ -9,6 +9,7 @@ _root = Path(__file__).resolve().parent
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
+
 # This makes pytest recognize plagih as a package
 def pytest_configure(config):
     """Ensure project root is in path before any test collection."""

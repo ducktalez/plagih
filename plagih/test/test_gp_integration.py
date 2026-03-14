@@ -7,6 +7,7 @@ Tests verify:
 3. Backup save/load works
 4. Monitoring plots are created
 """
+
 import sys
 from pathlib import Path
 
@@ -15,23 +16,31 @@ _root = Path(__file__).resolve().parent.parent.parent
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
-import pytest
-import numpy as np
-import pandas as pd
-import sympy
 import copy
 
-from plagih.trees import (
-    Node, Number, Symbol,
-    Add, Mul, Sin,
-    Evolution, ExplainableGP, Candidate,
-    selection_tournament, tree_simplification
-)
+import numpy as np
+import pandas as pd
+import pytest
+import sympy
 
+from plagih.trees import (
+    Add,
+    Candidate,
+    Evolution,
+    ExplainableGP,
+    Mul,
+    Node,
+    Number,
+    Sin,
+    Symbol,
+    selection_tournament,
+    tree_simplification,
+)
 
 # =============================================================================
 # Mini GP Run Tests
 # =============================================================================
+
 
 class TestMiniGPRun:
     """Tests for complete mini GP runs."""
@@ -59,6 +68,7 @@ class TestMiniGPRun:
 
         # Run 2 additional generations
         for gen in range(2):
+
             @gp_instance.create_trees(rate=0.5)
             def reproduce():
                 tree = selection_tournament(gp_instance.pop_genepool, n=2)
@@ -99,6 +109,7 @@ class TestMiniGPRun:
 # Pareto Front Tests
 # =============================================================================
 
+
 class TestParetoFront:
     """Tests for Pareto front management."""
 
@@ -117,14 +128,8 @@ class TestParetoFront:
                     # c1 dominates c2 if:
                     # - c1 is at least as good in both objectives (<=)
                     # - c1 is strictly better in at least one objective (<)
-                    at_least_as_good = (
-                        c1.fitness <= c2.fitness and
-                        c1.parsimony <= c2.parsimony
-                    )
-                    strictly_better = (
-                        c1.fitness < c2.fitness or
-                        c1.parsimony < c2.parsimony
-                    )
+                    at_least_as_good = c1.fitness <= c2.fitness and c1.parsimony <= c2.parsimony
+                    strictly_better = c1.fitness < c2.fitness or c1.parsimony < c2.parsimony
                     dominates = at_least_as_good and strictly_better
                     assert not dominates, f"Candidate {i} dominates {j}"
 
@@ -159,6 +164,7 @@ class TestParetoFront:
 # Backup Tests
 # =============================================================================
 
+
 class TestBackup:
     """Tests for backup save/load functionality."""
 
@@ -168,7 +174,7 @@ class TestBackup:
 
         gp_instance.backup_save()
 
-        backup_path = gp_instance.rootdir / 'backup/backup.pkl'
+        backup_path = gp_instance.rootdir / "backup/backup.pkl"
         assert backup_path.exists()
 
     def test_backup_load(self, gp_instance, temp_output_dir, cartpole_df, cartpole_evolution):
@@ -191,7 +197,7 @@ class TestBackup:
             pop_max_size=10,
             gen_end=3,
             eval_autocast=eval_autocast,
-            eval_error_metric=eval_error_metric
+            eval_error_metric=eval_error_metric,
         )
 
         new_gp.backup_load()
@@ -203,6 +209,7 @@ class TestBackup:
 # =============================================================================
 # Monitoring Tests
 # =============================================================================
+
 
 class TestMonitoring:
     """Tests for monitoring and plotting."""
@@ -217,8 +224,7 @@ class TestMonitoring:
         """Tests monitor DataFrame has required columns."""
         gp_instance.gen_create_initial()
 
-        required_cols = ['pop_len', 'pop_unique', 'fit_avg', 'fit_best',
-                         'parsim_avg', 'time']
+        required_cols = ["pop_len", "pop_unique", "fit_avg", "fit_best", "parsim_avg", "time"]
 
         for col in required_cols:
             assert col in gp_instance.monitor_df.columns
@@ -231,55 +237,58 @@ class TestMonitoring:
         @gp_instance.create_trees(rate=1.0)
         def trees():
             return gp_instance.evolve.evolve_new_tree_depth(float, 3)
+
         gp_instance.end_generation()
 
         gp_instance.evoloop_monitoring_plots()
 
         # Check monitoring.png exists
-        assert (gp_instance.rootdir / 'monitoring.png').exists()
+        assert (gp_instance.rootdir / "monitoring.png").exists()
 
 
 # =============================================================================
 # Candidate Tests
 # =============================================================================
 
+
 class TestCandidate:
     """Tests for Candidate class."""
 
     def test_candidate_creation(self):
         """Tests Candidate creation."""
-        tree = Add(Symbol(sympy.Symbol('a')), Number(1.0))
-        cand = Candidate(tree, fitness=0.5, parsimony=3, tag='test')
+        tree = Add(Symbol(sympy.Symbol("a")), Number(1.0))
+        cand = Candidate(tree, fitness=0.5, parsimony=3, tag="test")
 
         assert cand.tree is tree
         assert cand.fitness == 0.5
         assert cand.parsimony == 3
-        assert cand.get_tag() == 'test'
+        assert cand.get_tag() == "test"
 
     def test_candidate_string(self):
         """Tests Candidate string representation."""
-        tree = Add(Symbol(sympy.Symbol('a')), Number(1.0))
-        cand = Candidate(tree, fitness=0.5, parsimony=3, tag='test')
+        tree = Add(Symbol(sympy.Symbol("a")), Number(1.0))
+        cand = Candidate(tree, fitness=0.5, parsimony=3, tag="test")
 
         s = str(cand)
-        assert '3' in s  # parsimony
-        assert '0.5' in s or '0.50' in s  # fitness
+        assert "3" in s  # parsimony
+        assert "0.5" in s or "0.50" in s  # fitness
 
     def test_candidate_tag_history(self):
         """Tests Candidate tag history."""
-        tree = Add(Symbol(sympy.Symbol('a')), Number(1.0))
-        cand = Candidate(tree, fitness=0.5, parsimony=3, tag='init')
+        tree = Add(Symbol(sympy.Symbol("a")), Number(1.0))
+        cand = Candidate(tree, fitness=0.5, parsimony=3, tag="init")
 
-        cand.append_tag('mutate')
-        cand.append_tag('crossover')
+        cand.append_tag("mutate")
+        cand.append_tag("crossover")
 
-        assert cand.get_tag(-1) == 'crossover'
-        assert cand.get_tag(-2) == 'mutate'
+        assert cand.get_tag(-1) == "crossover"
+        assert cand.get_tag(-2) == "mutate"
 
 
 # =============================================================================
 # LUT Tests
 # =============================================================================
+
 
 class TestLookupTables:
     """Tests for lookup table functionality."""
@@ -306,7 +315,7 @@ class TestLookupTables:
         @gp_instance.create_trees(rate=0.5)
         def same_trees():
             # Simple tree likely to be duplicated
-            return Add(Symbol(sympy.Symbol('cartPos')), Number(1.0))
+            return Add(Symbol(sympy.Symbol("cartPos")), Number(1.0))
 
         # LUT should grow but fitness lookups should happen
         # (Hard to test directly, but LUT should have some entries)
@@ -316,6 +325,7 @@ class TestLookupTables:
 # =============================================================================
 # Error Handling Tests
 # =============================================================================
+
 
 class TestErrorHandling:
     """Tests for error handling in GP system."""
@@ -344,6 +354,7 @@ class TestErrorHandling:
 # =============================================================================
 # Complete Run Test
 # =============================================================================
+
 
 class TestCompleteRun:
     """Full integration test of a mini GP run."""

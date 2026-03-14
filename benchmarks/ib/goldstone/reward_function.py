@@ -1,9 +1,12 @@
 # coding=utf-8
 from __future__ import division
+
 import numpy as np
-from numpy import pi, sin, sign
+from numpy import pi, sign, sin
+
 from .nlgp import nlgp
-'''
+
+"""
 The MIT License (MIT)
 
 Copyright 2017 Siemens AG
@@ -27,10 +30,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-'''
+"""
+
 
 class reward_function:
-    
     def __init__(self, phi, max_required_step):
         """
         generates the reward function for fixed phi
@@ -43,12 +46,12 @@ class reward_function:
         self.max_required_step = max_required_step
         if max_required_step <= 0:
             raise ValueError("Value for argument max_required_step must be positive")
-        
+
         self.__reward_function = self.__reward_function_factory(phi, max_required_step)
         self.__vectorized_reward_function = np.vectorize(self.__reward_function)
         self.optimum_radius = self.__compute_optimal_radius(phi, max_required_step)
         self.optimum_value = self.__reward_function(self.optimum_radius)
-        
+
     def reward(self, r):
         return self.__reward_function(r)
 
@@ -57,19 +60,20 @@ class reward_function:
             if abs(x) <= abs(opt_rad):
                 return x * abs(min_rad) / abs(opt_rad)
             else:
-                exponent = (2-abs(opt_rad)) / (2-abs(min_rad))
-                scaling = (2-abs(min_rad)) / (2-abs(opt_rad))**exponent
-                return np.sign(x) * (abs(min_rad) + scaling * (abs(x) - abs(opt_rad))**exponent)
+                exponent = (2 - abs(opt_rad)) / (2 - abs(min_rad))
+                scaling = (2 - abs(min_rad)) / (2 - abs(opt_rad)) ** exponent
+                return np.sign(x) * (abs(min_rad) + scaling * (abs(x) - abs(opt_rad)) ** exponent)
+
         return tsf
-    
+
     def __compute_optimal_radius(self, phi, max_required_step):
-        phi = np.mod(phi, 2*pi)
+        phi = np.mod(phi, 2 * pi)
 
         opt = max(abs(sin(phi)), max_required_step)
-        if phi>=pi:
+        if phi >= pi:
             opt *= -1
         return opt
-    
+
     def __reward_function_factory(self, phi, max_required_step):
         """
         generates the reward function for fixed phi
@@ -80,8 +84,8 @@ class reward_function:
         """
         L = nlgp()
         # use 2-pi-symmetry to move phi in domain [0,2pi]
-        phi = np.mod(phi, 2*pi)
-        # the desired radius at which we want the global optimim to be: 
+        phi = np.mod(phi, 2 * pi)
+        # the desired radius at which we want the global optimim to be:
         opt_rad = self.__compute_optimal_radius(phi, max_required_step)
         #
         # the radius of minimum in NLGP:

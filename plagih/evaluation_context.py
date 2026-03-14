@@ -12,11 +12,11 @@ Dieses System ist nur eine zusätzliche Option für vereinheitlichte Evaluation.
 
 Usage:
     >>> from plagih.evaluation_context import EvaluationContext
-    >>> context = EvaluationContext(modes=['numpy_eager'], use_lut=True)
+    >>> context = EvaluationContext(modes=["numpy_eager"], use_lut=True)
     >>> result = context.evaluate(tree, df)
 
     # Multiple modes at once:
-    >>> context = EvaluationContext(modes=['sympy', 'numpy_eager', 'numpy_lambda'])
+    >>> context = EvaluationContext(modes=["sympy", "numpy_eager", "numpy_lambda"])
     >>> results = context.evaluate(tree, df)
 
 Author: Generated with assistance
@@ -28,7 +28,7 @@ from __future__ import annotations
 import warnings
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set, Union
 
 import numpy as np
 import pandas as pd
@@ -42,11 +42,13 @@ if TYPE_CHECKING:
 # Enums and Data Classes
 # =============================================================================
 
+
 class EvalMode(str, Enum):
     """Available evaluation modes."""
-    SYMPY = 'sympy'
-    NUMPY_EAGER = 'numpy_eager'
-    NUMPY_LAMBDA = 'numpy_lambda'
+
+    SYMPY = "sympy"
+    NUMPY_EAGER = "numpy_eager"
+    NUMPY_LAMBDA = "numpy_lambda"
 
 
 @dataclass
@@ -59,6 +61,7 @@ class EvaluationResult:
         numpy_lambda: Callable lambda function for lazy evaluation
         errors: Dict of mode -> error message for failed evaluations
     """
+
     sympy: Optional[sympy.Basic] = None
     numpy_eager: Optional[np.ndarray] = None
     numpy_lambda: Optional[Callable[[pd.DataFrame], np.ndarray]] = None
@@ -66,7 +69,7 @@ class EvaluationResult:
 
     def get(self, mode: str) -> Any:
         """Get result for specific mode."""
-        return getattr(self, mode.replace('-', '_'), None)
+        return getattr(self, mode.replace("-", "_"), None)
 
     def has_error(self, mode: str) -> bool:
         """Check if mode had an error."""
@@ -76,17 +79,18 @@ class EvaluationResult:
         """Get list of modes that succeeded."""
         modes = []
         if self.sympy is not None:
-            modes.append('sympy')
+            modes.append("sympy")
         if self.numpy_eager is not None:
-            modes.append('numpy_eager')
+            modes.append("numpy_eager")
         if self.numpy_lambda is not None:
-            modes.append('numpy_lambda')
+            modes.append("numpy_lambda")
         return modes
 
 
 # =============================================================================
 # Main EvaluationContext Class
 # =============================================================================
+
 
 class EvaluationContext:
     """Unified evaluation context for parallel evaluation modes.
@@ -105,28 +109,28 @@ class EvaluationContext:
 
     Example:
         >>> # Single mode (most common usage)
-        >>> context = EvaluationContext(modes=['numpy_eager'])
+        >>> context = EvaluationContext(modes=["numpy_eager"])
         >>> result = context.evaluate(tree, df)
         >>> assert isinstance(result, np.ndarray)
 
         >>> # Multiple modes at once
-        >>> context = EvaluationContext(modes=['sympy', 'numpy_eager', 'numpy_lambda'])
+        >>> context = EvaluationContext(modes=["sympy", "numpy_eager", "numpy_lambda"])
         >>> results = context.evaluate(tree, df)
-        >>> assert 'sympy' in results and 'numpy_eager' in results
+        >>> assert "sympy" in results and "numpy_eager" in results
 
         >>> # With LUT disabled (for memory-constrained environments)
-        >>> context = EvaluationContext(modes=['numpy_eager'], use_lut=False)
+        >>> context = EvaluationContext(modes=["numpy_eager"], use_lut=False)
     """
 
     # Valid mode names
-    VALID_MODES = {'sympy', 'numpy_eager', 'numpy_lambda'}
+    VALID_MODES = {"sympy", "numpy_eager", "numpy_lambda"}
 
     def __init__(
         self,
         modes: Optional[List[str]] = None,
         use_lut: bool = True,
         track_gradients: bool = False,
-        df: Optional[pd.DataFrame] = None
+        df: Optional[pd.DataFrame] = None,
     ):
         """Initialize evaluation context.
 
@@ -144,14 +148,12 @@ class EvaluationContext:
                 numpy_eager evaluations can be called without passing df.
         """
         if modes is None:
-            modes = ['numpy_eager']
+            modes = ["numpy_eager"]
 
         # Validate modes
         for mode in modes:
             if mode not in self.VALID_MODES:
-                raise ValueError(
-                    f"Invalid mode '{mode}'. Valid modes: {self.VALID_MODES}"
-                )
+                raise ValueError(f"Invalid mode '{mode}'. Valid modes: {self.VALID_MODES}")
 
         self.modes: Set[str] = set(modes)
         self.use_lut = use_lut
@@ -163,10 +165,10 @@ class EvaluationContext:
 
         # Statistics tracking
         self._stats = {
-            'evaluations': {mode: 0 for mode in self.modes},
-            'cache_hits': {mode: 0 for mode in self.modes},
-            'cache_misses': {mode: 0 for mode in self.modes},
-            'errors': {mode: 0 for mode in self.modes},
+            "evaluations": {mode: 0 for mode in self.modes},
+            "cache_hits": {mode: 0 for mode in self.modes},
+            "cache_misses": {mode: 0 for mode in self.modes},
+            "errors": {mode: 0 for mode in self.modes},
         }
 
         # Gradient storage (for future backprop support)
@@ -176,7 +178,7 @@ class EvaluationContext:
     # Context Configuration (Fluent Interface)
     # =========================================================================
 
-    def with_modes(self, modes: List[str]) -> 'EvaluationContext':
+    def with_modes(self, modes: List[str]) -> EvaluationContext:
         """Create a new context with different modes (LUT is shared for common modes).
 
         Args:
@@ -185,19 +187,14 @@ class EvaluationContext:
         Returns:
             New EvaluationContext with specified modes
         """
-        new_ctx = EvaluationContext(
-            modes=modes,
-            use_lut=self.use_lut,
-            track_gradients=self.track_gradients,
-            df=self.df
-        )
+        new_ctx = EvaluationContext(modes=modes, use_lut=self.use_lut, track_gradients=self.track_gradients, df=self.df)
         # Share LUT for modes that exist in both
         for mode in modes:
             if mode in self._lut:
                 new_ctx._lut[mode] = self._lut[mode]
         return new_ctx
 
-    def with_df(self, df: pd.DataFrame) -> 'EvaluationContext':
+    def with_df(self, df: pd.DataFrame) -> EvaluationContext:
         """Create a new context with a specific DataFrame.
 
         Args:
@@ -207,15 +204,12 @@ class EvaluationContext:
             New EvaluationContext with specified DataFrame
         """
         new_ctx = EvaluationContext(
-            modes=list(self.modes),
-            use_lut=self.use_lut,
-            track_gradients=self.track_gradients,
-            df=df
+            modes=list(self.modes), use_lut=self.use_lut, track_gradients=self.track_gradients, df=df
         )
         new_ctx._lut = self._lut  # Share LUT
         return new_ctx
 
-    def with_lut(self, use_lut: bool) -> 'EvaluationContext':
+    def with_lut(self, use_lut: bool) -> EvaluationContext:
         """Create a new context with LUT enabled/disabled.
 
         Args:
@@ -225,10 +219,7 @@ class EvaluationContext:
             New EvaluationContext with specified LUT setting
         """
         new_ctx = EvaluationContext(
-            modes=list(self.modes),
-            use_lut=use_lut,
-            track_gradients=self.track_gradients,
-            df=self.df
+            modes=list(self.modes), use_lut=use_lut, track_gradients=self.track_gradients, df=self.df
         )
         if use_lut:
             new_ctx._lut = self._lut  # Share LUT if enabled
@@ -294,11 +285,11 @@ class EvaluationContext:
             mode: Evaluation mode
             cache_hit: Whether this was a cache hit
         """
-        self._stats['evaluations'][mode] = self._stats['evaluations'].get(mode, 0) + 1
+        self._stats["evaluations"][mode] = self._stats["evaluations"].get(mode, 0) + 1
         if cache_hit:
-            self._stats['cache_hits'][mode] = self._stats['cache_hits'].get(mode, 0) + 1
+            self._stats["cache_hits"][mode] = self._stats["cache_hits"].get(mode, 0) + 1
         else:
-            self._stats['cache_misses'][mode] = self._stats['cache_misses'].get(mode, 0) + 1
+            self._stats["cache_misses"][mode] = self._stats["cache_misses"].get(mode, 0) + 1
 
     def _record_error(self, mode: str) -> None:
         """Record an evaluation error for statistics (internal).
@@ -306,7 +297,7 @@ class EvaluationContext:
         Args:
             mode: Evaluation mode that errored
         """
-        self._stats['errors'][mode] = self._stats['errors'].get(mode, 0) + 1
+        self._stats["errors"][mode] = self._stats["errors"].get(mode, 0) + 1
 
     def get_stats(self) -> Dict[str, Dict[str, int]]:
         """Get evaluation statistics.
@@ -325,8 +316,8 @@ class EvaluationContext:
         Returns:
             Cache hit rate as float between 0 and 1
         """
-        total = self._stats['evaluations'].get(mode, 0)
-        hits = self._stats['cache_hits'].get(mode, 0)
+        total = self._stats["evaluations"].get(mode, 0)
+        hits = self._stats["cache_hits"].get(mode, 0)
         return hits / total if total > 0 else 0.0
 
     def summary(self) -> str:
@@ -340,9 +331,9 @@ class EvaluationContext:
         lines.append(f"  LUT enabled: {self.use_lut}")
 
         for mode in sorted(self.modes):
-            evals = self._stats['evaluations'].get(mode, 0)
-            hits = self._stats['cache_hits'].get(mode, 0)
-            errors = self._stats['errors'].get(mode, 0)
+            evals = self._stats["evaluations"].get(mode, 0)
+            hits = self._stats["cache_hits"].get(mode, 0)
+            errors = self._stats["errors"].get(mode, 0)
             hit_rate = self.get_cache_hit_rate(mode)
             cache_size = len(self._lut.get(mode, {}))
             lines.append(f"  {mode}:")
@@ -356,10 +347,7 @@ class EvaluationContext:
     # =========================================================================
 
     def evaluate(
-        self,
-        node: 'Node',
-        df: Optional[pd.DataFrame] = None,
-        single_mode: Optional[str] = None
+        self, node: Node, df: Optional[pd.DataFrame] = None, single_mode: Optional[str] = None
     ) -> Union[Any, Dict[str, Any]]:
         """Evaluate a node tree in one or multiple modes.
 
@@ -382,13 +370,13 @@ class EvaluationContext:
             ValueError: If numpy_eager mode requested but no df provided
 
         Example:
-            >>> ctx = EvaluationContext(modes=['numpy_eager'])
+            >>> ctx = EvaluationContext(modes=["numpy_eager"])
             >>> result = ctx.evaluate(tree, df)  # Returns np.ndarray
 
-            >>> ctx = EvaluationContext(modes=['sympy', 'numpy_eager'])
+            >>> ctx = EvaluationContext(modes=["sympy", "numpy_eager"])
             >>> results = ctx.evaluate(tree, df)  # Returns dict
-            >>> results['sympy']  # sympy.Basic
-            >>> results['numpy_eager']  # np.ndarray
+            >>> results["sympy"]  # sympy.Basic
+            >>> results["numpy_eager"]  # np.ndarray
         """
         # Use stored df if not provided
         if df is None:
@@ -398,7 +386,7 @@ class EvaluationContext:
         modes_to_eval = [single_mode] if single_mode else list(self.modes)
 
         # Validate df for numpy_eager mode
-        if 'numpy_eager' in modes_to_eval and df is None:
+        if "numpy_eager" in modes_to_eval and df is None:
             raise ValueError(
                 "DataFrame (df) is required for numpy_eager evaluation. "
                 "Pass df to evaluate() or use context.with_df(df)."
@@ -417,11 +405,11 @@ class EvaluationContext:
 
             # Evaluate based on mode - DELEGATING to existing methods!
             try:
-                if mode == 'sympy':
+                if mode == "sympy":
                     result = node.get_sympy_expr()
-                elif mode == 'numpy_eager':
+                elif mode == "numpy_eager":
                     result = node.eval_predict_numpy_now(df)
-                elif mode == 'numpy_lambda':
+                elif mode == "numpy_lambda":
                     result = node.eval_np_lambdas()
                 else:
                     raise ValueError(f"Unknown mode: {mode}")
@@ -431,7 +419,7 @@ class EvaluationContext:
                 self._record_evaluation(mode, cache_hit=False)
                 results[mode] = result
 
-            except Exception as e:
+            except Exception:
                 self._record_error(mode)
                 # Re-raise - caller decides how to handle
                 raise
@@ -445,7 +433,7 @@ class EvaluationContext:
     # Convenience Methods
     # =========================================================================
 
-    def eval_sympy(self, node: 'Node') -> sympy.Basic:
+    def eval_sympy(self, node: Node) -> sympy.Basic:
         """Convenience: Evaluate only in sympy mode.
 
         Args:
@@ -454,9 +442,9 @@ class EvaluationContext:
         Returns:
             SymPy expression
         """
-        return self.evaluate(node, single_mode='sympy')
+        return self.evaluate(node, single_mode="sympy")
 
-    def eval_numpy(self, node: 'Node', df: pd.DataFrame) -> np.ndarray:
+    def eval_numpy(self, node: Node, df: pd.DataFrame) -> np.ndarray:
         """Convenience: Evaluate only in numpy_eager mode.
 
         Args:
@@ -466,9 +454,9 @@ class EvaluationContext:
         Returns:
             NumPy array with results
         """
-        return self.evaluate(node, df=df, single_mode='numpy_eager')
+        return self.evaluate(node, df=df, single_mode="numpy_eager")
 
-    def eval_lambda(self, node: 'Node') -> Callable[[pd.DataFrame], np.ndarray]:
+    def eval_lambda(self, node: Node) -> Callable[[pd.DataFrame], np.ndarray]:
         """Convenience: Evaluate only in numpy_lambda mode.
 
         Args:
@@ -477,13 +465,9 @@ class EvaluationContext:
         Returns:
             Callable that takes DataFrame and returns np.ndarray
         """
-        return self.evaluate(node, single_mode='numpy_lambda')
+        return self.evaluate(node, single_mode="numpy_lambda")
 
-    def eval_all(
-        self,
-        node: 'Node',
-        df: pd.DataFrame
-    ) -> EvaluationResult:
+    def eval_all(self, node: Node, df: pd.DataFrame) -> EvaluationResult:
         """Evaluate in all three modes and return structured result.
 
         This is useful for comparison/debugging purposes.
@@ -501,19 +485,19 @@ class EvaluationContext:
         try:
             result.sympy = node.get_sympy_expr()
         except Exception as e:
-            result.errors['sympy'] = str(e)
+            result.errors["sympy"] = str(e)
 
         # NumPy Eager
         try:
             result.numpy_eager = node.eval_predict_numpy_now(df)
         except Exception as e:
-            result.errors['numpy_eager'] = str(e)
+            result.errors["numpy_eager"] = str(e)
 
         # NumPy Lambda
         try:
             result.numpy_lambda = node.eval_np_lambdas()
         except Exception as e:
-            result.errors['numpy_lambda'] = str(e)
+            result.errors["numpy_lambda"] = str(e)
 
         return result
 
@@ -521,7 +505,7 @@ class EvaluationContext:
     # Future: Gradient Tracking for Backpropagation
     # =========================================================================
 
-    def enable_gradient_tracking(self) -> 'EvaluationContext':
+    def enable_gradient_tracking(self) -> EvaluationContext:
         """Enable gradient tracking for backpropagation.
 
         NOTE: This is a placeholder for future implementation.
@@ -531,9 +515,8 @@ class EvaluationContext:
             Self for method chaining
         """
         warnings.warn(
-            "Gradient tracking is not yet implemented. "
-            "This is a placeholder for future JAX/PyTorch integration.",
-            FutureWarning
+            "Gradient tracking is not yet implemented. This is a placeholder for future JAX/PyTorch integration.",
+            FutureWarning,
         )
         self.track_gradients = True
         return self
@@ -551,10 +534,9 @@ class EvaluationContext:
 # Utility Functions
 # =============================================================================
 
+
 def create_context(
-    mode: str = 'numpy_eager',
-    use_lut: bool = True,
-    df: Optional[pd.DataFrame] = None
+    mode: str = "numpy_eager", use_lut: bool = True, df: Optional[pd.DataFrame] = None
 ) -> EvaluationContext:
     """Factory function for creating EvaluationContext with a single mode.
 
@@ -570,17 +552,14 @@ def create_context(
         Configured EvaluationContext
 
     Example:
-        >>> ctx = create_context('numpy_eager', use_lut=True)
+        >>> ctx = create_context("numpy_eager", use_lut=True)
         >>> result = ctx.evaluate(tree, df)
     """
     return EvaluationContext(modes=[mode], use_lut=use_lut, df=df)
 
 
 def evaluate_tree(
-    node: 'Node',
-    df: Optional[pd.DataFrame] = None,
-    mode: str = 'numpy_eager',
-    use_lut: bool = False
+    node: Node, df: Optional[pd.DataFrame] = None, mode: str = "numpy_eager", use_lut: bool = False
 ) -> Any:
     """One-shot tree evaluation without creating a context explicitly.
 
@@ -597,8 +576,8 @@ def evaluate_tree(
         Evaluation result (type depends on mode)
 
     Example:
-        >>> result = evaluate_tree(tree, df, mode='numpy_eager')
-        >>> lambda_fn = evaluate_tree(tree, mode='numpy_lambda')
+        >>> result = evaluate_tree(tree, df, mode="numpy_eager")
+        >>> lambda_fn = evaluate_tree(tree, mode="numpy_lambda")
     """
     ctx = EvaluationContext(modes=[mode], use_lut=use_lut, df=df)
     return ctx.evaluate(node)
@@ -607,6 +586,7 @@ def evaluate_tree(
 # =============================================================================
 # Integration Helper for Node class
 # =============================================================================
+
 
 def add_unified_evaluation_to_node(node_class: type) -> None:
     """Add the evaluate_unified method to a Node class.
@@ -624,10 +604,9 @@ def add_unified_evaluation_to_node(node_class: type) -> None:
     Args:
         node_class: The Node class to extend
     """
+
     def evaluate_unified(
-        self,
-        context: EvaluationContext,
-        df: Optional[pd.DataFrame] = None
+        self, context: EvaluationContext, df: Optional[pd.DataFrame] = None
     ) -> Union[Any, Dict[str, Any]]:
         """Evaluate this node using the unified EvaluationContext.
 
@@ -662,7 +641,7 @@ def get_default_context() -> EvaluationContext:
     """
     global _default_context
     if _default_context is None:
-        _default_context = EvaluationContext(modes=['numpy_eager'])
+        _default_context = EvaluationContext(modes=["numpy_eager"])
     return _default_context
 
 

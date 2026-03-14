@@ -7,6 +7,7 @@ Tests verify:
 3. SymPy expression generation
 4. String representations
 """
+
 import sys
 from pathlib import Path
 
@@ -15,20 +16,17 @@ _root = Path(__file__).resolve().parent.parent.parent
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
-import pytest
 import numpy as np
-import sympy
 import pandas as pd
+import pytest
+import sympy
 
-from plagih.trees import (
-    Terminal, Number, Symbol, Boolean,
-    Add, Mul
-)
-
+from plagih.trees import Add, Boolean, Mul, Number, Symbol, Terminal
 
 # =============================================================================
 # Number Tests
 # =============================================================================
+
 
 class TestNumber:
     """Tests for Number terminal nodes."""
@@ -66,7 +64,7 @@ class TestNumber:
         """Tests Number string representation."""
         n = Number(2.5)
         s = str(n)
-        assert '2.5' in s or '2.50' in s
+        assert "2.5" in s or "2.50" in s
 
     def test_number_len(self):
         """Tests Number length is 1."""
@@ -102,59 +100,60 @@ class TestNumber:
 # Symbol Tests
 # =============================================================================
 
+
 class TestSymbol:
     """Tests for Symbol terminal nodes."""
 
     def test_symbol_construction(self):
         """Tests Symbol node construction."""
-        s = Symbol(sympy.Symbol('x'))
-        assert 'x' in str(s.get_value())
+        s = Symbol(sympy.Symbol("x"))
+        assert "x" in str(s.get_value())
 
     def test_symbol_from_string_sympy(self):
         """Tests Symbol with sympy Symbol."""
-        sym = sympy.Symbol('myvar', real=True)
+        sym = sympy.Symbol("myvar", real=True)
         s = Symbol(sym)
-        assert 'myvar' in str(s.get_value())
+        assert "myvar" in str(s.get_value())
 
     def test_symbol_evaluation(self, sample_df):
         """Tests Symbol evaluation retrieves DataFrame column."""
-        s = Symbol(sympy.Symbol('a'))
+        s = Symbol(sympy.Symbol("a"))
         result = s.eval_predict_numpy_now(sample_df)
 
-        np.testing.assert_array_almost_equal(result, sample_df['a'].values)
+        np.testing.assert_array_almost_equal(result, sample_df["a"].values)
 
     def test_symbol_evaluation_different_column(self, sample_df):
         """Tests Symbol with different column."""
-        s = Symbol(sympy.Symbol('b'))
+        s = Symbol(sympy.Symbol("b"))
         result = s.eval_predict_numpy_now(sample_df)
 
-        np.testing.assert_array_almost_equal(result, sample_df['b'].values)
+        np.testing.assert_array_almost_equal(result, sample_df["b"].values)
 
     def test_symbol_sympy_expr(self):
         """Tests Symbol SymPy expression generation."""
-        s = Symbol(sympy.Symbol('x'))
+        s = Symbol(sympy.Symbol("x"))
         expr = s.get_sympy_expr()
-        assert expr.is_Symbol or 'x' in str(expr)
+        assert expr.is_Symbol or "x" in str(expr)
 
     def test_symbol_string_repr(self):
         """Tests Symbol string representation."""
-        s = Symbol(sympy.Symbol('myvar'))
-        assert 'myvar' in str(s)
+        s = Symbol(sympy.Symbol("myvar"))
+        assert "myvar" in str(s)
 
     def test_symbol_len(self):
         """Tests Symbol length is 1."""
-        s = Symbol(sympy.Symbol('x'))
+        s = Symbol(sympy.Symbol("x"))
         assert len(s) == 1
 
     def test_symbol_is_terminal(self):
         """Tests Symbol is recognized as terminal."""
-        s = Symbol(sympy.Symbol('x'))
+        s = Symbol(sympy.Symbol("x"))
         assert s.is_term()
         assert s.is_term_and_symbol()
 
     def test_symbol_missing_column_raises(self, sample_df):
         """Tests Symbol with missing column raises error."""
-        s = Symbol(sympy.Symbol('nonexistent'))
+        s = Symbol(sympy.Symbol("nonexistent"))
         with pytest.raises(KeyError):
             s.eval_predict_numpy_now(sample_df)
 
@@ -162,6 +161,7 @@ class TestSymbol:
 # =============================================================================
 # Boolean Tests
 # =============================================================================
+
 
 class TestBoolean:
     """Tests for Boolean terminal nodes."""
@@ -214,15 +214,15 @@ class TestBoolean:
         b = Boolean(False)
         expr = b.get_sympy_expr()
         # Check it's falsy or equals sympy.false
-        assert expr == sympy.false or (not expr) == True or str(expr) == 'False'
+        assert expr == sympy.false or (not expr) == True or str(expr) == "False"
 
     def test_boolean_string_repr(self):
         """Tests Boolean string representation."""
         b_true = Boolean(True)
         b_false = Boolean(False)
 
-        assert 'True' in str(b_true) or 'true' in str(b_true).lower()
-        assert 'False' in str(b_false) or 'false' in str(b_false).lower()
+        assert "True" in str(b_true) or "true" in str(b_true).lower()
+        assert "False" in str(b_false) or "false" in str(b_false).lower()
 
     def test_boolean_len(self):
         """Tests Boolean length is 1."""
@@ -240,32 +240,30 @@ class TestBoolean:
 # Terminal Integration Tests
 # =============================================================================
 
+
 class TestTerminalIntegration:
     """Integration tests for terminals in trees."""
 
     def test_number_in_expression(self, sample_df):
         """Tests Number used in expression."""
-        tree = Add(Symbol(sympy.Symbol('a')), Number(10.0))
+        tree = Add(Symbol(sympy.Symbol("a")), Number(10.0))
         result = tree.eval_predict_numpy_now(sample_df)
-        expected = sample_df['a'].values + 10.0
+        expected = sample_df["a"].values + 10.0
         np.testing.assert_array_almost_equal(result, expected)
 
     def test_symbol_in_expression(self, sample_df):
         """Tests Symbol used in expression."""
-        tree = Mul(Symbol(sympy.Symbol('a')), Symbol(sympy.Symbol('b')))
+        tree = Mul(Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b")))
         result = tree.eval_predict_numpy_now(sample_df)
-        expected = sample_df['a'].values * sample_df['b'].values
+        expected = sample_df["a"].values * sample_df["b"].values
         np.testing.assert_array_almost_equal(result, expected)
 
     def test_mixed_terminals(self, sample_df):
         """Tests expression with multiple terminal types."""
         # Add(Mul(a, 2), b)
-        tree = Add(
-            Mul(Symbol(sympy.Symbol('a')), Number(2.0)),
-            Symbol(sympy.Symbol('b'))
-        )
+        tree = Add(Mul(Symbol(sympy.Symbol("a")), Number(2.0)), Symbol(sympy.Symbol("b")))
         result = tree.eval_predict_numpy_now(sample_df)
-        expected = sample_df['a'].values * 2.0 + sample_df['b'].values
+        expected = sample_df["a"].values * 2.0 + sample_df["b"].values
         np.testing.assert_array_almost_equal(result, expected)
 
     def test_xtype_number(self):
@@ -275,7 +273,7 @@ class TestTerminalIntegration:
 
     def test_xtype_symbol(self):
         """Tests Symbol xtype is correct."""
-        s = Symbol(sympy.Symbol('x'))
+        s = Symbol(sympy.Symbol("x"))
         assert s.xtype == ((), float)
 
     def test_xtype_boolean(self):
@@ -288,6 +286,7 @@ class TestTerminalIntegration:
 # Export/Import Tests
 # =============================================================================
 
+
 class TestTerminalExport:
     """Tests for terminal serialization."""
 
@@ -295,19 +294,19 @@ class TestTerminalExport:
         """Tests Number export_tree format."""
         n = Number(2.5)
         export = n.export_tree()
-        assert 'Number' in export
-        assert '2.5' in export
+        assert "Number" in export
+        assert "2.5" in export
 
     def test_symbol_export_tree(self):
         """Tests Symbol export_tree format."""
-        s = Symbol(sympy.Symbol('myvar'))
+        s = Symbol(sympy.Symbol("myvar"))
         export = s.export_tree()
-        assert 'Symbol' in export
-        assert 'myvar' in export
+        assert "Symbol" in export
+        assert "myvar" in export
 
     def test_boolean_export_tree(self):
         """Tests Boolean export_tree format."""
         b = Boolean(True)
         export = b.export_tree()
-        assert 'Boolean' in export
-        assert 'True' in export
+        assert "Boolean" in export
+        assert "True" in export

@@ -17,38 +17,42 @@ import textwrap
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
-import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from matplotlib.patches import FancyBboxPatch
+import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+from matplotlib.patches import FancyBboxPatch
 
 if TYPE_CHECKING:
-    from plagih.trees import Node
     from plagih.population_merge import MergedEvaluationGraph, MergedNode
+    from plagih.trees import Node
 
 
 # =============================================================================
 # Enums and Configuration
 # =============================================================================
 
+
 class Orientation(Enum):
     """Tree layout orientation."""
-    TOP_DOWN = "TB"      # Root at top, leaves at bottom
-    BOTTOM_UP = "BT"     # Root at bottom, leaves at top
-    LEFT_RIGHT = "LR"    # Root at left, leaves at right
-    RIGHT_LEFT = "RL"    # Root at right, leaves at left
+
+    TOP_DOWN = "TB"  # Root at top, leaves at bottom
+    BOTTOM_UP = "BT"  # Root at bottom, leaves at top
+    LEFT_RIGHT = "LR"  # Root at left, leaves at right
+    RIGHT_LEFT = "RL"  # Root at right, leaves at left
 
 
 class MergedDisplayMode(Enum):
     """Display mode for merged tree nodes."""
-    LABEL_ONLY = auto()       # Show only operator/terminal label
+
+    LABEL_ONLY = auto()  # Show only operator/terminal label
     FULL_EXPRESSION = auto()  # Show complete child expression
 
 
 class NodeShape(Enum):
     """Shape styles for nodes."""
+
     ELLIPSE = "ellipse"
     RECTANGLE = "rectangle"
     ROUNDED_RECTANGLE = "rounded"
@@ -58,6 +62,7 @@ class NodeShape(Enum):
 @dataclass
 class NodeStyle:
     """Style configuration for a node."""
+
     fill_color: str = "#FFFFFF"
     border_color: str = "#333333"
     text_color: str = "#000000"
@@ -90,18 +95,19 @@ class TreeRendererConfig:
         figure_dpi: DPI for saved figures
         background_color: Background color for figures
     """
+
     # Layout
     orientation: Orientation = Orientation.TOP_DOWN
-    min_level_gap: float = 0.5       # Minimum vertical gap between levels
-    min_sibling_gap: float = 0.15    # Minimum horizontal gap between siblings
-    min_subtree_gap: float = 0.3     # Minimum gap between subtrees
+    min_level_gap: float = 0.5  # Minimum vertical gap between levels
+    min_sibling_gap: float = 0.15  # Minimum horizontal gap between siblings
+    min_subtree_gap: float = 0.3  # Minimum gap between subtrees
 
     # Node sizing - compact defaults
-    node_padding_x: float = 0.08     # Horizontal padding inside nodes
-    node_padding_y: float = 0.05     # Vertical padding inside nodes
-    min_node_width: float = 0.3      # Smaller minimum width
-    min_node_height: float = 0.25    # Smaller minimum height
-    max_label_width: int = 20        # Characters before wrapping
+    node_padding_x: float = 0.08  # Horizontal padding inside nodes
+    node_padding_y: float = 0.05  # Vertical padding inside nodes
+    min_node_width: float = 0.3  # Smaller minimum width
+    min_node_height: float = 0.25  # Smaller minimum height
+    max_label_width: int = 20  # Characters before wrapping
 
     # Merged tree specific
     merged_display_mode: MergedDisplayMode = MergedDisplayMode.LABEL_ONLY
@@ -122,6 +128,7 @@ class LayoutNode:
 
     Used by the layout engine to compute positions before rendering.
     """
+
     node_id: str
     label: str
     width: float = 0.0
@@ -129,8 +136,8 @@ class LayoutNode:
     x: float = 0.0
     y: float = 0.0
     depth: int = 0
-    children: List['LayoutNode'] = field(default_factory=list)
-    parent: Optional['LayoutNode'] = None
+    children: List[LayoutNode] = field(default_factory=list)
+    parent: Optional[LayoutNode] = None
     style: NodeStyle = field(default_factory=NodeStyle)
 
     # For Reingold-Tilford algorithm
@@ -138,8 +145,8 @@ class LayoutNode:
     prelim: float = 0.0
     change: float = 0.0
     shift: float = 0.0
-    thread: Optional['LayoutNode'] = None
-    ancestor: Optional['LayoutNode'] = None
+    thread: Optional[LayoutNode] = None
+    ancestor: Optional[LayoutNode] = None
     number: int = 0  # Position among siblings
 
     def __post_init__(self):
@@ -149,12 +156,12 @@ class LayoutNode:
     def is_leaf(self) -> bool:
         return len(self.children) == 0
 
-    def leftmost_sibling(self) -> Optional['LayoutNode']:
+    def leftmost_sibling(self) -> Optional[LayoutNode]:
         if self.parent is None or self.number == 0:
             return None
         return self.parent.children[0]
 
-    def left_sibling(self) -> Optional['LayoutNode']:
+    def left_sibling(self) -> Optional[LayoutNode]:
         if self.parent is None or self.number == 0:
             return None
         return self.parent.children[self.number - 1]
@@ -163,6 +170,7 @@ class LayoutNode:
 # =============================================================================
 # Node Measurement
 # =============================================================================
+
 
 class NodeMeasurer:
     """Measures node dimensions based on label content using matplotlib."""
@@ -204,13 +212,13 @@ class NodeMeasurer:
         # Wrap long labels
         if len(label) > self.config.max_label_width:
             wrapped = textwrap.wrap(label, width=self.config.max_label_width)
-            label = '\n'.join(wrapped)
+            label = "\n".join(wrapped)
 
         # Count lines for height estimation
-        num_lines = label.count('\n') + 1
+        num_lines = label.count("\n") + 1
 
         # Measure text using matplotlib
-        txt = self._ax.text(0, 0, label, fontsize=font_size, fontfamily='sans-serif')
+        txt = self._ax.text(0, 0, label, fontsize=font_size, fontfamily="sans-serif")
         bbox = txt.get_window_extent(renderer=self._renderer)
         txt.remove()
 
@@ -242,6 +250,7 @@ class NodeMeasurer:
 # =============================================================================
 # Layout Engine - Modified Reingold-Tilford Algorithm
 # =============================================================================
+
 
 class TreeLayoutEngine:
     """
@@ -485,12 +494,14 @@ class TreeLayoutEngine:
 # Node Style and Label Helpers
 # =============================================================================
 
-def get_node_label_simple(node: 'Node') -> str:
+
+def get_node_label_simple(node: Node) -> str:
     """Get a simple label for a regular tree node."""
     if node.is_term():
         val = node.get_value()
         # Check if it's a Number node
         from plagih.trees import Number
+
         if isinstance(node, Number):
             fval = float(val) if not isinstance(val, float) else val
             if fval == int(fval):
@@ -500,61 +511,53 @@ def get_node_label_simple(node: 'Node') -> str:
     return node.showme or type(node).__name__
 
 
-def get_node_style_for_type(node: 'Node') -> NodeStyle:
+def get_node_style_for_type(node: Node) -> NodeStyle:
     """Get style based on node type."""
-    from plagih.trees import Number, Symbol, Boolean, MathOperator, LogicOperator
+    from plagih.trees import Boolean, LogicOperator, MathOperator, Number, Symbol
 
     if node.is_term():
         if isinstance(node, Number):
             return NodeStyle(
-                fill_color='#E8F5E9', border_color='#4CAF50',
-                text_color='#1B5E20', shape=NodeShape.ELLIPSE
+                fill_color="#E8F5E9", border_color="#4CAF50", text_color="#1B5E20", shape=NodeShape.ELLIPSE
             )
         elif isinstance(node, Symbol):
             return NodeStyle(
-                fill_color='#E3F2FD', border_color='#2196F3',
-                text_color='#0D47A1', shape=NodeShape.ELLIPSE
+                fill_color="#E3F2FD", border_color="#2196F3", text_color="#0D47A1", shape=NodeShape.ELLIPSE
             )
         elif isinstance(node, Boolean):
             return NodeStyle(
-                fill_color='#FFF3E0', border_color='#FF9800',
-                text_color='#E65100', shape=NodeShape.ELLIPSE
+                fill_color="#FFF3E0", border_color="#FF9800", text_color="#E65100", shape=NodeShape.ELLIPSE
             )
     else:
         if isinstance(node, MathOperator):
             return NodeStyle(
-                fill_color='#FCE4EC', border_color='#E91E63',
-                text_color='#880E4F', shape=NodeShape.ROUNDED_RECTANGLE
+                fill_color="#FCE4EC", border_color="#E91E63", text_color="#880E4F", shape=NodeShape.ROUNDED_RECTANGLE
             )
         elif isinstance(node, LogicOperator):
             return NodeStyle(
-                fill_color='#F3E5F5', border_color='#9C27B0',
-                text_color='#4A148C', shape=NodeShape.DIAMOND
+                fill_color="#F3E5F5", border_color="#9C27B0", text_color="#4A148C", shape=NodeShape.DIAMOND
             )
 
     return NodeStyle(
-        fill_color='#ECEFF1', border_color='#607D8B',
-        text_color='#263238', shape=NodeShape.ROUNDED_RECTANGLE
+        fill_color="#ECEFF1", border_color="#607D8B", text_color="#263238", shape=NodeShape.ROUNDED_RECTANGLE
     )
 
 
-def get_merged_node_style(merged_node: 'MergedNode') -> NodeStyle:
+def get_merged_node_style(merged_node: MergedNode) -> NodeStyle:
     """Get style for a merged tree node."""
     if merged_node.is_root:
         return NodeStyle(
-            fill_color='#FFB74D', border_color='#E65100',
-            text_color='#000000', shape=NodeShape.ROUNDED_RECTANGLE,
-            border_width=2.0
+            fill_color="#FFB74D",
+            border_color="#E65100",
+            text_color="#000000",
+            shape=NodeShape.ROUNDED_RECTANGLE,
+            border_width=2.0,
         )
-    elif merged_node.node_type == 'terminal':
-        return NodeStyle(
-            fill_color='#A5D6A7', border_color='#2E7D32',
-            text_color='#1B5E20', shape=NodeShape.ELLIPSE
-        )
+    elif merged_node.node_type == "terminal":
+        return NodeStyle(fill_color="#A5D6A7", border_color="#2E7D32", text_color="#1B5E20", shape=NodeShape.ELLIPSE)
     else:
         return NodeStyle(
-            fill_color='#90CAF9', border_color='#1565C0',
-            text_color='#0D47A1', shape=NodeShape.ROUNDED_RECTANGLE
+            fill_color="#90CAF9", border_color="#1565C0", text_color="#0D47A1", shape=NodeShape.ROUNDED_RECTANGLE
         )
 
 
@@ -562,15 +565,12 @@ def get_merged_node_style(merged_node: 'MergedNode') -> NodeStyle:
 # Tree Builders - Convert different tree types to LayoutNode
 # =============================================================================
 
-def build_layout_tree_from_node(
-    root: 'Node',
-    config: TreeRendererConfig,
-    measurer: NodeMeasurer
-) -> LayoutNode:
+
+def build_layout_tree_from_node(root: Node, config: TreeRendererConfig, measurer: NodeMeasurer) -> LayoutNode:
     """Convert a plagih Node tree to a LayoutNode tree."""
     counter = [0]
 
-    def build_recursive(node: 'Node') -> LayoutNode:
+    def build_recursive(node: Node) -> LayoutNode:
         node_id = f"n{counter[0]}"
         counter[0] += 1
 
@@ -578,13 +578,7 @@ def build_layout_tree_from_node(
         style = get_node_style_for_type(node)
         width, height = measurer.measure_label(label, style.font_size)
 
-        layout_node = LayoutNode(
-            node_id=node_id,
-            label=label,
-            width=width,
-            height=height,
-            style=style
-        )
+        layout_node = LayoutNode(node_id=node_id, label=label, width=width, height=height, style=style)
 
         if not node.is_term():
             for child in node.get_childs():
@@ -597,9 +591,7 @@ def build_layout_tree_from_node(
 
 
 def build_layout_tree_from_merged(
-    graph: 'MergedEvaluationGraph',
-    config: TreeRendererConfig,
-    measurer: NodeMeasurer
+    graph: MergedEvaluationGraph, config: TreeRendererConfig, measurer: NodeMeasurer
 ) -> Tuple[LayoutNode, Dict[str, LayoutNode]]:
     """
     Convert a MergedEvaluationGraph to a LayoutNode structure.
@@ -618,37 +610,32 @@ def build_layout_tree_from_merged(
         if config.merged_display_mode == MergedDisplayMode.LABEL_ONLY:
             label = merged_node.operator_name or str(merged_node.sympy_expr)
             if len(label) > 15:
-                label = label[:12] + '...'
+                label = label[:12] + "..."
         else:  # FULL_EXPRESSION
             label = str(merged_node.sympy_expr)
             if len(label) > config.max_expression_length:
-                label = label[:config.max_expression_length - 3] + '...'
+                label = label[: config.max_expression_length - 3] + "..."
 
         # Add usage count
         if config.show_usage_count:
             usage = len(merged_node.original_nodes)
             if usage > 1:
-                label += f'\n({usage}x)'
+                label += f"\n({usage}x)"
 
         # Add root marker
         if config.show_root_marker and merged_node.is_root:
-            label = '[R] ' + label
+            label = "[R] " + label
 
         # Wrap long labels
-        if '\n' not in label and len(label) > config.max_label_width:
+        if "\n" not in label and len(label) > config.max_label_width:
             wrapped = textwrap.wrap(label, width=config.max_label_width)
-            label = '\n'.join(wrapped)
+            label = "\n".join(wrapped)
 
         style = get_merged_node_style(merged_node)
         width, height = measurer.measure_label(label, style.font_size)
 
         layout_nodes[node_id] = LayoutNode(
-            node_id=node_id,
-            label=label,
-            width=width,
-            height=height,
-            depth=merged_node.depth,
-            style=style
+            node_id=node_id, label=label, width=width, height=height, depth=merged_node.depth, style=style
         )
 
     # Build tree structure - connect children
@@ -664,8 +651,7 @@ def build_layout_tree_from_merged(
         main_root_id = graph.root_ids[0]
     else:
         # Fallback: find node with no parents (max depth)
-        main_root_id = max(layout_nodes.keys(),
-                          key=lambda nid: graph.nodes[nid].depth)
+        main_root_id = max(layout_nodes.keys(), key=lambda nid: graph.nodes[nid].depth)
 
     return layout_nodes[main_root_id], layout_nodes
 
@@ -673,6 +659,7 @@ def build_layout_tree_from_merged(
 # =============================================================================
 # Tree Renderer - Main rendering class
 # =============================================================================
+
 
 class TreeRenderer:
     """Renders trees to matplotlib figures."""
@@ -683,10 +670,7 @@ class TreeRenderer:
         self.measurer = NodeMeasurer(self.config)
 
     def render_tree(
-        self,
-        root: Union['Node', LayoutNode],
-        title: str = "",
-        figsize: Tuple[float, float] = None
+        self, root: Union[Node, LayoutNode], title: str = "", figsize: Tuple[float, float] = None
     ) -> Tuple[plt.Figure, plt.Axes]:
         """
         Render a tree to a matplotlib figure.
@@ -732,10 +716,10 @@ class TreeRenderer:
 
     def render_merged_graph(
         self,
-        graph: 'MergedEvaluationGraph',
+        graph: MergedEvaluationGraph,
         title: str = "",
         figsize: Tuple[float, float] = None,
-        show_statistics: bool = True
+        show_statistics: bool = True,
     ) -> Tuple[plt.Figure, plt.Axes]:
         """
         Render a merged evaluation graph.
@@ -753,9 +737,7 @@ class TreeRenderer:
             Tuple of (figure, axes)
         """
         # Build layout nodes
-        layout_root, all_layout_nodes = build_layout_tree_from_merged(
-            graph, self.config, self.measurer
-        )
+        layout_root, all_layout_nodes = build_layout_tree_from_merged(graph, self.config, self.measurer)
 
         # Use layer-based layout for DAGs (more appropriate than tree layout)
         positions = self._compute_layer_layout(graph, all_layout_nodes)
@@ -763,10 +745,12 @@ class TreeRenderer:
         # Add statistics to title
         if show_statistics:
             stats = graph.get_statistics()
-            stat_str = (f"Trees: {stats['tree_count']} | "
-                       f"Nodes: {stats['total_nodes']} | "
-                       f"Shared: {stats['shared_nodes']} | "
-                       f"Savings: {stats['savings_percent']:.1f}%")
+            stat_str = (
+                f"Trees: {stats['tree_count']} | "
+                f"Nodes: {stats['total_nodes']} | "
+                f"Shared: {stats['shared_nodes']} | "
+                f"Savings: {stats['savings_percent']:.1f}%"
+            )
             if title:
                 title = f"{title}\n{stat_str}"
             else:
@@ -795,9 +779,7 @@ class TreeRenderer:
         return fig, ax
 
     def _compute_layer_layout(
-        self,
-        graph: 'MergedEvaluationGraph',
-        layout_nodes: Dict[str, LayoutNode]
+        self, graph: MergedEvaluationGraph, layout_nodes: Dict[str, LayoutNode]
     ) -> Dict[str, Tuple[float, float]]:
         """Compute layer-based layout for merged DAG.
 
@@ -835,9 +817,7 @@ class TreeRenderer:
         layer_heights = {}
         for depth, node_ids in layers.items():
             if node_ids:
-                layer_heights[depth] = max(
-                    layout_nodes[nid].height for nid in node_ids
-                )
+                layer_heights[depth] = max(layout_nodes[nid].height for nid in node_ids)
             else:
                 layer_heights[depth] = self.config.min_node_height
 
@@ -896,9 +876,7 @@ class TreeRenderer:
         return nodes
 
     def _compute_figure_size(
-        self,
-        positions: Dict[str, Tuple[float, float]],
-        node_lookup: Union[Dict[str, LayoutNode], List[LayoutNode]]
+        self, positions: Dict[str, Tuple[float, float]], node_lookup: Union[Dict[str, LayoutNode], List[LayoutNode]]
     ) -> Tuple[float, float]:
         """Compute appropriate figure size based on tree extent.
 
@@ -917,8 +895,8 @@ class TreeRenderer:
         for nid, (x, y) in positions.items():
             if nid in node_lookup:
                 node = node_lookup[nid]
-                x_coords.extend([x - node.width/2, x + node.width/2])
-                y_coords.extend([y - node.height/2, y + node.height/2])
+                x_coords.extend([x - node.width / 2, x + node.width / 2])
+                y_coords.extend([y - node.height / 2, y + node.height / 2])
 
         if not x_coords:
             return (10, 8)
@@ -958,7 +936,7 @@ class TreeRenderer:
         ax: plt.Axes,
         root: LayoutNode,
         positions: Dict[str, Tuple[float, float]],
-        node_lookup: Dict[str, LayoutNode]
+        node_lookup: Dict[str, LayoutNode],
     ):
         """Draw edges between nodes."""
         drawn = set()
@@ -988,10 +966,14 @@ class TreeRenderer:
                     else:
                         y1 = py + node.height / 2
                         y2 = cy - child.height / 2
-                    ax.plot([px, cx], [y1, y2],
-                           color=self.config.edge_color,
-                           linewidth=self.config.edge_width,
-                           zorder=1, solid_capstyle='round')
+                    ax.plot(
+                        [px, cx],
+                        [y1, y2],
+                        color=self.config.edge_color,
+                        linewidth=self.config.edge_width,
+                        zorder=1,
+                        solid_capstyle="round",
+                    )
                 else:  # LR or RL
                     if px > cx:
                         x1 = px - node.width / 2
@@ -999,10 +981,14 @@ class TreeRenderer:
                     else:
                         x1 = px + node.width / 2
                         x2 = cx - child.width / 2
-                    ax.plot([x1, x2], [py, cy],
-                           color=self.config.edge_color,
-                           linewidth=self.config.edge_width,
-                           zorder=1, solid_capstyle='round')
+                    ax.plot(
+                        [x1, x2],
+                        [py, cy],
+                        color=self.config.edge_color,
+                        linewidth=self.config.edge_width,
+                        zorder=1,
+                        solid_capstyle="round",
+                    )
 
                 draw_recursive(child)
 
@@ -1011,9 +997,9 @@ class TreeRenderer:
     def _draw_merged_edges(
         self,
         ax: plt.Axes,
-        graph: 'MergedEvaluationGraph',
+        graph: MergedEvaluationGraph,
         positions: Dict[str, Tuple[float, float]],
-        layout_nodes: Dict[str, LayoutNode]
+        layout_nodes: Dict[str, LayoutNode],
     ):
         """Draw edges for merged DAG."""
         for node_id, merged_node in graph.nodes.items():
@@ -1038,10 +1024,14 @@ class TreeRenderer:
                     else:
                         y1 = py + parent_node.height / 2
                         y2 = cy - child_node.height / 2
-                    ax.plot([px, cx], [y1, y2],
-                           color=self.config.edge_color,
-                           linewidth=self.config.edge_width,
-                           zorder=1, solid_capstyle='round')
+                    ax.plot(
+                        [px, cx],
+                        [y1, y2],
+                        color=self.config.edge_color,
+                        linewidth=self.config.edge_width,
+                        zorder=1,
+                        solid_capstyle="round",
+                    )
                 else:
                     if px > cx:
                         x1 = px - parent_node.width / 2
@@ -1049,17 +1039,16 @@ class TreeRenderer:
                     else:
                         x1 = px + parent_node.width / 2
                         x2 = cx - child_node.width / 2
-                    ax.plot([x1, x2], [py, cy],
-                           color=self.config.edge_color,
-                           linewidth=self.config.edge_width,
-                           zorder=1, solid_capstyle='round')
+                    ax.plot(
+                        [x1, x2],
+                        [py, cy],
+                        color=self.config.edge_color,
+                        linewidth=self.config.edge_width,
+                        zorder=1,
+                        solid_capstyle="round",
+                    )
 
-    def _draw_nodes(
-        self,
-        ax: plt.Axes,
-        nodes: List[LayoutNode],
-        positions: Dict[str, Tuple[float, float]]
-    ):
+    def _draw_nodes(self, ax: plt.Axes, nodes: List[LayoutNode], positions: Dict[str, Tuple[float, float]]):
         """Draw all nodes."""
         for node in nodes:
             if node.node_id not in positions:
@@ -1072,58 +1061,67 @@ class TreeRenderer:
             # Draw shape based on node style
             if style.shape == NodeShape.ELLIPSE:
                 patch = mpatches.Ellipse(
-                    (x, y), w, h,
+                    (x, y),
+                    w,
+                    h,
                     facecolor=style.fill_color,
                     edgecolor=style.border_color,
                     linewidth=style.border_width,
-                    zorder=2
+                    zorder=2,
                 )
             elif style.shape == NodeShape.DIAMOND:
                 # Diamond vertices
                 verts = [
-                    (x, y + h/2),   # top
-                    (x + w/2, y),   # right
-                    (x, y - h/2),   # bottom
-                    (x - w/2, y),   # left
+                    (x, y + h / 2),  # top
+                    (x + w / 2, y),  # right
+                    (x, y - h / 2),  # bottom
+                    (x - w / 2, y),  # left
                 ]
                 patch = mpatches.Polygon(
                     verts,
                     facecolor=style.fill_color,
                     edgecolor=style.border_color,
                     linewidth=style.border_width,
-                    zorder=2
+                    zorder=2,
                 )
             elif style.shape == NodeShape.RECTANGLE:
                 patch = FancyBboxPatch(
-                    (x - w/2, y - h/2), w, h,
+                    (x - w / 2, y - h / 2),
+                    w,
+                    h,
                     boxstyle="square,pad=0",
                     facecolor=style.fill_color,
                     edgecolor=style.border_color,
                     linewidth=style.border_width,
-                    zorder=2
+                    zorder=2,
                 )
             else:  # ROUNDED_RECTANGLE (default)
                 patch = FancyBboxPatch(
-                    (x - w/2, y - h/2), w, h,
+                    (x - w / 2, y - h / 2),
+                    w,
+                    h,
                     boxstyle="round,pad=0.02,rounding_size=0.12",
                     facecolor=style.fill_color,
                     edgecolor=style.border_color,
                     linewidth=style.border_width,
-                    zorder=2
+                    zorder=2,
                 )
 
             ax.add_patch(patch)
 
             # Draw label
             ax.text(
-                x, y, node.label,
-                ha='center', va='center',
+                x,
+                y,
+                node.label,
+                ha="center",
+                va="center",
                 fontsize=style.font_size,
                 color=style.text_color,
                 fontfamily=style.font_family,
-                fontweight='bold',
+                fontweight="bold",
                 linespacing=1.1,
-                zorder=3
+                zorder=3,
             )
 
     def _configure_axes(
@@ -1131,7 +1129,7 @@ class TreeRenderer:
         ax: plt.Axes,
         positions: Dict[str, Tuple[float, float]],
         node_lookup: Union[Dict[str, LayoutNode], List[LayoutNode]],
-        title: str
+        title: str,
     ):
         """Configure axes appearance."""
         if isinstance(node_lookup, list):
@@ -1143,8 +1141,8 @@ class TreeRenderer:
             for nid, (x, y) in positions.items():
                 if nid in node_lookup:
                     node = node_lookup[nid]
-                    x_coords.extend([x - node.width/2, x + node.width/2])
-                    y_coords.extend([y - node.height/2, y + node.height/2])
+                    x_coords.extend([x - node.width / 2, x + node.width / 2])
+                    y_coords.extend([y - node.height / 2, y + node.height / 2])
 
             if x_coords and y_coords:
                 x_margin = max(0.5, (max(x_coords) - min(x_coords)) * 0.08)
@@ -1153,39 +1151,63 @@ class TreeRenderer:
                 ax.set_xlim(min(x_coords) - x_margin, max(x_coords) + x_margin)
                 ax.set_ylim(min(y_coords) - y_margin, max(y_coords) + y_margin)
 
-        ax.set_aspect('equal')
-        ax.axis('off')
+        ax.set_aspect("equal")
+        ax.axis("off")
 
         if title:
-            ax.set_title(title, fontsize=11, fontweight='bold', pad=15)
+            ax.set_title(title, fontsize=11, fontweight="bold", pad=15)
 
     def _add_merged_legend(self, ax: plt.Axes):
         """Add legend for merged tree visualization."""
         legend_elements = [
-            Line2D([0], [0], marker='s', color='w', markerfacecolor='#FFB74D',
-                   markeredgecolor='#E65100', markersize=12, label='Root (output)'),
-            Line2D([0], [0], marker='s', color='w', markerfacecolor='#90CAF9',
-                   markeredgecolor='#1565C0', markersize=12, label='Operator'),
-            Line2D([0], [0], marker='o', color='w', markerfacecolor='#A5D6A7',
-                   markeredgecolor='#2E7D32', markersize=10, label='Terminal'),
+            Line2D(
+                [0],
+                [0],
+                marker="s",
+                color="w",
+                markerfacecolor="#FFB74D",
+                markeredgecolor="#E65100",
+                markersize=12,
+                label="Root (output)",
+            ),
+            Line2D(
+                [0],
+                [0],
+                marker="s",
+                color="w",
+                markerfacecolor="#90CAF9",
+                markeredgecolor="#1565C0",
+                markersize=12,
+                label="Operator",
+            ),
+            Line2D(
+                [0],
+                [0],
+                marker="o",
+                color="w",
+                markerfacecolor="#A5D6A7",
+                markeredgecolor="#2E7D32",
+                markersize=10,
+                label="Terminal",
+            ),
         ]
-        ax.legend(handles=legend_elements, loc='upper right', fontsize=8,
-                 framealpha=0.9)
+        ax.legend(handles=legend_elements, loc="upper right", fontsize=8, framealpha=0.9)
 
 
 # =============================================================================
 # High-Level API Functions
 # =============================================================================
 
+
 def render_tree(
-    tree: 'Node',
+    tree: Node,
     filename: str = "tree",
     output_dir: Union[str, Path] = None,
     orientation: str = "TB",
     config: TreeRendererConfig = None,
     title: str = "",
     show: bool = False,
-    **kwargs
+    **kwargs,
 ) -> str:
     """
     Render a plagih tree and save to file.
@@ -1227,8 +1249,9 @@ def render_tree(
 
     # Save
     output_path = output_dir / f"{filename}.png"
-    plt.savefig(output_path, dpi=config.figure_dpi, bbox_inches='tight',
-               facecolor=config.background_color, edgecolor='none')
+    plt.savefig(
+        output_path, dpi=config.figure_dpi, bbox_inches="tight", facecolor=config.background_color, edgecolor="none"
+    )
 
     if show:
         plt.show()
@@ -1240,7 +1263,7 @@ def render_tree(
 
 
 def render_merged_tree(
-    graph: 'MergedEvaluationGraph',
+    graph: MergedEvaluationGraph,
     filename: str = "merged_tree",
     output_dir: Union[str, Path] = None,
     orientation: str = "BT",
@@ -1248,7 +1271,7 @@ def render_merged_tree(
     config: TreeRendererConfig = None,
     title: str = "",
     show: bool = False,
-    **kwargs
+    **kwargs,
 ) -> str:
     """
     Render a merged evaluation graph and save to file.
@@ -1273,8 +1296,7 @@ def render_merged_tree(
 
     config.orientation = Orientation(orientation)
     config.merged_display_mode = (
-        MergedDisplayMode.FULL_EXPRESSION if display_mode == "expression"
-        else MergedDisplayMode.LABEL_ONLY
+        MergedDisplayMode.FULL_EXPRESSION if display_mode == "expression" else MergedDisplayMode.LABEL_ONLY
     )
 
     # Apply kwargs to config
@@ -1291,16 +1313,13 @@ def render_merged_tree(
 
     # Render
     renderer = TreeRenderer(config)
-    fig, ax = renderer.render_merged_graph(
-        graph,
-        title=title,
-        show_statistics=kwargs.get('show_statistics', True)
-    )
+    fig, ax = renderer.render_merged_graph(graph, title=title, show_statistics=kwargs.get("show_statistics", True))
 
     # Save
     output_path = output_dir / f"{filename}.png"
-    plt.savefig(output_path, dpi=config.figure_dpi, bbox_inches='tight',
-               facecolor=config.background_color, edgecolor='none')
+    plt.savefig(
+        output_path, dpi=config.figure_dpi, bbox_inches="tight", facecolor=config.background_color, edgecolor="none"
+    )
 
     if show:
         plt.show()
@@ -1315,8 +1334,9 @@ def render_merged_tree(
 # Backward-Compatible Wrappers (for existing code)
 # =============================================================================
 
+
 def visualize_tree(
-    root: 'Node',
+    root: Node,
     filename: str = "gp_tree",
     output_dir: Optional[str] = None,
     view: bool = False,
@@ -1330,21 +1350,15 @@ def visualize_tree(
 
     Note: 'backend' and 'format' parameters are ignored (always uses matplotlib/PNG).
     """
-    return render_tree(
-        tree=root,
-        filename=filename,
-        output_dir=output_dir,
-        orientation=rankdir,
-        show=view
-    )
+    return render_tree(tree=root, filename=filename, output_dir=output_dir, orientation=rankdir, show=view)
 
 
 def visualize_merged_graph(
-    graph: 'MergedEvaluationGraph',
+    graph: MergedEvaluationGraph,
     output_path: str = None,
     show: bool = False,
     orientation: str = "BT",
-    display_mode: str = "label"
+    display_mode: str = "label",
 ) -> Optional[str]:
     """
     Backward-compatible wrapper for visualize_merged_graph.
@@ -1362,7 +1376,7 @@ def visualize_merged_graph(
         output_dir=output_dir,
         orientation=orientation,
         display_mode=display_mode,
-        show=show
+        show=show,
     )
 
 
@@ -1370,36 +1384,32 @@ def visualize_merged_graph(
 # Demo / Test
 # =============================================================================
 
+
 def _demo():
     """Demonstrate the tree renderer with example trees."""
     import sympy
-    from plagih.trees import Add, Mul, Sin, Cos, Number, Symbol
+
+    from plagih.trees import Add, Cos, Mul, Number, Sin, Symbol
 
     print("=" * 60)
     print("Tree Renderer Demo")
     print("=" * 60)
 
     # Example tree: (x + 2) * sin(y)
-    tree = Mul(
-        Add(Symbol(sympy.Symbol('x')), Number(2)),
-        Sin(Symbol(sympy.Symbol('y')))
-    )
+    tree = Mul(Add(Symbol(sympy.Symbol("x")), Number(2)), Sin(Symbol(sympy.Symbol("y"))))
 
     # Test different orientations
     for orient in ["TB", "BT", "LR", "RL"]:
         path = render_tree(
-            tree,
-            filename=f"demo_tree_{orient.lower()}",
-            orientation=orient,
-            title=f"Example Tree ({orient})"
+            tree, filename=f"demo_tree_{orient.lower()}", orientation=orient, title=f"Example Tree ({orient})"
         )
         print(f"  Created: {path}")
 
     # More complex tree
     tree2 = Add(
-        Mul(Number(3), Symbol(sympy.Symbol('x'))),
-        Cos(Add(Symbol(sympy.Symbol('y')), Number(1))),
-        Sin(Mul(Symbol(sympy.Symbol('z')), Number(2)))
+        Mul(Number(3), Symbol(sympy.Symbol("x"))),
+        Cos(Add(Symbol(sympy.Symbol("y")), Number(1))),
+        Sin(Mul(Symbol(sympy.Symbol("z")), Number(2))),
     )
 
     render_tree(tree2, filename="demo_complex", title="Complex Expression")

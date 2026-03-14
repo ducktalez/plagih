@@ -1,4 +1,7 @@
 *.pyc
+__pycache__/
+.ruff_cache/
+.venv/
 run_examples/
 /kessi_deletable.py
 /benchmarks/slurm_runs/
@@ -11,5 +14,4 @@ run_examples/
 *.xml
 *.iml
 *.png
-/venv/
 /MTC200_RMSE_scratch/

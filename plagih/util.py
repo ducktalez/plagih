@@ -1,124 +1,134 @@
+import logging
 import pickle
 import re
 import shutil
-
-import time
-import numpy as np
-import matplotlib.pyplot as plt
-import logging
-from typing import Optional
-import yaml
 from pathlib import Path
+from typing import Optional
 
-PRINT_DUMMY = 'wwaaggiiffpp'  # noqa: dummy for print-policy (w=warning, a=action, g=generation, i=info, f=file, p=performance)
+import matplotlib.pyplot as plt
+import numpy as np
+import yaml
+
+PRINT_DUMMY = (
+    "wwaaggiiffpp"  # dummy for print-policy (w=warning, a=action, g=generation, i=info, f=file, p=performance)
+)
 # print-all: 'wwwwaaaggggiiiifffpp'
-TEXT_NEWLINE = '============================================================'
-DEBUG_DUMMY = False  # noqa: dummy for debug-policy
+TEXT_NEWLINE = "============================================================"
+DEBUG_DUMMY = False  # dummy for debug-policy
 FLOAT_PRECISION = 3
 PLOTS_INTERVAL = 1
 BACKUP_INTERVAL = 10
-CHAIN_implement = 'sfeh'  # used as placeholder for implementation-tasks
+CHAIN_implement = "sfeh"  # used as placeholder for implementation-tasks
 TREE_MIN_PARSIMONY = 3
 
 
 class TreeError(Exception):
     """All Tree-specific errors"""
+
     pass
+
 
 class TreeLutError(TreeError):
     """Errors regarding lookup-tables for trees"""
+
     pass
+
 
 class TreeSizeError(TreeError):
     """Non-important, but errors that often come up, e.g.
     - tree is too small after simplification
     - Tree has too many nodes. This should be covered somewhere though!
     discuss:subclassing value-error?"""
+
     pass
 
 
 class SympyError(Exception):
     """Non-important, but errors that often come up
     usually, when imaginary numbers accidentally come up in an expression"""
+
     pass
+
 
 class SympyImaginaryNumber(SympyError):
     pass
 
+
 class CuriosityError(Exception):
     """NeverHappensError/CuriosityError/DeletemeRrror/DebugError
     For code, that should never be reached. Just to check, why."""
+
     pass
 
 
 class BColors:
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    HEADER = '\033[95m'
-    FAIL = '\033[91m'
-    BLACK = '\033[30m'
-    RED = '\033[31m'
-    GREEN = '\033[32m'
-    YELLOW = '\033[33m'
-    BLUE = '\033[34m'
-    MAGENTA = '\033[35m'
-    CYAN = '\033[36m'
-    WHITE = '\033[37m'
-    BLACK2 = '\033[40m'
-    RED2 = '\033[41m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    UNDERLINE_RESET = '\033[0m'
-    ITALIC = '\x1B[3m'
-    ITALIC_RESET = '\x1B[0m'
-    RESET_COLOR = '\033[39m'
-    RESET = '\033[0m'
+    OKBLUE = "\033[94m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    HEADER = "\033[95m"
+    FAIL = "\033[91m"
+    BLACK = "\033[30m"
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    BLUE = "\033[34m"
+    MAGENTA = "\033[35m"
+    CYAN = "\033[36m"
+    WHITE = "\033[37m"
+    BLACK2 = "\033[40m"
+    RED2 = "\033[41m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
+    UNDERLINE_RESET = "\033[0m"
+    ITALIC = "\x1b[3m"
+    ITALIC_RESET = "\x1b[0m"
+    RESET_COLOR = "\033[39m"
+    RESET = "\033[0m"
 
     # Reset
-    Color_Off = '\033[0m'  # Text Reset
+    Color_Off = "\033[0m"  # Text Reset
 
     # Regular Colors
-    Black = '\033[0;30m'  # Black
-    Red = '\033[0;31m'  # Red
-    Cyan = '\033[0;36m'  # Cyan
-    White = '\033[0;37m'  # White
+    Black = "\033[0;30m"  # Black
+    Red = "\033[0;31m"  # Red
+    Cyan = "\033[0;36m"  # Cyan
+    White = "\033[0;37m"  # White
 
     # Bold
-    BBlack = '\033[1;30m'  # Black
-    BRed = '\033[1;31m'  # Red
-    BCyan = '\033[1;36m'  # Cyan
-    BWhite = '\033[1;37m'  # White
+    BBlack = "\033[1;30m"  # Black
+    BRed = "\033[1;31m"  # Red
+    BCyan = "\033[1;36m"  # Cyan
+    BWhite = "\033[1;37m"  # White
 
     # Underline
-    UBlack = '\033[4;30m'  # Black
-    URed = '\033[4;31m'  # Red
-    UCyan = '\033[4;36m'  # Cyan
-    UWhite = '\033[4;37m'  # White
+    UBlack = "\033[4;30m"  # Black
+    URed = "\033[4;31m"  # Red
+    UCyan = "\033[4;36m"  # Cyan
+    UWhite = "\033[4;37m"  # White
 
     # Background
-    On_Black = '\033[40m'  # Black
-    On_Red = '\033[41m'  # Red
-    On_Cyan = '\033[46m'  # Cyan
-    On_White = '\033[47m'  # White
+    On_Black = "\033[40m"  # Black
+    On_Red = "\033[41m"  # Red
+    On_Cyan = "\033[46m"  # Cyan
+    On_White = "\033[47m"  # White
 
     # High Intensty
-    IBlack = '\033[0;90m'  # Black
-    IRed = '\033[0;91m'  # Red
-    ICyan = '\033[0;96m'  # Cyan
-    IWhite = '\033[0;97m'  # White
+    IBlack = "\033[0;90m"  # Black
+    IRed = "\033[0;91m"  # Red
+    ICyan = "\033[0;96m"  # Cyan
+    IWhite = "\033[0;97m"  # White
 
     # Bold High Intensty
-    BIBlack = '\033[1;90m'  # Black
-    BIRed = '\033[1;91m'  # Red
-    BICyan = '\033[1;96m'  # Cyan
-    BIWhite = '\033[1;97m'  # White
+    BIBlack = "\033[1;90m"  # Black
+    BIRed = "\033[1;91m"  # Red
+    BICyan = "\033[1;96m"  # Cyan
+    BIWhite = "\033[1;97m"  # White
 
     # High Intensty backgrounds
-    On_IBlack = '\033[0;100m'  # Black
-    On_IRed = '\033[0;101m'  # Red
-    On_ICyan = '\033[0;106m'  # Cyan
-    On_IWhite = '\033[0;107m'  # White
+    On_IBlack = "\033[0;100m"  # Black
+    On_IRed = "\033[0;101m"  # Red
+    On_ICyan = "\033[0;106m"  # Cyan
+    On_IWhite = "\033[0;107m"  # White
 
 
 def rnd_choice(a):
@@ -143,24 +153,24 @@ def pickle_dump(path, data):
     """Saving python data (probably run) in a very small pickle _file"""
     path = path_make_dir(path)
 
-    with Path.open(path, 'wb') as _file:
+    with Path.open(path, "wb") as _file:
         pickle.dump(data, _file, protocol=pickle.HIGHEST_PROTOCOL)
 
-    printez('f', f'Backup: {path}')  # .as_posix()
+    printez("f", f"Backup: {path}")  # .as_posix()
 
 
 def yaml_dump(path, data, default_flow_style=True):
     """saves data to yaml file (better than xml/Json)
     - default_flow_style=False for dumping in a block style"""
     path = path_make_dir(path)
-    with Path.open(path, 'w') as file:
+    with Path.open(path, "w") as file:
         _ = yaml.dump(data, file, default_flow_style=default_flow_style, sort_keys=False)
-        printez('ff', f'{path}')  # .as_posix()
+        printez("ff", f"{path}")  # .as_posix()
         return
 
 
 def remove_trailing_zeroes(x):
-    x = re.sub(r'\.0+$|0+$', '', x)
+    x = re.sub(r"\.0+$|0+$", "", x)
     return x
 
 
@@ -174,10 +184,10 @@ def term_format(x, cut=False):
         if cut:
             x = float(x)
             if float(x) < 0.001 or float(x) > 1000:
-                xstr = f'{x:.3g}'
+                xstr = f"{x:.3g}"
             else:
-                xstr = f'{x:.3f}'
-                xstr = re.sub(r'\.0+$|0+$', '', xstr)
+                xstr = f"{x:.3f}"
+                xstr = re.sub(r"\.0+$|0+$", "", xstr)
         else:
             xstr = remove_trailing_zeroes(x)
         return xstr
@@ -194,9 +204,9 @@ def string_remove_trailing_zeroes(number_string):
     :return:
     """
     # Removes unnecessary zeros at the end of decimal numbers
-    cleaned_string = re.sub(r'(\.\d*?)0+(?!\d)', r'\1', number_string)
+    cleaned_string = re.sub(r"(\.\d*?)0+(?!\d)", r"\1", number_string)
     # Removes the decimal point if there are no decimal places left: keep this point to imply float?
-    cleaned_string = re.sub(r'\.(?!\d)', '', cleaned_string)
+    cleaned_string = re.sub(r"\.(?!\d)", "", cleaned_string)
     return cleaned_string
 
 
@@ -220,12 +230,12 @@ def print_warning(msg_type, text):
     try:
         if msg_type not in PRINT_DUMMY:
             return
-        if 'w' in msg_type:
-            print(f'{BColors.WARNING}Warning ({msg_type}): {text}{BColors.RESET_COLOR}')
+        if "w" in msg_type:
+            print(f"{BColors.WARNING}Warning ({msg_type}): {text}{BColors.RESET_COLOR}")
         else:
-            print(f'{BColors.WARNING}Warning ({msg_type}):{BColors.RESET_COLOR} {text}')
+            print(f"{BColors.WARNING}Warning ({msg_type}):{BColors.RESET_COLOR} {text}")
     except Exception as ex:
-        print(f'{BColors.WARNING}Warning (w): Could not print warning: {ex}{BColors.RESET_COLOR}')
+        print(f"{BColors.WARNING}Warning (w): Could not print warning: {ex}{BColors.RESET_COLOR}")
     return
 
 
@@ -241,63 +251,78 @@ def path_make_dir(p: Path):
 pyplot_size = (3.6, 2.7)  # default: (6.4, 4.8) S: (4, 3)  XXL: (16, 9)  M: (4.8, 3.6) (4.4, 3.3)
 plplot_size_up = (3.6, 3.6)
 
-pyplot_rc_tex = {'figure.autolayout': True,
-                 'text.usetex': shutil.which('latex') is not None,  # check if 'latex' is available
-                 'backend': 'pgf',
-                 'figure.figsize': pyplot_size,
-                 'axes.labelpad': 0.5,  # padding axis-ticks to axis title
-                 'xtick.labelsize': 8, 'xtick.major.size': 1.5, 'xtick.major.pad': 1.5,
-                 'ytick.labelsize': 8, 'ytick.major.size': 1.5, 'ytick.major.pad': 1.5,
-                 'font.size': 10,
-                 'legend.fontsize': 9,
-                 'savefig.dpi': 600,
-                 # 'savefig.pad_inches': 0,
-                 # 'lines.linewidth': 1,
-                 # 'lines.markersize': 3,
-                 # 'axes.xmargin': 0,
-                 # 'axes.ymargin': 0
-                 }
+pyplot_rc_tex = {
+    "figure.autolayout": True,
+    "text.usetex": shutil.which("latex") is not None,  # check if 'latex' is available
+    "backend": "pgf",
+    "figure.figsize": pyplot_size,
+    "axes.labelpad": 0.5,  # padding axis-ticks to axis title
+    "xtick.labelsize": 8,
+    "xtick.major.size": 1.5,
+    "xtick.major.pad": 1.5,
+    "ytick.labelsize": 8,
+    "ytick.major.size": 1.5,
+    "ytick.major.pad": 1.5,
+    "font.size": 10,
+    "legend.fontsize": 9,
+    "savefig.dpi": 600,
+    # 'savefig.pad_inches': 0,
+    # 'lines.linewidth': 1,
+    # 'lines.markersize': 3,
+    # 'axes.xmargin': 0,
+    # 'axes.ymargin': 0
+}
 
 # sfeh
 pyplot_size2 = (3, 2.1)  # default: (6.4, 4.8) S: (4, 3)  XXL: (16, 9)  M: (4.8, 3.6) (4.4, 3.3)
-pyplot_rc_tex2 = {'figure.autolayout': True,
-                  'text.usetex': True,
-                  'backend': 'pgf',
-                  'figure.figsize': pyplot_size2,
-                  'axes.labelpad': 0.5,  # padding axis-ticks to axis title
-                  'xtick.labelsize': 6, 'xtick.major.size': 1.2, 'xtick.major.pad': 1.2,
-                  'ytick.labelsize': 6, 'ytick.major.size': 1.2, 'ytick.major.pad': 1.2,
-                  'font.size': 9,
-                  'legend.fontsize': 8,
-                  'savefig.dpi': 600,
-                  # 'savefig.pad_inches': 0,
-                  # 'lines.linewidth': 1,
-                  # 'lines.markersize': 3,
-                  # 'axes.xmargin': 0,
-                  # 'axes.ymargin': 0
-                  }
+pyplot_rc_tex2 = {
+    "figure.autolayout": True,
+    "text.usetex": True,
+    "backend": "pgf",
+    "figure.figsize": pyplot_size2,
+    "axes.labelpad": 0.5,  # padding axis-ticks to axis title
+    "xtick.labelsize": 6,
+    "xtick.major.size": 1.2,
+    "xtick.major.pad": 1.2,
+    "ytick.labelsize": 6,
+    "ytick.major.size": 1.2,
+    "ytick.major.pad": 1.2,
+    "font.size": 9,
+    "legend.fontsize": 8,
+    "savefig.dpi": 600,
+    # 'savefig.pad_inches': 0,
+    # 'lines.linewidth': 1,
+    # 'lines.markersize': 3,
+    # 'axes.xmargin': 0,
+    # 'axes.ymargin': 0
+}
 
 # https://www.elsevier.com/authors/policies-and-guidelines/artwork-and-media-instructions/artwork-sizing
 plot_ratio = 9 / 16  # classic 16/9 ratio
 plot_width_twocol = 9 / 25.4  # main relevant cm->inch by /25.4
-pyplot_rc_two_column = {'figure.autolayout': True,
-                        'text.usetex': True,
-                        'backend': 'pgf',
-                        'figure.figsize': (3.5433, 2),
-                        'axes.labelpad': 0.4,  # padding axis-ticks to axis title
-                        'xtick.labelsize': 7, 'xtick.major.size': 1.2, 'xtick.major.pad': 1.2,
-                        'ytick.labelsize': 7, 'ytick.major.size': 1.2, 'ytick.major.pad': 1.2,
-                        'font.size': 10,
-                        'legend.fontsize': 8,
-                        'savefig.dpi': 600,
-                        'savefig.pad_inches': 0,
-                        'lines.linewidth': 1,
-                        'lines.markersize': 3,
-                        'axes.xmargin': 0,
-                        'axes.ymargin': 0
-                        }
+pyplot_rc_two_column = {
+    "figure.autolayout": True,
+    "text.usetex": True,
+    "backend": "pgf",
+    "figure.figsize": (3.5433, 2),
+    "axes.labelpad": 0.4,  # padding axis-ticks to axis title
+    "xtick.labelsize": 7,
+    "xtick.major.size": 1.2,
+    "xtick.major.pad": 1.2,
+    "ytick.labelsize": 7,
+    "ytick.major.size": 1.2,
+    "ytick.major.pad": 1.2,
+    "font.size": 10,
+    "legend.fontsize": 8,
+    "savefig.dpi": 600,
+    "savefig.pad_inches": 0,
+    "lines.linewidth": 1,
+    "lines.markersize": 3,
+    "axes.xmargin": 0,
+    "axes.ymargin": 0,
+}
 
-rc_pyplot_size = {'figure.figsize': pyplot_size}
+rc_pyplot_size = {"figure.figsize": pyplot_size}
 # ['text.latex.preamble'=r"\usepackage{lmodern}"]
 
 # def plot_rc_default(self):
@@ -359,7 +384,7 @@ rc_params = {'text.usetex': True, 'figure.figsize': (2.8, 2.1),
     'ytick.labelsize': 8,}
 with plt.rc_context(rc=rc_params):
     fig, ax = plt.subplots()
-    
+
     fig.tight_layout()
     plt.tight_layout()
     ax.plot(t, s, marker='x')
@@ -380,12 +405,12 @@ def print_caution(txt):
     Printing errors that are not worth stopping by raising an exception.
     Uses logging backend for proper error tracking.
     """
-    print(f'{BColors.RED}CAUTION! {BColors.WARNING}{txt}{BColors.RESET_COLOR}')
+    print(f"{BColors.RED}CAUTION! {BColors.WARNING}{txt}{BColors.RESET_COLOR}")
 
 
 def pickle_load(path: Path):
     """loads a pickle file (usually .p or .pkl)"""
-    with Path.open(path, 'rb') as file:
+    with Path.open(path, "rb") as file:
         pickle_data = pickle.load(file)
 
     return pickle_data
@@ -404,14 +429,14 @@ def printez(message_type, text):
 def yaml_load(path: Path):
     """.yaml-file loader (saves two lines that I had to look up all the time)
     Especially the Loader has to be specified."""
-    with Path.open(path, 'r') as file:
+    with Path.open(path, "r") as file:
         loaded_yaml = yaml.load(file, Loader=yaml.FullLoader)  # yaml.safe_load sfeh?
 
     return loaded_yaml
 
 
 # Get the plagih logger
-logger = logging.getLogger('plagih')
+logger = logging.getLogger("plagih")
 
 
 class ColoredConsoleFormatter(logging.Formatter):
@@ -421,54 +446,50 @@ class ColoredConsoleFormatter(logging.Formatter):
         super().__init__()
 
     def format(self, record):
-
         # Get the original message
         message = record.getMessage()
 
         # Apply colors based on level and type, matching printpl/printez exactly
-        if hasattr(record, 'print_type'):
+        if hasattr(record, "print_type"):
             # Messages from printpl with explicit type
             msg_type = record.print_type
-            if msg_type == 'i' or 'i' in msg_type:
-                return f'{BColors.CYAN}Info: {message}{BColors.RESET_COLOR}'
-            elif 'f' in msg_type:
-                return f'{BColors.WHITE}Writing File: {message}{BColors.RESET_COLOR}'
-            elif 'a' in msg_type:
-                return f'{BColors.GREEN}{message}{BColors.RESET_COLOR}'
-            elif 'g' in msg_type:
+            if msg_type == "i" or "i" in msg_type:
+                return f"{BColors.CYAN}Info: {message}{BColors.RESET_COLOR}"
+            elif "f" in msg_type:
+                return f"{BColors.WHITE}Writing File: {message}{BColors.RESET_COLOR}"
+            elif "a" in msg_type:
+                return f"{BColors.GREEN}{message}{BColors.RESET_COLOR}"
+            elif "g" in msg_type:
                 # Generation info - use magenta for visibility
-                return f'{BColors.MAGENTA}[Gen] {message}{BColors.RESET_COLOR}'
-            elif 'w' in msg_type:
-                return f'{BColors.WARNING}Warning: {message}{BColors.RESET_COLOR}'
+                return f"{BColors.MAGENTA}[Gen] {message}{BColors.RESET_COLOR}"
+            elif "w" in msg_type:
+                return f"{BColors.WARNING}Warning: {message}{BColors.RESET_COLOR}"
             else:
                 return message
         else:
             # Standard log levels
             if record.levelno >= logging.ERROR:
-                return f'{BColors.RED}ERROR: {message}{BColors.RESET_COLOR}'
+                return f"{BColors.RED}ERROR: {message}{BColors.RESET_COLOR}"
             elif record.levelno >= logging.WARNING:
-                return f'{BColors.WARNING}Warning: {message}{BColors.RESET_COLOR}'
+                return f"{BColors.WARNING}Warning: {message}{BColors.RESET_COLOR}"
             elif record.levelno >= logging.INFO:
-                return f'{BColors.CYAN}Info: {message}{BColors.RESET_COLOR}'
+                return f"{BColors.CYAN}Info: {message}{BColors.RESET_COLOR}"
             else:
-                return f'{BColors.WHITE}Debug: {message}{BColors.RESET_COLOR}'
+                return f"{BColors.WHITE}Debug: {message}{BColors.RESET_COLOR}"
 
 
 class FileFormatter(logging.Formatter):
     """File formatter without colors but with detailed info."""
 
     def __init__(self):
-        super().__init__(
-            '[%(asctime)s][%(levelname)-7s][%(name)s] %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
+        super().__init__("[%(asctime)s][%(levelname)-7s][%(name)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 
 
 def setup_logging(
     log_file: Optional[Path] = None,
     console_level: int = logging.INFO,
     file_level: int = logging.DEBUG,
-    verbose: bool = False
+    verbose: bool = False,
 ):
     """
     Initialize logging system for plagih framework with colored output.
@@ -497,7 +518,7 @@ def setup_logging(
         log_file = Path(log_file)
         log_file.parent.mkdir(parents=True, exist_ok=True)
 
-        file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
+        file_handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
         file_handler.setLevel(file_level)
         file_handler.setFormatter(FileFormatter())
         logger.addHandler(file_handler)
@@ -525,26 +546,26 @@ def printpl(msg_type: str, message_str: str):
 
     # Map message types to log levels - handle repeated characters
     level_map = {
-        'i': logging.INFO,
-        'ii': logging.INFO,
-        'f': logging.INFO,
-        'ff': logging.INFO,
-        'fff': logging.INFO,
-        'a': logging.INFO,
-        'aa': logging.INFO,
-        'g': logging.INFO,
-        'gg': logging.INFO,
-        'ggg': logging.INFO,
-        'gggg': logging.INFO,
-        'w': logging.WARNING,
-        'ww': logging.WARNING,
-        'www': logging.WARNING,
-        'wwww': logging.WARNING,
+        "i": logging.INFO,
+        "ii": logging.INFO,
+        "f": logging.INFO,
+        "ff": logging.INFO,
+        "fff": logging.INFO,
+        "a": logging.INFO,
+        "aa": logging.INFO,
+        "g": logging.INFO,
+        "gg": logging.INFO,
+        "ggg": logging.INFO,
+        "gggg": logging.INFO,
+        "w": logging.WARNING,
+        "ww": logging.WARNING,
+        "www": logging.WARNING,
+        "wwww": logging.WARNING,
     }
 
     # Fallback: if not in map, infer from first character
     if msg_type not in level_map:
-        if 'w' in msg_type:
+        if "w" in msg_type:
             level = logging.WARNING
         else:
             level = logging.INFO
@@ -553,13 +574,7 @@ def printpl(msg_type: str, message_str: str):
 
     # Create a log record with print_type for colored formatting
     record = logging.LogRecord(
-        name=logger.name,
-        level=level,
-        pathname='',
-        lineno=0,
-        msg=message_str,
-        args=(),
-        exc_info=None
+        name=logger.name, level=level, pathname="", lineno=0, msg=message_str, args=(), exc_info=None
     )
     record.print_type = msg_type
 
@@ -584,13 +599,13 @@ def print_warning(msg_type: str, text: str):
         record = logging.LogRecord(
             name=logger.name,
             level=logging.WARNING,
-            pathname='',
+            pathname="",
             lineno=0,
             msg=f"({msg_type}) {text}",
             args=(),
-            exc_info=None
+            exc_info=None,
         )
-        record.print_type = 'w'
+        record.print_type = "w"
 
         # Send to logger
         logger.handle(record)
@@ -598,7 +613,8 @@ def print_warning(msg_type: str, text: str):
     except Exception as ex:
         # Fallback to direct print
         from plagih.util import BColors
-        print(f'{BColors.WARNING}Warning (w): Could not print warning: {ex}{BColors.RESET_COLOR}')
+
+        print(f"{BColors.WARNING}Warning (w): Could not print warning: {ex}{BColors.RESET_COLOR}")
 
 
 def print_caution(txt: str):
@@ -648,9 +664,8 @@ def log_error(msg: str, *args, **kwargs):
     logger.error(msg, *args, **kwargs)
 
 
-
-if __name__ == '__main__':
-    print(f'Testing the plot style')
+if __name__ == "__main__":
+    print("Testing the plot style")
     import matplotlib.pyplot as plt
     import numpy as np
 
@@ -658,7 +673,7 @@ if __name__ == '__main__':
     y = np.sin(np.arange(10) / 10) + np.arange(10) / 10
     with plt.rc_context(rc=pyplot_rc_two_column):
         fig, ax = plt.subplots()
-        ax.plot(x, y, marker='x', label='random values (idk)')
-        ax.set(xlabel='some label', ylabel='some other value')
-        ax.legend(loc='lower left')
+        ax.plot(x, y, marker="x", label="random values (idk)")
+        ax.set(xlabel="some label", ylabel="some other value")
+        ax.legend(loc="lower left")
         plt.show()

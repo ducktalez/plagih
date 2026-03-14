@@ -12,15 +12,16 @@ maintained for backward compatibility.
 """
 
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional
 
-import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 import numpy as np
 
 # Try graphviz (still used for some legacy functions)
 try:
     from graphviz import Digraph
+
     HAS_GRAPHVIZ = True
 except ImportError:
     HAS_GRAPHVIZ = False
@@ -28,18 +29,21 @@ except ImportError:
 
 # Import tree structures
 import sys
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from plagih.util import *
 from plagih.trees import (
-    Node, Number, Symbol, Boolean,
-    MathOperator, LogicOperator,
+    Boolean,
+    LogicOperator,
+    MathOperator,
+    Node,
+    Number,
+    Symbol,
 )
+from plagih.util import *
 
 # Import new unified renderer
 from visualization.tree_renderer import (
     render_tree as _render_tree,
-    TreeRendererConfig,
-    Orientation,
 )
 
 
@@ -72,20 +76,20 @@ def get_node_color(node: Node) -> tuple:
     """Get colors (fill, border) for different node types."""
     if node.is_term():
         if isinstance(node, Number):
-            return '#E8F5E9', '#4CAF50'  # green
+            return "#E8F5E9", "#4CAF50"  # green
         elif isinstance(node, Symbol):
-            return '#E3F2FD', '#2196F3'  # blue
+            return "#E3F2FD", "#2196F3"  # blue
         elif isinstance(node, Boolean):
-            return '#FFF3E0', '#FF9800'  # orange
+            return "#FFF3E0", "#FF9800"  # orange
         else:
-            return '#F5F5F5', '#9E9E9E'  # gray
+            return "#F5F5F5", "#9E9E9E"  # gray
     else:
         if isinstance(node, MathOperator):
-            return '#FCE4EC', '#E91E63'  # pink
+            return "#FCE4EC", "#E91E63"  # pink
         elif isinstance(node, LogicOperator):
-            return '#F3E5F5', '#9C27B0'  # purple
+            return "#F3E5F5", "#9C27B0"  # purple
         else:
-            return '#ECEFF1', '#607D8B'  # blue-gray
+            return "#ECEFF1", "#607D8B"  # blue-gray
 
 
 def get_node_style(node: Node) -> dict:
@@ -97,28 +101,28 @@ def get_node_style(node: Node) -> dict:
 
     if node.is_term():
         return {
-            'shape': 'ellipse',
-            'style': 'filled',
-            'fillcolor': fill,
-            'color': border,
-            'fontcolor': '#1B5E20' if isinstance(node, Number) else '#0D47A1',
+            "shape": "ellipse",
+            "style": "filled",
+            "fillcolor": fill,
+            "color": border,
+            "fontcolor": "#1B5E20" if isinstance(node, Number) else "#0D47A1",
         }
     else:
         if isinstance(node, LogicOperator):
             return {
-                'shape': 'diamond',
-                'style': 'filled',
-                'fillcolor': fill,
-                'color': border,
-                'fontcolor': '#4A148C',
+                "shape": "diamond",
+                "style": "filled",
+                "fillcolor": fill,
+                "color": border,
+                "fontcolor": "#4A148C",
             }
         else:
             return {
-                'shape': 'box',
-                'style': 'filled,rounded',
-                'fillcolor': fill,
-                'color': border,
-                'fontcolor': '#880E4F' if isinstance(node, MathOperator) else '#263238',
+                "shape": "box",
+                "style": "filled,rounded",
+                "fillcolor": fill,
+                "color": border,
+                "fontcolor": "#880E4F" if isinstance(node, MathOperator) else "#263238",
             }
 
 
@@ -126,19 +130,20 @@ def get_node_style(node: Node) -> dict:
 # Graphviz-based visualization
 # ============================================================================
 
+
 def tree_to_graphviz(
     root: Node,
     name: str = "gp_tree",
     rankdir: str = "TB",
-) -> 'Digraph':
+) -> "Digraph":
     """Convert a plagih tree to a graphviz Digraph object."""
     if not HAS_GRAPHVIZ:
         raise ImportError("graphviz is required for tree visualization")
 
-    dot = Digraph(name=name, format='png')
+    dot = Digraph(name=name, format="png")
     dot.attr(rankdir=rankdir)
-    dot.attr('node', fontname='Arial', fontsize='12')
-    dot.attr('edge', color='#666666', arrowsize='0.7')
+    dot.attr("node", fontname="Arial", fontsize="12")
+    dot.attr("edge", color="#666666", arrowsize="0.7")
 
     node_counter = [0]
 
@@ -167,6 +172,7 @@ def tree_to_graphviz(
 # ============================================================================
 # Matplotlib/NetworkX-based visualization (Fallback)
 # ============================================================================
+
 
 def _compute_tree_layout(root: Node) -> tuple:
     """
@@ -262,7 +268,7 @@ def visualize_tree_matplotlib(
     for parent_id, child_id in edges:
         x1, y1 = positions[parent_id]
         x2, y2 = positions[child_id]
-        ax.plot([x1, x2], [y1, y2], '-', linewidth=1.5, zorder=1, color='#666666')
+        ax.plot([x1, x2], [y1, y2], "-", linewidth=1.5, zorder=1, color="#666666")
 
     # Draw nodes
     node_size = 0.4
@@ -272,19 +278,19 @@ def visualize_tree_matplotlib(
 
         # Draw circle/ellipse
         circle = mpatches.FancyBboxPatch(
-            (x - node_size/2, y - node_size/4),
-            node_size, node_size/2,
+            (x - node_size / 2, y - node_size / 4),
+            node_size,
+            node_size / 2,
             boxstyle=mpatches.BoxStyle("Round", pad=0.02),
             facecolor=color,
-            edgecolor='#333333',
+            edgecolor="#333333",
             linewidth=1.5,
-            zorder=2
+            zorder=2,
         )
         ax.add_patch(circle)
 
         # Draw label
-        ax.text(x, y, label, ha='center', va='center', fontsize=10,
-                fontweight='bold', zorder=3)
+        ax.text(x, y, label, ha="center", va="center", fontsize=10, fontweight="bold", zorder=3)
 
     # Adjust view
     if positions:
@@ -294,13 +300,13 @@ def visualize_tree_matplotlib(
         ax.set_xlim(min(xs) - margin, max(xs) + margin)
         ax.set_ylim(min(ys) - margin, max(ys) + margin)
 
-    ax.set_aspect('equal')
-    ax.axis('off')
+    ax.set_aspect("equal")
+    ax.axis("off")
     plt.tight_layout()
 
     # Save
     output_path = output_dir / f"{filename}.png"
-    plt.savefig(output_path, dpi=dpi, bbox_inches='tight', facecolor='white')
+    plt.savefig(output_path, dpi=dpi, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
     print(f"Tree saved to: {output_path}")
@@ -310,6 +316,7 @@ def visualize_tree_matplotlib(
 # ============================================================================
 # Main visualization function (auto-selects backend)
 # ============================================================================
+
 
 def visualize_tree(
     root: Node,
@@ -349,13 +356,7 @@ def visualize_tree(
 
     # Use new renderer by default
     if backend in ("auto", "new", "matplotlib"):
-        return _render_tree(
-            tree=root,
-            filename=filename,
-            output_dir=output_dir,
-            orientation=rankdir,
-            show=view
-        )
+        return _render_tree(tree=root, filename=filename, output_dir=output_dir, orientation=rankdir, show=view)
 
     # Legacy graphviz backend
     if backend == "graphviz" and HAS_GRAPHVIZ:
@@ -371,27 +372,16 @@ def visualize_tree(
             print(f"Graphviz failed ({e}), falling back to new renderer...")
 
     # Fallback to new renderer
-    return _render_tree(
-        tree=root,
-        filename=filename,
-        output_dir=output_dir,
-        orientation=rankdir,
-        show=view
-    )
+    return _render_tree(tree=root, filename=filename, output_dir=output_dir, orientation=rankdir, show=view)
 
 
-def visualize_multiple_trees(
-    trees: list,
-    prefix: str = "tree",
-    output_dir: Optional[str] = None,
-    **kwargs
-) -> list:
+def visualize_multiple_trees(trees: list, prefix: str = "tree", output_dir: Optional[str] = None, **kwargs) -> list:
     """
     Visualize multiple trees with numbered filenames.
     """
     paths = []
     for i, tree in enumerate(trees):
-        filename = f"{prefix}_{i+1:03d}"
+        filename = f"{prefix}_{i + 1:03d}"
         path = visualize_tree(tree, filename=filename, output_dir=output_dir, **kwargs)
         paths.append(path)
     return paths
@@ -444,13 +434,11 @@ def visualize_paretofront(
             tree = candidate.get_evotree()
             parsim = candidate.get_parsim()
             fitness = candidate.get_fitness()
-            individual_filename = f"pareto_{idx+1:03d}_P{parsim:.0f}_F{fitness:.4g}"
+            individual_filename = f"pareto_{idx + 1:03d}_P{parsim:.0f}_F{fitness:.4g}"
             _visualize_single_tree_to_file(
-                tree, individual_filename, individual_dir,
-                title=f"P={parsim:.0f}, F={fitness:.4g}",
-                dpi=dpi
+                tree, individual_filename, individual_dir, title=f"P={parsim:.0f}, F={fitness:.4g}", dpi=dpi
             )
-        printez('ff', f"Individual Paretofront trees saved to: {individual_dir}")
+        printez("ff", f"Individual Paretofront trees saved to: {individual_dir}")
 
     # Calculate grid layout
     n_trees = len(paretofront)
@@ -502,7 +490,7 @@ def visualize_paretofront(
         for parent_id, child_id in edges:
             x1, y1 = positions[parent_id]
             x2, y2 = positions[child_id]
-            ax.plot([x1, x2], [y1, y2], '-', linewidth=1.2, zorder=1, color='#666666')
+            ax.plot([x1, x2], [y1, y2], "-", linewidth=1.2, zorder=1, color="#666666")
 
         # Draw nodes
         for node_id, (x, y) in positions.items():
@@ -513,20 +501,20 @@ def visualize_paretofront(
             label_width = max(node_size, len(label) * 0.08)
 
             circle = mpatches.FancyBboxPatch(
-                (x - label_width/2, y - node_size/4),
-                label_width, node_size/2,
+                (x - label_width / 2, y - node_size / 4),
+                label_width,
+                node_size / 2,
                 boxstyle=mpatches.BoxStyle("Round", pad=0.02),
                 facecolor=color,
-                edgecolor='#333333',
+                edgecolor="#333333",
                 linewidth=1.0,
-                zorder=2
+                zorder=2,
             )
             ax.add_patch(circle)
 
             # Adjust font size based on label length
             fontsize = max(6, min(9, 72 / max(len(label), 1)))
-            ax.text(x, y, label, ha='center', va='center', fontsize=fontsize,
-                    fontweight='bold', zorder=3)
+            ax.text(x, y, label, ha="center", va="center", fontsize=fontsize, fontweight="bold", zorder=3)
 
         # Adjust view with proper margins
         if positions:
@@ -537,26 +525,26 @@ def visualize_paretofront(
             ax.set_xlim(min(xs) - margin_x, max(xs) + margin_x)
             ax.set_ylim(min(ys) - margin_y, max(ys) + margin_y)
 
-        ax.set_aspect('equal')
-        ax.axis('off')
+        ax.set_aspect("equal")
+        ax.axis("off")
 
         # Add title with parsimony and fitness
         parsim = candidate.get_parsim()
         fitness = candidate.get_fitness()
-        ax.set_title(f"P={parsim:.0f}, F={fitness:.4g}", fontsize=10, fontweight='bold')
+        ax.set_title(f"P={parsim:.0f}, F={fitness:.4g}", fontsize=10, fontweight="bold")
 
     # Hide unused subplots
     for idx in range(n_trees, n_rows * n_cols):
         row = idx // n_cols
         col = idx % n_cols
-        axes[row, col].axis('off')
+        axes[row, col].axis("off")
 
-    plt.suptitle(f"Paretofront ({n_trees} candidates)", fontsize=14, fontweight='bold')
+    plt.suptitle(f"Paretofront ({n_trees} candidates)", fontsize=14, fontweight="bold")
     plt.tight_layout()
 
     # Save
     output_path = output_dir / f"{filename}.png"
-    plt.savefig(output_path, dpi=dpi, bbox_inches='tight', facecolor='white')
+    plt.savefig(output_path, dpi=dpi, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
     print(f"Paretofront visualization saved to: {output_path}")
@@ -614,7 +602,7 @@ def _visualize_single_tree_to_file(
     for parent_id, child_id in edges:
         x1, y1 = positions[parent_id]
         x2, y2 = positions[child_id]
-        ax.plot([x1, x2], [y1, y2], '-', linewidth=1.5, zorder=1, color='#666666')
+        ax.plot([x1, x2], [y1, y2], "-", linewidth=1.5, zorder=1, color="#666666")
 
     # Draw nodes
     for node_id, (x, y) in positions.items():
@@ -625,20 +613,20 @@ def _visualize_single_tree_to_file(
         label_width = max(node_size, len(label) * 0.1)
 
         circle = mpatches.FancyBboxPatch(
-            (x - label_width/2, y - node_size/4),
-            label_width, node_size/2,
+            (x - label_width / 2, y - node_size / 4),
+            label_width,
+            node_size / 2,
             boxstyle=mpatches.BoxStyle("Round", pad=0.02),
             facecolor=color,
-            edgecolor='#333333',
+            edgecolor="#333333",
             linewidth=1.5,
-            zorder=2
+            zorder=2,
         )
         ax.add_patch(circle)
 
         # Adjust font size based on label length
         fontsize = max(7, min(11, 88 / max(len(label), 1)))
-        ax.text(x, y, label, ha='center', va='center', fontsize=fontsize,
-                fontweight='bold', zorder=3)
+        ax.text(x, y, label, ha="center", va="center", fontsize=fontsize, fontweight="bold", zorder=3)
 
     # Adjust view
     if positions:
@@ -649,17 +637,17 @@ def _visualize_single_tree_to_file(
         ax.set_xlim(min(xs) - margin_x, max(xs) + margin_x)
         ax.set_ylim(min(ys) - margin_y, max(ys) + margin_y)
 
-    ax.set_aspect('equal')
-    ax.axis('off')
+    ax.set_aspect("equal")
+    ax.axis("off")
 
     if title:
-        ax.set_title(title, fontsize=12, fontweight='bold')
+        ax.set_title(title, fontsize=12, fontweight="bold")
 
     plt.tight_layout()
 
     # Save
     output_path = output_dir / f"{filename}.png"
-    plt.savefig(output_path, dpi=dpi, bbox_inches='tight', facecolor='white')
+    plt.savefig(output_path, dpi=dpi, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
     return str(output_path)
@@ -669,36 +657,21 @@ def _visualize_single_tree_to_file(
 # Test / Demo
 # ============================================================================
 
+
 def _demo():
     """Demo visualization with sample trees."""
-    from plagih.trees import Add, Mul, Sin, Cos, Number, Symbol
+    from plagih.trees import Add, Cos, Mul, Number, Sin, Symbol
 
     # Example 1: Simple expression: (x + 2) * sin(y)
-    tree1 = Mul(
-        Add(Symbol('x'), Number(2)),
-        Sin(Symbol('y'))
-    )
+    tree1 = Mul(Add(Symbol("x"), Number(2)), Sin(Symbol("y")))
     visualize_tree(tree1, filename="example_simple", backend="matplotlib")
 
     # Example 2: More complex expression
-    tree2 = Add(
-        Mul(Number(3), Symbol('x')),
-        Cos(Add(Symbol('y'), Number(1))),
-        Number(-5)
-    )
+    tree2 = Add(Mul(Number(3), Symbol("x")), Cos(Add(Symbol("y"), Number(1))), Number(-5))
     visualize_tree(tree2, filename="example_complex", backend="matplotlib")
 
     # Example 3: Deeper tree
-    tree3 = Mul(
-        Add(
-            Sin(Symbol('x')),
-            Cos(Symbol('y'))
-        ),
-        Add(
-            Number(2),
-            Mul(Symbol('z'), Number(3))
-        )
-    )
+    tree3 = Mul(Add(Sin(Symbol("x")), Cos(Symbol("y"))), Add(Number(2), Mul(Symbol("z"), Number(3))))
     visualize_tree(tree3, filename="example_deep", backend="matplotlib")
 
     print("\nDemo complete! Check tree_output/ folder for images.")

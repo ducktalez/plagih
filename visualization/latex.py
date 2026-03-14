@@ -1,13 +1,15 @@
 """
 Visualising Trees with latex.
 """
-from plagih.trees import *
+
 import re
 
+from plagih.trees import *
 
-def latex_treeviz_full_document(tex_input, doc_border=',border=5pt'):
+
+def latex_treeviz_full_document(tex_input, doc_border=",border=5pt"):
     if isinstance(tex_input, list):
-        tex_body = '\n\\newpage\n'.join(tex_input)
+        tex_body = "\n\\newpage\n".join(tex_input)
     else:
         tex_body = tex_input
 
@@ -42,37 +44,37 @@ def latex_treeviz_full_document(tex_input, doc_border=',border=5pt'):
     return latex_doc_forest
 
 
-
 def label_tex_replace_digits(label):
     # 1.23456 + sdf -> 1.234 + sdf (remove +3 digits with regex)
-    label = re.sub(r'0\.000[0]+[1-9]+', '0.001', label)  # displaying very small values as '0.001'
-    label = re.sub(r'(?<=[0-9]\.[0-9]{3})(\d+)', '', label)  # removing over-accurate decimals
+    label = re.sub(r"0\.000[0]+[1-9]+", "0.001", label)  # displaying very small values as '0.001'
+    label = re.sub(r"(?<=[0-9]\.[0-9]{3})(\d+)", "", label)  # removing over-accurate decimals
     return label
 
 
 def label_tex_replace_digits(label):
-    label = re.sub(r'0\.000[0]+[1-9]+', '0.001', label)
-    label = re.sub(r'(?<=[0-9]\.[0-9]{3})(\d+)', '', label)
+    label = re.sub(r"0\.000[0]+[1-9]+", "0.001", label)
+    label = re.sub(r"(?<=[0-9]\.[0-9]{3})(\d+)", "", label)
     return label
 
 
 latex_custom_inline = {
-    Mul: r'\cdot',
-    Or: r'\vee',
-    And: r'\wedge',
-    Xor: r'\oplus',
-    Add: r'+',
-    Sub: r'-',
-    Div: r'/',
+    Mul: r"\cdot",
+    Or: r"\vee",
+    And: r"\wedge",
+    Xor: r"\oplus",
+    Add: r"+",
+    Sub: r"-",
+    Div: r"/",
 }
 
 latex_custom = {
-    Pow: r'{{{}}}^{{{}}}',
-    Abs: r'\left|{} \right|',
-    Sqrt: r'\sqrt{{{}}}',
-    Max: r'\max\left({}\right)',
-    Min: r'\min\left({}\right)',
+    Pow: r"{{{}}}^{{{}}}",
+    Abs: r"\left|{} \right|",
+    Sqrt: r"\sqrt{{{}}}",
+    Max: r"\max\left({}\right)",
+    Min: r"\min\left({}\right)",
 }
+
 
 def get_expr_latex(node, klammern=False):
     """
@@ -99,7 +101,7 @@ def get_expr_latex(node, klammern=False):
             return f"({expr})" if klammern else expr
 
     # Fallback: Funktionsstil
-    label = getattr(node, 'sy_str', str(node))
+    label = getattr(node, "sy_str", str(node))
     return f"{label}({', '.join(children)})"
 
 
@@ -121,13 +123,13 @@ def latex_brackettree(node, force_node=True):
     if not node.has_childs():
         return f"[{label}]"
     else:
-        children_str = ''.join([latex_brackettree(c, force_node=True) for c in node.get_childs()])
+        children_str = "".join([latex_brackettree(c, force_node=True) for c in node.get_childs()])
         return f"[{label}{children_str}]"
 
 
 # Beispiel
 if __name__ == "__main__":
-    syex = plagih_sympify('a + 2.3')
+    syex = plagih_sympify("a + 2.3")
     t = sympy_to_tree(syex, allow_chain=True)
-    print(fr"\plforest{{{latex_brackettree(t, force_node=False)}}}")
-    print(fr"\plforest{{{latex_brackettree(t, force_node=True)}}}")
+    print(rf"\plforest{{{latex_brackettree(t, force_node=False)}}}")
+    print(rf"\plforest{{{latex_brackettree(t, force_node=True)}}}")

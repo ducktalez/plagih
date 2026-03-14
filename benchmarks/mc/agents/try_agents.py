@@ -1,5 +1,5 @@
-from benchmarks.mc.agents.quick_eval import *
 from benchmarks.mc.agents.mtc_agent_sarsa import *
+from benchmarks.mc.agents.quick_eval import *
 
 
 def compare_plot_styles():
@@ -19,19 +19,21 @@ def compare_plot_styles():
 
 sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = load_sarsas()
 
-mountain_agents = [('simple', SimpleAgent()),
-                   ('v1_improved', PlagihAgent_A()),
-                   ('xiao_base', XiaoPresetAgent()),
-                   ('xiao_short', XiaoPresetNoLowerbound()),
-                   ('sarsa_75', sarsa_agent_75),
-                   ('sarsa_200', sarsa_agent_200),
-                   ('sarsa_1000', sarsa_agent_1000),
-                   ('sarsa_10000', sarsa_agent_10000),
-                   ('AgentV1p40', AgentV1p40()),
-                   ('Good Expert', Good_Expert()),
-                   ('TestCombined', TestCombined()),
-                   ('test_tmp', TestTmp()),
-                   ('test', SimonsCheckpoints())]
+mountain_agents = [
+    ("simple", SimpleAgent()),
+    ("v1_improved", PlagihAgent_A()),
+    ("xiao_base", XiaoPresetAgent()),
+    ("xiao_short", XiaoPresetNoLowerbound()),
+    ("sarsa_75", sarsa_agent_75),
+    ("sarsa_200", sarsa_agent_200),
+    ("sarsa_1000", sarsa_agent_1000),
+    ("sarsa_10000", sarsa_agent_10000),
+    ("AgentV1p40", AgentV1p40()),
+    ("Good Expert", Good_Expert()),
+    ("TestCombined", TestCombined()),
+    ("test_tmp", TestTmp()),
+    ("test", SimonsCheckpoints()),
+]
 
 
 # eval_agent_list([('lelel_MTC_simple13', MTC_simple13())])
@@ -75,7 +77,7 @@ mountain_agents = [('simple', SimpleAgent()),
 
 
 if __name__ == "__main__":
-    print('Use thesis_plots.py instead!')
+    print("Use thesis_plots.py instead!")
     # # thesis_plot_mc_comparisson()
     # thesis_decision_plots_dummied()
     # thesis_decision_plots_fullspace()
@@ -87,5 +89,5 @@ if __name__ == "__main__":
     # print('results 75:', mtc_play(sarsa_agent_75, n=100))
     # print('results 200:', mtc_play(sarsa_agent_200, n=100))
     #
-    print('results 1000:', mtc_play(sarsa_agent_1000, n=100))
-    print('results 10000:', mtc_play(sarsa_agent_10000, n=100))
+    print("results 1000:", mtc_play(sarsa_agent_1000, n=100))
+    print("results 10000:", mtc_play(sarsa_agent_10000, n=100))

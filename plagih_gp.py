@@ -17,6 +17,7 @@ import pandas as pd
 import sympy
 from sklearn.model_selection import train_test_split
 
+from plagih.parallel import Strategy
 from plagih.trees import *
 from plagih.util import *
 
@@ -121,40 +122,18 @@ def demo_minimal():
     # -------------------------------------------------------------------------
     print("Running evolution...")
 
+    # Define strategies declaratively — each generation uses the same set
+    strategies = [
+        Strategy("reproduction", rate=0.2, tournament_n=3),
+        Strategy("mutation", rate=0.4, depth_goal=3, p_term=0.3),
+        Strategy("random_new", rate=0.2, depths=[2, 3, 4], p_term=0.1),
+        Strategy("crossover", rate=0.2, crossover=True, tournament_n=3),
+    ]
+
     for gen in range(3):
         print(f"--- Generation {gp.gen_id} ---")
-
-        # Strategy 1: Reproduction (copy good trees)
-        @gp.create_trees(rate=0.2)
-        def reproduction():
-            """Select a good tree and copy it."""
-            return selection_tournament(gp.pop_genepool, n=3)
-
-        # Strategy 2: Mutation (modify existing trees)
-        @gp.create_trees(rate=0.4)
-        def mutation():
-            """Select a tree and mutate a branch."""
-            tree = selection_tournament(gp.pop_genepool, n=3)
-            return gp.evolve.evolve_mutate_branch_depth(tree, depth_goal=3, p_term=0.3)
-
-        # Strategy 3: New random trees
-        @gp.create_trees(rate=0.2)
-        def random_new():
-            """Create a new random tree."""
-            depth = np.random.choice([2, 3, 4])
-            return gp.evolve.evolve_new_tree_depth(float, depth, p_term=0.1)
-
-        # Strategy 4: Crossover (combine two trees)
-        @gp.create_trees(rate=0.2, crossover=True)
-        def crossover():
-            """Select two trees and swap branches."""
-            tree_a = selection_tournament(gp.pop_genepool, n=3)
-            tree_b = selection_tournament(gp.pop_genepool, n=3)
-            return gp.evolve.evolve_crossover(tree_a, tree_b)
-
-        # End generation: update Pareto front, prepare for next
-        gp.end_generation()
-
+        # run_generation handles: create trees, evaluate, update pareto, end generation
+        gp.run_generation(strategies)
         printez("ggg", f"  Population: {len(gp.pop_genepool)}, Pareto front: {len(gp.paretofront)}")
 
     # -------------------------------------------------------------------------
@@ -397,30 +376,16 @@ def demo_symbolic_regression():
 
     print("Running evolution...")
 
+    strategies = [
+        Strategy("reproduction", rate=0.15, tournament_n=3),
+        Strategy("mutation", rate=0.45, depth_goal=2, p_term=0.2),
+        Strategy("random_new", rate=0.2, depths=[2, 3, 4], p_term=0.1),
+        Strategy("crossover", rate=0.2, crossover=True, tournament_n=3),
+    ]
+
     for gen in range(5):
         print(f"--- Generation {gp.gen_id} ---")
-
-        @gp.create_trees(rate=0.15)
-        def reproduction():
-            return selection_tournament(gp.pop_genepool, n=3)
-
-        @gp.create_trees(rate=0.45)
-        def mutation():
-            tree = selection_tournament(gp.pop_genepool, n=3)
-            return gp.evolve.evolve_mutate_branch_depth(tree, depth_goal=2, p_term=0.2)
-
-        @gp.create_trees(rate=0.2)
-        def random_new():
-            depth = np.random.choice([2, 3, 4])
-            return gp.evolve.evolve_new_tree_depth(float, depth, p_term=0.1)
-
-        @gp.create_trees(rate=0.2, crossover=True)
-        def crossover():
-            tree_a = selection_tournament(gp.pop_genepool, n=3)
-            tree_b = selection_tournament(gp.pop_genepool, n=3)
-            return gp.evolve.evolve_crossover(tree_a, tree_b)
-
-        gp.end_generation()
+        gp.run_generation(strategies)
 
     # -------------------------------------------------------------------------
     # STEP 5: Show results
@@ -483,58 +448,19 @@ def _test_simple(dir_name, chained_on=True):
     gp.gen_create_initial()
 
     for _ in range(1):
-
-        @gp.create_trees(rate=1)
-        def rand2():
-            d = np.clip(int(random.normalvariate(3.5, 1)), 3, 5)
-            return gp.evolve.evolve_new_tree_depth(float, d, p_term=0)
-
-        gp.end_generation()
+        gp.run_generation([Strategy("random_new", rate=1.0, depths=[3, 4, 5], p_term=0.0)])
 
     for _ in range(1):
-
-        @gp.create_trees(rate=1)
-        def rand_huge():
-            d = np.clip(int(random.normalvariate(7, 1)), 7, 10)
-            return gp.evolve.evolve_new_tree_depth(float, d, p_term=0)
-
-        gp.end_generation()
+        gp.run_generation([Strategy("random_new", rate=1.0, depths=[7, 8, 9, 10], p_term=0.0)])
 
     for _ in range(2):
-
-        @gp.create_trees(rate=1)
-        def rand2_CHAINA():
-            d = np.clip(int(random.normalvariate(4.5, 1)), 3, gp.evolve.depth_max)
-            _tree = gp.evolve.evolve_new_tree_depth(float, d, p_term=0)
-            _tree = tree_simplification(_tree, allow_chain=chained_on)
-            _tree.repair_depth(depth=0)  # sfeh repairing depth should be part of any evolution
-            return _tree
-
-        gp.end_generation()
+        gp.run_generation([Strategy("random_new", rate=1.0, simplicate=True, depths=[3, 4, 5, 6], p_term=0.0)])
 
     for _ in range(10):
-
-        @gp.create_trees(rate=1)
-        def mx_branch_n1():
-            tree = selection_tournament(gp.pop_genepool, n=3)
-            n = np.clip(int(random.normalvariate(16, 4)), 0, gp.evolve.nodes_max)
-            tree = gp.evolve.evolve_mutate_branch_nodes(tree, n, p_term=0.2)
-            return tree
-
-        gp.end_generation()
+        gp.run_generation([Strategy("mutation_branch_nodes", rate=1.0, tournament_n=3, nodes_goal=16, p_term=0.2)])
 
     for _ in range(10):
-
-        @gp.create_trees(rate=1, crossover=True)
-        def xover_CHAINA():
-            tree_a = selection_tournament(gp.pop_genepool, n=3)
-            tree_b = selection_tournament(gp.pop_genepool, n=3)
-            tree_a = tree_simplification(tree_a, allow_chain=chained_on)
-            tree_b = tree_simplification(tree_b, allow_chain=chained_on)
-            evo1, evo2 = gp.evolve.evolve_crossover(tree_a, tree_b)
-            return evo1, evo2
-
-        gp.end_generation()
+        gp.run_generation([Strategy("crossover", rate=1.0, crossover=True, simplicate=True, tournament_n=3)])
 
     gp.evoloop_monitoring_plots()
 
@@ -606,88 +532,29 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False, try_load_backu
 
     gp.time_genstart = time.perf_counter()  # sfeh here?
 
+    # Build strategy list based on configuration
+    if chained_on:
+        strategies = [
+            Strategy("reproduction", rate=0.1, tournament_n=3),
+            Strategy("mutation", rate=0.4, simplicate=simplicate, depth_goal=4, p_term=0.5),
+            Strategy("random_new", rate=0.3, simplicate=simplicate, depths=[3, 4, 5], p_term=0.0),
+            Strategy("crossover", rate=0.3, crossover=True, tournament_n=3),
+        ]
+    else:
+        strategies = [
+            Strategy("reproduction", rate=0.1, tournament_n=3),
+            Strategy("simplicate", rate=0.05, tournament_n=3, completely=True),
+            Strategy("mutation", rate=0.10, depth_goal=4, p_term=0.5),
+            Strategy("mutation_branch_nodes", rate=0.15, tournament_n=3, nodes_goal=10, p_term=0.2),
+            Strategy("mutation_branch_nodes", rate=0.1, tournament_n=3, nodes_goal=4, p_term=0.0),
+            Strategy("mutation_filter", rate=0.1, tournament_n=3),
+            Strategy("random_new", rate=0.1, depths=[3, 4, 4, 5], p_term=0.0),
+            Strategy("crossover", rate=0.3, crossover=True, tournament_n=3),
+            Strategy("pareto_revive", rate=0.01),
+        ]
+
     while gp.gen_id <= gp.gen_end and not gp.run_custom_exit_condition():
-
-        @gp.create_trees(rate=0.1)
-        def repro1():
-            _tree = selection_tournament(gp.pop_genepool, n=3)
-            return _tree
-
-        if chained_on:
-
-            @gp.create_trees(rate=0.4, simplicate=simplicate)
-            def mx_branch_d_CHAIN():
-                _tree = selection_tournament(gp.pop_genepool, n=3)
-                _tree = gp.evolve.evolve_mutate_branch_depth(_tree, 4, chained_on, p_term=0.5)
-                return _tree
-
-            @gp.create_trees(rate=0.3, simplicate=simplicate)
-            def rand2_CHAINB():
-                tree = gp.evolve.evolve_new_tree_depth(
-                    float, np.clip(int(random.normalvariate(3.5, 1)), 3, 5), p_term=0
-                )
-                # _tree = tree_simplification(_tree, allow_chain=gp.allow_chain)
-                return tree
-
-            @gp.create_trees(rate=0.3, crossover=True)
-            def xover_CHAIN(simplicate=simplicate):
-                tree_a = selection_tournament(gp.pop_genepool, n=3)
-                tree_b = selection_tournament(gp.pop_genepool, n=3)
-                evo1, evo2 = gp.evolve.evolve_crossover(tree_a, tree_b)
-                # evo1 = tree_simplification(evo1, allow_chain=gp.allow_chain)
-                # evo2 = tree_simplification(evo2, allow_chain=gp.allow_chain)
-                return evo1, evo2
-
-        else:
-
-            @gp.create_trees(rate=0.05)
-            def re_sym_all():
-                tree = selection_tournament(gp.pop_genepool, n=3)
-                return evolve_reduce_simplicate(tree, gp.allow_chain, completely=True)
-
-            @gp.create_trees(rate=0.10)
-            def mx_branch_d():
-                tree = selection_tournament(gp.pop_genepool, n=3)
-                return gp.evolve.evolve_mutate_branch_depth(tree, 4, chained_on, p_term=0.5)
-
-            @gp.create_trees(rate=0.15)
-            def mx_branch_n2():
-                _tree = selection_tournament(gp.pop_genepool, n=3)
-                n = np.random.choice([1, 5, 10, 15, 17, 19, 20, 30, 40, 50, 60])
-                _tree = gp.evolve.evolve_mutate_branch_nodes(_tree, n, p_term=0.2)
-                return _tree
-
-            @gp.create_trees(rate=0.1)  # was error source?
-            def mut_br():
-                _tree = selection_tournament(gp.pop_genepool, n=3)
-                _tree = gp.evolve.evolve_mutate_branch_nodes(_tree, 4, p_term=0)
-                return _tree
-
-            @gp.create_trees(rate=0.1)
-            def filter_optimize():
-                _tree = selection_tournament(gp.pop_genepool, n=3)
-                return gp.evolve.evolve_mutate_filter(_tree)
-
-            @gp.create_trees(rate=0.1)
-            def rand2b():
-                _tree = gp.evolve.evolve_new_tree_depth(float, np.random.choice([3, 4, 4, 5]), p_term=0)
-                return _tree
-
-            @gp.create_trees(rate=0.3, crossover=True)
-            def xover():
-                tree_a = selection_tournament(gp.pop_genepool, n=3)
-                tree_b = selection_tournament(gp.pop_genepool, n=3)
-                evo1, evo2 = gp.evolve.evolve_crossover(tree_a, tree_b)
-                return evo1, evo2
-
-            @gp.create_trees(rate=0.01)
-            def pareto_revive():
-                fintree = np.random.choice(gp.paretofront)
-                return fintree.tree
-
-        # tmp_pareto = pareto_from_pop(gp.pop_next)  # sfeh:idea paretofront in each generation?
-
-        gp.end_generation()
+        gp.run_generation(strategies)
 
     printpl("g", f"Done after Generation {gp.gen_id}.\nTime since start: {time.perf_counter() - gp.time_start:4.2f}s")
 

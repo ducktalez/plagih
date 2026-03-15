@@ -5,6 +5,7 @@ This file needs to be here, empty. Lel!
 Exports for convenient access to plagih functionality.
 """
 
+# Parallel execution engine
 # Population merge functionality
 # Unified evaluation context (optional, backward-compatible)
 from plagih.evaluation_context import (
@@ -14,6 +15,13 @@ from plagih.evaluation_context import (
     add_unified_evaluation_to_node,
     create_context,
     evaluate_tree,
+)
+from plagih.parallel import (
+    BUILTIN_STRATEGIES,
+    PerformanceTracker,
+    Strategy,
+    TaskResult,
+    TaskSpec,
 )
 from plagih.population_merge import (
     MergedEvaluationGraph,

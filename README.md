@@ -1,10 +1,30 @@
 # Familiar Genetic Programming with TensorFlow
 
-- Fast
+Very fast GP-Framework that introduces the concept of ``familiarity'',  which is a measure of how similar a candidate 
+solution is to a reference program. The algorithm was filed as a patent in Germany in 2023.
 
+Trees are optionally unified and simplified with sympy, which is a powerful symbolic mathematics library. 
+This also allows to create a merged tree representing all trees in a population.
+
+We are currently trying to introduce a  pseudo-backpropagation-algorithm, with primary focus on the if/piecewise-operator.
+
+Enjoy!
 
 ## Ablage/Todos
+### Code Dokumentation und instructions überarbeiten
+Es sollen sinnvolle copilot instructions formuliert werden, die sich auch notfalls automatisch updaten. Es sollen im übrigen auch Tests generiert werden. 
+Im selben Schritt Soll auch die Kommentierung diesbezüglich optimiert werden und eine Dokumentation des gesamten Frameworks angelegt werden.
 
+Instructions und Kommentare sollen dabei so aufgeteilt sein dass die Instructions möglichst kompakt sind und wirklich nur das Wesentliche beinhalten. In den Files bei den Funktionen sind die konkreten Informationen vorhanden. 
+- Kompakte Copilot Instructions, die sich automatisch updaten
+- Kommentare in den Funktionen, die sich auf die konkrete Funktion beziehen und auch automatisch updaten. In englisch umformulieren, falls besser. Bei unklaren Fällen, bitte nachfragen, bevor Informationen gelöscht werden.
+- Dokumentation als .md oder .pdf, die den gesamten Ablauf erklärt und einem neuen Nutzer (bzw. auch als Notfall-Hilfe für Copilot) Ablauf und Funktionalität erklärt.
+
+Wenn du hier noch Vorschläge und Ideen hast, kannst du sie gerne einbringen. 
+
+- Die Tests sollen
+- Copilot-RUFF?)
+- GPU-evaluation?
 - Merged-tree visualisierung
   - mit chatgpt erstellen
   - tree-viz zentral implementieren
@@ -21,23 +41,34 @@
     - utils.py (Hilfsfunktionen)
   - Wie würdest du das strukturieren?
 - self.evolve.origin_tree
-- Anweisungen für Copilot (Instructions erstellen), am besten, sodass sie sich auch selbst notfalls erweitern.
 - Dokumentation als .md/.pdf
 - Pseudo-Backpropagation durch Bäume
 - evaluation alternatives
   - tf-fun in every class
   - regular python code implementation
-- In Vorbereitung für eine potentielle Parallelisierung soll der generelle Ablauf der Evolution überdacht werden.
-  - Bisher findet der Ablauf durch Loops statt, die nacheinander die Population generieren und evaluieren.
-  - Wichtig war hier, dass Wiederverwendbarkeit und Debugging einfach sind.
-  - Die Gesamtprozedur erscheint aber dennoch sehr komplex
-  - Der Nutzer soll keine abstrakte YAML-Datei schreiben müssen, sondern einfach Python-Code.
-  - Unterpunkt Parallelisierung
-    - Die Bäume einer Population können theoretisch parallel evaluiert werden. Wie würdest du das am besten umsetzen?
-    - Die letzte Population ist ein shared memory object
-    - Die Liste mit zu erstellenden Bäumen kann von Arbeitern abgearbeitet werden
-    - Bisher wurden loops verwendet, um die Bäume nacheinander zu erzeugen. Evtl. muss sich das ändern
-    - Die Implementierung soll im single-core Betrieb immer noch möglichst leicht zu debuggen sein.
+- In Vorbereitung für eine potenzielle Parallelisierung soll der generelle Ablauf der Evolution überdacht werden.
+  - ✅ **DONE**: Deklarative Strategy-API (`plagih.parallel.Strategy`) ersetzt den alten `@gp.create_trees` Decorator.
+  - ✅ **DONE**: `gp.run_generation(strategies)` — ein einziger Codepfad für sequentiell und parallel.
+  - ✅ **DONE**: Parallele Ausführung via `ProcessPoolExecutor` mit `parallel=True` oder `parallel=N` (Anzahl Worker).
+  - ✅ **DONE**: Per-Task Performance-Tracking (avg/median Zeit, Fehlerrate pro Strategie).
+  - ✅ **DONE**: Optionaler `seed`-Parameter für Reproduzierbarkeit.
+  - ✅ **DONE**: Worker erhalten State via `initializer`-Globals (kein per-Task Serialisierungs-Overhead).
+  - ✅ **DONE**: LUT-Merge via einfachem `dict.update()` (gleiche Keys = gleiche Werte).
+  - ✅ **DONE**: Pool-Neustart pro Generation (~100ms Overhead, garantiert konsistenter Genepool-State).
+  - ✅ **DONE**: Fehlerbudget pro Strategie (2*n+5), restliche Tasks werden übersprungen bei Überschreitung.
+  - ✅ **DONE**: Custom-Strategien via `gp.register_strategy("name", top_level_fn)`.
+  - ✅ **DONE**: Sequentieller Modus (Default) erlaubt volles Debugging mit Breakpoints.
+  - Alter `@gp.create_trees` Decorator bleibt als deprecated Wrapper für Abwärtskompatibilität erhalten.
+  - Beispiel:
+    ```python
+    from plagih.parallel import Strategy
+    gp.run_generation([
+        Strategy("reproduction", rate=0.2, tournament_n=3),
+        Strategy("mutation", rate=0.4, depth_goal=3, p_term=0.3),
+        Strategy("random_new", rate=0.2, depths=[2, 3, 4]),
+        Strategy("crossover", rate=0.2, crossover=True, tournament_n=3),
+    ])
+    ```
 
 # Sub-tasks
 

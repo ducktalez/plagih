@@ -2694,18 +2694,11 @@ class NodeSelect:
             bool: [],
         }  # NotImplementedError
 
-        # -> Choosing 50 random numeric values from the dataset for building trees ...just not zeros)
-        # samples = [ii for ii in itertools.chain.from_iterable(df[build_variables_list].sample(n=50).values) if ii != 0]
-        self.pick_constant = {
-            float: norm_choices(
-                [
-                    [lambda: round(random.normalvariate(1, 1), FLOAT_PRECISION), 0.1],
-                    [lambda: round(random.randint(1, 20), FLOAT_PRECISION), 0.1],
-                    # [lambda: round(random.choice(samples), FLOAT_PRECISION), 0.5]
-                ]
-            ),
-            bool: norm_choices([[lambda: random.choice((True, False)), 1]]),
-        }
+        # Design: Direct generation instead of lambda-pool.
+        # Simpler, picklable (required for ProcessPoolExecutor), equally flexible.
+        # Previously used lambdas in a weighted choice list, but the indirection
+        # added complexity without benefit. Constants are now generated inline
+        # in choose_constant_node().
 
     def choose_operator_class(self, xt: Union[Type[float], Type[bool]]) -> Type[BaseOperator]:
         """Randomly selects an operator class that produces the given output type.
@@ -2764,8 +2757,11 @@ class NodeSelect:
     def choose_constant_node(self, xt: Union[Type[float], Type[bool]]) -> Terminal:
         """Randomly generates a constant terminal node.
 
-        For float: Samples from normal distribution or random integers.
+        For float: 50% normal distribution N(1,1), 50% random integer [1,20].
         For bool: Random True/False.
+
+        Design: Direct generation instead of lambda-pool for picklability
+        (required for multiprocessing) and simplicity.
 
         Args:
             xt: The required output type (float or bool).
@@ -2773,13 +2769,16 @@ class NodeSelect:
         Returns:
             A Number or Boolean terminal node.
         """
-        _v = np.random.choice(self.pick_constant[xt][0], p=self.pick_constant[xt][1])()  # just dist. must be ()
         if xt == float:
-            _v = sympy.Float(_v, FLOAT_PRECISION)  #  discuss allow "rational" inputs? 1/3, 3/4, ...
+            # 50/50 chance: normal distribution or random integer
+            if random.random() < 0.5:
+                _v = round(random.normalvariate(1, 1), FLOAT_PRECISION)
+            else:
+                _v = round(random.randint(1, 20), FLOAT_PRECISION)
+            _v = sympy.Float(_v, FLOAT_PRECISION)  # discuss allow "rational" inputs? 1/3, 3/4, ...
             return Number(_v)  # round FLOAT_PRECISION was here
         else:
-            # _v = sympy.logic.boolalg.BooleanAtom(_v)  # discuss: vs. Boolean
-            # -> sympy.sympify('And(True, BooleanAtom(False))')
+            _v = random.choice((True, False))
             return Boolean(_v)
 
     def choose_symbol_node(self, xt: Union[Type[float], Type[bool]]) -> Symbol:
@@ -3328,6 +3327,39 @@ def pop_analyze(population: List[Candidate], gen_time: float, gens_since_pareto:
     }
 
 
+# =============================================================================
+# Picklable helper callables for ProcessPoolExecutor compatibility
+# =============================================================================
+# Closures and lambdas are NOT picklable. These classes wrap the same
+# logic in a picklable __call__ object.
+
+
+class _ClipAutocast:
+    """Picklable autocast that clips predictions to [lo, hi]."""
+
+    def __init__(self, lo: float, hi: float):
+        self.lo = lo
+        self.hi = hi
+
+    def __call__(self, x):
+        return np.clip(np.asarray(x, dtype=np.float64), self.lo, self.hi)
+
+
+def _error_rmse(pred, true):
+    """RMSE error metric (picklable top-level function)."""
+    return np.sqrt(np.mean((pred - true) ** 2))
+
+
+def _error_mse(pred, true):
+    """MSE error metric (picklable top-level function)."""
+    return np.mean((pred - true) ** 2)
+
+
+def _error_mae(pred, true):
+    """MAE error metric (picklable top-level function)."""
+    return np.mean(np.abs(pred - true))
+
+
 class ExplainableGP:
     """Main class for explainable genetic programming.
 
@@ -3364,10 +3396,9 @@ class ExplainableGP:
         )
     """
 
-    # Default error metric: RMSE
+    # Default error metric and autocast as picklable top-level references
+    # (lambdas and closures are NOT picklable for ProcessPoolExecutor)
     DEFAULT_ERROR_METRIC = staticmethod(lambda pred, true: np.sqrt(np.mean((pred - true) ** 2)))
-
-    # Default autocast: identity (np.array)
     DEFAULT_AUTOCAST = staticmethod(lambda _x: np.asarray(_x, dtype=np.float64))
 
     def __init__(
@@ -3383,6 +3414,7 @@ class ExplainableGP:
         allow_chain: bool = False,
         target_column: str = "action",
         verbose: bool = True,
+        parallel: Union[bool, int] = False,
     ):
         """Initialize the GP system.
 
@@ -3397,6 +3429,7 @@ class ExplainableGP:
             allow_chain: Whether to allow chained operators. Default: False.
             target_column: Name of target column in df_train. Default: 'action'.
             verbose: Print initialization info. Default: True.
+            parallel: False=sequential, True=auto-detect CPUs, int=explicit worker count.
         """
         self.time_start = time.perf_counter()
 
@@ -3438,6 +3471,21 @@ class ExplainableGP:
         self.time_genstart = time.perf_counter()
         self.monitor = GPMonitor()
 
+        # Parallel execution config
+        import os
+
+        from plagih.parallel import BUILTIN_STRATEGIES
+
+        if parallel is True:
+            self._parallel_workers = os.cpu_count() or 4
+        elif isinstance(parallel, int) and parallel > 0:
+            self._parallel_workers = parallel
+        else:
+            self._parallel_workers = 0  # 0 = sequential mode
+        self._custom_strategies: Dict[str, Callable] = {}
+        self._strategy_registry = dict(BUILTIN_STRATEGIES)  # copy builtin registry
+        self._performance_tracker = None  # Set per generation
+
     # =========================================================================
     # Backwards Compatibility Properties
     # =========================================================================
@@ -3473,6 +3521,7 @@ class ExplainableGP:
         allow_chain: bool = False,
         target_column: str = "action",
         verbose: bool = True,
+        parallel: Union[bool, int] = False,
     ) -> "ExplainableGP":
         """Factory method for easy GP creation with sensible defaults.
 
@@ -3514,23 +3563,20 @@ class ExplainableGP:
 
         # Setup autocast
         if clip_range:
-
-            def _clip_autocast(x):
-                return np.clip(np.asarray(x, dtype=np.float64), clip_range[0], clip_range[1])
-
-            eval_autocast = _clip_autocast
+            eval_autocast = _ClipAutocast(clip_range[0], clip_range[1])
         else:
             eval_autocast = None  # Will use default
 
         # Setup error metric
+        # Uses picklable top-level functions (not lambdas) for ProcessPoolExecutor.
         if callable(error_metric):
             eval_error_metric = error_metric
         elif error_metric == "rmse":
-            eval_error_metric = lambda pred, true: np.sqrt(np.mean((pred - true) ** 2))
+            eval_error_metric = _error_rmse
         elif error_metric == "mse":
-            eval_error_metric = lambda pred, true: np.mean((pred - true) ** 2)
+            eval_error_metric = _error_mse
         elif error_metric == "mae":
-            eval_error_metric = lambda pred, true: np.mean(np.abs(pred - true))
+            eval_error_metric = _error_mae
         else:
             raise ValueError(f"Unknown error_metric: {error_metric}. Use 'rmse', 'mse', 'mae', or callable.")
 
@@ -3545,6 +3591,7 @@ class ExplainableGP:
             allow_chain=allow_chain,
             target_column=target_column,
             verbose=verbose,
+            parallel=parallel,
         )
 
     @classmethod
@@ -3665,6 +3712,141 @@ class ExplainableGP:
         self.gen_id += 1
 
         self.time_genstart = time.perf_counter()
+
+    # =========================================================================
+    # Declarative Strategy API
+    # =========================================================================
+
+    def register_strategy(self, name: str, fn: Callable):
+        """Register a custom strategy function.
+
+        The function must be a top-level function (picklable for parallel mode).
+        Signature: fn(evolve, pop_genepool, paretofront, allow_chain, **params) -> Node | Tuple[Node, Node]
+
+        Args:
+            name: Name to register the strategy under.
+            fn: Strategy function.
+
+        Example:
+            def my_strategy(evolve, pop_genepool, paretofront, allow_chain, **params):
+                tree = selection_tournament(pop_genepool, n=3)
+                return evolve.evolve_mutate_point(tree)
+
+            gp.register_strategy("my_mutation", my_strategy)
+        """
+        self._custom_strategies[name] = fn
+        self._strategy_registry[name] = fn
+
+    def run_generation(self, strategies, *, parallel: Optional[bool] = None, seed: Optional[int] = None):
+        """Run a complete generation using declarative strategies.
+
+        Creates trees according to the strategy list, evaluates them,
+        updates the Pareto front, and prepares for the next generation.
+
+        Supports both sequential (debuggable) and parallel execution.
+        In sequential mode, the same code path is used as in parallel,
+        just without a ProcessPoolExecutor — allowing full debugging
+        with breakpoints.
+
+        Args:
+            strategies: List of Strategy objects defining the generation.
+            parallel: Override parallel mode. None=use self._parallel_workers.
+                      True=parallel with auto-detect, False=sequential.
+            seed: Optional base seed for reproducibility. Each task gets
+                  seed = base_seed * 10000 + task_index.
+
+        Example:
+            from plagih.parallel import Strategy
+
+            gp.run_generation([
+                Strategy("reproduction", rate=0.2, tournament_n=3),
+                Strategy("mutation", rate=0.4, depth_goal=3, p_term=0.3),
+                Strategy("random_new", rate=0.2, depths=[2, 3, 4]),
+                Strategy("crossover", rate=0.2, crossover=True, tournament_n=3),
+            ])
+        """
+        from plagih.parallel import (
+            build_task_list,
+            run_generation_parallel,
+            run_generation_sequential,
+        )
+
+        # Determine execution mode
+        if parallel is True:
+            import os
+
+            n_workers = os.cpu_count() or 4
+        elif parallel is False or parallel == 0:
+            n_workers = 0
+        elif isinstance(parallel, int) and parallel > 0:
+            n_workers = parallel
+        elif parallel is None:
+            n_workers = self._parallel_workers
+        else:
+            n_workers = 0
+
+        # Build task list from strategies
+        tasks = build_task_list(strategies, self.pop_max_size, seed=seed)
+
+        printpl(
+            "gg",
+            f"Generation {self.gen_id}: {len(tasks)} tasks, "
+            f"{'parallel' if n_workers > 0 else 'sequential'}"
+            f"{f' ({n_workers} workers)' if n_workers > 0 else ''}",
+        )
+
+        if n_workers > 0:
+            # Parallel execution
+            candidates, lut_tree_delta, lut_symex_delta, tracker = run_generation_parallel(
+                tasks=tasks,
+                n_workers=n_workers,
+                evolve=self.evolve,
+                df_train=self.df_train,
+                pop_genepool=self.pop_genepool,
+                paretofront=self.paretofront,
+                eval_autocast=self.eval_autocast,
+                eval_error_metric=self.eval_error_metric,
+                allow_chain=self.allow_chain,
+                target_column=self.target_column,
+                nodes_max=self.evolve.nodes_max,
+                complexity_metric=self.evolve.complexity_metric,
+                strategy_registry=self._strategy_registry,
+            )
+            # Merge worker-local LUTs into main LUTs.
+            # Same key = same result, simple update is sufficient.
+            self.lut_tree_infos.update(lut_tree_delta)
+            self.lut_symex_fitness.update(lut_symex_delta)
+        else:
+            # Sequential execution — identical logic, no pool, full debugging
+            candidates, tracker = run_generation_sequential(
+                tasks=tasks,
+                evolve=self.evolve,
+                df_train=self.df_train,
+                pop_genepool=self.pop_genepool,
+                paretofront=self.paretofront,
+                eval_autocast=self.eval_autocast,
+                eval_error_metric=self.eval_error_metric,
+                allow_chain=self.allow_chain,
+                target_column=self.target_column,
+                nodes_max=self.evolve.nodes_max,
+                complexity_metric=self.evolve.complexity_metric,
+                strategy_registry=self._strategy_registry,
+                lut_tree=self.lut_tree_infos,
+                lut_symex=self.lut_symex_fitness,
+            )
+
+        # Store tracker for inspection
+        self._performance_tracker = tracker
+
+        # Add candidates to pop_next
+        for candidate in candidates:
+            self.pop_next_append(candidate)
+
+        # Finalize generation (same as end_generation)
+        self.end_generation()
+
+        # Print performance summary
+        tracker.print_summary()
 
     def gen_create_initial(self, origin_tree=None):
         """Creates the initial population (generation 0).

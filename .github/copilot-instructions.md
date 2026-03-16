@@ -16,7 +16,7 @@ crossover, and simplification, evaluated against training data.
 <!-- AUTOGEN:MODULE_MAP:START -->
 | Module | Responsibility |
 |---|---|
-| `plagih/trees.py` | plagih_tree contain a new implementation of trees that we use in genetic programming to display a program. (67C/22F) |
+| `plagih/trees.py` | plagih_tree contain a new implementation of trees that we use in genetic programming to display a program. (66C/22F) |
 | `plagih/parallel.py` | Parallel execution engine for plagih GP. (5C/33F) |
 | `plagih/paretofront.py` | Pareto-front dominance filter for GP candidates. (0C/6F) |
 | `plagih/monitoring.py` | GP Monitoring Module (2C/0F) |
@@ -36,19 +36,17 @@ Node (ABC)
     │   ├── NodeDummy
     │   │   └── PleaseUsePartnerOp, ExprCondPair_Dummy
     │   └── BaseOperator
-    │       ├── OperatorArity
-    │       │   ├── LogicOperator
-    │       │   │   └── Not, And (+C), Or (+C), Xor (+NC), ITE
-    │       │   ├── RelationalOperator
-    │       │   │   └── Eq, Ne, Lt, Le, Gt, Ge
-    │       │   └── Ifte
     │       ├── MathOperator
     │       │   ├── Trigonometry
     │       │   │   └── Cos (+N), Sin (+N), Tan (+N), Acos (+N), Asin (+N), Atan (+N), Tanh (+N), Sinh (+N), Cosh (+N)
     │       │   ├── BaseMinMax
     │       │   │   └── Min (+C), Max (+C), Clip (+C)
     │       │   └── Add (+C), Mul (+C), DivFraction, NthRoot, Pow, Abs, Sign (+N), Log (+N), Square, Exp, Exp2, Sub, Round, PowRounded, Div, Sqrt, Usub
-    │       └── Piecewise (+C)
+    │       ├── LogicOperator
+    │       │   └── Not, And (+C), Or (+C), Xor (+NC), ITE
+    │       ├── RelationalOperator
+    │       │   └── Eq, Ne, Lt, Le, Gt, Ge
+    │       └── Ifte, Piecewise (+C)
     └── Terminal
         └── Boolean, Number, Symbol
 

@@ -84,7 +84,6 @@ def get_all_operator_classes():
     """Returns list of all concrete operator classes for testing."""
     skip_classes = {
         "BaseOperator",
-        "OperatorArity",
         "MathOperator",
         "LogicOperator",
         "RelationalOperator",

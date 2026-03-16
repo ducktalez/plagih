@@ -49,7 +49,6 @@ ABSTRACT_CLASSES = {
     "NodeWithChilds",
     "NodeDummy",
     "BaseOperator",
-    "OperatorArity",
     "MathOperator",
     "LogicOperator",
     "RelationalOperator",

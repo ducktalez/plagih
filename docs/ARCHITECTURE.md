@@ -57,21 +57,6 @@ Node (ABC)
     │   │   ├── PleaseUsePartnerOp
     │   │   └── ExprCondPair_Dummy
     │   └── BaseOperator
-    │       ├── OperatorArity
-    │       │   ├── LogicOperator
-    │       │   │   ├── Not
-    │       │   │   ├── And  (+ ChainableOp)
-    │       │   │   ├── Or  (+ ChainableOp)
-    │       │   │   ├── Xor  (+ NoSymCapitalized, ChainableOp)
-    │       │   │   └── ITE
-    │       │   ├── RelationalOperator
-    │       │   │   ├── Eq
-    │       │   │   ├── Ne
-    │       │   │   ├── Lt
-    │       │   │   ├── Le
-    │       │   │   ├── Gt
-    │       │   │   └── Ge
-    │       │   └── Ifte
     │       ├── MathOperator
     │       │   ├── Trigonometry
     │       │   │   ├── Cos  (+ NoSymCapitalized)
@@ -104,6 +89,20 @@ Node (ABC)
     │       │   ├── Div
     │       │   ├── Sqrt
     │       │   └── Usub
+    │       ├── LogicOperator
+    │       │   ├── Not
+    │       │   ├── And  (+ ChainableOp)
+    │       │   ├── Or  (+ ChainableOp)
+    │       │   ├── Xor  (+ NoSymCapitalized, ChainableOp)
+    │       │   └── ITE
+    │       ├── RelationalOperator
+    │       │   ├── Eq
+    │       │   ├── Ne
+    │       │   ├── Lt
+    │       │   ├── Le
+    │       │   ├── Gt
+    │       │   └── Ge
+    │       ├── Ifte
     │       └── Piecewise  (+ ChainableOp)
     └── Terminal
         ├── Boolean

@@ -71,7 +71,6 @@ def _get_tree_classes():
         Not,
         NthRoot,
         Number,
-        OperatorArity,
         Or,
         Piecewise,
         Pow,
@@ -413,7 +412,6 @@ def get_all_operator_classes():
 
     skip_classes = {
         "BaseOperator",
-        "OperatorArity",
         "MathOperator",
         "LogicOperator",
         "RelationalOperator",

@@ -97,7 +97,6 @@ und diese Tabelle anschließend nachgezogen werden.
 ## Ablage/Todos
 ### Code Dokumentation und instructions überarbeiten
 
-- LogicOperator ist keine Unterklasse von OperatorArity. OperatorArity hat vermutlich gar keinen authentischen Nutzen und kann deshalb entfernt werden oder?
 - Ich habe schon gesehen dass die Prints bei der Ausgabe sich noch rückwirkend verändern. Ist sowas auch für das hier möglich? Also ich stelle mir vor so eine Art Progress-Print, das innerhalb einer Generation sagt: "Ich starte jetzt und dann bin ich halt irgendwann fertig." Dann wird "Start..." überschrieben mit den Sachen, die dahinter stehen, und man braucht keine zwei Zahlen mehr. 
   ```
   [22:37:18] generation 2/5 start ...

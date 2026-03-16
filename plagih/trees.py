@@ -1362,7 +1362,7 @@ def evolve_reduce_simplicate(_tree: Node, allow_chain: bool, completely: bool = 
             cc.set_new_node(cc2)
     else:
         node_list = [
-            n for n in _tree.list_mutable_nodes() if issubclass(n.get_typus(), OperatorArity)
+            n for n in _tree.list_mutable_nodes() if issubclass(n.get_typus(), BaseOperator)
         ]  # ignoring leaf nodes...
         if len(node_list) == 0:
             print_warning("wwww", f"Tree for simplification does not provide operators: {_tree}")
@@ -1507,16 +1507,6 @@ class BaseOperator(NodeWithChilds):
         return node_lambda
 
 
-class OperatorArity(BaseOperator):
-    """Base class for operators with a fixed arity (number of arguments).
-
-    Most standard operators (Add, Mul, Sin, etc.) inherit from this class.
-    The arity is determined by the length of the input types in xtype[0].
-    """
-
-    arity = None
-
-
 # class OperatorChained(BaseOperator):
 #     # no xtype, only input type
 #     # no tflow, separate handling in totf-function
@@ -1566,7 +1556,7 @@ class MathOperator(BaseOperator):
     pass
 
 
-class LogicOperator(OperatorArity):
+class LogicOperator(BaseOperator):
     """Base class for logical operators that produce boolean results.
 
     Includes And, Or, Xor, Not operations.
@@ -1575,7 +1565,7 @@ class LogicOperator(OperatorArity):
     pass
 
 
-class RelationalOperator(OperatorArity):
+class RelationalOperator(BaseOperator):
     """Base class for relational/comparison operators.
 
     Includes Lt (<), Le (<=), Gt (>), Ge (>=), Eq (==), Ne (!=).
@@ -2237,7 +2227,7 @@ class Sub(MathOperator):
     repr_str = "Sub{},[{}, {}]"
 
 
-class Ifte(OperatorArity):
+class Ifte(BaseOperator):
     """Numeric if-then-else operator (Piecewise).
 
     Ifte(condition, then_value, else_value) returns then_value if condition

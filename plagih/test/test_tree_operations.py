@@ -215,6 +215,15 @@ class TestTreeSimplification:
 
         np.testing.assert_array_almost_equal(result_orig, result_simp)
 
+    def test_partial_reduce_can_simplify_math_operator(self):
+        """Regression: partial simplification must not ignore MathOperator nodes."""
+        tree = Add(Symbol(sympy.Symbol("a")), Number(0.0))
+
+        simplified = evolve_reduce_simplicate(tree, allow_chain=False, completely=False, force=True)
+
+        assert isinstance(simplified, Symbol)
+        assert simplified.get_value() == sympy.Symbol("a")
+
 
 # =============================================================================
 # Tree Node Grouping Tests

@@ -136,7 +136,7 @@ if __name__ == "__main__":
     print(f"Generations: {N_GENERATIONS}\n")
 
     configs = [
-        ("seq_1000", 1000, False),
+        ("seq_1000", 10000, False),
         ("par_2w_1000", 1000, 2),
         ("par_4w_1000", 1000, 4),
         ("par_8w_1000", 1000, 8),

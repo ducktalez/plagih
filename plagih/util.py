@@ -9,10 +9,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 
-PRINT_DUMMY = (
-    "wwaaggiiffpp"  # dummy for print-policy (w=warning, a=action, g=generation, i=info, f=file, p=performance)
-)
-# print-all: 'wwwwaaaggggiiiifffpp'
+# ---------------------------------------------------------------------------
+# Verbosity control via substring membership.
+# printpl(level, msg) prints only if `level in PRINT_DUMMY`.
+# "gg" ∈ "wwaaggiiffpp" → True   (generation summaries shown)
+# "gggg" ∈ "wwaaggiiffpp" → False (per-candidate detail suppressed)
+# Full verbosity: "wwwwaaaggggiiiifffpp"
+# See docs/PITFALLS.md P5.
+# ---------------------------------------------------------------------------
+PRINT_DUMMY = "wwaaggiiffpp"  # w=warning, a=action, g=generation, i=info, f=file, p=performance
 TEXT_NEWLINE = "============================================================"
 DEBUG_DUMMY = False  # dummy for debug-policy
 FLOAT_PRECISION = 3

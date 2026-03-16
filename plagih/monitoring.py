@@ -323,7 +323,7 @@ class GPMonitor:
 
         if not self.generations:
             # Return empty DataFrame with expected columns
-            return pd.DataFrame(
+            df = pd.DataFrame(
                 columns=[
                     "pop_len",
                     "pop_unique",
@@ -344,6 +344,8 @@ class GPMonitor:
                     "gens_since_last_pareto",
                 ]
             )
+            df.index.name = "gen_id"
+            return df
 
         # Collect all unique metric names
         all_metrics = set()
@@ -360,6 +362,7 @@ class GPMonitor:
                 data[metric].append(gen.get(metric, np.nan))
 
         df = pd.DataFrame(data, index=index)
+        df.index.name = "gen_id"
 
         # Rename columns for backwards compatibility with existing code
         rename_map = {

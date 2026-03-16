@@ -1,11 +1,21 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
+  # Auto-update AI instructions & architecture docs from source code
+  - repo: local
+    hooks:
+      - id: update-copilot-instructions
+        name: Update copilot-instructions & architecture docs
+        entry: python scripts/update_copilot_instructions.py
+        language: python
+        pass_filenames: false
+        files: '(plagih/trees\.py|\.github/copilot-instructions\.md|docs/ARCHITECTURE\.md|scripts/update_copilot_instructions\.py)'
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.11.13
     hooks:
-      # Linter – runs first, auto-fixes what it can
+      # Linter – auto-fixes everything it can (incl. unsafe fixes like RUF003)
       - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
+        args: [--fix, --unsafe-fixes]
       # Formatter – runs second, formats everything
       - id: ruff-format

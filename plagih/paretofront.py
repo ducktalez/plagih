@@ -1,7 +1,12 @@
 """
-All paretoefficient GP-candidates, aka the "best" entries for each complexity.
--> updated after each generation
+Pareto-front dominance filter for GP candidates.
 
+Maintains the non-dominated set w.r.t. (parsimony, fitness).
+Candidate A dominates B iff A.parsimony ≤ B.parsimony AND A.fitness ≤ B.fitness
+with at least one strict inequality.
+
+Updated every generation via ExplainableGP.run_update_paretofront().
+The front is the primary output of a GP run.
 """
 
 from plagih.util import *

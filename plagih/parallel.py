@@ -176,6 +176,16 @@ class PerformanceTracker:
         """Set the total wall-clock time for the generation."""
         self._generation_time = elapsed
 
+    @property
+    def total_ok(self) -> int:
+        """Total number of successful tasks across all strategies."""
+        return sum(self._successes.values())
+
+    @property
+    def total_fail(self) -> int:
+        """Total number of failed tasks across all strategies."""
+        return sum(self._errors.values())
+
     def summary(self) -> Dict[str, Any]:
         """Compute summary statistics per strategy tag.
 

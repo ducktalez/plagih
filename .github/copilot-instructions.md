@@ -22,7 +22,7 @@ crossover, and simplification, evaluated against training data.
 | `plagih/monitoring.py` | GP Monitoring Module (2C/0F) |
 | `plagih/evaluation_context.py` | Unified Evaluation Context System for Plagih GP Trees. (3C/5F) |
 | `plagih/population_merge.py` | Population Merge Module for plagih GP Framework (3C/8F) |
-| `plagih/util.py` | *(no docstring)* (9C/28F) |
+| `plagih/util.py` | *(no docstring)* (9C/31F) |
 | `visualization/tree_renderer.py` | Unified Tree Visualization Module for plagih GP Framework (9C/10F) |
 | `visualization/visualize_trees.py` | Tree Visualization for plagih GP Framework (0C/7F) |
 <!-- AUTOGEN:MODULE_MAP:END -->
@@ -91,6 +91,16 @@ See `docs/PITFALLS.md` for the full list with examples.
    population). Use `str(tree)` or `tree.get_lut_id()` for fast identification.
 6. **Physical cores**: `os.cpu_count()` returns logical threads (16 on 8-core
    HT CPU). Use `cpu_count_physical()` from `util.py` for worker counts.
+
+## Working behaviour
+
+- **Proactive code review**: When working on a task, report any **bugs**,
+  **code smells**, or **questionable patterns** discovered along the way —
+  even if unrelated to the current task. Include a brief improvement
+  suggestion for each finding.
+- **Raise concerns**: If an approach seems risky, fragile, or
+  architecturally problematic, voice the concern explicitly before or
+  alongside the implementation.
 
 ## Maintaining these docs
 

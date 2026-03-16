@@ -3820,7 +3820,7 @@ class ExplainableGP:
 
         return changed
 
-    def end_generation(self):
+    def end_generation(self, _suppress_analyze_print: bool = False):
         """Finalizes the current generation and prepares for the next.
 
         Actions:
@@ -3829,6 +3829,11 @@ class ExplainableGP:
         - Prints population summary (only at high verbosity, expensive for large pops)
         - Runs analysis and monitoring
         - Increments generation counter
+
+        Args:
+            _suppress_analyze_print: If True, suppress the generation summary print
+                in analyze_generation (used by run_generation which prints its own
+                progress-style summary).
         """
         pareto_updated = self.run_update_paretofront(self.pop_next)
 
@@ -3838,7 +3843,7 @@ class ExplainableGP:
         if "gggg" in PRINT_DUMMY:
             print_pop(self.pop_next)
         self.pop_next = []
-        self.analyze_generation(pareto_updated=pareto_updated)
+        self.analyze_generation(pareto_updated=pareto_updated, _suppress_print=_suppress_analyze_print)
         self.gen_id += 1
 
         self.time_genstart = time.perf_counter()
@@ -3918,12 +3923,8 @@ class ExplainableGP:
         # Build task list from strategies
         tasks = build_task_list(strategies, self.pop_max_size, seed=seed)
 
-        printpl(
-            "gg",
-            f"Generation {self.gen_id}: {len(tasks)} tasks, "
-            f"{'parallel' if n_workers > 0 else 'sequential'}"
-            f"{f' ({n_workers} workers)' if n_workers > 0 else ''}",
-        )
+        # Progress start — will be overwritten by the done-line below
+        print_generation_start(self.gen_id, self.gen_end)
 
         if n_workers > 0:
             # Parallel execution — use persistent pool to avoid Windows spawn overhead
@@ -3976,9 +3977,24 @@ class ExplainableGP:
             self.pop_next_append(candidate)
 
         # Finalize generation (same as end_generation)
-        self.end_generation()
+        self.end_generation(_suppress_analyze_print=True)
 
-        # Print performance summary
+        # Progress done — overwrites the start-line
+        gen_time_ms = (time.perf_counter() - self.time_genstart) * 1000
+        # time_genstart was reset in end_generation, so use tracker time
+        tracker_total_ms = tracker.summary().get("generation_total_time", 0.0) * 1000
+        print_generation_done(
+            gen_id=self.gen_id - 1,  # gen_id was already incremented in end_generation
+            gen_end=self.gen_end,
+            time_ms=tracker_total_ms,
+            genepool=len(self.pop_genepool),
+            pareto=len(self.paretofront),
+            ok=tracker.total_ok,
+            fail=tracker.total_fail,
+            tracker_total_ms=tracker_total_ms,
+        )
+
+        # Print detailed performance summary (only at higher verbosity)
         tracker.print_summary()
 
     def gen_create_initial(self, origin_tree=None):
@@ -4499,7 +4515,7 @@ class ExplainableGP:
         else:
             raise FileNotFoundError(f"No backup-file found at {path_backup}")
 
-    def analyze_generation(self, pareto_updated: bool = False):
+    def analyze_generation(self, pareto_updated: bool = False, _suppress_print: bool = False):
         """Analyzes and logs statistics for the current generation.
 
         Computes population metrics and stores them in monitor.
@@ -4507,6 +4523,8 @@ class ExplainableGP:
 
         Args:
             pareto_updated: Whether the Pareto front was updated this generation.
+            _suppress_print: If True, suppress the generation summary printpl.
+                Used by run_generation which prints its own progress-style summary.
         """
         gen_time = time.perf_counter() - self.time_genstart
 
@@ -4519,13 +4537,14 @@ class ExplainableGP:
             lut_size=len(self.lut_symex_fitness),
         )
 
-        # Get latest metrics for logging
-        latest = self.monitor.latest
-        printpl(
-            "gg",
-            f"Created {latest.get('pop_size', 0)}/{self.gen_end} ({latest.get('pop_unique', 0)} unique) in generation {self.gen_id}. "
-            f"Trees in LUT: {len(self.lut_symex_fitness)} Generation took {gen_time:4.2f}s",
-        )
+        # Get latest metrics for logging (only when not suppressed by run_generation)
+        if not _suppress_print:
+            latest = self.monitor.latest
+            printpl(
+                "gg",
+                f"Created {latest.get('pop_size', 0)}/{self.gen_end} ({latest.get('pop_unique', 0)} unique) in generation {self.gen_id}. "
+                f"Trees in LUT: {len(self.lut_symex_fitness)} Generation took {gen_time:4.2f}s",
+            )
 
         # Generate merged population tree visualization
         if self.enable_analysis:

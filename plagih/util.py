@@ -3,6 +3,8 @@ import os
 import pickle
 import re
 import shutil
+import sys
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -26,6 +28,59 @@ PLOTS_INTERVAL = 1
 BACKUP_INTERVAL = 10
 CHAIN_implement = "sfeh"  # used as placeholder for implementation-tasks
 TREE_MIN_PARSIMONY = 3
+
+# ---------------------------------------------------------------------------
+# Progress-print helpers: "start ..." gets overwritten by "done: ..." on the
+# same terminal line (via \r).  If other prints happen in between, the start
+# line simply stays and the done line appears below.
+# ---------------------------------------------------------------------------
+_progress_line_open = False  # True while a start-line is waiting for its done-line
+
+
+def print_generation_start(gen_id: int, gen_end: int):
+    """Print an in-place progress line that will be overwritten by *_done*."""
+    global _progress_line_open
+    if "gg" not in PRINT_DUMMY:
+        return
+    ts = time.strftime("%H:%M:%S", time.localtime())
+    msg = f"[{ts}] generation {gen_id}/{gen_end} start ..."
+    sys.stdout.write(f"\r{msg}")
+    sys.stdout.flush()
+    _progress_line_open = True
+
+
+def print_generation_done(
+    gen_id: int, gen_end: int, time_ms: float, genepool: int, pareto: int, ok: int, fail: int, tracker_total_ms: float
+):
+    """Overwrite the start-line with the final summary."""
+    global _progress_line_open
+    if "gg" not in PRINT_DUMMY:
+        _progress_line_open = False
+        return
+    ts = time.strftime("%H:%M:%S", time.localtime())
+    msg = (
+        f"[{ts}] generation {gen_id}/{gen_end} done: {time_ms:.1f}ms"
+        f" | genepool={genepool} | pareto={pareto}"
+        f" | ok={ok}, fail={fail}, tracker_total={tracker_total_ms:.1f}ms"
+    )
+    # Pad with spaces to fully overwrite a potentially longer start-line
+    pad = max(0, 80 - len(msg))
+    sys.stdout.write(f"\r{msg}{' ' * pad}\n")
+    sys.stdout.flush()
+    _progress_line_open = False
+
+
+def _flush_progress_line():
+    """If a progress start-line is open, move to a new line first.
+
+    Called by printez/printpl so that intermediate messages don't clobber
+    the progress line.
+    """
+    global _progress_line_open
+    if _progress_line_open:
+        sys.stdout.write("\n")
+        sys.stdout.flush()
+        _progress_line_open = False
 
 
 def cpu_count_physical() -> int:
@@ -574,6 +629,9 @@ def printpl(msg_type: str, message_str: str):
 
     if msg_type not in PRINT_DUMMY:
         return
+
+    # If a progress start-line is open, move to a new line first
+    _flush_progress_line()
 
     # Map message types to log levels - handle repeated characters
     level_map = {

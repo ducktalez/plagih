@@ -41,7 +41,6 @@ from plagih.util import (
     TreeLutError,
     TreeSizeError,
     print_caution,
-    print_warning,
     printpl,
 )
 
@@ -273,6 +272,27 @@ def _init_worker(
     _worker_strategy_registry = strategy_registry
 
 
+def _update_worker_state(pop_genepool, paretofront):
+    """Update worker state per generation (persistent pool mode).
+
+    Only pop_genepool and paretofront change between generations.
+    Called as a task on each worker before the actual batch.
+
+    After deserialization, tree back-references (parent_node, root_node)
+    are None (excluded from pickle for performance). We repair them here
+    so strategies that need them (e.g. set_new_node with repair=True) work.
+    """
+    global _worker_pop_genepool, _worker_paretofront
+    # Repair tree back-references stripped during pickling
+    for candidate in pop_genepool:
+        candidate.tree.repair_all()
+    for candidate in paretofront:
+        candidate.tree.repair_all()
+    _worker_pop_genepool = pop_genepool
+    _worker_paretofront = paretofront
+    return True
+
+
 # =============================================================================
 # Standalone Tree Evaluation (extracted from ExplainableGP.tree_to_candidate)
 # =============================================================================
@@ -489,14 +509,17 @@ BUILTIN_STRATEGIES: Dict[str, Callable] = {
 # =============================================================================
 
 
-def _worker_run_task(task: TaskSpec) -> TaskResult:
+def _worker_run_task(task: TaskSpec, shared_lut_tree=None, shared_lut_symex=None) -> TaskResult:
     """Execute a single tree-creation task in a worker process.
 
     Uses global worker state (set by _init_worker) for evolve, df_train, etc.
-    Builds a worker-local LUT to avoid cross-process synchronization.
+    When called from _worker_run_batch, shared LUT dicts are passed in
+    to enable intra-batch cache hits.
 
     Args:
         task: TaskSpec describing what to do.
+        shared_lut_tree: Optional shared LUT dict (from batch). Creates new if None.
+        shared_lut_symex: Optional shared LUT dict (from batch). Creates new if None.
 
     Returns:
         TaskResult with candidate(s), LUT deltas, timing, and error info.
@@ -504,8 +527,8 @@ def _worker_run_task(task: TaskSpec) -> TaskResult:
     from plagih.trees import tree_simplification
 
     timing = {}
-    lut_tree = {}
-    lut_symex = {}
+    lut_tree = shared_lut_tree if shared_lut_tree is not None else {}
+    lut_symex = shared_lut_symex if shared_lut_symex is not None else {}
     t0 = time.perf_counter()  # Start timing before try block
 
     # Set seed if provided (for reproducibility)
@@ -571,8 +594,8 @@ def _worker_run_task(task: TaskSpec) -> TaskResult:
 
         return TaskResult(
             candidates=candidates,
-            lut_tree_entries=lut_tree,
-            lut_symex_entries=lut_symex,
+            lut_tree_entries={},  # LUT entries stay in shared dicts (or local if standalone)
+            lut_symex_entries={},
             timing=timing,
             error=None,
             tag=task.tag,
@@ -582,12 +605,38 @@ def _worker_run_task(task: TaskSpec) -> TaskResult:
         timing["total"] = time.perf_counter() - t0
         return TaskResult(
             candidates=[],
-            lut_tree_entries=lut_tree,
-            lut_symex_entries=lut_symex,
+            lut_tree_entries={},  # LUT entries stay in shared dicts
+            lut_symex_entries={},
             timing=timing,
             error=f"{type(e).__name__}: {e}",
             tag=task.tag,
         )
+
+
+def _worker_run_batch(tasks: List[TaskSpec]) -> List[TaskResult]:
+    """Execute a batch of tasks in a single worker call.
+
+    Processes multiple tasks sequentially within the same worker process,
+    sharing LUT dicts across tasks for intra-batch cache hits.
+    Returns only TaskResults (no LUT dicts) — LUTs contain sympy objects
+    which are extremely expensive to pickle. Since the pool is destroyed
+    per generation anyway, worker LUTs don't need to persist.
+
+    Args:
+        tasks: List of TaskSpecs for this batch.
+
+    Returns:
+        List of TaskResults for tracking and candidate collection.
+    """
+    batch_lut_tree = {}
+    batch_lut_symex = {}
+    results = []
+
+    for task in tasks:
+        result = _worker_run_task(task, shared_lut_tree=batch_lut_tree, shared_lut_symex=batch_lut_symex)
+        results.append(result)
+
+    return results
 
 
 # =============================================================================
@@ -760,93 +809,118 @@ def run_generation_parallel(
     nodes_max,
     complexity_metric,
     strategy_registry,
+    pool: Optional[ProcessPoolExecutor] = None,
 ) -> Tuple[list, Dict, Dict, PerformanceTracker]:
-    """Run all tasks in parallel using ProcessPoolExecutor.
+    """Run all tasks in parallel using ProcessPoolExecutor with batch submission.
 
-    Design: Pool is created fresh per generation (~100ms overhead).
-    This guarantees consistent genepool state without needing
-    a broadcast update mechanism for persistent pools.
+    Design: Instead of submitting N individual tasks (→ N pickle roundtrips),
+    tasks are split into n_workers batches. Each worker processes its entire
+    batch in a single call, sharing LUTs within the batch. This reduces
+    serialization overhead from O(N) to O(n_workers).
+
+    LUT dicts are NOT returned from workers because they contain sympy objects
+    which are extremely expensive to pickle. Worker LUTs are used only for
+    intra-batch deduplication.
+
+    Performance: Uses a persistent pool to avoid Windows `spawn` overhead
+    (~2 seconds per pool creation due to Python interpreter + module imports).
+    Worker state (pop_genepool, paretofront) is updated per generation via
+    _update_worker_state tasks.
 
     Args:
         tasks: List of TaskSpec objects.
         n_workers: Number of worker processes.
         evolve, df_train, ...: GP state for worker initialization.
         strategy_registry: Combined builtin + custom strategies.
+        pool: Optional persistent ProcessPoolExecutor. If None, creates a new one.
 
     Returns:
         Tuple of (candidates, lut_tree_delta, lut_symex_delta, tracker).
+        Note: lut_tree_delta and lut_symex_delta are always empty in parallel mode.
     """
     tracker = PerformanceTracker()
     all_candidates = []
     lut_tree_delta = {}
     lut_symex_delta = {}
 
-    # Track failures per strategy tag for budget enforcement
-    fail_counts: Dict[str, int] = {}
-    success_counts: Dict[str, int] = {}
-    # Compute expected counts for budget calculation
-    tag_expected: Dict[str, int] = {}
-    for task in tasks:
-        tag_expected[task.tag] = tag_expected.get(task.tag, 0) + 1
-
     gen_start = time.perf_counter()
 
-    # Design: Pool-Neustart pro Generation statt persistent.
-    # ~100ms Overhead, dafür garantiert konsistenter Genepool-State.
-    with ProcessPoolExecutor(
-        max_workers=n_workers,
-        initializer=_init_worker,
-        initargs=(
-            evolve,
-            df_train,
-            pop_genepool,
-            paretofront,
-            eval_autocast,
-            eval_error_metric,
-            allow_chain,
-            target_column,
-            nodes_max,
-            complexity_metric,
-            strategy_registry,
-        ),
-    ) as executor:
-        futures = {executor.submit(_worker_run_task, task): task for task in tasks}
+    # Diagnostic: measure pickle size of genepool (the IPC bottleneck)
+    import pickle as _pickle
+
+    _gp_bytes = len(_pickle.dumps(pop_genepool, protocol=_pickle.HIGHEST_PROTOCOL))
+    printpl("pp", f"  pickle(pop_genepool): {_gp_bytes / 1024:.0f} KB  ({len(pop_genepool)} candidates)")
+
+    # Split tasks into n_workers batches (round-robin for strategy mix)
+    batches: List[List[TaskSpec]] = [[] for _ in range(n_workers)]
+    for i, task in enumerate(tasks):
+        batches[i % n_workers].append(task)
+    # Remove empty batches (when tasks < n_workers)
+    batches = [b for b in batches if b]
+
+    owns_pool = pool is None
+    if owns_pool:
+        pool = ProcessPoolExecutor(
+            max_workers=n_workers,
+            initializer=_init_worker,
+            initargs=(
+                evolve,
+                df_train,
+                pop_genepool,
+                paretofront,
+                eval_autocast,
+                eval_error_metric,
+                allow_chain,
+                target_column,
+                nodes_max,
+                complexity_metric,
+                strategy_registry,
+            ),
+        )
+
+    try:
+        # Update worker state with current generation's genepool and paretofront.
+        # For persistent pools, this is how we push new data to workers.
+        # For new pools, this is redundant but harmless (~1ms overhead).
+        update_futures = [pool.submit(_update_worker_state, pop_genepool, paretofront) for _ in range(n_workers)]
+        for f in update_futures:
+            f.result()  # Wait for all workers to update
+
+        # Submit n_workers batches instead of N individual tasks
+        futures = {pool.submit(_worker_run_batch, batch): batch for batch in batches}
 
         for future in as_completed(futures):
-            task = futures[future]
-            tag = task.tag
+            batch = futures[future]
 
             try:
-                result = future.result()
+                batch_results = future.result()
             except Exception as e:
-                # Unexpected worker crash
-                result = TaskResult(
-                    candidates=[],
-                    lut_tree_entries={},
-                    lut_symex_entries={},
-                    timing={"total": 0.0},
-                    error=f"WorkerCrash: {e}",
-                    tag=tag,
-                )
-
-            tracker.record(result)
-
-            if result.error is not None:
-                fail_counts[tag] = fail_counts.get(tag, 0) + 1
-                n_expected = tag_expected.get(tag, 1)
-                budget = 2 * n_expected + 5
-                if fail_counts[tag] > budget:
-                    print_warning(
-                        "ww",
-                        f"Strategy '{tag}' exceeded failure budget "
-                        f"({fail_counts[tag]}/{budget}). Some tasks may not complete.",
+                # Worker crash — record failure for all tasks in batch
+                for task in batch:
+                    tracker.record(
+                        TaskResult(
+                            candidates=[],
+                            lut_tree_entries={},
+                            lut_symex_entries={},
+                            timing={"total": 0.0},
+                            error=f"WorkerCrash: {e}",
+                            tag=task.tag,
+                        )
                     )
-            else:
-                success_counts[tag] = success_counts.get(tag, 0) + 1
-                all_candidates.extend(result.candidates)
-                # Merge worker-local LUTs: same key = same result, simple update
-                lut_tree_delta.update(result.lut_tree_entries)
-                lut_symex_delta.update(result.lut_symex_entries)
+                continue
+
+            # Process individual task results for tracking
+            for result in batch_results:
+                tracker.record(result)
+                if result.error is None:
+                    # Repair tree back-references stripped during pickling
+                    for candidate in result.candidates:
+                        candidate.tree.repair_all()
+                    all_candidates.extend(result.candidates)
+
+    finally:
+        if owns_pool:
+            pool.shutdown(wait=True)
 
     tracker.set_generation_time(time.perf_counter() - gen_start)
     return all_candidates, lut_tree_delta, lut_symex_delta, tracker

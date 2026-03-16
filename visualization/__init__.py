@@ -44,7 +44,6 @@ _TREE_RENDERER_EXPORTS = {
 }
 
 _VISUALIZE_TREES_EXPORTS = {
-    "visualize_multiple_trees",
     "visualize_paretofront",
 }
 

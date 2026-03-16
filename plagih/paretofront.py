@@ -66,6 +66,8 @@ def plot_paretofront(paretofront, path, parsimony_max):
             print_caution(f"Could not save plot: {perm_error}")
         except Exception as ex:
             raise ex
+        finally:
+            plt.close(fig)
     return
 
 

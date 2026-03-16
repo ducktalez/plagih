@@ -168,6 +168,26 @@ class Node(ABC):
         self.root_node = kwargs.get("root_node")
         self.parent_node = kwargs.get("parent_node")
 
+    # ------------------------------------------------------------------
+    # Pickle optimization: exclude circular back-references
+    # parent_node and root_node create circular reference chains that
+    # cause pickle to serialize the entire tree multiple times.
+    # Excluding them reduces pickle size ~5-10x and speeds up
+    # ProcessPoolExecutor IPC dramatically.
+    # After unpickling, call repair_all() to restore back-references.
+    # ------------------------------------------------------------------
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state.pop("parent_node", None)
+        state.pop("root_node", None)
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.parent_node = None
+        self.root_node = None
+
     def __repr__(self):
         """Returns a detailed string representation of the node.
 
@@ -3360,6 +3380,16 @@ def _error_mae(pred, true):
     return np.mean(np.abs(pred - true))
 
 
+def _default_autocast(x):
+    """Default autocast: convert to float64 numpy array (picklable top-level function)."""
+    return np.asarray(x, dtype=np.float64)
+
+
+def _warmup_noop():
+    """Trivial picklable function for pool warmup (lambdas can't be pickled on Windows)."""
+    return True
+
+
 class ExplainableGP:
     """Main class for explainable genetic programming.
 
@@ -3397,9 +3427,9 @@ class ExplainableGP:
     """
 
     # Default error metric and autocast as picklable top-level references
-    # (lambdas and closures are NOT picklable for ProcessPoolExecutor)
-    DEFAULT_ERROR_METRIC = staticmethod(lambda pred, true: np.sqrt(np.mean((pred - true) ** 2)))
-    DEFAULT_AUTOCAST = staticmethod(lambda _x: np.asarray(_x, dtype=np.float64))
+    # (lambdas and closures are NOT picklable for ProcessPoolExecutor on Windows)
+    DEFAULT_ERROR_METRIC = staticmethod(_error_rmse)
+    DEFAULT_AUTOCAST = staticmethod(_default_autocast)
 
     def __init__(
         self,
@@ -3485,6 +3515,61 @@ class ExplainableGP:
         self._custom_strategies: Dict[str, Callable] = {}
         self._strategy_registry = dict(BUILTIN_STRATEGIES)  # copy builtin registry
         self._performance_tracker = None  # Set per generation
+
+        # Persistent worker pool (avoids ~2s Windows spawn overhead per generation).
+        # Created lazily on first parallel generation, shutdown on close().
+        self._pool = None
+
+    def _get_or_create_pool(self):
+        """Get or lazily create the persistent worker pool.
+
+        On Windows, spawning new processes is expensive (~2s due to Python
+        interpreter startup + module imports). A persistent pool amortizes
+        this cost across all generations.
+        """
+        if self._pool is None and self._parallel_workers > 0:
+            from concurrent.futures import ProcessPoolExecutor
+
+            from plagih.parallel import _init_worker
+
+            self._pool = ProcessPoolExecutor(
+                max_workers=self._parallel_workers,
+                initializer=_init_worker,
+                initargs=(
+                    self.evolve,
+                    self.df_train,
+                    self.pop_genepool,
+                    self.paretofront,
+                    self.eval_autocast,
+                    self.eval_error_metric,
+                    self.allow_chain,
+                    self.target_column,
+                    self.evolve.nodes_max,
+                    self.evolve.complexity_metric,
+                    self._strategy_registry,
+                ),
+            )
+            # Warm up: submit a trivial task to force all workers to start
+            # and import modules. This way the first real generation doesn't
+            # pay the import cost.
+            warmup_futures = [self._pool.submit(_warmup_noop) for _ in range(self._parallel_workers)]
+            for f in warmup_futures:
+                f.result()
+            printpl("i", f"Worker pool created with {self._parallel_workers} workers")
+        return self._pool
+
+    def close(self):
+        """Shutdown the persistent worker pool. Call when done with GP."""
+        if self._pool is not None:
+            self._pool.shutdown(wait=False)
+            self._pool = None
+
+    def __del__(self):
+        """Ensure pool is cleaned up on garbage collection."""
+        try:
+            self.close()
+        except Exception:
+            pass
 
     # =========================================================================
     # Backwards Compatibility Properties
@@ -3697,7 +3782,7 @@ class ExplainableGP:
         Actions:
         - Updates Pareto front with new candidates
         - Moves pop_next to pop_genepool
-        - Prints population summary
+        - Prints population summary (only at high verbosity, expensive for large pops)
         - Runs analysis and monitoring
         - Increments generation counter
         """
@@ -3706,7 +3791,11 @@ class ExplainableGP:
         # Note: gens_since_last_pareto is now tracked by self.monitor
 
         self.pop_genepool = self.pop_next[:]
-        print_pop(self.pop_next)
+        # Guard: print_pop calls get_sympy_expr() for every candidate, which is
+        # extremely expensive for large populations (~40ms/tree). Only print at
+        # high verbosity level ("gggg" = individual tree detail).
+        if "gggg" in PRINT_DUMMY:
+            print_pop(self.pop_next)
         self.pop_next = []
         self.analyze_generation(pareto_updated=pareto_updated)
         self.gen_id += 1
@@ -3796,7 +3885,8 @@ class ExplainableGP:
         )
 
         if n_workers > 0:
-            # Parallel execution
+            # Parallel execution — use persistent pool to avoid Windows spawn overhead
+            pool = self._get_or_create_pool()
             candidates, lut_tree_delta, lut_symex_delta, tracker = run_generation_parallel(
                 tasks=tasks,
                 n_workers=n_workers,
@@ -3811,11 +3901,13 @@ class ExplainableGP:
                 nodes_max=self.evolve.nodes_max,
                 complexity_metric=self.evolve.complexity_metric,
                 strategy_registry=self._strategy_registry,
+                pool=pool,
             )
-            # Merge worker-local LUTs into main LUTs.
-            # Same key = same result, simple update is sufficient.
-            self.lut_tree_infos.update(lut_tree_delta)
-            self.lut_symex_fitness.update(lut_symex_delta)
+            # Note: LUT deltas are empty in parallel mode.
+            # Worker LUTs contain sympy objects (too expensive to pickle back).
+            # Worker LUTs are used only for intra-batch deduplication.
+            # Main-process LUTs won't grow during parallel generations, which
+            # causes some redundant computation but avoids pickle overhead.
         else:
             # Sequential execution — identical logic, no pool, full debugging
             candidates, tracker = run_generation_sequential(
@@ -4346,6 +4438,11 @@ class ExplainableGP:
                 raise Exception(f"EOFError: \n{e}")
 
             help_dict, self.gen_id, self.pop_genepool, self.paretofront, loaded_monitor_df = run_data
+            # Repair tree back-references stripped during pickling
+            for candidate in self.pop_genepool:
+                candidate.tree.repair_all()
+            for candidate in self.paretofront:
+                candidate.tree.repair_all()
             # Recreate monitor from loaded DataFrame (for backwards compatibility)
             # The monitor will be repopulated if evolution continues
             self.monitor = GPMonitor()

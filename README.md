@@ -12,7 +12,7 @@ Enjoy!
 
 ## Ablage/Todos
 ### Code Dokumentation und instructions überarbeiten
-Es sollen sinnvolle copilot instructions formuliert werden, die sich auch notfalls automatisch updaten. Es sollen im übrigen auch Tests generiert werden. 
+Es sollen sinnvolle copilot instructions formuliert werden, die sich auch notfalls automatisch updaten. Es sollen im übrigen auch Tests generiert werden.
 Im selben Schritt Soll auch die Kommentierung diesbezüglich optimiert werden und eine Dokumentation des gesamten Frameworks angelegt werden.
 
 Instructions und Kommentare sollen dabei so aufgeteilt sein dass die Instructions möglichst kompakt sind und wirklich nur das Wesentliche beinhalten. In den Files bei den Funktionen sind die konkreten Informationen vorhanden. 

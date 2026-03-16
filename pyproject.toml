@@ -31,6 +31,10 @@ testpaths = ["plagih/test"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+markers = [
+    "benchmark: slow performance benchmarks (deselect with '-m not benchmark')",
+]
+addopts = "-m 'not benchmark'"
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -82,6 +86,7 @@ ignore = [
     "E722",   # bare except – will be refactored
     "B904",   # raise without from – style improvement, fix incrementally
     "B007",   # unused loop variable – common pattern (for ii, cc in enumerate)
+    "B008",   # function-call-in-default – intentional for optional path defaults (Path.cwd())
     "B017",   # assert blind exception – test pattern
     "B028",   # no explicit stacklevel – fix when cleaning warnings
     "F811",   # redefined function – intentional in util.py (legacy compat layer)

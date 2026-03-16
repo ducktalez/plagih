@@ -2629,7 +2629,7 @@ def check_operator_pool(ops: Dict[Type[BaseOperator], float]) -> None:
     has_f2b = any([float in i[0] and bool == i[1] for i in opxtypes])
     has_b2f = any([bool in i[0] and float == i[1] for i in opxtypes])
     if not all([has_2f, has_2b, has_f2b, has_b2f]):
-        print_warning("w", "Loaded operators do not feature both numeric (float) and bool type.")
+        print_warning("ww", "Loaded operators do not feature both numeric (float) and bool type.")
     if all([has_2f, has_2b]) and not all([has_f2b or has_b2f]):
         raise Exception("Loaded operators do not allow closure!")
 
@@ -3445,6 +3445,7 @@ class ExplainableGP:
         target_column: str = "action",
         verbose: bool = True,
         parallel: Union[bool, int] = False,
+        enable_analysis: bool = True,
     ):
         """Initialize the GP system.
 
@@ -3460,6 +3461,12 @@ class ExplainableGP:
             target_column: Name of target column in df_train. Default: 'action'.
             verbose: Print initialization info. Default: True.
             parallel: False=sequential, True=auto-detect CPUs, int=explicit worker count.
+            enable_analysis: Enable visualization, monitoring plots, backups, and
+                merged tree rendering during evolution. Set to False for benchmarks
+                to get authentic timing without IO/rendering overhead. Default: True.
+                Note: Lightweight metric recording (GPMonitor) always runs regardless.
+                # TODO: Future idea — run analysis in a separate background process
+                #       so that the main evolution loop is never blocked by IO/rendering.
         """
         self.time_start = time.perf_counter()
 
@@ -3480,6 +3487,9 @@ class ExplainableGP:
         self.eval_error_metric = eval_error_metric or self.DEFAULT_ERROR_METRIC
 
         self.allow_chain = allow_chain
+
+        # Analysis control: when False, skips plots, backups, and merged tree rendering
+        self.enable_analysis = enable_analysis
 
         if verbose:
             print(
@@ -3502,12 +3512,12 @@ class ExplainableGP:
         self.monitor = GPMonitor()
 
         # Parallel execution config
-        import os
 
         from plagih.parallel import BUILTIN_STRATEGIES
+        from plagih.util import cpu_count_physical
 
         if parallel is True:
-            self._parallel_workers = os.cpu_count() or 4
+            self._parallel_workers = cpu_count_physical()
         elif isinstance(parallel, int) and parallel > 0:
             self._parallel_workers = parallel
         else:
@@ -3538,8 +3548,8 @@ class ExplainableGP:
                 initargs=(
                     self.evolve,
                     self.df_train,
-                    self.pop_genepool,
-                    self.paretofront,
+                    [],  # pop_genepool: not needed — pre-selection in main process
+                    [],  # paretofront: not needed — pre-selection in main process
                     self.eval_autocast,
                     self.eval_error_metric,
                     self.allow_chain,
@@ -3607,6 +3617,7 @@ class ExplainableGP:
         target_column: str = "action",
         verbose: bool = True,
         parallel: Union[bool, int] = False,
+        enable_analysis: bool = True,
     ) -> "ExplainableGP":
         """Factory method for easy GP creation with sensible defaults.
 
@@ -3625,6 +3636,8 @@ class ExplainableGP:
             allow_chain: Allow chained operators. Default: False.
             target_column: Target column name. Default: 'action'.
             verbose: Print info. Default: True.
+            enable_analysis: Enable plots, backups, visualizations. Default: True.
+                Set to False for benchmarks to get authentic timing.
 
         Returns:
             Configured ExplainableGP instance.
@@ -3677,6 +3690,7 @@ class ExplainableGP:
             target_column=target_column,
             verbose=verbose,
             parallel=parallel,
+            enable_analysis=enable_analysis,
         )
 
     @classmethod
@@ -3786,14 +3800,11 @@ class ExplainableGP:
         - Runs analysis and monitoring
         - Increments generation counter
         """
-        # sfeh:open end generation in every generation
         pareto_updated = self.run_update_paretofront(self.pop_next)
-        # Note: gens_since_last_pareto is now tracked by self.monitor
 
         self.pop_genepool = self.pop_next[:]
-        # Guard: print_pop calls get_sympy_expr() for every candidate, which is
-        # extremely expensive for large populations (~40ms/tree). Only print at
-        # high verbosity level ("gggg" = individual tree detail).
+        # Pitfall P3: print_pop calls get_sympy_expr() per candidate (~40ms/tree).
+        # Guarded by "gggg" in PRINT_DUMMY - skipped at default verbosity.
         if "gggg" in PRINT_DUMMY:
             print_pop(self.pop_next)
         self.pop_next = []
@@ -3862,9 +3873,9 @@ class ExplainableGP:
 
         # Determine execution mode
         if parallel is True:
-            import os
+            from plagih.util import cpu_count_physical
 
-            n_workers = os.cpu_count() or 4
+            n_workers = cpu_count_physical()
         elif parallel is False or parallel == 0:
             n_workers = 0
         elif isinstance(parallel, int) and parallel > 0:
@@ -4078,9 +4089,11 @@ class ExplainableGP:
                 except KeyError as e:
                     # KeyError(re) -> okay?, real part implies complex numbers, ignoring is okay
                     # (probably sympy.lambdify expression not evaluable)
-                    print(f"OnlyPrintException: Keyerror?: {e}")
+                    print_warning("ww", f"OnlyPrintException: Keyerror?: {e}")
                 except RecursionError as e:
-                    print(f"OnlyPrintException: RecursionError (probably Piecewise/relational combination?): {e}")
+                    print_warning(
+                        "ww", f"OnlyPrintException: RecursionError (probably Piecewise/relational combination?): {e}"
+                    )
                 # except NotImplementedError as nie:
                 #     print_caution(f'Notimplemented? {nie}')
                 # except Exception as ex:
@@ -4480,7 +4493,8 @@ class ExplainableGP:
         )
 
         # Generate merged population tree visualization
-        self._save_merged_population_tree()
+        if self.enable_analysis:
+            self._save_merged_population_tree()
 
         printpl("ggg", f"--- Generation {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}. ---")
 
@@ -4488,11 +4502,12 @@ class ExplainableGP:
         """
         Every x generations, save a backup and/or save plots
         """
-        if self.gen_id >= PLOTS_INTERVAL and self.gen_id % PLOTS_INTERVAL == 0:
-            self.evoloop_monitoring_plots()
+        if self.enable_analysis:
+            if self.gen_id >= PLOTS_INTERVAL and self.gen_id % PLOTS_INTERVAL == 0:
+                self.evoloop_monitoring_plots()
 
-        if (self.gen_id >= BACKUP_INTERVAL and self.gen_id % BACKUP_INTERVAL == 0) or self.gen_id == 10:
-            self.backup_save()
+            if (self.gen_id >= BACKUP_INTERVAL and self.gen_id % BACKUP_INTERVAL == 0) or self.gen_id == 10:
+                self.backup_save()
 
     def run_custom_exit_condition(self):
         """Checks for early termination conditions.

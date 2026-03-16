@@ -12,34 +12,15 @@ Enjoy!
 
 ## Ablage/Todos
 ### Code Dokumentation und instructions überarbeiten
-Es sollen sinnvolle copilot instructions formuliert werden, die sich auch notfalls automatisch updaten. Es sollen im übrigen auch Tests generiert werden.
-Im selben Schritt Soll auch die Kommentierung diesbezüglich optimiert werden und eine Dokumentation des gesamten Frameworks angelegt werden.
 
-Instructions und Kommentare sollen dabei so aufgeteilt sein dass die Instructions möglichst kompakt sind und wirklich nur das Wesentliche beinhalten. In den Files bei den Funktionen sind die konkreten Informationen vorhanden. 
-- Kompakte Copilot Instructions, die sich automatisch updaten
-- Kommentare in den Funktionen, die sich auf die konkrete Funktion beziehen und auch automatisch updaten. In englisch umformulieren, falls besser. Bei unklaren Fällen, bitte nachfragen, bevor Informationen gelöscht werden.
-- Dokumentation als .md oder .pdf, die den gesamten Ablauf erklärt und einem neuen Nutzer (bzw. auch als Notfall-Hilfe für Copilot) Ablauf und Funktionalität erklärt.
-
-Wenn du hier noch Vorschläge und Ideen hast, kannst du sie gerne einbringen. 
-
-- Die Tests sollen
-- Copilot-RUFF?)
-- GPU-evaluation?
+- .env-File statt DEBUG_DUMMY in utils verwenden
+- LogicOperator ist keine Unterklasse von OperatorArity. OperatorArity hat vermutlich gar keinen authentischen Nutzen und kann deshalb entfernt werden oder?  
+- Copilot-RUFF?
+- Es geht darum, den Visualization-Ordner aufzuräumen und neu zu strukturieren. Dort befinden sich drei Dateien. Zwei davon machen, nach meinem Gefühl, eigentlich relativ ähnliche Sachen, nämlich Tree_Renderer und Visualize_Trees. Latex steht vermutlich nur für die Latex-Visualisierung, dennoch sollte das File vermutlich besser anders genannt werden. 
+- Performance: GPU-evaluation?
 - Merged-tree visualisierung
-  - mit chatgpt erstellen
-  - tree-viz zentral implementieren
-  - Weitere merge-tree Version (ohne Terminal nodes)
-- Bereits erstellte Evaluierungskombination nutzen
-- better structure
-  - plagih_gp.py ist momentan das Hauptskript, welches den Ablauf steuert. Es ist aber sehr lang und unübersichtlich.
-    Ich möchte es in mehrere Dateien aufteilen, z.B.:
-    - main.py (Hauptablauf)
-    - trees.py (Baumstruktur und Operationen)
-    - evolution.py (Evolutionsprozess)
-    - evaluation.py (Evaluation der Bäume)
-    - visualization.py (Visualisierung der Bäume)
-    - utils.py (Hilfsfunktionen)
-  - Wie würdest du das strukturieren?
+  - mit chatgpt erstellen: Weitere merge-tree Version (ohne Terminal nodes)
+  - Bereits erstellte Evaluierungskombination nutzen
 - self.evolve.origin_tree
 - Dokumentation als .md/.pdf
 - Pseudo-Backpropagation durch Bäume
@@ -47,17 +28,6 @@ Wenn du hier noch Vorschläge und Ideen hast, kannst du sie gerne einbringen.
   - tf-fun in every class
   - regular python code implementation
 - In Vorbereitung für eine potenzielle Parallelisierung soll der generelle Ablauf der Evolution überdacht werden.
-  - ✅ **DONE**: Deklarative Strategy-API (`plagih.parallel.Strategy`) ersetzt den alten `@gp.create_trees` Decorator.
-  - ✅ **DONE**: `gp.run_generation(strategies)` — ein einziger Codepfad für sequentiell und parallel.
-  - ✅ **DONE**: Parallele Ausführung via `ProcessPoolExecutor` mit `parallel=True` oder `parallel=N` (Anzahl Worker).
-  - ✅ **DONE**: Per-Task Performance-Tracking (avg/median Zeit, Fehlerrate pro Strategie).
-  - ✅ **DONE**: Optionaler `seed`-Parameter für Reproduzierbarkeit.
-  - ✅ **DONE**: Worker erhalten State via `initializer`-Globals (kein per-Task Serialisierungs-Overhead).
-  - ✅ **DONE**: LUT-Merge via einfachem `dict.update()` (gleiche Keys = gleiche Werte).
-  - ✅ **DONE**: Pool-Neustart pro Generation (~100ms Overhead, garantiert konsistenter Genepool-State).
-  - ✅ **DONE**: Fehlerbudget pro Strategie (2*n+5), restliche Tasks werden übersprungen bei Überschreitung.
-  - ✅ **DONE**: Custom-Strategien via `gp.register_strategy("name", top_level_fn)`.
-  - ✅ **DONE**: Sequentieller Modus (Default) erlaubt volles Debugging mit Breakpoints.
   - Alter `@gp.create_trees` Decorator bleibt als deprecated Wrapper für Abwärtskompatibilität erhalten.
   - Beispiel:
     ```python
@@ -97,9 +67,11 @@ Wenn du hier noch Vorschläge und Ideen hast, kannst du sie gerne einbringen.
 - Different print types for trees, also visualization
 - make categorical options categorical. For mountain car, it is scalable, but a categorical options (aka a 3 nodes last layer) should be an option
 - prevent the LUT of becoming too big; make a counter whenever a result is hit and delete the smallest in each cycle. Reset the numbers aswell.
-- pseudo-backpropagation: ALL functions in a tree can be represented as a neural network. E. g. if-function is two input variables, a softmax layer and a result layer. replace a tree with a NN in the next step and train it.
-- sympy facttor (up/downfactor), so it adds stuff together, expand(), 
-- user-functions (=nodes with n inputs, given by a user)
+- pseudo-backpropagation
+  - ALL functions in a tree can be represented as a neural network. E. g. if-function is two input variables, a softmax layer and a result layer. 
+  - replace a tree with a NN in the next step and train it.
+- sympy factor (up/downfactor), so it adds stuff together, expand(), 
+- Plan/feature: Iteratives ersetzen eines NN durch einen Baum, der das NN nachahmt. Das NN findet die großen Unterschiede zu einem GP-Baum, und der GP-Baum versucht, if-Strukturen zu finden, die das NN-Verhalten nachahmen.
 - sfeh:idea sympy.nsimplify('3.333333*x+0.522', tolerance=0.1, rational=True) for
   - Terminals 
   - Even whole formulae!

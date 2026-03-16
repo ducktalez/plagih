@@ -96,6 +96,9 @@ class TaskSpec:
         tag: Label for tracking (usually strategy name).
         task_index: Unique index for seed computation.
         seed: Optional base seed for reproducibility.
+        selected_trees: Pre-selected parent trees (parallel mode only).
+            When set, workers use these instead of pop_genepool, eliminating
+            the need for _update_worker_state IPC.
     """
 
     strategy_name: str
@@ -105,6 +108,7 @@ class TaskSpec:
     tag: str
     task_index: int
     seed: Optional[int] = None
+    selected_trees: Optional[List] = None
 
 
 @dataclass
@@ -406,6 +410,9 @@ def evaluate_tree_standalone(
 
 def _strategy_reproduction(evolve, pop_genepool, paretofront, allow_chain, **params):
     """Select a good tree via tournament selection and copy it."""
+    pre = params.pop("_pre_selected", None)
+    if pre:
+        return pre[0]
     from plagih.trees import selection_tournament
 
     tournament_n = params.get("tournament_n", 3)
@@ -414,41 +421,57 @@ def _strategy_reproduction(evolve, pop_genepool, paretofront, allow_chain, **par
 
 def _strategy_mutation(evolve, pop_genepool, paretofront, allow_chain, **params):
     """Select a tree and mutate a branch."""
-    from plagih.trees import selection_tournament
-
+    pre = params.pop("_pre_selected", None)
     tournament_n = params.get("tournament_n", 3)
     depth_goal = params.get("depth_goal", 3)
     p_term = params.get("p_term", 0.3)
-    tree = selection_tournament(pop_genepool, n=tournament_n)
+    if pre:
+        tree = pre[0]
+    else:
+        from plagih.trees import selection_tournament
+
+        tree = selection_tournament(pop_genepool, n=tournament_n)
     return evolve.evolve_mutate_branch_depth(tree, depth_goal, allow_chain, p_term=p_term)
 
 
 def _strategy_mutation_point(evolve, pop_genepool, paretofront, allow_chain, **params):
     """Select a tree and mutate a single point."""
-    from plagih.trees import selection_tournament
-
+    pre = params.pop("_pre_selected", None)
     tournament_n = params.get("tournament_n", 3)
-    tree = selection_tournament(pop_genepool, n=tournament_n)
+    if pre:
+        tree = pre[0]
+    else:
+        from plagih.trees import selection_tournament
+
+        tree = selection_tournament(pop_genepool, n=tournament_n)
     return evolve.evolve_mutate_point(tree)
 
 
 def _strategy_mutation_branch_nodes(evolve, pop_genepool, paretofront, allow_chain, **params):
     """Select a tree and mutate by target node count."""
-    from plagih.trees import selection_tournament
-
+    pre = params.pop("_pre_selected", None)
     tournament_n = params.get("tournament_n", 3)
     nodes_goal = params.get("nodes_goal", 4)
     p_term = params.get("p_term", 0.2)
-    tree = selection_tournament(pop_genepool, n=tournament_n)
+    if pre:
+        tree = pre[0]
+    else:
+        from plagih.trees import selection_tournament
+
+        tree = selection_tournament(pop_genepool, n=tournament_n)
     return evolve.evolve_mutate_branch_nodes(tree, nodes_goal, p_term=p_term)
 
 
 def _strategy_mutation_filter(evolve, pop_genepool, paretofront, allow_chain, **params):
     """Select a tree and apply filter mutation (constant tuning)."""
-    from plagih.trees import selection_tournament
-
+    pre = params.pop("_pre_selected", None)
     tournament_n = params.get("tournament_n", 3)
-    tree = selection_tournament(pop_genepool, n=tournament_n)
+    if pre:
+        tree = pre[0]
+    else:
+        from plagih.trees import selection_tournament
+
+        tree = selection_tournament(pop_genepool, n=tournament_n)
     return evolve.evolve_mutate_filter(tree)
 
 
@@ -462,26 +485,39 @@ def _strategy_random_new(evolve, pop_genepool, paretofront, allow_chain, **param
 
 def _strategy_crossover(evolve, pop_genepool, paretofront, allow_chain, **params):
     """Select two trees and perform subtree crossover."""
-    from plagih.trees import selection_tournament
-
+    pre = params.pop("_pre_selected", None)
     tournament_n = params.get("tournament_n", 3)
-    tree_a = selection_tournament(pop_genepool, n=tournament_n)
-    tree_b = selection_tournament(pop_genepool, n=tournament_n)
+    if pre:
+        tree_a, tree_b = pre[0], pre[1]
+    else:
+        from plagih.trees import selection_tournament
+
+        tree_a = selection_tournament(pop_genepool, n=tournament_n)
+        tree_b = selection_tournament(pop_genepool, n=tournament_n)
     return evolve.evolve_crossover(tree_a, tree_b)
 
 
 def _strategy_simplicate(evolve, pop_genepool, paretofront, allow_chain, **params):
     """Select a tree and simplify it via sympy."""
-    from plagih.trees import evolve_reduce_simplicate, selection_tournament
+    from plagih.trees import evolve_reduce_simplicate
 
+    pre = params.pop("_pre_selected", None)
     tournament_n = params.get("tournament_n", 3)
     completely = params.get("completely", True)
-    tree = selection_tournament(pop_genepool, n=tournament_n)
+    if pre:
+        tree = pre[0]
+    else:
+        from plagih.trees import selection_tournament
+
+        tree = selection_tournament(pop_genepool, n=tournament_n)
     return evolve_reduce_simplicate(tree, allow_chain, completely=completely)
 
 
 def _strategy_pareto_revive(evolve, pop_genepool, paretofront, allow_chain, **params):
     """Revive a random candidate from the Pareto front."""
+    pre = params.pop("_pre_selected", None)
+    if pre:
+        return pre[0]
     import copy as _copy
 
     if not paretofront:
@@ -502,6 +538,79 @@ BUILTIN_STRATEGIES: Dict[str, Callable] = {
     "simplicate": _strategy_simplicate,
     "pareto_revive": _strategy_pareto_revive,
 }
+
+# Strategies grouped by how many parent trees they need from the genepool.
+# Used by pre_select_for_tasks() to move tournament selection to the main process.
+_STRATEGIES_ONE_PARENT = frozenset(
+    {
+        "reproduction",
+        "mutation",
+        "mutation_point",
+        "mutation_branch_nodes",
+        "mutation_filter",
+        "simplicate",
+    }
+)
+_STRATEGIES_TWO_PARENTS = frozenset({"crossover"})
+_STRATEGIES_NO_PARENT = frozenset({"random_new"})
+_STRATEGIES_PARETO = frozenset({"pareto_revive"})
+
+
+def pre_select_for_tasks(tasks, pop_genepool, paretofront):
+    """Pre-select parent trees in the main process to avoid IPC of pop_genepool.
+
+    For each task, performs tournament selection (or appropriate selection)
+    and stores the result in task.selected_trees. Workers then use these
+    pre-selected trees instead of needing the full population.
+
+    This eliminates _update_worker_state overhead (~950ms/gen for pop=1000, 4w)
+    which was the main parallelization bottleneck on Windows.
+
+    Args:
+        tasks: List of TaskSpec objects (modified in place).
+        pop_genepool: Current generation's population.
+        paretofront: Current Pareto front.
+
+    Returns:
+        bool: True if any task could NOT be pre-selected (needs pop_genepool
+              sent to workers via _update_worker_state).
+    """
+    import copy as _copy
+
+    from plagih.trees import selection_tournament
+
+    needs_full_pop = False
+
+    for task in tasks:
+        name = task.strategy_name
+        params = task.strategy_params
+        tournament_n = params.get("tournament_n", 3)
+
+        if name in _STRATEGIES_ONE_PARENT:
+            tree = selection_tournament(pop_genepool, n=tournament_n)
+            task.selected_trees = [tree]
+
+        elif name in _STRATEGIES_TWO_PARENTS:
+            tree_a = selection_tournament(pop_genepool, n=tournament_n)
+            tree_b = selection_tournament(pop_genepool, n=tournament_n)
+            task.selected_trees = [tree_a, tree_b]
+
+        elif name in _STRATEGIES_NO_PARENT:
+            task.selected_trees = []
+
+        elif name in _STRATEGIES_PARETO:
+            if paretofront:
+                candidate = np.random.choice(paretofront)
+                task.selected_trees = [_copy.deepcopy(candidate.get_evotree())]
+            else:
+                task.selected_trees = []
+
+        else:
+            # Unknown/custom strategy — cannot pre-select, worker needs pop_genepool
+            task.selected_trees = None
+            needs_full_pop = True
+
+    return needs_full_pop
 
 
 # =============================================================================
@@ -546,12 +655,23 @@ def _worker_run_task(task: TaskSpec, shared_lut_tree=None, shared_lut_symex=None
             raise ValueError(f"Unknown strategy: {task.strategy_name}")
 
         strategy_fn = registry[task.strategy_name]
+
+        # Inject pre-selected trees if available (parallel pre-selection mode).
+        # Trees were selected in the main process and pickled with the task,
+        # so we need to repair back-references after deserialization.
+        call_params = task.strategy_params
+        if task.selected_trees is not None and len(task.selected_trees) > 0:
+            for tree in task.selected_trees:
+                tree.repair_all()
+            call_params = dict(task.strategy_params)
+            call_params["_pre_selected"] = task.selected_trees
+
         result = strategy_fn(
             _worker_evolve,
             _worker_pop_genepool,
             _worker_paretofront,
             _worker_allow_chain,
-            **task.strategy_params,
+            **call_params,
         )
 
         timing["create"] = time.perf_counter() - t0
@@ -813,19 +933,19 @@ def run_generation_parallel(
 ) -> Tuple[list, Dict, Dict, PerformanceTracker]:
     """Run all tasks in parallel using ProcessPoolExecutor with batch submission.
 
-    Design: Instead of submitting N individual tasks (→ N pickle roundtrips),
+    Design: Instead of submitting N individual tasks (N pickle roundtrips),
     tasks are split into n_workers batches. Each worker processes its entire
     batch in a single call, sharing LUTs within the batch. This reduces
     serialization overhead from O(N) to O(n_workers).
 
+    Pre-selection: Tournament selection is performed in the main process and
+    the selected trees are attached to each TaskSpec. This eliminates the
+    need for _update_worker_state (which pickles the entire pop_genepool to
+    every worker every generation — the main IPC bottleneck on Windows).
+
     LUT dicts are NOT returned from workers because they contain sympy objects
     which are extremely expensive to pickle. Worker LUTs are used only for
     intra-batch deduplication.
-
-    Performance: Uses a persistent pool to avoid Windows `spawn` overhead
-    (~2 seconds per pool creation due to Python interpreter + module imports).
-    Worker state (pop_genepool, paretofront) is updated per generation via
-    _update_worker_state tasks.
 
     Args:
         tasks: List of TaskSpec objects.
@@ -845,11 +965,9 @@ def run_generation_parallel(
 
     gen_start = time.perf_counter()
 
-    # Diagnostic: measure pickle size of genepool (the IPC bottleneck)
-    import pickle as _pickle
-
-    _gp_bytes = len(_pickle.dumps(pop_genepool, protocol=_pickle.HIGHEST_PROTOCOL))
-    printpl("pp", f"  pickle(pop_genepool): {_gp_bytes / 1024:.0f} KB  ({len(pop_genepool)} candidates)")
+    # Pre-select parent trees in the main process so workers don't need pop_genepool.
+    # This eliminates _update_worker_state IPC overhead (~950ms/gen for pop=1000, 4w).
+    needs_full_pop = pre_select_for_tasks(tasks, pop_genepool, paretofront)
 
     # Split tasks into n_workers batches (round-robin for strategy mix)
     batches: List[List[TaskSpec]] = [[] for _ in range(n_workers)]
@@ -866,8 +984,8 @@ def run_generation_parallel(
             initargs=(
                 evolve,
                 df_train,
-                pop_genepool,
-                paretofront,
+                pop_genepool if needs_full_pop else [],
+                paretofront if needs_full_pop else [],
                 eval_autocast,
                 eval_error_metric,
                 allow_chain,
@@ -879,12 +997,13 @@ def run_generation_parallel(
         )
 
     try:
-        # Update worker state with current generation's genepool and paretofront.
-        # For persistent pools, this is how we push new data to workers.
-        # For new pools, this is redundant but harmless (~1ms overhead).
-        update_futures = [pool.submit(_update_worker_state, pop_genepool, paretofront) for _ in range(n_workers)]
-        for f in update_futures:
-            f.result()  # Wait for all workers to update
+        # Only send pop_genepool/paretofront to workers if a custom strategy
+        # needs them (i.e. could not be pre-selected). For builtin strategies,
+        # pre-selected trees are already attached to each TaskSpec.
+        if needs_full_pop:
+            update_futures = [pool.submit(_update_worker_state, pop_genepool, paretofront) for _ in range(n_workers)]
+            for f in update_futures:
+                f.result()  # Wait for all workers to update
 
         # Submit n_workers batches instead of N individual tasks
         futures = {pool.submit(_worker_run_batch, batch): batch for batch in batches}

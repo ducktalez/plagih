@@ -144,3 +144,64 @@ The initial population is always created sequentially, even if
 `parallel=True`. This is intentional – the initial population is small
 and the parallel pool may not yet be initialized.
 
+---
+
+## P9 – Benchmarking with analysis enabled distorts timing
+
+**Where:** `analyze_generation()` in `trees.py`
+
+By default, every generation triggers visualization (merged tree rendering,
+Pareto-front plots, monitoring plots, parsimony histograms) and backups.
+This IO/rendering overhead **dominates** runtime for benchmarks and makes
+timing results unreliable.
+
+**Rule:** Set `enable_analysis=False` when creating GP instances for
+benchmarking or performance measurement:
+
+```python
+gp = ExplainableGP.create(..., enable_analysis=False)
+```
+
+Lightweight metric recording (`GPMonitor.record_generation()`) always runs
+regardless of this flag — only expensive IO operations are skipped.
+
+**Future idea:** Run analysis in a separate background process so the main
+evolution loop is never blocked by IO/rendering.
+
+---
+
+## P10 – `get_sympy_expr()` in monitoring was a hidden bottleneck
+
+**Where:** `GPMonitor._compute_population_metrics()` in `monitoring.py`
+
+The unique-expression counter originally called `get_sympy_expr()` on
+**every candidate** in the population to compute diversity. For pop=1000,
+this added **~3-5 seconds per generation** — more than the actual
+evolution compute time.
+
+**Fix (applied):** Replaced `str(c.tree.get_sympy_expr())` with
+`str(c.tree)` which uses the fast tree string representation.
+
+**Rule:** Never call `get_sympy_expr()` in hot paths. Use `str(tree)`,
+`tree.get_lut_id()`, or `tree.represent_str()` for fast identification.
+
+---
+
+## P11 – Parallel worker count: physical cores, not logical
+
+**Where:** `cpu_count_physical()` in `util.py`, `ExplainableGP.__init__`
+
+`os.cpu_count()` returns **logical cores** (e.g. 16 on an 8-core
+hyperthreaded CPU). For CPU-bound GP work, using more workers than
+physical cores hurts performance because hyperthreads share execution
+units and caches.
+
+**Rule:** Use `cpu_count_physical()` from `util.py`. When `parallel=True`,
+the framework now auto-detects physical cores. For explicit control,
+pass the number directly: `parallel=4`.
+
+**Sweet spot:** Benchmarks show 4 workers is optimal for pop=1000
+with typical operators. More workers increase IPC overhead faster
+than they reduce compute time.
+
+

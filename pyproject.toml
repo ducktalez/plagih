@@ -31,10 +31,6 @@ testpaths = ["plagih/test"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-markers = [
-    "benchmark: slow performance benchmarks (deselect with '-m not benchmark')",
-]
-addopts = "-m 'not benchmark'"
 
 [tool.setuptools.packages.find]
 where = ["."]

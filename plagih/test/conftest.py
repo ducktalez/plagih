@@ -13,6 +13,12 @@ _project_root = Path(__file__).resolve().parent.parent.parent
 if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 
+# ---------------------------------------------------------------------------
+# Exclude standalone benchmark scripts from pytest collection.
+# They live in plagih/test/benchmarks/ and are meant to be run directly.
+# ---------------------------------------------------------------------------
+collect_ignore_glob = ["benchmarks/bench_*.py"]
+
 import shutil
 import tempfile
 

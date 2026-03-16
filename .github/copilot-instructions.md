@@ -17,12 +17,12 @@ crossover, and simplification, evaluated against training data.
 | Module | Responsibility |
 |---|---|
 | `plagih/trees.py` | plagih_tree contain a new implementation of trees that we use in genetic programming to display a program. (67C/22F) |
-| `plagih/parallel.py` | Parallel execution engine for plagih GP. (4C/18F) |
+| `plagih/parallel.py` | Parallel execution engine for plagih GP. (4C/19F) |
 | `plagih/paretofront.py` | Pareto-front dominance filter for GP candidates. (0C/6F) |
 | `plagih/monitoring.py` | GP Monitoring Module (2C/0F) |
 | `plagih/evaluation_context.py` | Unified Evaluation Context System for Plagih GP Trees. (3C/5F) |
 | `plagih/population_merge.py` | Population Merge Module for plagih GP Framework (3C/8F) |
-| `plagih/util.py` | *(no docstring)* (9C/27F) |
+| `plagih/util.py` | *(no docstring)* (9C/28F) |
 | `visualization/tree_renderer.py` | Unified Tree Visualization Module for plagih GP Framework (9C/10F) |
 | `visualization/visualize_trees.py` | Tree Visualization for plagih GP Framework (0C/7F) |
 <!-- AUTOGEN:MODULE_MAP:END -->
@@ -87,6 +87,12 @@ See `docs/PITFALLS.md` for the full list with examples.
 3. **`PRINT_DUMMY`** (`util.py`): Verbosity via substring membership.
    `"gg" in "wwaaggiiffpp"` → True, `"gggg"` → False.
    Always use `printpl("gg", ...)` instead of `print()`.
+4. **Benchmarking**: `enable_analysis=False` disables plots/backups/rendering
+   during evolution. Without it, IO overhead distorts timing.
+5. **`get_sympy_expr()` is slow**: Never call it in hot paths (loops over
+   population). Use `str(tree)` or `tree.get_lut_id()` for fast identification.
+6. **Physical cores**: `os.cpu_count()` returns logical threads (16 on 8-core
+   HT CPU). Use `cpu_count_physical()` from `util.py` for worker counts.
 
 ## Maintaining these docs
 

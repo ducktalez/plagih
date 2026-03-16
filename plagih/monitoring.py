@@ -223,9 +223,9 @@ class GPMonitor:
         fitnesses = np.array([c.get_fitness() for c in population])
         parsimony = np.array([c.get_parsim() for c in population])
 
-        # Count unique expressions
+        # Count unique expressions (use fast string representation, not sympy)
         try:
-            unique_exprs = set(str(c.tree.get_sympy_expr()) for c in population)
+            unique_exprs = set(str(c.tree) for c in population)
             n_unique = len(unique_exprs)
         except Exception:
             n_unique = len(population)

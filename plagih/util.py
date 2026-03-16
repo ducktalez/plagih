@@ -1,4 +1,5 @@
 import logging
+import os
 import pickle
 import re
 import shutil
@@ -25,6 +26,31 @@ PLOTS_INTERVAL = 1
 BACKUP_INTERVAL = 10
 CHAIN_implement = "sfeh"  # used as placeholder for implementation-tasks
 TREE_MIN_PARSIMONY = 3
+
+
+def cpu_count_physical() -> int:
+    """Return the number of *physical* CPU cores (not hyperthreads).
+
+    os.cpu_count() returns logical cores (e.g. 16 on an 8-core CPU with
+    hyperthreading). For CPU-bound work like GP evaluation, using more
+    workers than physical cores hurts performance because hyperthreads
+    share execution units and caches.
+
+    Falls back to os.cpu_count() // 2 if psutil is unavailable.
+    """
+    try:
+        import psutil
+
+        physical = psutil.cpu_count(logical=False)
+        if physical is not None:
+            return physical
+    except ImportError:
+        pass
+    # Fallback: assume hyperthreading (2 threads per core)
+    logical = os.cpu_count()
+    if logical is not None:
+        return max(1, logical // 2)
+    return 4
 
 
 class TreeError(Exception):

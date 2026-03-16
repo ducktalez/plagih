@@ -382,5 +382,5 @@ def visualize_paretofront(
     plt.savefig(output_path, dpi=dpi, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
-    print(f"Paretofront visualization saved to: {output_path}")
+    printpl("ff", f"Paretofront visualization saved to: {output_path}")
     return str(output_path)

@@ -1,6 +1,11 @@
 """
-Benchmark: Sequential vs. Parallel GP execution.
-Run directly:  python _run_bench.py
+Benchmark: Sequential vs. Parallel GP execution at different scales.
+
+Runs multiple GP configurations and compares timing, speedup, and
+parallel efficiency. These benchmarks take significant time.
+
+Run directly:
+    python plagih/test/benchmarks/bench_run.py
 """
 
 import os
@@ -10,8 +15,9 @@ import tempfile
 import time
 from pathlib import Path
 
-# Setup path
-_root = Path(__file__).resolve().parent
+psize = 1000
+
+_root = Path(__file__).resolve().parent.parent.parent.parent
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
@@ -39,8 +45,19 @@ from plagih.trees import (
     Sub,
 )
 
+STRATEGIES = [
+    Strategy("reproduction", rate=0.15, tournament_n=3),
+    Strategy("mutation", rate=0.35, depth_goal=3, p_term=0.3),
+    Strategy("mutation_point", rate=0.10, tournament_n=3),
+    Strategy("random_new", rate=0.20, depths=[2, 3, 4], p_term=0.1),
+    Strategy("crossover", rate=0.20, crossover=True, tournament_n=3),
+]
 
-def create_gp(pop_size, parallel, temp_dir):
+N_GENERATIONS = 3
+
+
+def _create_bench_gp(pop_size, parallel, temp_dir):
+    """Create a GP instance for benchmarking."""
     data_path = _root / "benchmarks" / "mc" / "gp_files" / "samples200.csv"
     if data_path.exists():
         df = pd.read_csv(data_path).astype("float32")
@@ -85,25 +102,16 @@ def create_gp(pop_size, parallel, temp_dir):
         error_metric="rmse",
         parallel=parallel,
         verbose=False,
+        enable_analysis=False,
     )
 
 
-STRATEGIES = [
-    Strategy("reproduction", rate=0.15, tournament_n=3),
-    Strategy("mutation", rate=0.35, depth_goal=3, p_term=0.3),
-    Strategy("mutation_point", rate=0.10, tournament_n=3),
-    Strategy("random_new", rate=0.20, depths=[2, 3, 4], p_term=0.1),
-    Strategy("crossover", rate=0.20, crossover=True, tournament_n=3),
-]
-
-N_GENERATIONS = 3
-
-
-def run_one(label, pop_size, parallel):
+def _run_one(label, pop_size, parallel):
+    """Run a single benchmark configuration and return timing dict."""
     temp_dir = Path(tempfile.mkdtemp(prefix=f"plagih_bench_{label}_"))
     gp = None
     try:
-        gp = create_gp(pop_size, parallel, temp_dir)
+        gp = _create_bench_gp(pop_size, parallel, temp_dir)
         t0 = time.perf_counter()
         gp.gen_create_initial()
         t_init = time.perf_counter() - t0
@@ -126,39 +134,55 @@ def run_one(label, pop_size, parallel):
         }
     finally:
         if gp is not None:
-            gp.close()  # explicitly shutdown persistent worker pool
+            gp.close()
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
-if __name__ == "__main__":
+def bench_sequential_baseline():
+    """Sequential baseline."""
+    r = _run_one("seq", psize, False)
+    print(f"Sequential pop: {r['t_total']:.1f}s total, {r['t_avg']:.2f}s avg/gen")
+
+
+def bench_parallel_2_workers():
+    """Parallel with 2 workers."""
+    r = _run_one("par_2w", psize, 2)
+    print(f"Parallel 2w: {r['t_total']:.1f}s total, {r['t_avg']:.2f}s avg/gen")
+
+
+def bench_parallel_4_workers():
+    """Parallel with 4 workers."""
+    if os.cpu_count() is not None and os.cpu_count() < 4:
+        print("\nSkipping 4-worker benchmark: need at least 4 CPUs")
+        return
+    r = _run_one("par_4w", psize, 4)
+    print(f"Parallel 4w: {r['t_total']:.1f}s total, {r['t_avg']:.2f}s avg/gen")
+
+
+def bench_scaling_comparison():
+    """Compare sequential vs parallel at scale and print summary."""
     cpu_count = os.cpu_count() or 4
-    print(f"CPUs: {cpu_count} | Python: {sys.version.split()[0]}")
-    print(f"Generations: {N_GENERATIONS}\n")
+    print(f"CPUs: {cpu_count} | Generations: {N_GENERATIONS}\n")
 
     configs = [
-        ("seq_1000", 10000, False),
-        ("par_2w_1000", 1000, 2),
-        ("par_4w_1000", 1000, 4),
-        ("par_8w_1000", 1000, 8),
+        ("seq", psize, False),
+        ("par_2w", psize, 2),
     ]
+    if cpu_count >= 4:
+        configs.append(("par_4w", psize, 4))
 
     results = []
     for label, pop, par in configs:
         mode = f"parallel({par}w)" if par else "sequential"
         print(f"  Running {label:<15s} pop={pop:>3d}  {mode:<16s} ...", end="", flush=True)
-        try:
-            r = run_one(label, pop, par)
-            results.append(r)
-            print(f"  {r['t_total']:6.1f}s total, {r['t_avg']:6.2f}s avg/gen")
-        except Exception as e:
-            print(f"  FAILED: {e}")
+        r = _run_one(label, pop, par)
+        results.append(r)
+        print(f"  {r['t_total']:6.1f}s total, {r['t_avg']:6.2f}s avg/gen")
 
-    # === Summary ===
-    print("\n" + "=" * 75)
-    print(f"{'Label':<16s} {'Pop':>4s} {'Mode':<14s} {'Init':>6s} {'Avg/Gen':>8s} {'Total':>7s} {'Speedup':>8s}")
+    # Summary table
+    print(f"\n{'Label':<16s} {'Pop':>4s} {'Mode':<14s} {'Init':>6s} {'Avg/Gen':>8s} {'Total':>7s} {'Speedup':>8s}")
     print("-" * 75)
 
-    # Group by pop_size for speedup calculation
     seq_by_pop = {}
     for r in results:
         if r["parallel"] is False:
@@ -175,4 +199,14 @@ if __name__ == "__main__":
             f"{r['t_total']:>6.1f}s {speedup:>6.2f}x {eff}"
         )
 
-    print("=" * 75)
+    print(f"\n✓ {len(results)} configurations benchmarked.")
+
+
+if __name__ == "__main__":
+    print("=" * 60)
+    print("plagih GP — Sequential vs. Parallel Benchmark")
+    print("=" * 60)
+    bench_sequential_baseline()
+    bench_parallel_2_workers()
+    bench_parallel_4_workers()
+    bench_scaling_comparison()

@@ -24,6 +24,8 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import FancyBboxPatch
 
+from plagih.util import printpl
+
 if TYPE_CHECKING:
     from plagih.population_merge import MergedEvaluationGraph, MergedNode
     from plagih.trees import Node
@@ -1326,7 +1328,7 @@ def render_merged_tree(
     else:
         plt.close(fig)
 
-    print(f"Merged tree saved to: {output_path}")
+    printpl("f", f"Merged tree saved to: {output_path}")
     return str(output_path)
 
 

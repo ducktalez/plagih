@@ -25,14 +25,20 @@ Usage:
     gp.register_strategy("my_mutation", my_strategy)
 """
 
+import atexit
+import os
 import random
 import time
+import traceback
 import warnings
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from collections import Counter
+from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, wait
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from multiprocessing import shared_memory
+from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 
 import numpy as np
+import pandas as pd
 
 from plagih.util import (
     FLOAT_PRECISION,
@@ -41,6 +47,7 @@ from plagih.util import (
     TreeLutError,
     TreeSizeError,
     print_caution,
+    print_warning,
     printpl,
 )
 
@@ -130,6 +137,7 @@ class TaskResult:
     timing: Dict[str, float]
     error: Optional[str]
     tag: str
+    debug: Optional[Dict[str, Any]] = None
 
 
 # =============================================================================
@@ -222,6 +230,19 @@ class PerformanceTracker:
         self._generation_time = 0.0
 
 
+@dataclass
+class WorkerInitResources:
+    """Parent-side resources owned for worker initialization."""
+
+    df_train_shm: Optional[shared_memory.SharedMemory] = None
+    uses_shared_df_train: bool = False
+
+
+DEFAULT_TASKS_PER_BATCH = 128
+PROGRESS_TIMEOUT_SECONDS = 120.0
+DEBUG_TRACEBACK_LINES = 20
+
+
 # =============================================================================
 # Worker Global State
 # =============================================================================
@@ -239,6 +260,241 @@ _worker_target_column = None
 _worker_nodes_max = None
 _worker_complexity_metric = None
 _worker_strategy_registry = None
+_worker_df_train_shm = None
+_worker_df_train_shm_registered = False
+
+
+def _close_worker_df_train_shm():
+    """Close the worker-local shared memory handle if one is attached."""
+    global _worker_df_train_shm
+
+    shm = _worker_df_train_shm
+    if shm is not None:
+        try:
+            shm.close()
+        except FileNotFoundError:
+            pass
+        _worker_df_train_shm = None
+
+
+def _is_shared_memory_compatible_df(df_train) -> bool:
+    """Return True if df_train can be represented as one numeric ndarray."""
+    if df_train is None or len(df_train.columns) == 0 or len(df_train.index) == 0:
+        return False
+
+    arr = df_train.to_numpy(copy=False)
+    if arr.size == 0 or arr.nbytes == 0:
+        return False
+
+    return bool(np.issubdtype(arr.dtype, np.number) or np.issubdtype(arr.dtype, np.bool_))
+
+
+def _create_df_train_shared_memory(df_train) -> Tuple[Optional[Tuple], WorkerInitResources]:
+    """Create shared memory for df_train and return worker metadata plus resources."""
+    resources = WorkerInitResources()
+    if not _is_shared_memory_compatible_df(df_train):
+        return None, resources
+
+    arr = np.ascontiguousarray(df_train.to_numpy(copy=False))
+    if arr.size == 0 or arr.nbytes == 0:
+        return None, resources
+
+    shm = shared_memory.SharedMemory(create=True, size=arr.nbytes)
+    shm_arr = np.ndarray(arr.shape, dtype=arr.dtype, buffer=shm.buf)
+    shm_arr[:] = arr
+
+    df_train_shm_meta = (
+        shm.name,
+        arr.shape,
+        arr.dtype.str,
+        df_train.columns.copy(),
+        df_train.index.copy(),
+    )
+    resources.df_train_shm = shm
+    resources.uses_shared_df_train = True
+    return df_train_shm_meta, resources
+
+
+def cleanup_worker_init_resources(resources: Optional[WorkerInitResources]) -> None:
+    """Release parent-side resources created for worker initialization."""
+    if resources is None or resources.df_train_shm is None:
+        return
+
+    try:
+        resources.df_train_shm.close()
+    finally:
+        try:
+            resources.df_train_shm.unlink()
+        except FileNotFoundError:
+            pass
+        resources.df_train_shm = None
+        resources.uses_shared_df_train = False
+
+
+def build_worker_init_config(
+    evolve,
+    df_train,
+    pop_genepool,
+    paretofront,
+    eval_autocast,
+    eval_error_metric,
+    allow_chain,
+    target_column,
+    nodes_max,
+    complexity_metric,
+    strategy_registry,
+) -> Tuple[Tuple, WorkerInitResources]:
+    """Build initializer args for a worker pool, using shared memory for df_train when possible."""
+    df_train_shm_meta, resources = _create_df_train_shared_memory(df_train)
+    df_train_init = None if df_train_shm_meta is not None else df_train
+    initargs = (
+        evolve,
+        df_train_init,
+        pop_genepool,
+        paretofront,
+        eval_autocast,
+        eval_error_metric,
+        allow_chain,
+        target_column,
+        nodes_max,
+        complexity_metric,
+        strategy_registry,
+        df_train_shm_meta,
+    )
+    return initargs, resources
+
+
+def _safe_tree_debug_id(tree) -> str:
+    """Return a fast, robust identifier for debug output."""
+    if tree is None:
+        return "<none>"
+
+    try:
+        return tree.get_lut_id()
+    except Exception:
+        try:
+            return repr(tree)
+        except Exception:
+            return f"<{type(tree).__name__}>"
+
+
+def _task_debug_payload(task: TaskSpec, stage: str, trees=None, exc: Optional[BaseException] = None) -> Dict[str, Any]:
+    """Build structured debug context for a failed task."""
+    selected_tree_ids = []
+    if task.selected_trees is not None:
+        selected_tree_ids = [_safe_tree_debug_id(tree) for tree in task.selected_trees]
+
+    tree_ids = []
+    if trees:
+        tree_ids = [_safe_tree_debug_id(tree) for tree in trees]
+
+    payload: Dict[str, Any] = {
+        "worker_pid": os.getpid(),
+        "stage": stage,
+        "strategy": task.strategy_name,
+        "task_index": task.task_index,
+        "seed": task.seed,
+        "crossover": task.crossover,
+        "simplicate": task.simplicate,
+        "strategy_params": dict(task.strategy_params),
+        "selected_tree_ids": selected_tree_ids,
+        "tree_ids": tree_ids,
+    }
+    if exc is not None:
+        payload["traceback"] = traceback.format_exc(limit=DEBUG_TRACEBACK_LINES)
+    return payload
+
+
+def _format_task_error_message(exc: BaseException, debug: Dict[str, Any]) -> str:
+    """Format a concise but actionable error message for TaskResult.error."""
+    selected = len(debug.get("selected_tree_ids", []))
+    trees = len(debug.get("tree_ids", []))
+    return (
+        f"{type(exc).__name__}: {exc} "
+        f"[stage={debug.get('stage')}, strategy={debug.get('strategy')}, "
+        f"task_index={debug.get('task_index')}, seed={debug.get('seed')}, "
+        f"selected={selected}, trees={trees}, pid={debug.get('worker_pid')}]"
+    )
+
+
+def _debug_should_print(result: TaskResult) -> bool:
+    """Return True for failures that deserve explicit runtime diagnostics."""
+    if result.error is None:
+        return False
+    return any(
+        token in result.error for token in ("RecursionError", "WorkerCrash", "BatchTimeout", "BrokenProcessPool")
+    )
+
+
+def _print_parallel_failure_debug(result: TaskResult) -> None:
+    """Print detailed diagnostics for severe worker failures."""
+    if not _debug_should_print(result):
+        return
+
+    debug = result.debug or {}
+    print_warning(
+        "ww",
+        "Parallel task failure: "
+        f"tag={result.tag}, error={result.error}, "
+        f"stage={debug.get('stage')}, task_index={debug.get('task_index')}, "
+        f"strategy={debug.get('strategy')}, pid={debug.get('worker_pid')}",
+    )
+    tb = debug.get("traceback")
+    if tb:
+        print_warning("ww", f"Parallel task traceback:\n{tb}")
+
+
+def _resolve_target_tasks_per_batch(n_tasks: int, n_workers: int) -> int:
+    """Return a conservative runtime batch size.
+
+    Smaller chunks avoid long silent waits in as_completed/wait, isolate bad
+    tasks better, and matched the benchmark results more closely than one huge
+    batch per worker.
+    """
+    env_value = os.environ.get("PLAGIH_TASKS_PER_BATCH")
+    if env_value:
+        try:
+            return max(1, min(int(env_value), n_tasks))
+        except ValueError:
+            pass
+
+    auto_floor = max(1, n_tasks // max(1, n_workers * 8))
+    return max(auto_floor, min(DEFAULT_TASKS_PER_BATCH, n_tasks))
+
+
+def _build_task_batches(tasks: List[TaskSpec], n_workers: int) -> List[List[TaskSpec]]:
+    """Split tasks into mixed-strategy chunks for runtime execution."""
+    if not tasks:
+        return []
+
+    target_batch_size = _resolve_target_tasks_per_batch(len(tasks), n_workers)
+    n_batches = max(n_workers, int(np.ceil(len(tasks) / target_batch_size)))
+    batches: List[List[TaskSpec]] = [[] for _ in range(n_batches)]
+    for i, task in enumerate(tasks):
+        batches[i % n_batches].append(task)
+    return [batch for batch in batches if batch]
+
+
+def _summarize_batch(batch: List[TaskSpec]) -> Dict[str, Any]:
+    """Build a compact batch summary for timeout/crash diagnostics."""
+    strategy_counts = dict(Counter(task.strategy_name for task in batch))
+    return {
+        "size": len(batch),
+        "task_index_min": min((task.task_index for task in batch), default=None),
+        "task_index_max": max((task.task_index for task in batch), default=None),
+        "strategies": strategy_counts,
+    }
+
+
+def _progress_timeout_seconds() -> float:
+    """Return the maximum allowed time without any finished batch."""
+    env_value = os.environ.get("PLAGIH_PROGRESS_TIMEOUT_S")
+    if env_value:
+        try:
+            return max(1.0, float(env_value))
+        except ValueError:
+            pass
+    return PROGRESS_TIMEOUT_SECONDS
 
 
 def _init_worker(
@@ -253,6 +509,7 @@ def _init_worker(
     nodes_max,
     complexity_metric,
     strategy_registry,
+    df_train_shm_meta=None,
 ):
     """Initialize global state in each worker process.
 
@@ -262,9 +519,20 @@ def _init_worker(
     global _worker_paretofront, _worker_eval_autocast, _worker_eval_error_metric
     global _worker_allow_chain, _worker_target_column
     global _worker_nodes_max, _worker_complexity_metric, _worker_strategy_registry
+    global _worker_df_train_shm, _worker_df_train_shm_registered
 
     _worker_evolve = evolve
-    _worker_df_train = df_train
+    _close_worker_df_train_shm()
+    if df_train_shm_meta is not None:
+        shm_name, shape, dtype_str, columns, index = df_train_shm_meta
+        _worker_df_train_shm = shared_memory.SharedMemory(name=shm_name)
+        arr = np.ndarray(shape, dtype=np.dtype(dtype_str), buffer=_worker_df_train_shm.buf)
+        _worker_df_train = pd.DataFrame(arr, columns=columns, index=index, copy=False)
+        if not _worker_df_train_shm_registered:
+            atexit.register(_close_worker_df_train_shm)
+            _worker_df_train_shm_registered = True
+    else:
+        _worker_df_train = df_train
     _worker_pop_genepool = pop_genepool
     _worker_paretofront = paretofront
     _worker_eval_autocast = eval_autocast
@@ -639,6 +907,9 @@ def _worker_run_task(task: TaskSpec, shared_lut_tree=None, shared_lut_symex=None
     lut_tree = shared_lut_tree if shared_lut_tree is not None else {}
     lut_symex = shared_lut_symex if shared_lut_symex is not None else {}
     t0 = time.perf_counter()  # Start timing before try block
+    stage = "setup"
+    created_trees = []
+    trees = []
 
     # Set seed if provided (for reproducibility)
     if task.seed is not None:
@@ -648,6 +919,7 @@ def _worker_run_task(task: TaskSpec, shared_lut_tree=None, shared_lut_symex=None
 
     try:
         # Phase 1: Create tree(s) via strategy function
+        stage = "create"
 
         # Look up strategy function
         registry = _worker_strategy_registry or BUILTIN_STRATEGIES
@@ -673,10 +945,15 @@ def _worker_run_task(task: TaskSpec, shared_lut_tree=None, shared_lut_symex=None
             _worker_allow_chain,
             **call_params,
         )
+        if task.crossover:
+            created_trees = [result[0], result[1]]
+        else:
+            created_trees = [result]
 
         timing["create"] = time.perf_counter() - t0
 
         # Phase 2: Simplify if requested
+        stage = "simplify"
         t1 = time.perf_counter()
         if task.crossover:
             tree_a, tree_b = result
@@ -692,6 +969,7 @@ def _worker_run_task(task: TaskSpec, shared_lut_tree=None, shared_lut_symex=None
         timing["simplify"] = time.perf_counter() - t1
 
         # Phase 3: Evaluate each tree
+        stage = "evaluate"
         t2 = time.perf_counter()
         candidates = []
         for tree in trees:
@@ -719,17 +997,20 @@ def _worker_run_task(task: TaskSpec, shared_lut_tree=None, shared_lut_symex=None
             timing=timing,
             error=None,
             tag=task.tag,
+            debug=None,
         )
 
-    except (TreeError, TreeSizeError, SympyError, ValueError, ArithmeticError, KeyError, RecursionError) as e:
+    except Exception as e:
         timing["total"] = time.perf_counter() - t0
+        debug = _task_debug_payload(task, stage=stage, trees=trees or created_trees, exc=e)
         return TaskResult(
             candidates=[],
             lut_tree_entries={},  # LUT entries stay in shared dicts
             lut_symex_entries={},
             timing=timing,
-            error=f"{type(e).__name__}: {e}",
+            error=_format_task_error_message(e, debug),
             tag=task.tag,
+            debug=debug,
         )
 
 
@@ -753,7 +1034,19 @@ def _worker_run_batch(tasks: List[TaskSpec]) -> List[TaskResult]:
     results = []
 
     for task in tasks:
-        result = _worker_run_task(task, shared_lut_tree=batch_lut_tree, shared_lut_symex=batch_lut_symex)
+        try:
+            result = _worker_run_task(task, shared_lut_tree=batch_lut_tree, shared_lut_symex=batch_lut_symex)
+        except Exception as e:
+            debug = _task_debug_payload(task, stage="batch_wrapper", trees=None, exc=e)
+            result = TaskResult(
+                candidates=[],
+                lut_tree_entries={},
+                lut_symex_entries={},
+                timing={"total": 0.0},
+                error=_format_task_error_message(e, debug),
+                tag=task.tag,
+                debug=debug,
+            )
         results.append(result)
 
     return results
@@ -969,32 +1262,36 @@ def run_generation_parallel(
     # This eliminates _update_worker_state IPC overhead (~950ms/gen for pop=1000, 4w).
     needs_full_pop = pre_select_for_tasks(tasks, pop_genepool, paretofront)
 
-    # Split tasks into n_workers batches (round-robin for strategy mix)
-    batches: List[List[TaskSpec]] = [[] for _ in range(n_workers)]
-    for i, task in enumerate(tasks):
-        batches[i % n_workers].append(task)
-    # Remove empty batches (when tasks < n_workers)
-    batches = [b for b in batches if b]
+    # Split tasks into mixed-strategy chunks rather than one giant batch/worker.
+    # This improves load balancing and makes pathological tasks debuggable.
+    batches = _build_task_batches(tasks, n_workers)
 
     owns_pool = pool is None
+    init_resources = None
+    fast_shutdown = False
     if owns_pool:
-        pool = ProcessPoolExecutor(
-            max_workers=n_workers,
-            initializer=_init_worker,
-            initargs=(
-                evolve,
-                df_train,
-                pop_genepool if needs_full_pop else [],
-                paretofront if needs_full_pop else [],
-                eval_autocast,
-                eval_error_metric,
-                allow_chain,
-                target_column,
-                nodes_max,
-                complexity_metric,
-                strategy_registry,
-            ),
+        initargs, init_resources = build_worker_init_config(
+            evolve=evolve,
+            df_train=df_train,
+            pop_genepool=pop_genepool if needs_full_pop else [],
+            paretofront=paretofront if needs_full_pop else [],
+            eval_autocast=eval_autocast,
+            eval_error_metric=eval_error_metric,
+            allow_chain=allow_chain,
+            target_column=target_column,
+            nodes_max=nodes_max,
+            complexity_metric=complexity_metric,
+            strategy_registry=strategy_registry,
         )
+        try:
+            pool = ProcessPoolExecutor(
+                max_workers=n_workers,
+                initializer=_init_worker,
+                initargs=cast(tuple[Any, ...], initargs),
+            )
+        except Exception:
+            cleanup_worker_init_resources(init_resources)
+            raise
 
     try:
         # Only send pop_genepool/paretofront to workers if a custom strategy
@@ -1005,33 +1302,64 @@ def run_generation_parallel(
             for f in update_futures:
                 f.result()  # Wait for all workers to update
 
-        # Submit n_workers batches instead of N individual tasks
         futures = {pool.submit(_worker_run_batch, batch): batch for batch in batches}
+        pending = set(futures)
+        timeout_s = _progress_timeout_seconds()
 
-        for future in as_completed(futures):
-            batch = futures[future]
+        while pending:
+            done, pending = wait(pending, timeout=timeout_s, return_when=FIRST_COMPLETED)
+            if not done:
+                pending_debug = [_summarize_batch(futures[future]) for future in pending]
+                fast_shutdown = True
+                print_warning(
+                    "ww",
+                    "Parallel batch timeout: no worker batch completed within "
+                    f"{timeout_s:.1f}s; pending_batches={pending_debug}",
+                )
+                if not owns_pool and pool is not None:
+                    try:
+                        pool.shutdown(wait=False, cancel_futures=True)
+                    except Exception:
+                        pass
+                raise TimeoutError(
+                    f"BatchTimeout: no worker batch completed within {timeout_s:.1f}s; pending_batches={pending_debug}"
+                )
 
-            try:
-                batch_results = future.result()
-            except Exception as e:
-                # Worker crash — record failure for all tasks in batch
-                for task in batch:
-                    tracker.record(
-                        TaskResult(
+            for future in done:
+                batch = futures[future]
+
+                try:
+                    batch_results = future.result()
+                except Exception as e:
+                    batch_summary = _summarize_batch(batch)
+                    debug = {
+                        "batch_summary": batch_summary,
+                        "traceback": traceback.format_exc(limit=DEBUG_TRACEBACK_LINES),
+                    }
+                    for task in batch:
+                        result = TaskResult(
                             candidates=[],
                             lut_tree_entries={},
                             lut_symex_entries={},
                             timing={"total": 0.0},
-                            error=f"WorkerCrash: {e}",
+                            error=(
+                                f"WorkerCrash: {type(e).__name__}: {e} "
+                                f"[strategy={task.strategy_name}, task_index={task.task_index}, batch={batch_summary}]"
+                            ),
                             tag=task.tag,
+                            debug=debug,
                         )
-                    )
-                continue
+                        tracker.record(result)
+                        _print_parallel_failure_debug(result)
+                    continue
 
-            # Process individual task results for tracking
-            for result in batch_results:
-                tracker.record(result)
-                if result.error is None:
+                # Process individual task results for tracking
+                for result in batch_results:
+                    tracker.record(result)
+                    if result.error is not None:
+                        _print_parallel_failure_debug(result)
+                        continue
+
                     # Repair tree back-references stripped during pickling
                     for candidate in result.candidates:
                         candidate.tree.repair_all()
@@ -1039,7 +1367,8 @@ def run_generation_parallel(
 
     finally:
         if owns_pool:
-            pool.shutdown(wait=True)
+            pool.shutdown(wait=not fast_shutdown, cancel_futures=fast_shutdown)
+            cleanup_worker_init_resources(init_resources)
 
     tracker.set_generation_time(time.perf_counter() - gen_start)
     return all_candidates, lut_tree_delta, lut_symex_delta, tracker

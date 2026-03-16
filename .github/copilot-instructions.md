@@ -17,7 +17,7 @@ crossover, and simplification, evaluated against training data.
 | Module | Responsibility |
 |---|---|
 | `plagih/trees.py` | plagih_tree contain a new implementation of trees that we use in genetic programming to display a program. (67C/22F) |
-| `plagih/parallel.py` | Parallel execution engine for plagih GP. (4C/19F) |
+| `plagih/parallel.py` | Parallel execution engine for plagih GP. (5C/33F) |
 | `plagih/paretofront.py` | Pareto-front dominance filter for GP candidates. (0C/6F) |
 | `plagih/monitoring.py` | GP Monitoring Module (2C/0F) |
 | `plagih/evaluation_context.py` | Unified Evaluation Context System for Plagih GP Trees. (3C/5F) |

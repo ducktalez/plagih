@@ -19,13 +19,17 @@ Expects: enable_analysis=False (no plots/backups during benchmarks).
 """
 
 import argparse
+import atexit
+import math
 import os
 import pickle
+import random
 import shutil
 import sys
 import tempfile
 import time
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from multiprocessing import shared_memory
 from pathlib import Path
 
 _root = Path(__file__).resolve().parent.parent.parent.parent
@@ -73,6 +77,8 @@ from plagih.util import cpu_count_physical
 
 POP_SIZE = 1000
 N_GENERATIONS = 5
+COMPARE_POP_SIZES = (1000, 10_000)
+BATCH_TASK_SIZES = (1, 32, 128, 0)  # 0 = auto-balanced (~tasks / worker)
 
 STRATEGIES = [
     Strategy("reproduction", rate=0.15, tournament_n=3),
@@ -101,7 +107,7 @@ def _load_df():
     )
 
 
-def _create_gp(pop_size=POP_SIZE, parallel=False):
+def _create_gp(pop_size=POP_SIZE, parallel: bool | int = False):
     """Create GP instance, returns (gp, temp_dir)."""
     temp_dir = Path(tempfile.mkdtemp(prefix="plagih_diag_"))
     gp = ExplainableGP.create(
@@ -158,10 +164,102 @@ def _section(title):
     print(f"{'-' * 60}")
 
 
+def _unique_ints(values):
+    unique = []
+    for value in values:
+        if value not in unique:
+            unique.append(value)
+    return unique
+
+
+def _auto_batch_size(n_tasks, n_workers):
+    return max(1, math.ceil(n_tasks / max(1, n_workers)))
+
+
+def _normalize_batch_sizes(batch_sizes, n_tasks, n_workers):
+    auto_size = _auto_batch_size(n_tasks, n_workers)
+    normalized = []
+    seen = set()
+    for raw in batch_sizes:
+        size = auto_size if raw <= 0 else min(raw, n_tasks)
+        if size not in seen:
+            seen.add(size)
+            label = f"auto({size})" if raw <= 0 else str(size)
+            normalized.append((size, label))
+    if auto_size not in seen:
+        normalized.append((auto_size, f"auto({auto_size})"))
+    return normalized
+
+
+def _build_mixed_batches(tasks, target_batch_size):
+    if not tasks:
+        return []
+    batch_count = max(1, math.ceil(len(tasks) / max(1, target_batch_size)))
+    batches = [[] for _ in range(batch_count)]
+    for i, task in enumerate(tasks):
+        batches[i % batch_count].append(task)
+    return [batch for batch in batches if batch]
+
+
+def _build_preselected_tasks(gp, pop_size, seed):
+    random.seed(seed)
+    np.random.seed(seed % (2**31))
+    tasks = build_task_list(STRATEGIES, pop_size, seed=seed)
+    needs_full_pop = pre_select_for_tasks(tasks, gp.pop_genepool, gp.paretofront)
+    if needs_full_pop:
+        raise RuntimeError("Benchmark erwartet nur builtin strategies mit erfolgreicher pre-selection.")
+    return tasks
+
+
+_bench_df_train = None
+_bench_df_shm = None
+
+
+def _init_df_pickle_worker(df_train):
+    global _bench_df_train, _bench_df_shm
+    _bench_df_train = df_train
+    _bench_df_shm = None
+
+
+def _init_df_shm_worker(shm_name, shape, dtype_str, columns):
+    global _bench_df_train, _bench_df_shm
+    _bench_df_shm = shared_memory.SharedMemory(name=shm_name)
+    atexit.register(_bench_df_shm.close)
+    arr = np.ndarray(shape, dtype=np.dtype(dtype_str), buffer=_bench_df_shm.buf)
+    _bench_df_train = pd.DataFrame(arr, columns=list(columns), copy=False)
+
+
+def _probe_df_train_worker():
+    arr = _bench_df_train.to_numpy(copy=False)
+    checksum = float(arr.sum(dtype=np.float64) + arr[0, 0] + arr[-1, -1])
+    return checksum, tuple(_bench_df_train.shape)
+
+
+def _create_df_shared_memory(df_train):
+    arr = np.ascontiguousarray(df_train.to_numpy(copy=True))
+    shm = shared_memory.SharedMemory(create=True, size=arr.nbytes)
+    shm_arr = np.ndarray(arr.shape, dtype=arr.dtype, buffer=shm.buf)
+    shm_arr[:] = arr
+    metadata = (shm.name, arr.shape, arr.dtype.str, tuple(df_train.columns))
+    return shm, metadata, arr.nbytes
+
+
+def _measure_pool_startup(initializer, initargs, n_workers, repeats=3):
+    times = []
+    for _ in range(repeats):
+        t0 = time.perf_counter()
+        with ProcessPoolExecutor(max_workers=n_workers, initializer=initializer, initargs=initargs) as pool:
+            futures = [pool.submit(_probe_df_train_worker) for _ in range(n_workers)]
+            for future in futures:
+                future.result()
+        times.append(time.perf_counter() - t0)
+    return float(np.mean(times))
+
+
 # --- 1. Pickle Size Analysis ------------------------------------------------
 
 
-def diag_pickle_sizes(gp):
+def diag_pickle_sizes(gp, pop_size=POP_SIZE):
     """Measure pickle size of each component sent via IPC."""
     _section("1. PICKLE SIZE ANALYSIS")
 
@@ -195,7 +293,7 @@ def diag_pickle_sizes(gp):
     print(f"\n  Legacy _update_worker_state payload: {_fmt_bytes(update_payload_sz)}")
 
     # Pre-selected batch payload
-    tasks = build_task_list(STRATEGIES, POP_SIZE)
+    tasks = build_task_list(STRATEGIES, pop_size)
     pre_select_for_tasks(tasks, gp.pop_genepool, gp.paretofront)
     n_workers = min(4, cpu_count_physical())
     batches = [[] for _ in range(n_workers)]
@@ -209,18 +307,89 @@ def diag_pickle_sizes(gp):
     return update_payload_sz
 
 
-# --- 2. Legacy vs Pre-Selection IPC Cost ------------------------------------
+# --- 2. df_train Transport: Pickle vs Shared Memory --------------------------
 
 
-def diag_ipc_comparison(gp):
+def diag_df_train_transport(df_train, n_workers=None):
+    """Compare df_train transfer via pickle vs shared memory."""
+    if n_workers is None:
+        n_workers = min(4, cpu_count_physical())
+    _section(f"2. DF_TRAIN TRANSPORT (pickle vs shared memory, {n_workers} workers)")
+
+    N = 25
+    payload = pickle.dumps(df_train, protocol=pickle.HIGHEST_PROTOCOL)
+
+    t0 = time.perf_counter()
+    for _ in range(N):
+        payload = pickle.dumps(df_train, protocol=pickle.HIGHEST_PROTOCOL)
+    t_pickle_dumps = (time.perf_counter() - t0) / N
+
+    t0 = time.perf_counter()
+    for _ in range(N):
+        restored = pickle.loads(payload)
+        _ = restored.iloc[0, 0]
+    t_pickle_loads = (time.perf_counter() - t0) / N
+
+    setup_times = []
+    shm_nbytes = 0
+    shm_metadata = None
+    for _ in range(5):
+        t0 = time.perf_counter()
+        shm, shm_metadata, shm_nbytes = _create_df_shared_memory(df_train)
+        setup_times.append(time.perf_counter() - t0)
+        shm.close()
+        shm.unlink()
+    t_shm_setup = float(np.mean(setup_times))
+
+    shm, shm_metadata, shm_nbytes = _create_df_shared_memory(df_train)
+    try:
+        metadata_payload = pickle.dumps(shm_metadata, protocol=pickle.HIGHEST_PROTOCOL)
+        t_pool_pickle = _measure_pool_startup(_init_df_pickle_worker, (df_train,), n_workers)
+        t_pool_shm = _measure_pool_startup(_init_df_shm_worker, shm_metadata, n_workers)
+    finally:
+        shm.close()
+        shm.unlink()
+
+    print(f"  DataFrame pickle payload:   {_fmt_bytes(len(payload))}")
+    print(f"  Shared-memory raw buffer:   {_fmt_bytes(shm_nbytes)}")
+    print(f"  Shared-memory metadata:     {_fmt_bytes(len(metadata_payload))}")
+    print()
+    print("  Local serialization cost:")
+    print(f"    pickle.dumps(df_train):   {_fmt_ms(t_pickle_dumps)}")
+    print(f"    pickle.loads(df_train):   {_fmt_ms(t_pickle_loads)}")
+    print(f"    shm setup+copy (parent):  {_fmt_ms(t_shm_setup)}")
+    print()
+    print("  Real pool startup (includes worker init + first probe):")
+    print(f"    Pickled DataFrame init:   {_fmt_ms(t_pool_pickle)}")
+    print(f"    Shared-memory attach:     {_fmt_ms(t_pool_shm)}")
+    print(f"    Shared-memory total*:     {_fmt_ms(t_pool_shm + t_shm_setup)}")
+    if t_pool_shm > 0:
+        print(f"    Startup speedup:          {t_pool_pickle / t_pool_shm:.2f}x")
+    print("    * includes one-time parent-side shm allocation+copy")
+
+    return {
+        "pickle_payload": len(payload),
+        "shm_buffer": shm_nbytes,
+        "shm_metadata": len(metadata_payload),
+        "pickle_init": t_pool_pickle,
+        "shm_init": t_pool_shm,
+        "shm_total": t_pool_shm + t_shm_setup,
+    }
+
+
+# --- 3. Legacy vs Pre-Selection IPC Cost ------------------------------------
+
+
+def diag_ipc_comparison(gp, pop_size=POP_SIZE):
     """Compare legacy _update_worker_state vs pre-selection IPC cost."""
-    _section("2. LEGACY vs PRE-SELECTION IPC COST")
+    _section("3. LEGACY vs PRE-SELECTION IPC COST")
 
     n_workers = min(4, cpu_count_physical())
     N = 10
 
     # Legacy: pickle full pop_genepool to each worker
     payload = (gp.pop_genepool, gp.paretofront)
+    data = b""
     t0 = time.perf_counter()
     for _ in range(N):
         data = pickle.dumps(payload, protocol=pickle.HIGHEST_PROTOCOL)
@@ -243,12 +412,12 @@ def diag_ipc_comparison(gp):
     # New: pre-select in main process
     t0 = time.perf_counter()
     for _ in range(N):
-        tasks_copy = build_task_list(STRATEGIES, POP_SIZE)
+        tasks_copy = build_task_list(STRATEGIES, pop_size)
         pre_select_for_tasks(tasks_copy, gp.pop_genepool, gp.paretofront)
     t_preselect = (time.perf_counter() - t0) / N
 
     # Batch pickle cost
-    tasks = build_task_list(STRATEGIES, POP_SIZE)
+    tasks = build_task_list(STRATEGIES, pop_size)
     pre_select_for_tasks(tasks, gp.pop_genepool, gp.paretofront)
     batches = [[] for _ in range(n_workers)]
     for i, task in enumerate(tasks):
@@ -277,14 +446,14 @@ def diag_ipc_comparison(gp):
     return legacy_total, new_total
 
 
-# --- 3. Per-Task Compute Time -----------------------------------------------
+# --- 4. Per-Task Compute Time -----------------------------------------------
 
 
-def diag_per_task_compute(gp):
+def diag_per_task_compute(gp, pop_size=POP_SIZE):
     """Measure average compute time per task (sequential, no IPC)."""
-    _section("3. PER-TASK COMPUTE TIME (sequential, no overhead)")
+    _section("4. PER-TASK COMPUTE TIME (sequential, no overhead)")
 
-    tasks = build_task_list(STRATEGIES, POP_SIZE)
+    tasks = build_task_list(STRATEGIES, pop_size)
     lut_tree, lut_symex = {}, {}
 
     t0 = time.perf_counter()
@@ -327,12 +496,137 @@ def diag_per_task_compute(gp):
     return t_total, t_per_task
 
 
-# --- 4. Result Pickle Cost --------------------------------------------------
+# --- 5. Batch Size Sweep -----------------------------------------------------
 
 
-def diag_result_pickle_cost(gp):
+def diag_batch_size_sweep(gp, pop_size=POP_SIZE, n_workers=None, batch_sizes=BATCH_TASK_SIZES, print_header=True):
+    """Compare actual worker wall-time for different task batch sizes."""
+    if n_workers is None:
+        n_workers = min(4, cpu_count_physical())
+
+    n_tasks = len(build_task_list(STRATEGIES, pop_size))
+    configs = _normalize_batch_sizes(batch_sizes, n_tasks, n_workers)
+
+    if print_header:
+        _section(f"5. BATCH SIZE SWEEP (pop={pop_size}, {n_workers} workers)")
+
+    sweep_results = []
+    pool = ProcessPoolExecutor(
+        max_workers=n_workers,
+        initializer=_init_worker,
+        initargs=(
+            gp.evolve,
+            gp.df_train,
+            [],
+            [],
+            gp.eval_autocast,
+            gp.eval_error_metric,
+            gp.allow_chain,
+            gp.target_column,
+            gp.evolve.nodes_max,
+            gp.evolve.complexity_metric,
+            {**BUILTIN_STRATEGIES},
+        ),
+    )
+    try:
+        for future in [pool.submit(_warmup_noop) for _ in range(n_workers)]:
+            future.result()
+
+        print(f"  Total tasks: {n_tasks}")
+        print(f"  {'Batch':<12s} {'#batches':>9s} {'Payload':>10s} {'Avg time':>10s} {'Speedup':>9s}")
+        print(f"  {'-' * 58}")
+
+        for cfg_idx, (batch_size, label) in enumerate(configs):
+            times = []
+            payload_sizes = []
+            batch_counts = []
+
+            for rep in range(2):
+                tasks = _build_preselected_tasks(gp, pop_size, seed=pop_size * 10 + cfg_idx * 100 + rep)
+                batches = _build_mixed_batches(tasks, batch_size)
+                payload_sizes.append(
+                    sum(len(pickle.dumps(batch, protocol=pickle.HIGHEST_PROTOCOL)) for batch in batches)
+                )
+                batch_counts.append(len(batches))
+
+                t0 = time.perf_counter()
+                futures = {pool.submit(_worker_run_batch, batch): batch for batch in batches}
+                for future in as_completed(futures):
+                    future.result()
+                times.append(time.perf_counter() - t0)
+
+            sweep_results.append(
+                {
+                    "batch_size": batch_size,
+                    "label": label,
+                    "avg_time": float(np.mean(times)),
+                    "avg_payload": int(np.mean(payload_sizes)),
+                    "avg_batches": float(np.mean(batch_counts)),
+                }
+            )
+
+        baseline = sweep_results[0]["avg_time"] if sweep_results else 0
+        for row in sweep_results:
+            speedup = baseline / row["avg_time"] if row["avg_time"] > 0 else 0
+            print(
+                f"  {row['label']:<12s} {round(row['avg_batches']):>9d} "
+                f"{_fmt_bytes(row['avg_payload']):>10s} {_fmt_ms(row['avg_time']):>10s} {speedup:>8.2f}x"
+            )
+    finally:
+        pool.shutdown(wait=True)
+
+    return sweep_results
+
+
+def diag_population_batch_comparison(pop_sizes=COMPARE_POP_SIZES, batch_sizes=BATCH_TASK_SIZES, n_workers=None):
+    """Compare batch-size effects side-by-side for pop=1k vs 10k."""
+    if n_workers is None:
+        n_workers = min(4, cpu_count_physical())
+    pop_label = " vs ".join(f"{pop:,}" for pop in pop_sizes)
+    _section(f"6. BATCH + POPULATION COMPARISON ({pop_label})")
+
+    all_results = {}
+    for pop_size in pop_sizes:
+        gp, temp_dir = _create_gp(pop_size)
+        try:
+            gp.gen_create_initial()
+            print(f"\n  pop={pop_size}")
+            all_results[pop_size] = diag_batch_size_sweep(
+                gp,
+                pop_size=pop_size,
+                n_workers=n_workers,
+                batch_sizes=batch_sizes,
+                print_header=False,
+            )
+        finally:
+            gp.close()
+            shutil.rmtree(temp_dir, ignore_errors=True)
+
+    print("\n  SUMMARY (smallest batch vs auto-balanced):")
+    print(f"  {'Pop':>8s} {'Batch=1':>10s} {'Auto':>10s} {'Speedup':>9s} {'Payload Δ':>12s}")
+    print(f"  {'-' * 57}")
+    for pop_size in pop_sizes:
+        rows = all_results[pop_size]
+        baseline = min(rows, key=lambda row: row["batch_size"])
+        auto_row = max(rows, key=lambda row: row["batch_size"])
+        speedup = baseline["avg_time"] / auto_row["avg_time"] if auto_row["avg_time"] > 0 else 0
+        payload_ratio = baseline["avg_payload"] / auto_row["avg_payload"] if auto_row["avg_payload"] > 0 else 0
+        print(
+            f"  {pop_size:>8d} {_fmt_ms(baseline['avg_time']):>10s} {_fmt_ms(auto_row['avg_time']):>10s} "
+            f"{speedup:>8.2f}x {payload_ratio:>11.2f}x"
+        )
+
+    return all_results
+
+
+# --- 7. Result Pickle Cost --------------------------------------------------
+
+
+def diag_result_pickle_cost(gp, pop_size=POP_SIZE, batch_sizes=BATCH_TASK_SIZES, n_workers=None):
     """Measure cost of pickling TaskResults back from workers."""
-    _section("4. RESULT PICKLE COST (worker -> main)")
+    if n_workers is None:
+        n_workers = min(4, cpu_count_physical())
+    _section("7. RESULT PICKLE COST (worker -> main)")
 
     tasks = build_task_list(STRATEGIES, 100)
     lut_tree, lut_symex = {}, {}
@@ -364,31 +658,34 @@ def diag_result_pickle_cost(gp):
         print("  No successful results to measure.")
         return 0
 
-    batch_250 = ok_results * (250 // len(ok_results) + 1)
-    batch_250 = batch_250[:250]
-    sz_batch = len(pickle.dumps(batch_250, protocol=pickle.HIGHEST_PROTOCOL))
-    t0 = time.perf_counter()
-    for _ in range(10):
-        pickle.dumps(batch_250, protocol=pickle.HIGHEST_PROTOCOL)
-    t_batch = (time.perf_counter() - t0) / 10
+    approx_results_per_worker = max(1, pop_size // max(1, n_workers))
+    result_batch_sizes = _normalize_batch_sizes(batch_sizes, approx_results_per_worker, n_workers)
 
-    print(f"  Batch of 250 results: {_fmt_bytes(sz_batch)}, dumps={_fmt_ms(t_batch)}")
-    for nw in [2, 4, 8]:
-        batch_size = POP_SIZE // nw
-        est = t_batch * (batch_size / 250)
-        print(f"    {nw}w x ~{batch_size} results: ~{_fmt_ms(est * nw)}")
+    print(f"  {'Batch':<12s} {'Payload':>10s} {'dumps':>10s}")
+    print(f"  {'-' * 36}")
+    measurements = []
+    for batch_size, label in result_batch_sizes:
+        batch = ok_results * (batch_size // len(ok_results) + 1)
+        batch = batch[:batch_size]
+        sz_batch = len(pickle.dumps(batch, protocol=pickle.HIGHEST_PROTOCOL))
+        t0 = time.perf_counter()
+        for _ in range(10):
+            pickle.dumps(batch, protocol=pickle.HIGHEST_PROTOCOL)
+        t_batch = (time.perf_counter() - t0) / 10
+        measurements.append((label, sz_batch, t_batch))
+        print(f"  {label:<12s} {_fmt_bytes(sz_batch):>10s} {_fmt_ms(t_batch):>10s}")
 
-    return t_batch
+    return measurements
 
 
-# --- 5. Real Pool Comparison ------------------------------------------------
+# --- 8. Real Pool Comparison ------------------------------------------------
 
 
-def diag_real_pool_comparison(gp, n_workers=None):
+def diag_real_pool_comparison(gp, pop_size=POP_SIZE, n_workers=None):
     """Compare real pool: legacy _update_worker_state vs pre-selection batch."""
     if n_workers is None:
         n_workers = min(4, cpu_count_physical())
-    _section(f"5. REAL POOL COMPARISON ({n_workers} workers)")
+    _section(f"8. REAL POOL COMPARISON ({n_workers} workers)")
 
     pool = ProcessPoolExecutor(
         max_workers=n_workers,
@@ -424,7 +721,7 @@ def diag_real_pool_comparison(gp, n_workers=None):
     # Pre-selection: pre-select + submit batch with work
     times_presel = []
     for _ in range(N):
-        tasks = build_task_list(STRATEGIES, POP_SIZE)
+        tasks = build_task_list(STRATEGIES, pop_size)
         t_ps = time.perf_counter()
         pre_select_for_tasks(tasks, gp.pop_genepool, gp.paretofront)
         batches = [[] for _ in range(n_workers)]
@@ -433,8 +730,6 @@ def diag_real_pool_comparison(gp, n_workers=None):
         batches = [b for b in batches if b]
 
         t0 = time.perf_counter()
-        from concurrent.futures import as_completed
-
         futs = {pool.submit(_worker_run_batch, batch): batch for batch in batches}
         for f in as_completed(futs):
             f.result()
@@ -453,12 +748,15 @@ def diag_real_pool_comparison(gp, n_workers=None):
     return avg_legacy, avg_presel
 
 
-# --- 6. End-to-End: Sequential vs Parallel ----------------------------------
+# --- 9. End-to-End: Sequential vs Parallel ----------------------------------
 
 
-def diag_sequential_vs_parallel(pop_size=POP_SIZE, n_gens=N_GENERATIONS):
+def diag_sequential_vs_parallel(pop_size=POP_SIZE, n_gens=N_GENERATIONS, print_section=True):
     """Run full sequential and parallel comparisons with timing breakdown."""
-    _section(f"6. END-TO-END COMPARISON (pop={pop_size}, {n_gens} gens)")
+    if print_section:
+        _section(f"9. END-TO-END COMPARISON (pop={pop_size}, {n_gens} gens)")
+    else:
+        print(f"\n  pop={pop_size} | gens={n_gens}")
 
     phys = cpu_count_physical()
     logical = os.cpu_count() or phys
@@ -476,7 +774,7 @@ def diag_sequential_vs_parallel(pop_size=POP_SIZE, n_gens=N_GENERATIONS):
 
     for nw in worker_counts:
         label = "sequential" if nw == 0 else f"parallel({nw}w)"
-        gp, temp_dir = _create_gp(pop_size, parallel=nw if nw > 0 else 0)
+        gp, temp_dir = _create_gp(pop_size, parallel=nw if nw > 0 else False)
         try:
             t0 = time.perf_counter()
             gp.gen_create_initial()
@@ -546,14 +844,14 @@ def diag_sequential_vs_parallel(pop_size=POP_SIZE, n_gens=N_GENERATIONS):
     return results
 
 
-# --- 7. Overhead Budget -----------------------------------------------------
+# --- 10. Overhead Budget ----------------------------------------------------
 
 
-def diag_overhead_budget(t_ipc_legacy, t_ipc_presel, t_seq_total, n_workers=None):
+def diag_overhead_budget(t_ipc_legacy, t_ipc_presel, t_seq_total, pop_size=POP_SIZE, n_workers=None):
     """Calculate theoretical speedup and overhead budget."""
     if n_workers is None:
         n_workers = min(4, cpu_count_physical())
-    _section(f"7. OVERHEAD BUDGET (pop={POP_SIZE}, {n_workers} workers)")
+    _section(f"10. OVERHEAD BUDGET (pop={pop_size}, {n_workers} workers)")
 
     t_compute = t_seq_total
     t_compute_parallel = t_compute / n_workers
@@ -576,6 +874,56 @@ def diag_overhead_budget(t_ipc_legacy, t_ipc_presel, t_seq_total, n_workers=None
     print(f"    Total:     {_fmt_ms(est_new)}")
     if est_new > 0:
         print(f"    Speedup:   {t_compute / est_new:.2f}x")
+
+
+def diag_population_end_to_end_comparison(pop_sizes=COMPARE_POP_SIZES, n_gens=N_GENERATIONS):
+    """Run end-to-end comparison for multiple population sizes and summarize."""
+    pop_label = " vs ".join(f"{pop:,}" for pop in pop_sizes)
+    _section(f"11. END-TO-END POPULATION COMPARISON ({pop_label})")
+
+    summaries = []
+    for pop_size in pop_sizes:
+        results = diag_sequential_vs_parallel(pop_size=pop_size, n_gens=n_gens, print_section=False)
+        seq_steady = next(
+            (float(np.mean(r["gen_times"][1:])) for r in results if r["workers"] == 0 and len(r["gen_times"]) > 1),
+            None,
+        )
+        seq_metric = seq_steady
+        if seq_metric is None:
+            seq_metric = next((float(r["t_avg"]) for r in results if r["workers"] == 0), None)
+        parallel_rows = [r for r in results if r["workers"] > 0]
+        best_parallel = min(
+            parallel_rows,
+            key=lambda row: float(np.mean(row["gen_times"][1:])) if len(row["gen_times"]) > 1 else row["t_avg"],
+        )
+        best_parallel_steady = (
+            float(np.mean(best_parallel["gen_times"][1:]))
+            if len(best_parallel["gen_times"]) > 1
+            else best_parallel["t_avg"]
+        )
+        speedup = seq_metric / best_parallel_steady if seq_metric and best_parallel_steady > 0 else 0
+        summaries.append(
+            {
+                "pop": pop_size,
+                "seq_metric": seq_metric,
+                "best_label": best_parallel["label"],
+                "best_steady": best_parallel_steady,
+                "speedup": speedup,
+            }
+        )
+
+    summary_label = "steady-state, gen 2+" if n_gens > 1 else "overall (single generation)"
+    print(f"\n  SUMMARY ({summary_label}):")
+    print(f"  {'Pop':>8s} {'Seq':>10s} {'Best parallel':>16s} {'Parallel':>10s} {'Speedup':>9s}")
+    print(f"  {'-' * 61}")
+    for row in summaries:
+        seq_text = _fmt_ms(row["seq_metric"]) if row["seq_metric"] is not None else "n/a"
+        print(
+            f"  {row['pop']:>8d} {seq_text:>10s} {row['best_label']:>16s} "
+            f"{_fmt_ms(row['best_steady']):>10s} {row['speedup']:>8.2f}x"
+        )
+
+    return summaries
 
 
 # --- Output Tee --------------------------------------------------------------
@@ -643,6 +991,20 @@ def _parse_args():
         default=N_GENERATIONS,
         help=f"Number of generations for end-to-end test (default: {N_GENERATIONS})",
     )
+    parser.add_argument(
+        "--compare-pops",
+        nargs="+",
+        type=int,
+        default=list(COMPARE_POP_SIZES),
+        help="Population sizes for direct side-by-side comparison (default: 1000 10000)",
+    )
+    parser.add_argument(
+        "--batch-sizes",
+        nargs="+",
+        type=int,
+        default=list(BATCH_TASK_SIZES),
+        help="Task batch sizes to compare; use 0 for auto-balanced batches (default: 1 32 128 0)",
+    )
     return parser.parse_args()
 
 
@@ -650,6 +1012,8 @@ if __name__ == "__main__":
     args = _parse_args()
     pop_size = args.pop
     n_generations = args.gens
+    compare_pops = tuple(_unique_ints(args.compare_pops))
+    batch_sizes = tuple(_unique_ints(args.batch_sizes))
 
     with _TeeWriter(args.output) as tee:
         sys.stdout = tee
@@ -661,6 +1025,7 @@ if __name__ == "__main__":
             print("  plagih GP - Full Parallel Diagnostics")
             print(f"  Physical cores: {phys} | Logical (threads): {logical}")
             print(f"  pop={pop_size} | gens={n_generations}")
+            print(f"  compare_pops={compare_pops} | batch_sizes={batch_sizes}")
             print("=" * 60)
 
             # Create a GP instance with initial population for component measurements
@@ -670,22 +1035,25 @@ if __name__ == "__main__":
             n_workers = min(4, phys)
 
             try:
-                diag_pickle_sizes(gp)
-                t_ipc_legacy, t_ipc_new = diag_ipc_comparison(gp)
-                t_seq_total, t_per_task = diag_per_task_compute(gp)
-                diag_result_pickle_cost(gp)
-                t_pool_legacy, t_pool_presel = diag_real_pool_comparison(gp, n_workers)
-                diag_overhead_budget(t_pool_legacy, t_pool_presel, t_seq_total, n_workers)
+                diag_pickle_sizes(gp, pop_size=pop_size)
+                diag_df_train_transport(gp.df_train, n_workers=n_workers)
+                t_ipc_legacy, t_ipc_new = diag_ipc_comparison(gp, pop_size=pop_size)
+                t_seq_total, t_per_task = diag_per_task_compute(gp, pop_size=pop_size)
+                diag_population_batch_comparison(pop_sizes=compare_pops, batch_sizes=batch_sizes, n_workers=n_workers)
+                diag_result_pickle_cost(gp, pop_size=pop_size, batch_sizes=batch_sizes, n_workers=n_workers)
+                t_pool_legacy, t_pool_presel = diag_real_pool_comparison(gp, pop_size=pop_size, n_workers=n_workers)
+                diag_overhead_budget(t_pool_legacy, t_pool_presel, t_seq_total, pop_size=pop_size, n_workers=n_workers)
             finally:
                 gp.close()
                 shutil.rmtree(temp_dir, ignore_errors=True)
 
-            # End-to-end comparison (creates fresh GP instances)
-            diag_sequential_vs_parallel(pop_size=pop_size, n_gens=n_generations)
+            # End-to-end population comparison (creates fresh GP instances)
+            diag_population_end_to_end_comparison(pop_sizes=compare_pops, n_gens=n_generations)
 
             print(f"\n{'=' * 60}")
             print("  Diagnostics complete.")
             print(f"  Results saved to: {args.output}")
             print(f"{'=' * 60}")
+            print("\n === DONE. ===")
         finally:
             sys.stdout = tee._stdout

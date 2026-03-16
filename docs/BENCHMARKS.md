@@ -11,6 +11,19 @@ Das Framework enthält mehrere Benchmark-Environments für Tests und Demonstrati
 | **Symbolic Regression** | `benchmarks/sr/` | ⭐ Einfach | ✅ Neu | Klassisches GP-Benchmark, 1 Input |
 | **Industrial Benchmark** | `benchmarks/ib/` | ⭐⭐⭐ Komplex | ⚠️ Experimentell | Viele Inputs, industrielles Szenario |
 
+## Parallel-Performance-Diagnose
+
+Die aktuelle detaillierte Analyse der Windows-Parallelisierung, inklusive
+Shared-Memory-Test, Batch-Größen-Vergleich und Populationsvergleich,
+steht in:
+
+- `docs/PARALLEL_BENCHMARK_DIAGNOSIS.md`
+
+Direktes CPU-/RAM-Profiling für den aktuellen Parallelpfad steht in:
+
+- `plagih/test/benchmarks/bench_parallel_resources.py`
+- Output-Datei: `plagih/test/benchmarks/bench_resources_output.txt`
+
 ---
 
 ## MountainCar (Standard-Benchmark)

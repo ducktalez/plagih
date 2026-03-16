@@ -10,23 +10,117 @@ We are currently trying to introduce a  pseudo-backpropagation-algorithm, with p
 
 Enjoy!
 
+## Systemanforderungen, Laufzeit und KPI-Richtwerte
+
+Diese Sektion ist ein **erster Startpunkt** für grobe Systemanforderungen und
+Laufzeit-/Speichererwartungen. Die Werte sind **keine Garantien**, sondern
+gemessene Richtwerte für die aktuelle Implementierung der Parallelisierung.
+
+**Messbasis (Stand: 2026-03-16):**
+- Windows
+- 8 physische Kerne / 16 Threads
+- aktuelle Parallelisierung mit
+  - Pre-selection
+  - Shared Memory für `df_train`
+  - chunked batching
+- Details: `docs/PARALLEL_BENCHMARK_DIAGNOSIS.md`
+- Ressourcenprofiling: `plagih/test/benchmarks/bench_parallel_resources.py`
+
+### Gemessene Richtwerte für die aktuelle Parallelisierung
+
+Die folgenden Werte stammen aus den aktuellen Benchmark-Outputs und dienen als
+Orientierung, wie stark `pop_size`, Workerzahl und Parallelmodus Zeit und RAM
+beeinflussen.
+
+| Population | Worker | Steady-State pro Generation | Init-Zeit | Peak RAM |
+|---|---:|---:|---:|---:|
+| `1000` | `0` | ~`4.0 s` | ~`4.3 s` | ~`161 MB` |
+| `1000` | `4` | ~`1.8 s` | ~`4.7 s` | ~`750 MB` |
+| `1000` | `8` | ~`1.3 s` | ~`4.5 s` | ~`1.29 GB` |
+| `10000` | `0` | ~`41.6 s` | ~`44.4 s` | ~`290 MB` |
+| `10000` | `4` | ~`17.1 s` | ~`44.7 s` | ~`941 MB` |
+| `10000` | `8` | ~`11.9 s` | ~`45.1 s` | ~`1.49 GB` |
+
+**Wichtige Beobachtungen:**
+- `gen_create_initial()` ist aktuell weiterhin **sequentiell** und skaliert kaum
+  mit `parallel=`.
+- Für diese aktuelle Architektur war auf dem Benchmark-System **`8` Worker** am
+  schnellsten.
+- Der große RAM-Sprung kommt vor allem durch die **Worker-Prozesse**, nicht nur
+  durch die Population selbst.
+
+### Einflussmatrix der Laufparameter
+
+| Parameter | Einfluss auf Zeit | Einfluss auf RAM | Einfluss auf Parallelisierung | Kommentar |
+|---|---|---|---|---|
+| `pop_size` | sehr hoch | mittel bis hoch | positiv | Mehr Arbeit pro Generation amortisiert Parallel-Overhead besser, erhöht aber Laufzeit und RAM deutlich. |
+| `gen_end` / Anzahl Generationen | linear hoch | niedrig bis mittel | neutral | Gesamtlaufzeit wächst fast linear mit der Zahl der Generationen. |
+| Workerzahl (`parallel`) | niedrig bis sehr positiv | sehr hoch | direkt | Mehr Worker beschleunigen den Lauf, erhöhen aber Worker-RAM stark. |
+| Batchgröße / Chunking | hoch | niedrig | sehr hoch | Zu kleine oder zu große Batches kosten Performance; aktuell liegt der Sweet Spot grob bei `32..128` Tasks pro Batch. |
+| Mathematische Komplexität (mehr Operatoren, tiefere Bäume) | hoch | mittel | negativ | Mehr SymPy-/NumPy-Arbeit pro Tree; komplexere Populationen verlangsamen sowohl sequential als auch parallel. |
+| Logik-/`Ifte`-/`Piecewise`-Anteil | hoch | mittel | potenziell negativ | Kann SymPy stark belasten; pathologische Fälle werden inzwischen abgefangen, bleiben aber teuer. |
+| `nodes_max`, `depth_max` | hoch | mittel | gemischt | Erlauben größere Ausdrucksbäume; steigern Suchraum, Kosten und Risiko teurer SymPy-Pfade. |
+| Initialpopulation | sehr hoch | mittel | negativ | Läuft aktuell sequentiell; bei großen Populationen ein dominanter Fixkostenblock. |
+| `enable_analysis=True` | hoch | niedrig bis mittel | negativ | Zusätzliche IO/Plots/Rendering verfälschen Benchmarkzeiten. |
+| Debug-/Detail-Prints | mittel bis hoch | niedrig | negativ | Teure Ausdrucksrepräsentationen dürfen nicht in Hot Paths aktiviert werden. |
+
+### Grobe Presets für die Praxis
+
+| Ziel | Empfehlung |
+|---|---|
+| Wenig RAM, robustes Arbeiten | `parallel=4` als vorsichtiger Startwert |
+| Maximaler Durchsatz auf 8 physischen Kernen | `parallel=8` |
+| Kleine Populationen / kurze Testläufe | erst `parallel=0` oder `parallel=2` prüfen |
+| Große Populationen (`>=10000`) | Parallelisierung lohnt sich deutlich mehr als bei kleinen Läufen |
+
+### Benchmark-/Pflegehinweis
+
+Diese Tabelle sollte **regelmäßig aktualisiert** werden, insbesondere wenn sich
+eine der folgenden Grundlagen ändert:
+
+- Batching-/Chunking-Strategie in `plagih/parallel.py`
+- Worker-Init / Shared-Memory-Verhalten
+- SymPy-Handling / Tree-Komplexität
+- Standard-Operatorenset oder Evolutionsparameter
+- Benchmark-Hardware oder Betriebssystem
+
+Empfohlene Update-Quellen:
+- `plagih/test/benchmarks/bench_diagnose_full.py`
+- `plagih/test/benchmarks/bench_parallel_resources.py`
+- `docs/PARALLEL_BENCHMARK_DIAGNOSIS.md`
+
+**Offene Aufgabe:** Die Parallelisierung hat vermutlich noch weiteres Potenzial.
+Insbesondere Worker-RAM, Main-Process-Orchestrierung (`gen_create_initial()`,
+Pre-selection) und Perf/RAM-Abwägungen für `4w` vs. `8w` sollten weiter gemessen
+und diese Tabelle anschließend nachgezogen werden.
+
 ## Ablage/Todos
 ### Code Dokumentation und instructions überarbeiten
 
-- .env-File statt DEBUG_DUMMY in utils verwenden
-- LogicOperator ist keine Unterklasse von OperatorArity. OperatorArity hat vermutlich gar keinen authentischen Nutzen und kann deshalb entfernt werden oder?  
+- LogicOperator ist keine Unterklasse von OperatorArity. OperatorArity hat vermutlich gar keinen authentischen Nutzen und kann deshalb entfernt werden oder?
+- Ich habe schon gesehen dass die Prints bei der Ausgabe sich noch rückwirkend verändern. Ist sowas auch für das hier möglich? Also ich stelle mir vor so eine Art Progress-Print, das innerhalb einer Generation sagt: "Ich starte jetzt und dann bin ich halt irgendwann fertig." Dann wird "Start..." überschrieben mit den Sachen, die dahinter stehen, und man braucht keine zwei Zahlen mehr. 
+  ```
+  [22:37:18] generation 2/5 start ...
+  [22:37:20] generation 2/5 done: 2445.9ms | genepool=971 | pareto=3 | ok=875, fail=25, tracker_total=2354.7ms
+  ```
+- .env-File statt DEBUG_DUMMY in utils verwenden. In dem End-File sollen auch bereits alle Voreinstellungen für die genetische Programmierung vorgenommen werden können. Hierfür muss sich noch eine gute Struktur überlegt werden, die auch in den Instructions oder der Architektur festgehalten werden sollte. Der Standard soll entgegengesetzt der aktuellen Konfiguration nur die Basisfunktionalität beinhalten. Das heißt:
+  - keine Simplifizierung
+  - keine Visualisierung während des Laufes
+  - Kein Merge der gesamten Population in einen Merged Tree
+  - Kein Origin Tree
+  - Keine performanceverbesserungen:
+    - Keine Parallelisierung
+    - Keine Look-Up-Tables (Hier bitte den User warnen. Man sollte vielleicht auch diskutieren, was denn der beste Standard wäre. )
+    Jeder dieser konfigurierbaren Optionen stellt auch eine Funktion des Frameworks dar. Insofern sollte sich hier auch mit dem Readme abgestimmt werden. 
 - Copilot-RUFF?
 - Es geht darum, den Visualization-Ordner aufzuräumen und neu zu strukturieren. Dort befinden sich drei Dateien. Zwei davon machen, nach meinem Gefühl, eigentlich relativ ähnliche Sachen, nämlich Tree_Renderer und Visualize_Trees. Latex steht vermutlich nur für die Latex-Visualisierung, dennoch sollte das File vermutlich besser anders genannt werden. 
-- Performance: GPU-evaluation?
+- Performance: GPU-evaluation? Ist dafür TensorFlow nötig oder geht das auch mit NumPy? 
 - Merged-tree visualisierung
   - mit chatgpt erstellen: Weitere merge-tree Version (ohne Terminal nodes)
   - Bereits erstellte Evaluierungskombination nutzen
 - self.evolve.origin_tree
 - Dokumentation als .md/.pdf
 - Pseudo-Backpropagation durch Bäume
-- evaluation alternatives
-  - tf-fun in every class
-  - regular python code implementation
 - In Vorbereitung für eine potenzielle Parallelisierung soll der generelle Ablauf der Evolution überdacht werden.
   - Alter `@gp.create_trees` Decorator bleibt als deprecated Wrapper für Abwärtskompatibilität erhalten.
   - Beispiel:
@@ -64,7 +158,6 @@ Enjoy!
 - print(sympy.parsing.sympy_parser.transformations)
 - Symbol-time (for IB), choosing the time-step as input variable
 - "Ban" trees, if they are too dominant
-- Different print types for trees, also visualization
 - make categorical options categorical. For mountain car, it is scalable, but a categorical options (aka a 3 nodes last layer) should be an option
 - prevent the LUT of becoming too big; make a counter whenever a result is hit and delete the smallest in each cycle. Reset the numbers aswell.
 - pseudo-backpropagation

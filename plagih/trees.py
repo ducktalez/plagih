@@ -39,7 +39,7 @@ import warnings
 from abc import ABC
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeGuard, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeGuard, Union, cast
 
 import pandas as pd
 import sympy
@@ -577,36 +577,57 @@ class Node(ABC):
             SympyImaginaryNumber: If comparison involves complex numbers.
             NotImplementedError: If node type is not supported.
         """
-        _sym = type(self).symfun
-        _cs = self.get_childs()
+        try:
+            _sym = type(self).symfun
+            _cs = self.get_childs()
 
-        if self.is_term():
-            _r = _sym(*_cs)
+            node_summary = f"node={type(self).__name__}, child_types={[type(child).__name__ for child in _cs[:4]]}"
 
-        elif isinstance(self, Piecewise):
-            # _sym = sympy.Piecewise
-            _cs = [(cc.get_childs()[0], cc.get_childs()[1]) for cc in _cs]
-            _cs = [
-                (cc[0].get_sympy_expr(simplimore=simplimore), cc[1].get_sympy_expr(simplimore=simplimore)) for cc in _cs
-            ]
-            _cs = [ExprCondPair(cc[0], cc[1]) for cc in _cs]
-            _r = _sym(*_cs)
-        elif self.is_operator():
-            _cs = [cc.get_sympy_expr(simplimore=simplimore) for cc in _cs]
+            def _contains_piecewise_like(node: "Node") -> bool:
+                if isinstance(node, (Ifte, Piecewise)):
+                    return True
+                if node.has_childs():
+                    return any(_contains_piecewise_like(child) for child in node.get_childs())
+                return False
 
-            try:
+            if self.is_term():
                 _r = _sym(*_cs)
-                # -> AttributeError: 'Xor' object has no attribute '_eval_as_set'
-                # -> TypeError: Invalid comparison of non-real asin(15)
-            except TypeError as e:
-                raise SympyImaginaryNumber(e)
 
-        else:
-            raise NotImplementedError
+            elif isinstance(self, Piecewise):
+                # _sym = sympy.Piecewise
+                _cs = [(cc.get_childs()[0], cc.get_childs()[1]) for cc in _cs]
+                _cs = [
+                    (cc[0].get_sympy_expr(simplimore=simplimore), cc[1].get_sympy_expr(simplimore=simplimore))
+                    for cc in _cs
+                ]
+                _cs = [ExprCondPair(cc[0], cc[1]) for cc in _cs]
+                _r = _sym(*_cs)
+            elif self.is_operator():
+                if isinstance(self, RelationalOperator) and any(_contains_piecewise_like(child) for child in _cs):
+                    raise SympyError(
+                        "Relational operator on Ifte/Piecewise subtree is not supported for SymPy conversion "
+                        f"({node_summary}). This combination is known to trigger SymPy recursion/hangs."
+                    )
 
-        sympy_expression_check_raise(_r)
+                _cs = [cc.get_sympy_expr(simplimore=simplimore) for cc in _cs]
 
-        return _r
+                try:
+                    _r = _sym(*_cs)
+                    # -> AttributeError: 'Xor' object has no attribute '_eval_as_set'
+                    # -> TypeError: Invalid comparison of non-real asin(15)
+                except TypeError as e:
+                    raise SympyImaginaryNumber(e)
+
+            else:
+                raise NotImplementedError
+
+            sympy_expression_check_raise(_r)
+            return _r
+
+        except RecursionError as e:
+            raise SympyError(
+                f"RecursionError while building sympy expression for {type(self).__name__} ({node_summary}): {e}"
+            ) from e
 
     def list_terminal_nodes(self) -> List["Node"]:
         """Returns a list of all terminal (leaf) nodes in this subtree."""
@@ -2448,7 +2469,12 @@ def sympy_expression_check_raise(expr_sym: sympy.Basic) -> sympy.Basic:
     # Handle Python booleans - sympify('True') returns Python True, not sympy.true
     if isinstance(expr_sym, bool):
         return sympy.true if expr_sym else sympy.false
-    if expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im, sympy.re):
+    try:
+        has_bad_atoms = expr_sym.has(sympy.zoo, sympy.oo, -sympy.oo, sympy.nan, sympy.I, sympy.im, sympy.re)
+    except RecursionError as e:
+        raise SympyError(f"RecursionError while validating sympy expression: {e}") from e
+
+    if has_bad_atoms:
         # sympy.re: real part -> don't ignore; if there is a real part, there is an imaginary part.
         raise SympyError(f"Simplification failed: {expr_sym}")
     return expr_sym
@@ -3529,6 +3555,7 @@ class ExplainableGP:
         # Persistent worker pool (avoids ~2s Windows spawn overhead per generation).
         # Created lazily on first parallel generation, shutdown on close().
         self._pool = None
+        self._pool_init_resources = None
 
     def _get_or_create_pool(self):
         """Get or lazily create the persistent worker pool.
@@ -3540,39 +3567,52 @@ class ExplainableGP:
         if self._pool is None and self._parallel_workers > 0:
             from concurrent.futures import ProcessPoolExecutor
 
-            from plagih.parallel import _init_worker
+            from plagih.parallel import _init_worker, build_worker_init_config, cleanup_worker_init_resources
 
-            self._pool = ProcessPoolExecutor(
-                max_workers=self._parallel_workers,
-                initializer=_init_worker,
-                initargs=(
-                    self.evolve,
-                    self.df_train,
-                    [],  # pop_genepool: not needed — pre-selection in main process
-                    [],  # paretofront: not needed — pre-selection in main process
-                    self.eval_autocast,
-                    self.eval_error_metric,
-                    self.allow_chain,
-                    self.target_column,
-                    self.evolve.nodes_max,
-                    self.evolve.complexity_metric,
-                    self._strategy_registry,
-                ),
+            initargs, self._pool_init_resources = build_worker_init_config(
+                evolve=self.evolve,
+                df_train=self.df_train,
+                pop_genepool=[],  # pop_genepool: not needed — pre-selection in main process
+                paretofront=[],  # paretofront: not needed — pre-selection in main process
+                eval_autocast=self.eval_autocast,
+                eval_error_metric=self.eval_error_metric,
+                allow_chain=self.allow_chain,
+                target_column=self.target_column,
+                nodes_max=self.evolve.nodes_max,
+                complexity_metric=self.evolve.complexity_metric,
+                strategy_registry=self._strategy_registry,
             )
-            # Warm up: submit a trivial task to force all workers to start
-            # and import modules. This way the first real generation doesn't
-            # pay the import cost.
-            warmup_futures = [self._pool.submit(_warmup_noop) for _ in range(self._parallel_workers)]
-            for f in warmup_futures:
-                f.result()
-            printpl("i", f"Worker pool created with {self._parallel_workers} workers")
+            try:
+                self._pool = ProcessPoolExecutor(
+                    max_workers=self._parallel_workers,
+                    initializer=_init_worker,
+                    initargs=cast(tuple[Any, ...], initargs),
+                )
+                # Warm up: submit a trivial task to force all workers to start
+                # and import modules. This way the first real generation doesn't
+                # pay the import cost.
+                warmup_futures = [self._pool.submit(_warmup_noop) for _ in range(self._parallel_workers)]
+                for f in warmup_futures:
+                    f.result()
+                printpl("i", f"Worker pool created with {self._parallel_workers} workers")
+            except Exception:
+                if self._pool is not None:
+                    self._pool.shutdown(wait=True)
+                    self._pool = None
+                cleanup_worker_init_resources(self._pool_init_resources)
+                self._pool_init_resources = None
+                raise
         return self._pool
 
     def close(self):
         """Shutdown the persistent worker pool. Call when done with GP."""
+        from plagih.parallel import cleanup_worker_init_resources
+
         if self._pool is not None:
-            self._pool.shutdown(wait=False)
+            self._pool.shutdown(wait=True)
             self._pool = None
+        cleanup_worker_init_resources(self._pool_init_resources)
+        self._pool_init_resources = None
 
     def __del__(self):
         """Ensure pool is cleaned up on garbage collection."""
@@ -4021,7 +4061,10 @@ class ExplainableGP:
         if force and ct.get_parsim() < TREE_MIN_PARSIMONY:
             # raise ValueError(f'Tree not complex enough for population, sfeh')
             return
-        printpl("gggg", f"|->{evotree.len_nodecount_fair():2.0f}: {evotree.str_as_expr()}")
+        # Guard expensive debug formatting locally: f-strings are evaluated
+        # before printpl() can check PRINT_DUMMY.
+        if "gggg" in PRINT_DUMMY:
+            printpl("gggg", f"|->{evotree.len_nodecount_fair():2.0f}: {evotree.str_as_expr()}")
         self.pop_next.append(ct)
 
     def create_trees(self, rate=0.0, crossover=False, simplicate=False, allow_chain=False):
@@ -4094,6 +4137,8 @@ class ExplainableGP:
                     print_warning(
                         "ww", f"OnlyPrintException: RecursionError (probably Piecewise/relational combination?): {e}"
                     )
+                # 2026: (ww) OnlyPrintException: RecursionError (probably Piecewise/relational combination?): maximum recursion depth exceeded
+                # -> sfeh: how did this happen
                 # except NotImplementedError as nie:
                 #     print_caution(f'Notimplemented? {nie}')
                 # except Exception as ex:

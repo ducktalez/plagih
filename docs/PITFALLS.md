@@ -61,6 +61,15 @@ a substring, so `print_pop` is skipped.
 **How to break it:** Set `PRINT_DUMMY` to a string containing `"gggg"`
 (e.g., `"wwaaggggiiiffpp"`) and run with large populations.
 
+**Extra pitfall:** `printpl("gggg", f"...")` is **not** lazy. The f-string is
+evaluated before `printpl()` checks `PRINT_DUMMY`. For expensive values like
+`tree.str_as_expr()` / `get_sympy_expr()`, add a local guard first:
+
+```python
+if "gggg" in PRINT_DUMMY:
+    printpl("gggg", f"...{tree.str_as_expr()}...")
+```
+
 ---
 
 ## P4 – Windows parallel: everything must be picklable
@@ -198,10 +207,39 @@ units and caches.
 
 **Rule:** Use `cpu_count_physical()` from `util.py`. When `parallel=True`,
 the framework now auto-detects physical cores. For explicit control,
-pass the number directly: `parallel=4`.
+pass the number directly, e.g. `parallel=4` or `parallel=8`.
 
-**Sweet spot:** Benchmarks show 4 workers is optimal for pop=1000
-with typical operators. More workers increase IPC overhead faster
-than they reduce compute time.
+**Current benchmark state:** With the current pre-selection + shared-memory +
+chunked-batching implementation on an 8-core Windows machine, `8` workers are
+best for both `pop=1000` and `pop=10000`. Do **not** hard-code the older
+assumption that 4 workers are always optimal; the sweet spot depends on the
+current batching strategy and population size.
+
+---
+
+## P12 – Relational operators on `Ifte` / `Piecewise` subtrees can hang SymPy
+
+**Where:** `Node.get_sympy_expr()` / `sympy.Piecewise` / relational operators like `Lt`, `Le`
+
+Nested constructions like:
+
+```python
+Lt(Ifte(...), 0)
+Le(Piecewise(...), x)
+```
+
+can trigger pathological recursion or very long hangs inside SymPy on Windows
+(observed in `bench_diagnose_full.py` during large parallel runs).
+
+**Rule:** Treat relational-on-piecewise as unsupported for SymPy conversion and
+fail fast with `SympyError` instead of letting SymPy recurse indefinitely.
+
+**Already handled in:**
+- `Node.get_sympy_expr()` in `trees.py` now raises `SympyError` early for this pattern.
+- `run_generation_parallel()` in `parallel.py` now uses smaller runtime batches
+  plus timeout/debug output so pathological tasks no longer appear as silent hangs.
+
+**How to break it:** Remove the guard in `get_sympy_expr()` or reintroduce
+large one-batch-per-worker execution without progress diagnostics.
 
 

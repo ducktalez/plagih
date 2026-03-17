@@ -80,6 +80,8 @@ See `docs/ARCHITECTURE.md` § Configuration System for full details.
 
 # Sub-tasks
 
+- introduce a "strategy" system for evolution, that can be easily parallelized. 
+  - This also allows to easily adjust the rates of different strategies, and to add new ones.
 - save-evaluation: nan-handling, forcing real numbers
 - discuss: allow_chain is probably not required at so many places...
 - gen_create_initial -> create random pop if pop empty? with leftovers? 
@@ -127,7 +129,6 @@ See `docs/ARCHITECTURE.md` § Configuration System for full details.
   - create "better mutable" trees?
 - Discuss: Input normalization. Leads to different formulae; which is NOT desired, right?
 - Node/Number type rational?
-- introduce a scale-oparetor, that only multiplies with a number, in order to be a good building block
 - https://github.com/sympy/sympy/issues/27364
   ```python
   import sympy

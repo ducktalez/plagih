@@ -16,7 +16,7 @@ crossover, and simplification, evaluated against training data.
 <!-- AUTOGEN:MODULE_MAP:START -->
 | Module | Responsibility |
 |---|---|
-| `plagih/trees.py` | plagih_tree contain a new implementation of trees that we use in genetic programming to display a program. (66C/22F) |
+| `plagih/trees.py` | plagih_tree contain a new implementation of trees that we use in genetic programming to display a program. (67C/22F) |
 | `plagih/parallel.py` | Parallel execution engine for plagih GP. (5C/33F) |
 | `plagih/paretofront.py` | Pareto-front dominance filter for GP candidates. (0C/6F) |
 | `plagih/monitoring.py` | GP Monitoring Module (2C/0F) |
@@ -41,7 +41,7 @@ Node (ABC)
     │       │   │   └── Cos (+N), Sin (+N), Tan (+N), Acos (+N), Asin (+N), Atan (+N), Tanh (+N), Sinh (+N), Cosh (+N)
     │       │   ├── BaseMinMax
     │       │   │   └── Min (+C), Max (+C), Clip (+C)
-    │       │   └── Add (+C), Mul (+C), DivFraction, NthRoot, Pow, Abs, Sign (+N), Log (+N), Square, Exp, Exp2, Sub, Round, PowRounded, Div, Sqrt, Usub
+    │       │   └── Add (+C), Mul (+C), DivFraction, NthRoot, Pow, Abs, Sign (+N), Log (+N), Square, Exp, Exp2, Sub, Round, PowRounded, Div, Sqrt, Usub, Scale
     │       ├── LogicOperator
     │       │   └── Not, And (+C), Or (+C), Xor (+NC), ITE
     │       ├── RelationalOperator
@@ -100,6 +100,14 @@ See `docs/PITFALLS.md` for the full list with examples.
    population). Use `str(tree)` or `tree.get_lut_id()` for fast identification.
 6. **Physical cores**: `os.cpu_count()` returns logical threads (16 on 8-core
    HT CPU). Use `cpu_count_physical()` from `util.py` for worker counts.
+7. **Scale ↔ SymPy round-trip**: `Scale` maps to `sympy.Mul` and is not in
+   `d_sym2node`. After any SymPy round-trip, `tree_node_grouping()` must
+   run to restore Scale nodes.
+8. **`canonicalize_children()` timing**: Must run **after** tree is fully
+   built (post-processing only). Never call in `set_childs()` or `__init__`.
+   Mutations invalidate ancestor ordering — re-run in `tree_to_candidate()`.
+   Sort key, performance, and invalidation trade-offs are open for discussion
+   (see `PITFALLS.md` P10).
 
 ## Working behaviour
 

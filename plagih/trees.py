@@ -152,6 +152,11 @@ class Node(ABC):
     xtype: tuple = ()
     xtype_chain: Union[bool, float] = False
 
+    # Commutativity marker — set to True on operators whose child order
+    # does not affect the result (e.g. Add, Mul, Min, Max, And, Or, Xor).
+    # Used by canonicalize_children() to sort children deterministically.
+    is_commutative: bool = False
+
     # Visualization defaults (overridden by subclass hierarchy)
     _viz_color, _viz_border, _viz_text = "#ECEFF1", "#607D8B", "#263238"
     _viz_shape = "rounded"  # ellipse | rounded | diamond
@@ -988,8 +993,16 @@ class Node(ABC):
                                 new_num = 1 / mul1
                                 self.replace_with(Div, [node_sub, Number(new_num)])
                         else:
-                            # ScaleNode-idea here
-                            pass
+                            # Scale grouping: Mul(c, expr) → Scale(c, expr)
+                            # where c is a Number and expr is a non-Number expression.
+                            rest = mychlds_remove(cc)
+                            has_other_numbers = any(isinstance(r, Number) for r in rest)
+                            if not has_other_numbers and len(rest) >= 1:
+                                if len(rest) == 1:
+                                    self.replace_with(Scale, [cc, rest[0]])
+                                else:
+                                    # Mul(c, a, b) → Scale(c, Mul(a, b))
+                                    self.replace_with(Scale, [cc, Mul(*rest)])
                     elif isinstance(cc, DivFraction):
                         has_div_frac = [isinstance(ix, DivFraction) for ix in mychlds]
                         if (
@@ -1012,7 +1025,12 @@ class Node(ABC):
             pass
 
         else:
-            raise NotImplementedError
+            # No specific grouping rule for this operator type (e.g. Scale, Add,
+            # Div, trigonometry, relational operators). Children were already
+            # recursively grouped above.
+            # TODO: Grouping rules could be declared as class attributes/decorators
+            #   on individual node classes instead of centrally here.
+            pass
         # # Wenn Divisionen erkannt wurden → baue Bruchstruktur
         # if denominators:
         #     numerator_expr = Mul(*numerators, evaluate=False) if numerators else Number(1)
@@ -1025,6 +1043,60 @@ class Node(ABC):
         # if len(remaining) == 1:
         #     self.replace_with_node(remaining[0])
         return  # two indents
+
+    def canonicalize_children(self) -> None:
+        """Sorts children of commutative operators for a canonical representation.
+
+        Recursively traverses the tree and sorts children of commutative operators
+        (Add, Mul, Min, Max, And, Or, Xor) by their string representation.
+        This is a **post-processing** step — call it after tree construction
+        is complete (e.g. in tree_node_grouping or tree_simplification).
+
+        This does NOT alter semantics (commutativity guarantees identical results)
+        but normalises trees so that structurally equivalent expressions have
+        identical string representations and LUT keys.
+
+        # TODO(discuss): Open design concerns for canonicalize_children
+        #
+        # 1. **Performance**: This is a recursive function that traverses every
+        #    node and calls represent_str() as sort key. On large trees this may
+        #    become a measurable overhead, especially since it is called in
+        #    tree_to_candidate() (hot path). Benchmark before optimising.
+        #
+        # 2. **Sort key quality**: The current sort key is represent_str() which
+        #    is a simple string comparison. SymPy uses a much more sophisticated
+        #    ordering (sympy.core.sorting.default_sort_key) that considers type
+        #    priority, complexity, and algebraic properties. A SymPy-equivalent
+        #    sort would produce better canonical forms but would be significantly
+        #    more expensive to evaluate. An alternative middle-ground: sort by
+        #    subtree size (len(child)) — cheap, stable, and groups simple branches
+        #    before complex ones.
+        #
+        # 3. **Invalidation after mutation**: When a mutation changes a child
+        #    node deep in the tree, the canonical order of ALL ancestor
+        #    commutative nodes may become stale. This means canonicalize_children()
+        #    must be re-run after any mutation — or the mutation itself must
+        #    propagate re-sorting upwards. Currently handled by calling
+        #    canonicalize_children() in tree_to_candidate(), but if it were
+        #    moved earlier in the pipeline, mutation invalidation would become
+        #    a pitfall. See docs/PITFALLS.md P10.
+        #
+        # These trade-offs should be revisited once there is benchmark data on
+        # the actual overhead and LUT hit-rate improvement.
+        """
+        if self.is_term():
+            return
+
+        # Recurse first so children are canonical before sorting
+        for cc in self.get_childs():
+            cc.canonicalize_children()
+
+        if getattr(self, "is_commutative", False):
+            # Sort by string representation — available after tree is fully built.
+            # Terminals sort lexicographically (symbols by name, numbers by value).
+            # Operators sort by their showme + children recursively.
+            # TODO(discuss): Consider alternative sort keys — see docstring above.
+            self.childs.sort(key=lambda c: c.represent_str(show_fixed_hint=False, cut_terms=False))
 
     def len_nodecount_raw(self) -> int:
         """Returns the raw count of all nodes in this subtree.
@@ -1318,6 +1390,11 @@ def tree_simplification(_tree: Node, allow_chain: bool) -> Node:
             raise CuriosityError
         if str(_tree) == str(tree_history[-1]):
             break
+
+    # Canonical child ordering for commutative operators (post-processing).
+    # This normalises e.g. Add(b, a) → Add(a, b) so that structurally equivalent
+    # expressions produce identical string representations and LUT keys.
+    _tree.canonicalize_children()
 
     # print(f'Tree updates\n'
     #       f'\t{tree_copy.represent_str(show_all=False)}\n'
@@ -1768,6 +1845,8 @@ class Add(MathOperator, ChainableOp):
     more than two operands: Add(a, b, c) = a + b + c.
     """
 
+    is_commutative = True
+
     symfun = staticmethod(lambda *a: sympy.Add(*a))
     np_fun = staticmethod(lambda *a: np.sum(np.stack(a), axis=0))
     showme = "Add"
@@ -1795,6 +1874,8 @@ class Mul(MathOperator, ChainableOp):
     Note: np.multiply only works for pairwise multiplication,
     so np.prod with stacking is used instead.
     """
+
+    is_commutative = True
 
     symfun = staticmethod(lambda *args: sympy.Mul(*args))
     np_fun = staticmethod(lambda *a: np.prod(np.stack(a), axis=0))
@@ -2029,6 +2110,8 @@ class And(LogicOperator, ChainableOp):
     Supports chaining: And(a, b, c) = a & b & c.
     """
 
+    is_commutative = True
+
     symfun = staticmethod(lambda *a: sympy.And(*a))
     np_fun = staticmethod(lambda *a: np.logical_and.reduce(a))
     showme = "And"
@@ -2054,6 +2137,8 @@ class Or(LogicOperator, ChainableOp):
     Supports chaining: Or(a, b, c) = a | b | c.
     """
 
+    is_commutative = True
+
     symfun = staticmethod(lambda *a: sympy.Or(a[0], a[1]))
     np_fun = staticmethod(lambda *a: np.any(a, axis=0))
     showme = "Or"
@@ -2076,6 +2161,8 @@ class Xor(LogicOperator, NoSymCapitalized, ChainableOp):
     Caution: The sympy representation '(a ^ b)' is interpreted as a**b in Python.
     Supports chaining for multiple operands.
     """
+
+    is_commutative = True
 
     symfun = staticmethod(lambda *a: sympy.Xor(*a))
     np_fun = staticmethod(lambda *a: np.logical_xor.reduce(a))
@@ -2116,6 +2203,8 @@ class Min(BaseMinMax, ChainableOp):
     Supports chaining: Min(a, b, c) returns min(a, b, c).
     """
 
+    is_commutative = True
+
     symfun = staticmethod(lambda *a: sympy.Min(*a))
     np_fun = staticmethod(lambda *a: np.minimum.reduce(np.vstack(a), axis=0))
     showme = "Min"
@@ -2136,6 +2225,8 @@ class Max(BaseMinMax, ChainableOp):
 
     Supports chaining: Max(a, b, c) returns max(a, b, c).
     """
+
+    is_commutative = True
 
     symfun = staticmethod(lambda *a: sympy.Max(*a))
     np_fun = staticmethod(lambda *a: np.maximum.reduce(np.vstack(a), axis=0))
@@ -2404,6 +2495,53 @@ class Usub(MathOperator):
     showme = "Usub"
     sy_str = "(-{})"
     repr_str = "Usub{},[{}]"
+
+
+class Scale(MathOperator):
+    """Scaling operator: Scale(factor, expression) computes factor * expression.
+
+    A semantically specialised Multiplication where the first operand is always
+    a numeric constant (Number terminal) and the second operand is a
+    float-producing expression (operator or symbol, but NOT a Number).
+
+    Purpose:
+    - Makes the scaling factor explicit in the tree structure.
+    - Ideal target for Gaussian filter mutation (tune the constant).
+    - Created primarily via tree_node_grouping from Mul(Number, expr).
+    - Can also be created directly in evolve_create_random.
+
+    Invariant:
+        childs[0] must be a Number terminal.
+        childs[1] must be a float-producing node that is NOT a Number terminal.
+
+    Note:
+        SymPy does not have a dedicated Scale type — this maps to sympy.Mul.
+        Therefore Scale is NOT registered in sym2node/d_sym2node; it is
+        produced only by grouping or direct creation.
+
+    # TODO: Discuss whether a chainable ScaleMul (Scale with multiple
+    #   non-Number factors) is worthwhile. Currently kept at arity-2
+    #   for simplicity; chained Mul(Number, a, b) is grouped as
+    #   Scale(Number, Mul(a, b)).
+    """
+
+    xtype = ((float, float), float)
+    symfun = staticmethod(lambda *a: sympy.Mul(a[0], a[1]))
+    np_fun = staticmethod(np.multiply)
+    showme = "Scale"
+    sy_str = "({0} · {1})"
+    repr_str = "Scale{},[{}, {}]"
+    latex_inline = r" \cdot "
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Soft validation: warn if invariant is violated (can happen during
+        # intermediate tree construction or deserialization).
+        if len(self.childs) >= 2:
+            if not isinstance(self.childs[0], Number):
+                print_warning("w", f"Scale: first child should be Number, got {type(self.childs[0]).__name__}")
+            if isinstance(self.childs[1], Number):
+                print_warning("w", f"Scale: second child should not be Number, got Number({self.childs[1]})")
 
 
 class Clip(BaseMinMax, CustomOperator):
@@ -2885,6 +3023,7 @@ class Evolution:
         "math_simple": {
             Add: 2,
             Mul: 2,
+            Scale: 0.5,
             Div: 1,
             Square: 0.75,
             Abs: 0.5,
@@ -3087,23 +3226,44 @@ class Evolution:
             if CHAIN_implement:
                 pass  # optional; just add more node here already
 
-            nums = randomly_split_range(num_rest - 1, len(child_xts))
+            # Scale special case: first child is always a constant (Number),
+            # second child is a random expression (operator or symbol, NOT Number).
+            if node_cls is Scale:
+                scale_factor = self.node_selector.choose_constant_node(float)
+                # Second child: recurse normally but avoid a bare Number terminal
+                # by setting p_term=0 if depth allows at least one more level.
+                sub_p_term = 0.0 if depth + 1 < min(self.depth_max, depth_max_local) else p_term
+                scale_expr = self.evolve_create_random(
+                    float, depth_max_local, num_rest=max(num_rest - 1, -1), depth=depth + 1, p_term=sub_p_term
+                )
+                # Fallback: if we still got a Number, wrap it in an operator or use a Symbol
+                if isinstance(scale_expr, Number):
+                    try:
+                        scale_expr = self.node_selector.choose_symbol_node(float)
+                    except (TypeError, IndexError):
+                        pass  # keep the Number; Scale.__init__ will warn
+                node = Scale(scale_factor, scale_expr)
+            else:
+                nums = randomly_split_range(num_rest - 1, len(child_xts))
 
-            for ii, xt in enumerate(child_xts):
-                cc = self.evolve_create_random(xt, depth_max_local, num_rest=nums[ii], depth=depth + 1, p_term=p_term)
-                childs.append(cc)
+                for ii, xt in enumerate(child_xts):
+                    cc = self.evolve_create_random(
+                        xt, depth_max_local, num_rest=nums[ii], depth=depth + 1, p_term=p_term
+                    )
+                    childs.append(cc)
 
-            node = node_cls(*childs)
+                node = node_cls(*childs)
 
         node.depth = depth
 
         return node
 
     def evolve_mutate_filter(self, _tree: Node) -> Node:
-        """Applies Gaussian mutation to a random subtree's numeric terminals.
+        """Applies Gaussian mutation to numeric terminals in a random subtree.
 
-        Selects a random mutable node and applies evolve_mutate_filter_gauss
-        to all Number terminals in that subtree.
+        Prefers Scale nodes as mutation targets — their scaling factor
+        (childs[0]) is the ideal parameter for fine-tuning via Gaussian noise.
+        Falls back to a random mutable node if no Scale nodes exist.
 
         Args:
             _tree: The tree to mutate.
@@ -3112,7 +3272,17 @@ class Evolution:
             The mutated subtree node.
         """
 
-        _nd = random.choice(_tree.list_mutable_nodes())
+        # Prefer Scale nodes for targeted constant tuning
+        mutable = _tree.list_mutable_nodes()
+        scale_nodes = [n for n in mutable if isinstance(n, Scale)]
+        if scale_nodes and random.random() < 0.5:
+            _nd = random.choice(scale_nodes)
+            # Mutate only the scaling factor (childs[0]), not the expression subtree
+            if isinstance(_nd.childs[0], Number):
+                val = round(random.gauss(_nd.childs[0].get_value(), 0.1), _cfg.float_precision)
+                _nd.childs[0].set_value(val)
+                return _nd
+        _nd = random.choice(mutable)
         _nd.evolve_mutate_filter_gauss()
 
         return _nd
@@ -4235,6 +4405,7 @@ class ExplainableGP:
         evotree.force_input_node(self.evolve)
         evotree = self.evolve.evolve_prune_tree(evotree)
         evotree.repair_depth()
+        evotree.canonicalize_children()  # Deterministic child order for commutative ops → consistent LUT keys
 
         tree_id = evotree.get_lut_id()
 

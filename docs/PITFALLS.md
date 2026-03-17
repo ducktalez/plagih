@@ -257,4 +257,61 @@ fail fast with `SympyError` instead of letting SymPy recurse indefinitely.
 **How to break it:** Remove the guard in `get_sympy_expr()` or reintroduce
 large one-batch-per-worker execution without progress diagnostics.
 
+---
 
+## P9 – Scale is invisible to `sympy_to_tree()`
+
+**Where:** `Scale` class in `trees.py`, `d_sym2node` mapping
+
+`Scale` uses `sympy.Mul` as its `symfun`, and is NOT registered in `d_sym2node`.
+This means `sympy_to_tree()` will always reconstruct `Scale(c, expr)` as
+`Mul(c, expr)`. The Scale form is only recovered by `tree_node_grouping()`.
+
+**Rule:** Any pipeline that round-trips through SymPy (e.g. `tree_simplification`)
+must call `tree_node_grouping()` afterwards to restore Scale nodes.
+
+**Already handled in:**
+- `tree_simplification()` calls `tree_node_grouping()` then `canonicalize_children()`.
+
+**How to break it:** Add a SymPy round-trip path that skips `tree_node_grouping()`.
+
+---
+
+## P10 – `canonicalize_children()` must run after tree is fully built
+
+**Where:** `Node.canonicalize_children()` in `trees.py`
+
+The canonical child ordering uses `represent_str()` as sort key, which requires
+all children to be fully constructed. Calling it during tree *construction*
+(e.g. inside `set_childs()`) would produce incorrect or crashing results.
+
+**Rule:** Only call `canonicalize_children()` as a post-processing step:
+in `tree_simplification()`, `tree_to_candidate()`, or similar finalization points.
+
+**How to break it:** Move the sort into `set_childs()` or `__init__()`.
+
+**Mutation invalidation:** When a mutation modifies a child node deep in the
+tree, the canonical order of *all ancestor commutative nodes* may become stale.
+Currently this is handled by calling `canonicalize_children()` in
+`tree_to_candidate()` (after all mutations are complete). If canonicalization
+were ever moved earlier in the pipeline (e.g. inside mutation operators),
+every mutation would need to propagate re-sorting upwards.
+
+### Open design discussion (TODO)
+
+The current implementation works but has trade-offs that should be revisited:
+
+1. **Performance cost**: `canonicalize_children()` is recursive and calls
+   `represent_str()` per child as sort key. On large trees this may become
+   measurable overhead. Consider benchmarking vs. a simpler key like
+   subtree size (`len(child)`).
+
+2. **Sort key quality**: `represent_str()` produces a simple string comparison.
+   SymPy's `default_sort_key` uses a much richer ordering (type priority,
+   complexity, algebraic properties) that produces more canonical forms —
+   but at significantly higher cost. A middle-ground: sort by subtree size
+   first, then by string as tiebreaker.
+
+3. **Re-sorting after mutation**: Currently re-sorted once in
+   `tree_to_candidate()`. If the pipeline changes so that canonical form
+   is expected *between* mutation steps, this becomes a pitfall.

@@ -89,7 +89,8 @@ Node (ABC)
     │       │   ├── PowRounded
     │       │   ├── Div
     │       │   ├── Sqrt
-    │       │   └── Usub
+    │       │   ├── Usub
+    │       │   └── Scale
     │       ├── LogicOperator
     │       │   ├── Not
     │       │   ├── And  (+ ChainableOp)
@@ -440,4 +441,146 @@ are initialised from `cfg` and remain available for backwards compatibility.
 | `simplicate` | SymPy simplification of a tree | | ✓ |
 | `pareto_revive` | Clone from Pareto front | | |
 
+---
 
+## 12. How to add a new operator
+
+Checklist for adding a new `Node` subclass to the framework:
+
+### 12.1 Define the class
+
+1. **Choose a base class**: `MathOperator` (float→float), `LogicOperator`
+   (bool→bool), `RelationalOperator` (float→bool), `Trigonometry`, `BaseMinMax`,
+   or `BaseOperator` directly.
+2. **Set required class attributes**:
+   | Attribute | Example | Description |
+   |---|---|---|
+   | `xtype` | `((float, float), float)` | `(input_types, output_type)` |
+   | `symfun` | `staticmethod(lambda *a: sympy.Add(*a))` | SymPy constructor |
+   | `np_fun` | `staticmethod(np.add)` | NumPy evaluation function |
+   | `showme` | `"Add"` | Display name |
+   | `sy_str` | `"({0} + {1})"` | String template with `{0}`, `{1}` placeholders |
+   | `repr_str` | `"Add{},[{}, {}]"` | Repr template |
+3. **Optional attributes**:
+   - `latex_fmt` / `latex_inline` — for LaTeX rendering
+   - `is_commutative = True` — if child order doesn't matter
+   - `formulae_str` — alternative string representation
+
+### 12.2 Visualization
+
+The `_viz_color`, `_viz_border`, `_viz_text`, `_viz_shape` attributes are
+**inherited** from the base class hierarchy. No changes needed in renderers.
+Override on your class only if you want a distinct colour.
+
+### 12.3 Registration
+
+- **If a SymPy equivalent exists**: add to `d_sym2node` (and `sym2node` if needed)
+  so that `sympy_to_tree()` can reconstruct your operator from SymPy expressions.
+- **If no SymPy equivalent**: don't register (like `Scale`, `Clip`). The operator
+  is created only by grouping or direct creation.
+
+### 12.4 Operator pool
+
+Add to `Evolution.operator_presets` or pass via user `operators` dict.
+Example: `{MyOp: 0.5}` means weight 0.5 relative to other operators.
+
+### 12.5 Grouping / simplification
+
+If your operator can be derived from simpler patterns, add a grouping rule in
+`Node.tree_node_grouping()`. Example: `Mul(Number, expr)` → `Scale(Number, expr)`.
+
+> **TODO**: Grouping rules should eventually be declared as class attributes or
+> decorators on the node class itself, rather than centrally in `tree_node_grouping`.
+
+### 12.6 Special creation logic
+
+If your operator has input constraints beyond the `xtype` system (e.g. `Scale`
+requires `childs[0]` to be a `Number`), add special-case logic in
+`Evolution.evolve_create_random()`.
+
+### 12.7 Validation
+
+- `check_operator_pool()` validates type closure — ensure your operator doesn't
+  break the float/bool ecosystem.
+- Tests in `test_visualization.py` automatically check `_viz_*` attributes.
+- Tests in `test_all_node_classes.py` check `symfun`/`np_fun` consistency.
+
+---
+
+## 13. Commutative child ordering
+
+Commutative operators (`Add`, `Mul`, `Min`, `Max`, `And`, `Or`, `Xor`) have
+`is_commutative = True`. The method `Node.canonicalize_children()` sorts
+their children by string representation for a deterministic canonical form.
+
+This is a **post-processing** step — called in:
+- `tree_simplification()` (after `tree_node_grouping`)
+- `tree_to_candidate()` (before LUT key generation)
+
+**Not** called in `set_childs()` because children may be incomplete during
+tree construction.
+
+Benefits:
+- Identical expressions get identical LUT keys → better cache hit rate
+- Deterministic `__str__` output for debugging and comparison
+
+### Open design discussion (TODO)
+
+The current implementation should be revisited once benchmark data is available:
+
+1. **Performance**: Recursive traversal + `represent_str()` sort key on every
+   `tree_to_candidate()` call. May become measurable overhead on large trees.
+   Alternative: sort by subtree size (`len(child)`) — cheaper and stable.
+
+2. **Sort key**: `represent_str()` is a simple lexicographic comparison.
+   SymPy's `default_sort_key` produces more canonical forms (considers type
+   priority, algebraic complexity) but is significantly more expensive.
+   A middle-ground: sort by subtree size first, then string as tiebreaker.
+
+3. **Mutation invalidation**: When a mutation changes a node deep in the tree,
+   the canonical order of all ancestor commutative nodes becomes stale. Currently
+   handled by re-running `canonicalize_children()` in `tree_to_candidate()`
+   after all mutations are complete. If canonicalization is ever moved earlier
+   (e.g. between mutation steps), mutations must propagate re-sorting upwards.
+
+See also `PITFALLS.md` P10.
+
+---
+
+## 14. Scale operator
+
+`Scale(factor, expression)` is a semantically specialised `Mul` where:
+- `childs[0]` is always a `Number` terminal (the scaling factor)
+- `childs[1]` is a float-producing expression (operator or Symbol, not Number)
+
+Created via:
+- **Grouping**: `Mul(3.0, sin(x))` → `Scale(3.0, sin(x))` in `tree_node_grouping`
+- **Direct creation**: `evolve_create_random` generates `Scale(constant, subtree)`
+
+Purpose:
+- Explicit scaling factor for better readability
+- Ideal target for `evolve_mutate_filter_gauss` (tune the constant)
+- Additional to `Mul` in the operator pool (not a replacement)
+
+**SymPy mapping**: `Scale.symfun = sympy.Mul` — no dedicated SymPy type exists.
+Scale is not registered in `d_sym2node`; it is produced only by grouping or
+direct creation, never by `sympy_to_tree()`.
+
+---
+
+## 15. Future: xtype system extension
+
+> **TODO**: Discuss whether the `xtype` system should support node-class
+> constraints (e.g. `xtype = ((Number, BaseOperator), float)`) in addition
+> to the current `float`/`bool` primitives.
+>
+> **Pro**: Universal, type-safe, enables operators like `Scale` to declare
+> their constraints declaratively. Would simplify `evolve_create_random`.
+>
+> **Contra**: Significant changes to `operatorpool_to_picks`,
+> `choose_operator_class`, `evolve_create_random`, and `choose_operator_match`.
+> The current system is simple and readable.
+>
+> Current workaround: Operators with special constraints (e.g. `Scale`)
+> handle them via `__init__` validation + special-case logic in
+> `evolve_create_random`. This works but doesn't scale to many such operators.

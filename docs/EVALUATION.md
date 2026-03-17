@@ -1,31 +1,31 @@
 # Unified Evaluation System
 
-Plagih bietet ein optionales, vereinheitlichtes Evaluierungssystem, das alle drei
-Evaluierungsmethoden unter einer einheitlichen API zusammenfasst.
+Plagih provides an optional, unified evaluation system that combines all three
+evaluation methods under a single API.
 
-## Überblick
+## Overview
 
-### Die drei Evaluierungsmethoden
+### The three evaluation methods
 
-| Methode | Beschreibung | Geschwindigkeit | Anwendungsfall |
-|---------|--------------|-----------------|----------------|
-| `get_sympy_expr()` | Symbolische SymPy-Evaluierung | Langsam | Analyse, Export, Vereinfachung |
-| `eval_predict_numpy_now()` | Direkte NumPy-Evaluierung (eager) | Schnell | Fitness-Berechnung, Debugging |
-| `eval_np_lambdas()` | Lambda-basierte Evaluierung (lazy) | Mittel | Wiederverwendung, Graph-Aufbau |
+| Method | Description | Speed | Use case |
+|--------|-------------|-------|----------|
+| `get_sympy_expr()` | Symbolic SymPy evaluation | Slow | Analysis, export, simplification |
+| `eval_predict_numpy_now()` | Direct NumPy evaluation (eager) | Fast | Fitness calculation, debugging |
+| `eval_np_lambdas()` | Lambda-based evaluation (lazy) | Medium | Reuse, graph construction |
 
-### Warum EvaluationContext?
+### Why EvaluationContext?
 
-Das `EvaluationContext`-System bietet:
+The `EvaluationContext` system provides:
 
-- **Einheitliche Schnittstelle**: Eine API für alle drei Methoden
-- **Optionales LUT-Caching**: Automatisches Caching von Ergebnissen
-- **Multi-Mode-Evaluation**: Mehrere Modi gleichzeitig evaluieren
-- **Statistiken**: Tracking von Cache-Hits, Evaluierungen, etc.
-- **Backward-Kompatibilität**: Alte Methoden funktionieren unverändert
+- **Unified interface**: One API for all three methods
+- **Optional LUT caching**: Automatic result caching
+- **Multi-mode evaluation**: Evaluate multiple modes simultaneously
+- **Statistics**: Tracking of cache hits, evaluations, etc.
+- **Backward compatibility**: Existing methods continue to work unchanged
 
 ## Quick Start
 
-### Einfachste Nutzung
+### Simplest usage
 
 ```python
 from plagih.evaluation_context import evaluate_tree
@@ -34,36 +34,36 @@ from plagih.evaluation_context import evaluate_tree
 result = evaluate_tree(tree, df, mode='numpy_eager')
 ```
 
-### Mit EvaluationContext
+### With EvaluationContext
 
 ```python
 from plagih.evaluation_context import EvaluationContext
 
-# Einfacher Fall: NumPy-Evaluierung
+# Simple case: NumPy evaluation
 ctx = EvaluationContext(modes=['numpy_eager'])
 result = ctx.evaluate(tree, df)
 
-# Mehrere Modi gleichzeitig
+# Multiple modes at once
 ctx = EvaluationContext(modes=['sympy', 'numpy_eager', 'numpy_lambda'])
 results = ctx.evaluate(tree, df)
 # results = {'sympy': <expr>, 'numpy_eager': <array>, 'numpy_lambda': <callable>}
 ```
 
-## Detaillierte Nutzung
+## Detailed Usage
 
-### EvaluationContext erstellen
+### Creating an EvaluationContext
 
 ```python
 from plagih.evaluation_context import EvaluationContext, create_context
 
-# Vollständig konfiguriert
+# Fully configured
 ctx = EvaluationContext(
-    modes=['numpy_eager', 'numpy_lambda'],  # Welche Modi
-    use_lut=True,                           # LUT-Caching aktivieren
-    df=my_dataframe                         # Optional: DataFrame speichern
+    modes=['numpy_eager', 'numpy_lambda'],  # Which modes
+    use_lut=True,                           # Enable LUT caching
+    df=my_dataframe                         # Optional: store DataFrame
 )
 
-# Factory-Funktion für einzelnen Modus
+# Factory function for a single mode
 ctx = create_context('numpy_eager', use_lut=True)
 ```
 
@@ -76,44 +76,44 @@ ctx = (EvaluationContext()
        .with_lut(True))
 ```
 
-### Convenience-Methoden
+### Convenience Methods
 
 ```python
 ctx = EvaluationContext(modes=['sympy', 'numpy_eager', 'numpy_lambda'])
 
-# Einzelne Modi
+# Individual modes
 sympy_result = ctx.eval_sympy(tree)
 numpy_result = ctx.eval_numpy(tree, df)
 lambda_fn = ctx.eval_lambda(tree)
 
-# Alle Modi auf einmal (mit Error-Handling)
+# All modes at once (with error handling)
 result = ctx.eval_all(tree, df)
 # result.sympy, result.numpy_eager, result.numpy_lambda, result.errors
 ```
 
-## LUT-Caching
+## LUT Caching
 
-### Aktivieren/Deaktivieren
+### Enable / Disable
 
 ```python
-# Mit Caching (default)
+# With caching (default)
 ctx = EvaluationContext(modes=['numpy_eager'], use_lut=True)
 
-# Ohne Caching
+# Without caching
 ctx = EvaluationContext(modes=['numpy_eager'], use_lut=False)
 ```
 
-### Cache-Statistiken
+### Cache Statistics
 
 ```python
 ctx = EvaluationContext(modes=['numpy_eager'], use_lut=True)
 
-# Mehrere Evaluierungen
+# Multiple evaluations
 ctx.evaluate(tree, df)
-ctx.evaluate(tree, df)  # Cache-Hit!
-ctx.evaluate(tree, df)  # Cache-Hit!
+ctx.evaluate(tree, df)  # Cache hit!
+ctx.evaluate(tree, df)  # Cache hit!
 
-# Statistiken abrufen
+# Retrieve statistics
 print(ctx.summary())
 # EvaluationContext Statistics:
 #   Modes: ['numpy_eager']
@@ -122,71 +122,71 @@ print(ctx.summary())
 #     Evaluations: 3, Cache hits: 2 (66.7%)
 #     Errors: 0, Cache size: 1
 
-# Detaillierte Stats
+# Detailed stats
 stats = ctx.get_stats()
 hit_rate = ctx.get_cache_hit_rate('numpy_eager')
 cache_size = ctx.get_cache_size()
 ```
 
-### Cache leeren
+### Clear Cache
 
 ```python
-# Alle Modi leeren
+# Clear all modes
 ctx.clear_cache()
 
-# Nur bestimmten Modus leeren
+# Clear specific mode only
 ctx.clear_cache('numpy_eager')
 ```
 
-## Backward-Kompatibilität
+## Backward Compatibility
 
-Die bestehenden Methoden funktionieren weiterhin unverändert:
+Existing methods continue to work unchanged:
 
 ```python
-# Diese funktionieren wie bisher!
+# These still work as before!
 sy_expr = tree.get_sympy_expr()
 np_result = tree.eval_predict_numpy_now(df)
 lambda_fn = tree.eval_np_lambdas()
 ```
 
-Das EvaluationContext-System **delegiert** zu diesen Methoden - es ersetzt sie nicht!
+The EvaluationContext system **delegates** to these methods — it does not replace them.
 
-## Integration mit Node-Klasse
+## Node Class Integration
 
-Optional kann eine `evaluate_unified` Methode zur Node-Klasse hinzugefügt werden:
+Optionally, an `evaluate_unified` method can be added to the Node class:
 
 ```python
 from plagih.trees import Node
 from plagih.evaluation_context import add_unified_evaluation_to_node
 
-# Einmalig aufrufen
+# Call once
 add_unified_evaluation_to_node(Node)
 
-# Danach verfügbar für alle Nodes
+# Then available for all nodes
 ctx = EvaluationContext(modes=['numpy_eager'])
 result = tree.evaluate_unified(ctx, df)
 ```
 
-## Praktische Beispiele
+## Practical Examples
 
-### Fitness-Berechnung mit Caching
+### Fitness Calculation with Caching
 
 ```python
 from plagih.evaluation_context import EvaluationContext
 
-# Context für die gesamte Generation
+# Context for the entire generation
 ctx = EvaluationContext(modes=['numpy_eager'], use_lut=True)
 
 for tree in population:
-    # Gleiche Bäume werden nur einmal evaluiert!
+    # Identical trees are evaluated only once!
     result = ctx.evaluate(tree, df_train)
     fitness = calculate_fitness(result, target)
 
-# Am Ende: Cache-Statistiken
+# Cache statistics
 print(f"Cache hit rate: {ctx.get_cache_hit_rate('numpy_eager'):.1%}")
 ```
 
-### Vergleich aller drei Modi
+### Comparing All Three Modes
 
 ```python
 from plagih.evaluation_context import EvaluationContext
@@ -197,51 +197,48 @@ result = ctx.eval_all(tree, df)
 if result.errors:
     print(f"Errors: {result.errors}")
 else:
-    # Vergleiche Ergebnisse
     print(f"SymPy: {result.sympy}")
     print(f"NumPy eager: {result.numpy_eager[:5]}...")
-    
-    # Lambda ausführen
+
     lambda_result = result.numpy_lambda(df)
     print(f"Lambda: {lambda_result[:5]}...")
-    
-    # Ergebnisse sollten übereinstimmen
+
+    # Results should match
     assert np.allclose(result.numpy_eager, lambda_result)
 ```
 
-## Zukünftige Features
+## Future Features
 
 ### Gradient Tracking (Placeholder)
 
 ```python
-# Vorbereitet für zukünftige JAX/PyTorch Integration
+# Prepared for future JAX/PyTorch integration
 ctx = EvaluationContext(track_gradients=True)
-ctx.enable_gradient_tracking()  # Gibt FutureWarning aus
+ctx.enable_gradient_tracking()  # Emits FutureWarning
 
-# Später:
+# Later:
 gradients = ctx.get_gradients()
 ```
 
-### Parallelisierung
+### Parallelization
 
-Das EvaluationContext-System ist so designed, dass es später leicht parallelisiert
-werden kann:
+The EvaluationContext system is designed for easy future parallelization:
 
 ```python
-# Zukünftig möglich:
+# Possible in the future:
 from concurrent.futures import ThreadPoolExecutor
 
 ctx = EvaluationContext(modes=['numpy_eager'])
 
 with ThreadPoolExecutor() as executor:
     futures = [
-        executor.submit(ctx.evaluate, tree, df) 
+        executor.submit(ctx.evaluate, tree, df)
         for tree in population
     ]
     results = [f.result() for f in futures]
 ```
 
-## API-Referenz
+## API Reference
 
 ### EvaluationContext
 
@@ -254,25 +251,25 @@ class EvaluationContext:
         track_gradients: bool = False,
         df: pd.DataFrame = None
     )
-    
+
     # Fluent interface
     def with_modes(self, modes: List[str]) -> EvaluationContext
     def with_df(self, df: pd.DataFrame) -> EvaluationContext
     def with_lut(self, use_lut: bool) -> EvaluationContext
-    
+
     # Main evaluation
     def evaluate(self, node, df=None, single_mode=None) -> Union[Any, Dict]
-    
+
     # Convenience methods
     def eval_sympy(self, node) -> sympy.Basic
     def eval_numpy(self, node, df) -> np.ndarray
     def eval_lambda(self, node) -> Callable
     def eval_all(self, node, df) -> EvaluationResult
-    
+
     # Cache management
     def clear_cache(self, mode=None) -> None
     def get_cache_size(self) -> Dict[str, int]
-    
+
     # Statistics
     def get_stats(self) -> Dict[str, Dict[str, int]]
     def get_cache_hit_rate(self, mode: str) -> float
@@ -301,7 +298,7 @@ class EvaluationResult:
     numpy_eager: Optional[np.ndarray]
     numpy_lambda: Optional[Callable]
     errors: Dict[str, str]
-    
+
     def get(self, mode: str) -> Any
     def has_error(self, mode: str) -> bool
     def successful_modes(self) -> List[str]

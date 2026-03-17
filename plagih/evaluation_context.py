@@ -7,8 +7,8 @@ that unifies the three existing evaluation methods:
 2. NumPy eager evaluation (eval_predict_numpy_now) - fast, debug-friendly
 3. NumPy lambda evaluation (eval_np_lambdas) - graph-based, reusable
 
-WICHTIG: Die bisherigen Implementierungen in trees.py bleiben UNVERÄNDERT!
-Dieses System ist nur eine zusätzliche Option für vereinheitlichte Evaluation.
+IMPORTANT: The existing implementations in trees.py remain UNCHANGED!
+This system is only an additional option for unified evaluation.
 
 Usage:
     >>> from plagih.evaluation_context import EvaluationContext

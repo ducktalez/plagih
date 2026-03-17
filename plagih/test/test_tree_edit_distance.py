@@ -468,7 +468,7 @@ class TestNodeMethod:
 
 
 class TestTraversalOrders:
-    """Test to_postorder(), to_preorder(), str_as_list(order=...)."""
+    """Test to_traversal(), to_postorder(), to_preorder(), str_as_list(order=...)."""
 
     def test_postorder_leaf(self):
         """Single leaf: postorder = [leaf]."""
@@ -542,6 +542,21 @@ class TestTraversalOrders:
         s = t.str_as_list(order="post")
         assert s.endswith("Add]")
         assert not s.startswith("[Add")
+
+    def test_to_traversal_pre_matches_to_preorder(self):
+        """to_traversal('pre') returns same result as to_preorder()."""
+        t = _make_tree(Add, _make_tree(Mul, _sym("x"), _num(2)), _sym("y"))
+        assert t.to_traversal("pre") == t.to_preorder()
+
+    def test_to_traversal_post_matches_to_postorder(self):
+        """to_traversal('post') returns same result as to_postorder()."""
+        t = _make_tree(Add, _make_tree(Mul, _sym("x"), _num(2)), _sym("y"))
+        assert t.to_traversal("post") == t.to_postorder()
+
+    def test_to_traversal_default_is_preorder(self):
+        """Default to_traversal() uses preorder."""
+        t = _make_tree(Add, _sym("x"), _num(1))
+        assert t.to_traversal() == t.to_preorder()
 
     def test_str_as_list_preorder_explicit(self):
         """Explicit pre order matches default."""

@@ -25,7 +25,8 @@ import numpy as np
 from matplotlib.lines import Line2D
 from matplotlib.patches import FancyBboxPatch
 
-from plagih.util import path_make_dir, print_warning, printez, printpl
+from plagih.logging_utils import log
+from plagih.util import path_make_dir
 
 if TYPE_CHECKING:
     from plagih.population_merge import MergedEvaluationGraph, MergedNode
@@ -1243,7 +1244,7 @@ def render_tree(
         plt.close(fig)
 
     print(f"Tree saved to: {output_path}")
-    # TODO(sfeh): should use printpl("f", ...) but render_tree is also used standalone
+    # TODO(sfeh): should use log("f", ...) but render_tree is also used standalone
     return str(output_path)
 
 
@@ -1311,7 +1312,7 @@ def render_merged_tree(
     else:
         plt.close(fig)
 
-    printpl("f", f"Merged tree saved to: {output_path}")
+    log("f", f"Merged tree saved to: {output_path}")
     return str(output_path)
 
 
@@ -1466,7 +1467,7 @@ def visualize_paretofront(
         Path to the generated image file.
     """
     if not paretofront:
-        print_warning("w", "Paretofront is empty, nothing to visualize.")
+        log("w", "Paretofront is empty, nothing to visualize.")
         return
 
     output_dir = path_make_dir(output_dir / "tree_output")
@@ -1486,7 +1487,7 @@ def visualize_paretofront(
                 title=f"P={p:.0f}, F={f:.4g}",
                 dpi=dpi,
             )
-        printez("ff", f"Individual Paretofront trees saved to: {individual_dir}")
+        log("ff", f"Individual Paretofront trees saved to: {individual_dir}")
 
     # Grid layout
     n_trees = len(paretofront)
@@ -1524,5 +1525,5 @@ def visualize_paretofront(
     plt.savefig(output_path, dpi=dpi, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
-    printpl("ff", f"Paretofront visualization saved to: {output_path}")
+    log("ff", f"Paretofront visualization saved to: {output_path}")
     return str(output_path)

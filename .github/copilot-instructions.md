@@ -3,7 +3,8 @@
 > This file is injected into every AI request.  Keep it **short** and
 > limited to knowledge that **cannot** be discovered from source code.
 > Auto-generated sections have zero maintenance cost.
-> Full details: `docs/ARCHITECTURE.md`, pitfalls: `docs/PITFALLS.md`.
+> Full details: `docs/ARCHITECTURE.md`, pitfalls: `docs/PITFALLS.md`,
+> open tasks: `docs/IMPLEMENTATION_PLAN.md`.
 
 ## Project overview
 
@@ -16,18 +17,21 @@ crossover, and simplification, evaluated against training data.
 <!-- AUTOGEN:MODULE_MAP:START -->
 | Module | Responsibility |
 |---|---|
-| `plagih/trees.py` | plagih_tree contain a new implementation of trees that we use in genetic programming to display a program. (67C/24F) |
+| `plagih/trees/` | plagih.trees — Node hierarchy, evolution, and GP engine. |
+| `plagih/trees/_nodes.py` | plagih_tree contain a new implementation of trees that we use in genetic programming to display a program. (62C/11F) |
+| `plagih/trees/_evolution.py` | Evolution module: Candidate, NodeSelect, Evolution, and population helpers. (3C/8F) |
+| `plagih/trees/_gp_engine.py` | GP Engine module: ExplainableGP and picklable helper callables. (2C/5F) |
 | `plagih/parallel.py` | Parallel execution engine for plagih GP. (5C/33F) |
 | `plagih/paretofront.py` | Pareto-front dominance filter for GP candidates. (0C/6F) |
 | `plagih/monitoring.py` | GP Monitoring Module (2C/0F) |
 | `plagih/evaluation_context.py` | Unified Evaluation Context System for Plagih GP Trees. (3C/5F) |
 | `plagih/population_merge.py` | Population Merge Module for plagih GP Framework (3C/8F) |
-| `plagih/util.py` | *(no docstring)* (9C/31F) |
+| `plagih/util.py` | *(no docstring)* (1C/14F) |
 | `visualization/tree_renderer.py` | Unified Tree Visualization Module for plagih GP Framework (9C/13F) |
 | `visualization/visualize_trees.py` | *(file not found)* |
 <!-- AUTOGEN:MODULE_MAP:END -->
 
-## Node hierarchy (auto-generated from `trees.py`)
+## Node hierarchy (auto-generated from `trees/_nodes.py`)
 
 <!-- AUTOGEN:NODE_HIERARCHY_COMPACT:START -->
 ```
@@ -54,65 +58,38 @@ Mixins: ChainableOp, CustomOperator, NoSymCapitalized, PleaseUsePartnerOp
 ```
 <!-- AUTOGEN:NODE_HIERARCHY_COMPACT:END -->
 
-**Node rendering attributes** (on base classes, no `isinstance` in renderers):
-- `_viz_color`, `_viz_border`, `_viz_text`, `_viz_shape` — set on `MathOperator`, `LogicOperator`, `Number`, `Symbol`, `Boolean`
-- `latex_fmt` — format string for special LaTeX (e.g. `Pow`, `Abs`, `Sqrt`, `Min`, `Max`)
-- `latex_inline` — infix separator for LaTeX (e.g. `Add → " + "`, `Mul → r" \cdot "`)
-- When adding a new node type: set these on the class or its base — **no** renderer code changes needed.
+## Area-specific instructions
 
-## GP lifecycle (order matters)
+Detailed rules live in `.github/instructions/*.instructions.md` (with `applyTo`
+frontmatter). They are automatically injected when editing matching files:
 
-```
-ExplainableGP.create(symbols, df_train, rootdir, ...)
-  └─ __init__  →  Evolution(symbol_list, operators, ...)
-       └─ gen_create_initial()            # random pop, always sequential
-       └─ for each generation:
-            run_generation(strategies)     # parallel or sequential
-              ├─ build TaskSpecs from Strategy list
-              ├─ workers: create tree → simplify → evaluate → Candidate
-              └─ main: pop_next_append(candidate)
-            end_generation()
-              ├─ run_update_paretofront(pop_next)
-              ├─ pop_genepool = pop_next
-              └─ analyze_generation()      # GPMonitor
-       └─ close()                          # shutdown pool
-```
+| File | Scope |
+|---|---|
+| `trees.instructions.md` | `plagih/trees/**` — pitfalls, new-operator pointer |
+| `parallel.instructions.md` | `plagih/parallel.py` — pickle, IPC, batching |
+| `monitoring.instructions.md` | `plagih/monitoring.py` — metrics, callbacks, DataFrame mapping |
+| `evaluation-context.instructions.md` | `plagih/evaluation_context.py` — modes, LUT caching |
+| `population-merge.instructions.md` | `plagih/population_merge.py` — DAG merge |
+| `paretofront.instructions.md` | `plagih/paretofront.py` — dominance filter |
+| `config.instructions.md` | `plagih/config.py` — PlagihConfig, verbosity |
+| `logging-utils.instructions.md` | `plagih/logging_utils.py` — `log()`, verbosity gating |
+| `plagih-gp.instructions.md` | `plagih_gp.py` — entry point, demos |
+| `visualization.instructions.md` | `visualization/**` — rendering attributes |
+| `tests.instructions.md` | `plagih/test/**` — pytest config, fixtures |
+| `tree-complexity.instructions.md` | `plagih/tree_complexity/**` — TED, bytecode |
+| `benchmarks.instructions.md` | `benchmarks/**` — environments, samples format |
 
-## Critical pitfalls
+## Key docs in `docs/`
 
-These are **non-obvious** — an AI reading the code alone will miss them.
-See `docs/PITFALLS.md` for the full list with examples.
-
-1. **Pickle & back-references**: `parent_node`/`root_node` are excluded
-   from pickle (`Node.__getstate__`). Call `tree.repair_all()` after
-   **any** deserialization — including `deepcopy`, worker IPC, `backup_load`.
-2. **Windows parallel**: `ProcessPoolExecutor` pickles everything.
-   Strategies and error metrics must be **top-level functions** (no lambdas).
-3. **`.env` / `PlagihConfig`** (`config.py`): All framework defaults are loaded
-   from `.env` via `PlagihConfig` singleton (`cfg`).  Verbosity still uses
-   substring membership (`"gg" in cfg.verbosity`).
-   Always use `printpl("gg", ...)` instead of `print()`.
-   Legacy globals (`PRINT_DUMMY`, `DEBUG_DUMMY`) exist in `util.py` for
-   backwards compat but read from `cfg` at import time.
-4. **Benchmarking**: `enable_analysis=False` disables plots/backups/rendering
-   during evolution. Without it, IO overhead distorts timing.
-5. **`get_sympy_expr()` is slow**: Never call it in hot paths (loops over
-   population). Use `str(tree)` or `tree.get_lut_id()` for fast identification.
-6. **Physical cores**: `os.cpu_count()` returns logical threads (16 on 8-core
-   HT CPU). Use `cpu_count_physical()` from `util.py` for worker counts.
-7. **Scale ↔ SymPy round-trip**: `Scale` maps to `sympy.Mul` and is not in
-   `d_sym2node`. After any SymPy round-trip, `tree_node_grouping()` must
-   run to restore Scale nodes.
-8. **`canonicalize_children()` timing**: Must run **after** tree is fully
-   built (post-processing only). Never call in `set_childs()` or `__init__`.
-   Mutations invalidate ancestor ordering — re-run in `tree_to_candidate()`.
-   Sort key, performance, and invalidation trade-offs are open for discussion
-   (see `PITFALLS.md` P10).
-9. **Tree edit distance modes**: `compute_ted()` supports `"structural"`,
-   `"full"`, and `"structural_plus_leaf_diff"` modes via `TedConfig`.
-   `eval_parsimony` uses `"structural"`. For diversity, use `"full"`.
-   The external `apted` package is **no longer a dependency**.
-   `apted_distance()` and `get_apted_notation()` are deprecated.
+| Document | Purpose |
+|---|---|
+| `ARCHITECTURE.md` | Module overview, lifecycle, node hierarchy, config reference |
+| `PITFALLS.md` | Known bugs and gotchas (P1–P16). Read before editing core code. |
+| `IMPLEMENTATION_PLAN.md` | Central TODO list — add open tasks here, not in source code |
+| `EVALUATION.md` | EvaluationContext API and examples |
+| `LOGGING.md` | Hybrid logging system (`setup_logging`, `printpl` → `log_*`) |
+| `BENCHMARKS.md` | Benchmark environments and data formats |
+| `PARALLEL_BENCHMARK_DIAGNOSIS.md` | Performance diagnosis report (reference data) |
 
 ## Working behaviour
 
@@ -126,6 +103,8 @@ See `docs/PITFALLS.md` for the full list with examples.
   or a `print()`/comment suggests ongoing work — **ask first** or add a
   `# TODO` instead of removing/rewriting it. Debug prints with markers like
   `WHATHAPPENED`, `sfeh`, `# discuss` are investigation aids, not dead code.
+- **Open tasks**: Add new TODOs to `docs/IMPLEMENTATION_PLAN.md` instead of
+  writing `# TODO` comments in source code.
 - **Raise concerns**: If an approach seems risky, fragile, or
   architecturally problematic, voice the concern explicitly before or
   alongside the implementation.
@@ -134,8 +113,7 @@ See `docs/PITFALLS.md` for the full list with examples.
 
 - **Module map & Node hierarchy** are auto-updated by a pre-commit hook
   (`scripts/update_copilot_instructions.py`). No manual work needed.
-- **When you discover a new pitfall**, add it to `docs/PITFALLS.md` and
-  add a one-liner to the list above. Same for new architectural patterns
-  → update `docs/ARCHITECTURE.md`.
+- **When you discover a new pitfall**, add it to `docs/PITFALLS.md`.
+- **When you identify an open task**, add it to `docs/IMPLEMENTATION_PLAN.md`.
 - **Coding conventions** (linting, type hints, test config) live in
   `pyproject.toml` — do **not** duplicate them here.

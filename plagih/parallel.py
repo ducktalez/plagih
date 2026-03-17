@@ -41,15 +41,8 @@ import numpy as np
 import pandas as pd
 
 from plagih.config import cfg as _cfg
-from plagih.util import (
-    SympyError,
-    TreeError,
-    TreeLutError,
-    TreeSizeError,
-    print_caution,
-    print_warning,
-    printpl,
-)
+from plagih.exceptions import SympyError, TreeError, TreeLutError, TreeSizeError
+from plagih.logging_utils import log, log_error
 
 # =============================================================================
 # Strategy Dataclass
@@ -222,7 +215,7 @@ class PerformanceTracker:
                 seg += f" fail={fail}"
             parts.append(seg)
         total = summary["generation_total_time"]
-        printpl("pp", f"[Perf] {total:.2f}s | {' | '.join(parts)}")
+        log("pp", f"[Perf] {total:.2f}s | {' | '.join(parts)}")
 
     def reset(self):
         """Reset all tracking data for the next generation."""
@@ -434,7 +427,7 @@ def _print_parallel_failure_debug(result: TaskResult) -> None:
         return
 
     debug = result.debug or {}
-    print_warning(
+    log(
         "ww",
         "Parallel task failure: "
         f"tag={result.tag}, error={result.error}, "
@@ -443,7 +436,7 @@ def _print_parallel_failure_debug(result: TaskResult) -> None:
     )
     tb = debug.get("traceback")
     if tb:
-        print_warning("ww", f"Parallel task traceback:\n{tb}")
+        log("ww", f"Parallel task traceback:\n{tb}")
 
 
 def _resolve_target_tasks_per_batch(n_tasks: int, n_workers: int) -> int:
@@ -1313,7 +1306,7 @@ def run_generation_parallel(
             if not done:
                 pending_debug = [_summarize_batch(futures[future]) for future in pending]
                 fast_shutdown = True
-                print_warning(
+                log(
                     "ww",
                     "Parallel batch timeout: no worker batch completed within "
                     f"{timeout_s:.1f}s; pending_batches={pending_debug}",
@@ -1447,7 +1440,7 @@ def run_generation_sequential(
         if result.error is not None:
             fail_counts[tag] = fail_counts.get(tag, 0) + 1
             if fail_counts[tag] > budget:
-                print_caution(
+                log_error(
                     f"Strategy '{tag}' exceeded failure budget "
                     f"({fail_counts[tag]}/{budget}). Skipping remaining tasks.",
                 )

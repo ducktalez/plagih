@@ -1,7 +1,7 @@
 """
 Auto-update copilot-instructions.md and ARCHITECTURE.md from source code.
 
-Scans module docstrings and the Node class hierarchy in ``plagih/trees.py``
+Scans module docstrings and the Node class hierarchy in ``plagih/trees/_nodes.py``
 and replaces sections delimited by AUTOGEN markers in both Markdown files.
 
 Run manually or as a pre-commit hook:
@@ -21,11 +21,14 @@ from typing import Dict, List, Set, Tuple
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 INSTRUCTIONS_PATH = PROJECT_ROOT / ".github" / "copilot-instructions.md"
 ARCHITECTURE_PATH = PROJECT_ROOT / "docs" / "ARCHITECTURE.md"
-TREES_PATH = PROJECT_ROOT / "plagih" / "trees.py"
+TREES_PATH = PROJECT_ROOT / "plagih" / "trees" / "_nodes.py"
 
 # Modules to scan: (path relative to project root, display name)
 MODULES = [
-    ("plagih/trees.py", "plagih/trees.py"),
+    ("plagih/trees/__init__.py", "plagih/trees/"),
+    ("plagih/trees/_nodes.py", "plagih/trees/_nodes.py"),
+    ("plagih/trees/_evolution.py", "plagih/trees/_evolution.py"),
+    ("plagih/trees/_gp_engine.py", "plagih/trees/_gp_engine.py"),
     ("plagih/parallel.py", "plagih/parallel.py"),
     ("plagih/paretofront.py", "plagih/paretofront.py"),
     ("plagih/monitoring.py", "plagih/monitoring.py"),
@@ -150,7 +153,7 @@ def parse_node_hierarchy(
     Set[str],  # all_node_classes (transitively inheriting Node)
     Set[str],  # mixin_classes found
 ]:
-    """Parse ``trees.py`` and extract the Node class hierarchy via AST.
+    """Parse ``trees/_nodes.py`` and extract the Node class hierarchy via AST.
 
     Returns:
         children: mapping parent_class -> list of direct child classes

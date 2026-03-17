@@ -339,3 +339,34 @@ for diversity → `"full"`.  Parsimony / complexity distance from origin →
 but emit `DeprecationWarning`.  The external `apted` package is no longer a
 dependency.  Use `compute_ted(node1, node2, config)` instead.
 
+---
+
+## P16 – Python bytecode complexity is version-dependent
+
+**Where:** `plagih/tree_complexity/python_bytecode_complexity.py`
+
+The `tree_python_bytecode_count` and `tree_python_bytecode_weighted_count`
+measures are based on **CPython bytecode**, not on machine assembly. This
+means the exact count can change across:
+
+- Python versions
+- compiler optimisations
+- bytecode format changes (`BINARY_OP`, caches, adaptive interpreter, ...)
+
+**Rule:** Treat this as a **heuristic proof-of-concept score**, not a
+hardware-stable runtime metric.
+
+**Use cases:**
+- ranking trees by rough implementation complexity
+- comparing variants within the same Python/runtime environment
+
+**Do not assume:**
+- stable values across Python versions
+- direct equivalence to CPU runtime
+- equivalence to FLOPs or real machine instructions
+
+**Open design tasks:**
+- parallel critical-path complexity
+- branch-sensitive complexity for `Ifte` / `Piecewise`
+- optional Numba / LLVM / ASM backends
+

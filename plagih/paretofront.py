@@ -44,7 +44,7 @@ def plot_paretofront(paretofront, path, parsimony_max):
     xx, yy = np.array(tuples).T
 
     if len(xx) == 0:
-        print_caution(f"Plotting empty array is not possible! Data={xx, yy}")
+        log_error(f"Plotting empty array is not possible! Data={xx, yy}")
         return
 
     with plt.rc_context(rc=pyplot_rc_tex):
@@ -66,9 +66,9 @@ def plot_paretofront(paretofront, path, parsimony_max):
             path_png = path / "paretofront.png"
             # path_pdf = path / f'paretofront.pdf'
             fig.savefig(path_png)
-            printez("f", f"paretofront (.png): {path_png}")
+            log("f", f"paretofront (.png): {path_png}")
         except PermissionError as perm_error:
-            print_caution(f"Could not save plot: {perm_error}")
+            log_error(f"Could not save plot: {perm_error}")
         except Exception as ex:
             raise ex
         finally:
@@ -91,7 +91,7 @@ def analyze_pareto(cpu_cores=4):
     Writing all analysis files after evaluating the paretofront.
     (Currently strongly customized by sfeh for the mountaincar and industrial benchmark)
     """
-    # self.printpl('i', f'Analysing the paretofront candidates of the run.')
+    # self.log('i', f'Analysing the paretofront candidates of the run.')
     #
     # dir_benchmarks = Path(__file__).parent.parent.absolute() / 'benchmarks/'
     # path_hist = path_make_dir(self.rootdir / 'histograms/')
@@ -262,7 +262,7 @@ def plot_performance(monitor_df, save_path):
         save_path: Path to save the plot image.
     """
     if len(monitor_df) == 0:
-        print_warning("w", "Cannot plot performance: empty monitor_df")
+        log("w", "Cannot plot performance: empty monitor_df")
         return
 
     with plt.rc_context(rc=pyplot_rc_tex):
@@ -324,9 +324,9 @@ def plot_performance(monitor_df, save_path):
 
         try:
             fig.savefig(save_path)
-            printez("f", f"Performance plot saved: {save_path}")
+            log("f", f"Performance plot saved: {save_path}")
         except PermissionError as e:
-            print_caution(f"Could not save plot: {e}")
+            log_error(f"Could not save plot: {e}")
         finally:
             plt.close(fig)
 
@@ -341,7 +341,7 @@ def plot_parsimony_histogram(population, save_path, max_population=100, max_pars
         max_parsimony: Maximum expected parsimony for x-axis scaling.
     """
     if not population:
-        print_warning("w", "Cannot plot histogram: empty population")
+        log("w", "Cannot plot histogram: empty population")
         return
 
     parsimony_values = [c.get_parsim() for c in population]
@@ -360,8 +360,8 @@ def plot_parsimony_histogram(population, save_path, max_population=100, max_pars
 
         try:
             fig.savefig(save_path)
-            printez("f", f"Parsimony histogram saved: {save_path}")
+            log("f", f"Parsimony histogram saved: {save_path}")
         except PermissionError as e:
-            print_caution(f"Could not save plot: {e}")
+            log_error(f"Could not save plot: {e}")
         finally:
             plt.close(fig)

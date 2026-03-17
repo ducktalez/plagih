@@ -134,7 +134,7 @@ def demo_minimal():
         print(f"--- Generation {gp.gen_id} ---")
         # run_generation handles: create trees, evaluate, update pareto, end generation
         gp.run_generation(strategies)
-        printez("ggg", f"  Population: {len(gp.pop_genepool)}, Pareto front: {len(gp.paretofront)}")
+        log("ggg", f"  Population: {len(gp.pop_genepool)}, Pareto front: {len(gp.paretofront)}")
 
     # -------------------------------------------------------------------------
     # STEP 7: Inspect results
@@ -523,9 +523,9 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False, try_load_backu
         if try_load_backup:
             gp.backup_load()
         else:
-            printpl("i", "Ignore loading backup!")
+            log("i", "Ignore loading backup!")
     except FileNotFoundError as ex:
-        printpl("i", f"No backup file found at {ex}. Starting a new run.")
+        log("i", f"No backup file found at {ex}. Starting a new run.")
 
     if gp.gen_id == 0:
         gp.gen_create_initial()  # sfeh check if last pop is empty? +info/warnung: neue generation?
@@ -556,7 +556,7 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False, try_load_backu
     while gp.gen_id <= gp.gen_end and not gp.run_custom_exit_condition():
         gp.run_generation(strategies)
 
-    printpl("g", f"Done after Generation {gp.gen_id}.\nTime since start: {time.perf_counter() - gp.time_start:4.2f}s")
+    log("g", f"Done after Generation {gp.gen_id}.\nTime since start: {time.perf_counter() - gp.time_start:4.2f}s")
 
     gp.backup_save()
     gp.evoloop_monitoring_plots()

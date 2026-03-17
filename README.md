@@ -13,7 +13,22 @@ Enjoy!
 ## Ablage/Todos
 ### Code Dokumentation und instructions überarbeiten
 
-- Strukturiere das Projekt so, dass es optimal vom Coding Agent bearbeitet werden kann. Für einzelne Ordner können ja auch weitere Instruction Files angelegt werden. Ich würde hier gerne ein guten Aufbau herausarbeiten und umsetzen. 
+- Alle zu diskutierenden Architekturprobleme sollten entweder in Implementationsplan oder in Architektur zur Diskussion gestellt werden so gehen sie nicht verloren und sind dennoch bei den zu beachtenden Ideen mit vertreten. 
+- PLAN: Erstelle eine Grundstruktur und Instructions für das Konzept der Pseudo-Backpropagation. Diese sind auch als Teil der baumspezifischen individuellen Optimierung anzusehen. 
+  - Im Bereich der genetischen Programmierung versucht man üblicherweise nicht, einzelne Kandidaten endlos zu optimieren. Hier wird auf das Konzept des Zufalls gesetzt. 
+  - Wir haben uns allerdings entschieden, einige Evolutionsprozesse In besonderem Maße zu unterstützen. 
+    - Hintergrund ist eine Erkenntnis, die während meiner Masterarbeit zum Komplexitätsmaß Familiarity entstanden ist. 
+    - Menschen nutzen zum Lösen von Problemen sehr gern die Kapselungsmöglichkeiten durch IF-Operatoren beziehungsweise den Piecewise-Operator. 
+    - Lösungskandidaten haben allerdings nur selten eine solche Kapselung als elementares Konzept, was mehrere Gründe hat. 
+      - Ihr Spreading-Faktor macht Bäume generell sehr viel komplexer. 
+      - Sie bestehen aus mehreren Eingaben, die in einer perfekten Komposition die Werte sich gegenseitig ergänzen müssen. 
+      - Sie können nur in sehr seltenen Fällen durch Crossover zufällig eine Verbesserung bieten. 
+      - Damit IF-Anweisungen überhaupt entstehen, muss man häufig im Komplexitätsmaß oder beim Vorkommen dieses Operators nachhelfen. 
+      - Oftmals werden trotzdem die zufälligen Kombinationen von Polynomfunktionen und Sinuskurven zu besseren Lösungen führen können 
+    - Das Problem gilt im Speziellen für IF-Operatoren, aber auch im Allgemeinen gibt es Formeln, die besser im genetischen Evolutionsprozess optimiert werden können. Und solche, die man sich eigentlich lieber wünscht. Man kann allerdings nur auf einen Aspekt Fokus legen. Dieser wird implizit durch das Komplexitätsmaß oder bei der zufälligen Baumerzeugung berücksichtigt. 
+  - pseudo-backpropagation
+    - ALL functions in a tree can be represented as a neural network. E. g. if-function is two input variables, a softmax layer and a result layer. 
+    - replace a tree with a NN in the next step and train it.
 - TED-Distance diff branches anzeigen lassen und als idee in zukunft behandeln. 
 - Copilot-RUFF?
 - Performance: GPU-evaluation? Ist dafür TensorFlow nötig oder geht das auch mit NumPy? 
@@ -36,9 +51,7 @@ Enjoy!
         Strategy("crossover", rate=0.2, crossover=True, tournament_n=3),
     ])
     ```
-
-# Sub-tasks
-
+- Übersicht über Distanzmaße mit Beispielbäumen und deren Auswirkungen auf die Evolution erstellen.
 - introduce a "strategy" system for evolution, that can be easily parallelized. 
   - This also allows to easily adjust the rates of different strategies, and to add new ones.
 - save-evaluation: nan-handling, forcing real numbers
@@ -47,7 +60,6 @@ Enjoy!
   - How are missing individuals in an evolution handled usually? (try force?)
 - tree -> evaluate nodes for best improvement 
 - population cluster/races
-- BackPropagation through nodes, rank value for whole tree
 - tf/vectorized implementation allows parallel evaluation of trees.
   - This required another numpy-dimensionality handling
   - [1] vs. [1, 2, 3] vs. [[1,1,2],[1,2,3],[2,3,3]]
@@ -66,9 +78,6 @@ Enjoy!
 - "Ban" trees, if they are too dominant
 - make categorical options categorical. For mountain car, it is scalable, but a categorical options (aka a 3 nodes last layer) should be an option
 - prevent the LUT of becoming too big; make a counter whenever a result is hit and delete the smallest in each cycle. Reset the numbers aswell.
-- pseudo-backpropagation
-  - ALL functions in a tree can be represented as a neural network. E. g. if-function is two input variables, a softmax layer and a result layer. 
-  - replace a tree with a NN in the next step and train it.
 - sympy factor (up/downfactor), so it adds stuff together, expand(), 
 - Plan/feature: Iteratives ersetzen eines NN durch einen Baum, der das NN nachahmt. Das NN findet die großen Unterschiede zu einem GP-Baum, und der GP-Baum versucht, if-Strukturen zu finden, die das NN-Verhalten nachahmen.
 - sfeh:idea sympy.nsimplify('3.333333*x+0.522', tolerance=0.1, rational=True) for
@@ -110,11 +119,10 @@ Enjoy!
 - nsimplify()
 - variable-names = symbols
 - Introduce min/max input operator, that is the number of the min/max value of inputs in the column.
-- apted-distance can also compute the actual edit steps (now implemented intrinsically via Zhang-Shasha, no external dependency needed)
 - Crossover - make fix nodes insertable
 - create_random should be the same for first generation and other randoms
 - warning for sympifyable origin tree
-- only allow variables in specific subtrees/branches
+- Make a plan for the following distinction: Genetic programming has an evolutionary and a fitness aspect. Some trees might have some evolutionary features that suit them better. And I want to make distinction in that way. 
 -  insert constants like pi, e, into trees
 - choose_operator should be adjusted a little towards actually useful functions
 - pop-mining?
@@ -144,7 +152,7 @@ Enjoy!
     Actually, we should make an ordered Dataframe, to do this.
     We just need a measurement, a metric, to value the amount of actual hits and non/bad hits.
     Similar to entropy, in order to know, which trees should be merged together.
-- progress-print anzeigen des aktuell erzeugten Baum, zum durchlaufen
+- Für eine neue Knotenart „Non-Replace“ oder „Non-Holding“ oder „Save Evaluation“, die im Fall von „Not a Number“ oder von Evaluierungsproblemen einen Standardwert zurückgibt. Hierbei sollte auf jeden Fall unterschieden werden zwischen NRNs, die bereits beim Sympy-Prozess entstehen, und NRNs, die während der Auswertung entstehen. 
 - nonzero-operator? making zero-ish inputs slightly positive? Also nan/complex-number exits?
 - Creating "backpropagable"-tree -> tanh/sigmoid + exprcondtuples can mime nn-layers for if-conditions?
 - Iterate between approximating with NNs and representing the NNs with GP-trees
@@ -157,32 +165,11 @@ Enjoy!
 - Zum Thema "großer Einheitsbaum": Hier könnte man Äste absterben lassen, wenn sie zu
   schlecht sind. Also z.B. wenn alle weiteren Äste unter diesem Knoten schlecht sind,
   und es über 1000 Stück schon gab, dann wird dieser Knoten an der Stelle gekillt.
-- Komplexitätsmaß Assembler-operatoren?
-    ```
-  import dis
-
-  dis.dis(lambda x: x+1)
-  
-  3           0 RESUME                   0
-              2 LOAD_FAST                0 (x)
-              4 LOAD_CONST               1 (1)
-              6 BINARY_OP                0 (+)
-             10 RETURN_VALUE
-    ```
-    ````
-  from numba import njit
-  @njit
-   def f(x):
-       return np.log(x**2 + 1e-6)
-   
-   f.inspect_asm(np.float64)
-    ````
 - BIGTREE
   A complete tree, feeding bottom-up on nodes that seem very userful
   like putting the genepool actually all together
   - after stagnation, change the tree architecture with sympy tricks. 
     Or after branches are imbalanced.
-- ~~"Scale"-operator, that just multiplies with a number~~ ✅ Implemented (`Scale(Number, expr)` in `trees.py`)
 
 ## Configuration (`.env`)
 

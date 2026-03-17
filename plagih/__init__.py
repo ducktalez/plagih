@@ -1,7 +1,4 @@
 """
-Sometimes, just sometimes, you gotta hate python.
-This file needs to be here, empty. Lel!
-
 Exports for convenient access to plagih functionality.
 """
 
@@ -18,6 +15,26 @@ from plagih.evaluation_context import (
     add_unified_evaluation_to_node,
     create_context,
     evaluate_tree,
+)
+
+# Exception classes
+from plagih.exceptions import (
+    CuriosityError,
+    SympyError,
+    SympyImaginaryNumber,
+    TreeError,
+    TreeLutError,
+    TreeSizeError,
+)
+
+# Logging
+from plagih.logging_utils import (
+    log,
+    log_debug,
+    log_error,
+    log_info,
+    log_warning,
+    setup_logging,
 )
 from plagih.parallel import (
     BUILTIN_STRATEGIES,

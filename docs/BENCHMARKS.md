@@ -1,194 +1,193 @@
-# Benchmarks für plagih GP
+# Benchmarks for plagih GP
 
-Das Framework enthält mehrere Benchmark-Environments für Tests und Demonstrationen.
+The framework includes several benchmark environments for testing and demonstration.
 
-## Übersicht
+## Overview
 
-| Benchmark | Ordner | Komplexität | Status | Beschreibung |
-|-----------|--------|-------------|--------|--------------|
-| **MountainCar** | `benchmarks/mc/` | ⭐ Einfach | ✅ Standard | Kontinuierliche Steuerung, 2 Inputs |
-| **CartPole** | `benchmarks/cp/` | ⭐ Einfach | ✅ Vorhanden | Balancieren, 4 Inputs, diskrete Ausgabe |
-| **Symbolic Regression** | `benchmarks/sr/` | ⭐ Einfach | ✅ Neu | Klassisches GP-Benchmark, 1 Input |
-| **Industrial Benchmark** | `benchmarks/ib/` | ⭐⭐⭐ Komplex | ⚠️ Experimentell | Viele Inputs, industrielles Szenario |
+| Benchmark | Folder | Complexity | Status | Description |
+|-----------|--------|------------|--------|-------------|
+| **MountainCar** | `benchmarks/mc/` | ⭐ Simple | ✅ Standard | Continuous control, 2 inputs |
+| **CartPole** | `benchmarks/cp/` | ⭐ Simple | ✅ Available | Balancing, 4 inputs, discrete output |
+| **Symbolic Regression** | `benchmarks/sr/` | ⭐ Simple | ✅ New | Classic GP benchmark, 1 input |
+| **Industrial Benchmark** | `benchmarks/ib/` | ⭐⭐⭐ Complex | ⚠️ Experimental | Many inputs, industrial scenario |
 
-## Parallel-Performance-Diagnose
+## Parallel Performance Diagnosis
 
-Die aktuelle detaillierte Analyse der Windows-Parallelisierung, inklusive
-Shared-Memory-Test, Batch-Größen-Vergleich und Populationsvergleich,
-steht in:
+Detailed analysis of Windows parallelization (shared memory, batch sizes,
+population comparison):
 
 - `docs/PARALLEL_BENCHMARK_DIAGNOSIS.md`
 
-Direktes CPU-/RAM-Profiling für den aktuellen Parallelpfad steht in:
+Direct CPU/RAM profiling for the current parallel path:
 
 - `plagih/test/benchmarks/bench_parallel_resources.py`
-- Output-Datei: `plagih/test/benchmarks/bench_resources_output.txt`
+- Output: `plagih/test/benchmarks/bench_resources_output.txt`
 
 ---
 
-## MountainCar (Standard-Benchmark)
+## MountainCar (Standard Benchmark)
 
-**Verwendet in:** `demo_minimal()`, Standard-Testläufe
+**Used in:** `demo_minimal()`, standard test runs
 
 **Problem:**
-- Ein Auto muss aus einem Tal auf einen Berg fahren
-- Das Auto hat nicht genug Kraft, direkt hochzufahren
-- Es muss Schwung holen (hin und her fahren)
+- A car must drive out of a valley onto a hill
+- The car lacks the power to drive up directly
+- It must build momentum (drive back and forth)
 
-**Spezifikation:**
+**Specification:**
 ```
-Inputs:  cartPos (Position: -1.2 bis 0.6)
-         cartVel (Geschwindigkeit: -0.07 bis 0.07)
-Output:  action (0=links, 1=nichts, 2=rechts)
+Inputs:  cartPos (position: -1.2 to 0.6)
+         cartVel (velocity: -0.07 to 0.07)
+Output:  action (0=left, 1=nothing, 2=right)
 ```
 
-**Dateien:**
+**Files:**
 ```
 benchmarks/mc/
 ├── gp_files/
-│   ├── samples200.csv              # Kleine Trainingsmenge (200 Samples)
-│   ├── samples75.csv               # Sehr kleine Menge (75 Samples)
-│   ├── behaviour_samples.csv       # Vollständige Samples (~2000)
-│   └── tree_*.csv                  # Verschiedene Startbäume
+│   ├── samples200.csv              # Small training set (200 samples)
+│   ├── samples75.csv               # Very small set (75 samples)
+│   ├── behaviour_samples.csv       # Full samples (~2000)
+│   └── tree_*.csv                  # Various initial trees
 └── agents/
-    └── ...                         # Evaluation-Agenten
+    └── ...                         # Evaluation agents
 ```
 
-**Beispiel-Aufruf:**
+**Example:**
 ```python
 from plagih_gp import demo_minimal
 demo_minimal()
 ```
 
-**Bekannte gute Lösungen:**
-- `sign(cartVel)` - Sehr einfach, funktioniert grundlegend
-- `sign(cartPos + cartVel)` - Besser
+**Known good solutions:**
+- `sign(cartVel)` — very simple, works basically
+- `sign(cartPos + cartVel)` — better
 
 ---
 
-## CartPole (Alternatives Benchmark)
+## CartPole (Alternative Benchmark)
 
-**Verwendet in:** `demo_cartpole()`
+**Used in:** `demo_cartpole()`
 
 **Problem:**
-- Ein Wagen mit einer Stange muss balanciert werden
-- Die Stange darf nicht umfallen
-- Klassisches Reinforcement Learning Problem
+- A cart with a pole must be balanced
+- The pole must not fall over
+- Classic reinforcement learning problem
 
-**Spezifikation:**
+**Specification:**
 ```
-Inputs:  cartPos       (Wagenposition)
-         cartVel       (Wagengeschwindigkeit)
-         poleAngle     (Stangenwinkel, früher observation2)
-         poleVel       (Winkelgeschwindigkeit, früher observation3)
-Output:  action (0=links, 1=rechts) - binär!
+Inputs:  cartPos       (cart position)
+         cartVel       (cart velocity)
+         poleAngle     (pole angle, formerly observation2)
+         poleVel       (angular velocity, formerly observation3)
+Output:  action (0=left, 1=right) — binary!
 ```
 
-**Dateien:**
+**Files:**
 ```
 benchmarks/cp/
 ├── gp_files/
-│   ├── samples.csv                    # Trainingsdaten (~5800 Samples)
-│   ├── operators.csv                  # Operatoren-Set
-│   └── tree_labels(simple).csv        # Einfacher Startbaum
+│   ├── samples.csv                    # Training data (~5800 samples)
+│   ├── operators.csv                  # Operator set
+│   └── tree_labels(simple).csv        # Simple initial tree
 └── agents/
-    ├── cartpole_eval.py               # Gymnasium-Evaluation
-    └── yingzwang.py                   # Literatur-Agent
+    ├── cartpole_eval.py               # Gymnasium evaluation
+    └── yingzwang.py                   # Literature agent
 ```
 
-**Beispiel-Aufruf:**
+**Example:**
 ```python
 from plagih_gp import demo_cartpole
 demo_cartpole()
 ```
 
-**Bekannte gute Lösungen:**
-- `poleAngle < 0` - Nur Winkel (einfachste Lösung)
-- `poleVel < 0` - Nur Winkelgeschwindigkeit
+**Known good solutions:**
+- `poleAngle < 0` — angle only (simplest solution)
+- `poleVel < 0` — angular velocity only
 
 ---
 
-## Symbolic Regression (Klassisches GP-Benchmark)
+## Symbolic Regression (Classic GP Benchmark)
 
-**Verwendet in:** `demo_symbolic_regression()`
+**Used in:** `demo_symbolic_regression()`
 
 **Problem:**
-- Finde eine mathematische Formel, die Daten approximiert
-- Klassisches GP-Standard-Benchmark
-- Kein externes Environment nötig
+- Find a mathematical formula that approximates data
+- Classic GP standard benchmark
+- No external environment needed
 
-**Spezifikation:**
+**Specification:**
 ```
-Inputs:  x (Wert zwischen -2 und 2)
-Output:  target = x³ + x² + x (Zielfunktion)
+Inputs:  x (value between -2 and 2)
+Output:  target = x³ + x² + x (target function)
 ```
 
-**Dateien:**
+**Files:**
 ```
 benchmarks/sr/
 └── gp_files/
     └── polynomial.csv    # f(x) = x³ + x² + x
 ```
 
-**Beispiel-Aufruf:**
+**Example:**
 ```python
 from plagih_gp import demo_symbolic_regression
 demo_symbolic_regression()
 ```
 
-**Zielfunktion:**
-Die zu findende Formel ist: `f(x) = x³ + x² + x`
+**Target function:**
+The formula to be found is: `f(x) = x³ + x² + x`
 
-Dies ist ein klassisches Benchmark, da:
-- Es eine eindeutige Lösung gibt
-- Die Lösung relativ einfach ist
-- Man den Erfolg leicht messen kann
+This is a classic benchmark because:
+- There is a unique solution
+- The solution is relatively simple
+- Success can be easily measured
 
 ---
 
-## Industrial Benchmark (Komplex)
+## Industrial Benchmark (Complex)
 
-**Empfohlen für:** Fortgeschrittene Tests, Skalierbarkeit, Publikationen
+**Recommended for:** Advanced tests, scalability, publications
 
-⚠️ **Hinweis:** Dieses Benchmark ist deutlich komplexer als die anderen.
+⚠️ **Note:** This benchmark is significantly more complex than the others.
 
 **Problem:**
-- Simulation eines industriellen Prozesses
-- Viele Eingangsvariablen
-- Komplexe, nicht-lineare Dynamik
+- Simulation of an industrial process
+- Many input variables
+- Complex, non-linear dynamics
 
-**Spezifikation:**
+**Specification:**
 ```
-Inputs:  Shift_0, Shift_1, ...     (Verschiebungen)
-         Gain_0, Gain_1, ...       (Verstärkungen)
-         Setpoint, Velocity, ...   (Weitere Variablen)
-Output:  Steuerungsaktion
+Inputs:  Shift_0, Shift_1, ...     (shifts)
+         Gain_0, Gain_1, ...       (gains)
+         Setpoint, Velocity, ...   (additional variables)
+Output:  control action
 ```
 
-**Dateien:**
+**Files:**
 ```
 benchmarks/ib/
 ├── gp_files/
-│   ├── samples_prepared.csv    # Vorbereitete Daten (sehr groß!)
-│   └── samples_raw.csv         # Rohdaten
+│   ├── samples_prepared.csv    # Prepared data (very large!)
+│   └── samples_raw.csv         # Raw data
 ├── ib_eval_agents.py           # Evaluation
 └── IDS.py                      # Industrial Data Simulator
 ```
 
 ---
 
-## Benchmark hinzufügen
+## Adding a Benchmark
 
-Um ein neues Benchmark hinzuzufügen:
+To add a new benchmark:
 
-1. **Ordner erstellen:**
+1. **Create folder:**
    ```
    benchmarks/BENCHMARK_NAME/
    └── gp_files/
-       └── samples.csv          # Trainingsdaten
+       └── samples.csv          # Training data
    ```
 
-2. **Samples-Format:**
+2. **Samples format:**
    ```csv
    input1:float,input2:float,target:float
    0.1,0.2,1.0
@@ -196,7 +195,7 @@ Um ein neues Benchmark hinzuzufügen:
    ...
    ```
 
-3. **Demo-Funktion hinzufügen** (in `plagih_gp.py`):
+3. **Add demo function** (in `plagih_gp.py`):
    ```python
    def demo_BENCHMARK_NAME():
        df = pd.read_csv('benchmarks/BENCHMARK_NAME/gp_files/samples.csv')

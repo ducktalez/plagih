@@ -27,6 +27,7 @@ a mathematical/logical expression (e.g., `Add(Mul(x, 3), Sin(y))`).
 
 ```
 plagih/
+├── config.py             # PlagihConfig singleton – loads .env, central defaults
 ├── trees.py              # Everything: Node hierarchy, Evolution, ExplainableGP,
 │                         #   Candidate, tree operations, simplification
 ├── parallel.py           # Strategy system, ProcessPoolExecutor workers,
@@ -35,7 +36,7 @@ plagih/
 ├── monitoring.py         # GPMonitor – metrics, callbacks, DataFrame export
 ├── evaluation_context.py # Optional unified evaluation (sympy/numpy/lambda)
 ├── population_merge.py   # DAG merge for batch evaluation
-├── util.py               # printpl, PRINT_DUMMY, file I/O, constants, BColors
+├── util.py               # printpl, file I/O, constants, BColors (reads cfg)
 └── test/                 # pytest test suite
 
 visualization/
@@ -333,21 +334,93 @@ visualize_paretofront(gp.paretofront, output_dir=gp.rootdir)
 
 ---
 
-## 10. Configuration reference
+## 10. Configuration system
 
-### ExplainableGP.create() parameters
+### Overview
+
+All framework-wide settings are centralised in `plagih/config.py` via the
+`PlagihConfig` singleton (`cfg`).  Settings are resolved in this order:
+
+```
+.env file  ←  environment variables  ←  code-level overrides
+            (lowest priority)            (highest priority)
+```
+
+1. On first import of `plagih.config`, `python-dotenv` loads the project-root
+   `.env` file (if present).
+2. Environment variables **override** `.env` values (standard dotenv behaviour).
+3. Code-level parameters (e.g. `ExplainableGP.create(parallel=4)`) override
+   everything for that particular instance.
+
+### `.env` key reference
+
+Copy `.env.example` → `.env` and adjust.  All keys use the `PLAGIH_` prefix.
+
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `PLAGIH_VERBOSITY` | str | `wwaaggiiffpp` | Substring-membership string for `printpl`/`printez` |
+| `PLAGIH_DEBUG` | bool | `false` | Debug-level checks (e.g. sympy comparison) |
+| `PLAGIH_SIMPLIFICATION` | bool | `false` | SymPy simplification during evolution |
+| `PLAGIH_VISUALIZATION` | bool | `false` | Plots/renderings during evolution |
+| `PLAGIH_MERGED_TREE` | bool | `false` | Build merged population tree per generation |
+| `PLAGIH_ORIGIN_TREE` | bool | `false` | Track origin-tree metadata on candidates |
+| `PLAGIH_LUT_ENABLED` | bool | `false` | Expression LUT for duplicate avoidance ⚠️ |
+| `PLAGIH_PARALLEL` | int | `0` | Worker count (0=sequential) |
+| `PLAGIH_FLOAT_PRECISION` | int | `3` | Decimal places for terminal formatting |
+| `PLAGIH_PLOTS_INTERVAL` | int | `1` | Plot every N generations |
+| `PLAGIH_BACKUP_INTERVAL` | int | `10` | Backup every N generations |
+| `PLAGIH_TREE_MIN_PARSIMONY` | int | `3` | Minimum complexity for kept trees |
+
+> ⚠️ **LUT warning:** Disabling LUT (`PLAGIH_LUT_ENABLED=false`) means every
+> expression is re-evaluated even if identical ones were already seen.  For any
+> non-trivial run this is **significantly** slower.  The default is `false` to
+> keep the minimal profile transparent, but most users should set it to `true`.
+
+### Minimal vs. recommended profile
+
+The **default** profile is intentionally minimal — no simplification, no
+visualisation, no parallelisation, no LUT.  This is the safest starting
+point for new users and reproduces the simplest possible behaviour.
+
+For real runs, copy `.env.example` and enable:
+```
+PLAGIH_LUT_ENABLED=true
+PLAGIH_VISUALIZATION=true
+PLAGIH_PARALLEL=4
+```
+
+### Usage in code
+
+```python
+from plagih.config import cfg
+
+# Read
+if cfg.lut_enabled:
+    ...
+
+# Runtime override
+cfg.verbosity = "ww"  # suppress most output
+```
+
+Legacy module-level globals (`PRINT_DUMMY`, `DEBUG_DUMMY`, etc.) in `util.py`
+are initialised from `cfg` and remain available for backwards compatibility.
+
+---
+
+## 11. ExplainableGP.create() parameters
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `symbols` | list | *required* | Input variable names |
 | `df_train` | DataFrame | *required* | Training data with target column |
 | `rootdir` | str/Path | *required* | Output directory |
-| `preset` | str | `'math_simple'` | Operator preset |
+| `preset` | str | `'math_full'` | Operator preset |
 | `pop_max_size` | int | `100` | Population size |
 | `gen_end` | int | `50` | Number of generations |
 | `depth_max` | int | `7` | Max tree depth |
 | `nodes_max` | int | `40` | Max nodes per tree |
-| `parallel` | bool/int | `False` | Worker count |
+| `parallel` | bool/int/None | `None` → `.env` | Worker count |
+| `enable_analysis` | bool/None | `None` → `.env` | Plots, backups, visualizations |
 | `error_metric` | str | `'rmse'` | `'rmse'`, `'mse'`, `'mae'`, or callable |
 | `clip_range` | tuple | `None` | `(min, max)` to clip predictions |
 | `allow_chain` | bool | `False` | Allow chained operators (Add with 3+ children) |

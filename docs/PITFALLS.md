@@ -90,14 +90,16 @@ sent to workers is serialized via `pickle`. This means:
 
 ---
 
-## P5 – `PRINT_DUMMY` verbosity system
+## P5 – Verbosity system (`cfg.verbosity` / `.env`)
 
-**Where:** `util.py`
+**Where:** `plagih/config.py`, `plagih/util.py`
 
-`PRINT_DUMMY` is a string. Verbosity is checked via **substring membership**:
+Verbosity is controlled by `cfg.verbosity` (loaded from `PLAGIH_VERBOSITY`
+in `.env` or environment variables).  The check uses **substring membership**:
 
 ```python
-PRINT_DUMMY = "wwaaggiiffpp"
+from plagih.config import cfg
+# cfg.verbosity = "wwaaggiiffpp"  (default)
 
 # "gg" in "wwaaggiiffpp"   → True  (generation summaries printed)
 # "gggg" in "wwaaggiiffpp" → False (per-candidate detail skipped)
@@ -105,7 +107,19 @@ PRINT_DUMMY = "wwaaggiiffpp"
 ```
 
 The `printpl(msg_type, message)` function checks `if msg_type not in
-PRINT_DUMMY: return`.
+cfg.verbosity: return`.
+
+For backwards compatibility, `util.PRINT_DUMMY` is initialised from
+`cfg.verbosity` at import time.  **New code should use `cfg.verbosity`
+directly**, as runtime changes to `cfg.verbosity` are picked up
+immediately by `printpl`/`printez`.
+
+Legacy writes like `util.PRINT_DUMMY = "ww"` still work (module-level
+variable), but they do **not** update `cfg.verbosity`.  Prefer:
+```python
+from plagih.config import cfg
+cfg.verbosity = "ww"
+```
 
 **Levels** (from most to least common):
 - `"g"` – major generation events
@@ -113,7 +127,8 @@ PRINT_DUMMY: return`.
 - `"ggg"` – strategy-level detail
 - `"gggg"` – per-candidate detail (expensive!)
 
-**To enable full verbosity:** Set `PRINT_DUMMY = "wwwwaaaggggiiiifffpp"`.
+**To enable full verbosity:** Set `PLAGIH_VERBOSITY=wwwwaaaggggiiiifffpp`
+in `.env` or environment.
 
 ---
 

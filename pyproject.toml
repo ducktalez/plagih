@@ -15,6 +15,7 @@ dependencies = [
     "sympy",
     "matplotlib",
     "scikit-learn",
+    "python-dotenv>=0.19",
 ]
 
 [project.optional-dependencies]

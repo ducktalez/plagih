@@ -10,21 +10,53 @@ We are currently trying to introduce a  pseudo-backpropagation-algorithm, with p
 
 Enjoy!
 
+## Configuration (`.env`)
+
+All framework defaults are managed via a `.env` file in the project root.
+Copy `.env.example` to `.env` and adjust values to your needs.
+
+### Minimal default profile
+
+The default configuration is intentionally **minimal** — every feature is off:
+
+| Feature | Default | `.env` Key |
+|---|---|---|
+| SymPy Simplification | off | `PLAGIH_SIMPLIFICATION` |
+| Visualisation during runs | off | `PLAGIH_VISUALIZATION` |
+| Merged population tree | off | `PLAGIH_MERGED_TREE` |
+| Origin tree tracking | off | `PLAGIH_ORIGIN_TREE` |
+| Look-Up Tables (LUT) | off ⚠️ | `PLAGIH_LUT_ENABLED` |
+| Parallelisation | 0 (sequential) | `PLAGIH_PARALLEL` |
+
+> ⚠️ **LUT warning:** Disabling LUT means every expression is re-evaluated
+> even if identical ones were already seen.  For non-trivial runs this is
+> **significantly** slower.  Most users should set `PLAGIH_LUT_ENABLED=true`.
+
+### Recommended profile for real runs
+
+```dotenv
+PLAGIH_LUT_ENABLED=true
+PLAGIH_VISUALIZATION=true
+PLAGIH_PARALLEL=4
+PLAGIH_SIMPLIFICATION=true
+```
+
+### Override hierarchy
+
+```
+.env file  →  environment variables  →  code-level parameters
+(lowest)                                  (highest priority)
+```
+
+Code-level overrides (e.g. `ExplainableGP.create(parallel=8)`) always win.
+See `docs/ARCHITECTURE.md` § Configuration System for full details.
+
 ## Ablage/Todos
 ### Code Dokumentation und instructions überarbeiten
 
 
-- .env-File statt DEBUG_DUMMY in utils verwenden. In dem End-File sollen auch bereits alle Voreinstellungen für die genetische Programmierung vorgenommen werden können. Hierfür muss sich noch eine gute Struktur überlegt werden, die auch in den Instructions oder der Architektur festgehalten werden sollte. Der Standard soll entgegengesetzt der aktuellen Konfiguration nur die Basisfunktionalität beinhalten. Das heißt:
-  - keine Simplifizierung
-  - keine Visualisierung während des Laufes
-  - Kein Merge der gesamten Population in einen Merged Tree
-  - Kein Origin Tree
-  - Keine performanceverbesserungen, also
-    - Keine Parallelisierung
-    - Keine Look-Up-Tables (Hier bitte den User warnen. Man sollte vielleicht auch diskutieren, was denn der beste Standard wäre. )
-    Jeder dieser konfigurierbaren Optionen stellt auch eine Funktion des Frameworks dar. Insofern sollte sich hier auch mit dem Readme abgestimmt werden (also ergänzt). 
+
 - Copilot-RUFF?
-- Es geht darum, den Visualization-Ordner aufzuräumen und neu zu strukturieren. Dort befinden sich drei Dateien. Zwei davon machen, nach meinem Gefühl, eigentlich relativ ähnliche Sachen, nämlich Tree_Renderer und Visualize_Trees. Latex steht vermutlich nur für die Latex-Visualisierung, dennoch sollte das File vermutlich besser anders genannt werden. 
 - Performance: GPU-evaluation? Ist dafür TensorFlow nötig oder geht das auch mit NumPy? 
 - Merged-tree visualisierung
   - mit chatgpt erstellen: Weitere merge-tree Version (ohne Terminal nodes)
@@ -65,6 +97,7 @@ Enjoy!
 - use sympy.count_ops() to count operators
 - numba.pydata.org https://www.youtube.com/watch?v=x58W9A2lnQc
 - If no float-symbols found, return (1) true or (2) an operator? 
+- Add a test to check how simplifying a tree with SymPy before evaluating it saves time or performance. 
 - sympy exprtools abchecken
 - Division-multiplicator node as non-len() chain input?
 - print(sympy.parsing.sympy_parser.transformations)

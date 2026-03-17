@@ -1,30 +1,26 @@
 """
 Visualization module for plagih GP Framework.
 
-This module provides unified tree visualization functionality for:
+Provides unified tree visualization functionality for:
 - Normal GP trees (Node-based)
 - Merged evaluation graphs (DAGs)
-- Multiple orientations and display modes
+- Paretofront candidate grids
+- LaTeX tree export (latex_renderer)
 """
 
 
 # Lazy imports to avoid circular dependencies
 def __getattr__(name):
     """Lazy import of visualization components."""
-    if name in _TREE_RENDERER_EXPORTS:
+    if name in _EXPORTS:
         from visualization import tree_renderer
 
         return getattr(tree_renderer, name)
 
-    if name in _VISUALIZE_TREES_EXPORTS:
-        from visualization import visualize_trees
-
-        return getattr(visualize_trees, name)
-
     raise AttributeError(f"module 'visualization' has no attribute {name!r}")
 
 
-_TREE_RENDERER_EXPORTS = {
+_EXPORTS = {
     # Core classes
     "TreeRenderer",
     "TreeRendererConfig",
@@ -39,12 +35,7 @@ _TREE_RENDERER_EXPORTS = {
     # High-level functions
     "render_tree",
     "render_merged_tree",
-    "visualize_tree",
-    "visualize_merged_graph",
-}
-
-_VISUALIZE_TREES_EXPORTS = {
     "visualize_paretofront",
 }
 
-__all__ = list(_TREE_RENDERER_EXPORTS | _VISUALIZE_TREES_EXPORTS)
+__all__ = list(_EXPORTS)

@@ -31,7 +31,6 @@ if str(_root) not in sys.path:
 
 import psutil
 
-import plagih.util as util
 from plagih.test.benchmarks.bench_diagnose_full import STRATEGIES, _create_gp, _fmt_ms
 from plagih.util import cpu_count_physical
 
@@ -331,7 +330,9 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=_DEFAULT_OUTPUT, help="Where to write the profiling summary")
     args = parser.parse_args()
 
-    util.PRINT_DUMMY = "ww"
+    from plagih.config import cfg
+
+    cfg.verbosity = "ww"
 
     pop_sizes = tuple(args.pops)
     worker_counts = _resolve_worker_counts(args.workers)

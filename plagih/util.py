@@ -12,22 +12,26 @@ import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 
+from plagih.config import cfg as _cfg
+
 # ---------------------------------------------------------------------------
-# Verbosity control via substring membership.
-# printpl(level, msg) prints only if `level in PRINT_DUMMY`.
-# "gg" ∈ "wwaaggiiffpp" → True   (generation summaries shown)
-# "gggg" ∈ "wwaaggiiffpp" → False (per-candidate detail suppressed)
-# Full verbosity: "wwwwaaaggggiiiifffpp"
-# See docs/PITFALLS.md P5.
+# Backwards-compatible module-level aliases.
+#
+# Legacy code reads/writes these globals directly, e.g.:
+#     from plagih.util import PRINT_DUMMY
+#     util.PRINT_DUMMY = "ww"
+#
+# They are initialised from PlagihConfig and kept in sync.
+# For new code, prefer ``from plagih.config import cfg`` directly.
 # ---------------------------------------------------------------------------
-PRINT_DUMMY = "wwaaggiiffpp"  # w=warning, a=action, g=generation, i=info, f=file, p=performance
+PRINT_DUMMY = _cfg.verbosity  # w=warning, a=action, g=generation, i=info, f=file, p=performance
 TEXT_NEWLINE = "============================================================"
-DEBUG_DUMMY = False  # dummy for debug-policy
-FLOAT_PRECISION = 3
-PLOTS_INTERVAL = 1
-BACKUP_INTERVAL = 10
+DEBUG_DUMMY = _cfg.debug
+FLOAT_PRECISION = _cfg.float_precision
+PLOTS_INTERVAL = _cfg.plots_interval
+BACKUP_INTERVAL = _cfg.backup_interval
 CHAIN_implement = "sfeh"  # used as placeholder for implementation-tasks
-TREE_MIN_PARSIMONY = 3
+TREE_MIN_PARSIMONY = _cfg.tree_min_parsimony
 
 # ---------------------------------------------------------------------------
 # Progress-print helpers: "start ..." gets overwritten by "done: ..." on the
@@ -40,7 +44,7 @@ _progress_line_open = False  # True while a start-line is waiting for its done-l
 def print_generation_start(gen_id: int, gen_end: int):
     """Print an in-place progress line that will be overwritten by *_done*."""
     global _progress_line_open
-    if "gg" not in PRINT_DUMMY:
+    if "gg" not in _cfg.verbosity:
         return
     ts = time.strftime("%H:%M:%S", time.localtime())
     msg = f"[{ts}] generation {gen_id}/{gen_end} start ..."
@@ -54,7 +58,7 @@ def print_generation_done(
 ):
     """Overwrite the start-line with the final summary."""
     global _progress_line_open
-    if "gg" not in PRINT_DUMMY:
+    if "gg" not in _cfg.verbosity:
         _progress_line_open = False
         return
     ts = time.strftime("%H:%M:%S", time.localtime())
@@ -314,7 +318,7 @@ def print_warning(msg_type, text):
     """
     # Fallback implementation
     try:
-        if msg_type not in PRINT_DUMMY:
+        if msg_type not in _cfg.verbosity:
             return
         if "w" in msg_type:
             print(f"{BColors.WARNING}Warning ({msg_type}): {text}{BColors.RESET_COLOR}")
@@ -505,7 +509,7 @@ def pickle_load(path: Path):
 def printez(message_type, text):
     """giving prints colours, accessible from everywhere.
     Now with logging backend support."""
-    if message_type not in PRINT_DUMMY:
+    if message_type not in _cfg.verbosity:
         return
 
     # Use printpl for all message types (it handles logging and colors)
@@ -548,10 +552,13 @@ class ColoredConsoleFormatter(logging.Formatter):
             elif "g" in msg_type:
                 # Generation info - use magenta for visibility
                 return f"{BColors.MAGENTA}[Gen] {message}{BColors.RESET_COLOR}"
+            elif "p" in msg_type:
+                # Performance/profiling info - neutral white
+                return f"{BColors.WHITE}{message}{BColors.RESET_COLOR}"
             elif "w" in msg_type:
                 return f"{BColors.WARNING}Warning: {message}{BColors.RESET_COLOR}"
             else:
-                return message
+                return f"{BColors.RESET}{message}{BColors.RESET_COLOR}"
         else:
             # Standard log levels
             if record.levelno >= logging.ERROR:
@@ -627,7 +634,7 @@ def printpl(msg_type: str, message_str: str):
         message_str: The message to log/print.
     """
 
-    if msg_type not in PRINT_DUMMY:
+    if msg_type not in _cfg.verbosity:
         return
 
     # If a progress start-line is open, move to a new line first
@@ -646,6 +653,8 @@ def printpl(msg_type: str, message_str: str):
         "gg": logging.INFO,
         "ggg": logging.INFO,
         "gggg": logging.INFO,
+        "p": logging.INFO,
+        "pp": logging.INFO,
         "w": logging.WARNING,
         "ww": logging.WARNING,
         "www": logging.WARNING,
@@ -681,7 +690,7 @@ def print_warning(msg_type: str, text: str):
     """
 
     try:
-        if msg_type not in PRINT_DUMMY:
+        if msg_type not in _cfg.verbosity:
             return
 
         # Create warning record with proper formatting

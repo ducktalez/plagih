@@ -293,6 +293,16 @@ class TestCandidate:
 class TestLookupTables:
     """Tests for lookup table functionality."""
 
+    @pytest.fixture(autouse=True)
+    def _enable_lut(self):
+        """LUT tests require lut_enabled=True (new default is False)."""
+        from plagih.config import cfg
+
+        old = cfg.lut_enabled
+        cfg.lut_enabled = True
+        yield
+        cfg.lut_enabled = old
+
     def test_lut_caches_fitness(self, gp_instance):
         """Tests LUT caches fitness values."""
         gp_instance.gen_create_initial()

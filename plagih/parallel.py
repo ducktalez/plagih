@@ -40,8 +40,8 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 import numpy as np
 import pandas as pd
 
+from plagih.config import cfg as _cfg
 from plagih.util import (
-    FLOAT_PRECISION,
     SympyError,
     TreeError,
     TreeLutError,
@@ -210,27 +210,19 @@ class PerformanceTracker:
         return out
 
     def print_summary(self):
-        """Print a human-readable performance summary."""
+        """Print a compact one-line performance summary per strategy."""
         summary = self.summary()
-        printpl("pp", "=== Strategy Performance Summary ===")
-        printpl("pp", f"  Generation total: {summary['generation_total_time']:.3f}s")
-        tags = sorted(set(t.rsplit("_", 2)[0].replace("strategy_", "") for t in summary if t.startswith("strategy_")))
-        # Deduplicate properly
-        seen_tags = set()
-        for tag in self._results:
-            if tag in seen_tags:
-                continue
-            seen_tags.add(tag)
-            avg = summary.get(f"strategy_{tag}_avg_time", 0)
-            med = summary.get(f"strategy_{tag}_median_time", 0)
+        parts = []
+        for tag in dict.fromkeys(self._results):  # insertion-order dedup
+            avg = summary.get(f"strategy_{tag}_avg_time", 0) * 1000
             ok = summary.get(f"strategy_{tag}_success", 0)
             fail = summary.get(f"strategy_{tag}_fails", 0)
-            rate = summary.get(f"strategy_{tag}_fail_rate", 0)
-            printpl(
-                "pp",
-                f"  {tag:20s}: avg={avg * 1000:6.1f}ms  med={med * 1000:6.1f}ms  "
-                f"ok={ok:3d}  fail={fail:3d}  fail_rate={rate:.1%}",
-            )
+            seg = f"{tag}: avg={avg:.0f}ms ok={ok}"
+            if fail:
+                seg += f" fail={fail}"
+            parts.append(seg)
+        total = summary["generation_total_time"]
+        printpl("pp", f"[Perf] {total:.2f}s | {' | '.join(parts)}")
 
     def reset(self):
         """Reset all tracking data for the next generation."""
@@ -661,7 +653,7 @@ def evaluate_tree_standalone(
                 np_results_raw = evotree.eval_predict_numpy_now(df_train)
                 np_results = eval_autocast(np_results_raw)
                 np_fitness = eval_error_metric(np_results, true_values)
-                np_fitness = round(np_fitness, FLOAT_PRECISION)
+                np_fitness = round(np_fitness, _cfg.float_precision)
 
                 if "nan" in str(np_fitness) or np_fitness != np_fitness or np_fitness == float("inf"):
                     err_txt = "NaN in results"

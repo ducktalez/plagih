@@ -46,6 +46,7 @@ import sympy
 from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.utilities.exceptions import ignore_warnings
 
+from plagih.config import cfg as _cfg
 from plagih.monitoring import GPMonitor
 from plagih.paretofront import *
 from plagih.tree_complexity.tree_edit_distance import *
@@ -150,6 +151,10 @@ class Node(ABC):
     repr_str: str = ""  # Representation format string.
     xtype: tuple = ()
     xtype_chain: Union[bool, float] = False
+
+    # Visualization defaults (overridden by subclass hierarchy)
+    _viz_color, _viz_border, _viz_text = "#ECEFF1", "#607D8B", "#263238"
+    _viz_shape = "rounded"  # ellipse | rounded | diamond
 
     # Tree-structure
     childs: List[Union["Node", Any]] = field(default_factory=list)  # Terminal-Nodes speichern Werte statt Nodes
@@ -839,7 +844,7 @@ class Node(ABC):
 
         else:
             if is_number(self):
-                val = round(random.gauss(self.get_value(), 0.1), FLOAT_PRECISION)
+                val = round(random.gauss(self.get_value(), 0.1), _cfg.float_precision)
 
                 #  self.childs[0] = val only this used to work
                 self.set_value(val)
@@ -1325,6 +1330,9 @@ def tree_simplification(_tree: Node, allow_chain: bool) -> Node:
     # print(f'After simplification:  {len(tree_copy)}\t{tree}')
 
     if len(tree_history[0]) < len(_tree):
+        # TODO(sfeh): Investigate why simplification can *grow* a tree.
+        #  Possible causes: sympy expanding terms, or tree-rebuild adding wrapper nodes.
+        #  Keep this print until root cause is understood.
         astr = string_remove_trailing_zeroes(str(tree_history[0].get_sympy_expr()))
         bstr = string_remove_trailing_zeroes(str(_tree.get_sympy_expr()))
         print(f"WHATHAPPENED SFEH\t{astr}")
@@ -1553,7 +1561,7 @@ class MathOperator(BaseOperator):
     trigonometric functions (Sin, Cos), and other numeric transformations.
     """
 
-    pass
+    _viz_color, _viz_border, _viz_text = "#FCE4EC", "#E91E63", "#880E4F"
 
 
 class LogicOperator(BaseOperator):
@@ -1562,7 +1570,8 @@ class LogicOperator(BaseOperator):
     Includes And, Or, Xor, Not operations.
     """
 
-    pass
+    _viz_color, _viz_border, _viz_text = "#F3E5F5", "#9C27B0", "#4A148C"
+    _viz_shape = "diamond"
 
 
 class RelationalOperator(BaseOperator):
@@ -1651,6 +1660,8 @@ class Boolean(Terminal):
     symfun = staticmethod(lambda *a: sympy.S.true if a[0] else ~sympy.S.true)  # sympy.logic.boolalg.Boolean
     np_fun = staticmethod(lambda x: bool(x))
     showme = "Boolean"
+    _viz_color, _viz_border, _viz_text = "#FFF3E0", "#FF9800", "#E65100"
+    _viz_shape = "ellipse"
 
     def eval_predict_numpy_now(self, _df: pd.DataFrame, *args) -> np.ndarray:
         val = bool(self.get_value())
@@ -1676,11 +1687,13 @@ class Number(Terminal):
     """
 
     xtype = ((), float)
-    symfun = staticmethod(lambda *a: sympy.Float(float(a[0]), FLOAT_PRECISION))
+    symfun = staticmethod(lambda *a: sympy.Float(float(a[0]), _cfg.float_precision))
     np_fun = staticmethod(lambda _x: float(_x))
     # sympy.Rational(0.1) -> 3602879701896397/36028797018963968
     # sympy.Rational('0.1') -> 1/10
     showme = "Number"
+    _viz_color, _viz_border, _viz_text = "#E8F5E9", "#4CAF50", "#1B5E20"
+    _viz_shape = "ellipse"
     # sfeh: problem with rational: Sqrt(8.0) -> 2*sqrt(6)/3. : actually is_atomic?
     # tflow = lambda a: tf.constant(a, dtype=tf.float32)
     # def eval_predict_numpy_now(self, df, *args) -> np.ndarray:
@@ -1718,6 +1731,8 @@ class Symbol(Terminal):
     np_fun = None
     xtype = ((), float)
     showme = "Symbol"
+    _viz_color, _viz_border, _viz_text = "#E3F2FD", "#2196F3", "#0D47A1"
+    _viz_shape = "ellipse"
 
     def eval_predict_numpy_now(self, _df: pd.DataFrame, *args) -> np.ndarray:
         return _df[str(self.get_value())].to_numpy(dtype=np.float64)
@@ -1759,6 +1774,7 @@ class Add(MathOperator, ChainableOp):
     sy_str = "({0} + {1})"
     formulae_str = "({} + {})"
     repr_str = "Add{},[{},{}]"
+    latex_inline = " + "
     xtype = ((float, float), float)
     symfun_chain = lambda a: sympy.Add(*a)
     np_fun_chain = lambda *a: np.sum(*a)  # n
@@ -1785,6 +1801,7 @@ class Mul(MathOperator, ChainableOp):
     showme = "Mul"  #
     sy_str = "({0} * {1})"
     repr_str = "Mul{},[{}, {}]"
+    latex_inline = r" \cdot "
     xtype = ((float, float), float)
     symfun_chain = lambda a: sympy.Mul(*a)
     sy_str_chain = "Mul({})"
@@ -1833,6 +1850,7 @@ class Pow(MathOperator):
     showme = "Pow"
     sy_str = "({0})**({1})"
     repr_str = "Pow{},[{},{}]"
+    latex_fmt = r"{{{}}}^{{{}}}"
     xtype = ((float, float), float)
 
 
@@ -1844,6 +1862,7 @@ class Abs(MathOperator):
     showme = "Abs"
     sy_str = "Abs({})"
     repr_str = "Abs{},[{}]"
+    latex_fmt = r"\left|{} \right|"
     xtype = ((float,), float)
 
 
@@ -2015,6 +2034,7 @@ class And(LogicOperator, ChainableOp):
     showme = "And"
     sy_str = "({0} & {1})"  # Arity-2 Formatierung
     repr_str = "And{},[{}, {}]"
+    latex_inline = r" \wedge "
     xtype = ((bool, bool), bool)
     xtype_input = bool
     expr_dmy = "And"
@@ -2039,6 +2059,7 @@ class Or(LogicOperator, ChainableOp):
     showme = "Or"
     sy_str = "({0}|{1})"
     repr_str = "Or{},[{}, {}]"
+    latex_inline = r" \vee "
     xtype = ((bool, bool), bool)
     xtype_chain = ([(bool,)], bool)
     xtype_input = bool
@@ -2061,6 +2082,7 @@ class Xor(LogicOperator, NoSymCapitalized, ChainableOp):
     showme = "Xor"
     sy_str = "Xor({}, {})"  # 'a ^ b'
     repr_str = "Xor{},[{}, {}]"
+    latex_inline = r" \oplus "
     xtype = ((bool, bool), bool)
     symfun_chain = lambda a: sympy.Xor(*a)
     np_fun_chain = lambda *a: np.logical_xor(*a)
@@ -2099,6 +2121,7 @@ class Min(BaseMinMax, ChainableOp):
     showme = "Min"
     sy_str = "Min({0},{1})"
     repr_str = "Min{},[{}, {}]"
+    latex_fmt = r"\min\left({}\right)"
     xtype = ((float, float), float)
     xtype_input = float
     symfun_chain = lambda a: sympy.Min(*a)
@@ -2119,6 +2142,7 @@ class Max(BaseMinMax, ChainableOp):
     showme = "Max"
     sy_str = "Max({0}, {1})"
     repr_str = "Max{},[{}, {}]"
+    latex_fmt = r"\max\left({}\right)"
     xtype = ((float, float), float)
     xtype_input = float
     symfun_chain = lambda a: sympy.Max(*a)
@@ -2225,6 +2249,7 @@ class Sub(MathOperator):
     showme = "Sub"
     sy_str = "({0} - {1})"
     repr_str = "Sub{},[{}, {}]"
+    latex_inline = " - "
 
 
 class Ifte(BaseOperator):
@@ -2347,6 +2372,7 @@ class Div(MathOperator):
     showme = "Div"
     sy_str = "({0}/{1})"
     repr_str = "Div{},[{}, {}]"
+    latex_inline = " / "
     xtype = ((float, float), float)
 
 
@@ -2362,6 +2388,7 @@ class Sqrt(MathOperator):
     showme = "Sqrt"
     sy_str = "sqrt({})"
     repr_str = "Sqrt{},[{}, {}]"
+    latex_fmt = r"\sqrt{{{}}}"
 
 
 class Usub(MathOperator):
@@ -2808,11 +2835,11 @@ class NodeSelect:
         if xt == float:
             # 50/50 chance: normal distribution or random integer
             if random.random() < 0.5:
-                _v = round(random.normalvariate(1, 1), FLOAT_PRECISION)
+                _v = round(random.normalvariate(1, 1), _cfg.float_precision)
             else:
-                _v = round(random.randint(1, 20), FLOAT_PRECISION)
-            _v = sympy.Float(_v, FLOAT_PRECISION)  # discuss allow "rational" inputs? 1/3, 3/4, ...
-            return Number(_v)  # round FLOAT_PRECISION was here
+                _v = round(random.randint(1, 20), _cfg.float_precision)
+            _v = sympy.Float(_v, _cfg.float_precision)  # discuss allow "rational" inputs? 1/3, 3/4, ...
+            return Number(_v)  # round float_precision was here
         else:
             _v = random.choice((True, False))
             return Boolean(_v)
@@ -3460,8 +3487,8 @@ class ExplainableGP:
         allow_chain: bool = False,
         target_column: str = "action",
         verbose: bool = True,
-        parallel: Union[bool, int] = False,
-        enable_analysis: bool = True,
+        parallel: Union[bool, int] = None,
+        enable_analysis: Optional[bool] = None,
     ):
         """Initialize the GP system.
 
@@ -3475,14 +3502,24 @@ class ExplainableGP:
             eval_error_metric: Error function(pred, true) -> float. Default: RMSE.
             allow_chain: Whether to allow chained operators. Default: False.
             target_column: Name of target column in df_train. Default: 'action'.
-            verbose: Print initialization info. Default: True.
-            parallel: False=sequential, True=auto-detect CPUs, int=explicit worker count.
-            enable_analysis: Enable visualization, monitoring plots, backups, and
-                merged tree rendering during evolution. Set to False for benchmarks
-                to get authentic timing without IO/rendering overhead. Default: True.
-                Note: Lightweight metric recording (GPMonitor) always runs regardless.
-                # TODO: Future idea — run analysis in a separate background process
-                #       so that the main evolution loop is never blocked by IO/rendering.
+            verbose: Print info. Default: True.
+            parallel: None=use .env default, False/0=sequential,
+                True=auto-detect, int=explicit workers.
+            enable_analysis: Enable plots, backups, visualizations.
+                None=use .env default. Set to False for benchmarks.
+
+        Returns:
+            Configured ExplainableGP instance.
+
+        Example:
+            gp = ExplainableGP.create(
+                symbols=['x', 'y'],
+                df_train=data,
+                rootdir='./run_001',
+                preset='math_simple',
+                pop_max_size=50,
+                gen_end=20
+            )
         """
         self.time_start = time.perf_counter()
 
@@ -3504,8 +3541,9 @@ class ExplainableGP:
 
         self.allow_chain = allow_chain
 
-        # Analysis control: when False, skips plots, backups, and merged tree rendering
-        self.enable_analysis = enable_analysis
+        # Analysis control: when False, skips plots, backups, and merged tree rendering.
+        # None → resolve from .env / PlagihConfig
+        self.enable_analysis = enable_analysis if enable_analysis is not None else _cfg.visualization
 
         if verbose:
             print(
@@ -3528,10 +3566,14 @@ class ExplainableGP:
         self.monitor = GPMonitor()
 
         # Parallel execution config
+        # None → resolve from .env / PlagihConfig
 
         from plagih.parallel import BUILTIN_STRATEGIES
         from plagih.util import cpu_count_physical
 
+        if parallel is None:
+            # Resolve from config: 0 = sequential
+            parallel = _cfg.parallel
         if parallel is True:
             self._parallel_workers = cpu_count_physical()
         elif isinstance(parallel, int) and parallel > 0:
@@ -3646,10 +3688,13 @@ class ExplainableGP:
         allow_chain: bool = False,
         target_column: str = "action",
         verbose: bool = True,
-        parallel: Union[bool, int] = False,
-        enable_analysis: bool = True,
+        parallel: Union[bool, int] = None,
+        enable_analysis: Optional[bool] = None,
     ) -> "ExplainableGP":
         """Factory method for easy GP creation with sensible defaults.
+
+        All feature-flag defaults (parallel, enable_analysis, …) are resolved
+        from the ``.env`` / ``PlagihConfig`` unless explicitly overridden here.
 
         Args:
             symbols: List of input variable names or sympy Symbols.
@@ -3666,8 +3711,10 @@ class ExplainableGP:
             allow_chain: Allow chained operators. Default: False.
             target_column: Target column name. Default: 'action'.
             verbose: Print info. Default: True.
-            enable_analysis: Enable plots, backups, visualizations. Default: True.
-                Set to False for benchmarks to get authentic timing.
+            parallel: None=use .env default, False/0=sequential,
+                True=auto-detect, int=explicit workers.
+            enable_analysis: Enable plots, backups, visualizations.
+                None=use .env default. Set to False for benchmarks.
 
         Returns:
             Configured ExplainableGP instance.
@@ -3839,8 +3886,8 @@ class ExplainableGP:
 
         self.pop_genepool = self.pop_next[:]
         # Pitfall P3: print_pop calls get_sympy_expr() per candidate (~40ms/tree).
-        # Guarded by "gggg" in PRINT_DUMMY - skipped at default verbosity.
-        if "gggg" in PRINT_DUMMY:
+        # Guarded by "gggg" in verbosity - skipped at default verbosity.
+        if "gggg" in _cfg.verbosity:
             print_pop(self.pop_next)
         self.pop_next = []
         self.analyze_generation(pareto_updated=pareto_updated, _suppress_print=_suppress_analyze_print)
@@ -3969,22 +4016,15 @@ class ExplainableGP:
                 lut_symex=self.lut_symex_fitness,
             )
 
-        # Store tracker for inspection
-        self._performance_tracker = tracker
+        # Store candidates as next population
+        self.pop_next = candidates
 
-        # Add candidates to pop_next
-        for candidate in candidates:
-            self.pop_next_append(candidate)
-
-        # Finalize generation (same as end_generation)
-        self.end_generation(_suppress_analyze_print=True)
-
-        # Progress done — overwrites the start-line
-        gen_time_ms = (time.perf_counter() - self.time_genstart) * 1000
-        # time_genstart was reset in end_generation, so use tracker time
+        # Progress done — overwrites the start-line.
+        # Must happen BEFORE end_generation() because end_generation may
+        # trigger plots/backups/prints that would interrupt the \r line.
         tracker_total_ms = tracker.summary().get("generation_total_time", 0.0) * 1000
         print_generation_done(
-            gen_id=self.gen_id - 1,  # gen_id was already incremented in end_generation
+            gen_id=self.gen_id,
             gen_end=self.gen_end,
             time_ms=tracker_total_ms,
             genepool=len(self.pop_genepool),
@@ -3996,6 +4036,14 @@ class ExplainableGP:
 
         # Print detailed performance summary (only at higher verbosity)
         tracker.print_summary()
+
+        # Finalize generation (Pareto update, monitoring, plots, backups).
+        # This may print file/plot messages — safe now because progress line
+        # is already finished.
+        self.end_generation(_suppress_analyze_print=True)
+
+        # Store tracker for inspection
+        self._performance_tracker = tracker
 
     def gen_create_initial(self, origin_tree=None):
         """Creates the initial population (generation 0).
@@ -4064,12 +4112,12 @@ class ExplainableGP:
         """
         evotree = ct.get_evotree()
         # from visualization.pygraphviz import render_pygraphviz
-        if force and ct.get_parsim() < TREE_MIN_PARSIMONY:
+        if force and ct.get_parsim() < _cfg.tree_min_parsimony:
             # raise ValueError(f'Tree not complex enough for population, sfeh')
             return
         # Guard expensive debug formatting locally: f-strings are evaluated
-        # before printpl() can check PRINT_DUMMY.
-        if "gggg" in PRINT_DUMMY:
+        # before printpl() can check verbosity.
+        if "gggg" in _cfg.verbosity:
             printpl("gggg", f"|->{evotree.len_nodecount_fair():2.0f}: {evotree.str_as_expr()}")
         self.pop_next.append(ct)
 
@@ -4124,7 +4172,6 @@ class ExplainableGP:
                     if len(fails_list) > 2 * n_success + 5:  # allow more fails: fails_list > n
                         print_caution(
                             f"Evolution fails too often: {tag}, failed: {len(fails_list)}x. ({n_success} ok)."
-                            f"\n{fails_list}"
                         )
                         return  # optional raise
 
@@ -4153,8 +4200,8 @@ class ExplainableGP:
         return loop
 
     def tree_to_candidate(
-        self, evotree: Node, origin_tree=None, tag=None, raise_if_useless=True, compare_with_sympy=DEBUG_DUMMY
-    ):  # DEBUG
+        self, evotree: Node, origin_tree=None, tag=None, raise_if_useless=True, compare_with_sympy=None
+    ):  # compare_with_sympy defaults to cfg.debug
         """Converts a tree to a fully evaluated Candidate.
 
         Process:
@@ -4183,13 +4230,15 @@ class ExplainableGP:
         """
 
         # Make this tree usable for evaluation
+        if compare_with_sympy is None:
+            compare_with_sympy = _cfg.debug
         evotree.force_input_node(self.evolve)
         evotree = self.evolve.evolve_prune_tree(evotree)
         evotree.repair_depth()
 
         tree_id = evotree.get_lut_id()
 
-        if tree_id in self.lut_tree_infos:
+        if _cfg.lut_enabled and tree_id in self.lut_tree_infos:
             sy_expr = self.lut_tree_infos[tree_id].get("sy_expr")  # Attention: can be "False"
             parsimony = self.lut_tree_infos[tree_id].get("parsimony")
             fitness = self.lut_tree_infos[tree_id].get("fitness")
@@ -4198,21 +4247,24 @@ class ExplainableGP:
                 raise TreeLutError(f"Tree LUT Entry implies Problem: {_err}")
         else:
             # requires: valid, sympy expr, parsimony, fitness
-            self.lut_tree_infos[tree_id] = {}  # empty placeholder, if correctly filled later
+            if _cfg.lut_enabled:
+                self.lut_tree_infos[tree_id] = {}  # empty placeholder, if correctly filled later
 
             parsimony = eval_parsimony(evotree, self.evolve.complexity_metric, origin_tree=origin_tree)
             if raise_if_useless and parsimony > self.evolve.nodes_max:
                 err_txt = f"Tree too complex: {parsimony} > {self.evolve.nodes_max}"
-                self.lut_tree_infos[tree_id]["error"] = err_txt
+                if _cfg.lut_enabled:
+                    self.lut_tree_infos[tree_id]["error"] = err_txt
                 raise TreeSizeError(err_txt)
             try:
                 sy_expr = evotree.get_sympy_expr()
             except SympyError as e:
                 print_warning("www", f"Could not create sympy expression for tree: {e}")
-                self.lut_tree_infos[tree_id]["error"] = str(e)
+                if _cfg.lut_enabled:
+                    self.lut_tree_infos[tree_id]["error"] = str(e)
                 raise
 
-            if sy_expr in self.lut_symex_fitness:
+            if _cfg.lut_enabled and sy_expr in self.lut_symex_fitness:
                 # other tree might have same expression -> lookup fitness
                 fitness = self.lut_symex_fitness[sy_expr]
             else:
@@ -4227,7 +4279,7 @@ class ExplainableGP:
                         )  # exception? -> check np.isnan(sym_results).any()
                         np_results = self.eval_autocast(np_results_raw)
                         np_fitness = self.eval_error_metric(np_results, true_values)
-                        np_fitness = round(np_fitness, FLOAT_PRECISION)
+                        np_fitness = round(np_fitness, _cfg.float_precision)
 
                         if (
                             "nan" in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf
@@ -4339,7 +4391,7 @@ class ExplainableGP:
                             sym_results_raw = eval_predict_sympyBatch(sy_expr, self.df_train, self.evolve.symbol_list)
                             sym_results = self.eval_autocast(sym_results_raw)
                             sym_fitness = self.eval_error_metric(sym_results, self.df_train["action"])
-                            sym_fitness = round(sym_fitness, FLOAT_PRECISION)
+                            sym_fitness = round(sym_fitness, _cfg.float_precision)
 
                             perf_t[3] = time.perf_counter()
 
@@ -4377,19 +4429,23 @@ class ExplainableGP:
                                 result_diffs = sum(sym_results_raw - np_results_raw)
                                 print(f"Different results in evaluation: {result_diffs} sy-expr: ({sy_expr})")
 
-                            self.lut_tree_infos[tree_id]["fitness-sympy"] = sym_fitness
+                            if _cfg.lut_enabled:
+                                self.lut_tree_infos[tree_id]["fitness-sympy"] = sym_fitness
                 except (SympyError, TreeError, ValueError) as e:
                     print_warning("wwww", f"Could not evaluate fitness for tree {sy_expr}: {e}")
-                    self.lut_tree_infos[tree_id]["error"] = str(e)
+                    if _cfg.lut_enabled:
+                        self.lut_tree_infos[tree_id]["error"] = str(e)
                     raise
 
                 fitness = np_fitness
 
-                self.lut_symex_fitness[sy_expr] = fitness
+                if _cfg.lut_enabled:
+                    self.lut_symex_fitness[sy_expr] = fitness
 
-            self.lut_tree_infos[tree_id]["sy_expr"] = sy_expr
-            self.lut_tree_infos[tree_id]["parsimony"] = parsimony
-            self.lut_tree_infos[tree_id]["fitness"] = fitness
+            if _cfg.lut_enabled:
+                self.lut_tree_infos[tree_id]["sy_expr"] = sy_expr
+                self.lut_tree_infos[tree_id]["parsimony"] = parsimony
+                self.lut_tree_infos[tree_id]["fitness"] = fitness
 
         candidate = Candidate(evotree, fitness=fitness, parsimony=parsimony, tag=tag)
         return candidate
@@ -4445,7 +4501,7 @@ class ExplainableGP:
         self.monitor.plot_performance(self.rootdir / "monitoring.png")
         plot_paretofront(self.paretofront, self.rootdir, self.evolve.nodes_max)
 
-        from visualization.visualize_trees import visualize_paretofront
+        from visualization.tree_renderer import visualize_paretofront
 
         visualize_paretofront(self.paretofront, filename="paretofront_trees", output_dir=self.rootdir)
 
@@ -4547,7 +4603,7 @@ class ExplainableGP:
             )
 
         # Generate merged population tree visualization
-        if self.enable_analysis:
+        if self.enable_analysis and _cfg.merged_tree:
             self._save_merged_population_tree()
 
         printpl("ggg", f"--- Generation {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}. ---")
@@ -4557,10 +4613,10 @@ class ExplainableGP:
         Every x generations, save a backup and/or save plots
         """
         if self.enable_analysis:
-            if self.gen_id >= PLOTS_INTERVAL and self.gen_id % PLOTS_INTERVAL == 0:
+            if self.gen_id >= _cfg.plots_interval and self.gen_id % _cfg.plots_interval == 0:
                 self.evoloop_monitoring_plots()
 
-            if (self.gen_id >= BACKUP_INTERVAL and self.gen_id % BACKUP_INTERVAL == 0) or self.gen_id == 10:
+            if (self.gen_id >= _cfg.backup_interval and self.gen_id % _cfg.backup_interval == 0) or self.gen_id == 10:
                 self.backup_save()
 
     def run_custom_exit_condition(self):

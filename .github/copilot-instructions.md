@@ -23,8 +23,8 @@ crossover, and simplification, evaluated against training data.
 | `plagih/evaluation_context.py` | Unified Evaluation Context System for Plagih GP Trees. (3C/5F) |
 | `plagih/population_merge.py` | Population Merge Module for plagih GP Framework (3C/8F) |
 | `plagih/util.py` | *(no docstring)* (9C/31F) |
-| `visualization/tree_renderer.py` | Unified Tree Visualization Module for plagih GP Framework (9C/10F) |
-| `visualization/visualize_trees.py` | Tree Visualization for plagih GP Framework (0C/7F) |
+| `visualization/tree_renderer.py` | Unified Tree Visualization Module for plagih GP Framework (9C/13F) |
+| `visualization/visualize_trees.py` | *(file not found)* |
 <!-- AUTOGEN:MODULE_MAP:END -->
 
 ## Node hierarchy (auto-generated from `trees.py`)
@@ -54,6 +54,12 @@ Mixins: ChainableOp, CustomOperator, NoSymCapitalized, PleaseUsePartnerOp
 ```
 <!-- AUTOGEN:NODE_HIERARCHY_COMPACT:END -->
 
+**Node rendering attributes** (on base classes, no `isinstance` in renderers):
+- `_viz_color`, `_viz_border`, `_viz_text`, `_viz_shape` — set on `MathOperator`, `LogicOperator`, `Number`, `Symbol`, `Boolean`
+- `latex_fmt` — format string for special LaTeX (e.g. `Pow`, `Abs`, `Sqrt`, `Min`, `Max`)
+- `latex_inline` — infix separator for LaTeX (e.g. `Add → " + "`, `Mul → r" \cdot "`)
+- When adding a new node type: set these on the class or its base — **no** renderer code changes needed.
+
 ## GP lifecycle (order matters)
 
 ```
@@ -82,9 +88,12 @@ See `docs/PITFALLS.md` for the full list with examples.
    **any** deserialization — including `deepcopy`, worker IPC, `backup_load`.
 2. **Windows parallel**: `ProcessPoolExecutor` pickles everything.
    Strategies and error metrics must be **top-level functions** (no lambdas).
-3. **`PRINT_DUMMY`** (`util.py`): Verbosity via substring membership.
-   `"gg" in "wwaaggiiffpp"` → True, `"gggg"` → False.
+3. **`.env` / `PlagihConfig`** (`config.py`): All framework defaults are loaded
+   from `.env` via `PlagihConfig` singleton (`cfg`).  Verbosity still uses
+   substring membership (`"gg" in cfg.verbosity`).
    Always use `printpl("gg", ...)` instead of `print()`.
+   Legacy globals (`PRINT_DUMMY`, `DEBUG_DUMMY`) exist in `util.py` for
+   backwards compat but read from `cfg` at import time.
 4. **Benchmarking**: `enable_analysis=False` disables plots/backups/rendering
    during evolution. Without it, IO overhead distorts timing.
 5. **`get_sympy_expr()` is slow**: Never call it in hot paths (loops over
@@ -98,6 +107,12 @@ See `docs/PITFALLS.md` for the full list with examples.
   **code smells**, or **questionable patterns** discovered along the way —
   even if unrelated to the current task. Include a brief improvement
   suggestion for each finding.
+- **Don't silently fix ambiguous findings**: Only fix a discovered bug
+  directly if it is **unambiguously wrong** (e.g. missing import, off-by-one,
+  typo). If the intent is unclear, the code looks like an open investigation,
+  or a `print()`/comment suggests ongoing work — **ask first** or add a
+  `# TODO` instead of removing/rewriting it. Debug prints with markers like
+  `WHATHAPPENED`, `sfeh`, `# discuss` are investigation aids, not dead code.
 - **Raise concerns**: If an approach seems risky, fragile, or
   architecturally problematic, voice the concern explicitly before or
   alongside the implementation.

@@ -5,6 +5,9 @@ This file needs to be here, empty. Lel!
 Exports for convenient access to plagih functionality.
 """
 
+# Centralized configuration (PlagihConfig singleton)
+from plagih.config import PlagihConfig, cfg
+
 # Parallel execution engine
 # Population merge functionality
 # Unified evaluation context (optional, backward-compatible)
@@ -39,6 +42,7 @@ def __getattr__(name):
     _VIZ_EXPORTS = {
         "render_tree",
         "render_merged_tree",
+        "visualize_paretofront",
         "TreeRenderer",
         "TreeRendererConfig",
         "Orientation",

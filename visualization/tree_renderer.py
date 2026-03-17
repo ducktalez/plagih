@@ -21,10 +21,11 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.lines import Line2D
 from matplotlib.patches import FancyBboxPatch
 
-from plagih.util import printpl
+from plagih.util import path_make_dir, print_warning, printez, printpl
 
 if TYPE_CHECKING:
     from plagih.population_merge import MergedEvaluationGraph, MergedNode
@@ -513,35 +514,16 @@ def get_node_label_simple(node: Node) -> str:
     return node.showme or type(node).__name__
 
 
+_SHAPE_MAP = {"ellipse": NodeShape.ELLIPSE, "diamond": NodeShape.DIAMOND, "rounded": NodeShape.ROUNDED_RECTANGLE}
+
+
 def get_node_style_for_type(node: Node) -> NodeStyle:
-    """Get style based on node type."""
-    from plagih.trees import Boolean, LogicOperator, MathOperator, Number, Symbol
-
-    if node.is_term():
-        if isinstance(node, Number):
-            return NodeStyle(
-                fill_color="#E8F5E9", border_color="#4CAF50", text_color="#1B5E20", shape=NodeShape.ELLIPSE
-            )
-        elif isinstance(node, Symbol):
-            return NodeStyle(
-                fill_color="#E3F2FD", border_color="#2196F3", text_color="#0D47A1", shape=NodeShape.ELLIPSE
-            )
-        elif isinstance(node, Boolean):
-            return NodeStyle(
-                fill_color="#FFF3E0", border_color="#FF9800", text_color="#E65100", shape=NodeShape.ELLIPSE
-            )
-    else:
-        if isinstance(node, MathOperator):
-            return NodeStyle(
-                fill_color="#FCE4EC", border_color="#E91E63", text_color="#880E4F", shape=NodeShape.ROUNDED_RECTANGLE
-            )
-        elif isinstance(node, LogicOperator):
-            return NodeStyle(
-                fill_color="#F3E5F5", border_color="#9C27B0", text_color="#4A148C", shape=NodeShape.DIAMOND
-            )
-
+    """Get style from node's _viz_* class attributes (set on base classes in trees.py)."""
     return NodeStyle(
-        fill_color="#ECEFF1", border_color="#607D8B", text_color="#263238", shape=NodeShape.ROUNDED_RECTANGLE
+        fill_color=node._viz_color,
+        border_color=node._viz_border,
+        text_color=node._viz_text,
+        shape=_SHAPE_MAP.get(getattr(node, "_viz_shape", "rounded"), NodeShape.ROUNDED_RECTANGLE),
     )
 
 
@@ -1261,6 +1243,7 @@ def render_tree(
         plt.close(fig)
 
     print(f"Tree saved to: {output_path}")
+    # TODO(sfeh): should use printpl("f", ...) but render_tree is also used standalone
     return str(output_path)
 
 
@@ -1333,93 +1316,213 @@ def render_merged_tree(
 
 
 # =============================================================================
-# Backward-Compatible Wrappers (for existing code)
+# Paretofront Visualization (moved from visualize_trees.py)
 # =============================================================================
 
 
-def visualize_tree(
-    root: Node,
-    filename: str = "gp_tree",
-    output_dir: Optional[str] = None,
-    view: bool = False,
-    format: str = "png",
-    rankdir: str = "TB",
-    cleanup: bool = True,
-    backend: str = "auto",
-) -> str:
+def _get_tree_depth(node: Node) -> int:
+    """Calculate the depth of a tree."""
+    if node.is_term():
+        return 1
+    children = node.get_childs()
+    if not children:
+        return 1
+    return 1 + max(_get_tree_depth(c) for c in children)
+
+
+def _get_tree_width(node: Node) -> int:
+    """Calculate the width (number of leaves) of a tree."""
+    if node.is_term():
+        return 1
+    children = node.get_childs()
+    if not children:
+        return 1
+    return sum(_get_tree_width(c) for c in children)
+
+
+def _compute_simple_tree_layout(root: Node) -> tuple:
+    """Compute a simple hierarchical tree layout for subplot rendering.
+
+    Returns (positions, labels, colors, edges) dicts keyed by integer node id.
+    Uses get_node_label_simple / get_node_style_for_type for consistency.
     """
-    Backward-compatible wrapper for visualize_tree from visualize_trees.py.
+    positions, labels, colors, edges = {}, {}, {}, []
+    counter = [0]
 
-    Note: 'backend' and 'format' parameters are ignored (always uses matplotlib/PNG).
-    """
-    return render_tree(tree=root, filename=filename, output_dir=output_dir, orientation=rankdir, show=view)
+    def get_subtree_width(node: Node) -> int:
+        if node.is_term():
+            return 1
+        children = node.get_childs()
+        return sum(get_subtree_width(c) for c in children) if children else 1
 
+    def layout_node(node: Node, depth: int, left_bound: float, parent_id=None):
+        nid = counter[0]
+        counter[0] += 1
+        labels[nid] = get_node_label_simple(node)
+        colors[nid] = get_node_style_for_type(node).fill_color
+        if parent_id is not None:
+            edges.append((parent_id, nid))
+        children = node.get_childs() if not node.is_term() else []
+        if not children:
+            positions[nid] = (left_bound + 0.5, -depth)
+            return nid, 1
+        total_width, child_xs, cur = 0, [], left_bound
+        for child in children:
+            cid, cw = layout_node(child, depth + 1, cur, nid)
+            child_xs.append(positions[cid][0])
+            cur += cw
+            total_width += cw
+        positions[nid] = ((child_xs[0] + child_xs[-1]) / 2, -depth)
+        return nid, total_width
 
-def visualize_merged_graph(
-    graph: MergedEvaluationGraph,
-    output_path: str = None,
-    show: bool = False,
-    orientation: str = "BT",
-    display_mode: str = "label",
-) -> Optional[str]:
-    """
-    Backward-compatible wrapper for visualize_merged_graph.
-    """
-    if output_path:
-        output_dir = Path(output_path).parent
-        filename = Path(output_path).stem
-    else:
-        output_dir = None
-        filename = "merged_graph"
-
-    return render_merged_tree(
-        graph=graph,
-        filename=filename,
-        output_dir=output_dir,
-        orientation=orientation,
-        display_mode=display_mode,
-        show=show,
-    )
-
-
-# =============================================================================
-# Demo / Test
-# =============================================================================
+    layout_node(root, 0, 0)
+    return positions, labels, colors, edges
 
 
-def _demo():
-    """Demonstrate the tree renderer with example trees."""
-    import sympy
+def _render_tree_on_axes(ax, tree: Node, node_size_scale: float = 1.0):
+    """Render a single tree onto a matplotlib Axes (for subplot grids)."""
+    positions, labels, colors, edges = _compute_simple_tree_layout(tree)
+    tree_width = _get_tree_width(tree)
+    node_size = max(0.3, min(0.5, node_size_scale / max(tree_width, 1)))
 
-    from plagih.trees import Add, Cos, Mul, Number, Sin, Symbol
+    for pid, cid in edges:
+        x1, y1 = positions[pid]
+        x2, y2 = positions[cid]
+        ax.plot([x1, x2], [y1, y2], "-", linewidth=1.2, zorder=1, color="#666666")
 
-    print("=" * 60)
-    print("Tree Renderer Demo")
-    print("=" * 60)
-
-    # Example tree: (x + 2) * sin(y)
-    tree = Mul(Add(Symbol(sympy.Symbol("x")), Number(2)), Sin(Symbol(sympy.Symbol("y"))))
-
-    # Test different orientations
-    for orient in ["TB", "BT", "LR", "RL"]:
-        path = render_tree(
-            tree, filename=f"demo_tree_{orient.lower()}", orientation=orient, title=f"Example Tree ({orient})"
+    for nid, (x, y) in positions.items():
+        label = labels[nid]
+        lw = max(node_size, len(label) * 0.08)
+        patch = mpatches.FancyBboxPatch(
+            (x - lw / 2, y - node_size / 4),
+            lw,
+            node_size / 2,
+            boxstyle=mpatches.BoxStyle("Round", pad=0.02),
+            facecolor=colors[nid],
+            edgecolor="#333333",
+            linewidth=1.0,
+            zorder=2,
         )
-        print(f"  Created: {path}")
+        ax.add_patch(patch)
+        fs = max(6, min(9, 72 / max(len(label), 1)))
+        ax.text(x, y, label, ha="center", va="center", fontsize=fs, fontweight="bold", zorder=3)
 
-    # More complex tree
-    tree2 = Add(
-        Mul(Number(3), Symbol(sympy.Symbol("x"))),
-        Cos(Add(Symbol(sympy.Symbol("y")), Number(1))),
-        Sin(Mul(Symbol(sympy.Symbol("z")), Number(2))),
-    )
-
-    render_tree(tree2, filename="demo_complex", title="Complex Expression")
-
-    print("\n" + "=" * 60)
-    print("Demo complete! Check tree_output/ folder for images.")
-    print("=" * 60)
+    if positions:
+        xs = [p[0] for p in positions.values()]
+        ys = [p[1] for p in positions.values()]
+        mx = max(0.5, (max(xs) - min(xs)) * 0.1)
+        my = max(0.5, (max(ys) - min(ys)) * 0.1)
+        ax.set_xlim(min(xs) - mx, max(xs) + mx)
+        ax.set_ylim(min(ys) - my, max(ys) + my)
+    ax.set_aspect("equal")
+    ax.axis("off")
 
 
-if __name__ == "__main__":
-    _demo()
+def _visualize_single_tree_to_file(
+    tree: Node,
+    filename: str,
+    output_dir: Path,
+    title: str = "",
+    figsize=(8, 6),
+    dpi: int = 150,
+) -> str:
+    """Render a single tree to a PNG file with dynamic sizing."""
+    depth = _get_tree_depth(tree)
+    width = _get_tree_width(tree)
+    fig_w = max(figsize[0], width * 1.2)
+    fig_h = max(figsize[1], depth * 1.5)
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+    _render_tree_on_axes(ax, tree, node_size_scale=3.0)
+    if title:
+        ax.set_title(title, fontsize=12, fontweight="bold")
+    plt.tight_layout()
+    output_path = output_dir / f"{filename}.png"
+    plt.savefig(output_path, dpi=dpi, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+    return str(output_path)
+
+
+def visualize_paretofront(
+    paretofront: list,
+    filename: str = "paretofront_trees",
+    output_dir: Optional[Path] = Path.cwd(),
+    figsize_per_tree: tuple = (5, 4),
+    dpi: int = 150,
+    max_cols: int = 4,
+    save_individual: bool = True,
+):
+    """Visualize all Paretofront candidates in a single combined image.
+
+    Args:
+        paretofront: List of Candidate objects from the Paretofront.
+        filename: Output filename (without extension).
+        output_dir: Directory for output (default: cwd).
+        figsize_per_tree: Size (width, height) for each individual tree subplot.
+        dpi: Resolution of the output image.
+        max_cols: Maximum number of columns in the grid.
+        save_individual: If True, also save each tree as individual image.
+
+    Returns:
+        Path to the generated image file.
+    """
+    if not paretofront:
+        print_warning("w", "Paretofront is empty, nothing to visualize.")
+        return
+
+    output_dir = path_make_dir(output_dir / "tree_output")
+    sorted_front = sorted(paretofront, key=lambda c: (c.get_parsim(), c.get_fitness()))
+
+    # Save individual images
+    if save_individual:
+        individual_dir = output_dir / "paretoCandidates"
+        individual_dir.mkdir(parents=True, exist_ok=True)
+        for idx, cand in enumerate(sorted_front):
+            tree = cand.get_evotree()
+            p, f = cand.get_parsim(), cand.get_fitness()
+            _visualize_single_tree_to_file(
+                tree,
+                f"pareto_{idx + 1:03d}_P{p:.0f}_F{f:.4g}",
+                individual_dir,
+                title=f"P={p:.0f}, F={f:.4g}",
+                dpi=dpi,
+            )
+        printez("ff", f"Individual Paretofront trees saved to: {individual_dir}")
+
+    # Grid layout
+    n_trees = len(paretofront)
+    n_cols = min(n_trees, max_cols)
+    n_rows = (n_trees + n_cols - 1) // n_cols
+
+    max_depth = max(_get_tree_depth(c.get_evotree()) for c in sorted_front)
+    max_width = max(_get_tree_width(c.get_evotree()) for c in sorted_front)
+    w_scale = max(1.0, max_width / 4)
+    h_scale = max(1.0, max_depth / 3)
+    fig_w = max(8, figsize_per_tree[0] * n_cols * w_scale)
+    fig_h = max(6, figsize_per_tree[1] * n_rows * h_scale)
+
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(fig_w, fig_h))
+    if n_trees == 1:
+        axes = np.array([[axes]])
+    elif n_rows == 1:
+        axes = axes.reshape(1, -1)
+    elif n_cols == 1:
+        axes = axes.reshape(-1, 1)
+
+    for idx, cand in enumerate(sorted_front):
+        ax = axes[idx // n_cols, idx % n_cols]
+        _render_tree_on_axes(ax, cand.get_evotree(), node_size_scale=2.0)
+        p, f = cand.get_parsim(), cand.get_fitness()
+        ax.set_title(f"P={p:.0f}, F={f:.4g}", fontsize=10, fontweight="bold")
+
+    # Hide unused subplots
+    for idx in range(n_trees, n_rows * n_cols):
+        axes[idx // n_cols, idx % n_cols].axis("off")
+
+    plt.suptitle(f"Paretofront ({n_trees} candidates)", fontsize=14, fontweight="bold")
+    plt.tight_layout()
+    output_path = output_dir / f"{filename}.png"
+    plt.savefig(output_path, dpi=dpi, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+
+    printpl("ff", f"Paretofront visualization saved to: {output_path}")
+    return str(output_path)

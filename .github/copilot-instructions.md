@@ -16,7 +16,7 @@ crossover, and simplification, evaluated against training data.
 <!-- AUTOGEN:MODULE_MAP:START -->
 | Module | Responsibility |
 |---|---|
-| `plagih/trees.py` | plagih_tree contain a new implementation of trees that we use in genetic programming to display a program. (67C/22F) |
+| `plagih/trees.py` | plagih_tree contain a new implementation of trees that we use in genetic programming to display a program. (67C/24F) |
 | `plagih/parallel.py` | Parallel execution engine for plagih GP. (5C/33F) |
 | `plagih/paretofront.py` | Pareto-front dominance filter for GP candidates. (0C/6F) |
 | `plagih/monitoring.py` | GP Monitoring Module (2C/0F) |
@@ -108,6 +108,11 @@ See `docs/PITFALLS.md` for the full list with examples.
    Mutations invalidate ancestor ordering — re-run in `tree_to_candidate()`.
    Sort key, performance, and invalidation trade-offs are open for discussion
    (see `PITFALLS.md` P10).
+9. **Tree edit distance modes**: `compute_ted()` supports `"structural"`,
+   `"full"`, and `"structural_plus_leaf_diff"` modes via `TedConfig`.
+   `eval_parsimony` uses `"structural"`. For diversity, use `"full"`.
+   The external `apted` package is **no longer a dependency**.
+   `apted_distance()` and `get_apted_notation()` are deprecated.
 
 ## Working behaviour
 

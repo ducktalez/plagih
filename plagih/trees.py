@@ -680,21 +680,29 @@ class Node(ABC):
         """Checks if this node is a numeric constant (Number terminal)."""
         return issubclass(type(self), Number)
 
-    def str_as_list(self, cut_terms: bool = False) -> str:
-        """Returns a breadth-first nested list representation.
-
-        Example: a+1 -> [Add, [a], [1]]
-        Useful for comparing tree structures in debug output.
+    def str_as_list(self, cut_terms: bool = False, order: str = "pre") -> str:
+        """Returns a nested list representation of the tree.
 
         Args:
             cut_terms: If True, truncates numbers for readability.
+            order: Traversal order for the output.
+                ``"pre"``  (default) – operator first, then children:
+                ``Add(a, 1) → [Add, [a], [1]]``
+                ``"post"`` – children first, then operator:
+                ``Add(a, 1) → [[a], [1], Add]``
+
+        Returns:
+            Bracket-formatted string representation.
         """
         typus_str = self.showme
 
         if self.get_childs():
             if issubclass(type(self), BaseOperator):
-                childstr = ", ".join([cc.str_as_list(cut_terms=cut_terms) for cc in self.get_childs()])
-                typus_str = f"{typus_str}, {childstr}"
+                childstr = ", ".join([cc.str_as_list(cut_terms=cut_terms, order=order) for cc in self.get_childs()])
+                if order == "post":
+                    typus_str = f"{childstr}, {typus_str}"
+                else:
+                    typus_str = f"{typus_str}, {childstr}"
             else:
                 # terminal nodes
                 v = self.get_childs()[0]
@@ -829,10 +837,98 @@ class Node(ABC):
     def get_apted_notation(self) -> str:
         """Returns the tree in APTED bracket notation for tree edit distance.
 
+        .. deprecated::
+            Use :meth:`compute_ted` instead, which operates directly on Node
+            objects without requiring string conversion.
+
         APTED (All Path Tree Edit Distance) requires this specific format.
         Example: Add(a, 1) -> {Add{Symbol}{Number}}
         """
+        warnings.warn(
+            "get_apted_notation() is deprecated.  Use Node.compute_ted() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return f"{{{self.get_typus()}{''.join([cc.get_apted_notation() for cc in self.get_childs()])}}}"
+
+    # ------------------------------------------------------------------
+    # Tree Edit Distance (Zhang-Shasha, directly on Node objects)
+    # ------------------------------------------------------------------
+
+    def compute_ted(self, other: "Node", config: Optional[TedConfig] = None) -> TedResult:
+        """Compute tree edit distance between this tree and *other*.
+
+        The Zhang-Shasha algorithm (in ``tree_complexity/tree_edit_distance.py``)
+        traverses the Node tree directly via :meth:`get_childs` /
+        :meth:`has_childs` and compares labels via :func:`type` /
+        :meth:`get_value`.  No string conversion or external library required.
+
+        Args:
+            other: The target tree to compare against.
+            config: Distance configuration (mode, costs).
+                Defaults to ``TedConfig(mode="full")``.
+
+        Returns:
+            :class:`TedResult` with ``distance``, ``mapping`` (referencing
+            the actual Node objects from both trees), and optional
+            ``leaf_diff_count``.
+
+        Complexity:
+            Time  O(n² · m²),  Space O(n · m)
+        """
+        from plagih.tree_complexity.tree_edit_distance import zhang_shasha_ted
+
+        return zhang_shasha_ted(self, other, config)
+
+    # ------------------------------------------------------------------
+    # Tree traversal orders
+    # ------------------------------------------------------------------
+
+    def to_postorder(self) -> List["Node"]:
+        """Returns a flat list of all nodes in this subtree in **postorder**.
+
+        Postorder: children are visited left-to-right first, then the
+        node itself.  Leaf nodes appear before their parents.
+
+        Example::
+
+            Add(Mul(x, y), z)  →  [x, y, Mul, z, Add]
+
+        See also:
+            :meth:`list_mutable_nodes` (preorder, filtered),
+            :meth:`str_as_list` (preorder string).
+        """
+        result: List[Node] = []
+
+        def _visit(node: "Node") -> None:
+            if node.has_childs():
+                for child in node.get_childs():
+                    _visit(child)
+            result.append(node)
+
+        _visit(self)
+        return result
+
+    def to_preorder(self) -> List["Node"]:
+        """Returns a flat list of all nodes in this subtree in **preorder**.
+
+        Preorder: the node itself is visited first, then children
+        left-to-right.  The root appears at index 0.
+
+        Example::
+
+            Add(Mul(x, y), z)  →  [Add, Mul, x, y, z]
+        """
+        result: List[Node] = []
+
+        def _visit(node: "Node") -> None:
+            result.append(node)
+            if node.has_childs():
+                for child in node.get_childs():
+                    _visit(child)
+
+        _visit(self)
+        return result
 
     def evolve_mutate_filter_gauss(self) -> None:
         """Applies Gaussian noise mutation to numeric terminal nodes.
@@ -1231,6 +1327,36 @@ class Node(ABC):
         raise NotImplementedError(f"eval_predict_numpy_now not implemented for {type(self).__name__}")
 
 
+# Backward-compatible free function (delegates to Node.compute_ted)
+def compute_ted(tree1: Node, tree2: Node, config: Optional[TedConfig] = None) -> TedResult:
+    """Convenience wrapper — equivalent to ``tree1.compute_ted(tree2, config)``."""
+    return tree1.compute_ted(tree2, config)
+
+
+def pairwise_ted_matrix(
+    trees: List[Node],
+    config: Optional[TedConfig] = None,
+) -> np.ndarray:
+    """Compute a symmetric pairwise TED matrix for a list of trees.
+
+    Useful as foundation for diversity measurement and clustering.
+
+    Returns:
+        Symmetric ``(k, k)`` NumPy array where ``[i, j]`` is the tree
+        edit distance between ``trees[i]`` and ``trees[j]``.
+    """
+    if config is None:
+        config = TedConfig()
+    k = len(trees)
+    matrix = np.zeros((k, k), dtype=np.float64)
+    for i in range(k):
+        for j in range(i + 1, k):
+            result = trees[i].compute_ted(trees[j], config)
+            matrix[i, j] = result.distance
+            matrix[j, i] = result.distance
+    return matrix
+
+
 def eval_parsimony(_tree: Node, complexity_measure: str, origin_tree: Optional[Node] = None) -> int:
     """Evaluates the complexity/parsimony of a tree.
 
@@ -1244,20 +1370,13 @@ def eval_parsimony(_tree: Node, complexity_measure: str, origin_tree: Optional[N
 
     Returns:
         Integer complexity score (lower is simpler).
-
-    Note:
-        Tree edit distance is inefficient as origin_tree's APTED notation
-        is computed on every call.
     """
     if complexity_measure == "tree_node_count_raw":  # number of nodes
         return _tree.len_nodecount_raw()
     elif complexity_measure == "tree_node_count_fair":
         return _tree.len_nodecount_fair()
     elif complexity_measure == "tree_edit_distance":  # tree_edit_distance, fintree-edit-distance
-        apted1 = _tree.get_apted_notation()
-        apted2 = origin_tree.get_apted_notation()
-        distance, mapping = apted_distance(apted1, apted2)
-        return distance
+        return int(_tree.compute_ted(origin_tree, TedConfig(mode="structural")).distance)
     else:
         raise Exception(f"Complexity measurement not available: {complexity_measure}")
 

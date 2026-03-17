@@ -1,4 +1,4 @@
-# Familiar Genetic Programming with TensorFlow
+# Familiar Genetic Programming
 
 Very fast GP-Framework that introduces the concept of ``familiarity'',  which is a measure of how similar a candidate 
 solution is to a reference program. The algorithm was filed as a patent in Germany in 2023.
@@ -10,52 +10,11 @@ We are currently trying to introduce a  pseudo-backpropagation-algorithm, with p
 
 Enjoy!
 
-## Configuration (`.env`)
-
-All framework defaults are managed via a `.env` file in the project root.
-Copy `.env.example` to `.env` and adjust values to your needs.
-
-### Minimal default profile
-
-The default configuration is intentionally **minimal** — every feature is off:
-
-| Feature | Default | `.env` Key |
-|---|---|---|
-| SymPy Simplification | off | `PLAGIH_SIMPLIFICATION` |
-| Visualisation during runs | off | `PLAGIH_VISUALIZATION` |
-| Merged population tree | off | `PLAGIH_MERGED_TREE` |
-| Origin tree tracking | off | `PLAGIH_ORIGIN_TREE` |
-| Look-Up Tables (LUT) | off ⚠️ | `PLAGIH_LUT_ENABLED` |
-| Parallelisation | 0 (sequential) | `PLAGIH_PARALLEL` |
-
-> ⚠️ **LUT warning:** Disabling LUT means every expression is re-evaluated
-> even if identical ones were already seen.  For non-trivial runs this is
-> **significantly** slower.  Most users should set `PLAGIH_LUT_ENABLED=true`.
-
-### Recommended profile for real runs
-
-```dotenv
-PLAGIH_LUT_ENABLED=true
-PLAGIH_VISUALIZATION=true
-PLAGIH_PARALLEL=4
-PLAGIH_SIMPLIFICATION=true
-```
-
-### Override hierarchy
-
-```
-.env file  →  environment variables  →  code-level parameters
-(lowest)                                  (highest priority)
-```
-
-Code-level overrides (e.g. `ExplainableGP.create(parallel=8)`) always win.
-See `docs/ARCHITECTURE.md` § Configuration System for full details.
-
 ## Ablage/Todos
 ### Code Dokumentation und instructions überarbeiten
 
-
-
+- Strukturiere das Projekt so, dass es optimal vom Coding Agent bearbeitet werden kann. Für einzelne Ordner können ja auch weitere Instruction Files angelegt werden. Ich würde hier gerne ein guten Aufbau herausarbeiten und umsetzen. 
+- TED-Distance diff branches anzeigen lassen und als idee in zukunft behandeln. 
 - Copilot-RUFF?
 - Performance: GPU-evaluation? Ist dafür TensorFlow nötig oder geht das auch mit NumPy? 
 - Merged-tree visualisierung
@@ -151,7 +110,7 @@ See `docs/ARCHITECTURE.md` § Configuration System for full details.
 - nsimplify()
 - variable-names = symbols
 - Introduce min/max input operator, that is the number of the min/max value of inputs in the column.
-- apted-discance can also compute the actual edit steps
+- apted-distance can also compute the actual edit steps (now implemented intrinsically via Zhang-Shasha, no external dependency needed)
 - Crossover - make fix nodes insertable
 - create_random should be the same for first generation and other randoms
 - warning for sympifyable origin tree
@@ -223,7 +182,48 @@ See `docs/ARCHITECTURE.md` § Configuration System for full details.
   like putting the genepool actually all together
   - after stagnation, change the tree architecture with sympy tricks. 
     Or after branches are imbalanced.
-- "Scale"-operator, that just multiplies with a number
+- ~~"Scale"-operator, that just multiplies with a number~~ ✅ Implemented (`Scale(Number, expr)` in `trees.py`)
+
+## Configuration (`.env`)
+
+All framework defaults are managed via a `.env` file in the project root.
+Copy `.env.example` to `.env` and adjust values to your needs.
+
+### Minimal default profile
+
+The default configuration is intentionally **minimal** — every feature is off:
+
+| Feature | Default | `.env` Key |
+|---|---|---|
+| SymPy Simplification | off | `PLAGIH_SIMPLIFICATION` |
+| Visualisation during runs | off | `PLAGIH_VISUALIZATION` |
+| Merged population tree | off | `PLAGIH_MERGED_TREE` |
+| Origin tree tracking | off | `PLAGIH_ORIGIN_TREE` |
+| Look-Up Tables (LUT) | off ⚠️ | `PLAGIH_LUT_ENABLED` |
+| Parallelisation | 0 (sequential) | `PLAGIH_PARALLEL` |
+
+> ⚠️ **LUT warning:** Disabling LUT means every expression is re-evaluated
+> even if identical ones were already seen.  For non-trivial runs this is
+> **significantly** slower.  Most users should set `PLAGIH_LUT_ENABLED=true`.
+
+### Recommended profile for real runs
+
+```dotenv
+PLAGIH_LUT_ENABLED=true
+PLAGIH_VISUALIZATION=true
+PLAGIH_PARALLEL=4
+PLAGIH_SIMPLIFICATION=true
+```
+
+### Override hierarchy
+
+```
+.env file  →  environment variables  →  code-level parameters
+(lowest)                                  (highest priority)
+```
+
+Code-level overrides (e.g. `ExplainableGP.create(parallel=8)`) always win.
+See `docs/ARCHITECTURE.md` § Configuration System for full details.
 
 ## Systemanforderungen, Laufzeit und KPI-Richtwerte
 
@@ -433,15 +433,15 @@ Main features:
 
 ## Python 3.9 Anaconda packages
 
-All packages: `matplotlib pathlib sympy tensorflow pandas sympy scipy pyYAML scikit-learn scipy gym apted tikzplotlib`
+All packages: `matplotlib pathlib sympy tensorflow pandas sympy scipy pyYAML scikit-learn scipy gym tikzplotlib`
 
 `conda install -c matplotlib pathlib sympy tensorflow pandas sympy scipy pyYAML`
 
-`pip install scikit-learn scipy gym apted tikzplotlib graphviz`
+`pip install scikit-learn scipy gym tikzplotlib graphviz`
 
 
 non-conda packages:
-apted
+(none – apted has been replaced by an intrinsic Zhang-Shasha implementation)
 
 update of the yaml module might be necessary:
 conda install -U PyYaml

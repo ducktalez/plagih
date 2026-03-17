@@ -259,7 +259,7 @@ large one-batch-per-worker execution without progress diagnostics.
 
 ---
 
-## P9 – Scale is invisible to `sympy_to_tree()`
+## P13 – Scale is invisible to `sympy_to_tree()`
 
 **Where:** `Scale` class in `trees.py`, `d_sym2node` mapping
 
@@ -277,7 +277,7 @@ must call `tree_node_grouping()` afterwards to restore Scale nodes.
 
 ---
 
-## P10 – `canonicalize_children()` must run after tree is fully built
+## P14 – `canonicalize_children()` must run after tree is fully built
 
 **Where:** `Node.canonicalize_children()` in `trees.py`
 
@@ -315,3 +315,27 @@ The current implementation works but has trade-offs that should be revisited:
 3. **Re-sorting after mutation**: Currently re-sorted once in
    `tree_to_candidate()`. If the pipeline changes so that canonical form
    is expected *between* mutation steps, this becomes a pitfall.
+
+---
+
+## P15 – Tree Edit Distance mode selection
+
+**Where:** `plagih/tree_complexity/tree_edit_distance.py`, `eval_parsimony()` in `trees.py`
+
+The intrinsic Zhang-Shasha TED implementation supports three label-comparison
+modes via `TedConfig.mode`:
+
+- `"structural"` – compares only node types (class). This is what the old
+  `get_apted_notation()`-based distance computed, and what `eval_parsimony`
+  uses internally for `"tree_edit_distance"` complexity.
+- `"full"` – also compares terminal values (`Number(3) ≠ Number(5)`).
+- `"structural_plus_leaf_diff"` – structural TED + leaf-diff count.
+
+**Rule:** Choose the correct mode for the use case.  Comparing populations
+for diversity → `"full"`.  Parsimony / complexity distance from origin →
+`"structural"` (default in `eval_parsimony`).
+
+**Deprecated:** `apted_distance()` and `get_apted_notation()` still exist
+but emit `DeprecationWarning`.  The external `apted` package is no longer a
+dependency.  Use `compute_ted(node1, node2, config)` instead.
+

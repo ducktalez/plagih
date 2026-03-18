@@ -121,19 +121,28 @@
   `tree_node_grouping()` in `trees/_nodes.py`
 - **Problem:** The round-trip `tree → sympy → tree → grouping` is not
   idempotent.  SymPy's canonical form disagrees with the grouped form,
-  causing the tree to **grow** during simplification (the `WHATHAPPENED`
-  prints).  In some cases SymPy also numerically evaluates constant
-  sub-expressions (e.g. `sin(1)**2 → 0.708`), changing the expression
-  semantically.
-- **Questions:**
+  causing the tree to **grow** during simplification.  In some cases SymPy
+  also numerically evaluates constant sub-expressions (e.g.
+  `sin(1)**2 → 0.708`), changing the expression semantically.
+- **Implemented mitigations:**
+  1. **Size guard** — if simplified tree is larger than original, return
+     original.
+  2. **Min-size tracking** — grouping loop tracks the smallest tree across
+     all iterations.
+  3. **Oscillation detection** — if a string representation repeats, the
+     loop exits early (prevents infinite cycling A→B→A).
+  4. **`CuriosityError` debug bomb removed** — replaced with structured
+     `log("w", …)` warning on non-convergence.
+- **Remaining questions:**
   1. Should `tree_node_grouping` produce a form that round-trips cleanly
      through SymPy?  Or should we stop converting back to SymPy after
      grouping?
   2. Should constant-folding by SymPy be accepted (smaller tree, but
      different expression) or suppressed (keep `sin(1)` unevaluated)?
-  3. Can the `WHATHAPPENED` debug print be replaced with a structured log
-     entry + metric ("simplification_growth_count" in `GPMonitor`)?
-- **Status:** Debug prints exist, no architectural solution yet.
+  3. Could a "grouping-only" simplification mode (skip SymPy round-trip)
+     be useful for cases where SymPy expansion is counterproductive?
+- **Status:** Core mitigations implemented, pipeline is safe but not
+  fully idempotent.
 
 ---
 

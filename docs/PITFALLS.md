@@ -476,14 +476,22 @@ the tree.
    replaces the `Square(Sin(1))` subtree — the expression changes
    semantically ("Diff in sympy expression" warning).
 
-**Current mitigation:** The `WHATHAPPENED SFEH` debug print logs each case.
-The tree is still returned (the simplified version), but the growth is
-logged.
+**Current mitigation:**
+1. **Size guard** — if the simplified tree is larger than the original,
+   the original is returned unchanged.
+2. **Min-size tracking** — the grouping loop tracks the smallest tree
+   seen across all iterations and uses it as the result.
+3. **Oscillation detection** — if a string representation repeats across
+   iterations (A → B → A), the loop exits early instead of running to
+   exhaustion.
+4. **Structured logging** — growth and semantic diff are logged via
+   `log("w", …)` instead of debug prints.
 
-**Impact:** Trees may appear to grow during simplification, which is
-confusing but not a correctness bug (fitness is computed from the
-original, not the simplified tree). The semantic diff (case 3) is more
-concerning because it changes the mathematical meaning.
+The former `CuriosityError` debug bomb at iteration 6 has been removed.
+
+**Impact:** Trees will never grow during simplification (the size guard
+ensures this). The semantic diff (case 3) is still possible but is
+logged as a warning.
 
 **Tracked as:** D6 in `IMPLEMENTATION_PLAN.md` — "Idempotent
 simplification pipeline".

@@ -1492,7 +1492,15 @@ def tree_simplification(_tree: Node, allow_chain: bool) -> Node:
     Process:
     1. Convert tree to SymPy expression
     2. Convert back to tree (SymPy may simplify)
-    3. Apply tree_node_grouping iteratively
+    3. Apply tree_node_grouping iteratively until convergence
+    4. Canonicalize children ordering
+    5. Return the smallest equivalent tree (original or simplified)
+
+    The pipeline is NOT idempotent (P19/D6): SymPy's canonical form can
+    disagree with the grouped form, causing representation changes without
+    size reduction.  This function guards against growth by tracking the
+    minimum-size tree across all iterations and falling back to the original
+    when SymPy expansion or constant-folding produces a larger result.
 
     Known patterns handled:
     - sympy.sign -> sign node
@@ -1506,58 +1514,73 @@ def tree_simplification(_tree: Node, allow_chain: bool) -> Node:
     Returns:
         Simplified tree (may be same object if no changes).
     """
-    tree_history = [copy.deepcopy(_tree)]
+    _MAX_GROUPING_ITERS = 10
+
+    original = copy.deepcopy(_tree)
+    original_len = len(original)
+
     expr_sym = _tree.get_sympy_expr()
-    # expr_sym2 = sympy.simplify(expr_sym)
-    # if str(expr_sym) != str(expr_sym2):
-    #     print(f'okke: {expr_sym} // {expr_sym2}')
-    # expr_sym3  = tree.get_sympy_expr(simplimore=True)
-    # s4 = self.get_sympy_expr()
-    # s5 = self.get_expr_raw_fstring()
-    # s6 = self.str_as_list()
-    # s_export = self.get_tree_export()
-    # print(f'{s}\n{s1}\n{s2}\n{s3}\n{s4}\n{s5}\n{s6}\n{s_export}')
     _tree = sympy_to_tree(expr_sym, allow_chain=allow_chain)
-    for _ in range(10):
-        tree_history.append(copy.deepcopy(_tree))
+
+    # Track the smallest tree seen during the grouping loop.
+    best_tree = copy.deepcopy(_tree)
+    best_len = len(best_tree)
+
+    # Track string representations to detect oscillation (A → B → A).
+    seen_reprs: set[str] = set()
+
+    for i in range(_MAX_GROUPING_ITERS):
+        repr_before = str(_tree)
+        seen_reprs.add(repr_before)
+
         _tree.tree_node_grouping(tolerance=0)
-        if _ == 6:
-            print(tree_history)
-            raise CuriosityError
-        if str(_tree) == str(tree_history[-1]):
+
+        repr_after = str(_tree)
+
+        # Converged — grouping produced no change.
+        if repr_after == repr_before:
             break
+
+        # Oscillation — representation already seen in an earlier iteration.
+        if repr_after in seen_reprs:
+            log_debug(f"Grouping oscillation detected at iteration {i + 1}, stopping early.")
+            break
+
+        # Track the smallest intermediate result.
+        current_len = len(_tree)
+        if current_len < best_len:
+            best_tree = copy.deepcopy(_tree)
+            best_len = current_len
+    else:
+        # Loop exhausted without convergence — not expected in practice.
+        log(
+            "w",
+            f"Grouping did not converge after {_MAX_GROUPING_ITERS} "
+            f"iterations (tree len={len(_tree)}). Using best intermediate.",
+        )
+
+    # Use the smallest tree found during grouping (may be the sympy-converted
+    # version before any grouping if grouping only grew the tree).
+    if len(_tree) > best_len:
+        _tree = best_tree
 
     # Canonical child ordering for commutative operators (post-processing).
     # This normalises e.g. Add(b, a) → Add(a, b) so that structurally equivalent
     # expressions produce identical string representations and LUT keys.
     _tree.canonicalize_children()
 
-    # print(f'Tree updates\n'
-    #       f'\t{tree_copy.represent_str(show_all=False)}\n'
-    #       f'a\t{tree_a.represent_str(show_all=False)}\n'
-    #       f'b\t{tree_b.represent_str(show_all=False)}\n'
-    #       f'c\t{tree_c.represent_str(show_all=False)}')
-    # if tree_b.represent_str(show_all=False) != tree_c.represent_str(show_all=False):
-    #     raise CuriosityError
-    # sfeh:discuss
-    # print(f'After simplification:  {len(tree_copy)}\t{tree}')
-
-    if len(tree_history[0]) < len(_tree):
-        # TODO(sfeh): Investigate why simplification can *grow* a tree.
-        #  Possible causes: sympy expanding terms, or tree-rebuild adding wrapper nodes.
-        #  Keep this print until root cause is understood.
-        astr = string_remove_trailing_zeroes(str(tree_history[0].get_sympy_expr()))
+    # Final guard: if the simplified tree is larger than the original, fall
+    # back to the original (P19).
+    if original_len < len(_tree):
+        astr = string_remove_trailing_zeroes(str(original.get_sympy_expr()))
         bstr = string_remove_trailing_zeroes(str(_tree.get_sympy_expr()))
-        print(f"WHATHAPPENED SFEH\t{astr}")
-        for ii, tt in enumerate(tree_history):
-            print(f"\t{ii}:\t{tt.str_as_list()}")
+        log("w", f"Simplification grew tree ({original_len} → {len(_tree)} nodes), keeping original: {astr}")
 
         if astr != bstr:
-            # sfeh 'a**0.5' does not become 'sqrt(a)'! use rational=True or sympy.S.Half
-            log("w", f"Diff in sympy expression?\n\t{astr}\n\t{bstr}")  # raise ex? does not occur after grouping?
-            # sfeh Example 03.05.2025
-            # 	sin(cartVel**(6450000000*RoundDummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
-            # 	sin(cartVel**(6.45e+9*RoundDummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
+            log("w", f"Diff in sympy expression?\n\t{astr}\n\t{bstr}")
+
+        return original
+
     return _tree
 
 

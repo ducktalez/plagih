@@ -1123,7 +1123,7 @@ class ExplainableGP:
         self.monitor.plot_performance(self.rootdir / "monitoring.png")
         plot_paretofront(self.paretofront, self.rootdir, self.evolve.nodes_max)
 
-        from visualization.tree_renderer import visualize_paretofront
+        from plagih.visualization.tree_renderer import visualize_paretofront
 
         visualize_paretofront(self.paretofront, filename="paretofront_trees", output_dir=self.rootdir)
 

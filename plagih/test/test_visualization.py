@@ -139,7 +139,7 @@ class TestTreeRendererStyles:
     """get_node_style_for_type should return valid styles for all node types."""
 
     def test_style_for_number(self):
-        from visualization.tree_renderer import get_node_style_for_type
+        from plagih.visualization.tree_renderer import get_node_style_for_type
 
         node = Number(sympy.Float(3.14))
         style = get_node_style_for_type(node)
@@ -147,21 +147,21 @@ class TestTreeRendererStyles:
         assert style.border_color == Number._viz_border
 
     def test_style_for_symbol(self):
-        from visualization.tree_renderer import get_node_style_for_type
+        from plagih.visualization.tree_renderer import get_node_style_for_type
 
         node = Symbol(_SYM_A)
         style = get_node_style_for_type(node)
         assert style.fill_color == Symbol._viz_color
 
     def test_style_for_math_operator(self):
-        from visualization.tree_renderer import get_node_style_for_type
+        from plagih.visualization.tree_renderer import get_node_style_for_type
 
         node = Add(Number(sympy.Float(1.0)), Number(sympy.Float(2.0)))
         style = get_node_style_for_type(node)
         assert style.fill_color == MathOperator._viz_color
 
     def test_style_for_logic_operator(self):
-        from visualization.tree_renderer import get_node_style_for_type
+        from plagih.visualization.tree_renderer import get_node_style_for_type
 
         node = And(Boolean(True), Boolean(False))
         style = get_node_style_for_type(node)
@@ -169,7 +169,7 @@ class TestTreeRendererStyles:
 
     def test_all_concrete_classes_return_style(self):
         """get_node_style_for_type must not crash for any node type."""
-        from visualization.tree_renderer import NodeStyle, get_node_style_for_type
+        from plagih.visualization.tree_renderer import NodeStyle, get_node_style_for_type
 
         for cls in _all_concrete_node_classes():
             tree = _make_sample_tree(cls)
@@ -197,24 +197,24 @@ class TestLatexRenderer:
     """LaTeX rendering must work for all node types."""
 
     def test_terminal_number(self):
-        from visualization.latex_renderer import get_expr_latex
+        from plagih.visualization.latex_renderer import get_expr_latex
 
         result = get_expr_latex(Number(sympy.Float(3.14)))
         assert result.startswith("3.14"), f"Expected '3.14…', got {result!r}"
 
     def test_terminal_symbol(self):
-        from visualization.latex_renderer import get_expr_latex
+        from plagih.visualization.latex_renderer import get_expr_latex
 
         assert get_expr_latex(Symbol(_SYM_A)) == "a"
 
     def test_terminal_bool(self):
-        from visualization.latex_renderer import get_expr_latex
+        from plagih.visualization.latex_renderer import get_expr_latex
 
         result = get_expr_latex(Boolean(True))
         assert result in ("True", "true")
 
     def test_add_inline(self):
-        from visualization.latex_renderer import get_expr_latex
+        from plagih.visualization.latex_renderer import get_expr_latex
 
         tree = Add(Symbol(_SYM_A), Number(sympy.Float(2.0)))
         result = get_expr_latex(tree)
@@ -222,14 +222,14 @@ class TestLatexRenderer:
         assert "a" in result
 
     def test_mul_inline(self):
-        from visualization.latex_renderer import get_expr_latex
+        from plagih.visualization.latex_renderer import get_expr_latex
 
         tree = Mul(Symbol(_SYM_A), Symbol(_SYM_B))
         result = get_expr_latex(tree)
         assert r"\cdot" in result
 
     def test_pow_format(self):
-        from visualization.latex_renderer import get_expr_latex
+        from plagih.visualization.latex_renderer import get_expr_latex
 
         tree = Pow(Symbol(_SYM_A), Number(sympy.Float(3.0)))
         result = get_expr_latex(tree)
@@ -237,7 +237,7 @@ class TestLatexRenderer:
         assert "a" in result
 
     def test_abs_format(self):
-        from visualization.latex_renderer import get_expr_latex
+        from plagih.visualization.latex_renderer import get_expr_latex
 
         tree = Abs(Symbol(_SYM_A))
         result = get_expr_latex(tree)
@@ -245,14 +245,14 @@ class TestLatexRenderer:
         assert "|" in result, f"Abs LaTeX should contain pipe char: {result!r}"
 
     def test_sqrt_format(self):
-        from visualization.latex_renderer import get_expr_latex
+        from plagih.visualization.latex_renderer import get_expr_latex
 
         tree = Sqrt(Symbol(_SYM_A))
         result = get_expr_latex(tree)
         assert r"\sqrt" in result
 
     def test_min_two_children(self):
-        from visualization.latex_renderer import get_expr_latex
+        from plagih.visualization.latex_renderer import get_expr_latex
 
         tree = Min(Symbol(_SYM_A), Symbol(_SYM_B))
         result = get_expr_latex(tree)
@@ -261,7 +261,7 @@ class TestLatexRenderer:
         assert "b" in result, f"Min should show both children: {result!r}"
 
     def test_max_two_children(self):
-        from visualization.latex_renderer import get_expr_latex
+        from plagih.visualization.latex_renderer import get_expr_latex
 
         tree = Max(Symbol(_SYM_A), Symbol(_SYM_B))
         result = get_expr_latex(tree)
@@ -269,14 +269,14 @@ class TestLatexRenderer:
         assert "a" in result and "b" in result
 
     def test_logic_operators(self):
-        from visualization.latex_renderer import get_expr_latex
+        from plagih.visualization.latex_renderer import get_expr_latex
 
         assert r"\wedge" in get_expr_latex(And(Boolean(True), Boolean(False)))
         assert r"\vee" in get_expr_latex(Or(Boolean(True), Boolean(False)))
         assert r"\oplus" in get_expr_latex(Xor(Boolean(True), Boolean(False)))
 
     def test_sub_div_inline(self):
-        from visualization.latex_renderer import get_expr_latex
+        from plagih.visualization.latex_renderer import get_expr_latex
 
         sub = Sub(Symbol(_SYM_A), Symbol(_SYM_B))
         assert "-" in get_expr_latex(sub)
@@ -286,7 +286,7 @@ class TestLatexRenderer:
 
     def test_fallback_function_style(self):
         """Nodes without latex_fmt/latex_inline should use showme(children)."""
-        from visualization.latex_renderer import get_expr_latex
+        from plagih.visualization.latex_renderer import get_expr_latex
 
         tree = Sign(Symbol(_SYM_A))
         result = get_expr_latex(tree)
@@ -296,7 +296,7 @@ class TestLatexRenderer:
 
     def test_nested_expression(self):
         """Complex nested tree should render without crashing."""
-        from visualization.latex_renderer import get_expr_latex
+        from plagih.visualization.latex_renderer import get_expr_latex
 
         # sqrt(min(a, b)) * (a + 2)^3
         tree = Mul(
@@ -310,7 +310,7 @@ class TestLatexRenderer:
         assert "^" in result
 
     def test_brackettree_force_node(self):
-        from visualization.latex_renderer import latex_brackettree
+        from plagih.visualization.latex_renderer import latex_brackettree
 
         tree = Add(Symbol(_SYM_A), Number(sympy.Float(1.0)))
         result = latex_brackettree(tree, force_node=True)
@@ -319,7 +319,7 @@ class TestLatexRenderer:
         assert "$" in result  # LaTeX math mode markers
 
     def test_brackettree_single_expression(self):
-        from visualization.latex_renderer import latex_brackettree
+        from plagih.visualization.latex_renderer import latex_brackettree
 
         tree = Add(Symbol(_SYM_A), Number(sympy.Float(1.0)))
         result = latex_brackettree(tree, force_node=False)
@@ -328,7 +328,7 @@ class TestLatexRenderer:
 
     def test_all_operators_render_latex(self):
         """get_expr_latex must not crash for any operator with valid children."""
-        from visualization.latex_renderer import get_expr_latex
+        from plagih.visualization.latex_renderer import get_expr_latex
 
         for cls in _all_concrete_node_classes():
             tree = _make_sample_tree(cls)
@@ -353,16 +353,16 @@ class TestLatexRenderer:
 
 class TestTexTruncDigits:
     def test_long_decimal(self):
-        from visualization.latex_renderer import _tex_trunc_digits
+        from plagih.visualization.latex_renderer import _tex_trunc_digits
 
         assert _tex_trunc_digits("1.23456789") == "1.234"
 
     def test_very_small(self):
-        from visualization.latex_renderer import _tex_trunc_digits
+        from plagih.visualization.latex_renderer import _tex_trunc_digits
 
         assert _tex_trunc_digits("0.00000123") == "0.001"
 
     def test_integer_unaffected(self):
-        from visualization.latex_renderer import _tex_trunc_digits
+        from plagih.visualization.latex_renderer import _tex_trunc_digits
 
         assert _tex_trunc_digits("42") == "42"

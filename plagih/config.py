@@ -82,8 +82,9 @@ class PlagihConfig:
     """Central configuration for the plagih GP framework.
 
     All defaults correspond to the **minimal profile**: no simplification,
-    no visualisation, no parallelisation, no LUT.  Enable features
-    explicitly via ``.env``, environment variables, or code-level overrides.
+    no visualisation, no parallelisation. LUT is enabled by default for
+    performance. Enable other features explicitly via ``.env``, environment
+    variables, or code-level overrides.
 
     Attributes (grouped):
         **Verbosity / Debug**
@@ -131,12 +132,12 @@ class PlagihConfig:
         self.verbosity = env("PLAGIH_VERBOSITY", "wwaaggiiffpp")
         self.debug = _bool(env("PLAGIH_DEBUG", "false"))
 
-        # GP Feature Flags — defaults are MINIMAL (everything off)
+        # GP Feature Flags — defaults are MINIMAL (simplification, visualization, merged_tree, origin_tree, parallel off; lut_enabled on)
         self.simplification = _bool(env("PLAGIH_SIMPLIFICATION", "false"))
         self.visualization = _bool(env("PLAGIH_VISUALIZATION", "false"))
         self.merged_tree = _bool(env("PLAGIH_MERGED_TREE", "false"))
         self.origin_tree = _bool(env("PLAGIH_ORIGIN_TREE", "false"))
-        self.lut_enabled = _bool(env("PLAGIH_LUT_ENABLED", "false"))
+        self.lut_enabled = _bool(env("PLAGIH_LUT_ENABLED", "true"))
         self.parallel = _int(env("PLAGIH_PARALLEL", "0"))
 
         # Numeric / IO

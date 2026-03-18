@@ -14,20 +14,70 @@ Enjoy!
 ### Code Dokumentation und instructions überarbeiten
 
 - PLAN: Erstelle eine Grundstruktur und Instructions für das Konzept der Pseudo-Backpropagation. Diese sind auch als Teil der baumspezifischen individuellen Optimierung anzusehen. 
-  - Im Bereich der genetischen Programmierung versucht man üblicherweise nicht, einzelne Kandidaten endlos zu optimieren. Hier wird auf das Konzept des Zufalls gesetzt. 
+  - Im Bereich der genetischen Programmierung versucht man üblicherweise nicht, einzelne Kandidaten endlos zu optimieren. Hier wird auf das Konzept des Zufalls gesetzt.
+  - Im Folgenden werden einige zielgerichtete Optimierungsmöglichkeiten besprochen. Hauptunterscheidungen sind folgende:
+    - Evolutionärer Nutzen
+      - Identifikation der (Kind-)-Knoten mit größtem Optimierungspotenzial.
+      - Zielgerichtete Rekombination zueinander passender Formelbestandteile.
+      - Identifizierung struktureller Sackgassen (Wird an einer Stelle ein negativer Wert gebraucht, Kann zum Beispiel die quadratische Funktion ausgeschlossen werden)
+    - Analyse potenzieller Backpropagation-Informationen:
+      - "Aktivierungsfunktion" (Kann mit Backpropagation optimiert werden)
+      - Vorkommende Input-variablen in den Kindknoten (die einen Einfluss haben können)
+      - Wertebereich (min/max)
+      - Ableitbarkeit
+      - Zyklisch/Stetigkeit
+    - Für jeden Punkt eines Datasets gibt es einen Baumkandidaten, der diesen am besten erreicht. Die Analyse der Unterschiede zwischen diesen Kandidaten könnte Informationen darüber liefern, welche Bestandteile der Formel für die Optimierung besonders relevant sind.
+    - Wichtige Hilfskonzepte hierfür sind: 
+      - Sympy's Unifikation and simplification
+        - Erzeugt "chained operators"
+          - Deren kommutative Bestandteile sehr viel besser optimiert werden können. (zb. die Bestandteile einer Summe)
+          - Diese können auch durch gezielte Mutation oder Rekombination verändert werden, ohne die gesamte Formel zu verändern.
+          - Ein großer vereinter Baum, bestehend aus der gesamten Population, ermöglicht es, die besten Bestandteile der gesamten Population zu identifizieren und gezielt zu optimieren. zB:
+            - durch Analyse der "Dicksten Stämme"
+            - Wird für den kombinierten Baum eine passende Basisstruktur gefunden? So können die einzelnen Knoten und Faktoren sehr effizient miteinander kombiniert werden. 
+          - Idee: SoftOptimum/SoftSelection-Operator (Name kann noch geklärt werden)
+            - Dieser intelligente Super-Operator Behält immer den bestmöglichen Wert zu einem Datenpunkt einer gesamten Population.
+            - Das Minimum Set beschreibt die kleinstmögliche Anzahl an Bäumen oder Gesamtknotenzahl, die notwendig sind, um die optimale Lösung einer Population zu erreichen. 
+            - Seine Fehlerquote ist die min-Fehlerquote, die die aktuelle Population bei optimaler Orchestrierung erreichen kann.
+      - Wird eine clevere Kombination von der "Ähnlichkeit von Ansätzen" / Fitness / Entropie /  Komplexität (und vielleicht noch ein paar anderen unbedachten Faktoren) gefunden, sind Bäume eventuell sehr viel besser gezielt optimierbar. 
+      - Jeder Knoten muss den Kindknoten bestimmen, der den schlechtesten Einfluss hat (Entweder bezüglich der Anzahl oder der Summe).
+        - Die Formel wird so umgebaut, dass für alle Formel-Eingaben der optimale Wert ausgerechnet wird.
+          - Für eine Summe könnte man so zum Beispiel die Summe der quadratischen Abweichungen zum Optimalwert als Distanzmaß nehmen. 
   - Wir haben uns allerdings entschieden, einige Evolutionsprozesse In besonderem Maße zu unterstützen. 
-    - Hintergrund ist eine Erkenntnis, die während meiner Masterarbeit zum Komplexitätsmaß Familiarity entstanden ist. 
-    - Menschen nutzen zum Lösen von Problemen sehr gern die Kapselungsmöglichkeiten durch IF-Operatoren beziehungsweise den Piecewise-Operator. 
-    - Lösungskandidaten haben allerdings nur selten eine solche Kapselung als elementares Konzept, was mehrere Gründe hat. 
-      - Ihr Spreading-Faktor macht Bäume generell sehr viel komplexer. 
-      - Sie bestehen aus mehreren Eingaben, die in einer perfekten Komposition die Werte sich gegenseitig ergänzen müssen. 
-      - Sie können nur in sehr seltenen Fällen durch Crossover zufällig eine Verbesserung bieten. 
-      - Damit IF-Anweisungen überhaupt entstehen, muss man häufig im Komplexitätsmaß oder beim Vorkommen dieses Operators nachhelfen. 
-      - Oftmals werden trotzdem die zufälligen Kombinationen von Polynomfunktionen und Sinuskurven zu besseren Lösungen führen können 
-    - Das Problem gilt im Speziellen für IF-Operatoren, aber auch im Allgemeinen gibt es Formeln, die besser im genetischen Evolutionsprozess optimiert werden können. Und solche, die man sich eigentlich lieber wünscht. Man kann allerdings nur auf einen Aspekt Fokus legen. Dieser wird implizit durch das Komplexitätsmaß oder bei der zufälligen Baumerzeugung berücksichtigt. 
-  - pseudo-backpropagation
-    - ALL functions in a tree can be represented as a neural network. E. g. if-function is two input variables, a softmax layer and a result layer. 
+    - Hintergrund: 
+      - ...ist eine Erkenntnis, die während meiner Masterarbeit zum Komplexitätsmaß Familiarity entstanden ist. 
+      - Menschen nutzen zum Lösen von Problemen sehr gern die Kapselungsmöglichkeiten durch IF-Operatoren beziehungsweise den Piecewise-Operator. 
+      - Lösungskandidaten haben allerdings nur selten eine solche Kapselung als elementares Konzept, was mehrere Gründe hat. 
+        - Komplexität Multiplikator: Ihr Spreading-Faktor macht Bäume generell sehr viel komplexer, Egal welche Gewichtung man anwendet. . 
+        - Schlecht mit GP optimierbar:
+          - Sie bestehen aus mehreren Eingaben, die in einer perfekten Komposition die Werte sich gegenseitig ergänzen müssen. 
+          - Zufällige Rekombination ist hierfür ungeeignet. Sie können nur in sehr seltenen Fällen durch Crossover zufällig eine Verbesserung bieten. 
+          - Damit IF-Anweisungen überhaupt entstehen, muss man häufig im Komplexitätsmaß oder beim Vorkommen dieses Operators nachhelfen.  Oftmals werden trotzdem die zufälligen Kombinationen von Polynomfunktionen und Sinuskurven zu besseren Lösungen führen können
+      - Der wesentliche Unterschied ist hierbei natürlich, dass den Menschen viel einfacher fällt, das Problem zu kapseln und für die unter-probleme Lösungen zu finden.
+      - Das Problem gilt im Speziellen für IF-Operatoren, aber auch im Allgemeinen gibt es Formeln, die besser im genetischen Evolutionsprozess optimiert werden können. Und solche, die man sich eigentlich lieber wünscht. Man kann allerdings nur auf einen Aspekt Fokus legen. Dieser wird implizit durch das Komplexitätsmaß oder bei der zufälligen Baumerzeugung berücksichtigt. 
+    - Hieraus entstand die Idee, einen zielgerichteten Verbesserungs-/Evolutions-Algorithmus für den iF-Operator zu entwickeln.
+      - Für eine iF-Anweisung werden die Bedingung und beide Ergebnisse ausgerechnet (Analog natürlich alle Bedingungen und alle Ergebnisse bei Piecewise-Operatoren).
+      - Nun wird für jeden Knoten ein Performance-Faktor ausgerechnet, Indem bei einem sonst unveränderten Baum alle if-Optionen miteinander verglichen werden .
+        - Option 1: Reine Anzahl. 
+          - Für die if-Entscheidung wie oft sie sich für den besseren Wert entscheidet
+          - Für die Ergebnisse, wie oft sie sich Näher am Zielwert befinden 
+        - Option 2: Fehlerquote-Gesamtabweichung/Summe (Hier ist viel Platz für Diskussionen und Ideen)
+          - Für die if-Entscheidung: Bei Entscheidung für den besseren Wert 0, bei Wahl des schlechteren Wertes die Differenz zur besseren Option 
+          - Für die Ergebnisse: Differenz zum Zielwert
+  - targeted optimization with approximation
+    - Many functions in a tree can be represented as a neural network. E. g. if-function is two input variables, a softmax layer and a result layer.
     - replace a tree with a NN in the next step and train it.
+    - Forcing this to go to the extremes while keeping the distinction entropic-wise efficient may lead to very good logical distinctions that can be optimized mathematically.
+  - Iterative GP/NN approximation. 
+    - Similar to the expectation maximization algorithm, Recursively
+      - finding Pareto-efficient candidates to explain a complex behavior
+      - Nachdem hier eine Sättigung angetreten ist, using the inputs of the tree (Maybe even a complete subset of all genes in the gene pool of the perito-efficient candidates) as input layer for a neural network, which then trains/optimizes the differences in the next step.
+      - The neural network can thus decide which inputs are mathematically most useful and help represent some logic that the neural network has to find in a more complex way otherwise. Note that the training speed or the training progress might be an interesting factor To compare as well.
+      - Note idea: 
+        - Create a new neural network according to the best possible matching structure that is found in the genetic programming framework.
+        - For example if the Pareto candidates are all I polynomials, Sigmoid might be preferable over ReLU. 
+        - If the Pareto candidates get better the more complex they are, try to use a bigger broader neural network structure. 
+        - In general it should best analyze which neural networks can represent which GP structures the best. 
 - TED-Distance diff branches anzeigen lassen und als idee in zukunft behandeln. 
 - Performance: GPU-evaluation? Ist dafür TensorFlow nötig oder geht das auch mit NumPy? 
 - Merged-tree visualisierung

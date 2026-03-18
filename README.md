@@ -13,7 +13,6 @@ Enjoy!
 ## Ablage/Todos
 ### Code Dokumentation und instructions überarbeiten
 
-- Alle zu diskutierenden Architekturprobleme sollten entweder in Implementationsplan oder in Architektur zur Diskussion gestellt werden so gehen sie nicht verloren und sind dennoch bei den zu beachtenden Ideen mit vertreten. 
 - PLAN: Erstelle eine Grundstruktur und Instructions für das Konzept der Pseudo-Backpropagation. Diese sind auch als Teil der baumspezifischen individuellen Optimierung anzusehen. 
   - Im Bereich der genetischen Programmierung versucht man üblicherweise nicht, einzelne Kandidaten endlos zu optimieren. Hier wird auf das Konzept des Zufalls gesetzt. 
   - Wir haben uns allerdings entschieden, einige Evolutionsprozesse In besonderem Maße zu unterstützen. 

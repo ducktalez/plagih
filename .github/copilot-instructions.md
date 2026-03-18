@@ -27,7 +27,7 @@ crossover, and simplification, evaluated against training data.
 | `plagih/evaluation_context.py` | Unified Evaluation Context System for Plagih GP Trees. (3C/5F) |
 | `plagih/population_merge.py` | Population Merge Module for plagih GP Framework (3C/8F) |
 | `plagih/util.py` | *(no docstring)* (1C/14F) |
-| `visualization/tree_renderer.py` | Unified Tree Visualization Module for plagih GP Framework (9C/13F) |
+| `visualization/tree_renderer.py` | *(file not found)* |
 | `visualization/visualize_trees.py` | *(file not found)* |
 <!-- AUTOGEN:MODULE_MAP:END -->
 
@@ -84,8 +84,8 @@ frontmatter). They are automatically injected when editing matching files:
 | Document | Purpose |
 |---|---|
 | `ARCHITECTURE.md` | Module overview, lifecycle, node hierarchy, config reference |
-| `PITFALLS.md` | Known bugs and gotchas (P1–P16). Read before editing core code. |
-| `IMPLEMENTATION_PLAN.md` | Central TODO list — add open tasks here, not in source code |
+| `PITFALLS.md` | Known bugs and gotchas (P1–P17). Read before editing core code. |
+| `IMPLEMENTATION_PLAN.md` | Central TODO list + **Design Discussions** — add open tasks and architectural questions here, not in source code |
 | `EVALUATION.md` | EvaluationContext API and examples |
 | `LOGGING.md` | Hybrid logging system (`setup_logging`, `printpl` → `log_*`) |
 | `BENCHMARKS.md` | Benchmark environments and data formats |
@@ -105,6 +105,10 @@ frontmatter). They are automatically injected when editing matching files:
   `WHATHAPPENED`, `sfeh`, `# discuss` are investigation aids, not dead code.
 - **Open tasks**: Add new TODOs to `docs/IMPLEMENTATION_PLAN.md` instead of
   writing `# TODO` comments in source code.
+- **Design discussions**: Open architectural questions, trade-off decisions,
+  and "should we?" debates go into the **Design Discussions** section of
+  `docs/IMPLEMENTATION_PLAN.md` (items D1, D2, …). Do **not** embed them
+  inline in `PITFALLS.md` or source code — add a cross-reference instead.
 - **Raise concerns**: If an approach seems risky, fragile, or
   architecturally problematic, voice the concern explicitly before or
   alongside the implementation.

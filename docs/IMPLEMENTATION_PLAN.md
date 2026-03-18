@@ -68,6 +68,47 @@
 
 ---
 
+## Design Discussions
+
+> Open architectural questions that need a decision before implementation.
+> Add structural trade-offs, API design choices, and "should we?" questions
+> here so they don't get lost. Reference the relevant pitfall or module.
+
+### D1 – `canonicalize_children()` sort-key trade-offs (→ P14)
+- **Where:** `Node.canonicalize_children()` in `trees/_nodes.py`
+- **Questions:**
+  1. **Performance cost**: `represent_str()` is recursive per child. Benchmark
+     vs. subtree size (`len(child)`) as primary key, string as tiebreaker.
+  2. **Sort key quality**: SymPy's `default_sort_key` produces more canonical
+     forms but is significantly more expensive. Is a middle-ground worth it?
+  3. **Re-sorting timing**: Currently one-shot in `tree_to_candidate()`. If
+     canonical form is ever expected *between* mutation steps, propagation
+     becomes a problem.
+- **Also tracked as:** M1 (benchmark).
+
+### D2 – Bytecode complexity backends and extensions (→ P16)
+- **Where:** `plagih/tree_complexity/python_bytecode_complexity.py`
+- **Questions:**
+  1. Parallel critical-path complexity — how to define / measure?
+  2. Branch-sensitive complexity for `Ifte` / `Piecewise` — weight both
+     branches equally or only the taken branch?
+  3. Optional Numba / LLVM / ASM backends — worth the dependency?
+
+### D3 – `Number` display: cleaner representation for fixed children
+- **Where:** `Number.represent_str()` in `trees/_nodes.py` (line ~1263)
+- **Question:** `s += ":fix"` suffix for fixed nodes feels ad-hoc.
+  Is there a more natural way to visually distinguish fixed vs. mutable
+  terminals without string manipulation?
+
+### D4 – Allow rational inputs for `Number` terminals
+- **Where:** `NodeSelect.get_terminals()` in `trees/_evolution.py` (line ~313)
+- **Question:** Currently `sympy.Float(_v, precision)` is used. Should
+  rational literals like `1/3`, `3/4` be supported as terminal values?
+  Pro: more compact expressions. Contra: larger search space, interaction
+  with rounding (P17).
+
+---
+
 ## Low Priority
 
 ### L1 – Backend-specific complexity measures

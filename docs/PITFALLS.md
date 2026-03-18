@@ -297,24 +297,7 @@ Currently this is handled by calling `canonicalize_children()` in
 were ever moved earlier in the pipeline (e.g. inside mutation operators),
 every mutation would need to propagate re-sorting upwards.
 
-### Open design discussion (TODO)
-
-The current implementation works but has trade-offs that should be revisited:
-
-1. **Performance cost**: `canonicalize_children()` is recursive and calls
-   `represent_str()` per child as sort key. On large trees this may become
-   measurable overhead. Consider benchmarking vs. a simpler key like
-   subtree size (`len(child)`).
-
-2. **Sort key quality**: `represent_str()` produces a simple string comparison.
-   SymPy's `default_sort_key` uses a much richer ordering (type priority,
-   complexity, algebraic properties) that produces more canonical forms —
-   but at significantly higher cost. A middle-ground: sort by subtree size
-   first, then by string as tiebreaker.
-
-3. **Re-sorting after mutation**: Currently re-sorted once in
-   `tree_to_candidate()`. If the pipeline changes so that canonical form
-   is expected *between* mutation steps, this becomes a pitfall.
+**Open design trade-offs:** → see `IMPLEMENTATION_PLAN.md` § D1.
 
 ---
 
@@ -365,10 +348,7 @@ hardware-stable runtime metric.
 - direct equivalence to CPU runtime
 - equivalence to FLOPs or real machine instructions
 
-**Open design tasks:**
-- parallel critical-path complexity
-- branch-sensitive complexity for `Ifte` / `Piecewise`
-- optional Numba / LLVM / ASM backends
+**Open design tasks:** → see `IMPLEMENTATION_PLAN.md` § D2.
 
 ---
 

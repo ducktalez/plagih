@@ -168,7 +168,7 @@ Settings in `PlagihConfig` singleton (`cfg`), loaded from `.env` via `python-dot
 | Key | Default | Description |
 |---|---|---|
 | `PLAGIH_VERBOSITY` | `wwaaggiiffpp` | Substring-membership string for `printpl` |
-| `PLAGIH_LUT_ENABLED` | `false` | Expression LUT (most runs should use `true`) |
+| `PLAGIH_LUT_ENABLED` | `true` | Expression LUT for duplicate-fitness avoidance |
 | `PLAGIH_PARALLEL` | `0` | Worker count (0=sequential) |
 | `PLAGIH_SIMPLIFICATION` | `false` | SymPy simplification during evolution |
 | `PLAGIH_VISUALIZATION` | `false` | Plots/renderings during evolution |

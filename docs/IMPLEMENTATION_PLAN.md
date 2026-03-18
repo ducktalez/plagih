@@ -116,6 +116,25 @@
 - **Primary focus:** Ifte/Piecewise pseudo-backpropagation (§3.1).
 - **Next:** Integration into `run_generation()` as optional strategy (Phase 2b).
 
+### D6 – Idempotent simplification pipeline (→ P19)
+- **Where:** `tree_simplification()` → `sympy_to_tree()` →
+  `tree_node_grouping()` in `trees/_nodes.py`
+- **Problem:** The round-trip `tree → sympy → tree → grouping` is not
+  idempotent.  SymPy's canonical form disagrees with the grouped form,
+  causing the tree to **grow** during simplification (the `WHATHAPPENED`
+  prints).  In some cases SymPy also numerically evaluates constant
+  sub-expressions (e.g. `sin(1)**2 → 0.708`), changing the expression
+  semantically.
+- **Questions:**
+  1. Should `tree_node_grouping` produce a form that round-trips cleanly
+     through SymPy?  Or should we stop converting back to SymPy after
+     grouping?
+  2. Should constant-folding by SymPy be accepted (smaller tree, but
+     different expression) or suppressed (keep `sin(1)` unevaluated)?
+  3. Can the `WHATHAPPENED` debug print be replaced with a structured log
+     entry + metric ("simplification_growth_count" in `GPMonitor`)?
+- **Status:** Debug prints exist, no architectural solution yet.
+
 ---
 
 ## Low Priority
@@ -141,6 +160,26 @@
 - **Idea:** Run visualization/backup IO in a separate background process
   so the main evolution loop is never blocked.
 
+### L5 – Crossover time grows across generations
+- **Where:** `run_generation()` / crossover strategy
+- **Observed:** In test run, crossover avg goes from `10ms → 29ms` over
+  20 generations (population=50). Likely caused by trees growing in
+  complexity across generations. Investigate whether tree-size limits or
+  early-rejection can keep crossover time stable.
+
+### L6 – Generation count exceeds `gen_end`
+- **Where:** `run_generation()` loop in `_gp_engine.py`
+- **Observed:** Log shows "generation 21/20", "22/20", "23/20", "24/20" —
+  the loop continues past `gen_end=20`. Verify the termination condition
+  and off-by-one in the generation counter.
+
+### L7 – Population shrinks below `pop_max_size`
+- **Where:** Various strategy functions in `parallel.py`
+- **Observed:** `genepool=44` to `genepool=48` when `pop_max=50`. Some
+  candidates are rejected (fail counts), but the population is not
+  back-filled. Consider retry logic or fallback random trees to maintain
+  target population size.
+
 ---
 
 ## Completed
@@ -152,6 +191,7 @@
 - ✅ Physical core detection via `cpu_count_physical()` (P11)
 - ✅ Chunked batching with progress diagnostics in parallel (P12)
 - ✅ **M5** — Legacy `printpl`/`printez`/`print_warning`/`print_caution` migrated to `log()`/`log_error()`
+- ✅ **P18** — `MemoryError` guard in `get_sympy_expr()` for `sympy.exp()` on huge arguments
 
 
 

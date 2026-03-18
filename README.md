@@ -13,6 +13,7 @@ Enjoy!
 ## Ablage/Todos
 ### Code Dokumentation und instructions überarbeiten
 
+- Ich hätte gerne einen Fortschrittsbalken, der ausgeprintet wird beim Erstellen einer Generation. Somit soll leichter klar werden ob wirklich Bäume erstellt werden oder ob nicht vielleicht ein unglaublich komplexer Baum bei irgendeiner tausendsten Generation festhängt. 
 - TED-Distance diff branches anzeigen lassen und als idee in zukunft behandeln. 
 - Performance: GPU-evaluation? Ist dafür TensorFlow nötig oder geht das auch mit NumPy? 
   - Wenn irgendwann sowieso neuronale Netze verwendet werden sollen, muss vermutlich TensorFlow oder Keras oder irgendwas verwendet werden. 
@@ -171,12 +172,9 @@ The default configuration is intentionally **minimal** — every feature is off:
 | Visualisation during runs | off | `PLAGIH_VISUALIZATION` |
 | Merged population tree | off | `PLAGIH_MERGED_TREE` |
 | Origin tree tracking | off | `PLAGIH_ORIGIN_TREE` |
-| Look-Up Tables (LUT) | off ⚠️ | `PLAGIH_LUT_ENABLED` |
+| Look-Up Tables (LUT) | **on** | `PLAGIH_LUT_ENABLED` |
 | Parallelisation | 0 (sequential) | `PLAGIH_PARALLEL` |
 
-> ⚠️ **LUT warning:** Disabling LUT means every expression is re-evaluated
-> even if identical ones were already seen.  For non-trivial runs this is
-> **significantly** slower.  Most users should set `PLAGIH_LUT_ENABLED=true`.
 
 ### Recommended profile for real runs
 

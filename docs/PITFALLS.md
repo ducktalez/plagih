@@ -423,3 +423,67 @@ evaluation. `PowRounded` uses `RoundDummy` in its `symfun` and
 - Exceptions from imaginary results (e.g. `asin(tan(1))`) are caught and
   re-raised as `SympyImaginaryNumber`.
 
+---
+
+## P18 – `sympy.exp()` on large arguments causes `MemoryError`
+
+**Where:** `get_sympy_expr()` → `_sym(*_cs)` in `trees/_nodes.py`
+
+**Problem:** When GP evolves deeply nested exponential expressions
+(e.g. `exp(exp(exp(large_number)))`), SymPy internally calls `mpmath`
+to evaluate the result numerically. `mpmath` tries to allocate memory
+proportional to the magnitude, which can be billions of bits, causing
+an instant `MemoryError` that crashes the entire process.
+
+**Concrete example from a test run:**
+```
+Exp(some_large_crossover_result)
+→ sympy.exp(huge_float)
+→ mpf_exp in mpmath
+→ man << offset  # MemoryError
+```
+
+**Fix:** A `MemoryError` catch was added in `get_sympy_expr()` at the
+`_r = _sym(*_cs)` call site. It re-raises as `SympyError`, which the
+evaluation pipeline already handles gracefully (tree is rejected, logged,
+and evolution continues).
+
+**Rule:** Never assume that SymPy's `symfun` calls are memory-safe. Any
+operator whose `symfun` involves numeric evaluation (`exp`, `Pow`, `log`
+with extreme arguments) can trigger this.
+
+---
+
+## P19 – `tree_simplification` can grow trees (WHATHAPPENED)
+
+**Where:** `tree_simplification()` → `sympy_to_tree()` →
+`tree_node_grouping()` in `trees/_nodes.py`
+
+**Problem:** The simplification pipeline is **not idempotent**: SymPy's
+canonical form sometimes differs from the tree's grouped form, causing a
+cycle where each round-trip changes the representation without shrinking
+the tree.
+
+**Observed patterns:**
+1. `Div(a, b)` → SymPy: `a * b**(-1)` → `Mul(a, Pow(b, -1))` →
+   grouping: `Mul(a, DivFraction(b))` — representation changes but
+   semantics are identical, node count may grow.
+2. `Scale(c, expr)` → SymPy doesn't know `Scale`, so `sympy_to_tree`
+   rebuilds it as `Mul(c, expr)`, then `tree_node_grouping` converts
+   back to `Scale(c, expr)` — but intermediate forms have different
+   structure and can have more nodes.
+3. `sin(1)**2` → SymPy evaluates to `~0.708` → a `Number(0.708)` node
+   replaces the `Square(Sin(1))` subtree — the expression changes
+   semantically ("Diff in sympy expression" warning).
+
+**Current mitigation:** The `WHATHAPPENED SFEH` debug print logs each case.
+The tree is still returned (the simplified version), but the growth is
+logged.
+
+**Impact:** Trees may appear to grow during simplification, which is
+confusing but not a correctness bug (fitness is computed from the
+original, not the simplified tree). The semantic diff (case 3) is more
+concerning because it changes the mathematical meaning.
+
+**Tracked as:** D6 in `IMPLEMENTATION_PLAN.md` — "Idempotent
+simplification pipeline".

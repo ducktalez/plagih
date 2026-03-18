@@ -623,6 +623,15 @@ class Node(ABC):
                     # -> TypeError: Invalid comparison of non-real asin(15)
                 except TypeError as e:
                     raise SympyImaginaryNumber(e)
+                except MemoryError:
+                    # P18: SymPy can try to numerically evaluate huge
+                    # expressions (e.g. exp(very_large_number)) and exhaust
+                    # memory inside mpmath.  Treat as an invalid expression.
+                    raise SympyError(
+                        f"MemoryError while building sympy expression for "
+                        f"{type(self).__name__} ({node_summary}). "
+                        f"The expression is too large for symbolic evaluation."
+                    )
 
             else:
                 raise NotImplementedError

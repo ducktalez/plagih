@@ -132,7 +132,7 @@ class PlagihConfig:
         self.verbosity = env("PLAGIH_VERBOSITY", "wwaaggiiffpp")
         self.debug = _bool(env("PLAGIH_DEBUG", "false"))
 
-        # GP Feature Flags — defaults are MINIMAL (simplification, visualization, merged_tree, origin_tree, parallel off; lut_enabled on)
+        # GP Feature Flags — defaults are MINIMAL (simplification, visualization, merged_tree, origin_tree, parallel off; lut on)
         self.simplification = _bool(env("PLAGIH_SIMPLIFICATION", "false"))
         self.visualization = _bool(env("PLAGIH_VISUALIZATION", "false"))
         self.merged_tree = _bool(env("PLAGIH_MERGED_TREE", "false"))

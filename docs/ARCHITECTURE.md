@@ -203,3 +203,23 @@ Checklist for adding a `Node` subclass:
 Created by grouping (`Mul(3, sin(x))` → `Scale(3, sin(x))`) or direct creation.
 Uses `sympy.Mul` as `symfun`, not registered in `d_sym2node`. Only recovered
 by `tree_node_grouping()` after SymPy round-trips (P13).
+
+---
+
+## 9. Targeted Optimization (Planned)
+
+Beyond random evolution, plagih aims to support **per-tree targeted
+optimization** — identifying the weakest subtree in a candidate and
+mutating it with informed guidance (pseudo-backpropagation).
+
+Key ideas:
+- **Ifte/Piecewise component scoring**: Evaluate all branches independently
+  and focus mutation on the weakest component.
+- **Node-level optimization gap**: For invertible operators, compute the
+  ideal child value and measure how far the actual subtree deviates.
+- **SoftOptimum / Oracle Bound**: Per-row best-of-population as convergence
+  metric and crossover guide.
+
+Full design: `docs/TARGETED_OPTIMIZATION.md`. Tracked as D5 in
+`IMPLEMENTATION_PLAN.md`.
+

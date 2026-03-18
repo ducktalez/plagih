@@ -90,6 +90,7 @@ frontmatter). They are automatically injected when editing matching files:
 | `LOGGING.md` | Hybrid logging system (`setup_logging`, `printpl` → `log_*`) |
 | `BENCHMARKS.md` | Benchmark environments and data formats |
 | `PARALLEL_BENCHMARK_DIAGNOSIS.md` | Performance diagnosis report (reference data) |
+| `TARGETED_OPTIMIZATION.md` | Targeted per-tree optimization, pseudo-backpropagation, SoftOptimum |
 
 ## Working behaviour
 

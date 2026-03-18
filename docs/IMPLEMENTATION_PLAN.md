@@ -107,6 +107,15 @@
   Pro: more compact expressions. Contra: larger search space, interaction
   with rounding (P17).
 
+### D5 – Targeted Evolutionary Optimization (→ `docs/TARGETED_OPTIMIZATION.md`)
+- **Scope:** Per-tree pseudo-backpropagation, node-level optimization gaps,
+  SoftOptimum population bound, chained-operator mutation, merged-tree
+  trunk analysis.
+- **Status:** Concept document exists, no implementation yet.
+- **Primary focus:** Ifte/Piecewise pseudo-backpropagation (§3.1).
+- **Depends on:** Per-node intermediate-value evaluation infrastructure
+  (Phase 1 in roadmap).
+
 ---
 
 ## Low Priority

@@ -30,7 +30,6 @@ Enjoy!
     - ALL functions in a tree can be represented as a neural network. E. g. if-function is two input variables, a softmax layer and a result layer. 
     - replace a tree with a NN in the next step and train it.
 - TED-Distance diff branches anzeigen lassen und als idee in zukunft behandeln. 
-- Copilot-RUFF?
 - Performance: GPU-evaluation? Ist dafür TensorFlow nötig oder geht das auch mit NumPy? 
 - Merged-tree visualisierung
   - mit chatgpt erstellen: Weitere merge-tree Version (ohne Terminal nodes)

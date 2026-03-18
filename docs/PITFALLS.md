@@ -370,3 +370,76 @@ hardware-stable runtime metric.
 - branch-sensitive complexity for `Ifte` / `Piecewise`
 - optional Numba / LLVM / ASM backends
 
+---
+
+## P17 – Rounding exponents in SymPy is surprisingly hard
+
+**Where:** `RoundDummy` in `trees/_nodes.py`, `PowRounded`, `Round`
+
+**Context:** In GP evolution we often want `base ** round(exp)` to
+constrain exponents to integers (avoiding complex numbers from fractional
+powers of negative bases). Getting SymPy to cooperate with rounding
+turned out to be a multi-attempt odyssey. All approaches and their
+failure modes are documented below.
+
+**SymPy upstream issue:** <https://github.com/sympy/sympy/issues/27326>
+(opened 2024-11-28).
+
+**SymPy deprecation note:** "Core operators no longer accept non-Expr
+args" – see
+<https://docs.sympy.org/latest/explanation/active-deprecations.html#non-expr-args-deprecated>.
+
+### Approaches tried (and why they fail)
+
+1. **`N(value, precision)`** – `sympy.sympify('Pow(a, N(1.234, 1))')` →
+   works for numeric literals but crashes on symbols:
+   `AttributeError: 'function' object has no attribute 'evalf'`.
+
+2. **`Integer()`** – `sympy.sympify('Integer(1.234)')` truncates to `1`
+   for literals, but `Integer(Symbol('a'))` raises
+   `TypeError: int() argument must be a string, a bytes-like object or a
+   real number, not 'Symbol'`.
+
+3. **Modulo (`%`)** – `a - (a % 1)` truncates for floats, but
+   `sympy.sympify('Pow(2, (a-(a % 1)))')` with a symbolic `a` raises
+   `TypeError: unsupported operand type(s) for %: 'Symbol' and 'One'`.
+
+4. **Built-in `round()`** – `sympy.sympify('round(1.234)')` works for
+   literals, but `sympy.sympify('Pow(2, round(a))')` raises
+   `TypeError: Cannot round symbolic expression`.
+
+5. **Custom `sympy.Function` subclass (`RoundDummy`)** ✅ – the solution
+   that works. A custom SymPy function whose `eval()`:
+   - Returns `None` (= stays unevaluated) when the argument is symbolic.
+   - Returns `sympy.Integer(round(a))` when the argument is numeric.
+
+   This allows SymPy to carry `RoundDummy(a)` through symbolic
+   manipulation and fold it to an integer when `evalf(subs=…)` is called
+   or when a numeric value is substituted.
+
+### Current implementation (`RoundDummy`)
+
+```python
+class RoundDummy(sympy.Function):
+    @classmethod
+    def eval(cls, a):
+        if a.is_symbol:
+            return None          # keep symbolic
+        elif a.is_number:
+            return sympy.Integer(round(a.evalf()))
+```
+
+The `__call__` override handles NumPy arrays for `lambdify`/direct
+evaluation. `PowRounded` uses `RoundDummy` in its `symfun` and
+`sy_str`.
+
+### Rules
+
+- **Always use `RoundDummy`** (or the `PowRounded` / `Round` operators)
+  for rounding inside SymPy expressions. Do not use `round()`,
+  `Integer()`, `N()`, or `%` directly.
+- **`a.is_symbol` must be checked before `a.is_number`** inside `eval()`.
+  Checking `.is_number` first can crash on certain symbol subclasses.
+- Exceptions from imaginary results (e.g. `asin(tan(1))`) are caught and
+  re-raised as `SympyImaginaryNumber`.
+

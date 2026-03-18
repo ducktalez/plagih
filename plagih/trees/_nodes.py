@@ -81,7 +81,7 @@ class RoundDummy(sympy.Function):  # Not a Math-operator
     Evaluates to an integer when the argument is numeric, otherwise
     remains unevaluated for symbolic arguments.
 
-    For implementation details, see: plagih/discoveries/rounding_exponents.py
+    For implementation details, see: docs/PITFALLS.md → P17
     """
 
     @classmethod

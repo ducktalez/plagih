@@ -111,10 +111,10 @@
 - **Scope:** Per-tree pseudo-backpropagation, node-level optimization gaps,
   SoftOptimum population bound, chained-operator mutation, merged-tree
   trunk analysis.
-- **Status:** Concept document exists, no implementation yet.
+- **Status:** Phase 1 (analysis infrastructure) + Phase 2 (Ifte/Piecewise
+  scoring) implemented in `plagih/targeted_optimization.py` (17 tests pass).
 - **Primary focus:** Ifte/Piecewise pseudo-backpropagation (§3.1).
-- **Depends on:** Per-node intermediate-value evaluation infrastructure
-  (Phase 1 in roadmap).
+- **Next:** Integration into `run_generation()` as optional strategy (Phase 2b).
 
 ---
 

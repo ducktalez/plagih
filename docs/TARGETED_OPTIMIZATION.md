@@ -324,12 +324,15 @@ can NumPy + CuPy suffice?
   └──────────────┘  └──────────────┘  └──────────────────┘
 ```
 
-- [ ] **Per-node intermediate-value evaluation**: Extend `eval_predict_numpy_now`
+- [x] **Per-node intermediate-value evaluation**: Extend `eval_predict_numpy_now`
       to optionally return intermediate results at each node, not just the root.
-- [ ] **Best-per-datapoint mapping**: For a population, compute which candidate
+      → `eval_node_intermediates()` in `plagih/targeted_optimization.py`
+- [x] **Best-per-datapoint mapping**: For a population, compute which candidate
       wins each training row. Return a `(n_rows,)` array of candidate indices.
-- [ ] **SoftOptimum error**: Compute the oracle-selector bound for the current
+      → `best_per_datapoint()` in `plagih/targeted_optimization.py`
+- [x] **SoftOptimum error**: Compute the oracle-selector bound for the current
       population as a monitoring metric (add to `GPMonitor`).
+      → `soft_optimum_error()` in `plagih/targeted_optimization.py`
 
 ### Phase 2 — Ifte/Piecewise pseudo-backpropagation
 
@@ -353,7 +356,9 @@ can NumPy + CuPy suffice?
   weakest component ──► focused mutation
 ```
 
-- [ ] **Component scoring** (§3.1): Implement Option A (count-based) first.
+- [x] **Component scoring** (§3.1): Implement Option A (count-based) first.
+      → `ifte_component_scores()` + `piecewise_component_scores()` in
+      `plagih/targeted_optimization.py`
 - [ ] **Focused mutation strategy**: New `Strategy("targeted_ifte", rate=…)` in
       `parallel.py` that only mutates the weakest Ifte component.
 - [ ] **Integration**: Wire into `run_generation()` as an optional strategy.

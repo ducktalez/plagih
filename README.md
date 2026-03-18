@@ -15,6 +15,9 @@ Enjoy!
 
 - TED-Distance diff branches anzeigen lassen und als idee in zukunft behandeln. 
 - Performance: GPU-evaluation? Ist dafür TensorFlow nötig oder geht das auch mit NumPy? 
+  - Wenn irgendwann sowieso neuronale Netze verwendet werden sollen, muss vermutlich TensorFlow oder Keras oder irgendwas verwendet werden. 
+  - Bitte entscheide welches Framework du dafür normalerweise verwenden würdest. 
+  - Falls es TensorFlow ist gibt eine mittlerweile nicht mehr so verbreitete Option, erst einen Graphen zu bauen ohne ihn direkt auszuwerten, was ab Version 2 nicht mehr der Standard ist. 
 - Merged-tree visualisierung
   - mit chatgpt erstellen: Weitere merge-tree Version (ohne Terminal nodes)
   - Bereits erstellte Evaluierungskombination nutzen
@@ -78,7 +81,6 @@ Enjoy!
   - Factorized
   - Simplified
   - create "better mutable" trees?
-- Discuss: Input normalization. Leads to different formulae; which is NOT desired, right?
 - Node/Number type rational?
 - https://github.com/sympy/sympy/issues/27364
   ```python

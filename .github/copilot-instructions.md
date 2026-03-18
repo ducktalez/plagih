@@ -78,6 +78,7 @@ frontmatter). They are automatically injected when editing matching files:
 | `tests.instructions.md` | `plagih/test/**` — pytest config, fixtures |
 | `tree-complexity.instructions.md` | `plagih/tree_complexity/**` — TED, bytecode |
 | `benchmarks.instructions.md` | `benchmarks/**` — environments, samples format |
+| `targeted-optimization.instructions.md` | `plagih/targeted_optimization.py` — analysis, scoring, no side effects |
 
 ## Key docs in `docs/`
 

@@ -556,7 +556,12 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False, try_load_backu
     while gp.gen_id <= gp.gen_end and not gp.run_custom_exit_condition():
         gp.run_generation(strategies)
 
-    log("g", f"Done after Generation {gp.gen_id}.\nTime since start: {time.perf_counter() - gp.time_start:4.2f}s")
+    completed_generation = max(0, gp.gen_id - 1)
+    log(
+        "g",
+        f"done after generation {completed_generation}/{gp.gen_end}.\n"
+        f"Time since start: {time.perf_counter() - gp.time_start:4.2f}s",
+    )
 
     gp.backup_save()
     gp.evoloop_monitoring_plots()

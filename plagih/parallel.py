@@ -215,7 +215,7 @@ class PerformanceTracker:
                 seg += f" fail={fail}"
             parts.append(seg)
         total = summary["generation_total_time"]
-        log("pp", f"[Perf] {total:.2f}s | {' | '.join(parts)}")
+        log("ppp", f"[Perf] {total:.2f}s | {' | '.join(parts)}")
 
     def reset(self):
         """Reset all tracking data for the next generation."""
@@ -1218,6 +1218,7 @@ def run_generation_parallel(
     complexity_metric,
     strategy_registry,
     pool: Optional[ProcessPoolExecutor] = None,
+    progress_callback: Optional[Callable[[int, int, int, Optional[str]], None]] = None,
 ) -> Tuple[list, Dict, Dict, PerformanceTracker]:
     """Run all tasks in parallel using ProcessPoolExecutor with batch submission.
 
@@ -1250,8 +1251,14 @@ def run_generation_parallel(
     all_candidates = []
     lut_tree_delta = {}
     lut_symex_delta = {}
+    total_candidates_expected = sum(2 if task.crossover else 1 for task in tasks)
+    created_candidates = 0
+    failed_tasks = 0
 
     gen_start = time.perf_counter()
+
+    if progress_callback is not None:
+        progress_callback(created_candidates, total_candidates_expected, failed_tasks, None)
 
     # Pre-select parent trees in the main process so workers don't need pop_genepool.
     # This eliminates _update_worker_state IPC overhead (~950ms/gen for pop=1000, 4w).
@@ -1352,6 +1359,7 @@ def run_generation_parallel(
                 for result in batch_results:
                     tracker.record(result)
                     if result.error is not None:
+                        failed_tasks += 1
                         _print_parallel_failure_debug(result)
                         continue
 
@@ -1359,6 +1367,11 @@ def run_generation_parallel(
                     for candidate in result.candidates:
                         candidate.tree.repair_all()
                     all_candidates.extend(result.candidates)
+                    created_candidates += len(result.candidates)
+
+                if progress_callback is not None:
+                    batch_label = batch[0].tag if len(batch) == 1 else None
+                    progress_callback(created_candidates, total_candidates_expected, failed_tasks, batch_label)
 
     finally:
         if owns_pool:
@@ -1384,6 +1397,7 @@ def run_generation_sequential(
     strategy_registry,
     lut_tree,
     lut_symex,
+    progress_callback: Optional[Callable[[int, int, int, Optional[str]], None]] = None,
 ) -> Tuple[list, PerformanceTracker]:
     """Run all tasks sequentially in the main process.
 
@@ -1401,6 +1415,9 @@ def run_generation_sequential(
     """
     tracker = PerformanceTracker()
     all_candidates = []
+    total_candidates_expected = sum(2 if task.crossover else 1 for task in tasks)
+    created_candidates = 0
+    failed_tasks = 0
 
     fail_counts: Dict[str, int] = {}
     tag_expected: Dict[str, int] = {}
@@ -1408,6 +1425,9 @@ def run_generation_sequential(
         tag_expected[task.tag] = tag_expected.get(task.tag, 0) + 1
 
     gen_start = time.perf_counter()
+
+    if progress_callback is not None:
+        progress_callback(created_candidates, total_candidates_expected, failed_tasks, None)
 
     for task in tasks:
         tag = task.tag
@@ -1438,6 +1458,7 @@ def run_generation_sequential(
         tracker.record(result)
 
         if result.error is not None:
+            failed_tasks += 1
             fail_counts[tag] = fail_counts.get(tag, 0) + 1
             if fail_counts[tag] > budget:
                 log_error(
@@ -1446,6 +1467,10 @@ def run_generation_sequential(
                 )
         else:
             all_candidates.extend(result.candidates)
+            created_candidates += len(result.candidates)
+
+        if progress_callback is not None:
+            progress_callback(created_candidates, total_candidates_expected, failed_tasks, task.tag)
 
     tracker.set_generation_time(time.perf_counter() - gen_start)
     return all_candidates, tracker

@@ -13,7 +13,6 @@ Enjoy!
 ## Ablage/Todos
 ### Code Dokumentation und instructions überarbeiten
 
-- Ich hätte gerne einen Fortschrittsbalken, der ausgeprintet wird beim Erstellen einer Generation. Somit soll leichter klar werden ob wirklich Bäume erstellt werden oder ob nicht vielleicht ein unglaublich komplexer Baum bei irgendeiner tausendsten Generation festhängt. 
 - Beim Printing könnte man die Größe der Bäume In einer Population mit einer Höhen-darstellungsfarbe wie bei einer Map anzeigen. 
 - TED-Distance diff branches anzeigen lassen und als idee in zukunft behandeln. 
 - Performance: GPU-evaluation? Ist dafür TensorFlow nötig oder geht das auch mit NumPy? 

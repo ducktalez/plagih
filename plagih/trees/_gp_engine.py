@@ -11,6 +11,7 @@ import pandas as pd
 import sympy
 
 from plagih.config import cfg as _cfg
+from plagih.logging_utils import _flush_progress_line
 from plagih.monitoring import GPMonitor
 from plagih.paretofront import *
 from plagih.trees._evolution import *
@@ -596,9 +597,23 @@ class ExplainableGP:
 
         # Build task list from strategies
         tasks = build_task_list(strategies, self.pop_max_size, seed=seed)
+        total_candidates_expected = sum(2 if task.crossover else 1 for task in tasks)
+        progress_started = time.perf_counter()
+
+        def _update_generation_progress(created: int, total: int, fail: int, label: Optional[str]) -> None:
+            print_generation_progress(
+                gen_id=self.gen_id,
+                gen_end=self.gen_end,
+                created=created,
+                total=total if total > 0 else total_candidates_expected,
+                label=label or "create",
+                fail=fail,
+                elapsed_s=time.perf_counter() - progress_started,
+            )
 
         # Progress start — will be overwritten by the done-line below
-        print_generation_start(self.gen_id, self.gen_end)
+        current_gen_id = self.gen_id
+        print_generation_start(current_gen_id, self.gen_end)
 
         if n_workers > 0:
             # Parallel execution — use persistent pool to avoid Windows spawn overhead
@@ -618,6 +633,7 @@ class ExplainableGP:
                 complexity_metric=self.evolve.complexity_metric,
                 strategy_registry=self._strategy_registry,
                 pool=pool,
+                progress_callback=_update_generation_progress,
             )
             # Note: LUT deltas are empty in parallel mode.
             # Worker LUTs contain sympy objects (too expensive to pickle back).
@@ -641,6 +657,7 @@ class ExplainableGP:
                 strategy_registry=self._strategy_registry,
                 lut_tree=self.lut_tree_infos,
                 lut_symex=self.lut_symex_fitness,
+                progress_callback=_update_generation_progress,
             )
 
         # Store candidates as next population
@@ -651,11 +668,11 @@ class ExplainableGP:
         # trigger plots/backups/prints that would interrupt the \r line.
         tracker_total_ms = tracker.summary().get("generation_total_time", 0.0) * 1000
         print_generation_done(
-            gen_id=self.gen_id,
+            gen_id=current_gen_id,
             gen_end=self.gen_end,
             time_ms=tracker_total_ms,
-            genepool=len(self.pop_genepool),
-            pareto=len(self.paretofront),
+            created=len(candidates),
+            pareto_pre=len(self.paretofront),
             ok=tracker.total_ok,
             fail=tracker.total_fail,
             tracker_total_ms=tracker_total_ms,
@@ -684,7 +701,7 @@ class ExplainableGP:
         Returns:
             The initial population (pop_genepool).
         """
-        log("gg", f"Preparing to create first Generation. Gen {self.gen_id}.")
+        log("gg", f"generation {self.gen_id}/{self.gen_end} start: create initial population")
 
         if origin_tree is not None:
             cand_origin = self.tree_to_candidate(origin_tree, raise_if_useless=False, tag="origin")
@@ -770,6 +787,21 @@ class ExplainableGP:
             fails_list = []
             tag = create_tree_f.__name__
             log("ggg", f"->Evolving {n}x '{tag}'...")
+            progress_started = time.perf_counter()
+
+            def _update_creation_progress() -> None:
+                print_generation_progress(
+                    gen_id=self.gen_id,
+                    gen_end=self.gen_end,
+                    created=min(n_success, n),
+                    total=n,
+                    label=tag,
+                    fail=len(fails_list),
+                    elapsed_s=time.perf_counter() - progress_started,
+                )
+
+            if n > 0:
+                _update_creation_progress()
 
             while n_success < n:
                 try:
@@ -780,11 +812,13 @@ class ExplainableGP:
                         ctree1 = self.tree_to_candidate(t1, tag=tag)
                         self.pop_next_append(ctree1)
                         n_success += 1
+                        _update_creation_progress()
                         if simplicate:
                             t2 = tree_simplification(t2, allow_chain=self.allow_chain)
                         ctree2 = self.tree_to_candidate(t2, tag=tag)
                         self.pop_next_append(ctree2)
                         n_success += 1
+                        _update_creation_progress()
                     else:
                         evotree = create_tree_f()
                         if simplicate:
@@ -792,11 +826,15 @@ class ExplainableGP:
                         ctree = self.tree_to_candidate(evotree, tag=tag)
                         self.pop_next_append(ctree)
                         n_success += 1
+                        _update_creation_progress()
 
                 except (TreeError, TreeSizeError, SympyError) as e:
                     fails_list.append(e)
                     log("www", f"Failed evolution tag '{tag}': {e}")
+                    if n > 0:
+                        _update_creation_progress()
                     if len(fails_list) > 2 * n_success + 5:  # allow more fails: fails_list > n
+                        _flush_progress_line()
                         log_error(f"Evolution fails too often: {tag}, failed: {len(fails_list)}x. ({n_success} ok).")
                         return  # optional raise
 
@@ -806,19 +844,27 @@ class ExplainableGP:
                         e
                     ) or "The argument 'zoo' is not comparable" in str(e):
                         log("ww", f"OnlyPrintException: {e}")
+                        if n > 0:
+                            _update_creation_progress()
 
                 except KeyError as e:
                     # KeyError(re) -> okay?, real part implies complex numbers, ignoring is okay
                     # (probably sympy.lambdify expression not evaluable)
                     log("ww", f"OnlyPrintException: Keyerror?: {e}")
+                    if n > 0:
+                        _update_creation_progress()
                 except RecursionError as e:
                     log("ww", f"OnlyPrintException: RecursionError (probably Piecewise/relational combination?): {e}")
+                    if n > 0:
+                        _update_creation_progress()
                 # 2026: (ww) OnlyPrintException: RecursionError (probably Piecewise/relational combination?): maximum recursion depth exceeded
                 # -> sfeh: how did this happen
                 # except NotImplementedError as nie:
                 #     log_error(f'Notimplemented? {nie}')
                 # except Exception as ex:
                 #     print(f'OnlyPrintException: Why are we not here??? {ex}')
+
+            _flush_progress_line()
 
         return loop
 
@@ -894,7 +940,7 @@ class ExplainableGP:
             else:
                 """Numpy eval"""
                 perf_t = {0: time.perf_counter()}
-                true_values = self.df_train["action"].to_numpy()
+                true_values = self.df_train[self.target_column].to_numpy()
                 try:
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore", RuntimeWarning)  # sfeh:discuss
@@ -1014,7 +1060,7 @@ class ExplainableGP:
                             """Sympy lambdify"""
                             sym_results_raw = eval_predict_sympyBatch(sy_expr, self.df_train, self.evolve.symbol_list)
                             sym_results = self.eval_autocast(sym_results_raw)
-                            sym_fitness = self.eval_error_metric(sym_results, self.df_train["action"])
+                            sym_fitness = self.eval_error_metric(sym_results, self.df_train[self.target_column])
                             sym_fitness = round(sym_fitness, _cfg.float_precision)
 
                             perf_t[3] = time.perf_counter()
@@ -1220,15 +1266,19 @@ class ExplainableGP:
             latest = self.monitor.latest
             log(
                 "gg",
-                f"Created {latest.get('pop_size', 0)}/{self.gen_end} ({latest.get('pop_unique', 0)} unique) in generation {self.gen_id}. "
-                f"Trees in LUT: {len(self.lut_symex_fitness)} Generation took {gen_time:4.2f}s",
+                f"generation {self.gen_id}/{self.gen_end} summary: "
+                f"created {latest.get('pop_size', 0)}/{self.pop_max_size}"
+                f" | unique={latest.get('pop_unique', 0)}"
+                f" | lut={len(self.lut_symex_fitness)}"
+                f" | time={gen_time:4.2f}s",
             )
 
         # Generate merged population tree visualization
         if self.enable_analysis and _cfg.merged_tree:
             self._save_merged_population_tree()
 
-        log("ggg", f"--- Generation {self.gen_id} took: {time.perf_counter() - self.time_genstart:4.2f}. ---")
+        if not _suppress_print:
+            log("ggg", f"generation {self.gen_id}/{self.gen_end} summary done: {gen_time:4.2f}s")
 
         # def monitoring_scheduled_io(self, gen_id, plots_interval=10, backup_interval=10):
         """

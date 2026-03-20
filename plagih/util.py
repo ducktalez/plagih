@@ -30,6 +30,7 @@ from plagih.logging_utils import (  # noqa: F401
     log_warning,
     print_caution,
     print_generation_done,
+    print_generation_progress,
     print_generation_start,
     print_warning,
     printez,

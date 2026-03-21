@@ -11,5 +11,5 @@ Run with coverage:
     pytest plagih/test/ --cov=plagih --cov-report=html
 
 Run performance tests only:
-    pytest plagih/test/test_performance.py -v
+    pytest plagih/test/test_tree_creation_benchmark.py -v
 """

@@ -34,6 +34,7 @@ Custom Operators /Functions/Nodes/Terminals/Nested:
 
 import copy
 import random
+import time
 import warnings
 from abc import ABC
 from dataclasses import dataclass, field
@@ -49,6 +50,32 @@ from plagih.tree_complexity.tree_edit_distance import *
 from plagih.util import *
 
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
+
+
+_SIMPLIFICATION_GROWTH_WARNING_COUNT = 0
+_SIMPLIFICATION_GROWTH_WARNING_SUPPRESSED = 0
+_SIMPLIFICATION_GROWTH_WARNING_LAST_EMIT = 0.0
+
+
+def _should_emit_simplification_growth_warning() -> tuple[bool, int]:
+    """Rate-limit repetitive "simplification grew tree" warnings for long runs."""
+    global _SIMPLIFICATION_GROWTH_WARNING_COUNT
+    global _SIMPLIFICATION_GROWTH_WARNING_SUPPRESSED
+    global _SIMPLIFICATION_GROWTH_WARNING_LAST_EMIT
+
+    _SIMPLIFICATION_GROWTH_WARNING_COUNT += 1
+    now = time.perf_counter()
+    count = _SIMPLIFICATION_GROWTH_WARNING_COUNT
+    should_emit = count <= 3 or count % 25 == 0 or now - _SIMPLIFICATION_GROWTH_WARNING_LAST_EMIT >= 30.0
+
+    if not should_emit:
+        _SIMPLIFICATION_GROWTH_WARNING_SUPPRESSED += 1
+        return False, 0
+
+    suppressed = _SIMPLIFICATION_GROWTH_WARNING_SUPPRESSED
+    _SIMPLIFICATION_GROWTH_WARNING_SUPPRESSED = 0
+    _SIMPLIFICATION_GROWTH_WARNING_LAST_EMIT = now
+    return True, suppressed
 
 
 # =============================================================================
@@ -1492,15 +1519,7 @@ def tree_simplification(_tree: Node, allow_chain: bool) -> Node:
     Process:
     1. Convert tree to SymPy expression
     2. Convert back to tree (SymPy may simplify)
-    3. Apply tree_node_grouping iteratively until convergence
-    4. Canonicalize children ordering
-    5. Return the smallest equivalent tree (original or simplified)
-
-    The pipeline is NOT idempotent (P19/D6): SymPy's canonical form can
-    disagree with the grouped form, causing representation changes without
-    size reduction.  This function guards against growth by tracking the
-    minimum-size tree across all iterations and falling back to the original
-    when SymPy expansion or constant-folding produces a larger result.
+    3. Apply tree_node_grouping iteratively
 
     Known patterns handled:
     - sympy.sign -> sign node
@@ -1514,48 +1533,39 @@ def tree_simplification(_tree: Node, allow_chain: bool) -> Node:
     Returns:
         Simplified tree (may be same object if no changes).
     """
-    _MAX_GROUPING_ITERS = 10
-
     original = copy.deepcopy(_tree)
     original_len = len(original)
-
     expr_sym = _tree.get_sympy_expr()
+    # expr_sym2 = sympy.simplify(expr_sym)
+    # if str(expr_sym) != str(expr_sym2):
+    #     print(f'okke: {expr_sym} // {expr_sym2}')
+    # expr_sym3  = tree.get_sympy_expr(simplimore=True)
+    # s4 = self.get_sympy_expr()
+    # s5 = self.get_expr_raw_fstring()
+    # s6 = self.str_as_list()
+    # s_export = self.get_tree_export()
+    # print(f'{s}\n{s1}\n{s2}\n{s3}\n{s4}\n{s5}\n{s6}\n{s_export}')
     _tree = sympy_to_tree(expr_sym, allow_chain=allow_chain)
-
-    # Track the smallest tree seen during the grouping loop.
+    max_grouping_iters = 10
     best_tree = copy.deepcopy(_tree)
     best_len = len(best_tree)
 
-    # Track string representations to detect oscillation (A → B → A).
-    seen_reprs: set[str] = set()
-
-    for i in range(_MAX_GROUPING_ITERS):
-        repr_before = str(_tree)
-        seen_reprs.add(repr_before)
-
+    for _ in range(max_grouping_iters):
+        previous_repr = str(_tree)
         _tree.tree_node_grouping(tolerance=0)
 
-        repr_after = str(_tree)
-
-        # Converged — grouping produced no change.
-        if repr_after == repr_before:
-            break
-
-        # Oscillation — representation already seen in an earlier iteration.
-        if repr_after in seen_reprs:
-            log_debug(f"Grouping oscillation detected at iteration {i + 1}, stopping early.")
-            break
-
-        # Track the smallest intermediate result.
         current_len = len(_tree)
         if current_len < best_len:
             best_tree = copy.deepcopy(_tree)
             best_len = current_len
+
+        if str(_tree) == previous_repr:
+            break
     else:
         # Loop exhausted without convergence — not expected in practice.
         log(
             "w",
-            f"Grouping did not converge after {_MAX_GROUPING_ITERS} "
+            f"Grouping did not converge after {max_grouping_iters} "
             f"iterations (tree len={len(_tree)}). Using best intermediate.",
         )
 
@@ -1574,13 +1584,21 @@ def tree_simplification(_tree: Node, allow_chain: bool) -> Node:
     if original_len < len(_tree):
         astr = string_remove_trailing_zeroes(str(original.get_sympy_expr()))
         bstr = string_remove_trailing_zeroes(str(_tree.get_sympy_expr()))
-        log("w", f"Simplification grew tree ({original_len} → {len(_tree)} nodes), keeping original: {astr}")
+        should_log_warning, suppressed_count = _should_emit_simplification_growth_warning()
+        if should_log_warning:
+            suffix = f" | similar cases suppressed={suppressed_count}" if suppressed_count else ""
+            log(
+                "w",
+                f"Simplification grew tree ({original_len} → {len(_tree)} nodes), keeping original: {astr}{suffix}",
+            )
 
-        if astr != bstr:
-            log("w", f"Diff in sympy expression?\n\t{astr}\n\t{bstr}")
-
-        return original
-
+            if astr != bstr:
+                # sfeh 'a**0.5' does not become 'sqrt(a)'! use rational=True or sympy.S.Half
+                log("w", f"Diff in sympy expression?\n\t{astr}\n\t{bstr}")  # raise ex? does not occur after grouping?
+                # sfeh Example 03.05.2025
+                # 	sin(cartVel**(6450000000*RoundDummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
+                # 	sin(cartVel**(6.45e+9*RoundDummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
+        _tree = original
     return _tree
 
 

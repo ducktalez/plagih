@@ -19,6 +19,7 @@ import pandas as pd
 import pytest
 import sympy
 
+from plagih.exceptions import SympyError
 from plagih.trees import (
     ITE,
     Abs,
@@ -317,6 +318,11 @@ class TestRoundDummy:
         result = RoundDummy(x + 1.13)
         # Should be a symbolic expression
         assert result is not None
+
+    def test_round_dummy_rejects_unsupported_input_with_sympy_error(self):
+        """Regression: unsupported RoundDummy inputs should not leak CuriosityError."""
+        with pytest.raises(SympyError, match="RoundDummy cannot evaluate input"):
+            RoundDummy.eval(object())
 
 
 # =============================================================================

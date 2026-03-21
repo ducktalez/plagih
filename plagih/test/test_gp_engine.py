@@ -97,3 +97,92 @@ class TestGenerationSummaryLogging:
             msg_type == "gg" and message == f"generation 0/{gp_instance.gen_end} start: create initial population"
             for msg_type, message in messages
         )
+
+    def test_gen_create_initial_persists_tree_timing_csv(self, gp_instance):
+        """Generation analysis should persist per-tree timing records for later inspection."""
+        gp_instance.gen_create_initial()
+
+        timing_path = gp_instance.rootdir / "performance" / "tree_timings_gen_0000.csv"
+        assert timing_path.exists()
+
+        df = pd.read_csv(timing_path)
+        assert not df.empty
+        assert {"tag", "status", "create_ms_shared", "total_ms"}.issubset(df.columns)
+        assert len(gp_instance._latest_generation_tree_timings) == len(df)
+
+    def test_persist_generation_tree_timings_logs_only_real_outliers(self, gp_instance, monkeypatch):
+        """Only genuinely anomalous slow trees should be logged for diagnosis."""
+        messages = []
+
+        def _capture_log(msg_type, message):
+            messages.append((msg_type, message))
+
+        monkeypatch.setattr(gp_engine_mod, "log", _capture_log)
+        gp_instance._generation_tree_timings = [
+            {
+                "tag": "mutation",
+                "status": "ok",
+                "create_ms_shared": 5.0,
+                "simplify_ms": 7.0,
+                "evaluate_ms": 22.0,
+                "total_ms": 34.0,
+                "fitness": 0.5,
+                "parsimony": 9,
+                "expr_short": "Add(cartPos, cartVel)",
+            },
+            {
+                "tag": "random_new",
+                "status": "ok",
+                "create_ms_shared": 3.0,
+                "simplify_ms": 50.0,
+                "evaluate_ms": 2350.0,
+                "total_ms": 2403.0,
+                "fitness": 0.4,
+                "parsimony": 7,
+                "expr_short": "Mul(cartPos, cartVel)",
+            },
+        ]
+
+        gp_instance._persist_generation_tree_timings(gen_id=0)
+
+        warning_messages = [message for msg_type, message in messages if msg_type == "w"]
+        assert any("tree timing warning" in message for message in warning_messages)
+        assert any("Tree timing outlier #1" in message and "phase=evaluate" in message for message in warning_messages)
+        assert any("expr=Mul(cartPos, cartVel)" in message for message in warning_messages)
+
+    def test_persist_generation_tree_timings_skips_normal_cases(self, gp_instance, monkeypatch):
+        """Normal generations should persist CSVs silently without extra per-tree spam."""
+        messages = []
+
+        def _capture_log(msg_type, message):
+            messages.append((msg_type, message))
+
+        monkeypatch.setattr(gp_engine_mod, "log", _capture_log)
+        gp_instance._generation_tree_timings = [
+            {
+                "tag": "mutation",
+                "status": "ok",
+                "create_ms_shared": 5.0,
+                "simplify_ms": 7.0,
+                "evaluate_ms": 22.0,
+                "total_ms": 34.0,
+                "fitness": 0.5,
+                "parsimony": 9,
+                "expr_short": "Add(cartPos, cartVel)",
+            },
+            {
+                "tag": "random_new",
+                "status": "ok",
+                "create_ms_shared": 3.0,
+                "simplify_ms": 1.0,
+                "evaluate_ms": 40.0,
+                "total_ms": 44.0,
+                "fitness": 0.4,
+                "parsimony": 7,
+                "expr_short": "Mul(cartPos, cartVel)",
+            },
+        ]
+
+        gp_instance._persist_generation_tree_timings(gen_id=0)
+
+        assert not [message for msg_type, message in messages if msg_type in {"w", "f", "pp"}]

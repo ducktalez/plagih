@@ -131,6 +131,7 @@ class TaskResult:
     error: Optional[str]
     tag: str
     debug: Optional[Dict[str, Any]] = None
+    tree_timings: Optional[List[Dict[str, Any]]] = None
 
 
 # =============================================================================
@@ -150,6 +151,7 @@ class PerformanceTracker:
         self._errors: Dict[str, int] = {}  # tag -> error count
         self._successes: Dict[str, int] = {}  # tag -> success count
         self._generation_time: float = 0.0
+        self.tree_timings: List[Dict[str, Any]] = []
 
     def record(self, result: TaskResult):
         """Record a single task result."""
@@ -164,6 +166,9 @@ class PerformanceTracker:
         else:
             self._successes[tag] += 1
             self._results[tag].append(result.timing)
+
+        if result.tree_timings:
+            self.tree_timings.extend(result.tree_timings)
 
     def set_generation_time(self, elapsed: float):
         """Set the total wall-clock time for the generation."""
@@ -223,6 +228,7 @@ class PerformanceTracker:
         self._errors.clear()
         self._successes.clear()
         self._generation_time = 0.0
+        self.tree_timings.clear()
 
 
 @dataclass
@@ -905,6 +911,8 @@ def _worker_run_task(task: TaskSpec, shared_lut_tree=None, shared_lut_symex=None
     stage = "setup"
     created_trees = []
     trees = []
+    tree_timing_records = []
+    current_tree_index = None
 
     # Set seed if provided (for reproducibility)
     if task.seed is not None:
@@ -949,25 +957,24 @@ def _worker_run_task(task: TaskSpec, shared_lut_tree=None, shared_lut_symex=None
 
         # Phase 2: Simplify if requested
         stage = "simplify"
+        trees = []
+        simplify_durations = []
+        raw_trees = list(created_trees)
         t1 = time.perf_counter()
-        if task.crossover:
-            tree_a, tree_b = result
-            if task.simplicate:
-                tree_a = tree_simplification(tree_a, allow_chain=_worker_allow_chain)
-                tree_b = tree_simplification(tree_b, allow_chain=_worker_allow_chain)
-            trees = [tree_a, tree_b]
-        else:
-            tree = result
-            if task.simplicate:
-                tree = tree_simplification(tree, allow_chain=_worker_allow_chain)
-            trees = [tree]
+        for raw_tree in raw_trees:
+            tree_simplify_start = time.perf_counter()
+            tree_now = tree_simplification(raw_tree, allow_chain=_worker_allow_chain) if task.simplicate else raw_tree
+            simplify_durations.append(time.perf_counter() - tree_simplify_start)
+            trees.append(tree_now)
         timing["simplify"] = time.perf_counter() - t1
 
         # Phase 3: Evaluate each tree
         stage = "evaluate"
         t2 = time.perf_counter()
         candidates = []
-        for tree in trees:
+        for tree_index, tree in enumerate(trees):
+            current_tree_index = tree_index
+            tree_eval_start = time.perf_counter()
             candidate = evaluate_tree_standalone(
                 evotree=tree,
                 evolve=_worker_evolve,
@@ -982,6 +989,23 @@ def _worker_run_task(task: TaskSpec, shared_lut_tree=None, shared_lut_symex=None
                 tag=task.tag,
             )
             candidates.append(candidate)
+            evaluate_duration = time.perf_counter() - tree_eval_start
+            tree_timing_records.append(
+                {
+                    "tag": task.tag,
+                    "task_index": task.task_index,
+                    "tree_index": tree_index,
+                    "status": "ok",
+                    "failed_stage": None,
+                    "create_ms_shared": timing.get("create", 0.0) * 1000,
+                    "simplify_ms": simplify_durations[tree_index] * 1000,
+                    "evaluate_ms": evaluate_duration * 1000,
+                    "total_ms": (timing.get("create", 0.0) + simplify_durations[tree_index] + evaluate_duration) * 1000,
+                    "fitness": candidate.fitness,
+                    "parsimony": candidate.parsimony,
+                    "expr_short": str(candidate.tree),
+                }
+            )
         timing["evaluate"] = time.perf_counter() - t2
         timing["total"] = time.perf_counter() - t0
 
@@ -993,11 +1017,30 @@ def _worker_run_task(task: TaskSpec, shared_lut_tree=None, shared_lut_symex=None
             error=None,
             tag=task.tag,
             debug=None,
+            tree_timings=tree_timing_records,
         )
 
     except Exception as e:
         timing["total"] = time.perf_counter() - t0
         debug = _task_debug_payload(task, stage=stage, trees=trees or created_trees, exc=e)
+        tree_timing_records.append(
+            {
+                "tag": task.tag,
+                "task_index": task.task_index,
+                "tree_index": current_tree_index,
+                "status": "error",
+                "failed_stage": stage,
+                "create_ms_shared": timing.get("create", 0.0) * 1000,
+                "simplify_ms": timing.get("simplify", 0.0) * 1000,
+                "evaluate_ms": timing.get("evaluate", 0.0) * 1000,
+                "total_ms": timing["total"] * 1000,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "expr_short": str((trees or created_trees)[current_tree_index])
+                if current_tree_index is not None and (trees or created_trees)
+                else None,
+            }
+        )
         return TaskResult(
             candidates=[],
             lut_tree_entries={},  # LUT entries stay in shared dicts
@@ -1006,6 +1049,7 @@ def _worker_run_task(task: TaskSpec, shared_lut_tree=None, shared_lut_symex=None
             error=_format_task_error_message(e, debug),
             tag=task.tag,
             debug=debug,
+            tree_timings=tree_timing_records,
         )
 
 
@@ -1086,6 +1130,9 @@ def run_task_sequential(
 
     timing = {}
     t0 = time.perf_counter()
+    tree_timing_records = []
+    current_tree_index = None
+    stage = "setup"
 
     # Set seed if provided
     if task.seed is not None:
@@ -1095,6 +1142,7 @@ def run_task_sequential(
 
     try:
         # Phase 1: Create tree(s)
+        stage = "create"
 
         registry = strategy_registry
         if task.strategy_name not in registry:
@@ -1105,24 +1153,31 @@ def run_task_sequential(
         timing["create"] = time.perf_counter() - t0
 
         # Phase 2: Simplify
+        stage = "simplify"
         t1 = time.perf_counter()
+        simplify_durations = []
         if task.crossover:
             tree_a, tree_b = result
-            if task.simplicate:
-                tree_a = tree_simplification(tree_a, allow_chain=allow_chain)
-                tree_b = tree_simplification(tree_b, allow_chain=allow_chain)
-            trees = [tree_a, tree_b]
+            raw_trees = [tree_a, tree_b]
         else:
             tree = result
-            if task.simplicate:
-                tree = tree_simplification(tree, allow_chain=allow_chain)
-            trees = [tree]
+            raw_trees = [tree]
+
+        trees = []
+        for raw_tree in raw_trees:
+            tree_simplify_start = time.perf_counter()
+            tree_now = tree_simplification(raw_tree, allow_chain=allow_chain) if task.simplicate else raw_tree
+            simplify_durations.append(time.perf_counter() - tree_simplify_start)
+            trees.append(tree_now)
         timing["simplify"] = time.perf_counter() - t1
 
         # Phase 3: Evaluate
+        stage = "evaluate"
         t2 = time.perf_counter()
         candidates = []
-        for tree in trees:
+        for tree_index, tree in enumerate(trees):
+            current_tree_index = tree_index
+            tree_eval_start = time.perf_counter()
             candidate = evaluate_tree_standalone(
                 evotree=tree,
                 evolve=evolve,
@@ -1137,6 +1192,23 @@ def run_task_sequential(
                 tag=task.tag,
             )
             candidates.append(candidate)
+            evaluate_duration = time.perf_counter() - tree_eval_start
+            tree_timing_records.append(
+                {
+                    "tag": task.tag,
+                    "task_index": task.task_index,
+                    "tree_index": tree_index,
+                    "status": "ok",
+                    "failed_stage": None,
+                    "create_ms_shared": timing.get("create", 0.0) * 1000,
+                    "simplify_ms": simplify_durations[tree_index] * 1000,
+                    "evaluate_ms": evaluate_duration * 1000,
+                    "total_ms": (timing.get("create", 0.0) + simplify_durations[tree_index] + evaluate_duration) * 1000,
+                    "fitness": candidate.fitness,
+                    "parsimony": candidate.parsimony,
+                    "expr_short": str(candidate.tree),
+                }
+            )
         timing["evaluate"] = time.perf_counter() - t2
         timing["total"] = time.perf_counter() - t0
 
@@ -1147,10 +1219,29 @@ def run_task_sequential(
             timing=timing,
             error=None,
             tag=task.tag,
+            tree_timings=tree_timing_records,
         )
 
     except (TreeError, TreeSizeError, SympyError, ValueError, ArithmeticError, KeyError, RecursionError) as e:
         timing["total"] = time.perf_counter() - t0
+        tree_timing_records.append(
+            {
+                "tag": task.tag,
+                "task_index": task.task_index,
+                "tree_index": current_tree_index,
+                "status": "error",
+                "failed_stage": stage,
+                "create_ms_shared": timing.get("create", 0.0) * 1000,
+                "simplify_ms": timing.get("simplify", 0.0) * 1000,
+                "evaluate_ms": timing.get("evaluate", 0.0) * 1000,
+                "total_ms": timing["total"] * 1000,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "expr_short": str(trees[current_tree_index])
+                if current_tree_index is not None and current_tree_index < len(trees)
+                else None,
+            }
+        )
         return TaskResult(
             candidates=[],
             lut_tree_entries={},
@@ -1158,6 +1249,7 @@ def run_task_sequential(
             timing=timing,
             error=f"{type(e).__name__}: {e}",
             tag=task.tag,
+            tree_timings=tree_timing_records,
         )
 
 

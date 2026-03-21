@@ -5,27 +5,20 @@ Provides common test data, symbols, operators, and helper functions
 used across multiple test modules.
 """
 
-import sys
+import shutil
+import tempfile
 from pathlib import Path
 
-# MUST be before any plagih imports - add project root to Python path
-_project_root = Path(__file__).resolve().parent.parent.parent
-if str(_project_root) not in sys.path:
-    sys.path.insert(0, str(_project_root))
+import numpy as np
+import pandas as pd
+import pytest
+import sympy
 
 # ---------------------------------------------------------------------------
 # Exclude standalone benchmark scripts from pytest collection.
 # They live in plagih/test/benchmarks/ and are meant to be run directly.
 # ---------------------------------------------------------------------------
 collect_ignore_glob = ["benchmarks/bench_*.py"]
-
-import shutil
-import tempfile
-
-import numpy as np
-import pandas as pd
-import pytest
-import sympy
 
 
 # Lazy imports to avoid circular dependencies

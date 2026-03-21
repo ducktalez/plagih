@@ -8,20 +8,11 @@ Tests verify:
 4. Tree structure operations (repair, copy, etc.)
 """
 
-import sys
-from pathlib import Path
-
-# Add project root to path
-_root = Path(__file__).resolve().parent.parent.parent
-if str(_root) not in sys.path:
-    sys.path.insert(0, str(_root))
-
-import copy
-
 import numpy as np
 import pytest
 import sympy
 
+from plagih.exceptions import TreeError
 from plagih.trees import (
     Abs,
     Add,
@@ -208,12 +199,36 @@ class TestTreeSimplification:
         """Tests simplification preserves evaluation results."""
         original = Add(Mul(Symbol(sympy.Symbol("a")), Number(2.0)), Symbol(sympy.Symbol("b")))
 
-        simplified = tree_simplification(copy.deepcopy(original), allow_chain=False)
+        simplified_input = node_deepcopy(original)
+        simplified_input.repair_all()
+        simplified = tree_simplification(simplified_input, allow_chain=False)
 
         result_orig = original.eval_predict_numpy_now(sample_df)
         result_simp = simplified.eval_predict_numpy_now(sample_df)
 
         np.testing.assert_array_almost_equal(result_orig, result_simp)
+
+    def test_simplify_grouping_initializes_best_tree_regression(self):
+        """Regression: grouping updates must not crash with uninitialized best-tree tracking."""
+        a_sym = sympy.Symbol("a")
+        original = Pow(Symbol(a_sym), Number(2.0))
+
+        simplified = tree_simplification(original, allow_chain=False)
+
+        assert isinstance(simplified, (Square, Pow, PowRounded))
+        for sample in (-3, -1, 0, 2, 5):
+            expected = float(original.get_sympy_expr().subs({a_sym: sample}))
+            actual = float(simplified.get_sympy_expr().subs({a_sym: sample}))
+            assert actual == pytest.approx(expected)
+
+    def test_simplify_falls_back_to_original_when_sympy_version_grows(self):
+        """Regression: simplification must keep the smaller original representation."""
+        original = Div(Number(19.0), Symbol(sympy.Symbol("a")))
+
+        simplified = tree_simplification(original, allow_chain=False)
+
+        assert len(simplified) <= len(original)
+        assert sympy.simplify(original.get_sympy_expr() - simplified.get_sympy_expr()) == 0
 
     def test_partial_reduce_can_simplify_math_operator(self):
         """Regression: partial simplification must not ignore MathOperator nodes."""
@@ -223,6 +238,34 @@ class TestTreeSimplification:
 
         assert isinstance(simplified, Symbol)
         assert simplified.get_value() == sympy.Symbol("a")
+
+    def test_revoke_useless_nodes_removes_additive_identity_without_crashing(self):
+        """Regression: Add(..., 0) cleanup must not raise CuriosityError."""
+        tree = Add(Symbol(sympy.Symbol("a")), Number(0.0))
+
+        tree.revoke_useless_nodes()
+
+        assert isinstance(tree, Symbol)
+        assert tree.get_value() == sympy.Symbol("a")
+
+    def test_revoke_useless_nodes_reduces_all_zero_add_to_zero(self):
+        """Regression: Add(0, 0) should collapse to Number(0) instead of crashing."""
+        tree = Add(Number(0.0), Number(0.0))
+
+        tree.revoke_useless_nodes()
+
+        assert isinstance(tree, Number)
+        assert float(tree.get_value()) == pytest.approx(0.0)
+
+    def test_set_new_node_handles_neutral_add_branch_cleanup(self):
+        """Regression: set_new_node() should survive replacing a subtree with Add(a, 0)."""
+        target = Add(Symbol(sympy.Symbol("a")), Number(1.0))
+        replacement = Add(Symbol(sympy.Symbol("b")), Number(0.0))
+
+        target.set_new_node(replacement)
+
+        assert isinstance(target, Symbol)
+        assert target.get_value() == sympy.Symbol("b")
 
 
 # =============================================================================
@@ -265,6 +308,44 @@ class TestTreeNodeGrouping:
         # Should be Usub or simplified
         assert isinstance(tree, (Usub, Mul, Symbol))
 
+    def test_mul_by_one_cleanup_does_not_crash(self):
+        """Regression: Mul(..., 1) in grouping should simplify instead of raising."""
+        tree = Mul(Symbol(sympy.Symbol("a")), Number(1.0))
+
+        tree.tree_node_grouping()
+
+        assert isinstance(tree, Symbol)
+        assert tree.get_value() == sympy.Symbol("a")
+
+    def test_mul_of_only_ones_collapses_to_one(self):
+        """Regression: Mul(1, 1) should collapse to Number(1) during grouping."""
+        tree = Mul(Number(1.0), Number(1.0))
+
+        tree.tree_node_grouping()
+
+        assert isinstance(tree, Number)
+        assert float(tree.get_value()) == pytest.approx(1.0)
+
+    def test_grouping_preserves_duplicate_negative_one_factors(self):
+        """Regression: removing one matched factor must not drop both equal `-1` children."""
+        tree = Mul(Symbol(sympy.Symbol("a")), Number(-1.0), Number(-1.0))
+        expr_before = tree.get_sympy_expr()
+
+        tree.tree_node_grouping()
+
+        expr_after = tree.get_sympy_expr()
+        assert sympy.simplify(expr_before - expr_after) == 0
+
+    def test_grouping_preserves_duplicate_numeric_scale_factors(self):
+        """Regression: equal numeric factors must not be removed by value-based filtering."""
+        tree = Mul(Number(2.0), Symbol(sympy.Symbol("a")), Number(2.0))
+        expr_before = tree.get_sympy_expr()
+
+        tree.tree_node_grouping()
+
+        expr_after = tree.get_sympy_expr()
+        assert sympy.simplify(expr_before - expr_after) == 0
+
 
 # =============================================================================
 # Tree Structure Tests
@@ -273,6 +354,84 @@ class TestTreeNodeGrouping:
 
 class TestTreeStructure:
     """Tests for tree structure operations."""
+
+    def test_node_equality_is_identity_based_after_repair(self):
+        """Regression: repaired trees must not recurse via dataclass structural equality."""
+        tree_a = Add(Symbol(sympy.Symbol("a")), Number(1.0))
+        tree_b = Add(Symbol(sympy.Symbol("a")), Number(1.0))
+        tree_a.repair_all()
+        tree_b.repair_all()
+
+        assert tree_a == tree_a
+        assert tree_a != tree_b
+
+    def test_equal_value_terminals_do_not_match_by_membership(self):
+        """Regression: node membership checks should be identity-based, not structural."""
+        n1 = Number(1.0)
+        n2 = Number(1.0)
+
+        assert n1 not in [n2]
+
+    def test_set_new_node_repair_true_preserves_non_root_backlinks(self):
+        """Regression: replacing an attached subtree with repair=True must keep parent/root/depth consistent."""
+        root = Add(Symbol(sympy.Symbol("a")), Number(1.0))
+        root.repair_all()
+        child = root.get_childs()[1]
+
+        child.set_new_node(Mul(Number(2.0), Symbol(sympy.Symbol("b"))), repair=True, clean_chain=False)
+
+        assert root.get_childs()[1] is child
+        assert isinstance(child, Mul)
+        assert child.parent_node is root
+        assert child.root_node is root
+        assert child.depth == 1
+        for grandchild in child.get_childs():
+            assert grandchild.parent_node is child
+            assert grandchild.root_node is root
+            assert grandchild.depth == 2
+
+    def test_set_new_node_reuses_replacement_without_aliasing_children(self):
+        """Regression: reusing the same replacement template must not share child objects across trees."""
+        replacement = Mul(Number(3.0), Symbol(sympy.Symbol("z")))
+        left = Add(Symbol(sympy.Symbol("x")), Number(1.0))
+        right = Add(Symbol(sympy.Symbol("y")), Number(2.0))
+
+        left.set_new_node(replacement, clean_chain=False)
+        right.set_new_node(replacement, clean_chain=False)
+
+        assert isinstance(left, Mul)
+        assert isinstance(right, Mul)
+        assert all(a is not b for a, b in zip(left.get_childs(), right.get_childs(), strict=True))
+
+        left.get_childs()[0].set_value(99.0)
+        assert float(right.get_childs()[0].get_value()) == pytest.approx(3.0)
+        assert float(replacement.get_childs()[0].get_value()) == pytest.approx(3.0)
+
+    def test_replace_with_keeps_parent_slot_bound_to_same_object(self):
+        """Regression: replace_with() should mutate the attached node in place."""
+        root = Add(Symbol(sympy.Symbol("a")), Mul(Symbol(sympy.Symbol("b")), Number(-1.0)))
+        root.repair_all()
+        child = root.get_childs()[1]
+
+        child.replace_with(Usub, [Symbol(sympy.Symbol("b"))])
+
+        assert root.get_childs()[1] is child
+        assert isinstance(child, Usub)
+        assert child.parent_node is root
+        assert child.root_node is root
+        assert child.depth == 1
+
+    def test_replace_with_node_does_not_mutate_template_node(self):
+        """Regression: replace_with_node() should not pre-simplify/mutate the caller-provided template."""
+        target = Number(5.0)
+        replacement = Add(Symbol(sympy.Symbol("b")), Number(0.0))
+
+        target.replace_with_node(replacement)
+
+        assert isinstance(target, Symbol)
+        assert target.get_value() == sympy.Symbol("b")
+        assert isinstance(replacement, Add)
+        assert len(replacement.get_childs()) == 2
 
     def test_repair_depth(self):
         """Tests repair_depth sets correct depths."""
@@ -288,6 +447,7 @@ class TestTreeStructure:
         """Tests node_deepcopy creates independent copy."""
         original = Add(Symbol(sympy.Symbol("a")), Number(1.0))
         copied = node_deepcopy(original)
+        copied.repair_all()
 
         # Modify copy
         copied.childs[1] = Number(999.0)
@@ -419,6 +579,22 @@ class TestTreeRepresentation:
         assert "Symbol" in export
         assert "Number" in export
         assert "2.5" in export
+
+    def test_export_tree_raises_clear_error_for_invalid_number_payload(self):
+        """Regression: malformed Number export should raise a typed, descriptive error."""
+        tree = Number(1.0)
+        tree.childs = [object()]
+
+        with pytest.raises(ValueError, match="Cannot export Number terminal"):
+            tree.export_tree()
+
+    def test_str_as_list_raises_tree_error_for_node_without_childs(self):
+        """Regression: malformed nodes should fail with TreeError, not CuriosityError."""
+        tree = Number(1.0)
+        tree.childs = []
+
+        with pytest.raises(TreeError, match="has no childs"):
+            tree.str_as_list()
 
     def test_get_lut_id_unique(self):
         """Tests get_lut_id produces unique IDs."""

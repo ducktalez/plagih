@@ -13,6 +13,25 @@
 - **Problem:** Initial population creation is always sequential (P8). For
   `pop=10000` this costs ~44–47s — a fixed sequential block.
 - **Approach:** Reuse existing `run_generation_parallel()` infrastructure.
+- **Benchmark note (2026-03-20):** The new tree-creation benchmark shows raw
+  tree building is cheap (`~1.5–2.1 ms/tree`), while `gen_create_initial()` is
+  dominated by **evaluation** inside `tree_to_candidate()` (`max_evaluate_ms`
+  observed up to `~55.9 ms`). Parallelizing only the raw generator will not be
+  sufficient; the evaluation hot path must be considered too.
+
+### H4 – Reduce evaluation hot-path cost during tree production
+- **Where:** `ExplainableGP.tree_to_candidate()` in `trees/_gp_engine.py` and
+  `evaluate_tree_standalone()` in `parallel.py`
+- **Problem:** New tree-creation benchmark (`bench_tree_creation.py`) indicates
+  that both initial population creation and later generation production are
+  dominated by **evaluation**, not raw tree generation.
+- **Current evidence:** `initial_population` and `active_generation` both show
+  evaluation as the dominant phase for most successful trees, with evaluation
+  failures significantly outnumbering creation/simplification failures.
+- **Ideas:**
+  1. Add a cheap pre-filter before full evaluation for obviously invalid trees.
+  2. Investigate `canonicalize_children()` and LUT interactions in the hot path.
+  3. Consider lighter-weight or staged evaluation for active-test/debug modes.
 
 ### H2 – Optimize pre-selection overhead
 - **Where:** `pre_select_for_tasks()` in `parallel.py`

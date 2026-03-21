@@ -23,6 +23,47 @@ Direct CPU/RAM profiling for the current parallel path:
 - `plagih/test/benchmarks/bench_parallel_resources.py`
 - Output: `plagih/test/benchmarks/bench_resources_output.txt`
 
+## Tree-Creation Performance Diagnosis
+
+Focused creation/evaluation diagnosis for cases where evolution appears slow or
+stuck while producing trees:
+
+- Runner: `plagih/test/benchmarks/bench_tree_creation.py`
+- Shared harness: `plagih/test/benchmarks/_tree_creation_harness.py`
+- Pytest smoke coverage: `plagih/test/test_tree_creation_benchmark.py`
+- Output: `plagih/test/benchmarks/bench_tree_creation_output.json`
+
+The harness separates four scenarios:
+
+1. **Raw random creation** (`evolve_create_random`) — pure tree building
+2. **Depth-goal creation** (`evolve_new_tree_depth`) — targeted deeper trees
+3. **Initial population** (`gen_create_initial`) — creation + evaluation
+4. **Active generation** (`run_generation`) — strategy mix with timing records
+
+Each summary reports `mean/p50/p95/max`, dominant phase counts, failed-stage
+counts, and the slowest example expressions.
+
+### First benchmark findings (2026-03-20, local Windows run)
+
+- **Raw tree creation is cheap**: `raw_random_creation` averaged **~1.46 ms**
+  per tree and `depth_goal_creation` **~2.06 ms** per tree.
+- **The bottleneck is usually evaluation, not construction**:
+  `initial_population` had **112/120 successful trees dominated by evaluation**,
+  with `max_evaluate_ms ≈ 55.9 ms`.
+- **Mixed generations show the same pattern**:
+  `active_generation` had **73/108 successful trees dominated by evaluation**,
+  with `max_evaluate_ms ≈ 92.0 ms` and `p95_total_ms ≈ 25.1 ms`.
+- **Simplification was negligible in the current active-test preset**:
+  `max_simplify_ms ≈ 0.09 ms`, because the debug-safe strategy mix no longer
+  includes the dedicated `simplicate` stage.
+- **Evaluation failures are clustered in the evaluation phase**:
+  `initial_population` produced **22 evaluation-stage errors**, and
+  `active_generation` **12**, while creation/simplification errors were `0`.
+
+Implication: if a long run appears stuck during tree production, inspect
+`tree_to_candidate()` / `evaluate_tree_standalone()` first; raw tree generation
+is comparatively cheap in the current architecture.
+
 ---
 
 ## MountainCar (Standard Benchmark)

@@ -508,3 +508,16 @@ class TestEdgeCases:
         result = tree.eval_predict_numpy_now(sample_df)
         expected = np.abs(sample_df["a"].values)
         np.testing.assert_array_almost_equal(result, expected)
+
+    def test_exp_coerces_object_dtype_child_arrays(self, sample_df, monkeypatch):
+        """Regression: object arrays from child nodes must not crash np.exp."""
+        tree = Exp(Number(1.0))
+        monkeypatch.setattr(
+            tree.childs[0],
+            "eval_predict_numpy_now",
+            lambda _df, *args: np.array([1, 2, 3, 4, 5], dtype=object),
+        )
+
+        result = tree.eval_predict_numpy_now(sample_df)
+
+        np.testing.assert_allclose(result, np.exp(np.array([1.0, 2.0, 3.0, 4.0, 5.0], dtype=np.float64)))

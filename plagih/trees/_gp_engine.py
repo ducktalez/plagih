@@ -211,6 +211,8 @@ class ExplainableGP:
         self._custom_strategies: Dict[str, Callable] = {}
         self._strategy_registry = dict(BUILTIN_STRATEGIES)  # copy builtin registry
         self._performance_tracker = None  # Set per generation
+        self._generation_tree_timings = []
+        self._latest_generation_tree_timings = []
 
         # Persistent worker pool (avoids ~2s Windows spawn overhead per generation).
         # Created lazily on first parallel generation, shutdown on close().
@@ -599,6 +601,7 @@ class ExplainableGP:
         tasks = build_task_list(strategies, self.pop_max_size, seed=seed)
         total_candidates_expected = sum(2 if task.crossover else 1 for task in tasks)
         progress_started = time.perf_counter()
+        self._generation_tree_timings = []
 
         def _update_generation_progress(created: int, total: int, fail: int, label: Optional[str]) -> None:
             print_generation_progress(
@@ -662,6 +665,7 @@ class ExplainableGP:
 
         # Store candidates as next population
         self.pop_next = candidates
+        self._generation_tree_timings = list(tracker.tree_timings)
 
         # Progress done — overwrites the start-line.
         # Must happen BEFORE end_generation() because end_generation may
@@ -702,6 +706,7 @@ class ExplainableGP:
             The initial population (pop_genepool).
         """
         log("gg", f"generation {self.gen_id}/{self.gen_end} start: create initial population")
+        self._generation_tree_timings = []
 
         if origin_tree is not None:
             cand_origin = self.tree_to_candidate(origin_tree, raise_if_useless=False, tag="origin")
@@ -804,31 +809,121 @@ class ExplainableGP:
                 _update_creation_progress()
 
             while n_success < n:
+                attempt_started = time.perf_counter()
+                failed_stage = "create"
                 try:
                     if crossover:
+                        create_started = time.perf_counter()
                         t1, t2 = create_tree_f()
+                        create_duration = time.perf_counter() - create_started
                         if simplicate:
+                            failed_stage = "simplify"
+                            simplify_started = time.perf_counter()
                             t1 = tree_simplification(t1, allow_chain=self.allow_chain)
+                            simplify_duration_1 = time.perf_counter() - simplify_started
+                        else:
+                            simplify_duration_1 = 0.0
+                        failed_stage = "evaluate"
+                        evaluate_started = time.perf_counter()
                         ctree1 = self.tree_to_candidate(t1, tag=tag)
+                        evaluate_duration_1 = time.perf_counter() - evaluate_started
+                        self._generation_tree_timings.append(
+                            {
+                                "tag": tag,
+                                "task_index": n_success,
+                                "tree_index": 0,
+                                "status": "ok",
+                                "failed_stage": None,
+                                "create_ms_shared": create_duration * 1000,
+                                "simplify_ms": simplify_duration_1 * 1000,
+                                "evaluate_ms": evaluate_duration_1 * 1000,
+                                "total_ms": (create_duration + simplify_duration_1 + evaluate_duration_1) * 1000,
+                                "fitness": ctree1.fitness,
+                                "parsimony": ctree1.parsimony,
+                                "expr_short": str(ctree1.tree),
+                            }
+                        )
                         self.pop_next_append(ctree1)
                         n_success += 1
                         _update_creation_progress()
                         if simplicate:
+                            failed_stage = "simplify"
+                            simplify_started = time.perf_counter()
                             t2 = tree_simplification(t2, allow_chain=self.allow_chain)
+                            simplify_duration_2 = time.perf_counter() - simplify_started
+                        else:
+                            simplify_duration_2 = 0.0
+                        failed_stage = "evaluate"
+                        evaluate_started = time.perf_counter()
                         ctree2 = self.tree_to_candidate(t2, tag=tag)
+                        evaluate_duration_2 = time.perf_counter() - evaluate_started
+                        self._generation_tree_timings.append(
+                            {
+                                "tag": tag,
+                                "task_index": n_success,
+                                "tree_index": 1,
+                                "status": "ok",
+                                "failed_stage": None,
+                                "create_ms_shared": create_duration * 1000,
+                                "simplify_ms": simplify_duration_2 * 1000,
+                                "evaluate_ms": evaluate_duration_2 * 1000,
+                                "total_ms": (create_duration + simplify_duration_2 + evaluate_duration_2) * 1000,
+                                "fitness": ctree2.fitness,
+                                "parsimony": ctree2.parsimony,
+                                "expr_short": str(ctree2.tree),
+                            }
+                        )
                         self.pop_next_append(ctree2)
                         n_success += 1
                         _update_creation_progress()
                     else:
+                        create_started = time.perf_counter()
                         evotree = create_tree_f()
+                        create_duration = time.perf_counter() - create_started
                         if simplicate:
+                            failed_stage = "simplify"
+                            simplify_started = time.perf_counter()
                             evotree = tree_simplification(evotree, allow_chain=self.allow_chain)
+                            simplify_duration = time.perf_counter() - simplify_started
+                        else:
+                            simplify_duration = 0.0
+                        failed_stage = "evaluate"
+                        evaluate_started = time.perf_counter()
                         ctree = self.tree_to_candidate(evotree, tag=tag)
+                        evaluate_duration = time.perf_counter() - evaluate_started
+                        self._generation_tree_timings.append(
+                            {
+                                "tag": tag,
+                                "task_index": n_success,
+                                "tree_index": 0,
+                                "status": "ok",
+                                "failed_stage": None,
+                                "create_ms_shared": create_duration * 1000,
+                                "simplify_ms": simplify_duration * 1000,
+                                "evaluate_ms": evaluate_duration * 1000,
+                                "total_ms": (create_duration + simplify_duration + evaluate_duration) * 1000,
+                                "fitness": ctree.fitness,
+                                "parsimony": ctree.parsimony,
+                                "expr_short": str(ctree.tree),
+                            }
+                        )
                         self.pop_next_append(ctree)
                         n_success += 1
                         _update_creation_progress()
 
                 except (TreeError, TreeSizeError, SympyError) as e:
+                    self._generation_tree_timings.append(
+                        {
+                            "tag": tag,
+                            "task_index": n_success,
+                            "tree_index": None,
+                            "status": "error",
+                            "failed_stage": failed_stage,
+                            "total_ms": (time.perf_counter() - attempt_started) * 1000,
+                            "error_type": type(e).__name__,
+                            "error_message": str(e),
+                        }
+                    )
                     fails_list.append(e)
                     log("www", f"Failed evolution tag '{tag}': {e}")
                     if n > 0:
@@ -1273,6 +1368,8 @@ class ExplainableGP:
                 f" | time={gen_time:4.2f}s",
             )
 
+        self._persist_generation_tree_timings(gen_id=self.gen_id)
+
         # Generate merged population tree visualization
         if self.enable_analysis and _cfg.merged_tree:
             self._save_merged_population_tree()
@@ -1290,6 +1387,144 @@ class ExplainableGP:
 
             if (self.gen_id >= _cfg.backup_interval and self.gen_id % _cfg.backup_interval == 0) or self.gen_id == 10:
                 self.backup_save()
+
+    def _persist_generation_tree_timings(self, gen_id: int) -> None:
+        """Persist per-tree timing records and emit warnings only for real anomalies."""
+        records = list(self._generation_tree_timings)
+        self._latest_generation_tree_timings = records
+        if not records:
+            return
+
+        perf_dir = self.rootdir / "performance"
+        perf_dir.mkdir(parents=True, exist_ok=True)
+        csv_path = perf_dir / f"tree_timings_gen_{gen_id:04d}.csv"
+        pd.DataFrame(records).to_csv(csv_path, index=False)
+
+        ok_records = [record for record in records if record.get("status") == "ok"]
+        error_records = [record for record in records if record.get("status") == "error"]
+
+        max_create_ms = max((record.get("create_ms_shared", 0.0) for record in ok_records), default=0.0)
+        max_simplify_ms = max((record.get("simplify_ms", 0.0) for record in ok_records), default=0.0)
+        max_evaluate_ms = max((record.get("evaluate_ms", 0.0) for record in ok_records), default=0.0)
+        slowest_total = max(ok_records, key=lambda record: record.get("total_ms", 0.0), default=None)
+        timing_stats = self._tree_timing_stats(ok_records)
+        outliers = self._tree_timing_outliers(ok_records, stats=timing_stats)
+
+        stage_counts = {"create": 0, "simplify": 0, "evaluate": 0, "other": 0}
+        for record in error_records:
+            stage = record.get("failed_stage")
+            if stage in stage_counts:
+                stage_counts[stage] += 1
+            else:
+                stage_counts["other"] += 1
+
+        slowest_part = "n/a"
+        if slowest_total is not None:
+            slowest_part = (
+                f"{slowest_total.get('total_ms', 0.0):.1f}ms"
+                f" ({slowest_total.get('tag', '?')}#{slowest_total.get('tree_index', '?')})"
+            )
+
+        interesting_error_count = stage_counts["simplify"] + stage_counts["evaluate"] + stage_counts["other"]
+        excessive_create_errors = stage_counts["create"] >= max(10, len(records) // 8)
+        should_log_warning = bool(outliers) or interesting_error_count > 0 or excessive_create_errors
+
+        if should_log_warning:
+            log(
+                "w",
+                f"generation {gen_id}/{self.gen_end} tree timing warning: "
+                f"records={len(records)} | outliers={len(outliers)} | slowest_total={slowest_part} | "
+                f"median={timing_stats['median_total_ms']:.1f}ms | p95={timing_stats['p95_total_ms']:.1f}ms | "
+                f"max(create/simplify/evaluate)={max_create_ms:.1f}/{max_simplify_ms:.1f}/{max_evaluate_ms:.1f}ms | "
+                f"errors(create/simplify/evaluate/other)="
+                f"{stage_counts['create']}/{stage_counts['simplify']}/{stage_counts['evaluate']}/{stage_counts['other']}",
+            )
+            self._log_tree_timing_outliers(gen_id=gen_id, records=outliers)
+            log("f", f"Tree timing CSV saved to: {csv_path}")
+
+    @staticmethod
+    def _tree_timing_dominant_phase(record: Dict[str, Any]) -> str:
+        """Return the dominant measured phase for one successful tree timing record."""
+        phase_values = {
+            "create": record.get("create_ms_shared", 0.0),
+            "simplify": record.get("simplify_ms", 0.0),
+            "evaluate": record.get("evaluate_ms", 0.0),
+        }
+        return max(phase_values, key=phase_values.get)
+
+    @staticmethod
+    def _tree_timing_expr_short(record: Dict[str, Any], limit: int = 90) -> str:
+        """Return a compact single-line expression preview for logging."""
+        expr = str(record.get("expr_short") or "")
+        expr = expr.replace("\n", " ")
+        if len(expr) <= limit:
+            return expr
+        return expr[: limit - 3] + "..."
+
+    @staticmethod
+    def _tree_timing_stats(records: List[Dict[str, Any]]) -> Dict[str, float]:
+        """Return robust summary statistics for successful tree timings."""
+        totals = np.asarray([record.get("total_ms", 0.0) for record in records], dtype=np.float64)
+        if totals.size == 0:
+            return {"median_total_ms": 0.0, "p95_total_ms": 0.0, "max_total_ms": 0.0}
+        return {
+            "median_total_ms": float(np.median(totals)),
+            "p95_total_ms": float(np.percentile(totals, 95)) if totals.size > 1 else float(totals[0]),
+            "max_total_ms": float(np.max(totals)),
+        }
+
+    def _tree_timing_outliers(
+        self,
+        records: List[Dict[str, Any]],
+        *,
+        stats: Optional[Dict[str, float]] = None,
+        limit: int = 3,
+    ) -> List[Dict[str, Any]]:
+        """Return only clearly anomalous slow trees instead of every generation's top-N list."""
+        if not records:
+            return []
+
+        stats = stats or self._tree_timing_stats(records)
+        median_total_ms = stats.get("median_total_ms", 0.0)
+        p95_total_ms = stats.get("p95_total_ms", 0.0)
+        outliers: List[Dict[str, Any]] = []
+
+        for record in records:
+            total_ms = record.get("total_ms", 0.0)
+            dominant_phase = self._tree_timing_dominant_phase(record)
+            dominant_phase_ms = {
+                "create": record.get("create_ms_shared", 0.0),
+                "simplify": record.get("simplify_ms", 0.0),
+                "evaluate": record.get("evaluate_ms", 0.0),
+            }.get(dominant_phase, 0.0)
+            is_extreme_absolute = total_ms >= 5000.0
+            is_large_absolute = total_ms >= 1000.0
+            is_large_relative = total_ms >= max(3.0 * p95_total_ms, 8.0 * median_total_ms, 1000.0)
+            is_phase_dominated = (
+                total_ms >= 1000.0 and dominant_phase_ms >= 0.85 * total_ms and dominant_phase_ms >= 750.0
+            )
+
+            if is_extreme_absolute or (is_large_absolute and (is_large_relative or is_phase_dominated)):
+                outliers.append(record)
+
+        return sorted(outliers, key=lambda record: record.get("total_ms", 0.0), reverse=True)[:limit]
+
+    def _log_tree_timing_outliers(self, gen_id: int, records: List[Dict[str, Any]]) -> None:
+        """Log only genuinely slow outlier trees for long-run usability diagnostics."""
+        if not records:
+            return
+
+        for rank, record in enumerate(records, start=1):
+            dominant_phase = self._tree_timing_dominant_phase(record)
+            expr_short = self._tree_timing_expr_short(record)
+            log(
+                "w",
+                f"Tree timing outlier #{rank} in generation {gen_id}/{self.gen_end}: "
+                f"total={record.get('total_ms', 0.0):7.1f}ms | "
+                f"phase={dominant_phase:<8} | tag={record.get('tag', '?')} | "
+                f"fit={record.get('fitness', float('nan')):.4f} | "
+                f"parsim={record.get('parsimony', '?')} | expr={expr_short}",
+            )
 
     def run_custom_exit_condition(self):
         """Checks for early termination conditions.

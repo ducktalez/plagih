@@ -5,6 +5,7 @@ These are NOT pytest tests. They are standalone scripts meant to be run
 directly for performance profiling and diagnostics:
 
     python plagih/test/benchmarks/bench_performance.py
+    python plagih/test/benchmarks/bench_tree_creation.py
     python plagih/test/benchmarks/bench_parallel.py
     python plagih/test/benchmarks/bench_pickle.py
     python plagih/test/benchmarks/bench_run.py

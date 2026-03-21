@@ -495,3 +495,50 @@ logged as a warning.
 
 **Tracked as:** D6 in `IMPLEMENTATION_PLAN.md` — "Idempotent
 simplification pipeline".
+
+---
+
+## P20 – `revoke_useless_nodes()` must never crash on neutral cleanup
+
+**Where:** `Node.revoke_useless_nodes()` in `trees/_nodes.py`
+
+Structural edits (especially crossover via `set_new_node()`) can transiently
+create neutral forms such as `Add(a, 0)`, `Add(0, 0)`, `Mul(a, 1)`, or
+`Mul(1, 1)`. These are normal cleanup cases, not "impossible" states.
+
+**Fix (applied):**
+- neutral `0`/`1` children are removed without raising `CuriosityError`
+- all-neutral `Add` / `Mul` collapse to `Number(0)` / `Number(1)`
+- child iteration uses a copy so removals do not skip siblings
+- `Mul(..., 1)` inside `tree_node_grouping()` now delegates to normal cleanup
+  instead of crashing
+- `Mul` grouping removes exactly the matched child by object identity, so
+  duplicate equal factors (e.g. two `Number(-1)` nodes) are not dropped twice
+- malformed representation/export paths now raise structured `TreeError`,
+  `ValueError`, or `SympyError` with context instead of bare `CuriosityError`
+
+**Rule:** Do not use `CuriosityError` for expected simplification states in
+cleanup code. If a case can arise during crossover/mutation, handle it
+structurally and log only if further diagnosis is needed.
+
+---
+
+## P21 – `Node` equality must stay identity-based
+
+**Where:** `Node` dataclass in `trees/_nodes.py`
+
+`Node` instances carry circular back-references via `parent_node` and
+`root_node` after `repair_all()`. Dataclass-generated structural `__eq__`
+therefore causes two problems:
+
+1. comparing two repaired but structurally equal trees can recurse until
+   `RecursionError`
+2. list membership/filtering can accidentally treat distinct but equal-valued
+   nodes as the same child
+
+**Fix (applied):** `Node` uses identity-based equality (`@dataclass(eq=False)`),
+and transforms that remove a matched child do so by object identity.
+
+**Rule:** Never use `==` for structural tree comparison. Use
+`represent_str()`, `get_lut_id()`, or SymPy-level equivalence instead.
+

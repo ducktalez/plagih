@@ -4,15 +4,18 @@ Plagih GP - Explainable Genetic Programming Framework
 This file demonstrates how to use the plagih GP framework.
 Contains:
 1. demo_minimal() - A quick, well-documented example (~30s runtime)
-2. _test_simple() - Basic test run with various evolution strategies
-3. _test_random_pop() - Complete test run with all features
+2. demo_active_usability_test() - A single non-standard long observation run for active tests
+3. _test_simple() - Basic test run with various evolution strategies
+4. _test_random_pop() - Complete test run with all features
 
 Run this file to see the GP in action:
     python plagih_gp.py
 """
 
 import logging
+import time
 
+import numpy as np
 import pandas as pd
 import sympy
 from sklearn.model_selection import train_test_split
@@ -420,12 +423,193 @@ def demo_symbolic_regression():
 
 
 # =============================================================================
+# ACTIVE USABILITY TEST - Observe a single non-standard run over longer timescales
+# =============================================================================
+
+
+def _format_duration_compact(seconds):
+    """Formats a duration for compact console summaries."""
+    total_seconds = max(0, round(seconds))
+    hours, rem = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(rem, 60)
+    if hours:
+        return f"{hours}h {minutes:02d}m {seconds:02d}s"
+    if minutes:
+        return f"{minutes}m {seconds:02d}s"
+    return f"{seconds}s"
+
+
+def _build_longrun_strategies():
+    """Returns a balanced strategy mix for longer MountainCar observation runs."""
+    return [
+        Strategy("reproduction", rate=0.10, tournament_n=3),
+        Strategy("simplicate", rate=0.05, tournament_n=3, completely=True),
+        Strategy("mutation", rate=0.10, depth_goal=4, p_term=0.4),
+        Strategy("mutation_branch_nodes", rate=0.15, tournament_n=3, nodes_goal=10, p_term=0.2),
+        Strategy("mutation_branch_nodes", rate=0.10, tournament_n=3, nodes_goal=4, p_term=0.0),
+        Strategy("mutation_filter", rate=0.10, tournament_n=3),
+        Strategy("random_new", rate=0.15, depths=[3, 4, 5, 6], p_term=0.0),
+        Strategy("crossover", rate=0.20, crossover=True, tournament_n=3),
+        Strategy("pareto_revive", rate=0.05),
+    ]
+
+
+def _build_active_test_operator_dict():
+    """Return a conservative operator set for long interactive usability runs.
+
+    Goal: prefer stable, interpretable trees and avoid overly pathological
+    combinations (especially Exp / Round / PowRounded / Piecewise-heavy trees)
+    that are more likely to spend a very long time in native NumPy code.
+    """
+    return dict(Evolution.operator_presets["math_simple"])
+
+
+def _build_active_test_strategies():
+    """Return a debug-friendlier strategy mix for active usability testing."""
+    return [
+        Strategy("reproduction", rate=0.10, tournament_n=3),
+        Strategy("mutation", rate=0.20, depth_goal=4, p_term=0.4),
+        Strategy("mutation_branch_nodes", rate=0.20, tournament_n=3, nodes_goal=10, p_term=0.2),
+        Strategy("mutation_branch_nodes", rate=0.10, tournament_n=3, nodes_goal=4, p_term=0.0),
+        Strategy("mutation_filter", rate=0.10, tournament_n=3),
+        Strategy("random_new", rate=0.20, depths=[3, 4, 5, 6], p_term=0.0),
+        Strategy("crossover", rate=0.05, crossover=True, tournament_n=3),
+        Strategy("pareto_revive", rate=0.05),
+    ]
+
+
+def demo_active_usability_test(
+    pop_max_size=5000,
+    gen_end=1000,
+    parallel=None,
+    run_name=None,
+    enable_analysis=False,
+):
+    """Runs a single non-standard long observation run for active usability testing.
+
+    This mode is intentionally NOT part of the normal demo/test defaults. It is
+    meant for temporarily observing long-running behaviour with a much larger GP
+    configuration than the regular examples use.
+    """
+    if pop_max_size <= 0:
+        raise ValueError("pop_max_size must be > 0")
+    if gen_end <= 0:
+        raise ValueError("gen_end must be > 0")
+
+    timestamp = time.strftime("%Y%m%d-%H%M%S", time.localtime())
+    if run_name is None:
+        run_name = f"NONSTANDARD-observe-MTC200-RMSE-pop{pop_max_size}-gen{gen_end}-{timestamp}"
+
+    output_dir = Path.cwd() / ".testruns" / run_name
+    setup_logging(log_file=output_dir / "run.log", console_level=logging.INFO, file_level=logging.DEBUG, verbose=False)
+    log_info(f"Starting non-standard active usability test: {run_name}")
+
+    print(TEXT_NEWLINE)
+    print("PLAGIH GP - Non-standard Active Usability Test")
+    print(TEXT_NEWLINE)
+
+    df = pd.read_csv(Path(__file__).parent.absolute() / "benchmarks/mc/gp_files/samples200.csv").astype("float32")
+    df_train, df_test = train_test_split(df, test_size=0.2, random_state=0)
+
+    operator_dict = _build_active_test_operator_dict()
+    strategies = _build_active_test_strategies()
+    parallel = 0 if parallel is None else parallel
+
+    gp = ExplainableGP.create(
+        symbols=["cartVel", "cartPos"],
+        df_train=df_train,
+        rootdir=output_dir,
+        operators=operator_dict,
+        depth_max=7,
+        nodes_max=35,
+        pop_max_size=pop_max_size,
+        gen_end=gen_end,
+        clip_range=(0.0, 2.0),
+        error_metric="rmse",
+        parallel=parallel,
+        enable_analysis=enable_analysis,
+    )
+
+    print(f"Output directory: {output_dir}")
+    print(f"Training samples: {len(df_train)} | Control samples: {len(df_test)}")
+    print(f"Non-standard configuration: pop_max_size={pop_max_size}, gen_end={gen_end}")
+    print("Purpose: active long-timescale usability testing (not a standard demo/test mode)")
+    print(f"Analysis during run: {'enabled' if enable_analysis else 'disabled'}")
+    print(f"Parallel workers: {parallel}")
+    print(f"Strategy mix: {[strategy.name for strategy in strategies]}")
+    print(TEXT_NEWLINE)
+
+    gp.gen_create_initial()
+
+    stop_reason = f"generation limit {gp.gen_end} reached"
+    while gp.gen_id <= gp.gen_end:
+        if gp.run_custom_exit_condition():
+            stop_reason = "custom exit condition triggered"
+            break
+
+        observed_generation = gp.gen_id
+        gp.run_generation(strategies)
+        if gp.paretofront:
+            best = min(gp.paretofront, key=lambda c: (c.fitness, c.parsimony))
+            best_part = f"best_fit={best.fitness:.4f} | best_parsim={best.parsimony}"
+        else:
+            best_part = "best_fit=n/a"
+
+        log(
+            "gg",
+            f"observe generation {observed_generation}/{gp.gen_end}: "
+            f"population={len(gp.pop_genepool)}/{gp.pop_max_size} | "
+            f"pareto={len(gp.paretofront)} | {best_part}",
+        )
+    else:
+        stop_reason = f"generation limit {gp.gen_end} reached"
+
+    completed_generation = max(0, gp.gen_id - 1)
+    elapsed_total = time.perf_counter() - gp.time_start
+
+    print("\nTop Pareto solutions after the active usability test:")
+    for index, candidate in enumerate(sorted(gp.paretofront, key=lambda c: (c.fitness, c.parsimony))[:5], start=1):
+        print(
+            f"{index}. Fitness={candidate.fitness:.4f} | Complexity={candidate.parsimony:2d} | Expr={candidate.get_evotree().get_sympy_expr()}"
+        )
+
+    log(
+        "g",
+        f"non-standard usability test finished: {stop_reason}.\n"
+        f"Completed generation: {completed_generation}/{gp.gen_end}.\n"
+        f"Elapsed: {_format_duration_compact(elapsed_total)}.\n"
+        f"Results saved to: {output_dir}",
+    )
+
+    gp.backup_save()
+    gp.evoloop_monitoring_plots()
+
+    print(f"\n{TEXT_NEWLINE}\nNon-standard usability test complete! Results saved to: {output_dir}\n{TEXT_NEWLINE}")
+    return gp
+
+
+def demo_longrun(*args, **kwargs):
+    """Backward-compatible alias for the current active usability test mode."""
+    log_warning("'demo_longrun()' is now a compatibility alias for the non-standard active usability test.")
+    return demo_active_usability_test(*args, **kwargs)
+
+
+# =============================================================================
 # EXISTING TEST RUNS (kept for backwards compatibility)
 # =============================================================================
 
 
 def _test_simple(dir_name, chained_on=True):
     """SIMPLE"""
+
+    strategy_plan = [
+        (1, [Strategy("random_new", rate=1.0, depths=[3, 4, 5], p_term=0.0)]),
+        (1, [Strategy("random_new", rate=1.0, depths=[7, 8, 9, 10], p_term=0.0)]),
+        (2, [Strategy("random_new", rate=1.0, simplicate=True, depths=[3, 4, 5, 6], p_term=0.0)]),
+        (10, [Strategy("mutation_branch_nodes", rate=1.0, tournament_n=3, nodes_goal=16, p_term=0.2)]),
+        (10, [Strategy("crossover", rate=1.0, crossover=True, simplicate=True, tournament_n=3)]),
+    ]
+    planned_generations = sum(repeat_count for repeat_count, _strategies in strategy_plan)
 
     # Setup logging for this test
     setup_logging(log_file=rootdir / dir_name / "run.log", console_level=logging.INFO, verbose=False)
@@ -439,7 +623,7 @@ def _test_simple(dir_name, chained_on=True):
         df_train,
         rootdir=rootdir / dir_name,
         pop_max_size=50,
-        gen_end=20,
+        gen_end=planned_generations,
         eval_autocast=eval_autocast,
         allow_chain=chained_on,
         eval_error_metric=eval_error_metric,
@@ -447,20 +631,9 @@ def _test_simple(dir_name, chained_on=True):
 
     gp.gen_create_initial()
 
-    for _ in range(1):
-        gp.run_generation([Strategy("random_new", rate=1.0, depths=[3, 4, 5], p_term=0.0)])
-
-    for _ in range(1):
-        gp.run_generation([Strategy("random_new", rate=1.0, depths=[7, 8, 9, 10], p_term=0.0)])
-
-    for _ in range(2):
-        gp.run_generation([Strategy("random_new", rate=1.0, simplicate=True, depths=[3, 4, 5, 6], p_term=0.0)])
-
-    for _ in range(10):
-        gp.run_generation([Strategy("mutation_branch_nodes", rate=1.0, tournament_n=3, nodes_goal=16, p_term=0.2)])
-
-    for _ in range(10):
-        gp.run_generation([Strategy("crossover", rate=1.0, crossover=True, simplicate=True, tournament_n=3)])
+    for repeat_count, strategies in strategy_plan:
+        for _ in range(repeat_count):
+            gp.run_generation(strategies)
 
     gp.evoloop_monitoring_plots()
 
@@ -583,6 +756,15 @@ if __name__ == "__main__":
         # Quick demonstration (~30 seconds)
         demo_minimal()
 
+    elif mode == "active-test" or mode == "usability-test":
+        demo_active_usability_test()
+
+    elif mode == "longrun" or mode == "observe":
+        log_warning(
+            "CLI mode 'longrun/observe' is deprecated; use 'active-test' for the current non-standard usability run."
+        )
+        demo_active_usability_test()
+
     elif mode == "test" or mode == "full":
         # Full test runs (several minutes)
         """All runs: Experiment: Mountain Car dataset setup"""
@@ -598,6 +780,9 @@ if __name__ == "__main__":
 
         rootdir = Path.cwd() / ".testruns"
 
+        if mode == "test":
+            _test_simple(dir_name="simple-MTC200_RMSE_scratch", chained_on=False)
+
         if mode == "full":
             _test_simple(dir_name="simple-MTC200_RMSE_scratch", chained_on=False)
             _test_random_pop(dir_name="MTC200_RMSE_scratch", chained_on=False)
@@ -611,11 +796,16 @@ if __name__ == "__main__":
 
             Modes:
               demo   - Quick demonstration (~30 seconds) [default]
+              active-test - Non-standard active usability test (pop=5000, gen=1000)
+              usability-test - Alias for active-test
+              longrun - Deprecated alias for active-test
+              observe - Deprecated alias for active-test
               test   - Basic test run with _test_simple
               full   - Complete test runs with all features
 
             Examples:
               python plagih_gp.py demo
+              python plagih_gp.py active-test
               python plagih_gp.py test
               python plagih_gp.py full
             """)

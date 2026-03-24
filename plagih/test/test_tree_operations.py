@@ -12,6 +12,7 @@ import numpy as np
 import pytest
 import sympy
 
+import plagih.trees._nodes as nodes_mod
 from plagih.exceptions import TreeError
 from plagih.trees import (
     Abs,
@@ -166,6 +167,14 @@ class TestSympyToTree:
 class TestTreeSimplification:
     """Tests for tree_simplification function."""
 
+    def test_str_as_list_renders_compact_structure(self):
+        """Diagnostics should use the existing compact one-line structural dump."""
+        tree = Add(Symbol(sympy.Symbol("a")), Mul(Number(2.0), Symbol(sympy.Symbol("b"))))
+
+        dump = tree.str_as_list(cut_terms=True)
+
+        assert dump == "[Add, [a], [Mul, [2], [b]]]"
+
     def test_simplify_reduces_or_maintains_size(self):
         """Tests simplification doesn't increase tree size significantly."""
         # a + 0 should simplify to a
@@ -229,6 +238,31 @@ class TestTreeSimplification:
 
         assert len(simplified) <= len(original)
         assert sympy.simplify(original.get_sympy_expr() - simplified.get_sympy_expr()) == 0
+
+    def test_simplify_rejects_semantic_change_and_logs_tree_diagnostics(self, monkeypatch):
+        """Regression: semantically changed simplifications must fall back and log compact tree diagnostics."""
+        a_sym = sympy.Symbol("a")
+        original = Add(Symbol(a_sym), Number(1.0))
+        messages = []
+
+        def _capture_log(msg_type, message):
+            messages.append((msg_type, message))
+
+        monkeypatch.setattr(nodes_mod, "log", _capture_log)
+        monkeypatch.setattr(
+            nodes_mod,
+            "sympy_to_tree",
+            lambda expr, allow_chain: Add(Symbol(a_sym), Number(2.0)),
+        )
+
+        simplified = tree_simplification(original, allow_chain=False)
+
+        assert sympy.simplify(simplified.get_sympy_expr() - original.get_sympy_expr()) == 0
+        warning_messages = [message for msg_type, message in messages if msg_type == "w"]
+        assert any("Simplification rejected (changed semantics)" in message for message in warning_messages)
+        assert any("original tree : [Add, [a], [1]]" in message for message in warning_messages)
+        assert any("roundtrip tree: [Add, [a], [2]]" in message for message in warning_messages)
+        assert any("suspected stage=sympy_roundtrip" in message for message in warning_messages)
 
     def test_partial_reduce_can_simplify_math_operator(self):
         """Regression: partial simplification must not ignore MathOperator nodes."""

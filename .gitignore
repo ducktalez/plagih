@@ -17,3 +17,4 @@ run_examples/
 *.png
 *.log
 /MTC200_RMSE_scratch/
+/.testruns/

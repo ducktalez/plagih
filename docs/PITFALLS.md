@@ -160,13 +160,22 @@ If you need parent/root refs, call `repair_all()`.
 
 ---
 
-## P8 – `gen_create_initial()` is always sequential
+## P8 – `gen_create_initial()` uses the task runner, but parallel LUT sync is partial
 
 **Where:** `ExplainableGP.gen_create_initial()` in `trees.py`
 
-The initial population is always created sequentially, even if
-`parallel=True`. This is intentional – the initial population is small
-and the parallel pool may not yet be initialized.
+Generation 0 now uses the same declarative task runner as regular
+generations, including `run_generation_parallel()` when parallel workers are
+enabled.
+
+**Remaining caveat:** In parallel mode the main process only receives cheap
+exact-tree LUT metadata back from workers (`tree_id -> parsimony/fitness`).
+Worker-local SymPy-expression LUTs are **not** synchronized back because they
+would be expensive to pickle.
+
+**Implication:** Parallel runs can reuse exact same trees cheaply, but the
+cross-tree expression cache (`lut_symex_fitness`) still grows mainly in
+sequential execution paths.
 
 ---
 

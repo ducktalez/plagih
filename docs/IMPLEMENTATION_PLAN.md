@@ -8,11 +8,29 @@
 
 ## High Priority
 
-### H1 – Parallelize `gen_create_initial()`
+### ~~H1 – Parallelize `gen_create_initial()`~~ ✅
 - **Where:** `ExplainableGP.gen_create_initial()` in `trees.py`
-- **Problem:** Initial population creation is always sequential (P8). For
-  `pop=10000` this costs ~44–47s — a fixed sequential block.
+- **Historical problem:** Initial population creation used to be always
+  sequential (P8). For `pop=10000` this cost ~44–47s — a fixed sequential
+  block.
 - **Approach:** Reuse existing `run_generation_parallel()` infrastructure.
+- **Implemented groundwork (2026-03-23):** Generation 0 now uses a generic
+  weighted population-fill mechanism instead of hard-wired half/half rate
+  decorators.  This is closer to common GP practice (generic fill loop +
+  init-specific samplers) and preserves exact target size even when an
+  `origin_tree` already occupies one slot.
+- **Additional groundwork (2026-03-23):** Generation 0 now also has an
+  explicit **declarative strategy plan** with exact per-sampler counts
+  (`Strategy(count=...)`) and normal-depth sampling parameters.  This makes the
+  init path structurally closer to `build_task_list()` / task execution, even
+  though execution is still local to `gen_create_initial()`.
+- **Completed (2026-03-24):** Generation 0 now builds `TaskSpec`s via
+  `build_task_list()` and executes through the same sequential/parallel task
+  runner as regular generations, including shared progress reporting and
+  per-tree timing capture.
+- **Caveat:** Parallel generation-0 runs currently backfill only cheap
+  **exact-tree LUT metadata** (`tree_id -> parsimony/fitness`) into the main
+  process. Worker-local SymPy-expression LUTs are still not synchronized back.
 - **Benchmark note (2026-03-20):** The new tree-creation benchmark shows raw
   tree building is cheap (`~1.5–2.1 ms/tree`), while `gen_create_initial()` is
   dominated by **evaluation** inside `tree_to_candidate()` (`max_evaluate_ms`
@@ -152,6 +170,12 @@
      loop exits early (prevents infinite cycling A→B→A).
   4. **`CuriosityError` debug bomb removed** — replaced with structured
      `log("w", …)` warning on non-convergence.
+  5. **Semantic guard** — if the simplified tree is not SymPy-equivalent to
+     the original expression, reject it and keep the original tree.
+  6. **Compact structure diagnostics** — rejection logs now include
+     `original/roundtrip/grouped` both as expression and as compact structural
+     dump via `str_as_list()`, so single-tree failures can be inspected
+     without huge multiline output.
 - **Remaining questions:**
   1. Should `tree_node_grouping` produce a form that round-trips cleanly
      through SymPy?  Or should we stop converting back to SymPy after
@@ -162,6 +186,24 @@
      be useful for cases where SymPy expansion is counterproductive?
 - **Status:** Core mitigations implemented, pipeline is safe but not
   fully idempotent.
+
+### D7 – Root-cause analysis for rejected simplifications
+- **Where:** `tree_simplification()` / `tree_node_grouping()` in
+  `trees/_nodes.py`
+- **Problem:** The simplification pipeline is now **safe** (bad rewrites are
+  rejected), but real rejected cases still occur in practice and can be slow.
+  The current diagnostics show that failures often cluster around
+  `Scale`/`DivFraction`/`PowRounded` rewrites, SymPy float canonicalization,
+  and grouped forms that are structurally different despite apparently similar
+  end expressions.
+- **Questions:**
+  1. Which rewrite families are responsible for most rejections in long runs?
+  2. Are the issues introduced mainly by `sympy_to_tree()` or by
+     `tree_node_grouping()` post-processing?
+  3. Should some grouping rules be made conditional (e.g. avoid rewrites when
+     they are only cosmetic but expand the tree or destabilize round-tripping)?
+- **Next step:** Build a small frequency analysis of rejected simplification
+  patterns from the new compact diagnostics before changing grouping rules.
 
 ---
 
@@ -195,11 +237,15 @@
   complexity across generations. Investigate whether tree-size limits or
   early-rejection can keep crossover time stable.
 
-### L6 – Generation count exceeds `gen_end`
-- **Where:** `run_generation()` loop in `_gp_engine.py`
-- **Observed:** Log shows "generation 21/20", "22/20", "23/20", "24/20" —
-  the loop continues past `gen_end=20`. Verify the termination condition
-  and off-by-one in the generation counter.
+### ~~L6 – Generation count exceeds `gen_end`~~ ✅
+- **Where:** `_test_simple()` in `plagih_gp.py` (not `_gp_engine.py`)
+- **Cause found:** `gen_end` was fixed to `20`, but `_test_simple()` executed
+  a hard-coded plan of **24** generations (`1 + 1 + 2 + 10 + 10`).
+  The misleading logs like `21/20` were therefore caused by a demo/test-plan
+  mismatch, not by the core generation counter.
+- **Fix:** `_test_simple()` now derives `gen_end` from the declared strategy
+  plan, so the log output ends cleanly at `24/24`.
+- **Status:** Complete.
 
 ### L7 – Population shrinks below `pop_max_size`
 - **Where:** Various strategy functions in `parallel.py`
@@ -207,6 +253,15 @@
   candidates are rejected (fail counts), but the population is not
   back-filled. Consider retry logic or fallback random trees to maintain
   target population size.
+
+### L8 – Logging handlers can outlive their stdout/stderr streams
+- **Where:** `logging_utils.py` / benchmark harnesses / tests
+- **Observed:** During repeated pytest benchmark runs, the global logger can
+  keep a console handler whose underlying stream has already been closed,
+  leading to `ValueError: I/O operation on closed file` on later `log()` calls.
+- **Action:** Make `setup_logging()` / `log()` robust against stale closed
+  handlers, or ensure harnesses/tests always reinitialize the logger before
+  emitting framework logs.
 
 ---
 
@@ -220,6 +275,7 @@
 - ✅ Chunked batching with progress diagnostics in parallel (P12)
 - ✅ **M5** — Legacy `printpl`/`printez`/`print_warning`/`print_caution` migrated to `log()`/`log_error()`
 - ✅ **P18** — `MemoryError` guard in `get_sympy_expr()` for `sympy.exp()` on huge arguments
+- ✅ **L6** — `_test_simple()` now maps its fixed strategy plan to the correct `gen_end`, eliminating misleading `21/20`-style logs
 
 
 

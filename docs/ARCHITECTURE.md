@@ -128,7 +128,7 @@ Mixins (secondary bases, not part of Node tree):
 
 ```
 ExplainableGP.create(symbols, df_train, rootdir, ...)
-  └─ gen_create_initial()        # random pop, always sequential (P8)
+  └─ gen_create_initial()        # random pop via shared declarative task runner
   └─ for gen in range(gen_end):
        run_generation(strategies) # parallel or sequential
        end_generation()           # Pareto update, swap pop, monitor

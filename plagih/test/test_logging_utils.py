@@ -1,5 +1,6 @@
 """Tests for logging/progress helpers."""
 
+import io
 import logging
 
 import sympy
@@ -8,7 +9,9 @@ import plagih.trees._gp_engine as gp_engine_mod
 from plagih.config import cfg
 from plagih.logging_utils import (
     _flush_progress_line,
+    log,
     log_info,
+    logger,
     print_generation_done,
     print_generation_progress,
     setup_logging,
@@ -89,6 +92,39 @@ class TestGenerationProgress:
         assert "separate log line" in captured.out
         assert captured.err == ""
         assert "0.0s\n" in captured.out
+
+    def test_log_prunes_closed_console_handler_and_rebinds_stdout(self, monkeypatch, capsys):
+        """A stale closed stdout handler must not produce logging errors in later runs."""
+        monkeypatch.setattr(cfg, "verbosity", "gg")
+        for handler in list(logger.handlers):
+            logger.removeHandler(handler)
+
+        stale_stream = io.StringIO()
+        stale_handler = logging.StreamHandler(stale_stream)
+        logger.addHandler(stale_handler)
+        stale_stream.close()
+
+        log("gg", "recovered after closed stream")
+
+        captured = capsys.readouterr()
+        assert "recovered after closed stream" in captured.out
+        assert all(not getattr(getattr(handler, "stream", None), "closed", False) for handler in logger.handlers)
+
+    def test_setup_logging_closes_previous_handlers_cleanly(self, monkeypatch, capsys):
+        """Repeated setup_logging calls should safely replace old handlers instead of keeping stale ones alive."""
+        monkeypatch.setattr(cfg, "verbosity", "gg")
+
+        first_stream = io.StringIO()
+        old_handler = logging.StreamHandler(first_stream)
+        logger.addHandler(old_handler)
+
+        setup_logging(console_level=logging.INFO, verbose=False)
+        first_stream.close()
+        log_info("fresh console handler still works")
+
+        captured = capsys.readouterr()
+        assert "fresh console handler still works" in captured.out
+        assert old_handler not in logger.handlers
 
     def test_create_trees_reports_progress(self, gp_instance, monkeypatch):
         """Legacy create_trees path should emit progress updates while adding trees."""

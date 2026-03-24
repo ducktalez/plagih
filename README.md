@@ -13,6 +13,11 @@ Enjoy!
 ## Ablage/Todos
 ### Code Dokumentation und instructions überarbeiten
 
+- Ich sehe momentan folgende Simplifizierung:   
+    roundtrip expr: sign(Abs(361/cartVel**2 + 0.423*cartVel**2))
+    grouped expr  : sign(Abs(0.423*cartVel**2 + 361/cartVel**2))
+    Grundproblem ist hierbei die Umkehrung einer Multiplikation zu einer Division. Hier sollte schon mal vermerkt werden, dass die Division vielleicht nur mit bestimmten Faktoren erfolgen können sollte. 361 ist meiner Meinung nach zu groß. Gedacht war es ursprünglich mal für (0.5*a -> a/2) oder so.
+    Hier sollte man die Grundarchitektur diskutieren und anpassen - Gruppierungen sollten nach idempotenz kategorisierbar sein. 
 - Beim Printing könnte man die Größe der Bäume In einer Population mit einer Höhen-darstellungsfarbe wie bei einer Map anzeigen. 
 - TED-Distance diff branches anzeigen lassen und als idee in zukunft behandeln. 
 - Performance: GPU-evaluation? Ist dafür TensorFlow nötig oder geht das auch mit NumPy? 
@@ -227,8 +232,10 @@ beeinflussen.
 | `10000` | `8` | ~`11.9 s` | ~`45.1 s` | ~`1.49 GB` |
 
 **Wichtige Beobachtungen:**
-- `gen_create_initial()` ist aktuell weiterhin **sequentiell** und skaliert kaum
-  mit `parallel=`.
+- Die untenstehenden Init-Zeiten stammen aus einem **historischen Messstand vor
+  der Vereinheitlichung von Generation 0 mit dem Task-Runner**. `gen_create_initial()`
+  nutzt inzwischen denselben deklarativen Runner wie normale Generationen;
+  die Tabelle dient daher als Baseline, nicht als aktuelle Architekturbehauptung.
 - Für diese aktuelle Architektur war auf dem Benchmark-System **`8` Worker** am
   schnellsten.
 - Der große RAM-Sprung kommt vor allem durch die **Worker-Prozesse**, nicht nur
@@ -245,7 +252,7 @@ beeinflussen.
 | Mathematische Komplexität (mehr Operatoren, tiefere Bäume) | hoch | mittel | negativ | Mehr SymPy-/NumPy-Arbeit pro Tree; komplexere Populationen verlangsamen sowohl sequential als auch parallel. |
 | Logik-/`Ifte`-/`Piecewise`-Anteil | hoch | mittel | potenziell negativ | Kann SymPy stark belasten; pathologische Fälle werden inzwischen abgefangen, bleiben aber teuer. |
 | `nodes_max`, `depth_max` | hoch | mittel | gemischt | Erlauben größere Ausdrucksbäume; steigern Suchraum, Kosten und Risiko teurer SymPy-Pfade. |
-| Initialpopulation | sehr hoch | mittel | negativ | Läuft aktuell sequentiell; bei großen Populationen ein dominanter Fixkostenblock. |
+| Initialpopulation | sehr hoch | mittel | gemischt | Historisch war dies ein sequentieller Fixkostenblock; nach der Runner-Vereinheitlichung sollte dieser Pfad separat neu vermessen werden. |
 | `enable_analysis=True` | hoch | niedrig bis mittel | negativ | Zusätzliche IO/Plots/Rendering verfälschen Benchmarkzeiten. |
 | Debug-/Detail-Prints | mittel bis hoch | niedrig | negativ | Teure Ausdrucksrepräsentationen dürfen nicht in Hot Paths aktiviert werden. |
 
@@ -275,9 +282,9 @@ Empfohlene Update-Quellen:
 - `docs/PARALLEL_BENCHMARK_DIAGNOSIS.md`
 
 **Offene Aufgabe:** Die Parallelisierung hat vermutlich noch weiteres Potenzial.
-Insbesondere Worker-RAM, Main-Process-Orchestrierung (`gen_create_initial()`,
-Pre-selection) und Perf/RAM-Abwägungen für `4w` vs. `8w` sollten weiter gemessen
-und diese Tabelle anschließend nachgezogen werden.
+Insbesondere Worker-RAM, Pre-selection und die **neu vereinheitlichte Generation-0-
+Orchestrierung** sollten weiter gemessen und diese Tabelle anschließend nachgezogen
+werden.
 
 # Working with this Framework...
 The following are bitches:
@@ -372,6 +379,8 @@ Attention: If you want to write your own code, look for important developer info
 - It is specialized on fast and efficient evaluation (faster than KarooGP) and especially introduces the concept of familiarity.
 
 ## Paper ideas
+
+- !! (not gp-related) Database for LLM (for cross-available information)
 - unified mathematics as performance improvement for gp
 - cluster-based evolution of subpopulations / races
 - Recombining if cases in 

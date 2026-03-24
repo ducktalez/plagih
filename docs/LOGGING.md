@@ -26,7 +26,6 @@ setup_logging(
 - **INFO**: Important progress messages (generations, Pareto front updates)
 - **WARNING**: Non-critical problems (oversized trees, SymPy errors)
 - **ERROR**: Critical errors
-- **In-place progress bars**: Candidate creation within a generation (`"gg"` verbosity)
 
 ### Log file (debug information)
 - All console messages
@@ -73,35 +72,6 @@ The following functions are **deprecated** but still work via re-export:
 
 ### Generation progress bar
 
-If `"gg"` is present in `cfg.verbosity` / `PLAGIH_VERBOSITY`, plagih prints an
-in-place progress bar while candidates are being created.
-
-- Declarative API: `ExplainableGP.run_generation(...)`
-- Legacy API: `@gp.create_trees(...)`
-
-Typical output:
-
-```text
-[14:23:11] generation 4/20 mutation [##########------------] 42/100 ( 42%) | fail=3 | 1.8s
-[14:23:13] generation 4/20 done: 1834.7ms | created=100 | pareto_pre=12 | ok=95, fail=5, tracker_total=1834.7ms
-```
-
-This makes it visible that trees are still being created and helps spot cases
-where a generation appears stuck on a single very expensive tree or batch.
-
-To avoid console spam in JetBrains/Windows terminals, progress updates are
-throttled automatically and only emitted for meaningful changes (new progress
-bucket, changed fail count, timeout heartbeat, start/end).
-
-Performance summaries (`[Perf] ...`) are intentionally quieter and use a higher
-verbosity tier (`"ppp"`). They are hidden by default unless you explicitly add
-`ppp` to `cfg.verbosity` / `PLAGIH_VERBOSITY`.
-
-### Verbose mode
-Also shows DEBUG messages in the console:
-
-```python
-setup_logging(log_file=Path('./run.log'), verbose=True)
 ```
 
 ### Console only (no log file)
@@ -123,8 +93,10 @@ setup_logging(
 ```
 [2026-01-27 14:23:10][INFO   ][plagih] Starting test run: MTC200_RMSE_scratch
 [2026-01-27 14:23:10][DEBUG  ][plagih] Options - chained_on=False, simplicate=False
+[2026-01-27 14:23:11][INFO   ][plagih] Preparing to create first Generation. Gen 0.
 [2026-01-27 14:23:11][INFO   ][plagih] generation 0/20 start: create initial population
 [2026-01-27 14:23:11][DEBUG  ][plagih] Created tree with 15 nodes
+[2026-01-27 14:23:12][INFO   ][plagih] Created 10/3 (10 unique) in generation 0
 [2026-01-27 14:23:12][INFO   ][plagih] generation 0/20 summary: created 10/10 | unique=10 | lut=10 | time=1.02s
 [2026-01-27 14:23:12][WARNING][plagih] (w) Tree too complex: 52 > 50, pruning 2 nodes
 ```

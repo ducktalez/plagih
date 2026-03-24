@@ -549,6 +549,110 @@ class ExplainableGP:
         self._custom_strategies[name] = fn
         self._strategy_registry[name] = fn
 
+    def _resolve_parallel_workers(self, parallel: Optional[bool]) -> int:
+        """Resolve worker count for one execution step."""
+        if parallel is True:
+            from plagih.util import cpu_count_physical
+
+            return cpu_count_physical()
+        if parallel is False or parallel == 0:
+            return 0
+        if isinstance(parallel, int) and parallel > 0:
+            return parallel
+        if parallel is None:
+            return self._parallel_workers
+        return 0
+
+    def _merge_tree_lut_delta(self, lut_tree_delta: Dict[str, Dict[str, Any]]) -> None:
+        """Merge cheap exact-tree LUT metadata returned from parallel workers."""
+        if not _cfg.lut_enabled or not lut_tree_delta:
+            return
+
+        for tree_id, entry in lut_tree_delta.items():
+            current = self.lut_tree_infos.setdefault(tree_id, {})
+            if current.get("error") is not None and any(entry.get(key) is not None for key in ("fitness", "parsimony")):
+                current.pop("error", None)
+            for key, value in entry.items():
+                if value is not None and current.get(key) is None:
+                    current[key] = value
+
+    def _execute_task_plan(
+        self,
+        tasks,
+        *,
+        parallel: Optional[bool],
+        progress_total: Optional[int] = None,
+        progress_offset: int = 0,
+    ):
+        """Execute a declarative task list using the shared sequential/parallel runner."""
+        from plagih.parallel import run_generation_parallel, run_generation_sequential
+
+        n_workers = self._resolve_parallel_workers(parallel)
+        total_candidates_expected = sum(2 if task.crossover else 1 for task in tasks)
+        progress_total_resolved = (
+            total_candidates_expected + progress_offset
+            if progress_total is None
+            else max(progress_offset, progress_total)
+        )
+        progress_started = time.perf_counter()
+        self._generation_tree_timings = []
+
+        def _update_generation_progress(created: int, total: int, fail: int, label: Optional[str]) -> None:
+            print_generation_progress(
+                gen_id=self.gen_id,
+                gen_end=self.gen_end,
+                created=progress_offset + created,
+                total=progress_total_resolved if progress_total_resolved > 0 else progress_offset + total,
+                label=label or "create",
+                fail=fail,
+                elapsed_s=time.perf_counter() - progress_started,
+            )
+
+        if n_workers > 0:
+            pool = self._get_or_create_pool()
+            candidates, lut_tree_delta, lut_symex_delta, tracker = run_generation_parallel(
+                tasks=tasks,
+                n_workers=n_workers,
+                evolve=self.evolve,
+                df_train=self.df_train,
+                pop_genepool=self.pop_genepool,
+                paretofront=self.paretofront,
+                eval_autocast=self.eval_autocast,
+                eval_error_metric=self.eval_error_metric,
+                allow_chain=self.allow_chain,
+                target_column=self.target_column,
+                nodes_max=self.evolve.nodes_max,
+                complexity_metric=self.evolve.complexity_metric,
+                strategy_registry=self._strategy_registry,
+                pool=pool,
+                progress_callback=_update_generation_progress,
+            )
+            self._merge_tree_lut_delta(lut_tree_delta)
+            if lut_symex_delta:
+                self.lut_symex_fitness.update(lut_symex_delta)
+        else:
+            candidates, tracker = run_generation_sequential(
+                tasks=tasks,
+                evolve=self.evolve,
+                df_train=self.df_train,
+                pop_genepool=self.pop_genepool,
+                paretofront=self.paretofront,
+                eval_autocast=self.eval_autocast,
+                eval_error_metric=self.eval_error_metric,
+                allow_chain=self.allow_chain,
+                target_column=self.target_column,
+                nodes_max=self.evolve.nodes_max,
+                complexity_metric=self.evolve.complexity_metric,
+                strategy_registry=self._strategy_registry,
+                lut_tree=self.lut_tree_infos,
+                lut_symex=self.lut_symex_fitness,
+                progress_callback=_update_generation_progress,
+            )
+
+        self._generation_tree_timings = list(tracker.tree_timings)
+        self._performance_tracker = tracker
+        return candidates, tracker
+
     def run_generation(self, strategies, *, parallel: Optional[bool] = None, seed: Optional[int] = None):
         """Run a complete generation using declarative strategies.
 
@@ -577,95 +681,19 @@ class ExplainableGP:
                 Strategy("crossover", rate=0.2, crossover=True, tournament_n=3),
             ])
         """
-        from plagih.parallel import (
-            build_task_list,
-            run_generation_parallel,
-            run_generation_sequential,
-        )
-
-        # Determine execution mode
-        if parallel is True:
-            from plagih.util import cpu_count_physical
-
-            n_workers = cpu_count_physical()
-        elif parallel is False or parallel == 0:
-            n_workers = 0
-        elif isinstance(parallel, int) and parallel > 0:
-            n_workers = parallel
-        elif parallel is None:
-            n_workers = self._parallel_workers
-        else:
-            n_workers = 0
+        from plagih.parallel import build_task_list
 
         # Build task list from strategies
         tasks = build_task_list(strategies, self.pop_max_size, seed=seed)
-        total_candidates_expected = sum(2 if task.crossover else 1 for task in tasks)
-        progress_started = time.perf_counter()
-        self._generation_tree_timings = []
-
-        def _update_generation_progress(created: int, total: int, fail: int, label: Optional[str]) -> None:
-            print_generation_progress(
-                gen_id=self.gen_id,
-                gen_end=self.gen_end,
-                created=created,
-                total=total if total > 0 else total_candidates_expected,
-                label=label or "create",
-                fail=fail,
-                elapsed_s=time.perf_counter() - progress_started,
-            )
 
         # Progress start — will be overwritten by the done-line below
         current_gen_id = self.gen_id
         print_generation_start(current_gen_id, self.gen_end)
 
-        if n_workers > 0:
-            # Parallel execution — use persistent pool to avoid Windows spawn overhead
-            pool = self._get_or_create_pool()
-            candidates, lut_tree_delta, lut_symex_delta, tracker = run_generation_parallel(
-                tasks=tasks,
-                n_workers=n_workers,
-                evolve=self.evolve,
-                df_train=self.df_train,
-                pop_genepool=self.pop_genepool,
-                paretofront=self.paretofront,
-                eval_autocast=self.eval_autocast,
-                eval_error_metric=self.eval_error_metric,
-                allow_chain=self.allow_chain,
-                target_column=self.target_column,
-                nodes_max=self.evolve.nodes_max,
-                complexity_metric=self.evolve.complexity_metric,
-                strategy_registry=self._strategy_registry,
-                pool=pool,
-                progress_callback=_update_generation_progress,
-            )
-            # Note: LUT deltas are empty in parallel mode.
-            # Worker LUTs contain sympy objects (too expensive to pickle back).
-            # Worker LUTs are used only for intra-batch deduplication.
-            # Main-process LUTs won't grow during parallel generations, which
-            # causes some redundant computation but avoids pickle overhead.
-        else:
-            # Sequential execution — identical logic, no pool, full debugging
-            candidates, tracker = run_generation_sequential(
-                tasks=tasks,
-                evolve=self.evolve,
-                df_train=self.df_train,
-                pop_genepool=self.pop_genepool,
-                paretofront=self.paretofront,
-                eval_autocast=self.eval_autocast,
-                eval_error_metric=self.eval_error_metric,
-                allow_chain=self.allow_chain,
-                target_column=self.target_column,
-                nodes_max=self.evolve.nodes_max,
-                complexity_metric=self.evolve.complexity_metric,
-                strategy_registry=self._strategy_registry,
-                lut_tree=self.lut_tree_infos,
-                lut_symex=self.lut_symex_fitness,
-                progress_callback=_update_generation_progress,
-            )
+        candidates, tracker = self._execute_task_plan(tasks, parallel=parallel)
 
         # Store candidates as next population
         self.pop_next = candidates
-        self._generation_tree_timings = list(tracker.tree_timings)
 
         # Progress done — overwrites the start-line.
         # Must happen BEFORE end_generation() because end_generation may
@@ -690,10 +718,115 @@ class ExplainableGP:
         # is already finished.
         self.end_generation(_suppress_analyze_print=True)
 
-        # Store tracker for inspection
-        self._performance_tracker = tracker
+    @staticmethod
+    def _distribute_weighted_counts(total_count: int, weights: List[float]) -> List[int]:
+        """Distribute an exact target count across weighted generator slots."""
+        if total_count <= 0 or not weights:
+            return [0 for _ in weights]
 
-    def gen_create_initial(self, origin_tree=None):
+        weights_arr = np.asarray(weights, dtype=np.float64)
+        weights_arr = np.clip(weights_arr, 0.0, None)
+        if float(weights_arr.sum()) <= 0.0:
+            weights_arr = np.ones(len(weights), dtype=np.float64)
+
+        raw_counts = weights_arr / weights_arr.sum() * total_count
+        counts = np.floor(raw_counts).astype(int)
+        remainder = int(total_count - int(counts.sum()))
+        if remainder > 0:
+            fractional_order = np.argsort(raw_counts - counts, kind="stable")[::-1]
+            for idx in fractional_order[:remainder]:
+                counts[idx] += 1
+        return counts.tolist()
+
+    def _fill_population_from_plan(self, plan: List[Dict[str, Any]], *, target_size: Optional[int] = None) -> None:
+        """Fill ``pop_next`` to ``target_size`` using weighted tree-generator entries.
+
+        Typical GP systems separate init-specific samplers from the generic
+        "fill until target population size" logic.  This helper provides that
+        orchestration while keeping generation-0 special cases local to the
+        initial plan definition.
+        """
+        target = self.pop_max_size if target_size is None else target_size
+        remaining = max(0, target - len(self.pop_next))
+        if remaining == 0 or not plan:
+            return
+
+        counts = self._distribute_weighted_counts(remaining, [float(entry.get("weight", 0.0)) for entry in plan])
+        for entry, count in zip(plan, counts, strict=True):
+            if count <= 0:
+                continue
+            create_tree_f = entry["factory"]
+            self.create_trees(count=count, simplicate=bool(entry.get("simplicate", False)))(create_tree_f)
+
+    def _build_initial_strategy_plan(self, remaining_slots: Optional[int] = None):
+        """Return a declarative generation-0 plan with exact per-sampler counts.
+
+        This keeps generation-0 specific sampling separate from the generic
+        population-fill orchestration and prepares the initial population path
+        for eventual reuse of the task/parallel infrastructure.
+        """
+        from plagih.parallel import Strategy
+
+        target_slots = (
+            max(0, self.pop_max_size - len(self.pop_next)) if remaining_slots is None else max(0, remaining_slots)
+        )
+        count_a, count_b = self._distribute_weighted_counts(target_slots, [0.5, 0.5])
+
+        if self.allow_chain:
+            return [
+                Strategy(
+                    "random_new",
+                    count=count_a,
+                    simplicate=True,
+                    init_label="init_rand1",
+                    depth_sampler="normal",
+                    mean=4.0,
+                    sigma=1.0,
+                    min_depth=4,
+                    max_depth=6,
+                    p_term=0.0,
+                    require_min_depth_after_simplify=1,
+                ),
+                Strategy(
+                    "random_new",
+                    count=count_b,
+                    simplicate=True,
+                    init_label="init_rand2",
+                    depth_sampler="normal",
+                    mean=4.5,
+                    sigma=1.0,
+                    min_depth=3,
+                    max_depth=self.evolve.depth_max,
+                    p_term=0.0,
+                ),
+            ]
+
+        return [
+            Strategy(
+                "random_new",
+                count=count_a,
+                init_label="init_rand1a",
+                depth_sampler="normal",
+                mean=4.0,
+                sigma=1.0,
+                min_depth=3,
+                max_depth=5,
+                p_term=0.0,
+            ),
+            Strategy(
+                "random_new",
+                count=count_b,
+                init_label="init_rand2a",
+                depth_sampler="normal",
+                mean=3.5,
+                sigma=1.0,
+                min_depth=3,
+                max_depth=self.evolve.depth_max,
+                p_term=0.0,
+            ),
+        ]
+
+    def gen_create_initial(self, origin_tree=None, *, parallel: Optional[bool] = None, seed: Optional[int] = None):
         """Creates the initial population (generation 0).
 
         If an origin_tree is provided, adds it as a candidate.
@@ -705,43 +838,66 @@ class ExplainableGP:
         Returns:
             The initial population (pop_genepool).
         """
+        from plagih.parallel import PerformanceTracker, build_task_list
+
         log("gg", f"generation {self.gen_id}/{self.gen_end} start: create initial population")
+        current_gen_id = self.gen_id
+        pareto_pre = len(self.paretofront)
         self._generation_tree_timings = []
+        self.pop_next = []
+        print_generation_start(current_gen_id, self.gen_end)
 
         if origin_tree is not None:
             cand_origin = self.tree_to_candidate(origin_tree, raise_if_useless=False, tag="origin")
             self.pop_next_append(cand_origin)
-        else:
-            if self.allow_chain:
 
-                @self.create_trees(rate=0.5)
-                def init_rand1():
-                    n = np.clip(int(random.normalvariate(4.0, 1.0)), 4, 6)
-                    tree = self.evolve.evolve_new_tree_depth(float, n, p_term=0)
-                    tree = tree_simplification(tree, allow_chain=self.allow_chain)
+        tracker = PerformanceTracker()
+        stalled_rounds = 0
+        refill_round = 0
 
-                    if tree.get_max_depth() == 0:
-                        raise TreeSizeError("Tree did not get complex enough (only root node).")
-                    return tree
+        while len(self.pop_next) < self.pop_max_size:
+            remaining_slots = self.pop_max_size - len(self.pop_next)
+            initial_strategies = self._build_initial_strategy_plan(remaining_slots=remaining_slots)
+            tasks = build_task_list(
+                initial_strategies,
+                self.pop_max_size,
+                seed=None if seed is None else seed + refill_round,
+            )
+            if not tasks:
+                break
 
-                @self.create_trees(rate=0.5)
-                def init_rand2():
-                    n = np.clip(int(random.normalvariate(4.5, 1.0)), 3, self.evolve.depth_max)
-                    tree = self.evolve.evolve_new_tree_depth(float, n, p_term=0)
-                    tree = tree_simplification(tree, allow_chain=self.allow_chain)
-                    return tree
+            created_offset = len(self.pop_next)
+            round_candidates, round_tracker = self._execute_task_plan(
+                tasks,
+                parallel=parallel,
+                progress_total=self.pop_max_size,
+                progress_offset=created_offset,
+            )
+            self.pop_next.extend(round_candidates)
+            tracker.merge(round_tracker)
+            refill_round += 1
+
+            if round_candidates:
+                stalled_rounds = 0
             else:
+                stalled_rounds += 1
+                if stalled_rounds >= 3:
+                    raise TreeError(
+                        "Initial population creation stalled: three refill rounds produced no valid candidates."
+                    )
 
-                @self.create_trees(rate=0.5)
-                def init_rand1a():
-                    n = np.clip(int(random.normalvariate(4.0, 1.0)), 3, 5)
-                    _tree = self.evolve.evolve_new_tree_depth(float, n, p_term=0)
-                    return _tree
-
-                @self.create_trees(rate=0.5)
-                def init_rand2a():
-                    n = np.clip(int(random.normalvariate(3.5, 1.0)), 3, self.evolve.depth_max)
-                    return self.evolve.evolve_new_tree_depth(float, n, p_term=0)
+        tracker_total_ms = tracker.summary().get("generation_total_time", 0.0) * 1000
+        print_generation_done(
+            gen_id=current_gen_id,
+            gen_end=self.gen_end,
+            time_ms=tracker_total_ms,
+            created=len(self.pop_next),
+            pareto_pre=pareto_pre,
+            ok=tracker.total_ok,
+            fail=tracker.total_fail,
+            tracker_total_ms=tracker_total_ms,
+        )
+        tracker.print_summary()
 
         self.paretofront = pareto_from_pop(self.pop_next)
         self.pop_genepool = self.pop_next[:]
@@ -770,7 +926,7 @@ class ExplainableGP:
             log("gggg", f"|->{evotree.len_nodecount_fair():2.0f}: {evotree.str_as_expr()}")
         self.pop_next.append(ct)
 
-    def create_trees(self, rate=0.0, crossover=False, simplicate=False, allow_chain=False):
+    def create_trees(self, rate=0.0, crossover=False, simplicate=False, allow_chain=False, count: Optional[int] = None):
         """Decorator factory for safely creating and adding trees to the population.
 
         Wraps a tree creation function to handle errors, apply simplification,
@@ -778,6 +934,8 @@ class ExplainableGP:
 
         Args:
             rate: Fraction of pop_max_size to create (0.0 to 1.0).
+            count: Exact number of trees to create. If provided, overrides
+                ``rate`` and enables exact population-fill behavior.
             crossover: If True, expects function to return two trees.
             simplicate: If True, applies tree_simplification before evaluation.
             allow_chain: Whether to allow chained operators in simplification.
@@ -787,7 +945,7 @@ class ExplainableGP:
         """
 
         def loop(create_tree_f):
-            n = int(rate * self.pop_max_size)
+            n = int(count) if count is not None else int(rate * self.pop_max_size)
             n_success = 0
             fails_list = []
             tag = create_tree_f.__name__
@@ -1003,212 +1161,212 @@ class ExplainableGP:
 
         tree_id = evotree.get_lut_id()
 
+        parsimony = None
         if _cfg.lut_enabled and tree_id in self.lut_tree_infos:
-            sy_expr = self.lut_tree_infos[tree_id].get("sy_expr")  # Attention: can be "False"
-            parsimony = self.lut_tree_infos[tree_id].get("parsimony")
-            fitness = self.lut_tree_infos[tree_id].get("fitness")
-            if any(v is None for v in [sy_expr, parsimony, fitness]):
-                _err = self.lut_tree_infos[tree_id].get("error")
+            entry = self.lut_tree_infos[tree_id]
+            parsimony = entry.get("parsimony")
+            fitness = entry.get("fitness")
+            if parsimony is not None and fitness is not None:
+                return Candidate(evotree, fitness=fitness, parsimony=parsimony, tag=tag)
+            _err = entry.get("error")
+            if _err is not None:
                 raise TreeLutError(f"Tree LUT Entry implies Problem: {_err}")
-        else:
+        elif _cfg.lut_enabled:
             # requires: valid, sympy expr, parsimony, fitness
-            if _cfg.lut_enabled:
-                self.lut_tree_infos[tree_id] = {}  # empty placeholder, if correctly filled later
+            self.lut_tree_infos[tree_id] = {}  # empty placeholder, if correctly filled later
 
+        if parsimony is None:
             parsimony = eval_parsimony(evotree, self.evolve.complexity_metric, origin_tree=origin_tree)
-            if raise_if_useless and parsimony > self.evolve.nodes_max:
-                err_txt = f"Tree too complex: {parsimony} > {self.evolve.nodes_max}"
-                if _cfg.lut_enabled:
-                    self.lut_tree_infos[tree_id]["error"] = err_txt
-                raise TreeSizeError(err_txt)
+
+        if raise_if_useless and parsimony > self.evolve.nodes_max:
+            err_txt = f"Tree too complex: {parsimony} > {self.evolve.nodes_max}"
+            if _cfg.lut_enabled:
+                self.lut_tree_infos[tree_id]["error"] = err_txt
+            raise TreeSizeError(err_txt)
+        try:
+            sy_expr = evotree.get_sympy_expr()
+        except SympyError as e:
+            log("www", f"Could not create sympy expression for tree: {e}")
+            if _cfg.lut_enabled:
+                self.lut_tree_infos[tree_id]["error"] = str(e)
+            raise
+
+        if _cfg.lut_enabled and sy_expr in self.lut_symex_fitness:
+            # other tree might have same expression -> lookup fitness
+            fitness = self.lut_symex_fitness[sy_expr]
+        else:
+            """Numpy eval"""
+            perf_t = {0: time.perf_counter()}
+            true_values = self.df_train[self.target_column].to_numpy()
             try:
-                sy_expr = evotree.get_sympy_expr()
-            except SympyError as e:
-                log("www", f"Could not create sympy expression for tree: {e}")
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", RuntimeWarning)  # sfeh:discuss
+                    np_results_raw = evotree.eval_predict_numpy_now(
+                        self.df_train
+                    )  # exception? -> check np.isnan(sym_results).any()
+                    np_results = self.eval_autocast(np_results_raw)
+                    np_fitness = self.eval_error_metric(np_results, true_values)
+                    np_fitness = round(np_fitness, _cfg.float_precision)
+
+                    if (
+                        "nan" in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf
+                    ):  # sfeh:code not so good looking
+                        err_txt = "NaN in results"
+                        self.lut_tree_infos[tree_id]["error"] = err_txt
+                        raise TreeError(f"{err_txt}")
+
+                    perf_t[1] = time.perf_counter()
+
+                    if compare_with_sympy:
+                        # =========================================================
+                        # BENCHMARK: New EvaluationContext System vs. Old Methods
+                        # =========================================================
+                        import time as bench_time
+
+                        from plagih.evaluation_context import EvaluationContext, create_context
+
+                        bench_results = {}
+
+                        # 1. NumPy Eager (new context)
+                        t0 = bench_time.perf_counter()
+                        ctx_np = create_context("numpy_eager", use_lut=False)
+                        result_np = ctx_np.evaluate(evotree, self.df_train)
+                        bench_results["1_numpy_ctx"] = bench_time.perf_counter() - t0
+
+                        # 2. NumPy Lambda (new context)
+                        t0 = bench_time.perf_counter()
+                        ctx_lambda = create_context("numpy_lambda", use_lut=False)
+                        result_lambda_fn = ctx_lambda.evaluate(evotree)
+                        result_lambda = result_lambda_fn(self.df_train)
+                        bench_results["2_lambda_ctx"] = bench_time.perf_counter() - t0
+
+                        # 3. SymPy (new context)
+                        t0 = bench_time.perf_counter()
+                        ctx_sympy = create_context("sympy", use_lut=False)
+                        result_sympy = ctx_sympy.evaluate(evotree)
+                        bench_results["3_sympy_ctx"] = bench_time.perf_counter() - t0
+
+                        # 4. All together without LUT
+                        t0 = bench_time.perf_counter()
+                        ctx_all = EvaluationContext(modes=["numpy_eager", "numpy_lambda", "sympy"], use_lut=False)
+                        results_all = ctx_all.evaluate(evotree, self.df_train)
+                        bench_results["4_all_no_lut"] = bench_time.perf_counter() - t0
+
+                        # 5. All together WITH LUT (second call should be faster)
+                        t0 = bench_time.perf_counter()
+                        ctx_lut = EvaluationContext(modes=["numpy_eager", "numpy_lambda", "sympy"], use_lut=True)
+                        results_lut1 = ctx_lut.evaluate(evotree, self.df_train)  # First call (cache miss)
+                        results_lut2 = ctx_lut.evaluate(evotree, self.df_train)  # Second call (cache hit!)
+                        bench_results["5_all_with_lut"] = bench_time.perf_counter() - t0
+
+                        # Compare with OLD methods timing
+                        t0 = bench_time.perf_counter()
+                        old_np = evotree.eval_predict_numpy_now(self.df_train)
+                        bench_results["OLD_numpy"] = bench_time.perf_counter() - t0
+
+                        t0 = bench_time.perf_counter()
+                        old_lambda = evotree.eval_np_lambdas()(self.df_train)
+                        bench_results["OLD_lambda"] = bench_time.perf_counter() - t0
+
+                        t0 = bench_time.perf_counter()
+                        old_sympy = evotree.get_sympy_expr()
+                        bench_results["OLD_sympy"] = bench_time.perf_counter() - t0
+
+                        # Print benchmark results
+                        log("pp", "=== EvaluationContext Benchmark ===")
+                        log(
+                            "pp",
+                            f"  1. NumPy (ctx):     {bench_results['1_numpy_ctx'] * 1000:6.2f}ms | OLD: {bench_results['OLD_numpy'] * 1000:6.2f}ms",
+                        )
+                        log(
+                            "pp",
+                            f"  2. Lambda (ctx):    {bench_results['2_lambda_ctx'] * 1000:6.2f}ms | OLD: {bench_results['OLD_lambda'] * 1000:6.2f}ms",
+                        )
+                        log(
+                            "pp",
+                            f"  3. SymPy (ctx):     {bench_results['3_sympy_ctx'] * 1000:6.2f}ms | OLD: {bench_results['OLD_sympy'] * 1000:6.2f}ms",
+                        )
+                        log("pp", f"  4. All (no LUT):    {bench_results['4_all_no_lut'] * 1000:6.2f}ms")
+                        log("pp", f"  5. All (with LUT):  {bench_results['5_all_with_lut'] * 1000:6.2f}ms (2 evals)")
+                        log(
+                            "pp",
+                            f"  LUT Stats: {ctx_lut.get_cache_size()} entries, hit-rate: {ctx_lut.get_cache_hit_rate('numpy_eager'):.0%}",
+                        )
+
+                        # Verify results match
+                        np.testing.assert_array_almost_equal(
+                            result_np, old_np, decimal=6, err_msg="NumPy context result doesn't match old method!"
+                        )
+                        np.testing.assert_array_almost_equal(
+                            result_lambda,
+                            old_lambda,
+                            decimal=6,
+                            err_msg="Lambda context result doesn't match old method!",
+                        )
+                        # =========================================================
+
+                        """Numpy eager eval"""
+                        # sfeh _lambda verion comparisson, functionality-wise and time-wise, eval sympy first
+                        nplambda_results_raw = evotree.eval_np_lambdas()
+                        nplambda_results_raw = nplambda_results_raw(self.df_train)
+
+                        perf_t[2] = time.perf_counter()
+
+                        """Sympy lambdify"""
+                        sym_results_raw = eval_predict_sympyBatch(sy_expr, self.df_train, self.evolve.symbol_list)
+                        sym_results = self.eval_autocast(sym_results_raw)
+                        sym_fitness = self.eval_error_metric(sym_results, self.df_train[self.target_column])
+                        sym_fitness = round(sym_fitness, _cfg.float_precision)
+
+                        perf_t[3] = time.perf_counter()
+
+                        log(
+                            "pp",
+                            f"NP: {perf_t[1] - perf_t[0]:4.4f}s, NE: {perf_t[2] - perf_t[1]:4.4f}s, SY: {perf_t[3] - perf_t[2]:4.4f}s. "
+                            f"Fitness NP: {np_fitness}, SY: {sym_fitness} ({sy_expr}), eval tree id {tree_id}",
+                        )
+
+                        try:
+                            sum(nplambda_results_raw - np_results_raw)
+                        except Exception:
+                            raise TreeError("SFEH THESE ARE [True] trees")
+
+                        if sum(nplambda_results_raw - np_results_raw) > 0.001:
+                            diffs = np.abs(nplambda_results_raw - np_results_raw)
+                            mask = diffs > 0.001
+                            if np.any(mask):
+                                indices = np.where(mask)[0]
+                                log("w", f"{len(indices)} differences found above tolerance 0.001: (NP VERSION)")
+                            print(f"Different in (NP VERSION): {sum(nplambda_results_raw - np_results)} ({sy_expr})")
+
+                        if np.sum(np.abs(nplambda_results_raw - np_results_raw)) > 0.001:
+                            sym_results_raw_np = sym_results_raw.to_numpy()
+                            diffs = np.abs(sym_results_raw_np - np_results_raw)
+                            mask = diffs > 0.001
+                            if np.any(mask):
+                                indices = np.where(mask)[0]
+                                log("w", f"{len(indices)} differences found above tolerance 0.001:")
+                            # results_syraw_df = eval_predict_df_sympy_only(sy_expr, self.df_train)  #  takes forever
+                            result_diffs = sum(sym_results_raw - np_results_raw)
+                            log("w", f"Different results in evaluation: {result_diffs} sy-expr: ({sy_expr})")
+
+                        if _cfg.lut_enabled:
+                            self.lut_tree_infos[tree_id]["fitness-sympy"] = sym_fitness
+            except (SympyError, TreeError, ValueError) as e:
+                log("wwww", f"Could not evaluate fitness for tree {sy_expr}: {e}")
                 if _cfg.lut_enabled:
                     self.lut_tree_infos[tree_id]["error"] = str(e)
                 raise
 
-            if _cfg.lut_enabled and sy_expr in self.lut_symex_fitness:
-                # other tree might have same expression -> lookup fitness
-                fitness = self.lut_symex_fitness[sy_expr]
-            else:
-                """Numpy eval"""
-                perf_t = {0: time.perf_counter()}
-                true_values = self.df_train[self.target_column].to_numpy()
-                try:
-                    with warnings.catch_warnings():
-                        warnings.simplefilter("ignore", RuntimeWarning)  # sfeh:discuss
-                        np_results_raw = evotree.eval_predict_numpy_now(
-                            self.df_train
-                        )  # exception? -> check np.isnan(sym_results).any()
-                        np_results = self.eval_autocast(np_results_raw)
-                        np_fitness = self.eval_error_metric(np_results, true_values)
-                        np_fitness = round(np_fitness, _cfg.float_precision)
-
-                        if (
-                            "nan" in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf
-                        ):  # sfeh:code not so good looking
-                            err_txt = "NaN in results"
-                            self.lut_tree_infos[tree_id]["error"] = err_txt
-                            raise TreeError(f"{err_txt}")
-
-                        perf_t[1] = time.perf_counter()
-
-                        if compare_with_sympy:
-                            # =========================================================
-                            # BENCHMARK: New EvaluationContext System vs. Old Methods
-                            # =========================================================
-                            import time as bench_time
-
-                            from plagih.evaluation_context import EvaluationContext, create_context
-
-                            bench_results = {}
-
-                            # 1. NumPy Eager (new context)
-                            t0 = bench_time.perf_counter()
-                            ctx_np = create_context("numpy_eager", use_lut=False)
-                            result_np = ctx_np.evaluate(evotree, self.df_train)
-                            bench_results["1_numpy_ctx"] = bench_time.perf_counter() - t0
-
-                            # 2. NumPy Lambda (new context)
-                            t0 = bench_time.perf_counter()
-                            ctx_lambda = create_context("numpy_lambda", use_lut=False)
-                            result_lambda_fn = ctx_lambda.evaluate(evotree)
-                            result_lambda = result_lambda_fn(self.df_train)
-                            bench_results["2_lambda_ctx"] = bench_time.perf_counter() - t0
-
-                            # 3. SymPy (new context)
-                            t0 = bench_time.perf_counter()
-                            ctx_sympy = create_context("sympy", use_lut=False)
-                            result_sympy = ctx_sympy.evaluate(evotree)
-                            bench_results["3_sympy_ctx"] = bench_time.perf_counter() - t0
-
-                            # 4. All together without LUT
-                            t0 = bench_time.perf_counter()
-                            ctx_all = EvaluationContext(modes=["numpy_eager", "numpy_lambda", "sympy"], use_lut=False)
-                            results_all = ctx_all.evaluate(evotree, self.df_train)
-                            bench_results["4_all_no_lut"] = bench_time.perf_counter() - t0
-
-                            # 5. All together WITH LUT (second call should be faster)
-                            t0 = bench_time.perf_counter()
-                            ctx_lut = EvaluationContext(modes=["numpy_eager", "numpy_lambda", "sympy"], use_lut=True)
-                            results_lut1 = ctx_lut.evaluate(evotree, self.df_train)  # First call (cache miss)
-                            results_lut2 = ctx_lut.evaluate(evotree, self.df_train)  # Second call (cache hit!)
-                            bench_results["5_all_with_lut"] = bench_time.perf_counter() - t0
-
-                            # Compare with OLD methods timing
-                            t0 = bench_time.perf_counter()
-                            old_np = evotree.eval_predict_numpy_now(self.df_train)
-                            bench_results["OLD_numpy"] = bench_time.perf_counter() - t0
-
-                            t0 = bench_time.perf_counter()
-                            old_lambda = evotree.eval_np_lambdas()(self.df_train)
-                            bench_results["OLD_lambda"] = bench_time.perf_counter() - t0
-
-                            t0 = bench_time.perf_counter()
-                            old_sympy = evotree.get_sympy_expr()
-                            bench_results["OLD_sympy"] = bench_time.perf_counter() - t0
-
-                            # Print benchmark results
-                            log("pp", "=== EvaluationContext Benchmark ===")
-                            log(
-                                "pp",
-                                f"  1. NumPy (ctx):     {bench_results['1_numpy_ctx'] * 1000:6.2f}ms | OLD: {bench_results['OLD_numpy'] * 1000:6.2f}ms",
-                            )
-                            log(
-                                "pp",
-                                f"  2. Lambda (ctx):    {bench_results['2_lambda_ctx'] * 1000:6.2f}ms | OLD: {bench_results['OLD_lambda'] * 1000:6.2f}ms",
-                            )
-                            log(
-                                "pp",
-                                f"  3. SymPy (ctx):     {bench_results['3_sympy_ctx'] * 1000:6.2f}ms | OLD: {bench_results['OLD_sympy'] * 1000:6.2f}ms",
-                            )
-                            log("pp", f"  4. All (no LUT):    {bench_results['4_all_no_lut'] * 1000:6.2f}ms")
-                            log(
-                                "pp", f"  5. All (with LUT):  {bench_results['5_all_with_lut'] * 1000:6.2f}ms (2 evals)"
-                            )
-                            log(
-                                "pp",
-                                f"  LUT Stats: {ctx_lut.get_cache_size()} entries, hit-rate: {ctx_lut.get_cache_hit_rate('numpy_eager'):.0%}",
-                            )
-
-                            # Verify results match
-                            np.testing.assert_array_almost_equal(
-                                result_np, old_np, decimal=6, err_msg="NumPy context result doesn't match old method!"
-                            )
-                            np.testing.assert_array_almost_equal(
-                                result_lambda,
-                                old_lambda,
-                                decimal=6,
-                                err_msg="Lambda context result doesn't match old method!",
-                            )
-                            # =========================================================
-
-                            """Numpy eager eval"""
-                            # sfeh _lambda verion comparisson, functionality-wise and time-wise, eval sympy first
-                            nplambda_results_raw = evotree.eval_np_lambdas()
-                            nplambda_results_raw = nplambda_results_raw(self.df_train)
-
-                            perf_t[2] = time.perf_counter()
-
-                            """Sympy lambdify"""
-                            sym_results_raw = eval_predict_sympyBatch(sy_expr, self.df_train, self.evolve.symbol_list)
-                            sym_results = self.eval_autocast(sym_results_raw)
-                            sym_fitness = self.eval_error_metric(sym_results, self.df_train[self.target_column])
-                            sym_fitness = round(sym_fitness, _cfg.float_precision)
-
-                            perf_t[3] = time.perf_counter()
-
-                            log(
-                                "pp",
-                                f"NP: {perf_t[1] - perf_t[0]:4.4f}s, NE: {perf_t[2] - perf_t[1]:4.4f}s, SY: {perf_t[3] - perf_t[2]:4.4f}s. "
-                                f"Fitness NP: {np_fitness}, SY: {sym_fitness} ({sy_expr}), eval tree id {tree_id}",
-                            )
-
-                            try:
-                                sum(nplambda_results_raw - np_results_raw)
-                            except Exception:
-                                raise TreeError("SFEH THESE ARE [True] trees")
-
-                            if sum(nplambda_results_raw - np_results_raw) > 0.001:
-                                diffs = np.abs(nplambda_results_raw - np_results_raw)
-                                mask = diffs > 0.001
-                                if np.any(mask):
-                                    indices = np.where(mask)[0]
-                                    log("w", f"{len(indices)} differences found above tolerance 0.001: (NP VERSION)")
-                                print(
-                                    f"Different in (NP VERSION): {sum(nplambda_results_raw - np_results)} ({sy_expr})"
-                                )
-
-                            if np.sum(np.abs(nplambda_results_raw - np_results_raw)) > 0.001:
-                                sym_results_raw_np = sym_results_raw.to_numpy()
-                                diffs = np.abs(sym_results_raw_np - np_results_raw)
-                                mask = diffs > 0.001
-                                if np.any(mask):
-                                    indices = np.where(mask)[0]
-                                    log("w", f"{len(indices)} differences found above tolerance 0.001:")
-                                # results_syraw_df = eval_predict_df_sympy_only(sy_expr, self.df_train)  #  takes forever
-                                result_diffs = sum(sym_results_raw - np_results_raw)
-                                log("w", f"Different results in evaluation: {result_diffs} sy-expr: ({sy_expr})")
-
-                            if _cfg.lut_enabled:
-                                self.lut_tree_infos[tree_id]["fitness-sympy"] = sym_fitness
-                except (SympyError, TreeError, ValueError) as e:
-                    log("wwww", f"Could not evaluate fitness for tree {sy_expr}: {e}")
-                    if _cfg.lut_enabled:
-                        self.lut_tree_infos[tree_id]["error"] = str(e)
-                    raise
-
-                fitness = np_fitness
-
-                if _cfg.lut_enabled:
-                    self.lut_symex_fitness[sy_expr] = fitness
+            fitness = np_fitness
 
             if _cfg.lut_enabled:
-                self.lut_tree_infos[tree_id]["sy_expr"] = sy_expr
-                self.lut_tree_infos[tree_id]["parsimony"] = parsimony
-                self.lut_tree_infos[tree_id]["fitness"] = fitness
+                self.lut_symex_fitness[sy_expr] = fitness
+
+        if _cfg.lut_enabled:
+            self.lut_tree_infos[tree_id]["sy_expr"] = sy_expr
+            self.lut_tree_infos[tree_id]["parsimony"] = parsimony
+            self.lut_tree_infos[tree_id]["fitness"] = fitness
 
         candidate = Candidate(evotree, fitness=fitness, parsimony=parsimony, tag=tag)
         return candidate
@@ -1426,8 +1584,11 @@ class ExplainableGP:
             )
 
         interesting_error_count = stage_counts["simplify"] + stage_counts["evaluate"] + stage_counts["other"]
-        excessive_create_errors = stage_counts["create"] >= max(10, len(records) // 8)
-        should_log_warning = bool(outliers) or interesting_error_count > 0 or excessive_create_errors
+        interesting_error_threshold = max(3, int(np.ceil(len(records) * 0.05)))
+        excessive_create_errors = stage_counts["create"] >= max(15, int(np.ceil(len(records) * 0.2)))
+        should_log_warning = (
+            bool(outliers) or interesting_error_count >= interesting_error_threshold or excessive_create_errors
+        )
 
         if should_log_warning:
             log(
@@ -1488,6 +1649,7 @@ class ExplainableGP:
         median_total_ms = stats.get("median_total_ms", 0.0)
         p95_total_ms = stats.get("p95_total_ms", 0.0)
         outliers: List[Dict[str, Any]] = []
+        robust_floor_ms = 1500.0 if len(records) >= 20 else 2000.0
 
         for record in records:
             total_ms = record.get("total_ms", 0.0)
@@ -1498,10 +1660,12 @@ class ExplainableGP:
                 "evaluate": record.get("evaluate_ms", 0.0),
             }.get(dominant_phase, 0.0)
             is_extreme_absolute = total_ms >= 5000.0
-            is_large_absolute = total_ms >= 1000.0
-            is_large_relative = total_ms >= max(3.0 * p95_total_ms, 8.0 * median_total_ms, 1000.0)
+            is_large_absolute = total_ms >= robust_floor_ms
+            is_large_relative = total_ms >= max(4.0 * p95_total_ms, 10.0 * median_total_ms, robust_floor_ms)
             is_phase_dominated = (
-                total_ms >= 1000.0 and dominant_phase_ms >= 0.85 * total_ms and dominant_phase_ms >= 750.0
+                total_ms >= robust_floor_ms
+                and dominant_phase_ms >= 0.8 * total_ms
+                and dominant_phase_ms >= max(1200.0, robust_floor_ms * 0.8)
             )
 
             if is_extreme_absolute or (is_large_absolute and (is_large_relative or is_phase_dominated)):

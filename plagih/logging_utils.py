@@ -37,6 +37,7 @@ from typing import Optional
 # Logger singleton
 # ---------------------------------------------------------------------------
 logger = logging.getLogger("plagih")
+logger.propagate = False
 
 
 # ---------------------------------------------------------------------------
@@ -106,6 +107,61 @@ _last_progress_key = None
 _last_progress_bucket = None
 _last_progress_fail = None
 _last_progress_emit_time = 0.0
+
+
+def _handler_has_closed_stream(handler: logging.Handler) -> bool:
+    """Return True if a handler points to a stream that has already been closed."""
+    stream = getattr(handler, "stream", None)
+    return stream is not None and bool(getattr(stream, "closed", False))
+
+
+def _safe_remove_handler(handler: logging.Handler) -> None:
+    """Remove and close one handler without letting cleanup errors leak."""
+    try:
+        logger.removeHandler(handler)
+    except Exception:
+        pass
+    try:
+        handler.flush()
+    except Exception:
+        pass
+    try:
+        handler.close()
+    except Exception:
+        pass
+
+
+def _prune_closed_handlers() -> None:
+    """Drop handlers whose underlying stream is already closed.
+
+    This matters in tests and short-lived harnesses where captured stdout/stderr
+    objects are closed between runs while the module-global logger survives.
+    """
+    for handler in list(logger.handlers):
+        if _handler_has_closed_stream(handler):
+            _safe_remove_handler(handler)
+
+
+def _create_console_handler(level: int = logging.INFO) -> logging.StreamHandler:
+    """Create a fresh console handler bound to the current ``sys.stdout``."""
+    console = logging.StreamHandler(sys.stdout)
+    console.setLevel(level)
+    console.setFormatter(_ColoredConsoleFormatter())
+    return console
+
+
+def _ensure_live_console_handler(level: int = logging.INFO) -> None:
+    """Ensure the logger has at least one live console handler.
+
+    If a previous run left behind a handler whose stream is now closed, we prune
+    it and attach a fresh handler to the current ``sys.stdout``.
+    """
+    _prune_closed_handlers()
+    for handler in logger.handlers:
+        if isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler):
+            if not _handler_has_closed_stream(handler):
+                return
+    logger.addHandler(_create_console_handler(level=level))
 
 
 def _write_progress_line(message: str, *, close: bool = False) -> None:
@@ -276,12 +332,10 @@ def setup_logging(
         verbose: If *True*, show DEBUG messages on the console.
     """
     logger.setLevel(logging.DEBUG)
-    logger.handlers.clear()
+    for handler in list(logger.handlers):
+        _safe_remove_handler(handler)
 
-    console = logging.StreamHandler(sys.stdout)
-    console.setLevel(console_level if not verbose else logging.DEBUG)
-    console.setFormatter(_ColoredConsoleFormatter())
-    logger.addHandler(console)
+    logger.addHandler(_create_console_handler(level=console_level if not verbose else logging.DEBUG))
 
     if log_file:
         log_file = Path(log_file)
@@ -317,6 +371,7 @@ def log(msg_type: str, message: str) -> None:
 
     if msg_type not in _cfg.verbosity:
         return
+    _ensure_live_console_handler()
     _flush_progress_line()
     level = _LEVEL_FOR_CHAR.get(msg_type[0], logging.INFO)
     record = logging.LogRecord(
@@ -337,24 +392,28 @@ def log(msg_type: str, message: str) -> None:
 # ---------------------------------------------------------------------------
 def log_debug(msg: str, *args, **kwargs) -> None:
     """Log a DEBUG message (file only by default)."""
+    _ensure_live_console_handler(level=logging.DEBUG)
     _flush_progress_line()
     logger.debug(msg, *args, **kwargs)
 
 
 def log_info(msg: str, *args, **kwargs) -> None:
     """Log an INFO message."""
+    _ensure_live_console_handler()
     _flush_progress_line()
     logger.info(msg, *args, **kwargs)
 
 
 def log_warning(msg: str, *args, **kwargs) -> None:
     """Log a WARNING message."""
+    _ensure_live_console_handler(level=logging.WARNING)
     _flush_progress_line()
     logger.warning(msg, *args, **kwargs)
 
 
 def log_error(msg: str, *args, **kwargs) -> None:
     """Log an ERROR message."""
+    _ensure_live_console_handler(level=logging.ERROR)
     _flush_progress_line()
     logger.error(msg, *args, **kwargs)
 

@@ -32,6 +32,9 @@ testpaths = ["plagih/test"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+markers = [
+    "performance: extended performance / integration test – skipped by default, run with --run-perf to include",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]

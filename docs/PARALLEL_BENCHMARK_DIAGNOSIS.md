@@ -52,7 +52,7 @@
    - `pop=10000`: **128** slightly ahead of `32`
    - Large auto-batches (`~1 batch/worker`) are not optimal
 
-4. **`gen_create_initial()` is a large fixed cost block and still sequential.**
+Wunderbar fahre nun mit der Implementierung im ZigZag-Plan fort. 4. **At benchmark time, `gen_create_initial()` was a large fixed sequential cost block.**
    - `pop=10000` initialization costs ~**44–47 s** per configuration
    - This block is nearly identical for sequential and parallel
 
@@ -77,7 +77,7 @@
 | Batch size | 1 / 32 / 128 / auto | High | Sweet spot found |
 | Result return transport | Result pickle dumps | Low | Not a bottleneck |
 | Worker count | 2 / 4 / 8 | High | 8 currently best |
-| Initial population | `gen_create_initial()` | High | Still sequential |
+| Initial population | `gen_create_initial()` | High | Sequential at measurement time |
 | RAM (main process) | RSS | Medium | Scales with population |
 | RAM (worker processes) | Child RSS | High | Fixed parallel overhead |
 | CPU utilization | System CPU avg/peak | Medium | Clearly elevated in parallel, but not fully saturated |
@@ -245,7 +245,7 @@ Breakdown of the new variant:
 
 ## 6. Initial population as a separate cost block
 
-`gen_create_initial()` still runs sequentially.
+At the time of these measurements, `gen_create_initial()` still ran sequentially.
 
 | Population | Sequential init | Parallel(8w) init | Finding |
 |---|---:|---:|---|
@@ -253,7 +253,7 @@ Breakdown of the new variant:
 | `10000` | 44366.6 ms | 45096.9 ms | Practically equal |
 
 **Interpretation:**
-- The init block currently **does not** benefit from `parallel=`.
+- In this measurement baseline, the init block **did not** benefit from `parallel=`.
 - For `pop=10000`, initialization alone costs ~45 s per configuration.
 - This explains a significant portion of the total runtime.
 
@@ -379,7 +379,7 @@ This confirms that the newly added error diagnostics in `parallel.py` and
 4. **8 workers on 8 physical cores**
 
 ### Biggest remaining bottlenecks
-1. **`gen_create_initial()` remains sequential**
+1. **In this baseline, `gen_create_initial()` remained sequential**
 2. **Pre-selection runs in the main process and costs ~200 ms per generation (`pop=1000`)**
 3. **Task times remain short (~3.9 ms)**
 4. **Worker RAM overhead is high (~0.29 GB at `2w`, ~0.58–0.62 GB at `4w`, ~1.13–1.18 GB at `8w`)**
@@ -411,7 +411,7 @@ This confirms that the newly added error diagnostics in `parallel.py` and
 2. **Consider `parallel(8w)` as the preferred benchmark configuration on this host.**
 3. **For RAM-sensitive machines, document a second preset path**, e.g. `parallel(4w)`.
 4. **If further optimization is pursued, start here:**
-   - Parallelize or amortize initial population
+   - Re-measure the now unified generation-0 runner and amortize remaining init overhead
    - Make pre-selection more efficient
    - Reduce worker state/RAM
 
@@ -421,7 +421,7 @@ This confirms that the newly added error diagnostics in `parallel.py` and
 
 > **Note:** These items are also tracked in `docs/IMPLEMENTATION_PLAN.md` (H1–H3).
 
-- [ ] **Further optimize parallelization:** Specifically re-examine worker RAM and main-process orchestration (`gen_create_initial()`, pre-selection, worker state). Current measurements suggest untapped potential.
+- [ ] **Further optimize parallelization:** Specifically re-examine worker RAM, pre-selection, and the post-H1 generation-0 runner. Current measurements suggest untapped potential.
 - [ ] **Repeat resource profiling with `gens>=2`** to get CPU/RAM cross-tables not just for the first generation run but also for steady state.
 - [ ] **Test batch sweet spot under RAM budget**, e.g. `32`, `64`, `128` against `2w/4w/8w`, to derive a better perf/RAM preset.
 

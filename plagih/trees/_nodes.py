@@ -78,6 +78,79 @@ def _should_emit_simplification_growth_warning() -> tuple[bool, int]:
     return True, suppressed
 
 
+def _sympy_expr_str(expr: sympy.Basic) -> str:
+    """Return a stable one-line SymPy expression string for diagnostics."""
+    return string_remove_trailing_zeroes(str(expr))
+
+
+def _simplification_issue_stage(original_expr: str, roundtrip_expr: str, grouped_expr: str) -> str:
+    """Best-effort classification of which simplification step changed semantics."""
+    roundtrip_changed = original_expr != roundtrip_expr
+    grouping_changed = roundtrip_expr != grouped_expr
+
+    if roundtrip_changed and grouping_changed:
+        return "sympy_roundtrip+grouping"
+    if roundtrip_changed:
+        return "sympy_roundtrip"
+    if grouping_changed:
+        return "tree_node_grouping"
+    return "unknown"
+
+
+def _sympy_exprs_equivalent(expr_a: sympy.Basic, expr_b: sympy.Basic) -> bool:
+    """Return True when two SymPy expressions are provably equivalent enough for simplification checks."""
+    if _sympy_expr_str(expr_a) == _sympy_expr_str(expr_b):
+        return True
+
+    try:
+        eq_result = expr_a.equals(expr_b)
+        if eq_result is True:
+            return True
+    except Exception:
+        pass
+
+    try:
+        if bool(getattr(expr_a, "is_Boolean", False) or getattr(expr_b, "is_Boolean", False)):
+            xor_expr = sympy.Xor(sympy.sympify(expr_a), sympy.sympify(expr_b))
+            return sympy.simplify(xor_expr) in (False, sympy.false)
+        return sympy.simplify(expr_a - expr_b) == 0
+    except Exception:
+        return False
+
+
+def _tree_structure_str(node: "Node", *, cut_terms: bool = True) -> str:
+    """Return the existing compact one-line tree structure representation for diagnostics."""
+    try:
+        return node.str_as_list(cut_terms=cut_terms)
+    except Exception:
+        try:
+            return node.represent_str(cut_terms=cut_terms)
+        except Exception as ex:
+            return f"<tree-structure unavailable: {type(ex).__name__}: {ex}>"
+
+
+def _simplification_diagnostic_message(
+    *,
+    original: "Node",
+    roundtrip: "Node",
+    grouped: "Node",
+    original_expr: str,
+    roundtrip_expr: str,
+    grouped_expr: str,
+) -> str:
+    """Build a compact diagnostic block for simplify mismatches/growth."""
+    suspected_stage = _simplification_issue_stage(original_expr, roundtrip_expr, grouped_expr)
+    return (
+        f"Simplification diagnostic (suspected stage: {suspected_stage})\n"
+        f"  original expr : {original_expr}\n"
+        f"  roundtrip expr: {roundtrip_expr}\n"
+        f"  grouped expr  : {grouped_expr}\n"
+        f"  original tree : {_tree_structure_str(original)}\n"
+        f"  roundtrip tree: {_tree_structure_str(roundtrip)}\n"
+        f"  grouped tree  : {_tree_structure_str(grouped)}"
+    )
+
+
 # =============================================================================
 # Helper functions for type checking (forward references resolved at runtime)
 # =============================================================================
@@ -615,6 +688,7 @@ class Node(ABC):
             _cs = self.get_childs()
 
             node_summary = f"node={type(self).__name__}, child_types={[type(child).__name__ for child in _cs[:4]]}"
+            tree_dump = _tree_structure_str(self)
 
             def _contains_piecewise_like(node: "Node") -> bool:
                 if isinstance(node, (Ifte, Piecewise)):
@@ -639,7 +713,8 @@ class Node(ABC):
                 if isinstance(self, RelationalOperator) and any(_contains_piecewise_like(child) for child in _cs):
                     raise SympyError(
                         "Relational operator on Ifte/Piecewise subtree is not supported for SymPy conversion "
-                        f"({node_summary}). This combination is known to trigger SymPy recursion/hangs."
+                        f"({node_summary}). This combination is known to trigger SymPy recursion/hangs.\n"
+                        f"Tree structure: {tree_dump}"
                     )
 
                 _cs = [cc.get_sympy_expr(simplimore=simplimore) for cc in _cs]
@@ -657,7 +732,8 @@ class Node(ABC):
                     raise SympyError(
                         f"MemoryError while building sympy expression for "
                         f"{type(self).__name__} ({node_summary}). "
-                        f"The expression is too large for symbolic evaluation."
+                        f"The expression is too large for symbolic evaluation.\n"
+                        f"Tree structure: {tree_dump}"
                     )
 
             else:
@@ -668,7 +744,8 @@ class Node(ABC):
 
         except RecursionError as e:
             raise SympyError(
-                f"RecursionError while building sympy expression for {type(self).__name__} ({node_summary}): {e}"
+                f"RecursionError while building sympy expression for {type(self).__name__} ({node_summary}): {e}\n"
+                f"Tree structure: {_tree_structure_str(self)}"
             ) from e
 
     def list_terminal_nodes(self) -> List["Node"]:
@@ -743,7 +820,7 @@ class Node(ABC):
                 else:
                     typus_str = f"{v}"
         else:
-            raise CuriosityError("Holla sfeh")
+            raise TreeError(f"Node {type(self).__name__} has no childs for str_as_list()")
 
         return f"[{typus_str}]"
 
@@ -1546,6 +1623,7 @@ def tree_simplification(_tree: Node, allow_chain: bool) -> Node:
     # s_export = self.get_tree_export()
     # print(f'{s}\n{s1}\n{s2}\n{s3}\n{s4}\n{s5}\n{s6}\n{s_export}')
     _tree = sympy_to_tree(expr_sym, allow_chain=allow_chain)
+    roundtrip_tree = copy.deepcopy(_tree)
     max_grouping_iters = 10
     best_tree = copy.deepcopy(_tree)
     best_len = len(best_tree)
@@ -1579,22 +1657,48 @@ def tree_simplification(_tree: Node, allow_chain: bool) -> Node:
     # expressions produce identical string representations and LUT keys.
     _tree.canonicalize_children()
 
-    # Final guard: if the simplified tree is larger than the original, fall
-    # back to the original (P19).
-    if original_len < len(_tree):
-        astr = string_remove_trailing_zeroes(str(original.get_sympy_expr()))
-        bstr = string_remove_trailing_zeroes(str(_tree.get_sympy_expr()))
+    # Final guard: reject simplifications that either grow the tree (P19) or
+    # alter the represented SymPy expression.
+    roundtrip_expr_obj = roundtrip_tree.get_sympy_expr()
+    grouped_expr_obj = _tree.get_sympy_expr()
+    astr = _sympy_expr_str(expr_sym)
+    roundtrip_expr = _sympy_expr_str(roundtrip_expr_obj)
+    grouped_expr = _sympy_expr_str(grouped_expr_obj)
+    semantic_changed = astr != grouped_expr and not _sympy_exprs_equivalent(expr_sym, grouped_expr_obj)
+    grew_tree = original_len < len(_tree)
+
+    if grew_tree or semantic_changed:
         should_log_warning, suppressed_count = _should_emit_simplification_growth_warning()
         if should_log_warning:
+            reason_parts = []
+            if grew_tree:
+                reason_parts.append(f"grew tree ({original_len} → {len(_tree)} nodes)")
+            if semantic_changed:
+                reason_parts.append("changed semantics")
             suffix = f" | similar cases suppressed={suppressed_count}" if suppressed_count else ""
+            log("w", f"Simplification rejected ({', '.join(reason_parts)}), keeping original: {astr}{suffix}")
             log(
                 "w",
-                f"Simplification grew tree ({original_len} → {len(_tree)} nodes), keeping original: {astr}{suffix}",
+                _simplification_diagnostic_message(
+                    original=original,
+                    roundtrip=roundtrip_tree,
+                    grouped=_tree,
+                    original_expr=astr,
+                    roundtrip_expr=roundtrip_expr,
+                    grouped_expr=grouped_expr,
+                ),
             )
 
-            if astr != bstr:
+            if semantic_changed:
                 # sfeh 'a**0.5' does not become 'sqrt(a)'! use rational=True or sympy.S.Half
-                log("w", f"Diff in sympy expression?\n\t{astr}\n\t{bstr}")  # raise ex? does not occur after grouping?
+                suspected_stage = _simplification_issue_stage(astr, roundtrip_expr, grouped_expr)
+                log(
+                    "w",
+                    f"Diff in sympy expression? suspected stage={suspected_stage}\n"
+                    f"  original : {astr}\n"
+                    f"  roundtrip: {roundtrip_expr}\n"
+                    f"  grouped  : {grouped_expr}",
+                )
                 # sfeh Example 03.05.2025
                 # 	sin(cartVel**(6450000000*RoundDummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
                 # 	sin(cartVel**(6.45e+9*RoundDummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))

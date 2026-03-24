@@ -18,10 +18,10 @@ crossover, and simplification, evaluated against training data.
 | Module | Responsibility |
 |---|---|
 | `plagih/trees/` | plagih.trees — Node hierarchy, evolution, and GP engine. |
-| `plagih/trees/_nodes.py` | plagih_tree contain a new implementation of trees that we use in genetic programming to display a program. (62C/11F) |
+| `plagih/trees/_nodes.py` | plagih_tree contain a new implementation of trees that we use in genetic programming to display a program. (62C/17F) |
 | `plagih/trees/_evolution.py` | Evolution module: Candidate, NodeSelect, Evolution, and population helpers. (3C/8F) |
 | `plagih/trees/_gp_engine.py` | GP Engine module: ExplainableGP and picklable helper callables. (2C/5F) |
-| `plagih/parallel.py` | Parallel execution engine for plagih GP. (5C/33F) |
+| `plagih/parallel.py` | Parallel execution engine for plagih GP. (5C/34F) |
 | `plagih/paretofront.py` | Pareto-front dominance filter for GP candidates. (0C/6F) |
 | `plagih/monitoring.py` | GP Monitoring Module (2C/0F) |
 | `plagih/evaluation_context.py` | Unified Evaluation Context System for Plagih GP Trees. (3C/5F) |

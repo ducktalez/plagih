@@ -50,6 +50,7 @@ class TestMountainCarBenchmark:
         assert "cartPos" in df.columns, f"Missing cartPos column. Got: {list(df.columns)}"
         assert "cartVel" in df.columns, f"Missing cartVel column. Got: {list(df.columns)}"
 
+    @pytest.mark.performance
     def test_minimal_gp_run(self, tmp_path):
         """Test a minimal GP run with MountainCar data."""
         # Load data
@@ -117,6 +118,7 @@ class TestCartPoleBenchmark:
         # Check we have enough samples
         assert len(df) > 1000, f"Expected >1000 samples, got {len(df)}"
 
+    @pytest.mark.performance
     def test_minimal_gp_run(self, tmp_path):
         """Test a minimal GP run with CartPole data."""
         # Load data
@@ -205,6 +207,7 @@ class TestSymbolicRegressionBenchmark:
             df["action"].values, expected, decimal=2, err_msg="Target values don't match f(x) = x³ + x² + x"
         )
 
+    @pytest.mark.performance
     def test_minimal_gp_run(self, tmp_path):
         """Test a minimal GP run with Symbolic Regression data."""
         # Load data

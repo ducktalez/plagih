@@ -56,6 +56,8 @@ class Strategy:
     Args:
         name: Name of a builtin strategy or a registered custom strategy.
         rate: Fraction of pop_max_size to create (0.0 to 1.0).
+        count: Exact number of candidate slots for this strategy. If set,
+            overrides ``rate`` and is especially useful for generation-0 plans.
         crossover: If True, strategy returns two trees per call.
         simplicate: If True, apply tree simplification before evaluation.
         params: Additional keyword arguments passed to the strategy function.
@@ -67,13 +69,23 @@ class Strategy:
 
     name: str
     rate: float = 0.0
+    count: Optional[int] = None
     crossover: bool = False
     simplicate: bool = False
     params: Dict[str, Any] = field(default_factory=dict)
 
-    def __init__(self, name: str, rate: float = 0.0, crossover: bool = False, simplicate: bool = False, **params):
+    def __init__(
+        self,
+        name: str,
+        rate: float = 0.0,
+        count: Optional[int] = None,
+        crossover: bool = False,
+        simplicate: bool = False,
+        **params,
+    ):
         self.name = name
         self.rate = rate
+        self.count = count
         self.crossover = crossover
         self.simplicate = simplicate
         self.params = params
@@ -222,6 +234,16 @@ class PerformanceTracker:
         total = summary["generation_total_time"]
         log("ppp", f"[Perf] {total:.2f}s | {' | '.join(parts)}")
 
+    def merge(self, other: "PerformanceTracker") -> None:
+        """Merge another tracker into this one."""
+        for tag, timings in other._results.items():
+            self._results.setdefault(tag, []).extend(timings)
+            self._errors[tag] = self._errors.get(tag, 0) + other._errors.get(tag, 0)
+            self._successes[tag] = self._successes.get(tag, 0) + other._successes.get(tag, 0)
+
+        self._generation_time += other._generation_time
+        self.tree_timings.extend(other.tree_timings)
+
     def reset(self):
         """Reset all tracking data for the next generation."""
         self._results.clear()
@@ -242,6 +264,15 @@ class WorkerInitResources:
 DEFAULT_TASKS_PER_BATCH = 128
 PROGRESS_TIMEOUT_SECONDS = 120.0
 DEBUG_TRACEBACK_LINES = 20
+
+
+def _validate_post_simplify_tree_requirements(task: TaskSpec, tree) -> None:
+    """Apply generic post-simplification validation declared on a task."""
+    min_depth = task.strategy_params.get("require_min_depth_after_simplify")
+    if min_depth is None:
+        return
+    if tree.get_max_depth() < int(min_depth):
+        raise TreeSizeError("Tree did not get complex enough after simplification (only root node).")
 
 
 # =============================================================================
@@ -618,53 +649,56 @@ def evaluate_tree_standalone(
     evotree.force_input_node(evolve)
     evotree = evolve.evolve_prune_tree(evotree)
     evotree.repair_depth()
+    evotree.canonicalize_children()  # Keep exact-tree LUT keys stable like tree_to_candidate().
 
     tree_id = evotree.get_lut_id()
 
     if tree_id in local_lut_tree:
-        sy_expr = local_lut_tree[tree_id].get("sy_expr")
-        parsimony = local_lut_tree[tree_id].get("parsimony")
-        fitness = local_lut_tree[tree_id].get("fitness")
-        if any(v is None for v in [sy_expr, parsimony, fitness]):
-            _err = local_lut_tree[tree_id].get("error")
+        entry = local_lut_tree[tree_id]
+        parsimony = entry.get("parsimony")
+        fitness = entry.get("fitness")
+        if parsimony is not None and fitness is not None:
+            return Candidate(evotree, fitness=fitness, parsimony=parsimony, tag=tag)
+        _err = entry.get("error")
+        if _err is not None:
             raise TreeLutError(f"Tree LUT Entry implies Problem: {_err}")
     else:
         local_lut_tree[tree_id] = {}
 
-        parsimony = eval_parsimony(evotree, complexity_metric, origin_tree=origin_tree)
-        if raise_if_useless and parsimony > nodes_max:
-            err_txt = f"Tree too complex: {parsimony} > {nodes_max}"
-            local_lut_tree[tree_id]["error"] = err_txt
-            raise TreeSizeError(err_txt)
+    parsimony = eval_parsimony(evotree, complexity_metric, origin_tree=origin_tree)
+    if raise_if_useless and parsimony > nodes_max:
+        err_txt = f"Tree too complex: {parsimony} > {nodes_max}"
+        local_lut_tree[tree_id]["error"] = err_txt
+        raise TreeSizeError(err_txt)
 
-        try:
-            sy_expr = evotree.get_sympy_expr()
-        except SympyError as e:
-            local_lut_tree[tree_id]["error"] = str(e)
-            raise
+    try:
+        sy_expr = evotree.get_sympy_expr()
+    except SympyError as e:
+        local_lut_tree[tree_id]["error"] = str(e)
+        raise
 
-        if sy_expr in local_lut_symex:
-            fitness = local_lut_symex[sy_expr]
-        else:
-            true_values = df_train[target_column].to_numpy()
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", RuntimeWarning)
-                np_results_raw = evotree.eval_predict_numpy_now(df_train)
-                np_results = eval_autocast(np_results_raw)
-                np_fitness = eval_error_metric(np_results, true_values)
-                np_fitness = round(np_fitness, _cfg.float_precision)
+    if sy_expr in local_lut_symex:
+        fitness = local_lut_symex[sy_expr]
+    else:
+        true_values = df_train[target_column].to_numpy()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            np_results_raw = evotree.eval_predict_numpy_now(df_train)
+            np_results = eval_autocast(np_results_raw)
+            np_fitness = eval_error_metric(np_results, true_values)
+            np_fitness = round(np_fitness, _cfg.float_precision)
 
-                if "nan" in str(np_fitness) or np_fitness != np_fitness or np_fitness == float("inf"):
-                    err_txt = "NaN in results"
-                    local_lut_tree[tree_id]["error"] = err_txt
-                    raise TreeError(err_txt)
+            if "nan" in str(np_fitness) or np_fitness != np_fitness or np_fitness == float("inf"):
+                err_txt = "NaN in results"
+                local_lut_tree[tree_id]["error"] = err_txt
+                raise TreeError(err_txt)
 
-            fitness = np_fitness
-            local_lut_symex[sy_expr] = fitness
+        fitness = np_fitness
+        local_lut_symex[sy_expr] = fitness
 
-        local_lut_tree[tree_id]["sy_expr"] = sy_expr
-        local_lut_tree[tree_id]["parsimony"] = parsimony
-        local_lut_tree[tree_id]["fitness"] = fitness
+    local_lut_tree[tree_id]["sy_expr"] = sy_expr
+    local_lut_tree[tree_id]["parsimony"] = parsimony
+    local_lut_tree[tree_id]["fitness"] = fitness
 
     candidate = Candidate(evotree, fitness=fitness, parsimony=parsimony, tag=tag)
     return candidate
@@ -746,9 +780,17 @@ def _strategy_mutation_filter(evolve, pop_genepool, paretofront, allow_chain, **
 
 def _strategy_random_new(evolve, pop_genepool, paretofront, allow_chain, **params):
     """Create a new random tree with a random depth."""
-    depths = params.get("depths", [2, 3, 4])
+    depth_sampler = params.get("depth_sampler", "choice")
     p_term = params.get("p_term", 0.1)
-    depth = np.random.choice(depths)
+    if depth_sampler == "normal":
+        mean = params.get("mean", 3.0)
+        sigma = params.get("sigma", 1.0)
+        min_depth = params.get("min_depth", 2)
+        max_depth = params.get("max_depth", evolve.depth_max)
+        depth = np.clip(int(random.normalvariate(mean, sigma)), int(min_depth), int(max_depth))
+    else:
+        depths = params.get("depths", [2, 3, 4])
+        depth = np.random.choice(depths)
     return evolve.evolve_new_tree_depth(float, int(depth), p_term=p_term)
 
 
@@ -964,6 +1006,7 @@ def _worker_run_task(task: TaskSpec, shared_lut_tree=None, shared_lut_symex=None
         for raw_tree in raw_trees:
             tree_simplify_start = time.perf_counter()
             tree_now = tree_simplification(raw_tree, allow_chain=_worker_allow_chain) if task.simplicate else raw_tree
+            _validate_post_simplify_tree_requirements(task, tree_now)
             simplify_durations.append(time.perf_counter() - tree_simplify_start)
             trees.append(tree_now)
         timing["simplify"] = time.perf_counter() - t1
@@ -1167,6 +1210,7 @@ def run_task_sequential(
         for raw_tree in raw_trees:
             tree_simplify_start = time.perf_counter()
             tree_now = tree_simplification(raw_tree, allow_chain=allow_chain) if task.simplicate else raw_tree
+            _validate_post_simplify_tree_requirements(task, tree_now)
             simplify_durations.append(time.perf_counter() - tree_simplify_start)
             trees.append(tree_now)
         timing["simplify"] = time.perf_counter() - t1
@@ -1272,7 +1316,8 @@ def build_task_list(strategies: List[Strategy], pop_max_size: int, seed: Optiona
     tasks = []
     task_index = 0
     for strategy in strategies:
-        n = int(strategy.rate * pop_max_size)
+        tag = str(strategy.params.get("init_label", strategy.name))
+        n = int(strategy.count) if strategy.count is not None else int(strategy.rate * pop_max_size)
         # For crossover, each call produces 2 trees, so halve the task count
         if strategy.crossover:
             n_tasks = max(1, n // 2)
@@ -1286,7 +1331,7 @@ def build_task_list(strategies: List[Strategy], pop_max_size: int, seed: Optiona
                     strategy_params=strategy.params,
                     crossover=strategy.crossover,
                     simplicate=strategy.simplicate,
-                    tag=strategy.name,
+                    tag=tag,
                     task_index=task_index,
                     seed=seed,
                 )
@@ -1458,6 +1503,11 @@ def run_generation_parallel(
                     # Repair tree back-references stripped during pickling
                     for candidate in result.candidates:
                         candidate.tree.repair_all()
+                        if _cfg.lut_enabled:
+                            lut_tree_delta[candidate.tree.get_lut_id()] = {
+                                "parsimony": candidate.parsimony,
+                                "fitness": candidate.fitness,
+                            }
                     all_candidates.extend(result.candidates)
                     created_candidates += len(result.candidates)
 

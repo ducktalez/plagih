@@ -3,6 +3,25 @@ Pytest fixtures for plagih test suite.
 
 Provides common test data, symbols, operators, and helper functions
 used across multiple test modules.
+
+Test tiers
+----------
+* **Classic tests** (default): unit and functional tests that run fast on every
+  ``pytest`` invocation.  No special flag required.
+
+* **Performance / extended tests** (opt-in): marked with
+  ``@pytest.mark.performance``.  These tests are skipped unless the
+  ``--run-perf`` flag is passed::
+
+      pytest - -run - perf
+
+  They include GP-pipeline integration tests against real benchmark data,
+  timing benchmarks, and other resource-intensive scenarios.
+
+* **Standalone benchmark scripts** (``benchmarks/bench_*.py``): completely
+  excluded from pytest collection.  Run them directly::
+
+      python plagih/test/benchmarks/bench_performance.py
 """
 
 import shutil
@@ -19,6 +38,42 @@ import sympy
 # They live in plagih/test/benchmarks/ and are meant to be run directly.
 # ---------------------------------------------------------------------------
 collect_ignore_glob = ["benchmarks/bench_*.py"]
+
+
+# ---------------------------------------------------------------------------
+# Performance-test marker: opt-in via --run-perf
+# ---------------------------------------------------------------------------
+
+
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        "--run-perf",
+        action="store_true",
+        default=False,
+        help=(
+            "Include extended performance / integration tests "
+            "(marked with @pytest.mark.performance). "
+            "These are skipped by default because they are resource-intensive."
+        ),
+    )
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line(
+        "markers",
+        "performance: extended performance / integration test - skipped by default, run with --run-perf to include",
+    )
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list) -> None:
+    """Skip all @pytest.mark.performance tests unless --run-perf was passed."""
+    if config.getoption("--run-perf"):
+        return  # nothing to skip
+
+    skip_marker = pytest.mark.skip(reason="extended performance test - pass --run-perf to include")
+    for item in items:
+        if "performance" in item.keywords:
+            item.add_marker(skip_marker)
 
 
 # Lazy imports to avoid circular dependencies

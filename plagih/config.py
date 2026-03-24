@@ -154,11 +154,10 @@ class PlagihConfig:
                 "already seen.  For any non-trivial run this will be significantly "
                 "slower.  Set PLAGIH_LUT_ENABLED=true in your .env or environment "
                 "to enable caching.\n"
-                "Discussion: LUT should arguably be the default because the "
-                "performance benefit is large and the memory cost is small for "
-                "typical population sizes (<10 000).  The current default is "
-                "'off' to keep the minimal profile truly minimal, but most users "
-                "should enable it.",
+                "Discussion: LUT is now enabled by default because the performance "
+                "benefit is large and the memory cost is usually small for typical "
+                "population sizes (<10 000).  This warning therefore only appears "
+                "when caching was explicitly disabled.",
                 stacklevel=2,
             )
 

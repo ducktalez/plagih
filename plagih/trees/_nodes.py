@@ -200,8 +200,8 @@ class RoundDummy(sympy.Function):  # Not a Math-operator
             # TypeError('Argument of Integer should be of numeric type, got 2 - I.')
             #   -> 'asin(tan(1))' has imaginary part. sfeh: open
             raise SympyImaginaryNumber(imex)
-        except Exception:
-            raise CuriosityError
+        except Exception as ex:
+            raise SympyError(f"RoundDummy cannot evaluate input: {type(a).__name__}: {ex}") from ex
 
     def __call__(self, a):
         # if isinstance(a, (int, float, np.ndarray)):
@@ -301,6 +301,14 @@ class Node(ABC):
         Shows fixed node hints and full precision numbers.
         """
         return self.represent_str(show_fixed_hint=True, cut_terms=False)
+
+    def __eq__(self, other):
+        """Identity-based equality — prevents infinite recursion from circular parent_node references."""
+        return self is other
+
+    def __hash__(self):
+        """Identity-based hash — consistent with __eq__."""
+        return id(self)
 
     def __len__(self):
         """Returns the fair node count of this tree/subtree."""
@@ -523,10 +531,11 @@ class Node(ABC):
             if isinstance(node_term, Number):
                 try:
                     v = float(val)
-                except TypeError:
-                    v = float(sympy.sympify(val).evalf())
-                except Exception:
-                    raise CuriosityError
+                except (TypeError, Exception):
+                    try:
+                        v = float(sympy.sympify(val).evalf())
+                    except Exception as ex:
+                        raise ValueError(f"Cannot export Number terminal with value {val!r}: {ex}") from ex
                 s = f"{v}"
                 if cut_terms:
                     s = remove_trailing_zeroes(s)
@@ -582,7 +591,7 @@ class Node(ABC):
                                 childs_new = self.get_childs()
                                 childs_new.remove(cc)
                                 self.set_childs(childs_new)
-                                raise CuriosityError
+                                # Additive identity removed — can happen during crossover/simplification
                 elif isinstance(self, Mul):
                     for cc in self.get_childs():
                         if is_terminal(cc):
@@ -622,50 +631,41 @@ class Node(ABC):
             repair (bool): Whether to repair depth and parent relationships.
             clean_chain (bool): Whether to remove unnecessary chain operators.
         """
-        # Backup of old node, required for repair
-        self_copy = copy.deepcopy(self)
+        # Save back-references before deepcopy (deepcopy strips them via __getstate__)
+        saved_parent = self.parent_node
+        saved_root = self.root_node
+        saved_depth = self.depth
+
+        # Deep-copy the replacement so children are not aliased across trees
+        nd_new = copy.deepcopy(nd_new)
 
         # Updating everything in the Node-class
         self.__class__ = nd_new.__class__
         self.__dict__.update(nd_new.__dict__)
 
-        # debug_me = copy.deepcopy(self)
-
         if clean_chain:
             self.revoke_useless_nodes()
 
-        # if len(debug_me) != len(self):
-        #     pass  # this thing is useful, removing multiplications
-
         # Updating the structural Infos that have been updated with false Informations
         if repair:
-            self.parent_node = self_copy.parent_node  # debug if parent are linked correctly
-            self.root_node = self_copy.root_node  # sfeh:open recursively update
-            self.depth = self_copy.depth
-
-            self.repair_all()
+            self.repair_all(
+                parent=saved_parent,
+                root=saved_root or self,
+                depth=saved_depth or 0,
+            )
 
         else:
             self.parent_node = None
             self.root_node = None
             self.depth = None
 
-        # all BaseNode infos should not be updated
-        pass
-
     def replace_with(self, new_class: Type["Node"], new_args: list) -> None:
         """Replace the current node with a simpler equivalent."""
         new_node = new_class(*new_args)  # Create new instance
-        new_node.parent_node = self.parent_node  # Preserve parent reference
-        if self.parent_node:
-            self.parent_node.childs = [new_node if child is self else child for child in self.parent_node.childs]
-        self.set_new_node(new_node)
+        self.set_new_node(new_node, repair=self.parent_node is not None)
 
     def replace_with_node(self, new_node: "Node") -> None:
-        new_node.revoke_useless_nodes()
         self.set_new_node(new_node)
-
-        return
 
     def get_sympy_expr(self, simplimore: bool = False) -> sympy.Basic:
         """Converts this node tree into a SymPy expression.
@@ -1162,8 +1162,16 @@ class Node(ABC):
             elif isinstance(self, Mul):  # MulChain
                 denominators = []
                 for cc in mychlds:
-                    # Removes the one factor from the childs, that is matched
-                    mychlds_remove = lambda el: [x for x in mychlds if x != el]
+                    # Removes only the first occurrence (by identity) of the matched factor
+                    def mychlds_remove(el):
+                        result = []
+                        removed = False
+                        for x in mychlds:
+                            if x is el and not removed:
+                                removed = True
+                            else:
+                                result.append(x)
+                        return result
 
                     # if isinstance(cc, DivFraction):
                     #     has_div_frac = [isinstance(ix, DivFraction) for ix in mychlds]
@@ -1178,7 +1186,15 @@ class Node(ABC):
                     if isinstance(cc, Number):
                         mul1 = cc.get_value()
                         if mul1 in (1, sympy.S.One):
-                            raise CuriosityError  # "revoke_useless_nodes" should remove
+                            # Multiplicative identity — remove the factor
+                            rest = mychlds_remove(cc)
+                            if len(rest) == 0:
+                                self.set_new_node(Number(1.0))
+                            elif len(rest) == 1:
+                                self.set_new_node(rest[0])
+                            else:
+                                self.set_childs(rest)
+                            break  # children modified, restart would be needed
 
                         elif mul1 in (-1, sympy.S.NegativeOne):
                             self.replace_with(Usub, [Mul(*mychlds_remove(cc))])
@@ -1838,8 +1854,16 @@ class BaseOperator(NodeWithChilds):
             result = self.np_fun(*children)
         except TypeError as sfeh:
             if "loop of ufunc does not support argument" in str(sfeh):
-                # TypeError: loop of ufunc does not support argument 0 of type int which has no callable sin method
-                print("ASDASDASDASD TODO")  # Debug breakpoint
+                # Child returned object-dtype array — coerce to float64 and retry
+                children = [
+                    np.asarray(c, dtype=np.float64) if hasattr(c, "dtype") and c.dtype == object else c
+                    for c in children
+                ]
+                try:
+                    result = self.np_fun(*children)
+                    return result
+                except Exception:
+                    pass  # fall through to re-raise original
             raise TypeError(sfeh)
 
         return result

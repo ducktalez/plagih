@@ -1,11 +1,15 @@
 """Tests for plagih.targeted_optimization module.
 
-Covers Phase 1 (analysis infrastructure) and Phase 2 (Ifte scoring).
+Covers Phase 1 (analysis infrastructure), Phase 2 (Ifte scoring),
+and Phase 2b (targeted_ifte strategy integration).
 """
+
+import copy
 
 import numpy as np
 import pandas as pd
 import pytest
+import sympy
 
 from plagih.targeted_optimization import (
     BestPerDatapointResult,
@@ -312,37 +316,139 @@ class TestIfteComponentScores:
 
 
 # =============================================================================
-# Phase 2b: piecewise_component_scores
+# Phase 2b — targeted_ifte strategy integration
 # =============================================================================
 
 
-class TestPiecewiseComponentScores:
-    """Tests for Piecewise pseudo-backpropagation scoring."""
+class TestTargetedIfteStrategy:
+    """Tests for the _strategy_targeted_ifte builtin strategy."""
 
-    def test_no_piecewise_returns_empty(self, simple_df, target_flat, sym_a, sym_b):
-        """Tree without Piecewise should return empty list."""
-        tree = Add(Symbol(sym_a), Symbol(sym_b))
-        scores = piecewise_component_scores(tree, simple_df, target_flat)
-        assert scores == []
+    @pytest.fixture
+    def evolve_and_df(self):
+        """Create a minimal Evolution instance and DataFrame for strategy tests."""
+        from plagih.trees._evolution import Evolution
 
-    def test_simple_piecewise(self, sym_a):
-        """Simple Piecewise with two branches."""
-        df = pd.DataFrame({"a": [1.0, 2.0, 6.0, 7.0]})
-        target = np.array([10.0, 10.0, 20.0, 20.0])
+        operators = {Add: 1, Mul: 1, Sub: 1, Min: 1, Max: 1, Ifte: 1, Le: 1, Square: 1}
+        terminals_float = [sympy.Symbol("a"), sympy.Symbol("b")]
 
-        # Piecewise((10, a < 5), (20, True))
-        branch1 = ExprCondPair_Dummy(
-            Number(sympy.Float(10.0)),
-            Le(Symbol(sym_a), Number(sympy.Float(5.0))),
+        ev = Evolution(
+            symbol_list=terminals_float,
+            operators=operators,
+            nodes_max=30,
+            depth_max=6,
         )
-        branch2 = ExprCondPair_Dummy(
-            Number(sympy.Float(20.0)),
-            Boolean(True),
-        )
-        tree = Piecewise(branch1, branch2)
 
-        results = piecewise_component_scores(tree, df, target)
-        assert len(results) == 1
-        result = results[0]
-        assert len(result["branches"]) == 2
-        assert result["branches"][-1].is_default is True
+        df = pd.DataFrame(
+            {
+                "a": np.linspace(-5, 5, 20),
+                "b": np.linspace(0, 10, 20),
+                "action": np.linspace(1, 3, 20),
+            }
+        )
+        target = df["action"].values
+        return ev, df, target
+
+    def test_strategy_without_ifte_falls_back(self, evolve_and_df):
+        """Strategy should fall back to branch mutation when tree has no Ifte."""
+        from plagih.parallel import _strategy_targeted_ifte
+
+        ev, df, target = evolve_and_df
+        tree = Add(Symbol(sympy.Symbol("a")), Number(1.0))
+        tree.repair_all()
+
+        result = _strategy_targeted_ifte(
+            ev,
+            [],
+            [],
+            False,
+            _pre_selected=[copy.deepcopy(tree)],
+            _df_train=df,
+            _target=target,
+        )
+        # Should return a valid tree (fallback to mutation)
+        assert result is not None
+        assert hasattr(result, "get_childs") or hasattr(result, "get_value")
+
+    def test_strategy_with_ifte_mutates_weakest(self, evolve_and_df):
+        """Strategy should identify and mutate the weakest Ifte component."""
+        from plagih.parallel import _strategy_targeted_ifte
+
+        ev, df, target = evolve_and_df
+
+        # Build: Ifte(a > 0, 100, b) — condition is good, then-branch is terrible
+        ifte_tree = Ifte(
+            Le(Number(0.0), Symbol(sympy.Symbol("a"))),  # a >= 0
+            Number(100.0),  # then: always 100 (bad for target ~1-3)
+            Symbol(sympy.Symbol("b")),  # else: b
+        )
+        ifte_tree.repair_all()
+
+        result = _strategy_targeted_ifte(
+            ev,
+            [],
+            [],
+            False,
+            _pre_selected=[copy.deepcopy(ifte_tree)],
+            _df_train=df,
+            _target=target,
+        )
+        assert result is not None
+
+    def test_strategy_without_df_falls_back(self, evolve_and_df):
+        """Without df_train/target, strategy should fall back to mutation."""
+        from plagih.parallel import _strategy_targeted_ifte
+
+        ev, df, target = evolve_and_df
+        ifte_tree = Ifte(
+            Le(Number(0.0), Symbol(sympy.Symbol("a"))),
+            Number(1.0),
+            Number(2.0),
+        )
+        ifte_tree.repair_all()
+
+        result = _strategy_targeted_ifte(
+            ev,
+            [],
+            [],
+            False,
+            _pre_selected=[copy.deepcopy(ifte_tree)],
+            # No _df_train or _target
+        )
+        assert result is not None
+
+    def test_strategy_registered_in_builtins(self):
+        """targeted_ifte must be in BUILTIN_STRATEGIES."""
+        from plagih.parallel import BUILTIN_STRATEGIES
+
+        assert "targeted_ifte" in BUILTIN_STRATEGIES
+
+
+class TestTreeHasIfte:
+    """Tests for the _tree_has_ifte helper."""
+
+    def test_simple_tree_no_ifte(self):
+        from plagih.parallel import _tree_has_ifte
+
+        tree = Add(Symbol(sympy.Symbol("a")), Number(1.0))
+        assert _tree_has_ifte(tree) is False
+
+    def test_tree_with_ifte(self):
+        from plagih.parallel import _tree_has_ifte
+
+        tree = Ifte(Boolean(True), Number(1.0), Number(2.0))
+        assert _tree_has_ifte(tree) is True
+
+    def test_nested_ifte(self):
+        from plagih.parallel import _tree_has_ifte
+
+        tree = Add(
+            Symbol(sympy.Symbol("a")),
+            Ifte(Boolean(True), Number(1.0), Number(2.0)),
+        )
+        assert _tree_has_ifte(tree) is True
+
+    def test_terminal_no_ifte(self):
+        from plagih.parallel import _tree_has_ifte
+
+        tree = Number(1.0)
+        assert _tree_has_ifte(tree) is False

@@ -149,9 +149,17 @@
   SoftOptimum population bound, chained-operator mutation, merged-tree
   trunk analysis.
 - **Status:** Phase 1 (analysis infrastructure) + Phase 2 (Ifte/Piecewise
-  scoring) implemented in `plagih/targeted_optimization.py` (17 tests pass).
+  scoring) + Phase 2b (strategy integration) implemented.
 - **Primary focus:** Ifte/Piecewise pseudo-backpropagation (§3.1).
-- **Next:** Integration into `run_generation()` as optional strategy (Phase 2b).
+- **Phase 2b completed (2026-03-26):** New `targeted_ifte` strategy registered
+  in `BUILTIN_STRATEGIES` in `parallel.py`. The strategy selects trees with
+  Ifte/Piecewise nodes, uses `ifte_component_scores()` to identify the weakest
+  component, and applies focused mutation only to that subtree. Falls back to
+  standard branch mutation if no Ifte nodes are found or df_train/target are
+  unavailable.  Runtime context (`_df_train`, `_target`) is injected
+  automatically by `run_task_sequential()`.
+- **Next:** Phase 3 — General node-level optimization (§3.2) with invertible
+  operators.
 
 ### D6 – Idempotent simplification pipeline (→ P19)
 - **Where:** `tree_simplification()` → `sympy_to_tree()` →
@@ -247,12 +255,16 @@
   plan, so the log output ends cleanly at `24/24`.
 - **Status:** Complete.
 
-### L7 – Population shrinks below `pop_max_size`
-- **Where:** Various strategy functions in `parallel.py`
+### ~~L7 – Population shrinks below `pop_max_size`~~ ✅
+- **Where:** `run_generation()` in `trees/_gp_engine.py`
 - **Observed:** `genepool=44` to `genepool=48` when `pop_max=50`. Some
   candidates are rejected (fail counts), but the population is not
-  back-filled. Consider retry logic or fallback random trees to maintain
-  target population size.
+  back-filled.
+- **Implemented (2026-03-26):** After main generation execution, if failures
+  reduced the population below the expected task count, remaining slots are
+  back-filled with `random_new` trees. Only triggers on failure-induced
+  shortfall (not when strategy rates intentionally produce fewer candidates).
+- **Status:** Complete (526 tests pass).
 
 ### L8 – Logging handlers can outlive their stdout/stderr streams
 - **Where:** `logging_utils.py` / benchmark harnesses / tests
@@ -276,6 +288,13 @@
 - ✅ **M5** — Legacy `printpl`/`printez`/`print_warning`/`print_caution` migrated to `log()`/`log_error()`
 - ✅ **P18** — `MemoryError` guard in `get_sympy_expr()` for `sympy.exp()` on huge arguments
 - ✅ **L6** — `_test_simple()` now maps its fixed strategy plan to the correct `gen_end`, eliminating misleading `21/20`-style logs
+- ✅ **D5 Phase 2b** — `targeted_ifte` strategy integrated into `parallel.py` with automatic df_train/target injection
+- ✅ **L7** — Population back-fill after failure-induced shortfall in `run_generation()`
+- ✅ **CuriosityError cleanup** — All remaining `raise CuriosityError` in production code replaced with proper exceptions: `SympyError` (RoundDummy), `ValueError` (export_tree), log warnings (revoke_useless_nodes), or handled gracefully (tree_node_grouping Mul×1)
+- ✅ **Node.__eq__/__hash__** — Identity-based equality prevents infinite recursion from circular parent_node refs in dataclass-generated `__eq__`
+- ✅ **set_new_node deepcopy fix** — Back-references (parent_node, root_node, depth) are now saved before deepcopy and passed to `repair_all()` correctly
+- ✅ **mychlds_remove identity fix** — `tree_node_grouping` Mul-factor removal now uses identity (`is`) instead of value equality, fixing double-removal of equal Number nodes
+- ✅ **Object-dtype coercion** — `eval_predict_numpy_now` retries with float64 coercion when numpy ufuncs fail on object-dtype child arrays
 
 
 

@@ -695,6 +695,41 @@ class ExplainableGP:
         # Store candidates as next population
         self.pop_next = candidates
 
+        # L7: Population back-fill — if failures reduced the population below
+        # the number of planned tasks, fill remaining slots with random trees.
+        # Only triggers when failures caused the shortfall (not when strategy
+        # rates intentionally produce fewer candidates than pop_max_size).
+        expected_from_tasks = sum(2 if t.crossover else 1 for t in tasks)
+        actual_ok = tracker.total_ok
+        if tracker.total_fail > 0 and actual_ok < expected_from_tasks and self.gen_id > 0:
+            shortfall = min(tracker.total_fail, self.pop_max_size - len(self.pop_next))
+            if shortfall > 0:
+                from plagih.parallel import Strategy
+                from plagih.parallel import build_task_list as _build_task_list
+
+                backfill_strategies = [
+                    Strategy(
+                        "random_new",
+                        count=shortfall,
+                        depth_sampler="normal",
+                        mean=3.5,
+                        sigma=1.0,
+                        min_depth=2,
+                        max_depth=self.evolve.depth_max,
+                        p_term=0.1,
+                    ),
+                ]
+                backfill_tasks = _build_task_list(backfill_strategies, self.pop_max_size, seed=seed)
+                if backfill_tasks:
+                    backfill_candidates, backfill_tracker = self._execute_task_plan(
+                        backfill_tasks,
+                        parallel=parallel,
+                        progress_total=self.pop_max_size,
+                        progress_offset=len(self.pop_next),
+                    )
+                    self.pop_next.extend(backfill_candidates)
+                    tracker.merge(backfill_tracker)
+
         # Progress done — overwrites the start-line.
         # Must happen BEFORE end_generation() because end_generation may
         # trigger plots/backups/prints that would interrupt the \r line.

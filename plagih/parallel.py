@@ -837,6 +837,116 @@ def _strategy_pareto_revive(evolve, pop_genepool, paretofront, allow_chain, **pa
     return _copy.deepcopy(candidate.get_evotree())
 
 
+def _strategy_targeted_ifte(evolve, pop_genepool, paretofront, allow_chain, **params):
+    """Select a tree containing Ifte/Piecewise and mutate its weakest component.
+
+    Phase 2b of Targeted Evolutionary Optimization (D5 in IMPLEMENTATION_PLAN).
+    Uses pseudo-backpropagation scoring to identify the weakest Ifte component
+    (condition, then, or else) and applies focused mutation only to that subtree.
+
+    Falls back to standard branch mutation if no Ifte nodes are found.
+    """
+    import copy as _copy
+
+    pre = params.pop("_pre_selected", None)
+    tournament_n = params.get("tournament_n", 5)
+    depth_goal = params.get("depth_goal", 3)
+    p_term = params.get("p_term", 0.2)
+    df_train = params.get("_df_train")
+    target = params.get("_target")
+
+    # Select a tree — prefer trees with Ifte/Piecewise nodes
+    if pre:
+        tree = pre[0]
+    else:
+        from plagih.trees import selection_tournament
+
+        # Try multiple tournaments to find a tree with Ifte/Piecewise
+        best_tree = None
+        for _ in range(3):
+            candidate_tree = selection_tournament(pop_genepool, n=tournament_n)
+            if _tree_has_ifte(candidate_tree):
+                best_tree = candidate_tree
+                break
+            if best_tree is None:
+                best_tree = candidate_tree
+        tree = best_tree
+
+    evotree = _copy.deepcopy(tree)
+
+    # If no df_train/target available, or tree has no Ifte — fall back to standard mutation
+    if df_train is None or target is None or not _tree_has_ifte(evotree):
+        return evolve.evolve_mutate_branch_depth(evotree, depth_goal, allow_chain, p_term=p_term)
+
+    # Find weakest Ifte component via pseudo-backpropagation
+    from plagih.targeted_optimization import ifte_component_scores
+
+    try:
+        analyses = ifte_component_scores(evotree, df_train, target)
+    except Exception:
+        return evolve.evolve_mutate_branch_depth(evotree, depth_goal, allow_chain, p_term=p_term)
+
+    if not analyses:
+        return evolve.evolve_mutate_branch_depth(evotree, depth_goal, allow_chain, p_term=p_term)
+
+    # Pick the Ifte node with the worst condition accuracy
+    worst_analysis = min(analyses, key=lambda a: a.condition_accuracy)
+
+    # Find the actual Ifte node in the tree by matching node_id
+    target_node = _find_node_by_id(evotree, worst_analysis.node_id)
+    if target_node is None or not hasattr(target_node, "get_childs") or len(target_node.get_childs()) < 3:
+        return evolve.evolve_mutate_branch_depth(evotree, depth_goal, allow_chain, p_term=p_term)
+
+    # Determine which component to mutate
+    weakest = worst_analysis.weakest  # "condition", "then", or "else"
+    childs = target_node.get_childs()
+    if weakest == "condition":
+        mutation_target = childs[0]
+    elif weakest == "then":
+        mutation_target = childs[1]
+    else:
+        mutation_target = childs[2]
+
+    # Focused mutation: replace only the weakest component
+    n_init = len(evotree)
+    xtype_out = mutation_target.get_xtype_self()
+    branch = evolve.evolve_create_random(
+        xtype_out,
+        depth_goal,
+        num_rest=max(1, evolve.nodes_max - n_init),
+        depth=mutation_target.depth or 0,
+        p_term=p_term,
+    )
+    mutation_target.set_new_node(branch)
+
+    return evotree
+
+
+def _tree_has_ifte(tree) -> bool:
+    """Check if a tree contains any Ifte or Piecewise nodes."""
+    from plagih.trees._nodes import Ifte, Piecewise, Terminal
+
+    if isinstance(tree, Terminal):
+        return False
+    if isinstance(tree, (Ifte, Piecewise)):
+        return True
+    if hasattr(tree, "get_childs"):
+        return any(_tree_has_ifte(c) for c in tree.get_childs())
+    return False
+
+
+def _find_node_by_id(tree, node_id: int):
+    """Find a node in a tree by its id()."""
+    if id(tree) == node_id:
+        return tree
+    if hasattr(tree, "get_childs"):
+        for child in tree.get_childs():
+            found = _find_node_by_id(child, node_id)
+            if found is not None:
+                return found
+    return None
+
+
 # Registry of builtin strategies
 BUILTIN_STRATEGIES: Dict[str, Callable] = {
     "reproduction": _strategy_reproduction,
@@ -848,6 +958,7 @@ BUILTIN_STRATEGIES: Dict[str, Callable] = {
     "crossover": _strategy_crossover,
     "simplicate": _strategy_simplicate,
     "pareto_revive": _strategy_pareto_revive,
+    "targeted_ifte": _strategy_targeted_ifte,
 }
 
 # Strategies grouped by how many parent trees they need from the genepool.
@@ -860,6 +971,7 @@ _STRATEGIES_ONE_PARENT = frozenset(
         "mutation_branch_nodes",
         "mutation_filter",
         "simplicate",
+        "targeted_ifte",
     }
 )
 _STRATEGIES_TWO_PARENTS = frozenset({"crossover"})
@@ -1192,7 +1304,15 @@ def run_task_sequential(
             raise ValueError(f"Unknown strategy: {task.strategy_name}")
 
         strategy_fn = registry[task.strategy_name]
-        result = strategy_fn(evolve, pop_genepool, paretofront, allow_chain, **task.strategy_params)
+
+        # Inject runtime context for strategies that need training data
+        _effective_params = dict(task.strategy_params)
+        if task.strategy_name == "targeted_ifte":
+            _effective_params.setdefault("_df_train", df_train)
+            if target_column and df_train is not None:
+                _effective_params.setdefault("_target", df_train[target_column].values)
+
+        result = strategy_fn(evolve, pop_genepool, paretofront, allow_chain, **_effective_params)
         timing["create"] = time.perf_counter() - t0
 
         # Phase 2: Simplify

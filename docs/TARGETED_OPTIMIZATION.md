@@ -4,7 +4,7 @@
 > random evolution. Covers pseudo-backpropagation, node-level analysis,
 > population-wide orchestration, and hybrid GP↔NN approaches.
 >
-> Status: **Concept / Brainstorm** — no implementation yet.
+> Status: **Phase 1 + 2 implemented** — Phase 3+ pending.
 > Tracked in `IMPLEMENTATION_PLAN.md` § D5.
 
 ---
@@ -359,9 +359,12 @@ can NumPy + CuPy suffice?
 - [x] **Component scoring** (§3.1): Implement Option A (count-based) first.
       → `ifte_component_scores()` + `piecewise_component_scores()` in
       `plagih/targeted_optimization.py`
-- [ ] **Focused mutation strategy**: New `Strategy("targeted_ifte", rate=…)` in
-      `parallel.py` that only mutates the weakest Ifte component.
-- [ ] **Integration**: Wire into `run_generation()` as an optional strategy.
+- [x] **Focused mutation strategy**: New `Strategy("targeted_ifte", rate=…)` in
+      `parallel.py` that only mutates the weakest Ifte component. Falls back to
+      standard branch mutation if no Ifte nodes are found.
+- [x] **Integration**: Wired into `run_generation()` as optional strategy.
+      Runtime context (`_df_train`, `_target`) is injected automatically by
+      `run_task_sequential()` when the strategy name is `targeted_ifte`.
 
 ### Phase 3 — General node-level optimization
 

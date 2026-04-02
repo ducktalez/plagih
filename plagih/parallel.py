@@ -292,6 +292,7 @@ _worker_target_column = None
 _worker_nodes_max = None
 _worker_complexity_metric = None
 _worker_strategy_registry = None
+_worker_true_values = None  # Cached df_train[target_column].to_numpy() — avoids per-eval copy
 _worker_df_train_shm = None
 _worker_df_train_shm_registered = False
 
@@ -552,6 +553,7 @@ def _init_worker(
     global _worker_allow_chain, _worker_target_column
     global _worker_nodes_max, _worker_complexity_metric, _worker_strategy_registry
     global _worker_df_train_shm, _worker_df_train_shm_registered
+    global _worker_true_values
 
     _worker_evolve = evolve
     _close_worker_df_train_shm()
@@ -574,6 +576,8 @@ def _init_worker(
     _worker_nodes_max = nodes_max
     _worker_complexity_metric = complexity_metric
     _worker_strategy_registry = strategy_registry
+    # Cache target values once — avoids df_train[target_column].to_numpy() per evaluation.
+    _worker_true_values = _worker_df_train[target_column].to_numpy() if _worker_df_train is not None else None
 
 
 def _update_worker_state(pop_genepool, paretofront):
@@ -616,6 +620,7 @@ def evaluate_tree_standalone(
     tag="",
     origin_tree=None,
     raise_if_useless=True,
+    true_values=None,
 ):
     """Evaluate a tree into a Candidate, using worker-local LUTs.
 
@@ -635,6 +640,8 @@ def evaluate_tree_standalone(
         local_lut_symex: Worker-local symex->fitness LUT (mutated in place).
         origin_tree: Optional reference tree for edit distance.
         raise_if_useless: Raise TreeSizeError for oversized trees.
+        true_values: Pre-computed ``df_train[target_column].to_numpy()``.
+            If None, computed on demand (backward compatible).
 
     Returns:
         Candidate with tree, fitness, and parsimony.
@@ -649,9 +656,7 @@ def evaluate_tree_standalone(
     evotree.force_input_node(evolve)
     evotree = evolve.evolve_prune_tree(evotree)
     evotree.repair_depth()
-    evotree.canonicalize_children()  # Keep exact-tree LUT keys stable like tree_to_candidate().
-
-    tree_id = evotree.get_lut_id()
+    tree_id = evotree.canonicalize_and_get_lut_id()  # Fused: canonicalize + LUT key in one traversal
 
     if tree_id in local_lut_tree:
         entry = local_lut_tree[tree_id]
@@ -680,7 +685,8 @@ def evaluate_tree_standalone(
     if sy_expr in local_lut_symex:
         fitness = local_lut_symex[sy_expr]
     else:
-        true_values = df_train[target_column].to_numpy()
+        if true_values is None:
+            true_values = df_train[target_column].to_numpy()
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)
             np_results_raw = evotree.eval_predict_numpy_now(df_train)
@@ -688,7 +694,7 @@ def evaluate_tree_standalone(
             np_fitness = eval_error_metric(np_results, true_values)
             np_fitness = round(np_fitness, _cfg.float_precision)
 
-            if "nan" in str(np_fitness) or np_fitness != np_fitness or np_fitness == float("inf"):
+            if not np.isfinite(np_fitness):
                 err_txt = "NaN in results"
                 local_lut_tree[tree_id]["error"] = err_txt
                 raise TreeError(err_txt)
@@ -1142,6 +1148,7 @@ def _worker_run_task(task: TaskSpec, shared_lut_tree=None, shared_lut_symex=None
                 local_lut_tree=lut_tree,
                 local_lut_symex=lut_symex,
                 tag=task.tag,
+                true_values=_worker_true_values,
             )
             candidates.append(candidate)
             evaluate_duration = time.perf_counter() - tree_eval_start
@@ -1339,6 +1346,8 @@ def run_task_sequential(
         stage = "evaluate"
         t2 = time.perf_counter()
         candidates = []
+        # Pre-compute true_values once for this task (avoid per-tree DataFrame→NumPy copy)
+        _seq_true_values = df_train[target_column].to_numpy() if df_train is not None else None
         for tree_index, tree in enumerate(trees):
             current_tree_index = tree_index
             tree_eval_start = time.perf_counter()
@@ -1354,6 +1363,7 @@ def run_task_sequential(
                 local_lut_tree=lut_tree,
                 local_lut_symex=lut_symex,
                 tag=task.tag,
+                true_values=_seq_true_values,
             )
             candidates.append(candidate)
             evaluate_duration = time.perf_counter() - tree_eval_start

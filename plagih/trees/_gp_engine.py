@@ -157,6 +157,8 @@ class ExplainableGP:
 
         self.df_train = df_train
         self.target_column = target_column
+        # Pre-compute target values once (avoids DataFrame→NumPy copy per evaluation).
+        self._true_values: np.ndarray = df_train[target_column].to_numpy()
 
         self.evolve = evolve
         self.gen_end = gen_end
@@ -1192,9 +1194,7 @@ class ExplainableGP:
         evotree.force_input_node(self.evolve)
         evotree = self.evolve.evolve_prune_tree(evotree)
         evotree.repair_depth()
-        evotree.canonicalize_children()  # Deterministic child order for commutative ops → consistent LUT keys
-
-        tree_id = evotree.get_lut_id()
+        tree_id = evotree.canonicalize_and_get_lut_id()  # Fused: canonicalize + LUT key in one traversal
 
         parsimony = None
         if _cfg.lut_enabled and tree_id in self.lut_tree_infos:
@@ -1232,7 +1232,7 @@ class ExplainableGP:
         else:
             """Numpy eval"""
             perf_t = {0: time.perf_counter()}
-            true_values = self.df_train[self.target_column].to_numpy()
+            true_values = self._true_values
             try:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore", RuntimeWarning)  # sfeh:discuss
@@ -1243,9 +1243,7 @@ class ExplainableGP:
                     np_fitness = self.eval_error_metric(np_results, true_values)
                     np_fitness = round(np_fitness, _cfg.float_precision)
 
-                    if (
-                        "nan" in str(np_fitness) or np_fitness == np.nan or np_fitness == np.inf
-                    ):  # sfeh:code not so good looking
+                    if not np.isfinite(np_fitness):
                         err_txt = "NaN in results"
                         self.lut_tree_infos[tree_id]["error"] = err_txt
                         raise TreeError(f"{err_txt}")

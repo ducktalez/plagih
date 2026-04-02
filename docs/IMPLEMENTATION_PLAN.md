@@ -48,8 +48,27 @@
   failures significantly outnumbering creation/simplification failures.
 - **Ideas:**
   1. Add a cheap pre-filter before full evaluation for obviously invalid trees.
-  2. Investigate `canonicalize_children()` and LUT interactions in the hot path.
+  2. ~~Investigate `canonicalize_children()` and LUT interactions in the hot path.~~ ✅
   3. Consider lighter-weight or staged evaluation for active-test/debug modes.
+- **Implemented optimizations (2026-04-02):**
+  1. **Fused `canonicalize_and_get_lut_id()`** — eliminates redundant
+     `represent_str()` traversal.  The old path called `canonicalize_children()`
+     (recursive `represent_str()` for sorting) and then `get_lut_id()` (full
+     `represent_str()` again).  The new `_canonicalize_and_repr()` method
+     does both in a single bottom-up pass.
+     **Benchmark (30-node trees, 500 samples):** 0.107 ms/tree vs 0.247 ms/tree
+     → **2.3× speedup** on the canonicalize+LUT-id step.
+  2. **Cached `true_values`** — `df_train[target_column].to_numpy()` was called
+     for every LUT-miss evaluation.  Now pre-computed once:
+     - In `ExplainableGP.__init__()` as `self._true_values`
+     - In worker globals as `_worker_true_values` (set in `_init_worker()`)
+     - In `run_task_sequential()` before the evaluation loop
+  3. **Fixed NaN check** — `np_fitness == np.nan` was **always False** (NaN ≠ NaN).
+     The old code in `_gp_engine.py` relied on `"nan" in str(np_fitness)` as
+     fallback (wasteful string conversion).  Replaced with `np.isfinite()` in
+     both `tree_to_candidate()` and `evaluate_tree_standalone()`.
+- **Remaining ideas:** Cheap pre-filter for obviously invalid trees (idea 1),
+  staged evaluation (idea 3).
 
 ### H2 – Optimize pre-selection overhead
 - **Where:** `pre_select_for_tasks()` in `parallel.py`
@@ -349,6 +368,7 @@
 - ✅ **Object-dtype coercion** — `eval_predict_numpy_now` retries with float64 coercion when numpy ufuncs fail on object-dtype child arrays
 - ✅ **L3** — Duplicate `analyze_pareto` consolidated into a single clean stub; ~160 lines of commented-out legacy code removed
 - ✅ **L8** — Stale logging handler pruning already implemented (`_ensure_live_console_handler`); marked as complete
+- ✅ **H4 (partial)** — Fused `canonicalize_and_get_lut_id()` (2.3× speedup), cached `true_values`, fixed NaN check (`np_fitness == np.nan` → `np.isfinite`)
 
 
 

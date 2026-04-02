@@ -1278,33 +1278,12 @@ class Node(ABC):
         but normalises trees so that structurally equivalent expressions have
         identical string representations and LUT keys.
 
-        # TODO(discuss): Open design concerns for canonicalize_children
-        #
-        # 1. **Performance**: This is a recursive function that traverses every
-        #    node and calls represent_str() as sort key. On large trees this may
-        #    become a measurable overhead, especially since it is called in
-        #    tree_to_candidate() (hot path). Benchmark before optimising.
-        #
-        # 2. **Sort key quality**: The current sort key is represent_str() which
-        #    is a simple string comparison. SymPy uses a much more sophisticated
-        #    ordering (sympy.core.sorting.default_sort_key) that considers type
-        #    priority, complexity, and algebraic properties. A SymPy-equivalent
-        #    sort would produce better canonical forms but would be significantly
-        #    more expensive to evaluate. An alternative middle-ground: sort by
-        #    subtree size (len(child)) — cheap, stable, and groups simple branches
-        #    before complex ones.
-        #
-        # 3. **Invalidation after mutation**: When a mutation changes a child
-        #    node deep in the tree, the canonical order of ALL ancestor
-        #    commutative nodes may become stale. This means canonicalize_children()
-        #    must be re-run after any mutation — or the mutation itself must
-        #    propagate re-sorting upwards. Currently handled by calling
-        #    canonicalize_children() in tree_to_candidate(), but if it were
-        #    moved earlier in the pipeline, mutation invalidation would become
-        #    a pitfall. See docs/PITFALLS.md P10.
-        #
-        # These trade-offs should be revisited once there is benchmark data on
-        # the actual overhead and LUT hit-rate improvement.
+        Note: When canonicalization is immediately followed by ``get_lut_id()``,
+        prefer ``canonicalize_and_get_lut_id()`` which fuses both into a single
+        bottom-up traversal and avoids recomputing ``represent_str()`` twice.
+
+        See also: docs/IMPLEMENTATION_PLAN.md → D1, M1 for benchmark data and
+        design discussion on alternative sort keys.
         """
         if self.is_term():
             return
@@ -1314,11 +1293,43 @@ class Node(ABC):
             cc.canonicalize_children()
 
         if getattr(self, "is_commutative", False):
-            # Sort by string representation — available after tree is fully built.
-            # Terminals sort lexicographically (symbols by name, numbers by value).
-            # Operators sort by their showme + children recursively.
-            # TODO(discuss): Consider alternative sort keys — see docstring above.
             self.childs.sort(key=lambda c: c.represent_str(show_fixed_hint=False, cut_terms=False))
+
+    def canonicalize_and_get_lut_id(self) -> str:
+        """Canonicalize children and compute the LUT id in one bottom-up pass.
+
+        Fuses ``canonicalize_children()`` + ``get_lut_id()`` to avoid
+        computing ``represent_str()`` twice.  The recursive traversal
+        canonicalizes commutative children (sorting by string representation)
+        and simultaneously assembles the LUT key string bottom-up.
+
+        Returns:
+            The LUT id string (equivalent to calling ``canonicalize_children()``
+            followed by ``get_lut_id()``).
+        """
+        return self._canonicalize_and_repr()
+
+    def _canonicalize_and_repr(self) -> str:
+        """Recursively canonicalize and build represent_str(show_fixed_hint=False).
+
+        Internal helper for ``canonicalize_and_get_lut_id()``.  Returns the
+        same string that ``represent_str(show_fixed_hint=False, cut_terms=False)``
+        would produce *after* canonicalization.
+        """
+        if self.is_term():
+            # Terminals have no children to sort — just build representation.
+            return self.represent_str(show_fixed_hint=False, cut_terms=False)
+
+        # Recurse: canonicalize children and collect their representations
+        child_reprs = [cc._canonicalize_and_repr() for cc in self.get_childs()]
+
+        # Sort commutative children by their (already computed) representation
+        if getattr(self, "is_commutative", False):
+            sorted_pairs = sorted(zip(child_reprs, self.childs), key=lambda p: p[0])
+            self.childs[:] = [p[1] for p in sorted_pairs]
+            child_reprs = [p[0] for p in sorted_pairs]
+
+        return f"{self.showme}({', '.join(child_reprs)})"
 
     def len_nodecount_raw(self) -> int:
         """Returns the raw count of all nodes in this subtree.

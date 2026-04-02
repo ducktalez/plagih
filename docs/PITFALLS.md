@@ -551,3 +551,19 @@ and transforms that remove a matched child do so by object identity.
 **Rule:** Never use `==` for structural tree comparison. Use
 `represent_str()`, `get_lut_id()`, or SymPy-level equivalence instead.
 
+---
+
+## P20 – `np_fitness == np.nan` is always False (fixed)
+
+**Where:** `tree_to_candidate()` in `_gp_engine.py`, `evaluate_tree_standalone()` in `parallel.py`
+
+The NaN check `np_fitness == np.nan` is **always False** because NaN is not
+equal to itself by IEEE 754 semantics.  The old code relied on
+`"nan" in str(np_fitness)` as a fallback — a wasteful string conversion that
+happened to work.
+
+**Fix (applied 2026-04-02):** Replaced both paths with `not np.isfinite(np_fitness)`,
+which catches NaN, +inf, and −inf in a single fast C call.
+
+**Rule:** Never compare with `np.nan` using `==`.  Use `np.isnan()`,
+`np.isfinite()`, or the identity trick `x != x` (True only for NaN).

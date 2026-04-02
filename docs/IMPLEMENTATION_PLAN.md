@@ -82,13 +82,40 @@
   output is reproducible and editable.
 - **Renderer extension:** `_render_tree_on_axes` gains an optional `node_scores`
   parameter (`dict[id(node) → float 0–1]`) for score-coloured tree renders in Part 7.
-- **Status:** Initial implementation added 2026-04-02.
+- **Status:** Initial implementation added 2026-04-02.  Smoke test suite
+  (`test_demo_helpers.py`, 32 tests) added 2026-04-02 covering all tree
+  factories, DataFrame factories, Evolution factories, crossover helper,
+  display utilities (headless Agg), and `make_ifte_node_scores`.
 
 ### M1 – `canonicalize_children()` performance benchmark
-- **Where:** `Node.canonicalize_children()` in `trees.py` (P14)
+- **Where:** `Node.canonicalize_children()` in `trees/_nodes.py` (P14)
 - **Current:** Uses `represent_str()` as sort key — recursive string generation.
 - **Alternative:** Sort by subtree size (`len(child)`) first, string as tiebreaker.
-- **Action:** Benchmark both approaches on large trees before deciding.
+- **Benchmark script:** `plagih/test/benchmarks/bench_canonicalize.py`
+- **Benchmark results (2026-04-02):**
+
+  | Variant | Small (10 nodes) | Medium (30 nodes) | Large (96 nodes) |
+  |---|---:|---:|---:|
+  | **(A) `represent_str`** (status quo) | 6.2 ms / 50 trees | 27.7 ms / 50 trees | 131 ms / 30 trees |
+  | **(B) `len` + str tiebreaker** | 6.0 ms / 50 trees | 54.1 ms / 50 trees | 151 ms / 30 trees |
+  | **(C) `len` only** | 0.8 ms / 50 trees | 6.2 ms / 50 trees | 17.2 ms / 30 trees |
+
+- **Key findings:**
+  1. **(B) is slower than (A)** on medium/large trees (~2× on medium).
+     The composite `(len, str)` tuple key adds overhead without benefit because
+     `len()` is itself O(n) recursive and the tiebreaker still requires full
+     string generation.
+  2. **(C) is 7–8× faster** than (A), but produces different canonical forms for
+     **most** trees (24/50 to 29/30 differ). This would invalidate existing
+     LUT keys and potentially reduce LUT hit rates after the switch.
+  3. The cost of `canonicalize_children()` scales super-linearly with tree size
+     (from ~123 µs/tree at 10 nodes to ~4.4 ms/tree at 96 nodes).
+- **Conclusion:** Switching to (B) is **not recommended**. Switching to (C)
+  gives a large speedup but changes canonical forms — acceptable only if LUT
+  keys are regenerated. The current (A) approach remains the best balance.
+  A potential optimization: cache `represent_str()` on nodes to avoid
+  redundant recursive string generation during sorts.
+- **Action:** → see D1 for further design discussion.
 
 ### M2 – xtype system extension
 - **Where:** `xtype` on `Node` subclasses, `evolve_create_random()` in `trees.py`
@@ -247,10 +274,13 @@
 - **Status:** `track_gradients` parameter exists, emits `FutureWarning`.
 - **Idea:** JAX/PyTorch integration for gradient-based optimization.
 
-### L3 – `analyze_pareto` duplicate cleanup
+### ~~L3 – `analyze_pareto` duplicate cleanup~~ ✅
 - **Where:** `paretofront.py`
-- **Problem:** Two similar analysis functions exist (code smell).
-- **Action:** Consolidate into one.
+- **Problem:** Two identical `analyze_pareto` definitions existed (second
+  shadowed the first), plus ~160 lines of commented-out benchmark-specific
+  legacy code.
+- **Fix:** Consolidated into a single clean stub with proper docstring.
+- **Status:** Complete.
 
 ### L4 – Background analysis process
 - **Where:** `analyze_generation()` in `trees.py` (P9)
@@ -285,14 +315,17 @@
   shortfall (not when strategy rates intentionally produce fewer candidates).
 - **Status:** Complete (526 tests pass).
 
-### L8 – Logging handlers can outlive their stdout/stderr streams
+### ~~L8 – Logging handlers can outlive their stdout/stderr streams~~ ✅
 - **Where:** `logging_utils.py` / benchmark harnesses / tests
 - **Observed:** During repeated pytest benchmark runs, the global logger can
   keep a console handler whose underlying stream has already been closed,
   leading to `ValueError: I/O operation on closed file` on later `log()` calls.
-- **Action:** Make `setup_logging()` / `log()` robust against stale closed
-  handlers, or ensure harnesses/tests always reinitialize the logger before
-  emitting framework logs.
+- **Fix:** `_handler_has_closed_stream()`, `_prune_closed_handlers()`, and
+  `_ensure_live_console_handler()` were added to `logging_utils.py`.  Every
+  `log()` / `log_*()` call now auto-prunes stale handlers and reattaches a
+  fresh console handler when needed.  `setup_logging()` also removes all
+  existing handlers before adding new ones.
+- **Status:** Complete.
 
 ---
 
@@ -314,6 +347,8 @@
 - ✅ **set_new_node deepcopy fix** — Back-references (parent_node, root_node, depth) are now saved before deepcopy and passed to `repair_all()` correctly
 - ✅ **mychlds_remove identity fix** — `tree_node_grouping` Mul-factor removal now uses identity (`is`) instead of value equality, fixing double-removal of equal Number nodes
 - ✅ **Object-dtype coercion** — `eval_predict_numpy_now` retries with float64 coercion when numpy ufuncs fail on object-dtype child arrays
+- ✅ **L3** — Duplicate `analyze_pareto` consolidated into a single clean stub; ~160 lines of commented-out legacy code removed
+- ✅ **L8** — Stale logging handler pruning already implemented (`_ensure_live_console_handler`); marked as complete
 
 
 

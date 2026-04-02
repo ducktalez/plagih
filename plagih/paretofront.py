@@ -77,20 +77,16 @@ def plot_paretofront(paretofront, path, parsimony_max):
 
 
 def analyze_pareto(cpu_cores=4):
-    """
-    sfeh:open
-    Writing all analysis files after evaluating the paretofront.
-    (Currently strongly customized by sfeh for the mountaincar and industrial benchmark)
-    """
-    return
+    """Write all analysis files after evaluating the paretofront.
 
+    Currently a stub — benchmark-specific analysis (MountainCar, Industrial
+    Benchmark) was removed during the legacy-code cleanup.  Re-implement per
+    benchmark as needed.
 
-def analyze_pareto(cpu_cores=4):
+    Args:
+        cpu_cores: Number of cores for parallel evaluation (reserved).
     """
-    sfeh:open
-    Writing all analysis files after evaluating the paretofront.
-    (Currently strongly customized by sfeh for the mountaincar and industrial benchmark)
-    """
+    # ── Legacy LaTeX analysis code (kept for reference) ──────────────────
     # self.log('i', f'Analysing the paretofront candidates of the run.')
     #
     # dir_benchmarks = Path(__file__).parent.parent.absolute() / 'benchmarks/'
@@ -232,13 +228,11 @@ def analyze_pareto(cpu_cores=4):
     #
     #             # drawing the regression error, but plots seem to be too overloaded
     #             # axx = ax.twinx()
-    #             # axx.plot(xx, cnt, color='tab:gray', label='regression error', linestyle='dashed', marker='.')  # linestyle='None'  # , legend_loc='best'
+    #             # axx.plot(xx, cnt, color='tab:gray', label='regression error', linestyle='dashed', marker='.')
     #             # axx.tick_params(axis='y', labelcolor='tab:gray')
-    #             # # axx.plot(xx, y['regression_sum'])
     #             #
     #             # ax2 = ax.twinx()
-    #             # ax2.plot(xx, cnt, color='tab:gray', label='combos', linestyle='dashed', marker='.')  # linestyle='None'  # , legend_loc='best'
-    #             # # ax2.set(ylabel='possible combinations', color='tab:gray')
+    #             # ax2.plot(xx, cnt, color='tab:gray', label='combos', linestyle='dashed', marker='.')
     #             # ax2.tick_params(axis='y', labelcolor='tab:gray')
     #             # ax2.legend(loc='lower left')
     #
@@ -247,6 +241,7 @@ def analyze_pareto(cpu_cores=4):
     #
     # else:
     #     raise Exception(f'This should actually never happen right now. name: {self.conf.name}')
+    # ── End legacy LaTeX code ────────────────────────────────────────────
 
     return
 

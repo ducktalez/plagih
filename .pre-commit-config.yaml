@@ -11,6 +11,12 @@ repos:
         pass_filenames: false
         files: '(plagih/trees\.py|\.github/copilot-instructions\.md|docs/ARCHITECTURE\.md|scripts/update_copilot_instructions\.py)'
 
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.7.1
+    hooks:
+      - id: nbstripout
+        files: \.ipynb$
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.11.13
     hooks:

@@ -37,7 +37,7 @@ import sympy
 # Exclude standalone benchmark scripts from pytest collection.
 # They live in plagih/test/benchmarks/ and are meant to be run directly.
 # ---------------------------------------------------------------------------
-collect_ignore_glob = ["benchmarks/bench_*.py"]
+collect_ignore_glob = ["benchmarks/bench_*.py", "benchmarks/demo_*.py"]
 
 
 # ---------------------------------------------------------------------------

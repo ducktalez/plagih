@@ -1067,6 +1067,19 @@ class Node(ABC):
         Ideas for future:
         - Heaviside function detection
         - expr = b + a + a -> terms grouping via as_ordered_terms()
+
+        Examples::
+
+            from plagih.trees import Add, Mul, Number, Pow, Symbol, tree_simplification
+            import sympy
+
+            a = Symbol(sympy.Symbol("a"))
+            # Pow(a, 2) is structurally rewritten to Square(a) by grouping
+            tree = Pow(a, Number(2.0))
+            tree.tree_node_grouping()
+            print(type(tree).__name__)  # Square
+
+            # See docs/demo.ipynb §3 for more grouping examples.
         """
 
         if issubclass(self.__class__, Terminal):  # good for runtime
@@ -1625,6 +1638,20 @@ def tree_simplification(_tree: Node, allow_chain: bool) -> Node:
 
     Returns:
         Simplified tree (may be same object if no changes).
+
+    Examples::
+
+        from plagih.demo_helpers import make_tree_simplifiable
+        from plagih.trees import tree_simplification
+
+        tree = make_tree_simplifiable()  # 1*a + a**2
+        print(tree.get_sympy_expr())  # a + a**2  (or equivalent)
+
+        simplified = tree_simplification(tree, allow_chain=False)
+        print(simplified.get_sympy_expr())  # a*(a + 1) or similar SymPy form
+        print(len(tree), "→", len(simplified), "nodes")
+
+        # See docs/demo.ipynb §3 for a before/after visual comparison.
     """
     original = copy.deepcopy(_tree)
     original_len = len(original)

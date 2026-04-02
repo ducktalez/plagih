@@ -722,6 +722,29 @@ class Evolution:
         Raises:
             TreeError: If tree aa has no mutable nodes.
             ValueError: If no compatible nodes can be found.
+
+        Examples::
+
+            # Build two parent trees and cross them over.
+            # Use deepcopy so the originals are preserved for comparison.
+            import copy
+            from plagih.demo_helpers import (
+                do_crossover,
+                make_evolution,
+                make_tree_crossover_parent_a,
+                make_tree_crossover_parent_b,
+            )
+
+            parent_a = make_tree_crossover_parent_a()  # sin(a) + b
+            parent_b = make_tree_crossover_parent_b()  # a * |b|
+            child_a, child_b = do_crossover(parent_a, parent_b)
+
+            print(parent_a.get_sympy_expr())  # sin(a) + b
+            print(parent_b.get_sympy_expr())  # a*Abs(b)
+            print(child_a.get_sympy_expr())  # subtree from parent_b grafted in
+            print(child_b.get_sympy_expr())  # subtree from parent_a grafted in
+
+            # See docs/demo.ipynb §2 for the visual side-by-side render.
         """
 
         a_nds = aa.list_mutable_nodes()

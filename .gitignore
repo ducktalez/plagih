@@ -18,3 +18,14 @@ run_examples/
 *.log
 /MTC200_RMSE_scratch/
 /.testruns/
+# Demo notebook outputs (regenerate locally with docs/demo.ipynb)
+docs/demo_output/
+demo_executed.ipynb
+
+# Jupyter checkpoint folders
+.ipynb_checkpoints/
+docs/.ipynb_checkpoints/
+
+# Python packaging build artefacts
+plagih.egg-info/
+*.egg-info/

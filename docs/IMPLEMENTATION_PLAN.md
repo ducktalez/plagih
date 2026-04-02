@@ -65,6 +65,25 @@
 
 ## Medium Priority
 
+### D8 – Feature Demo Notebook (`docs/demo.ipynb`)
+- **Where:** `docs/demo.ipynb`, `plagih/demo_helpers.py`
+- **Purpose:** Showcase every major feature with hand-crafted, deterministic examples.
+  Doubles as a visual sanity-check after refactors — run the notebook, inspect inline
+  tree renders, verify nothing looks broken.
+- **Layout:**
+  - `docs/demo.ipynb` — Jupyter notebook (7 parts, stripped outputs via `nbstripout`)
+  - `plagih/demo_helpers.py` — pre-built example trees, DataFrames, display utilities
+    (`show_tree`, `show_trees`, `show_tree_with_scores`)
+- **Sections:** (1) Building Blocks, (2) Genetic Operations (crossover, mutation),
+  (3) Simplification & SymPy Bridge, (4) Evaluation & Complexity,
+  (5) Population & Pareto, (6) Monitoring, (7) Targeted Optimization / `targeted_ifte`
+- **Key design:** All demo examples are *hand-crafted* (no full GP runs). Complex
+  concepts (e.g. merge-tree, Pareto front) use prepared `Candidate` objects so the
+  output is reproducible and editable.
+- **Renderer extension:** `_render_tree_on_axes` gains an optional `node_scores`
+  parameter (`dict[id(node) → float 0–1]`) for score-coloured tree renders in Part 7.
+- **Status:** Initial implementation added 2026-04-02.
+
 ### M1 – `canonicalize_children()` performance benchmark
 - **Where:** `Node.canonicalize_children()` in `trees.py` (P14)
 - **Current:** Uses `represent_str()` as sort key — recursive string generation.

@@ -321,6 +321,33 @@ def ifte_component_scores(
     Returns:
         List of :class:`IfteAnalysisResult`, one per Ifte node found.
         Empty list if the tree contains no Ifte nodes.
+
+    Examples::
+
+        import numpy as np
+        from plagih.demo_helpers import (
+            make_cartpole_df,
+            make_ifte_node_scores,
+            make_tree_ifte_cartpole,
+            show_tree_with_scores,
+        )
+        from plagih.targeted_optimization import ifte_component_scores
+
+        df = make_cartpole_df()
+        tree = make_tree_ifte_cartpole()  # Ifte(cartPos < 0.5, cartVel, -1 * cartPos)
+        target = df["action"].to_numpy()
+
+        results = ifte_component_scores(tree, df, target)
+        for r in results:
+            print(f"Weakest component: {r.weakest}")
+            for name, score in r.scores.items():
+                print(f"  {name}: count_score={score.count_score:.2f}, error_sum={score.error_sum:.3f}")
+
+        # Visualise: colour Ifte branches by weakness
+        node_scores = make_ifte_node_scores(results)
+        show_tree_with_scores(tree, node_scores, title="Ifte weakness map")
+
+        # See docs/demo.ipynb §7 for the full interactive example.
     """
     from plagih.trees._nodes import Ifte
 

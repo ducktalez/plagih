@@ -1243,8 +1243,7 @@ def render_tree(
     else:
         plt.close(fig)
 
-    print(f"Tree saved to: {output_path}")
-    # TODO(sfeh): should use log("f", ...) but render_tree is also used standalone
+    log("f", f"Tree saved to: {output_path}")
     return str(output_path)
 
 
@@ -1344,10 +1343,14 @@ def _get_tree_width(node: Node) -> int:
 def _compute_simple_tree_layout(root: Node) -> tuple:
     """Compute a simple hierarchical tree layout for subplot rendering.
 
-    Returns (positions, labels, colors, edges) dicts keyed by integer node id.
+    Returns ``(positions, labels, colors, edges, obj_ids)`` dicts keyed by
+    integer node id.  The extra ``obj_ids`` dict maps ``nid → id(node)`` so
+    callers can correlate layout nodes back to the original Node objects
+    (e.g. for per-node score colouring).
+
     Uses get_node_label_simple / get_node_style_for_type for consistency.
     """
-    positions, labels, colors, edges = {}, {}, {}, []
+    positions, labels, colors, edges, obj_ids = {}, {}, {}, [], {}
     counter = [0]
 
     def get_subtree_width(node: Node) -> int:
@@ -1361,6 +1364,7 @@ def _compute_simple_tree_layout(root: Node) -> tuple:
         counter[0] += 1
         labels[nid] = get_node_label_simple(node)
         colors[nid] = get_node_style_for_type(node).fill_color
+        obj_ids[nid] = id(node)
         if parent_id is not None:
             edges.append((parent_id, nid))
         children = node.get_childs() if not node.is_term() else []
@@ -1377,12 +1381,30 @@ def _compute_simple_tree_layout(root: Node) -> tuple:
         return nid, total_width
 
     layout_node(root, 0, 0)
-    return positions, labels, colors, edges
+    return positions, labels, colors, edges, obj_ids
 
 
-def _render_tree_on_axes(ax, tree: Node, node_size_scale: float = 1.0):
-    """Render a single tree onto a matplotlib Axes (for subplot grids)."""
-    positions, labels, colors, edges = _compute_simple_tree_layout(tree)
+def _render_tree_on_axes(
+    ax,
+    tree: Node,
+    node_size_scale: float = 1.0,
+    node_scores: Optional[Dict[int, float]] = None,
+) -> None:
+    """Render a single tree onto a matplotlib Axes (for subplot grids).
+
+    Args:
+        ax: The matplotlib Axes to draw on.
+        tree: Root node of the tree.
+        node_size_scale: Controls node box size relative to tree width.
+        node_scores: Optional mapping ``id(node) → float`` in ``[0, 1]``.
+            When provided, each node's fill colour is blended from its base
+            colour (score 0.0 = best) toward red (#FF5252, score 1.0 = worst).
+            Useful for visualising per-node analysis results such as
+            :func:`plagih.targeted_optimization.ifte_component_scores`.
+    """
+    import matplotlib.colors as mcolors  # local import — only needed when tinting
+
+    positions, labels, colors, edges, obj_ids = _compute_simple_tree_layout(tree)
     tree_width = _get_tree_width(tree)
     node_size = max(0.3, min(0.5, node_size_scale / max(tree_width, 1)))
 
@@ -1391,15 +1413,28 @@ def _render_tree_on_axes(ax, tree: Node, node_size_scale: float = 1.0):
         x2, y2 = positions[cid]
         ax.plot([x1, x2], [y1, y2], "-", linewidth=1.2, zorder=1, color="#666666")
 
+    _red_rgb = mcolors.to_rgb("#FF5252")
+
     for nid, (x, y) in positions.items():
         label = labels[nid]
+        base_color = colors[nid]
+
+        # Score-based tinting: blend base colour → red
+        if node_scores is not None:
+            node_obj_id = obj_ids.get(nid)
+            if node_obj_id is not None and node_obj_id in node_scores:
+                score = float(np.clip(node_scores[node_obj_id], 0.0, 1.0))
+                base_rgb = mcolors.to_rgb(base_color)
+                blended = tuple(base_rgb[i] * (1.0 - score) + _red_rgb[i] * score for i in range(3))
+                base_color = mcolors.to_hex(blended)
+
         lw = max(node_size, len(label) * 0.08)
         patch = mpatches.FancyBboxPatch(
             (x - lw / 2, y - node_size / 4),
             lw,
             node_size / 2,
             boxstyle=mpatches.BoxStyle("Round", pad=0.02),
-            facecolor=colors[nid],
+            facecolor=base_color,
             edgecolor="#333333",
             linewidth=1.0,
             zorder=2,

@@ -13,6 +13,9 @@ Enjoy!
 ## Ablage/Todos
 ### Code Dokumentation und instructions überarbeiten
 
+- Führe nan-escape-Operator ein. (Gibt Wert zurück, wenn NaN/komplexe Zahl entsteht. Hat zwei Eingaben (Wert, default).
+- Zweite Demoart: md-file, welches die Besonderheiten mit Fokus auf die Darstellung anzeigt. Im Gegensatz zum Notebook sollen hier die Besonderheiten der Darstellung und die Möglichkeiten der Darstellung im Vordergrund stehen. Es soll eine Art "Showcase" sein.
+- Nutze die "best overlapping" Kandidaten - die, die in Bereichen, in denen die anderen gefailt haben, die besten Ergebnisse haben. (min-anzahl/diff in den Bereichen, in denen der Kandidat nicht die beste Lösung errechnet hat. (Waiting candidates/best matches/matching partners))
 - Ich sehe momentan folgende Simplifizierung:   
     roundtrip expr: sign(Abs(361/cartVel**2 + 0.423*cartVel**2))
     grouped expr  : sign(Abs(0.423*cartVel**2 + 361/cartVel**2))

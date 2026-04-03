@@ -47,7 +47,14 @@
   evaluation as the dominant phase for most successful trees, with evaluation
   failures significantly outnumbering creation/simplification failures.
 - **Ideas:**
-  1. Add a cheap pre-filter before full evaluation for obviously invalid trees.
+  1. ~~Add a cheap pre-filter before full evaluation for obviously invalid trees.~~ ✅
+     Already covered by existing 7-stage pre-filter chain:
+     `force_input_node` → `evolve_prune_tree` → `canonicalize_and_get_lut_id`
+     → tree-LUT check → parsimony guard → `get_sympy_expr` (catches imaginary,
+     zoo/oo/nan, MemoryError, RecursionError, relational-on-Piecewise) →
+     symex-LUT check.  The only remaining failures at NumPy level are
+     **data-dependent** NaN/Inf (e.g. `log(x)` with `x ≤ 0` in training data),
+     which cannot be detected without actual evaluation.
   2. ~~Investigate `canonicalize_children()` and LUT interactions in the hot path.~~ ✅
   3. Consider lighter-weight or staged evaluation for active-test/debug modes.
 - **Implemented optimizations (2026-04-02):**
@@ -67,8 +74,7 @@
      The old code in `_gp_engine.py` relied on `"nan" in str(np_fitness)` as
      fallback (wasteful string conversion).  Replaced with `np.isfinite()` in
      both `tree_to_candidate()` and `evaluate_tree_standalone()`.
-- **Remaining ideas:** Cheap pre-filter for obviously invalid trees (idea 1),
-  staged evaluation (idea 3).
+- **Remaining ideas:** Staged evaluation for active-test/debug modes (idea 3).
 
 ### H2 – Optimize pre-selection overhead
 - **Where:** `pre_select_for_tasks()` in `parallel.py`
@@ -278,6 +284,26 @@
 - **Next step:** Build a small frequency analysis of rejected simplification
   patterns from the new compact diagnostics before changing grouping rules.
 
+### D9 – RuntimeWarning suppression and data-dependent NaN quantification (→ H4)
+- **Where:** `ExplainableGP.tree_to_candidate()` in `trees/_gp_engine.py`
+  (line ~1238), `evaluate_tree_standalone()` in `parallel.py`
+- **Context:** The H4 pre-filter analysis showed that the only trees escaping
+  the 7-stage pre-filter chain are those with **data-dependent** NaN/Inf
+  (e.g. `log(x)` when `x ≤ 0` in training data). These are caught by the
+  `np.isfinite()` check after NumPy evaluation.
+- **Questions:**
+  1. **Quantification:** How many trees actually fail at the `np.isfinite()`
+     check? The existing `_generation_tree_timings` (with `failed_stage =
+     "evaluate"`) could answer this. If it's a significant fraction, a
+     lightweight domain check (e.g. Log/Sqrt/Div with known-negative inputs)
+     might be worthwhile. If it's rare → no further action needed.
+  2. **RuntimeWarning blanket suppression:** `warnings.simplefilter("ignore",
+     RuntimeWarning)` (`# sfeh:discuss`) hides all RuntimeWarnings during
+     NumPy eval (division-by-zero, log-of-negative, etc.). This is "by design"
+     (followed by `isfinite()` guard), but could mask real bugs in custom
+     `eval_error_metric` implementations. Should the suppression be narrowed
+     to specific warning categories, or is the blanket approach acceptable?
+
 ---
 
 ## Low Priority
@@ -312,6 +338,22 @@
   20 generations (population=50). Likely caused by trees growing in
   complexity across generations. Investigate whether tree-size limits or
   early-rejection can keep crossover time stable.
+- **Root cause (analysed 2026-04-02):** All crossover operations are O(n) in
+  tree size.  `selection_tournament()` calls `copy.deepcopy()` (2× per
+  crossover), `evolve_crossover()` calls `list_mutable_nodes()` (up to 3×) and
+  `copy.deepcopy(subtree)` (1×), and `evolve_prune_tree()` is called 2×.
+  Because GP trees grow in size across generations (selection pressure favours
+  lower fitness, not smaller trees), all these O(n) operations become
+  proportionally more expensive.  The pruning in `evolve_prune_tree()` already
+  caps trees at `nodes_max`, but trees at the cap are still larger than initial
+  trees (typically depth 3–5).
+- **Possible mitigations (not yet implemented):**
+  1. Size-aware tournament selection for crossover (prefer smaller parents).
+  2. Crossover rejection when both parents are at `nodes_max` (product tree
+     would be pruned anyway).
+  3. Lighter-weight deepcopy (e.g. copy-on-write or structural sharing).
+- **Impact:** Low.  At `pop=50` and `crossover_rate=0.2`, only ~10 crossovers
+  per generation.  The 19ms increase is ~190ms total — dwarfed by evaluation.
 
 ### ~~L6 – Generation count exceeds `gen_end`~~ ✅
 - **Where:** `_test_simple()` in `plagih_gp.py` (not `_gp_engine.py`)

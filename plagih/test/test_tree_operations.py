@@ -643,6 +643,190 @@ class TestTreeRepresentation:
         assert id1 != id2  # Different values
         assert id1 == id3  # Same structure
 
+
+# =============================================================================
+# Canonicalization Tests
+# =============================================================================
+
+
+class TestCanonicalization:
+    """Tests for canonicalize_children() and canonicalize_and_get_lut_id()."""
+
+    # --- canonicalize_children ---
+
+    def test_canonicalize_sorts_commutative_add(self):
+        """Add(b, a) should become Add(a, b) after canonicalization."""
+        tree = Add(Symbol(sympy.Symbol("b")), Symbol(sympy.Symbol("a")))
+        tree.canonicalize_children()
+
+        childs = tree.get_childs()
+        assert childs[0].get_value() == sympy.Symbol("a")
+        assert childs[1].get_value() == sympy.Symbol("b")
+
+    def test_canonicalize_sorts_commutative_mul(self):
+        """Mul(z, a) should become Mul(a, z)."""
+        tree = Mul(Symbol(sympy.Symbol("z")), Symbol(sympy.Symbol("a")))
+        tree.canonicalize_children()
+
+        childs = tree.get_childs()
+        assert childs[0].get_value() == sympy.Symbol("a")
+        assert childs[1].get_value() == sympy.Symbol("z")
+
+    def test_canonicalize_does_not_reorder_non_commutative(self):
+        """Sub(b, a) should stay Sub(b, a) — subtraction is not commutative."""
+        tree = Sub(Symbol(sympy.Symbol("b")), Symbol(sympy.Symbol("a")))
+        tree.canonicalize_children()
+
+        childs = tree.get_childs()
+        assert childs[0].get_value() == sympy.Symbol("b")
+        assert childs[1].get_value() == sympy.Symbol("a")
+
+    def test_canonicalize_recursive(self):
+        """Canonicalization should recurse into nested commutative children."""
+        # Add(Mul(b, a), Number(1))  →  Add(Number(1), Mul(a, b))
+        inner = Mul(Symbol(sympy.Symbol("b")), Symbol(sympy.Symbol("a")))
+        tree = Add(inner, Number(1.0))
+        tree.canonicalize_children()
+
+        # Inner Mul should be sorted: a before b
+        inner_childs = tree.get_childs()
+        # Find the Mul child
+        mul_child = [c for c in inner_childs if isinstance(c, Mul)][0]
+        assert mul_child.get_childs()[0].get_value() == sympy.Symbol("a")
+        assert mul_child.get_childs()[1].get_value() == sympy.Symbol("b")
+
+    def test_canonicalize_idempotent(self):
+        """Running canonicalize twice should produce the same result."""
+        tree = Add(Symbol(sympy.Symbol("c")), Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b")))
+        tree.canonicalize_children()
+        lut_after_first = tree.get_lut_id()
+        tree.canonicalize_children()
+        lut_after_second = tree.get_lut_id()
+
+        assert lut_after_first == lut_after_second
+
+    def test_canonicalize_terminal_is_noop(self):
+        """Canonicalizing a terminal should not raise."""
+        term = Symbol(sympy.Symbol("x"))
+        term.canonicalize_children()  # should not raise
+
+    # --- canonicalize_and_get_lut_id ---
+
+    def test_fused_matches_separate(self):
+        """canonicalize_and_get_lut_id() must produce the same result as separate calls."""
+        tree1 = Add(
+            Mul(Symbol(sympy.Symbol("z")), Symbol(sympy.Symbol("a"))),
+            Sin(Symbol(sympy.Symbol("b"))),
+        )
+        tree2 = Add(
+            Mul(Symbol(sympy.Symbol("z")), Symbol(sympy.Symbol("a"))),
+            Sin(Symbol(sympy.Symbol("b"))),
+        )
+
+        # Separate: canonicalize then get_lut_id
+        tree1.canonicalize_children()
+        separate_id = tree1.get_lut_id()
+
+        # Fused
+        fused_id = tree2.canonicalize_and_get_lut_id()
+
+        assert fused_id == separate_id
+
+    def test_fused_matches_separate_deeply_nested(self):
+        """Fused method matches separate calls on a deeper tree."""
+        tree1 = Add(
+            Mul(
+                Add(Symbol(sympy.Symbol("c")), Symbol(sympy.Symbol("a"))),
+                Symbol(sympy.Symbol("b")),
+            ),
+            Number(3.0),
+        )
+        tree2 = Add(
+            Mul(
+                Add(Symbol(sympy.Symbol("c")), Symbol(sympy.Symbol("a"))),
+                Symbol(sympy.Symbol("b")),
+            ),
+            Number(3.0),
+        )
+
+        tree1.canonicalize_children()
+        separate_id = tree1.get_lut_id()
+        fused_id = tree2.canonicalize_and_get_lut_id()
+
+        assert fused_id == separate_id
+
+    def test_fused_sorts_children(self):
+        """The fused method must actually sort commutative children."""
+        tree = Add(Symbol(sympy.Symbol("z")), Symbol(sympy.Symbol("a")))
+        tree.canonicalize_and_get_lut_id()
+
+        childs = tree.get_childs()
+        assert childs[0].get_value() == sympy.Symbol("a")
+        assert childs[1].get_value() == sympy.Symbol("z")
+
+    def test_fused_non_commutative_preserves_order(self):
+        """Non-commutative operators preserve child order in fused path."""
+        tree = Sub(Symbol(sympy.Symbol("b")), Symbol(sympy.Symbol("a")))
+        lut_id = tree.canonicalize_and_get_lut_id()
+
+        assert "b" in lut_id
+        childs = tree.get_childs()
+        assert childs[0].get_value() == sympy.Symbol("b")
+        assert childs[1].get_value() == sympy.Symbol("a")
+
+    def test_fused_terminal(self):
+        """Fused method on a terminal returns its represent_str."""
+        term = Symbol(sympy.Symbol("x"))
+        lut_id = term.canonicalize_and_get_lut_id()
+
+        assert lut_id == term.represent_str(show_fixed_hint=False, cut_terms=False)
+
+    def test_fused_different_order_same_id(self):
+        """Two trees with different child order but same structure get the same fused LUT id."""
+        tree1 = Add(Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b")))
+        tree2 = Add(Symbol(sympy.Symbol("b")), Symbol(sympy.Symbol("a")))
+
+        id1 = tree1.canonicalize_and_get_lut_id()
+        id2 = tree2.canonicalize_and_get_lut_id()
+
+        assert id1 == id2
+
+    def test_fused_different_values_different_id(self):
+        """Trees with different values produce different LUT ids."""
+        tree1 = Add(Symbol(sympy.Symbol("a")), Number(1.0))
+        tree2 = Add(Symbol(sympy.Symbol("a")), Number(2.0))
+
+        id1 = tree1.canonicalize_and_get_lut_id()
+        id2 = tree2.canonicalize_and_get_lut_id()
+
+        assert id1 != id2
+
+    def test_fused_with_chainable_three_children(self):
+        """Fused canonicalization works for 3+-ary commutative operators."""
+        tree1 = Add(Symbol(sympy.Symbol("c")), Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b")))
+        tree2 = Add(Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b")), Symbol(sympy.Symbol("c")))
+
+        id1 = tree1.canonicalize_and_get_lut_id()
+        id2 = tree2.canonicalize_and_get_lut_id()
+
+        assert id1 == id2
+        # Children should be sorted: a, b, c
+        childs = tree1.get_childs()
+        assert [c.get_value() for c in childs] == [sympy.Symbol("a"), sympy.Symbol("b"), sympy.Symbol("c")]
+
+    def test_fused_with_ifte_non_commutative(self):
+        """Ifte is not commutative — child order must be preserved."""
+        tree = Ifte(
+            Lt(Symbol(sympy.Symbol("a")), Number(0.0)),
+            Number(1.0),
+            Number(2.0),
+        )
+        lut_id = tree.canonicalize_and_get_lut_id()
+
+        assert "Ifte" in lut_id
+        childs = tree.get_childs()
+        assert isinstance(childs[0], Lt)
+
     def test_get_expr_symlike(self):
         """Tests get_expr_symlike output."""
         tree = Add(Symbol(sympy.Symbol("a")), Number(2.0))

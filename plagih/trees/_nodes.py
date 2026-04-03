@@ -2424,6 +2424,8 @@ class Not(LogicOperator):
 class Eq(RelationalOperator):
     """Equality comparison: Eq(a, b) returns True if a == b."""
 
+    is_commutative = True
+
     symfun = staticmethod(lambda *a: sympy.Eq(a[0], a[1]))
     np_fun = np.equal
     showme = "Eq"  # '==' not working in sympy!
@@ -2434,6 +2436,8 @@ class Eq(RelationalOperator):
 
 class Ne(RelationalOperator):
     """Inequality comparison: Ne(a, b) returns True if a != b."""
+
+    is_commutative = True
 
     symfun = staticmethod(lambda *a: sympy.Ne(a[0], a[1]))
     np_fun = np.not_equal

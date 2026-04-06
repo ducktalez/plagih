@@ -390,6 +390,106 @@
 
 ---
 
+## Ideas Backlog
+
+> Ideas migrated from the old README and other sources. Not yet prioritised
+> or scoped — promote to L*/M*/H* when ready to act on them.
+
+### I1 – NaN-escape operator
+- **Idea:** New node type that returns a default value when evaluation produces
+  NaN or a complex number. Two inputs: `(expression, fallback)`.
+- **Distinction:** Separate between NaN from SymPy (imaginary/zoo) and NaN from
+  NumPy evaluation (data-dependent). The former is already caught by
+  `get_sympy_expr()`, the latter is a runtime concern.
+- **Related:** D9 (RuntimeWarning suppression), P20 (NaN check fix).
+
+### I2 – Best-overlapping candidates / Partnering
+- **Idea:** Identify candidates that perform well in regions where others fail.
+  Use per-datapoint residuals to find complementary trees for `Piecewise`
+  composition or targeted crossover.
+- **Approach:** For each datapoint, track which candidate has the smallest
+  residual. Candidates with good coverage of "uncovered" regions are promoted
+  as partners. This could inform an entropy-like metric for merge selection.
+- **Related:** D5 (targeted optimisation), M3 (merge strategies).
+
+### I3 – Population mining / adaptive strategy
+- **Idea:** Analyse population characteristics and adjust strategies dynamically:
+  - Trees too large → reduce `nodes_max` or prefer smaller parents
+  - Population too homogeneous → increase `random_new` rate
+  - Stagnation → ban dominant sub-structures or change operator pool
+  - If constant-filter improved a tree → retry with slightly different adaptation
+- **Related:** L5 (crossover time), D5 (targeted optimisation).
+
+### I4 – GPU-accelerated evaluation
+- **Idea:** Evaluate trees on GPU for large populations / large datasets.
+  Requires batched evaluation (multiple trees simultaneously).
+- **Options:** TensorFlow (graph mode), PyTorch, JAX, or CuPy.
+- **Challenge:** Current per-tree NumPy evaluation produces 1D arrays;
+  batched GPU eval would need 2D (trees × datapoints), requiring a different
+  dimensionality model.
+- **Related:** L2 (gradient tracking / JAX integration).
+
+### I5 – Sub-populations / races
+- **Idea:** Evolve separate sub-populations that occasionally exchange
+  individuals. Variant: mine common trunk structure from good candidates and
+  seed a new sub-population with just that trunk (or explicitly without it).
+- **Related:** I2 (partnering), M3 (merge strategies).
+
+### I6 – `nsimplify` for terminals and expressions
+- **Idea:** Use `sympy.nsimplify(expr, tolerance=..., rational=True)` to
+  clean up evolved constants. E.g. `3.333*x → (10/3)*x`, or
+  `x**1.999 → x**2`. Especially useful for power exponents.
+- **Related:** D4 (rational Number terminals), D6 (simplification pipeline).
+
+### I7 – Terminal-only mutation
+- **Idea:** Mutation variant that only changes terminal values (Numbers,
+  Symbols) without altering tree structure. Preserves proven operator
+  structure while fine-tuning constants.
+- **Related:** D5 Phase 3 (node-level optimisation).
+
+### I8 – Special constants (π, e) as terminals
+- **Idea:** Allow `sympy.pi`, `sympy.E` etc. as terminal values in the
+  operator pool / terminal set.
+
+### I9 – Adaptive tournament size
+- **Idea:** Adjust `tournament_size` based on population fitness distribution
+  (skewness). High skew → smaller tournaments (more exploration). Low skew →
+  larger tournaments (more exploitation).
+- **Related:** I3 (population mining).
+
+### I10 – GP/NN co-evolution (EM-style)
+- **Idea:** Iterative process: (1) Train a GP to approximate an NN.
+  (2) Use Pareto-optimal GP trees as features for a smaller NN.
+  (3) GP focuses on the residual. Repeat.
+- **Variant:** NN identifies regions where GP fails → GP evolves `Ifte`
+  structures for those regions.
+- **Related:** D5 (targeted optimisation), I2 (partnering).
+
+### I11 – Merged-tree visualisation improvements
+- **Idea:** Variant of merge tree without terminal nodes (structure only).
+  Use existing evaluation combination for colour coding.
+- **Related:** `population_merge.py`, `visualization/`.
+
+### I12 – Tree "styles" / representation modes
+- **Idea:** One expression can be rendered in different styles:
+  raw (as generated), isolated inputs, factorised, simplified, "better
+  mutable" (optimised for further evolution). Currently only raw + simplified
+  exist.
+
+### I13 – DivFraction factor limits
+- **Observed:** Grouping rewrites `Mul → DivFraction` with large factors
+  (e.g. `361/x²`), where the original intent was small factors (`a/2`).
+  Consider limiting DivFraction rewrite to small denominators.
+- **Related:** D6 (idempotent simplification), D7 (rejected simplifications).
+
+### I14 – Showcase markdown document
+- **Idea:** A second demo format (`.md` file) focused on **rendering and
+  display** capabilities rather than code usage. A visual "gallery" of tree
+  renders, Pareto plots, merge trees, etc.
+- **Related:** D8 (demo notebook).
+
+---
+
 ## Completed
 
 - ✅ Shared memory for `df_train` — 1.68× faster worker startup
@@ -411,6 +511,7 @@
 - ✅ **L3** — Duplicate `analyze_pareto` consolidated into a single clean stub; ~160 lines of commented-out legacy code removed
 - ✅ **L8** — Stale logging handler pruning already implemented (`_ensure_live_console_handler`); marked as complete
 - ✅ **H4 (partial)** — Fused `canonicalize_and_get_lut_id()` (2.3× speedup), cached `true_values`, fixed NaN check (`np_fitness == np.nan` → `np.isfinite`)
+- ✅ **README cleanup** — Restructured from chaotic ~500-line dump to professional ~200-line document. ~100+ scattered TODOs migrated to Ideas Backlog (I1–I14). Removed: TensorFlow references, Python-3.9/Anaconda setup, LaTeX/tikzplotlib deps, biography, debug dumps, `====Everything below here is garbage====` section
 
 
 

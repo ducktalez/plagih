@@ -21,8 +21,8 @@ crossover, and simplification, evaluated against training data.
 | `plagih/trees/_nodes.py` | plagih_tree contain a new implementation of trees that we use in genetic programming to display a program. (62C/17F) |
 | `plagih/trees/_evolution.py` | Evolution module: Candidate, NodeSelect, Evolution, and population helpers. (3C/8F) |
 | `plagih/trees/_gp_engine.py` | GP Engine module: ExplainableGP and picklable helper callables. (2C/5F) |
-| `plagih/parallel.py` | Parallel execution engine for plagih GP. (5C/34F) |
-| `plagih/paretofront.py` | Pareto-front dominance filter for GP candidates. (0C/6F) |
+| `plagih/parallel.py` | Parallel execution engine for plagih GP. (5C/37F) |
+| `plagih/paretofront.py` | Pareto-front dominance filter for GP candidates. (0C/5F) |
 | `plagih/monitoring.py` | GP Monitoring Module (2C/0F) |
 | `plagih/evaluation_context.py` | Unified Evaluation Context System for Plagih GP Trees. (3C/5F) |
 | `plagih/population_merge.py` | Population Merge Module for plagih GP Framework (3C/8F) |
@@ -85,8 +85,8 @@ frontmatter). They are automatically injected when editing matching files:
 | Document | Purpose |
 |---|---|
 | `ARCHITECTURE.md` | Module overview, lifecycle, node hierarchy, config reference |
-| `PITFALLS.md` | Known bugs and gotchas (P1–P17). Read before editing core code. |
-| `IMPLEMENTATION_PLAN.md` | Central TODO list + **Design Discussions** — add open tasks and architectural questions here, not in source code |
+| `PITFALLS.md` | Known bugs and gotchas (P1–P20). Read before editing core code. |
+| `IMPLEMENTATION_PLAN.md` | Central TODO list, **Design Discussions**, and **Ideas Backlog** — add open tasks and architectural questions here, not in source code |
 | `EVALUATION.md` | EvaluationContext API and examples |
 | `LOGGING.md` | Hybrid logging system (`setup_logging`, `printpl` → `log_*`) |
 | `BENCHMARKS.md` | Benchmark environments and data formats |

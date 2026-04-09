@@ -79,7 +79,27 @@
 ### H2 – Optimize pre-selection overhead
 - **Where:** `pre_select_for_tasks()` in `parallel.py`
 - **Problem:** Pre-selection in the main process is currently the main IPC
-  cost contributor. See `PARALLEL_BENCHMARK_DIAGNOSIS.md` §4.
+  cost contributor (~198ms/gen at pop=1000). See `PARALLEL_BENCHMARK_DIAGNOSIS.md` §4.
+- **Implemented optimizations (2026-04-09):**
+  1. **Batch tournament selection with NumPy** — Replaced the per-task Python
+     loop (900× `random.choices()` + `min()` with lambda + `selection_tournament()`)
+     with a vectorized batch approach: `_batch_tournament_select()` pre-computes
+     a fitness array once, generates all tournament indices via
+     `np.random.randint(shape=(n, k))`, and finds winners via
+     `np.argmin(axis=1)` in a single pass. Tasks are grouped by `tournament_n`
+     for efficient batching.
+  2. **`pareto_revive` uses `fast_tree_copy`** — Pre-selection of Pareto
+     candidates now uses `fast_tree_copy()` (~4.6× faster) instead of
+     `copy.deepcopy()`.
+  3. **Eliminated `selection_tournament` import** — `pre_select_for_tasks()`
+     no longer calls the per-item `selection_tournament()` function from
+     `_evolution.py`, avoiding the per-call Python function overhead and
+     redundant `random.choices` → `min` → `fast_tree_copy` chain.
+- **Remaining:** The `fast_tree_copy()` calls (~40–100ms for 900 trees) still
+  happen per task. A further optimization could defer tree copying to workers
+  by sending winner indices instead (requires workers to have `pop_genepool`,
+  which trades pre-selection cost for `_update_worker_state` IPC). Benchmarking
+  needed to determine if the trade-off is worthwhile.
 
 ### H3 – Reduce worker RAM overhead
 - **Where:** `parallel.py` worker pool
@@ -512,6 +532,7 @@
 - ✅ **L8** — Stale logging handler pruning already implemented (`_ensure_live_console_handler`); marked as complete
 - ✅ **H4 (partial)** — Fused `canonicalize_and_get_lut_id()` (2.3× speedup), cached `true_values`, fixed NaN check (`np_fitness == np.nan` → `np.isfinite`)
 - ✅ **README cleanup** — Restructured from chaotic ~500-line dump to professional ~200-line document. ~100+ scattered TODOs migrated to Ideas Backlog (I1–I14). Removed: TensorFlow references, Python-3.9/Anaconda setup, LaTeX/tikzplotlib deps, biography, debug dumps, `====Everything below here is garbage====` section
+- ✅ **H2 (partial)** — Batch tournament selection with NumPy (`_batch_tournament_select`), `pareto_revive` switched from `copy.deepcopy` to `fast_tree_copy`, eliminated per-task `selection_tournament()` import overhead
 
 
 

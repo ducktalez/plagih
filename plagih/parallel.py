@@ -985,6 +985,42 @@ _STRATEGIES_NO_PARENT = frozenset({"random_new"})
 _STRATEGIES_PARETO = frozenset({"pareto_revive"})
 
 
+def _batch_tournament_select(
+    pop_genepool: list,
+    n_selections: int,
+    tournament_n: int = 3,
+) -> np.ndarray:
+    """Vectorized tournament selection for multiple tasks at once.
+
+    Uses NumPy to generate all tournament indices and find winners
+    in a single vectorized pass, replacing N individual Python-level
+    ``random.choices()`` + ``min()`` calls.
+
+    Args:
+        pop_genepool: List of Candidate objects.
+        n_selections: Number of winners to select.
+        tournament_n: Tournament size per selection.
+
+    Returns:
+        NumPy int array of winner indices into pop_genepool (shape: ``(n_selections,)``).
+    """
+    pop_size = len(pop_genepool)
+    k = min(tournament_n, pop_size)
+
+    # Pre-compute fitness array once — eliminates N*k get_fitness() calls
+    fitness = np.array([c.get_fitness() for c in pop_genepool], dtype=np.float64)
+
+    # Generate all tournament indices at once: (n_selections, k)
+    indices = np.random.randint(0, pop_size, size=(n_selections, k))
+
+    # Vectorized winner selection (lowest fitness = best)
+    tournament_fitness = fitness[indices]
+    winner_local = np.argmin(tournament_fitness, axis=1)
+    winner_indices = indices[np.arange(n_selections), winner_local]
+
+    return winner_indices
+
+
 def pre_select_for_tasks(tasks, pop_genepool, paretofront):
     """Pre-select parent trees in the main process to avoid IPC of pop_genepool.
 
@@ -995,6 +1031,11 @@ def pre_select_for_tasks(tasks, pop_genepool, paretofront):
     This eliminates _update_worker_state overhead (~950ms/gen for pop=1000, 4w)
     which was the main parallelization bottleneck on Windows.
 
+    Optimization (H2): Tournament selection is vectorized via NumPy —
+    all tournaments for same-sized groups are generated in a single
+    ``np.random.randint`` + ``np.argmin`` pass, replacing N individual
+    ``random.choices()`` + ``min()`` calls.
+
     Args:
         tasks: List of TaskSpec objects (modified in place).
         pop_genepool: Current generation's population.
@@ -1004,25 +1045,32 @@ def pre_select_for_tasks(tasks, pop_genepool, paretofront):
         bool: True if any task could NOT be pre-selected (needs pop_genepool
               sent to workers via _update_worker_state).
     """
-    import copy as _copy
-
-    from plagih.trees import selection_tournament
+    from plagih.trees._nodes import fast_tree_copy
 
     needs_full_pop = False
 
+    if not pop_genepool:
+        for task in tasks:
+            if task.strategy_name in _STRATEGIES_NO_PARENT or task.strategy_name in _STRATEGIES_PARETO:
+                task.selected_trees = []
+            else:
+                task.selected_trees = None
+                needs_full_pop = True
+        return needs_full_pop
+
+    # ── Classify tasks by selection type and tournament_n ──
+    one_parent_groups: Dict[int, List[TaskSpec]] = {}  # tournament_n -> [task, ...]
+    two_parent_groups: Dict[int, List[TaskSpec]] = {}  # tournament_n -> [task, ...]
+
     for task in tasks:
         name = task.strategy_name
-        params = task.strategy_params
-        tournament_n = params.get("tournament_n", 3)
+        tournament_n = task.strategy_params.get("tournament_n", 3)
 
         if name in _STRATEGIES_ONE_PARENT:
-            tree = selection_tournament(pop_genepool, n=tournament_n)
-            task.selected_trees = [tree]
+            one_parent_groups.setdefault(tournament_n, []).append(task)
 
         elif name in _STRATEGIES_TWO_PARENTS:
-            tree_a = selection_tournament(pop_genepool, n=tournament_n)
-            tree_b = selection_tournament(pop_genepool, n=tournament_n)
-            task.selected_trees = [tree_a, tree_b]
+            two_parent_groups.setdefault(tournament_n, []).append(task)
 
         elif name in _STRATEGIES_NO_PARENT:
             task.selected_trees = []
@@ -1030,7 +1078,7 @@ def pre_select_for_tasks(tasks, pop_genepool, paretofront):
         elif name in _STRATEGIES_PARETO:
             if paretofront:
                 candidate = np.random.choice(paretofront)
-                task.selected_trees = [_copy.deepcopy(candidate.get_evotree())]
+                task.selected_trees = [fast_tree_copy(candidate.get_evotree())]
             else:
                 task.selected_trees = []
 
@@ -1038,6 +1086,22 @@ def pre_select_for_tasks(tasks, pop_genepool, paretofront):
             # Unknown/custom strategy — cannot pre-select, worker needs pop_genepool
             task.selected_trees = None
             needs_full_pop = True
+
+    # ── Batch tournament selection for one-parent strategies ──
+    for tournament_n, group_tasks in one_parent_groups.items():
+        winner_indices = _batch_tournament_select(pop_genepool, len(group_tasks), tournament_n)
+        for task, winner_idx in zip(group_tasks, winner_indices):
+            task.selected_trees = [fast_tree_copy(pop_genepool[winner_idx].get_evotree())]
+
+    # ── Batch tournament selection for two-parent strategies ──
+    for tournament_n, group_tasks in two_parent_groups.items():
+        n = len(group_tasks)
+        winners_a = _batch_tournament_select(pop_genepool, n, tournament_n)
+        winners_b = _batch_tournament_select(pop_genepool, n, tournament_n)
+        for task, idx_a, idx_b in zip(group_tasks, winners_a, winners_b):
+            tree_a = fast_tree_copy(pop_genepool[idx_a].get_evotree())
+            tree_b = fast_tree_copy(pop_genepool[idx_b].get_evotree())
+            task.selected_trees = [tree_a, tree_b]
 
     return needs_full_pop
 

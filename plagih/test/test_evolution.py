@@ -24,6 +24,7 @@ import pytest
 import sympy
 
 from plagih.trees import (
+    Abs,
     Add,
     And,
     Boolean,
@@ -31,13 +32,18 @@ from plagih.trees import (
     Cos,
     Div,
     Evolution,
+    Ifte,
     Lt,
     Mul,
     Node,
     NodeSelect,
     Number,
+    Scale,
     Sin,
     Symbol,
+    Terminal,
+    fast_tree_copy,
+    is_terminal,
     selection_tournament,
 )
 
@@ -214,6 +220,130 @@ class TestMutation:
                 break
 
         assert changed
+
+
+# =============================================================================
+# Terminal-Only Mutation Tests (I7)
+# =============================================================================
+
+
+class TestMutateTerminals:
+    """Tests for terminal-only mutation (evolve_mutate_terminals)."""
+
+    def test_preserves_operator_structure(self, evolution_instance):
+        """Operator topology must remain identical after terminal mutation."""
+        tree = Add(Mul(Symbol(sympy.Symbol("a")), Number(2.0)), Sin(Symbol(sympy.Symbol("b"))))
+        tree.repair_depth()
+        original_ops = [type(n).__name__ for n in tree.list_mutable_nodes() if not is_terminal(n)]
+
+        mutated = evolution_instance.evolve_mutate_terminals(fast_tree_copy(tree))
+        mutated_ops = [type(n).__name__ for n in mutated.list_mutable_nodes() if not is_terminal(n)]
+
+        assert original_ops == mutated_ops
+
+    def test_changes_at_least_one_terminal(self, evolution_instance):
+        """With enough tries, at least one terminal should change."""
+        tree = Add(Symbol(sympy.Symbol("a")), Number(1.0))
+        tree.repair_depth()
+        original_str = str(tree)
+
+        changed = False
+        for _ in range(20):
+            mutated = evolution_instance.evolve_mutate_terminals(fast_tree_copy(tree))
+            if str(mutated) != original_str:
+                changed = True
+                break
+        assert changed
+
+    def test_xtype_preserved(self, evolution_instance):
+        """Replacement terminals must match the xtype of the original."""
+        tree = Add(Symbol(sympy.Symbol("a")), Number(3.0))
+        tree.repair_depth()
+
+        for _ in range(10):
+            mutated = evolution_instance.evolve_mutate_terminals(fast_tree_copy(tree))
+            terminals = [n for n in mutated.list_mutable_nodes() if is_terminal(n)]
+            for t in terminals:
+                assert t.get_xtype_self() == float
+
+    def test_fixed_nodes_untouched(self, evolution_instance):
+        """Terminals with is_fix=True must never be replaced."""
+        fixed_sym = Symbol(sympy.Symbol("a"), is_fix=True)
+        tree = Add(fixed_sym, Number(5.0))
+        tree.repair_depth()
+
+        for _ in range(10):
+            t = fast_tree_copy(tree)
+            evolution_instance.evolve_mutate_terminals(t, n_terminals=5)
+            # The fixed node should still be a Symbol named "a"
+            childs = t.get_childs()
+            fixed_child = [c for c in childs if c.is_fix]
+            assert len(fixed_child) == 1
+            assert isinstance(fixed_child[0], Symbol)
+            assert str(fixed_child[0].get_value()) == "a"
+
+    def test_n_terminals_clamp(self, evolution_instance):
+        """n_terminals > available terminals should not raise."""
+        tree = Add(Symbol(sympy.Symbol("a")), Number(1.0))
+        tree.repair_depth()
+
+        # 2 mutable terminals, requesting 10 — should work without error
+        mutated = evolution_instance.evolve_mutate_terminals(fast_tree_copy(tree), n_terminals=10)
+        assert mutated is not None
+
+    def test_multiple_terminals_changed(self, evolution_instance):
+        """With n_terminals=3, up to 3 terminals should differ."""
+        tree = Add(
+            Mul(Number(1.0), Number(2.0)),
+            Add(Number(3.0), Number(4.0)),
+        )
+        tree.repair_depth()
+
+        changed_count = 0
+        for _ in range(20):
+            mutated = evolution_instance.evolve_mutate_terminals(fast_tree_copy(tree), n_terminals=3)
+            orig_terms = sorted(str(n) for n in tree.list_mutable_nodes() if is_terminal(n))
+            mut_terms = sorted(str(n) for n in mutated.list_mutable_nodes() if is_terminal(n))
+            if orig_terms != mut_terms:
+                changed_count += 1
+        # Should change in most attempts
+        assert changed_count >= 10
+
+    def test_empty_tree_returns_unchanged(self, evolution_instance):
+        """A terminal-only tree (single Number) should still work."""
+        tree = Number(42.0)
+        tree.repair_depth()
+        mutated = evolution_instance.evolve_mutate_terminals(fast_tree_copy(tree))
+        assert mutated is not None
+
+    def test_bool_xtype_terminals(self, evolution_instance):
+        """Bool terminals should be replaced with bool terminals."""
+        tree = And(Boolean(True), Lt(Symbol(sympy.Symbol("a")), Number(0.0)))
+        tree.repair_depth()
+
+        for _ in range(10):
+            mutated = evolution_instance.evolve_mutate_terminals(fast_tree_copy(tree))
+            bool_terms = [n for n in mutated.list_mutable_nodes() if is_terminal(n) and n.get_xtype_self() == bool]
+            for bt in bool_terms:
+                assert isinstance(bt, Boolean)
+
+    def test_p_symbol_high_produces_symbols(self, evolution_instance):
+        """With p_symbol≈1, replaced terminals should mostly be Symbols."""
+        tree = Add(Number(1.0), Number(2.0))
+        tree.repair_depth()
+
+        symbol_count = 0
+        total = 0
+        for _ in range(30):
+            mutated = evolution_instance.evolve_mutate_terminals(fast_tree_copy(tree), n_terminals=2, p_symbol=0.95)
+            for n in mutated.list_mutable_nodes():
+                if is_terminal(n):
+                    total += 1
+                    if isinstance(n, Symbol):
+                        symbol_count += 1
+
+        # Most should be Symbols
+        assert symbol_count > total * 0.5
 
 
 # =============================================================================

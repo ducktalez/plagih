@@ -596,3 +596,23 @@ remained.  This added a pointless extra node to every `Mul(a, DivFraction(b))`
 replacement (then `return`) or `continue`/`break`.  Falling through to
 `return` without action silently skips remaining children.
 
+## P22 – `choose_terminal_node` `p_observation` has inverted semantics
+
+**Where:** `NodeSelect.choose_terminal_node()` in `trees/_evolution.py`
+
+The docstring says "With probability p_observation, tries to select a Symbol".
+The actual code is `if np.random.random() > p_observation:` → try symbol.
+This means **high** `p_observation` → **low** chance of symbol (opposite of
+what the docstring claims).
+
+- `p_observation=0.0` → always tries Symbol (~100%)
+- `p_observation=0.5` → 50/50 (happens to match the default)
+- `p_observation=1.0` → never tries Symbol (always constant)
+
+**Workaround:** `evolve_mutate_terminals()` inverts its `p_symbol` parameter
+before passing it (`p_observation = 1.0 - p_symbol`) so callers get the
+intuitive semantics.
+
+**Rule:** Don't trust the docstring — check the code when using
+`p_observation`.  A future rename/fix should align code with docstring.
+

@@ -784,6 +784,21 @@ def _strategy_mutation_filter(evolve, pop_genepool, paretofront, allow_chain, **
     return evolve.evolve_mutate_filter(tree)
 
 
+def _strategy_mutation_terminal(evolve, pop_genepool, paretofront, allow_chain, **params):
+    """Select a tree and mutate only its terminal nodes (structure-preserving)."""
+    pre = params.pop("_pre_selected", None)
+    tournament_n = params.get("tournament_n", 3)
+    n_terminals = params.get("n_terminals", 1)
+    p_symbol = params.get("p_symbol", 0.5)
+    if pre:
+        tree = pre[0]
+    else:
+        from plagih.trees import selection_tournament
+
+        tree = selection_tournament(pop_genepool, n=tournament_n)
+    return evolve.evolve_mutate_terminals(tree, n_terminals=n_terminals, p_symbol=p_symbol)
+
+
 def _strategy_random_new(evolve, pop_genepool, paretofront, allow_chain, **params):
     """Create a new random tree with a random depth."""
     depth_sampler = params.get("depth_sampler", "choice")
@@ -832,15 +847,16 @@ def _strategy_simplicate(evolve, pop_genepool, paretofront, allow_chain, **param
 
 def _strategy_pareto_revive(evolve, pop_genepool, paretofront, allow_chain, **params):
     """Revive a random candidate from the Pareto front."""
+    from plagih.trees._nodes import fast_tree_copy
+
     pre = params.pop("_pre_selected", None)
     if pre:
         return pre[0]
-    import copy as _copy
 
     if not paretofront:
         raise TreeError("Pareto front is empty, cannot revive")
     candidate = np.random.choice(paretofront)
-    return _copy.deepcopy(candidate.get_evotree())
+    return fast_tree_copy(candidate.get_evotree())
 
 
 def _strategy_targeted_ifte(evolve, pop_genepool, paretofront, allow_chain, **params):
@@ -852,7 +868,7 @@ def _strategy_targeted_ifte(evolve, pop_genepool, paretofront, allow_chain, **pa
 
     Falls back to standard branch mutation if no Ifte nodes are found.
     """
-    import copy as _copy
+    from plagih.trees._nodes import fast_tree_copy
 
     pre = params.pop("_pre_selected", None)
     tournament_n = params.get("tournament_n", 5)
@@ -878,7 +894,7 @@ def _strategy_targeted_ifte(evolve, pop_genepool, paretofront, allow_chain, **pa
                 best_tree = candidate_tree
         tree = best_tree
 
-    evotree = _copy.deepcopy(tree)
+    evotree = fast_tree_copy(tree)
 
     # If no df_train/target available, or tree has no Ifte — fall back to standard mutation
     if df_train is None or target is None or not _tree_has_ifte(evotree):
@@ -960,6 +976,7 @@ BUILTIN_STRATEGIES: Dict[str, Callable] = {
     "mutation_point": _strategy_mutation_point,
     "mutation_branch_nodes": _strategy_mutation_branch_nodes,
     "mutation_filter": _strategy_mutation_filter,
+    "mutation_terminal": _strategy_mutation_terminal,
     "random_new": _strategy_random_new,
     "crossover": _strategy_crossover,
     "simplicate": _strategy_simplicate,
@@ -976,6 +993,7 @@ _STRATEGIES_ONE_PARENT = frozenset(
         "mutation_point",
         "mutation_branch_nodes",
         "mutation_filter",
+        "mutation_terminal",
         "simplicate",
         "targeted_ifte",
     }

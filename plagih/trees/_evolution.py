@@ -625,6 +625,44 @@ class Evolution:
 
         return _nd
 
+    def evolve_mutate_terminals(self, _tree: Node, n_terminals: int = 1, p_symbol: float = 0.5) -> Node:
+        """Replaces random terminal nodes while preserving operator structure.
+
+        Unlike ``evolve_mutate_filter`` (which adds Gaussian noise to existing
+        Number values), this method **replaces** terminals entirely — a Number
+        can become a Symbol and vice-versa.  The operator topology of the tree
+        is guaranteed to be unchanged.
+
+        Fixed terminals (``is_fix=True``) are never touched.
+
+        Args:
+            _tree: The tree to mutate (modified **in place**).
+            n_terminals: Number of terminals to replace (clamped to available
+                mutable terminals).
+            p_symbol: Probability of choosing a Symbol (input variable) over a
+                constant for each replacement.  Passed to
+                ``choose_terminal_node(xt, p_observation=p_symbol)``.
+
+        Returns:
+            The mutated tree (same root object, modified in place).
+        """
+        terminals = [n for n in _tree.list_mutable_nodes() if is_terminal(n)]
+        if not terminals:
+            return _tree
+
+        k = min(n_terminals, len(terminals))
+        targets = random.sample(terminals, k)
+
+        for nd in targets:
+            xt = nd.get_xtype_self()
+            # Note: choose_terminal_node's p_observation is the probability of
+            # choosing a *constant* (despite its docstring).  Invert p_symbol
+            # so that p_symbol=0.8 → 80% chance of Symbol.
+            new_node = self.node_selector.choose_terminal_node(xt, p_observation=1.0 - p_symbol)
+            nd.set_new_node(new_node)
+
+        return _tree
+
     def evolve_mutate_point(self, _tree: Node) -> Node:
         """Mutates a single random node while preserving type signature.
 

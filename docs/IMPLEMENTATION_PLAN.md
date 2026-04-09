@@ -467,10 +467,20 @@
   `x**1.999 → x**2`. Especially useful for power exponents.
 - **Related:** D4 (rational Number terminals), D6 (simplification pipeline).
 
-### I7 – Terminal-only mutation
+### ~~I7 – Terminal-only mutation~~ ✅
 - **Idea:** Mutation variant that only changes terminal values (Numbers,
   Symbols) without altering tree structure. Preserves proven operator
   structure while fine-tuning constants.
+- **Implemented (2026-04-09):** `evolve_mutate_terminals(tree, n_terminals=1,
+  p_symbol=0.5)` on `Evolution` class in `_evolution.py`.  Replaces 1–k random
+  mutable terminals with new ones of the same `xtype`.  Fixed terminals
+  (`is_fix=True`) are never touched.  Registered as `mutation_terminal`
+  strategy in `BUILTIN_STRATEGIES` / `_STRATEGIES_ONE_PARENT` in `parallel.py`.
+  9 unit tests in `test_evolution.py::TestMutateTerminals`.
+- **Bonus fix:** `_strategy_pareto_revive` and `_strategy_targeted_ifte` still
+  used `copy.deepcopy` — replaced with `fast_tree_copy()`.
+- **Note:** `choose_terminal_node(p_observation)` has inverted semantics
+  (high p_observation → fewer symbols, despite docstring). Filed as P22.
 - **Related:** D5 Phase 3 (node-level optimisation).
 
 ### I8 – Special constants (π, e) as terminals
@@ -541,6 +551,7 @@
 - ✅ **H2** — Batch tournament selection with NumPy (`_batch_tournament_select`), `pareto_revive` → `fast_tree_copy`, eliminated per-task `selection_tournament()`. Index-deferral to workers rejected (IPC cost ~10× higher than `fast_tree_copy` savings)
 - ✅ **P21 fix** — Mul grouping early-return bug: `0 < mul1 < 1` branch without `else: continue` skipped DivFraction handler; degenerate `Mul(single_child)` in DivFraction handler
 - ✅ **`fast_tree_copy` rollout** — All `copy.deepcopy()` on Node trees replaced with `fast_tree_copy()` (~4.6× faster): `set_new_node`, `tree_simplification` (4×), `evolve_reduce_simplicate`, `evolve_new_tree_depth`, `evolve_mutate_node`, `evolve_crossover`. `import copy` removed from `_nodes.py` and `_evolution.py`
+- ✅ **I7** — `mutation_terminal` strategy: `evolve_mutate_terminals()` replaces random terminals while preserving operator topology. 9 tests. Also fixed remaining `copy.deepcopy` in `_strategy_pareto_revive` / `_strategy_targeted_ifte`
 
 
 

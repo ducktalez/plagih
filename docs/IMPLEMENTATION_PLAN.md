@@ -76,7 +76,7 @@
      both `tree_to_candidate()` and `evaluate_tree_standalone()`.
 - **Remaining ideas:** Staged evaluation for active-test/debug modes (idea 3).
 
-### H2 – Optimize pre-selection overhead
+### ~~H2 – Optimize pre-selection overhead~~ ✅
 - **Where:** `pre_select_for_tasks()` in `parallel.py`
 - **Problem:** Pre-selection in the main process is currently the main IPC
   cost contributor (~198ms/gen at pop=1000). See `PARALLEL_BENCHMARK_DIAGNOSIS.md` §4.
@@ -95,11 +95,15 @@
      no longer calls the per-item `selection_tournament()` function from
      `_evolution.py`, avoiding the per-call Python function overhead and
      redundant `random.choices` → `min` → `fast_tree_copy` chain.
-- **Remaining:** The `fast_tree_copy()` calls (~40–100ms for 900 trees) still
-  happen per task. A further optimization could defer tree copying to workers
-  by sending winner indices instead (requires workers to have `pop_genepool`,
-  which trades pre-selection cost for `_update_worker_state` IPC). Benchmarking
-  needed to determine if the trade-off is worthwhile.
+- **Index-deferral analysis (2026-04-09):** Considered sending only winner
+  indices to workers instead of pre-copied trees, deferring `fast_tree_copy`
+  to worker processes. **Rejected:** This would require re-introducing
+  `_update_worker_state` IPC to send `pop_genepool` to all workers (~950ms/gen
+  at pop=1000 historically — the original IPC bottleneck). The current
+  `fast_tree_copy` cost (~40–100ms for 900 trees) is **10× cheaper** than the
+  IPC cost it would trade for. Net result would be a significant regression.
+- **Status:** Complete. No further optimization of pre-selection is cost-effective
+  without a fundamentally different IPC architecture (e.g. shared-memory tree pool).
 
 ### H3 – Reduce worker RAM overhead
 - **Where:** `parallel.py` worker pool
@@ -534,7 +538,7 @@
 - ✅ **L8** — Stale logging handler pruning already implemented (`_ensure_live_console_handler`); marked as complete
 - ✅ **H4 (partial)** — Fused `canonicalize_and_get_lut_id()` (2.3× speedup), cached `true_values`, fixed NaN check (`np_fitness == np.nan` → `np.isfinite`)
 - ✅ **README cleanup** — Restructured from chaotic ~500-line dump to professional ~200-line document. ~100+ scattered TODOs migrated to Ideas Backlog (I1–I14). Removed: TensorFlow references, Python-3.9/Anaconda setup, LaTeX/tikzplotlib deps, biography, debug dumps, `====Everything below here is garbage====` section
-- ✅ **H2 (partial)** — Batch tournament selection with NumPy (`_batch_tournament_select`), `pareto_revive` switched from `copy.deepcopy` to `fast_tree_copy`, eliminated per-task `selection_tournament()` import overhead
+- ✅ **H2** — Batch tournament selection with NumPy (`_batch_tournament_select`), `pareto_revive` → `fast_tree_copy`, eliminated per-task `selection_tournament()`. Index-deferral to workers rejected (IPC cost ~10× higher than `fast_tree_copy` savings)
 - ✅ **P21 fix** — Mul grouping early-return bug: `0 < mul1 < 1` branch without `else: continue` skipped DivFraction handler; degenerate `Mul(single_child)` in DivFraction handler
 - ✅ **`fast_tree_copy` rollout** — All `copy.deepcopy()` on Node trees replaced with `fast_tree_copy()` (~4.6× faster): `set_new_node`, `tree_simplification` (4×), `evolve_reduce_simplicate`, `evolve_new_tree_depth`, `evolve_mutate_node`, `evolve_crossover`. `import copy` removed from `_nodes.py` and `_evolution.py`
 

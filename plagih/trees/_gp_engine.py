@@ -597,7 +597,6 @@ class ExplainableGP:
             else max(progress_offset, progress_total)
         )
         progress_started = time.perf_counter()
-        self._generation_tree_timings = []
 
         def _update_generation_progress(created: int, total: int, fail: int, label: Optional[str]) -> None:
             print_generation_progress(
@@ -651,7 +650,6 @@ class ExplainableGP:
                 progress_callback=_update_generation_progress,
             )
 
-        self._generation_tree_timings = list(tracker.tree_timings)
         self._performance_tracker = tracker
         return candidates, tracker
 
@@ -736,6 +734,8 @@ class ExplainableGP:
         # Must happen BEFORE end_generation() because end_generation may
         # trigger plots/backups/prints that would interrupt the \r line.
         tracker_total_ms = tracker.summary().get("generation_total_time", 0.0) * 1000
+        # Persist accumulated tree timings (includes L7 backfill if triggered).
+        self._generation_tree_timings = list(tracker.tree_timings)
         print_generation_done(
             gen_id=current_gen_id,
             gen_end=self.gen_end,
@@ -924,6 +924,8 @@ class ExplainableGP:
                     )
 
         tracker_total_ms = tracker.summary().get("generation_total_time", 0.0) * 1000
+        # Persist accumulated tree timings from all refill rounds.
+        self._generation_tree_timings = list(tracker.tree_timings)
         print_generation_done(
             gen_id=current_gen_id,
             gen_end=self.gen_end,

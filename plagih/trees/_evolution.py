@@ -1,6 +1,5 @@
 """Evolution module: Candidate, NodeSelect, Evolution, and population helpers."""
 
-import copy
 import random
 import warnings
 from collections import deque
@@ -497,7 +496,7 @@ class Evolution:
         """
 
         if self.origin_tree is not None:
-            evotree = copy.deepcopy(self.origin_tree)
+            evotree = fast_tree_copy(self.origin_tree)
             layer0 = evotree.get_mutable_rootnodes(extend_lvls=0)
 
             for ii, nd in enumerate(layer0):  # -> get layer every time (nsted ids might have changed)
@@ -638,7 +637,7 @@ class Evolution:
         Returns:
             A deep copy of the tree with one node mutated.
         """
-        evotree = copy.deepcopy(_tree)
+        evotree = fast_tree_copy(_tree)
 
         node = rnd_choice(evotree.list_mutable_nodes())  # debug if ignores chains
         xtype = node.get_xtype_tuple()
@@ -773,7 +772,7 @@ class Evolution:
                 raise ValueError("Crossover cant find matching nodes. This Should always be possible.")
             a_nd = random.choice(a_nds)
 
-        cpy = copy.deepcopy(a_nd)  # deepcopy required??
+        cpy = fast_tree_copy(a_nd)
 
         a_nd.set_new_node(b_nd)
         b_nd.set_new_node(cpy)

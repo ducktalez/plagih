@@ -32,7 +32,6 @@ Custom Operators /Functions/Nodes/Terminals/Nested:
     Also, make a case in sympy_to_tree to reconstruct trees from sympy expressions.
 """
 
-import copy
 import random
 import time
 import warnings
@@ -631,13 +630,13 @@ class Node(ABC):
             repair (bool): Whether to repair depth and parent relationships.
             clean_chain (bool): Whether to remove unnecessary chain operators.
         """
-        # Save back-references before deepcopy (deepcopy strips them via __getstate__)
+        # Save back-references before copy (fast_tree_copy strips them via __getstate__)
         saved_parent = self.parent_node
         saved_root = self.root_node
         saved_depth = self.depth
 
-        # Deep-copy the replacement so children are not aliased across trees
-        nd_new = copy.deepcopy(nd_new)
+        # Copy the replacement so children are not aliased across trees
+        nd_new = fast_tree_copy(nd_new)
 
         # Updating everything in the Node-class
         self.__class__ = nd_new.__class__
@@ -1670,7 +1669,7 @@ def tree_simplification(_tree: Node, allow_chain: bool) -> Node:
 
         # See docs/demo.ipynb §3 for a before/after visual comparison.
     """
-    original = copy.deepcopy(_tree)
+    original = fast_tree_copy(_tree)
     original_len = len(original)
     expr_sym = _tree.get_sympy_expr()
     # expr_sym2 = sympy.simplify(expr_sym)
@@ -1683,9 +1682,9 @@ def tree_simplification(_tree: Node, allow_chain: bool) -> Node:
     # s_export = self.get_tree_export()
     # print(f'{s}\n{s1}\n{s2}\n{s3}\n{s4}\n{s5}\n{s6}\n{s_export}')
     _tree = sympy_to_tree(expr_sym, allow_chain=allow_chain)
-    roundtrip_tree = copy.deepcopy(_tree)
+    roundtrip_tree = fast_tree_copy(_tree)
     max_grouping_iters = 10
-    best_tree = copy.deepcopy(_tree)
+    best_tree = fast_tree_copy(_tree)
     best_len = len(best_tree)
 
     for _ in range(max_grouping_iters):
@@ -1694,7 +1693,7 @@ def tree_simplification(_tree: Node, allow_chain: bool) -> Node:
 
         current_len = len(_tree)
         if current_len < best_len:
-            best_tree = copy.deepcopy(_tree)
+            best_tree = fast_tree_copy(_tree)
             best_len = current_len
 
         if str(_tree) == previous_repr:
@@ -1778,7 +1777,7 @@ def evolve_reduce_simplicate(_tree: Node, allow_chain: bool, completely: bool = 
     Returns:
         Simplified tree, or original if simplification increased size (unless force=True).
     """
-    tree_copy = copy.deepcopy(_tree)
+    tree_copy = fast_tree_copy(_tree)
     if completely:  # reduce the complete tree
         nodes_lv0 = _tree.get_mutable_rootnodes(extend_lvls=0)  # only required for fixed-core trees
         for cc in nodes_lv0:

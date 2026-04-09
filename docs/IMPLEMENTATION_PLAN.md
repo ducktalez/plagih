@@ -371,7 +371,9 @@
   1. Size-aware tournament selection for crossover (prefer smaller parents).
   2. Crossover rejection when both parents are at `nodes_max` (product tree
      would be pruned anyway).
-  3. Lighter-weight deepcopy (e.g. copy-on-write or structural sharing).
+  3. ~~Lighter-weight deepcopy (e.g. copy-on-write or structural sharing).~~ ✅
+     **Implemented (2026-04-09):** `fast_tree_copy()` rollout replaced all
+     `copy.deepcopy()` on Node trees with ~4.6× faster structural copy.
 - **Impact:** Low.  At `pop=50` and `crossover_rate=0.2`, only ~10 crossovers
   per generation.  The 19ms increase is ~190ms total — dwarfed by evaluation.
 
@@ -533,6 +535,8 @@
 - ✅ **H4 (partial)** — Fused `canonicalize_and_get_lut_id()` (2.3× speedup), cached `true_values`, fixed NaN check (`np_fitness == np.nan` → `np.isfinite`)
 - ✅ **README cleanup** — Restructured from chaotic ~500-line dump to professional ~200-line document. ~100+ scattered TODOs migrated to Ideas Backlog (I1–I14). Removed: TensorFlow references, Python-3.9/Anaconda setup, LaTeX/tikzplotlib deps, biography, debug dumps, `====Everything below here is garbage====` section
 - ✅ **H2 (partial)** — Batch tournament selection with NumPy (`_batch_tournament_select`), `pareto_revive` switched from `copy.deepcopy` to `fast_tree_copy`, eliminated per-task `selection_tournament()` import overhead
+- ✅ **P21 fix** — Mul grouping early-return bug: `0 < mul1 < 1` branch without `else: continue` skipped DivFraction handler; degenerate `Mul(single_child)` in DivFraction handler
+- ✅ **`fast_tree_copy` rollout** — All `copy.deepcopy()` on Node trees replaced with `fast_tree_copy()` (~4.6× faster): `set_new_node`, `tree_simplification` (4×), `evolve_reduce_simplicate`, `evolve_new_tree_depth`, `evolve_mutate_node`, `evolve_crossover`. `import copy` removed from `_nodes.py` and `_evolution.py`
 
 
 

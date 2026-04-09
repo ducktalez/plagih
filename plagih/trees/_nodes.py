@@ -1216,6 +1216,11 @@ class Node(ABC):
                                 node_sub = Mul(*mychlds_remove(cc))
                                 new_num = 1 / mul1
                                 self.replace_with(Div, [node_sub, Number(new_num)])
+                            else:
+                                # Non-integer reciprocal (e.g. 0.785 → 1.274…) —
+                                # no Div rewrite possible.  Continue to let
+                                # subsequent children (e.g. DivFraction) be checked.
+                                continue
                         else:
                             # Scale grouping: Mul(c, expr) → Scale(c, expr)
                             # where c is a Number and expr is a non-Number expression.
@@ -1234,9 +1239,10 @@ class Node(ABC):
                         ):  # this makes chained mul to 1/(mul( )) -> check if more than 2 inputs
                             continue  # leave them alone
                         denominators.append(cc.get_childs()[0])
-                        # e. g.: "a * 1/3" -> "3/a"
+                        # e. g.: "a * 1/3" -> "a/3"
                         div_by = cc.get_childs()[0]
-                        node_sub = Mul(*mychlds_remove(cc))
+                        rest = mychlds_remove(cc)
+                        node_sub = rest[0] if len(rest) == 1 else Mul(*rest)
                         self.replace_with(Div, [node_sub, div_by])
                     else:
                         continue  # make sure to skip the following return statement

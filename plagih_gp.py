@@ -622,7 +622,7 @@ def _test_simple(dir_name, chained_on=True):
         evolve,
         df_train,
         rootdir=rootdir / dir_name,
-        pop_max_size=50,
+        pop_max_size=1000,
         gen_end=planned_generations,
         eval_autocast=eval_autocast,
         allow_chain=chained_on,

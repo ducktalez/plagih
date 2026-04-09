@@ -567,3 +567,32 @@ which catches NaN, +inf, and −inf in a single fast C call.
 
 **Rule:** Never compare with `np.nan` using `==`.  Use `np.isnan()`,
 `np.isfinite()`, or the identity trick `x != x` (True only for NaN).
+
+---
+
+## P21 – `Mul` grouping early-return skips `DivFraction` handler (fixed)
+
+**Where:** `tree_node_grouping()` in `trees/_nodes.py`, `Mul` handler
+
+When `Mul(Number(c), DivFraction(x))` with `0 < c < 1` and `1/c` not an
+integer was processed, the `elif 0 < mul1 < 1:` branch entered but the inner
+`if (1/mul1) % 1 == 0:` was False.  Because there was **no `else: continue`**
+for this case, the code fell through to `return` at line 1246, exiting the
+child loop.  The `DivFraction` child was **never reached**, so the tree stayed
+as `Mul(c, DivFraction(x))` (6 nodes) instead of being converted to
+`Div(c, x)` (3 nodes).
+
+**Second bug in same handler:** `Mul(*mychlds_remove(cc))` in the DivFraction
+branch created a degenerate `Mul(single_child)` wrapper when only one factor
+remained.  This added a pointless extra node to every `Mul(a, DivFraction(b))`
+→ `Div` rewrite.
+
+**Fix (applied 2026-04-09):**
+1. Added `else: continue` in the `0 < mul1 < 1` branch so subsequent children
+   are still checked.
+2. Changed DivFraction handler to use `rest[0] if len(rest) == 1 else Mul(*rest)`.
+
+**Rule:** Every branch in the `Mul` child loop must either perform a
+replacement (then `return`) or `continue`/`break`.  Falling through to
+`return` without action silently skips remaining children.
+

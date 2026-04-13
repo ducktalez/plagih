@@ -1220,13 +1220,19 @@ class ExplainableGP:
             if _cfg.lut_enabled:
                 self.lut_tree_infos[tree_id]["error"] = err_txt
             raise TreeSizeError(err_txt)
-        try:
-            sy_expr = evotree.get_sympy_expr()
-        except SympyError as e:
-            log("www", f"Could not create sympy expression for tree: {e}")
-            if _cfg.lut_enabled:
-                self.lut_tree_infos[tree_id]["error"] = str(e)
-            raise
+
+        # Try to reuse cached SymPy expression before the expensive conversion.
+        sy_expr = None
+        if _cfg.lut_enabled and tree_id in self.lut_tree_infos:
+            sy_expr = self.lut_tree_infos[tree_id].get("sy_expr")
+        if sy_expr is None:
+            try:
+                sy_expr = evotree.get_sympy_expr()
+            except SympyError as e:
+                log("www", f"Could not create sympy expression for tree: {e}")
+                if _cfg.lut_enabled:
+                    self.lut_tree_infos[tree_id]["error"] = str(e)
+                raise
 
         if _cfg.lut_enabled and sy_expr in self.lut_symex_fitness:
             # other tree might have same expression -> lookup fitness
@@ -1242,6 +1248,29 @@ class ExplainableGP:
                         self.df_train
                     )  # exception? -> check np.isnan(sym_results).any()
                     np_results = self.eval_autocast(np_results_raw)
+
+                    # --- NaN-tolerant evaluation (I1 replacement) ---
+                    # Instead of rejecting trees with any NaN, we allow
+                    # partial NaN: replace non-finite values with worst-case
+                    # penalty so the tree survives with degraded fitness.
+                    np_results_arr = np.asarray(np_results, dtype=np.float64)
+                    finite_mask = np.isfinite(np_results_arr)
+                    n_bad = int((~finite_mask).sum())
+                    if n_bad > 0:
+                        n_total = len(np_results_arr)
+                        if n_bad > n_total // 2:
+                            # >50% non-finite → tree is intrinsically broken
+                            err_txt = f"NaN in results ({n_bad}/{n_total} non-finite)"
+                            self.lut_tree_infos[tree_id]["error"] = err_txt
+                            raise TreeError(err_txt)
+                        # Replace NaN/Inf with worst-case penalty value:
+                        # use the true_values extremes to create a maximally
+                        # wrong prediction for non-finite points.
+                        tv_min, tv_max = float(true_values.min()), float(true_values.max())
+                        tv_range = tv_max - tv_min if tv_max > tv_min else 1.0
+                        penalty_value = tv_max + tv_range  # predict far above max
+                        np_results = np.where(finite_mask, np_results_arr, penalty_value)
+
                     np_fitness = self.eval_error_metric(np_results, true_values)
                     np_fitness = round(np_fitness, _cfg.float_precision)
 

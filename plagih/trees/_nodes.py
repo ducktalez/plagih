@@ -33,6 +33,7 @@ Custom Operators /Functions/Nodes/Terminals/Nested:
 """
 
 import random
+import threading
 import time
 import warnings
 from abc import ABC
@@ -49,6 +50,61 @@ from plagih.tree_complexity.tree_edit_distance import *
 from plagih.util import *
 
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
+
+
+# =============================================================================
+# SymPy Timeout Mechanism
+# =============================================================================
+# SymPy can hang indefinitely on certain expression patterns (P12, relational
+# on Piecewise/Min/Max, .equals(), sympy.simplify()).  Thread-based timeout
+# provides a safety net so one pathological tree cannot block an entire worker.
+# Daemon threads are killed when the worker process exits; temporary CPU waste
+# from a leaked hung thread is acceptable given the alternative (total hang).
+
+SYMPY_SIMPLIFICATION_TIMEOUT_S = 5.0
+"""Max seconds for the entire ``tree_simplification`` pipeline (SymPy round-trip
++ grouping + validation).  On timeout the original tree is returned unchanged.
+
+Lowered from 15 → 5s: the data shows trees that take >5s for simplification
+never produce useful results (they hit Min/Max → Piecewise exponential blowup).
+The timeout still allows normal simplifications (<1s) to complete."""
+
+SYMPY_EQUIVALENCE_TIMEOUT_S = 2.0
+"""Max seconds for ``_sympy_exprs_equivalent`` (includes ``.equals()`` and
+``sympy.simplify()``).  On timeout we conservatively return False.
+
+Lowered from 5 → 2s: this runs *inside* the simplification timeout so it must
+be strictly smaller.  The string comparison already catches most matches; the
+expensive ``.equals()``/``simplify()`` path rarely succeeds within 2-5s when
+it doesn't succeed in <1s."""
+
+
+def _call_with_timeout(fn, timeout_s: float):
+    """Run *fn()* in a daemon thread; return ``(result, True)`` or ``(None, False)`` on timeout.
+
+    On Windows, threads cannot be forcibly killed.  The daemon thread keeps
+    running in the background but is cleaned up when the process exits.
+    """
+    result = [None]
+    exc: list[Optional[BaseException]] = [None]
+
+    def _target():
+        try:
+            result[0] = fn()
+        except BaseException as e:
+            exc[0] = e
+
+    t = threading.Thread(target=_target, daemon=True)
+    t.start()
+    t.join(timeout=timeout_s)
+
+    if t.is_alive():
+        return None, False  # Timed out — thread still running in background
+
+    if exc[0] is not None:
+        raise exc[0]
+
+    return result[0], True
 
 
 _SIMPLIFICATION_GROWTH_WARNING_COUNT = 0
@@ -82,6 +138,40 @@ def _sympy_expr_str(expr: sympy.Basic) -> str:
     return string_remove_trailing_zeroes(str(expr))
 
 
+def _tree_has_piecewise_like(node: "Node") -> bool:
+    """Check if a tree contains nodes that SymPy represents as Piecewise.
+
+    Covers: Ifte, Piecewise (explicit conditionals), BaseMinMax (Min, Max,
+    Clip), Sign, Abs — all of which SymPy internally converts to Piecewise.
+
+    D7 analysis shows that these operators cause ~100% of semantic simplification
+    rejections because the SymPy round-trip introduces semantic drift through
+    Piecewise intermediate representations.
+    """
+    # Late import guard (forward references within the same module).
+    if isinstance(node, (Ifte, Piecewise, BaseMinMax)):
+        return True
+    # Sign and Abs are also rewritten as Piecewise by SymPy
+    if type(node).__name__ in ("Sign", "Abs"):
+        return True
+    if hasattr(node, "get_childs") and node.has_childs():
+        return any(_tree_has_piecewise_like(child) for child in node.get_childs())
+    return False
+
+
+def _sympy_expr_str_safe(tree: "Node") -> str:
+    """Return a safe string representation of a tree for timeout logging.
+
+    Uses ``str(tree)`` (fast tree repr) instead of ``get_sympy_expr()``
+    because the latter might itself hang.
+    """
+    try:
+        s = str(tree)
+        return s[:120] + "..." if len(s) > 120 else s
+    except Exception:
+        return f"<{type(tree).__name__}>"
+
+
 def _simplification_issue_stage(original_expr: str, roundtrip_expr: str, grouped_expr: str) -> str:
     """Best-effort classification of which simplification step changed semantics."""
     roundtrip_changed = original_expr != roundtrip_expr
@@ -97,24 +187,37 @@ def _simplification_issue_stage(original_expr: str, roundtrip_expr: str, grouped
 
 
 def _sympy_exprs_equivalent(expr_a: sympy.Basic, expr_b: sympy.Basic) -> bool:
-    """Return True when two SymPy expressions are provably equivalent enough for simplification checks."""
+    """Return True when two SymPy expressions are provably equivalent enough for simplification checks.
+
+    Heavy checks (``.equals()``, ``sympy.simplify()``) are wrapped in a
+    timeout because they can hang on expressions involving relational /
+    Piecewise / Min / Max constructs.  On timeout we conservatively return
+    False (= assume not equivalent → reject the simplification → keep original).
+    """
     if _sympy_expr_str(expr_a) == _sympy_expr_str(expr_b):
         return True
 
-    try:
-        eq_result = expr_a.equals(expr_b)
-        if eq_result is True:
-            return True
-    except Exception:
-        pass
+    def _expensive_check() -> bool:
+        try:
+            eq_result = expr_a.equals(expr_b)
+            if eq_result is True:
+                return True
+        except Exception:
+            pass
 
-    try:
-        if bool(getattr(expr_a, "is_Boolean", False) or getattr(expr_b, "is_Boolean", False)):
-            xor_expr = sympy.Xor(sympy.sympify(expr_a), sympy.sympify(expr_b))
-            return sympy.simplify(xor_expr) in (False, sympy.false)
-        return sympy.simplify(expr_a - expr_b) == 0
-    except Exception:
+        try:
+            if bool(getattr(expr_a, "is_Boolean", False) or getattr(expr_b, "is_Boolean", False)):
+                xor_expr = sympy.Xor(sympy.sympify(expr_a), sympy.sympify(expr_b))
+                return sympy.simplify(xor_expr) in (False, sympy.false)
+            return sympy.simplify(expr_a - expr_b) == 0
+        except Exception:
+            return False
+
+    result, completed = _call_with_timeout(_expensive_check, SYMPY_EQUIVALENCE_TIMEOUT_S)
+    if not completed:
+        log("w", f"_sympy_exprs_equivalent timed out after {SYMPY_EQUIVALENCE_TIMEOUT_S}s — assuming not equivalent")
         return False
+    return bool(result)
 
 
 def _tree_structure_str(node: "Node", *, cut_terms: bool = True) -> str:
@@ -255,6 +358,7 @@ class Node(ABC):
     # Visualization defaults (overridden by subclass hierarchy)
     _viz_color, _viz_border, _viz_text = "#ECEFF1", "#607D8B", "#263238"
     _viz_shape = "rounded"  # ellipse | rounded | diamond
+    _viz_label: str = ""  # Pretty math label for visualization (e.g., "+" for Add)
 
     # Tree-structure
     childs: List[Union["Node", Any]] = field(default_factory=list)  # Terminal-Nodes speichern Werte statt Nodes
@@ -690,7 +794,14 @@ class Node(ABC):
             tree_dump = _tree_structure_str(self)
 
             def _contains_piecewise_like(node: "Node") -> bool:
-                if isinstance(node, (Ifte, Piecewise)):
+                """Check if subtree contains nodes that SymPy represents as Piecewise.
+
+                Covers Ifte, Piecewise (explicit conditionals) AND BaseMinMax
+                (Min, Max, Clip) — SymPy internally converts Min/Max to
+                Piecewise, so relational operators on them trigger the same
+                pathological case analysis / recursion (P12 extension).
+                """
+                if isinstance(node, (Ifte, Piecewise, BaseMinMax)):
                     return True
                 if node.has_childs():
                     return any(_contains_piecewise_like(child) for child in node.get_childs())
@@ -711,9 +822,9 @@ class Node(ABC):
             elif self.is_operator():
                 if isinstance(self, RelationalOperator) and any(_contains_piecewise_like(child) for child in _cs):
                     raise SympyError(
-                        "Relational operator on Ifte/Piecewise subtree is not supported for SymPy conversion "
-                        f"({node_summary}). This combination is known to trigger SymPy recursion/hangs.\n"
-                        f"Tree structure: {tree_dump}"
+                        "Relational operator on Ifte/Piecewise/MinMax subtree is not supported for "
+                        f"SymPy conversion ({node_summary}). This combination is known to trigger "
+                        f"SymPy recursion/hangs (P12).\nTree structure: {tree_dump}"
                     )
 
                 _cs = [cc.get_sympy_expr(simplimore=simplimore) for cc in _cs]
@@ -925,7 +1036,7 @@ class Node(ABC):
         Returns:
             Tuple of (nodes_dict, edges_list) for graph rendering.
         """
-        showme = f"{self.childs[0]}" if self.is_term() else f"{self.showme}"
+        showme = f"{self.childs[0]}" if self.is_term() else (self._viz_label or self.showme)
 
         res = {setid: {"node": self, "showme": showme}}
         edges = []
@@ -1648,6 +1759,12 @@ def tree_simplification(_tree: Node, allow_chain: bool) -> Node:
     - Piecewise -> if-then-else
     - Power fractions -> sqrt
 
+    The entire pipeline is wrapped in a thread-based timeout
+    (``SYMPY_SIMPLIFICATION_TIMEOUT_S``) because SymPy can hang
+    indefinitely on certain expression patterns (P12, relational on
+    Min/Max/Piecewise, ``expr.equals()``, ``sympy.simplify()``).
+    On timeout the original tree is returned unchanged.
+
     Args:
         _tree: The tree to simplify.
         allow_chain: Whether to allow chained operators.
@@ -1670,99 +1787,165 @@ def tree_simplification(_tree: Node, allow_chain: bool) -> Node:
         # See docs/demo.ipynb §3 for a before/after visual comparison.
     """
     original = fast_tree_copy(_tree)
-    original_len = len(original)
-    expr_sym = _tree.get_sympy_expr()
-    # expr_sym2 = sympy.simplify(expr_sym)
-    # if str(expr_sym) != str(expr_sym2):
-    #     print(f'okke: {expr_sym} // {expr_sym2}')
-    # expr_sym3  = tree.get_sympy_expr(simplimore=True)
-    # s4 = self.get_sympy_expr()
-    # s5 = self.get_expr_raw_fstring()
-    # s6 = self.str_as_list()
-    # s_export = self.get_tree_export()
-    # print(f'{s}\n{s1}\n{s2}\n{s3}\n{s4}\n{s5}\n{s6}\n{s_export}')
-    _tree = sympy_to_tree(expr_sym, allow_chain=allow_chain)
-    roundtrip_tree = fast_tree_copy(_tree)
-    max_grouping_iters = 10
-    best_tree = fast_tree_copy(_tree)
-    best_len = len(best_tree)
 
-    for _ in range(max_grouping_iters):
-        previous_repr = str(_tree)
-        _tree.tree_node_grouping(tolerance=0)
+    # D7 short-term fix: Trees with Min/Max/sign/Abs skip the SymPy round-trip
+    # entirely and only get tree_node_grouping(). The D7 frequency analysis
+    # showed that these operators cause 100% of semantic simplification rejections
+    # because SymPy internally converts them to Piecewise, introducing semantic
+    # drift during the round-trip that _sympy_exprs_equivalent() then rejects.
+    # Grouping-only mode avoids this entirely while still achieving structural
+    # simplifications (DivFraction, Scale, PowRounded rewrites etc.).
+    use_grouping_only = _tree_has_piecewise_like(_tree)
 
-        current_len = len(_tree)
-        if current_len < best_len:
-            best_tree = fast_tree_copy(_tree)
-            best_len = current_len
+    def _do_simplify() -> Node:
+        """Inner simplification logic — run inside timeout thread."""
+        nonlocal _tree
+        original_len = len(original)
 
-        if str(_tree) == previous_repr:
-            break
-    else:
-        # Loop exhausted without convergence — not expected in practice.
-        log(
-            "w",
-            f"Grouping did not converge after {max_grouping_iters} "
-            f"iterations (tree len={len(_tree)}). Using best intermediate.",
-        )
+        if use_grouping_only:
+            # Grouping-only path: skip sympy_to_tree() round-trip.
+            # Still apply iterative grouping + canonicalization.
+            _tree = fast_tree_copy(original)
+        else:
+            # Full path: SymPy round-trip + grouping.
+            expr_sym = _tree.get_sympy_expr()
+            # expr_sym2 = sympy.simplify(expr_sym)
+            # if str(expr_sym) != str(expr_sym2):
+            #     print(f'okke: {expr_sym} // {expr_sym2}')
+            # expr_sym3  = tree.get_sympy_expr(simplimore=True)
+            # s4 = self.get_sympy_expr()
+            # s5 = self.get_expr_raw_fstring()
+            # s6 = self.str_as_list()
+            # s_export = self.get_tree_export()
+            # print(f'{s}\n{s1}\n{s2}\n{s3}\n{s4}\n{s5}\n{s6}\n{s_export}')
+            _tree = sympy_to_tree(expr_sym, allow_chain=allow_chain)
+        roundtrip_tree = fast_tree_copy(_tree) if not use_grouping_only else None
+        max_grouping_iters = 10
+        best_tree = fast_tree_copy(_tree)
+        best_len = len(best_tree)
 
-    # Use the smallest tree found during grouping (may be the sympy-converted
-    # version before any grouping if grouping only grew the tree).
-    if len(_tree) > best_len:
-        _tree = best_tree
+        for _ in range(max_grouping_iters):
+            previous_repr = str(_tree)
+            _tree.tree_node_grouping(tolerance=0)
 
-    # Canonical child ordering for commutative operators (post-processing).
-    # This normalises e.g. Add(b, a) → Add(a, b) so that structurally equivalent
-    # expressions produce identical string representations and LUT keys.
-    _tree.canonicalize_children()
+            current_len = len(_tree)
+            if current_len < best_len:
+                best_tree = fast_tree_copy(_tree)
+                best_len = current_len
 
-    # Final guard: reject simplifications that either grow the tree (P19) or
-    # alter the represented SymPy expression.
-    roundtrip_expr_obj = roundtrip_tree.get_sympy_expr()
-    grouped_expr_obj = _tree.get_sympy_expr()
-    astr = _sympy_expr_str(expr_sym)
-    roundtrip_expr = _sympy_expr_str(roundtrip_expr_obj)
-    grouped_expr = _sympy_expr_str(grouped_expr_obj)
-    semantic_changed = astr != grouped_expr and not _sympy_exprs_equivalent(expr_sym, grouped_expr_obj)
-    grew_tree = original_len < len(_tree)
-
-    if grew_tree or semantic_changed:
-        should_log_warning, suppressed_count = _should_emit_simplification_growth_warning()
-        if should_log_warning:
-            reason_parts = []
-            if grew_tree:
-                reason_parts.append(f"grew tree ({original_len} → {len(_tree)} nodes)")
-            if semantic_changed:
-                reason_parts.append("changed semantics")
-            suffix = f" | similar cases suppressed={suppressed_count}" if suppressed_count else ""
-            log("w", f"Simplification rejected ({', '.join(reason_parts)}), keeping original: {astr}{suffix}")
+            if str(_tree) == previous_repr:
+                break
+        else:
+            # Loop exhausted without convergence — not expected in practice.
             log(
                 "w",
-                _simplification_diagnostic_message(
-                    original=original,
-                    roundtrip=roundtrip_tree,
-                    grouped=_tree,
-                    original_expr=astr,
-                    roundtrip_expr=roundtrip_expr,
-                    grouped_expr=grouped_expr,
-                ),
+                f"Grouping did not converge after {max_grouping_iters} "
+                f"iterations (tree len={len(_tree)}). Using best intermediate.",
             )
 
-            if semantic_changed:
-                # sfeh 'a**0.5' does not become 'sqrt(a)'! use rational=True or sympy.S.Half
-                suspected_stage = _simplification_issue_stage(astr, roundtrip_expr, grouped_expr)
+        # Use the smallest tree found during grouping (may be the sympy-converted
+        # version before any grouping if grouping only grew the tree).
+        if len(_tree) > best_len:
+            _tree = best_tree
+
+        # Canonical child ordering for commutative operators (post-processing).
+        # This normalises e.g. Add(b, a) → Add(a, b) so that structurally equivalent
+        # expressions produce identical string representations and LUT keys.
+        _tree.canonicalize_children()
+
+        # Final guard: reject simplifications that either grow the tree (P19) or
+        # alter the represented SymPy expression.
+        #
+        # In grouping-only mode (Piecewise-heavy trees, D7), we skip the
+        # expensive semantic equivalence check — tree_node_grouping() is
+        # structurally safe, and the SymPy comparison is exactly what was
+        # causing 100% of rejections for these trees.
+        #
+        # Performance note (2026-04): The old code called get_sympy_expr() on
+        # *both* roundtrip_tree and _tree here, then _sympy_exprs_equivalent()
+        # which itself calls .equals() + sympy.simplify().  That tripled the
+        # SymPy work for every simplification.  Now we:
+        #  - Only call _tree.get_sympy_expr() (not roundtrip_tree)
+        #  - Defer roundtrip_tree.get_sympy_expr() to the diagnostic-only path
+        #  - Reduced _sympy_exprs_equivalent timeout from 5→2s
+        grew_tree = original_len < len(_tree)
+
+        if use_grouping_only:
+            # Grouping-only mode: no SymPy round-trip → no semantic check needed.
+            # Only guard against tree growth.
+            if grew_tree:
+                should_log_warning, suppressed_count = _should_emit_simplification_growth_warning()
+                if should_log_warning:
+                    suffix = f" | similar cases suppressed={suppressed_count}" if suppressed_count else ""
+                    log(
+                        "w",
+                        f"Simplification rejected (grew tree ({original_len} → {len(_tree)} nodes), "
+                        f"grouping-only mode), keeping original{suffix}",
+                    )
+                return original
+            return _tree
+
+        astr = _sympy_expr_str(expr_sym)
+        try:
+            grouped_expr_obj = _tree.get_sympy_expr()
+            grouped_expr = _sympy_expr_str(grouped_expr_obj)
+            semantic_changed = astr != grouped_expr and not _sympy_exprs_equivalent(expr_sym, grouped_expr_obj)
+        except (SympyError, RecursionError):
+            # Can't even build the SymPy expr of the grouped tree → reject.
+            semantic_changed = True
+            grouped_expr = "<unavailable>"
+
+        if grew_tree or semantic_changed:
+            should_log_warning, suppressed_count = _should_emit_simplification_growth_warning()
+            if should_log_warning:
+                reason_parts = []
+                if grew_tree:
+                    reason_parts.append(f"grew tree ({original_len} → {len(_tree)} nodes)")
+                if semantic_changed:
+                    reason_parts.append("changed semantics")
+                suffix = f" | similar cases suppressed={suppressed_count}" if suppressed_count else ""
+                log("w", f"Simplification rejected ({', '.join(reason_parts)}), keeping original: {astr}{suffix}")
+
+                # Build diagnostic only when we actually log (rare path).
+                # Defers roundtrip_tree.get_sympy_expr() to here (was previously
+                # called unconditionally on every simplification — expensive).
+                try:
+                    roundtrip_expr = _sympy_expr_str(roundtrip_tree.get_sympy_expr())
+                except (SympyError, RecursionError):
+                    roundtrip_expr = "<unavailable>"
                 log(
                     "w",
-                    f"Diff in sympy expression? suspected stage={suspected_stage}\n"
-                    f"  original : {astr}\n"
-                    f"  roundtrip: {roundtrip_expr}\n"
-                    f"  grouped  : {grouped_expr}",
+                    _simplification_diagnostic_message(
+                        original=original,
+                        roundtrip=roundtrip_tree,
+                        grouped=_tree,
+                        original_expr=astr,
+                        roundtrip_expr=roundtrip_expr,
+                        grouped_expr=grouped_expr,
+                    ),
                 )
-                # sfeh Example 03.05.2025
-                # 	sin(cartVel**(6450000000*RoundDummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
-                # 	sin(cartVel**(6.45e+9*RoundDummy(cartVel))/(cartPos**6450000000*cartVel**6450000000))
-        _tree = original
-    return _tree
+
+                if semantic_changed:
+                    suspected_stage = _simplification_issue_stage(astr, roundtrip_expr, grouped_expr)
+                    log(
+                        "w",
+                        f"Diff in sympy expression? suspected stage={suspected_stage}\n"
+                        f"  original : {astr}\n"
+                        f"  roundtrip: {roundtrip_expr}\n"
+                        f"  grouped  : {grouped_expr}",
+                    )
+            return original
+        return _tree
+
+    result, completed = _call_with_timeout(_do_simplify, SYMPY_SIMPLIFICATION_TIMEOUT_S)
+    if not completed:
+        log(
+            "w",
+            f"tree_simplification timed out after {SYMPY_SIMPLIFICATION_TIMEOUT_S}s, "
+            f"keeping original ({len(original)} nodes): {_sympy_expr_str_safe(original)}",
+        )
+        return original
+    return result
 
 
 def evolve_reduce_simplicate(_tree: Node, allow_chain: bool, completely: bool = True, force: bool = False) -> Node:
@@ -2237,6 +2420,7 @@ class Add(MathOperator, ChainableOp):
     symfun = staticmethod(lambda *a: sympy.Add(*a))
     np_fun = staticmethod(lambda *a: np.sum(np.stack(a), axis=0))
     showme = "Add"
+    _viz_label = "+"
     sy_str = "({0} + {1})"
     formulae_str = "({} + {})"
     repr_str = "Add{},[{},{}]"
@@ -2267,6 +2451,7 @@ class Mul(MathOperator, ChainableOp):
     symfun = staticmethod(lambda *args: sympy.Mul(*args))
     np_fun = staticmethod(lambda *a: np.prod(np.stack(a), axis=0))
     showme = "Mul"  #
+    _viz_label = "×"  # noqa: RUF001
     sy_str = "({0} * {1})"
     repr_str = "Mul{},[{}, {}]"
     latex_inline = r" \cdot "
@@ -2292,6 +2477,7 @@ class DivFraction(MathOperator):
     symfun = staticmethod(lambda *a: sympy.Pow(a[0], sympy.S.NegativeOne))
     np_fun = staticmethod(lambda a: np.reciprocal(a))
     showme = "DivFraction"
+    _viz_label = "1/x"
     sy_str = "1/({})"
     repr_str = "DivFraction{},[{}]"
 
@@ -2306,6 +2492,7 @@ class NthRoot(MathOperator):
     symfun = staticmethod(lambda *a: sympy.root(a[0], a[1]))
     np_fun = staticmethod(lambda base, n: np.power(base, 1 / n))
     showme = "NthRoot"
+    _viz_label = "ⁿ√"
     sy_str = "root({}, {})"
     repr_str = "NthRoot{},[{}, {}]"
 
@@ -2316,6 +2503,7 @@ class Pow(MathOperator):
     symfun = staticmethod(lambda *a: sympy.Pow(a[0], a[1]) if len(a) == 2 else None)
     np_fun = staticmethod(lambda base, exp: np.power(base, exp))
     showme = "Pow"
+    _viz_label = "^"
     sy_str = "({0})**({1})"
     repr_str = "Pow{},[{},{}]"
     latex_fmt = r"{{{}}}^{{{}}}"
@@ -2328,6 +2516,7 @@ class Abs(MathOperator):
     symfun = staticmethod(lambda *a: sympy.Abs(a[0]))
     np_fun = np.absolute  # np.fabs works only for non-complex numbers
     showme = "Abs"
+    _viz_label = "|x|"
     sy_str = "Abs({})"
     repr_str = "Abs{},[{}]"
     latex_fmt = r"\left|{} \right|"
@@ -2340,6 +2529,7 @@ class Sign(MathOperator, NoSymCapitalized):
     symfun = staticmethod(lambda *a: sympy.sign(a[0]))
     np_fun = np.sign
     showme = "Sign"
+    _viz_label = "sgn"
     sy_str = "sign({})"
     repr_str = "Sign{},[{}]"
     xtype = ((float,), float)
@@ -2354,6 +2544,7 @@ class Log(MathOperator, NoSymCapitalized):
     symfun = staticmethod(lambda *a: sympy.log(a[0]))
     np_fun = np.log
     showme = "Log"
+    _viz_label = "ln"
     sy_str = "log({})"
     repr_str = "Log{},[{}]"
     xtype = ((float,), float)
@@ -2365,6 +2556,7 @@ class Cos(Trigonometry, NoSymCapitalized):
     symfun = staticmethod(lambda *a: sympy.cos(a[0]))
     np_fun = np.cos
     showme = "Cos"
+    _viz_label = "cos"
     sy_str = "cos({})"
     repr_str = "Cos{},[{}]"
     xtype = ((float,), float)
@@ -2376,6 +2568,7 @@ class Sin(Trigonometry, NoSymCapitalized):
     symfun = staticmethod(lambda *a: sympy.sin(a[0]))
     np_fun = np.sin
     showme = "Sin"
+    _viz_label = "sin"
     sy_str = "sin({})"
     repr_str = "Sin{},[{}]"
     xtype = ((float,), float)
@@ -2387,6 +2580,7 @@ class Tan(Trigonometry, NoSymCapitalized):
     symfun = staticmethod(lambda *a: sympy.tan(a[0]))
     np_fun = np.tan
     showme = "Tan"
+    _viz_label = "tan"
     sy_str = "tan({})"
     repr_str = "Tan{},[{}]"
     xtype = ((float,), float)
@@ -2398,6 +2592,7 @@ class Acos(Trigonometry, NoSymCapitalized):
     symfun = staticmethod(lambda *a: sympy.acos(a[0]))
     np_fun = np.arccos  # arccosh
     showme = "Acos"
+    _viz_label = "acos"
     sy_str = "acos({})"
     repr_str = "Acos{},[{}]"
     xtype = ((float,), float)
@@ -2409,6 +2604,7 @@ class Asin(Trigonometry, NoSymCapitalized):
     symfun = staticmethod(lambda *a: sympy.asin(a[0]))
     np_fun = np.arcsin
     showme = "Asin"
+    _viz_label = "asin"
     sy_str = "asin({})"
     repr_str = "Asin{},[{}]"
     xtype = ((float,), float)
@@ -2420,6 +2616,7 @@ class Atan(Trigonometry, NoSymCapitalized):
     symfun = staticmethod(lambda *a: sympy.atan(a[0]))
     np_fun = np.arctan
     showme = "Atan"
+    _viz_label = "atan"
     sy_str = "atan({})"
     repr_str = "Atan{},[{}]"
     xtype = ((float,), float)
@@ -2431,6 +2628,7 @@ class Tanh(Trigonometry, NoSymCapitalized):
     symfun = staticmethod(lambda *a: sympy.tanh(a[0]))
     np_fun = np.tanh
     showme = "Tanh"
+    _viz_label = "tanh"
     sy_str = "tanh({})"
     repr_str = "Tanh{},[{}]"
     xtype = ((float,), float)
@@ -2442,6 +2640,7 @@ class Sinh(Trigonometry, NoSymCapitalized):
     symfun = staticmethod(lambda *a: sympy.sinh(a[0]))
     np_fun = np.sinh
     showme = "Sinh"
+    _viz_label = "sinh"
     sy_str = "sinh({})"
     repr_str = "Sinh{},[{}]"
     xtype = ((float,), float)
@@ -2453,6 +2652,7 @@ class Cosh(Trigonometry, NoSymCapitalized):
     symfun = staticmethod(lambda *a: sympy.cosh(a[0]))
     np_fun = np.cosh
     showme = "Cosh"
+    _viz_label = "cosh"
     sy_str = "cosh({})"
     repr_str = "Cosh{},[{}, {}]"
     xtype = ((float,), float)
@@ -2464,6 +2664,7 @@ class Not(LogicOperator):
     symfun = staticmethod(lambda *a: sympy.Not(a[0]))
     np_fun = np.logical_not
     showme = "Not"
+    _viz_label = "¬"
     sy_str = "~({})"
     repr_str = "Not{},[{}]"
     xtype = ((bool,), bool)
@@ -2477,6 +2678,7 @@ class Eq(RelationalOperator):
     symfun = staticmethod(lambda *a: sympy.Eq(a[0], a[1]))
     np_fun = np.equal
     showme = "Eq"  # '==' not working in sympy!
+    _viz_label = "="
     sy_str = "Eq({0}, {1})"
     repr_str = "Eq{},[{}, {}]"
     xtype = ((float, float), bool)
@@ -2490,6 +2692,7 @@ class Ne(RelationalOperator):
     symfun = staticmethod(lambda *a: sympy.Ne(a[0], a[1]))
     np_fun = np.not_equal
     showme = "Ne"  # != not working in sympy
+    _viz_label = "≠"
     sy_str = "Ne({0}, {1})"
     repr_str = "Ne{},[{}, {}]"
     xtype = ((float, float), bool)
@@ -2506,6 +2709,7 @@ class And(LogicOperator, ChainableOp):
     symfun = staticmethod(lambda *a: sympy.And(*a))
     np_fun = staticmethod(lambda *a: np.logical_and.reduce(a))
     showme = "And"
+    _viz_label = "∧"
     sy_str = "({0} & {1})"  # Arity-2 Formatierung
     repr_str = "And{},[{}, {}]"
     latex_inline = r" \wedge "
@@ -2533,6 +2737,7 @@ class Or(LogicOperator, ChainableOp):
     symfun = staticmethod(lambda *a: sympy.Or(a[0], a[1]))
     np_fun = staticmethod(lambda *a: np.any(a, axis=0))
     showme = "Or"
+    _viz_label = "∨"  # noqa: RUF001
     sy_str = "({0}|{1})"
     repr_str = "Or{},[{}, {}]"
     latex_inline = r" \vee "
@@ -2558,6 +2763,7 @@ class Xor(LogicOperator, NoSymCapitalized, ChainableOp):
     symfun = staticmethod(lambda *a: sympy.Xor(*a))
     np_fun = staticmethod(lambda *a: np.logical_xor.reduce(a))
     showme = "Xor"
+    _viz_label = "⊕"
     sy_str = "Xor({}, {})"  # 'a ^ b'
     repr_str = "Xor{},[{}, {}]"
     latex_inline = r" \oplus "
@@ -2583,6 +2789,7 @@ class ITE(LogicOperator):
     symfun = staticmethod(lambda *a: sympy.ITE(a[0], a[1], a[2]))
     np_fun = staticmethod(lambda a, b, c: (a & b) | (not a) & c)
     showme = "ITE"
+    _viz_label = "ite"
     sy_str = "ITE({0}, {1}, {2})"
     repr_str = "ITE{},[{}, {}, {}]"
     xtype = ((bool, bool, bool), bool)
@@ -2599,6 +2806,7 @@ class Min(BaseMinMax, ChainableOp):
     symfun = staticmethod(lambda *a: sympy.Min(*a))
     np_fun = staticmethod(lambda *a: np.minimum.reduce(np.vstack(a), axis=0))
     showme = "Min"
+    _viz_label = "min"
     sy_str = "Min({0},{1})"
     repr_str = "Min{},[{}, {}]"
     latex_fmt = r"\min\left({}\right)"
@@ -2622,6 +2830,7 @@ class Max(BaseMinMax, ChainableOp):
     symfun = staticmethod(lambda *a: sympy.Max(*a))
     np_fun = staticmethod(lambda *a: np.maximum.reduce(np.vstack(a), axis=0))
     showme = "Max"
+    _viz_label = "max"
     sy_str = "Max({0}, {1})"
     repr_str = "Max{},[{}, {}]"
     latex_fmt = r"\max\left({}\right)"
@@ -2645,6 +2854,7 @@ class Lt(RelationalOperator):
     symfun = staticmethod(lambda *a: sympy.Lt(a[0], a[1]))
     np_fun = np.less
     showme = "Lt"
+    _viz_label = "<"
     sy_str = "({0} < {1})"
     repr_str = "Lt{},[{}, {}]"
     xtype = ((float, float), bool)
@@ -2656,6 +2866,7 @@ class Le(RelationalOperator):
     symfun = staticmethod(lambda *a: sympy.Le(a[0], a[1]))
     np_fun = np.less_equal
     showme = "Le"
+    _viz_label = "≤"
     sy_str = "({0} <= {1})"
     repr_str = "Le{},[{}, {}]"
     xtype = ((float, float), bool)
@@ -2670,6 +2881,7 @@ class Gt(RelationalOperator, PleaseUsePartnerOp):
     symfun = staticmethod(lambda *a: sympy.Gt(a[0], a[1]))
     np_fun = np.greater
     showme = "Gt"
+    _viz_label = ">"
     sy_str = "({0} > {1})"
     repr_str = "Gt{},[{}, {}]"
     xtype = ((float, float), bool)
@@ -2685,6 +2897,7 @@ class Ge(RelationalOperator, PleaseUsePartnerOp):
     symfun = staticmethod(lambda *a: sympy.Ge(a[0], a[1]))
     np_fun = np.greater_equal
     showme = "Ge"
+    _viz_label = "≥"
     sy_str = "({0} >= {1})"
     repr_str = "Ge{},[{}, {}]"
 
@@ -2696,6 +2909,7 @@ class Square(MathOperator):
     np_fun = np.square
     xtype = ((float,), float)
     showme = "Square"
+    _viz_label = "x²"
     sy_str = "({})**2"
     repr_str = "Square{},[{}]"
 
@@ -2706,6 +2920,7 @@ class Exp(MathOperator):
     symfun = staticmethod(lambda *a: sympy.exp(a[0]))
     np_fun = np.exp
     showme = "Exp"
+    _viz_label = "eˣ"
     sy_str = "{}**E"
     repr_str = "Exp{},[{}, {}]"
     xtype = ((float,), float)
@@ -2718,6 +2933,7 @@ class Exp2(MathOperator):
     np_fun = np.exp2
     xtype = ((float,), float)
     showme = "Exp2"
+    _viz_label = "2ˣ"
     sy_str = "2**({})"
     repr_str = "Exp2{},[{}]"
 
@@ -2729,6 +2945,7 @@ class Sub(MathOperator):
     symfun = staticmethod(lambda *a: sympy.Add(a[0], -a[1]))
     np_fun = np.subtract
     showme = "Sub"
+    _viz_label = "−"  # noqa: RUF001
     sy_str = "({0} - {1})"
     repr_str = "Sub{},[{}, {}]"
     latex_inline = " - "
@@ -2747,6 +2964,7 @@ class Ifte(BaseOperator):
     symfun = staticmethod(lambda *a: sympy.Piecewise((a[1], a[0]), (a[2], True)))
     np_fun = staticmethod(lambda cond, if_true, if_false: np.where(cond, if_true, if_false))
     showme = "Ifte"
+    _viz_label = "if-else"
     sy_str = "Ifte({0},{1},{2})"
     repr_str = "Ifte{},[{}, {}, {}]"
     expr_dummy = "Ifte"
@@ -2772,6 +2990,7 @@ class Piecewise(BaseOperator, ChainableOp):
     symfun = staticmethod(lambda *a: sympy.Piecewise(*a))
     np_fun = None
     showme = "Piecewise"
+    _viz_label = "pw"
     sy_str = "Piecewise({})"
     formulae_str = "Piecewise({})"
     repr_str = "Piecewise{},[{}]"
@@ -2816,6 +3035,7 @@ class Round(MathOperator):
     symfun = staticmethod(lambda *a: RoundDummy(a[0]))
     np_fun = staticmethod(lambda x: np.vectorize(lambda v: round(float(v)))(x))
     showme = "Round"
+    _viz_label = "≈"
     sy_str = "RoundDummy({},1)"
     repr_str = "RoundDummy{},[{}]"
 
@@ -2830,6 +3050,7 @@ class PowRounded(MathOperator):
     symfun = staticmethod(lambda *a: sympy.Pow(a[0], RoundDummy(a[1])))
     np_fun = staticmethod(lambda base, exponent: np.power(base, np.vectorize(lambda _x: round(float(_x)))(exponent)))
     showme = "PowRounded"
+    _viz_label = "^≈"
     sy_str = "({0})**RoundDummy({1})"
     repr_str = "PowRounded{},[{}, {}]"
     xtype = ((float, float), float)
@@ -2852,6 +3073,7 @@ class Div(MathOperator):
     symfun = staticmethod(lambda *a: sympy.Mul(a[0], sympy.Pow(a[1], -1)))
     np_fun = staticmethod(np.divide)
     showme = "Div"
+    _viz_label = "÷"
     sy_str = "({0}/{1})"
     repr_str = "Div{},[{}, {}]"
     latex_inline = " / "
@@ -2868,6 +3090,7 @@ class Sqrt(MathOperator):
     symfun = staticmethod(lambda *a: sympy.sqrt(a[0]))
     np_fun = staticmethod(np.sqrt)
     showme = "Sqrt"
+    _viz_label = "√"
     sy_str = "sqrt({})"
     repr_str = "Sqrt{},[{}, {}]"
     latex_fmt = r"\sqrt{{{}}}"
@@ -2884,6 +3107,7 @@ class Usub(MathOperator):
     symfun = staticmethod(lambda a, *_: sympy.Mul(-1, a))
     np_fun = staticmethod(lambda x: np.negative(x))
     showme = "Usub"
+    _viz_label = "−()"  # noqa: RUF001
     sy_str = "(-{})"
     repr_str = "Usub{},[{}]"
 
@@ -2920,6 +3144,7 @@ class Scale(MathOperator):
     symfun = staticmethod(lambda *a: sympy.Mul(a[0], a[1]))
     np_fun = staticmethod(np.multiply)
     showme = "Scale"
+    _viz_label = "·"
     sy_str = "({0} · {1})"
     repr_str = "Scale{},[{}, {}]"
     latex_inline = r" \cdot "
@@ -2944,6 +3169,7 @@ class Clip(BaseMinMax, CustomOperator):
     symfun = staticmethod(lambda *a: sympy.Min(sympy.Max(a[0], a[1]), a[2]))
     np_fun = np.clip
     showme = "Clip"
+    _viz_label = "clip"
     sy_str = "(sympy.Min(sympy.Max({0}, {1}), {2}))"
     repr_str = "Clip{},[{}, {}]"
     xtype = ((float, float, float), float)
@@ -2962,6 +3188,7 @@ class ExprCondPair_Dummy(NodeDummy):
     symfun = staticmethod(lambda *a: ExprCondPair(a[0], a[1]))
     np_fun = None
     showme = "ExprCondPair_Dummy"
+    _viz_label = "case"
     sy_str = "ExprCondPair({0}, {1})"
     repr_str = "ExprCondPair_Dummy{},[{}, {}]"
     xtype = ([(float, bool)], float)

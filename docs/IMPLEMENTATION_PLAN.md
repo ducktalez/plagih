@@ -8,36 +8,7 @@
 
 ## High Priority
 
-### ~~H1 – Parallelize `gen_create_initial()`~~ ✅
-- **Where:** `ExplainableGP.gen_create_initial()` in `trees.py`
-- **Historical problem:** Initial population creation used to be always
-  sequential (P8). For `pop=10000` this cost ~44–47s — a fixed sequential
-  block.
-- **Approach:** Reuse existing `run_generation_parallel()` infrastructure.
-- **Implemented groundwork (2026-03-23):** Generation 0 now uses a generic
-  weighted population-fill mechanism instead of hard-wired half/half rate
-  decorators.  This is closer to common GP practice (generic fill loop +
-  init-specific samplers) and preserves exact target size even when an
-  `origin_tree` already occupies one slot.
-- **Additional groundwork (2026-03-23):** Generation 0 now also has an
-  explicit **declarative strategy plan** with exact per-sampler counts
-  (`Strategy(count=...)`) and normal-depth sampling parameters.  This makes the
-  init path structurally closer to `build_task_list()` / task execution, even
-  though execution is still local to `gen_create_initial()`.
-- **Completed (2026-03-24):** Generation 0 now builds `TaskSpec`s via
-  `build_task_list()` and executes through the same sequential/parallel task
-  runner as regular generations, including shared progress reporting and
-  per-tree timing capture.
-- **Caveat:** Parallel generation-0 runs currently backfill only cheap
-  **exact-tree LUT metadata** (`tree_id -> parsimony/fitness`) into the main
-  process. Worker-local SymPy-expression LUTs are still not synchronized back.
-- **Benchmark note (2026-03-20):** The new tree-creation benchmark shows raw
-  tree building is cheap (`~1.5–2.1 ms/tree`), while `gen_create_initial()` is
-  dominated by **evaluation** inside `tree_to_candidate()` (`max_evaluate_ms`
-  observed up to `~55.9 ms`). Parallelizing only the raw generator will not be
-  sufficient; the evaluation hot path must be considered too.
-
-### H4 – Reduce evaluation hot-path cost during tree production
+### H4 – Reduce evaluation hot-path cost during tree production ✅ (diagnosed — no action needed)
 - **Where:** `ExplainableGP.tree_to_candidate()` in `trees/_gp_engine.py` and
   `evaluate_tree_standalone()` in `parallel.py`
 - **Problem:** New tree-creation benchmark (`bench_tree_creation.py`) indicates
@@ -46,69 +17,67 @@
 - **Current evidence:** `initial_population` and `active_generation` both show
   evaluation as the dominant phase for most successful trees, with evaluation
   failures significantly outnumbering creation/simplification failures.
-- **Ideas:**
-  1. ~~Add a cheap pre-filter before full evaluation for obviously invalid trees.~~ ✅
-     Already covered by existing 7-stage pre-filter chain:
-     `force_input_node` → `evolve_prune_tree` → `canonicalize_and_get_lut_id`
-     → tree-LUT check → parsimony guard → `get_sympy_expr` (catches imaginary,
-     zoo/oo/nan, MemoryError, RecursionError, relational-on-Piecewise) →
-     symex-LUT check.  The only remaining failures at NumPy level are
-     **data-dependent** NaN/Inf (e.g. `log(x)` with `x ≤ 0` in training data),
-     which cannot be detected without actual evaluation.
-  2. ~~Investigate `canonicalize_children()` and LUT interactions in the hot path.~~ ✅
-  3. Consider lighter-weight or staged evaluation for active-test/debug modes.
-- **Implemented optimizations (2026-04-02):**
-  1. **Fused `canonicalize_and_get_lut_id()`** — eliminates redundant
-     `represent_str()` traversal.  The old path called `canonicalize_children()`
-     (recursive `represent_str()` for sorting) and then `get_lut_id()` (full
-     `represent_str()` again).  The new `_canonicalize_and_repr()` method
-     does both in a single bottom-up pass.
-     **Benchmark (30-node trees, 500 samples):** 0.107 ms/tree vs 0.247 ms/tree
-     → **2.3× speedup** on the canonicalize+LUT-id step.
-  2. **Cached `true_values`** — `df_train[target_column].to_numpy()` was called
-     for every LUT-miss evaluation.  Now pre-computed once:
-     - In `ExplainableGP.__init__()` as `self._true_values`
-     - In worker globals as `_worker_true_values` (set in `_init_worker()`)
-     - In `run_task_sequential()` before the evaluation loop
-  3. **Fixed NaN check** — `np_fitness == np.nan` was **always False** (NaN ≠ NaN).
-     The old code in `_gp_engine.py` relied on `"nan" in str(np_fitness)` as
-     fallback (wasteful string conversion).  Replaced with `np.isfinite()` in
-     both `tree_to_candidate()` and `evaluate_tree_standalone()`.
-- **Remaining ideas:** Staged evaluation for active-test/debug modes (idea 3).
-
-### ~~H2 – Optimize pre-selection overhead~~ ✅
-- **Where:** `pre_select_for_tasks()` in `parallel.py`
-- **Problem:** Pre-selection in the main process is currently the main IPC
-  cost contributor (~198ms/gen at pop=1000). See `PARALLEL_BENCHMARK_DIAGNOSIS.md` §4.
-- **Implemented optimizations (2026-04-09):**
-  1. **Batch tournament selection with NumPy** — Replaced the per-task Python
-     loop (900× `random.choices()` + `min()` with lambda + `selection_tournament()`)
-     with a vectorized batch approach: `_batch_tournament_select()` pre-computes
-     a fitness array once, generates all tournament indices via
-     `np.random.randint(shape=(n, k))`, and finds winners via
-     `np.argmin(axis=1)` in a single pass. Tasks are grouped by `tournament_n`
-     for efficient batching.
-  2. **`pareto_revive` uses `fast_tree_copy`** — Pre-selection of Pareto
-     candidates now uses `fast_tree_copy()` (~4.6× faster) instead of
-     `copy.deepcopy()`.
-  3. **Eliminated `selection_tournament` import** — `pre_select_for_tasks()`
-     no longer calls the per-item `selection_tournament()` function from
-     `_evolution.py`, avoiding the per-call Python function overhead and
-     redundant `random.choices` → `min` → `fast_tree_copy` chain.
-- **Index-deferral analysis (2026-04-09):** Considered sending only winner
-  indices to workers instead of pre-copied trees, deferring `fast_tree_copy`
-  to worker processes. **Rejected:** This would require re-introducing
-  `_update_worker_state` IPC to send `pop_genepool` to all workers (~950ms/gen
-  at pop=1000 historically — the original IPC bottleneck). The current
-  `fast_tree_copy` cost (~40–100ms for 900 trees) is **10× cheaper** than the
-  IPC cost it would trade for. Net result would be a significant regression.
-- **Status:** Complete. No further optimization of pre-selection is cost-effective
-  without a fundamentally different IPC architecture (e.g. shared-memory tree pool).
+- **Analysis (2026-04-13):** Evaluation **is** the core work of GP —
+  trees exist to be evaluated. The current pipeline already minimises wasted
+  evaluation cycles through:
+  1. **tree_id LUT** — duplicate trees return cached results instantly.
+  2. **symex→fitness LUT** — structurally different trees with identical
+     SymPy expressions share fitness.
+  3. **Early rejection** — `TreeSizeError` and `SympyError` abort before
+     the expensive NumPy pass.
+  4. **Vectorised NumPy evaluation** — already the fastest Python-level
+     approach (µs–low ms per tree on typical training data).
+  A "staged evaluation" or lightweight debug mode would add complexity
+  for marginal runtime savings. The only remaining cost is the irreducible
+  per-tree NumPy evaluation, which cannot be shortened without changing
+  the fitness semantics.
+- **Verdict:** No action needed. The evaluation hot-path is already well
+  optimised. Revisit only if population sizes grow to 5000+ or training
+  datasets exceed 10k rows, where batched/GPU evaluation (→ I4) could help.
 
 ### H3 – Reduce worker RAM overhead
 - **Where:** `parallel.py` worker pool
 - **Problem:** 8 workers consume ~1.1–1.2 GB child RSS (mostly fixed
   interpreter/import overhead). See diagnosis report §5.
+- **Profiling results (2026-04-13):**
+  Benchmark: `bench_h3_worker_ram.py` + clean verification run.
+
+  **Important:** The original diagnosis report §5 measured ~1.1–1.2 GB at
+  8 workers. The H3 benchmark initially showed 298 MB/worker — but this was
+  an **artifact** of the benchmark importing TensorFlow (+510 MB) in the main
+  process before forking workers. TF is **not** imported during normal GP runs.
+
+  **Corrected measurements (no TF, fork mode):**
+
+  | Metric | Value |
+  |---|---|
+  | Main process RSS | 196.7 MB |
+  | Worker RSS (each) | **147.0 MB** |
+  | Worker modules loaded | 2063 |
+  | 4-worker total RSS | 588.1 MB |
+  | 8-worker total (estimated) | ~1176 MB |
+
+  Import cost breakdown (per-process, no TF):
+
+  | Import group | Delta RSS (MB) |
+  |---|---:|
+  | numpy + pandas | +56.1 |
+  | plagih.trees | +30.7 |
+  | sympy | +30.2 |
+  | matplotlib | +0.5 |
+
+- **Analysis:** At 147 MB/worker, the overhead is dominated by fixed
+  interpreter + numpy/sympy/pandas imports (~117 MB above baseline 12 MB).
+  With `fork` on Linux, workers share CoW pages with the parent — actual
+  unique RSS per worker is likely lower than reported (shared library pages
+  are double-counted in per-process RSS).
+- **Verdict:** No easy wins remain. The ~147 MB/worker is the irreducible
+  cost of numpy + sympy + pandas in a forked Python process. Switching to
+  `spawn` would not help (workers would re-import everything). The only
+  significant improvement would require a fundamentally different architecture
+  (e.g. shared-memory tree pool, or C/Rust worker processes).
+- **Status:** Diagnosed. No action needed unless 8+ worker configs on
+  memory-constrained machines become a priority.
 
 ---
 
@@ -131,40 +100,6 @@
   output is reproducible and editable.
 - **Renderer extension:** `_render_tree_on_axes` gains an optional `node_scores`
   parameter (`dict[id(node) → float 0–1]`) for score-coloured tree renders in Part 7.
-- **Status:** Initial implementation added 2026-04-02.  Smoke test suite
-  (`test_demo_helpers.py`, 32 tests) added 2026-04-02 covering all tree
-  factories, DataFrame factories, Evolution factories, crossover helper,
-  display utilities (headless Agg), and `make_ifte_node_scores`.
-
-### M1 – `canonicalize_children()` performance benchmark
-- **Where:** `Node.canonicalize_children()` in `trees/_nodes.py` (P14)
-- **Current:** Uses `represent_str()` as sort key — recursive string generation.
-- **Alternative:** Sort by subtree size (`len(child)`) first, string as tiebreaker.
-- **Benchmark script:** `plagih/test/benchmarks/bench_canonicalize.py`
-- **Benchmark results (2026-04-02):**
-
-  | Variant | Small (10 nodes) | Medium (30 nodes) | Large (96 nodes) |
-  |---|---:|---:|---:|
-  | **(A) `represent_str`** (status quo) | 6.2 ms / 50 trees | 27.7 ms / 50 trees | 131 ms / 30 trees |
-  | **(B) `len` + str tiebreaker** | 6.0 ms / 50 trees | 54.1 ms / 50 trees | 151 ms / 30 trees |
-  | **(C) `len` only** | 0.8 ms / 50 trees | 6.2 ms / 50 trees | 17.2 ms / 30 trees |
-
-- **Key findings:**
-  1. **(B) is slower than (A)** on medium/large trees (~2× on medium).
-     The composite `(len, str)` tuple key adds overhead without benefit because
-     `len()` is itself O(n) recursive and the tiebreaker still requires full
-     string generation.
-  2. **(C) is 7–8× faster** than (A), but produces different canonical forms for
-     **most** trees (24/50 to 29/30 differ). This would invalidate existing
-     LUT keys and potentially reduce LUT hit rates after the switch.
-  3. The cost of `canonicalize_children()` scales super-linearly with tree size
-     (from ~123 µs/tree at 10 nodes to ~4.4 ms/tree at 96 nodes).
-- **Conclusion:** Switching to (B) is **not recommended**. Switching to (C)
-  gives a large speedup but changes canonical forms — acceptable only if LUT
-  keys are regenerated. The current (A) approach remains the best balance.
-  A potential optimization: cache `represent_str()` on nodes to avoid
-  redundant recursive string generation during sorts.
-- **Action:** → see D1 for further design discussion.
 
 ### M2 – xtype system extension
 - **Where:** `xtype` on `Node` subclasses, `evolve_create_random()` in `trees.py`
@@ -184,20 +119,6 @@
 - **Idea:** Declare grouping rules as class attributes or decorators on the
   node class, rather than centrally in `tree_node_grouping()`.
 
-### ~~M5 – Migrate legacy logging calls to `log()`~~ ✅
-- **Where:** `trees.py`, `parallel.py`, `paretofront.py`, `visualization/tree_renderer.py`
-- **What:** All `printpl`/`printez`/`print_warning`/`print_caution` calls replaced
-  with `log()`. Legacy aliases kept in `logging_utils.py` for backward compatibility.
-- **Status:** Complete (452 tests pass). Verified no legacy calls remain.
-
-### ~~M6 – Split `trees.py` into sub-modules~~ ✅
-- **Where:** `plagih/trees/` package (was 4966-line monolith)
-- **Layout:** `_nodes.py` (2812 lines — full node hierarchy + sympy bridge),
-  `_evolution.py` (899 lines — Candidate, NodeSelect, Evolution),
-  `_gp_engine.py` (1288 lines — ExplainableGP), `__init__.py` (re-export).
-- **Status:** Complete (455 tests pass). All `from plagih.trees import X`
-  statements continue to work via `__init__.py` re-exports.
-
 ---
 
 ## Design Discussions
@@ -216,7 +137,6 @@
   3. **Re-sorting timing**: Currently one-shot in `tree_to_candidate()`. If
      canonical form is ever expected *between* mutation steps, propagation
      becomes a problem.
-- **Also tracked as:** M1 (benchmark).
 
 ### D2 – Bytecode complexity backends and extensions (→ P16)
 - **Where:** `plagih/tree_complexity/python_bytecode_complexity.py`
@@ -243,16 +163,7 @@
 - **Scope:** Per-tree pseudo-backpropagation, node-level optimization gaps,
   SoftOptimum population bound, chained-operator mutation, merged-tree
   trunk analysis.
-- **Status:** Phase 1 (analysis infrastructure) + Phase 2 (Ifte/Piecewise
-  scoring) + Phase 2b (strategy integration) implemented.
 - **Primary focus:** Ifte/Piecewise pseudo-backpropagation (§3.1).
-- **Phase 2b completed (2026-03-26):** New `targeted_ifte` strategy registered
-  in `BUILTIN_STRATEGIES` in `parallel.py`. The strategy selects trees with
-  Ifte/Piecewise nodes, uses `ifte_component_scores()` to identify the weakest
-  component, and applies focused mutation only to that subtree. Falls back to
-  standard branch mutation if no Ifte nodes are found or df_train/target are
-  unavailable.  Runtime context (`_df_train`, `_target`) is injected
-  automatically by `run_task_sequential()`.
 - **Next:** Phase 3 — General node-level optimization (§3.2) with invertible
   operators.
 
@@ -264,21 +175,6 @@
   causing the tree to **grow** during simplification.  In some cases SymPy
   also numerically evaluates constant sub-expressions (e.g.
   `sin(1)**2 → 0.708`), changing the expression semantically.
-- **Implemented mitigations:**
-  1. **Size guard** — if simplified tree is larger than original, return
-     original.
-  2. **Min-size tracking** — grouping loop tracks the smallest tree across
-     all iterations.
-  3. **Oscillation detection** — if a string representation repeats, the
-     loop exits early (prevents infinite cycling A→B→A).
-  4. **`CuriosityError` debug bomb removed** — replaced with structured
-     `log("w", …)` warning on non-convergence.
-  5. **Semantic guard** — if the simplified tree is not SymPy-equivalent to
-     the original expression, reject it and keep the original tree.
-  6. **Compact structure diagnostics** — rejection logs now include
-     `original/roundtrip/grouped` both as expression and as compact structural
-     dump via `str_as_list()`, so single-tree failures can be inspected
-     without huge multiline output.
 - **Remaining questions:**
   1. Should `tree_node_grouping` produce a form that round-trips cleanly
      through SymPy?  Or should we stop converting back to SymPy after
@@ -287,8 +183,6 @@
      different expression) or suppressed (keep `sin(1)` unevaluated)?
   3. Could a "grouping-only" simplification mode (skip SymPy round-trip)
      be useful for cases where SymPy expansion is counterproductive?
-- **Status:** Core mitigations implemented, pipeline is safe but not
-  fully idempotent.
 
 ### D7 – Root-cause analysis for rejected simplifications
 - **Where:** `tree_simplification()` / `tree_node_grouping()` in
@@ -305,8 +199,65 @@
      `tree_node_grouping()` post-processing?
   3. Should some grouping rules be made conditional (e.g. avoid rewrites when
      they are only cosmetic but expand the tree or destabilize round-tripping)?
-- **Next step:** Build a small frequency analysis of rejected simplification
-  patterns from the new compact diagnostics before changing grouping rules.
+- **Frequency analysis results (2026-04-13):**
+  Script: `scripts/analyze_simplification_rejections.py`, parsed 2 log files
+  with 92 logged rejections (302 including suppressed similar cases).
+
+  **Key finding: 100% of rejections are "changed semantics", 0% are "grew".**
+  The size guard works perfectly — it's the semantic equivalence check that
+  rejects simplifications.
+
+  | Suspected stage | Count | % |
+  |---|---:|---:|
+  | sympy_roundtrip+grouping | 117 | 60% |
+  | unknown | 48 | 25% |
+  | sympy_roundtrip | 30 | 15% |
+
+  **Dominant operators in rejected expressions:**
+
+  | Operator | Occurrences | Notes |
+  |---|---:|---|
+  | Max | 663 | SymPy → `Piecewise` → semantic drift |
+  | Min | 526 | SymPy → `Piecewise` → semantic drift |
+  | sin | 389 | Often combined with Min/Max |
+  | sign | 333 | SymPy rewrites as `Piecewise` internally |
+  | Abs | 306 | SymPy rewrites as `Piecewise` internally |
+  | log | 75 | Domain issues interact with simplification |
+  | sqrt | 32 | Minor contributor |
+
+  **Top co-occurrence pairs:** Max+sin (218), Max+Min (209), Min+sin (199),
+  Abs+Max (185), Max+sign (177).
+
+  **Root cause:** The overwhelming majority of semantic rejections involve
+  `Min`/`Max`/`sign`/`Abs` — operators that SymPy internally represents as
+  `Piecewise`. The round-trip `tree → sympy → tree → grouping` introduces
+  semantic drift because:
+  1. SymPy converts `Min(a,b)` → `Piecewise((a, a<b), (b, True))` internally
+  2. `sympy_to_tree()` may reconstruct this differently
+  3. The string comparison of the SymPy expressions then differs, and
+     `_sympy_exprs_equivalent()` either times out or returns False on
+     Piecewise-heavy expressions (known issue, P12)
+
+- **Answers to original questions:**
+  1. **Which rewrite families?** Min/Max/sign/Abs account for ~80%+ of all
+     rejected simplifications. DivFraction/Scale/PowRounded are NOT
+     significant contributors (contrary to earlier assumption).
+  2. **sympy_to_tree() or tree_node_grouping()?** Both: 60% involve both
+     stages, 15% only sympy_roundtrip. The grouping step compounds drift
+     from the roundtrip but is rarely the sole cause.
+  3. **Conditional grouping rules?** Not the priority. The real fix is
+     improving how Min/Max/sign/Abs survive the SymPy round-trip.
+
+- **Recommended next steps:**
+  1. **Short-term — Skip simplification for Piecewise-heavy trees:**
+     If a tree contains `Min`/`Max`/`sign`/`Abs`, skip the SymPy round-trip
+     entirely and only apply `tree_node_grouping()` (the "grouping-only"
+     mode from D6 question 3). This avoids the Piecewise semantic drift.
+  2. **Medium-term — Piecewise-aware equivalence check:**
+     Improve `_sympy_exprs_equivalent()` to handle Piecewise expressions
+     better (e.g. numerical sampling comparison as fallback).
+  3. **Long-term — Direct tree-to-tree simplification:**
+     Bypass SymPy entirely for structural simplifications (D6 question 1).
 
 ### D9 – RuntimeWarning suppression and data-dependent NaN quantification (→ H4)
 - **Where:** `ExplainableGP.tree_to_candidate()` in `trees/_gp_engine.py`
@@ -315,18 +266,152 @@
   the 7-stage pre-filter chain are those with **data-dependent** NaN/Inf
   (e.g. `log(x)` when `x ≤ 0` in training data). These are caught by the
   `np.isfinite()` check after NumPy evaluation.
-- **Questions:**
-  1. **Quantification:** How many trees actually fail at the `np.isfinite()`
-     check? The existing `_generation_tree_timings` (with `failed_stage =
-     "evaluate"`) could answer this. If it's a significant fraction, a
-     lightweight domain check (e.g. Log/Sqrt/Div with known-negative inputs)
-     might be worthwhile. If it's rare → no further action needed.
-  2. **RuntimeWarning blanket suppression:** `warnings.simplefilter("ignore",
-     RuntimeWarning)` (`# sfeh:discuss`) hides all RuntimeWarnings during
-     NumPy eval (division-by-zero, log-of-negative, etc.). This is "by design"
-     (followed by `isfinite()` guard), but could mask real bugs in custom
-     `eval_error_metric` implementations. Should the suppression be narrowed
-     to specific warning categories, or is the blanket approach acceptable?
+- **Quantification results (2026-04-13):**
+  Benchmark: `bench_d9_evaluate_failures.py`, 10 generations, pop=200,
+  MountainCar dataset, sequential mode.
+
+  | Metric | Value |
+  |---|---|
+  | Total tree attempts | 2314 |
+  | Evaluate failures | 124 (5.4%) |
+  | Create failures | 1 (0.04%) |
+  | Simplify failures | 0 |
+
+  Error breakdown: 116× `TreeError("NaN in results")`, 4× `TreeLutError`
+  (cached NaN), 3× `SympyError` (imaginary), 1× `ValueError`.
+  **93.5% of all failures are data-dependent NaN** at `np.isfinite()`.
+
+  Domain operators in failed expressions: **Div 96×, Sqrt 46×, Log 22×**.
+  Gen 0 has the highest rate (13%), later generations stabilise at 2–8%.
+
+- **Decision on question 1:** The 5.4% rate is **moderate** — not negligible
+  but not alarming. A lightweight domain pre-check for `Div`/`Sqrt`/`Log`
+  with known-negative training data ranges could eliminate ~70% of evaluate
+  failures, but the runtime saving is small (~3–7 ms per avoided evaluation).
+  **Verdict: not worth the complexity for now.** The `np.isfinite()` guard is
+  fast and catches everything. Revisit only if pop sizes grow to 5000+ where
+  the wasted evaluation cycles become noticeable.
+- **Open question 2 (RuntimeWarning suppression):** The blanket
+  `warnings.simplefilter("ignore", RuntimeWarning)` is acceptable given that
+  the `isfinite()` guard catches all NaN/Inf results. Narrowing to specific
+  categories (e.g. `divide`, `invalid`) would add complexity without benefit
+  since no custom `eval_error_metric` bugs were observed.
+
+### D10 – NaN-escape operator redesign (→ I1, D9)
+- **Where:** `trees/_nodes.py` (node class), `_gp_engine.py` (evaluation),
+  `trees/_evolution.py` (operator pool)
+- **Motivation:** Formulas that are structurally good and simple but produce
+  NaN/Inf on a few edge-case datapoints (e.g. `Log(x)` when some `x ≤ 0`,
+  `Sqrt(x)` when `x < 0`, `Div(a, b)` when `b ≈ 0`) are currently either
+  rejected or penalised. An explicit NaN-escape mechanism could rescue these
+  formulas and make the NaN-handling **visible** in the tree structure
+  (important for explainability).
+
+- **Previous attempt (reverted):** An `IfNan(expr, fallback)` node was
+  implemented as `IfNanDummy(sympy.Function)` + `IfNan(MathOperator)`.
+  Problem: SymPy cannot simplify through an opaque `IfNanDummy` wrapper,
+  so formulas wrapped in `IfNan` became dead-ends for simplification.
+  Additionally, the implementation only checked `np.isinf` — imaginary
+  results and actual `NaN` were not covered.
+
+- **Current workaround:** `tree_to_candidate()` in `_gp_engine.py` uses
+  NaN-tolerant scoring: trees with ≤50% non-finite results get a penalty
+  value per bad datapoint instead of outright rejection. This is simple and
+  effective, but the NaN-handling is invisible in the tree — bad for
+  explainability and not optimisable.
+
+- **Open design questions:**
+
+  1. **Explicit node vs. implicit evaluation-time escaping:**
+     - **Option A — Dedicated `IfNan` Node (tree-visible):**
+       `IfNan(expr, fallback)` as a proper `MathOperator` subclass.
+       *Pro:* NaN-handling is visible, evolvable, and explainable.
+       *Con:* SymPy interaction is hard (see question 4).
+     - **Option B — Evaluation-time auto-escape (current approach):**
+       Replace non-finite results with penalty values during NumPy eval.
+       *Pro:* Zero impact on SymPy, no new node type, simple.
+       *Con:* Invisible, not optimisable, coarse penalty.
+     - **Option C — Hybrid: Node for structure, transparent to SymPy:**
+       `IfNan` node exists in the tree but `get_sympy_expr()` returns
+       only `expr` (unwraps itself). SymPy sees and simplifies the inner
+       expression; the NaN-guard re-wraps after round-trip.
+       *Pro:* SymPy simplification works. *Con:* Guard can be lost during
+       simplification round-trips; needs re-insertion logic.
+
+  2. **Optimisable fallback value (via child node):**
+     If implemented as a node, the fallback child could be any subtree
+     (`Number`, `Symbol`, or a full expression). This means evolution can
+     **optimise what happens in the NaN case** — a unique capability that
+     pure evaluation-time escaping cannot provide. Example:
+     `IfNan(Log(x), Scale(-0.5, x))` → uses `log(x)` where valid,
+     falls back to `-0.5 * x` where `x ≤ 0`.
+     *Risk:* Over-complicates if the fallback subtree grows large. Could
+     mitigate by constraining fallback to terminals or depth-1 subtrees.
+
+  3. **Coverage: NaN, Inf, and imaginary values:**
+     The previous implementation only escaped `np.isinf`. A proper
+     implementation must handle:
+     - `NaN` (e.g. `0/0`, `sqrt(-x)` in NumPy returns NaN)
+     - `±Inf` (e.g. `1/0` in float arithmetic)
+     - **Imaginary results:** `asin(2)` returns `NaN` in NumPy but
+       `π/2 - i·acosh(2)` in SymPy. Options:
+       - **(a)** Use `np.real(result)` or `np.abs(result)` to extract the
+         real part / magnitude — only works element-wise, not for subtrees.
+       - **(b)** Treat imaginary as NaN (current approach via `isfinite`).
+       - **(c)** Dedicated `Re(expr)` operator that extracts the real part.
+         Could be useful beyond NaN-escaping but adds complexity.
+
+  4. **SymPy transparency requirement:**
+     A NaN-escape operator **must not block SymPy simplification**. If a
+     formula intrinsically produces NaN (e.g. `Log(-1)` with no data
+     dependency), it should be discarded — NaN-escaping is for
+     **data-dependent** edge cases, not structural impossibilities.
+     Approaches:
+     - Option C above (unwrap for SymPy, re-wrap after).
+     - Teach `tree_simplification()` to strip `IfNan` wrappers before
+       the SymPy round-trip and re-insert them after `sympy_to_tree()`.
+     - Mark `IfNan` subtrees as `is_fix` so simplification skips them
+       (coarse, loses optimisation potential).
+
+  5. **Node hierarchy placement:**
+     If implemented, `IfNan` **must** be a proper `Node` subclass:
+     - `IfNan(MathOperator)` with `xtype = ((float, float), float)`
+     - `childs[0]` = expression to evaluate
+     - `childs[1]` = fallback value/expression
+     - `showme = "IfNan"`, `sy_str = "IfNan({0}, {1})"`
+     - Custom `eval_predict_numpy_now` with lazy fallback evaluation
+       (only evaluate `childs[1]` where `childs[0]` produced NaN/Inf).
+     - For SymPy: either use a custom `sympy.Function` subclass (previous
+       approach, problematic) or unwrap transparently (Option C).
+
+  6. **When to apply NaN-escaping:**
+     - **Per-element:** `IfNan` wraps individual operator subtrees that are
+       known to produce NaN on some inputs. Evolution can place `IfNan`
+       wherever needed. This is the composable, fine-grained approach.
+     - **Per-tree (root-only):** `IfNan` is only allowed as the root node,
+       wrapping the entire formula. Simpler but less expressive.
+     - **Automatic wrapping:** After tree creation, automatically wrap
+       domain-sensitive operators (`Log`, `Sqrt`, `Div`) in `IfNan` if
+       the training data contains values outside their domain.
+       *Risk:* Bloats trees, may interfere with crossover/mutation.
+
+- **Recommendation (preliminary):**
+  The simplest safe path is **Option B (current evaluation-time escaping)**
+  enhanced with better diagnostics (log which datapoints triggered the
+  penalty, track NaN-rate as a candidate attribute). This avoids all SymPy
+  complications.
+
+  If the optimisable fallback (question 2) proves valuable in practice,
+  **Option C (SymPy-transparent node)** is the way forward. Implement in
+  stages:
+  1. First: `IfNan` node with `get_sympy_expr()` returning only `childs[0]`
+     (unwrap). Test that simplification round-trips work.
+  2. Then: Re-insertion logic in `tree_simplification()` to restore `IfNan`
+     wrappers after SymPy round-trip.
+  3. Finally: Evolution support (operator pool, mutation strategies).
+
+- **Decision needed:** Is the optimisable fallback value worth the
+  complexity? Or is the current penalty-based approach sufficient?
 
 ---
 
@@ -336,20 +421,10 @@
 - **Where:** `tree_complexity/`
 - **Ideas:** Numba/LLVM IR complexity, ASM instruction count, parallel
   critical-path complexity, branch-sensitive complexity for `Ifte`/`Piecewise`.
-- **Status:** Proof-of-concept exists for CPython bytecode (P16).
 
 ### L2 – Gradient tracking placeholder
 - **Where:** `evaluation_context.py`
-- **Status:** `track_gradients` parameter exists, emits `FutureWarning`.
 - **Idea:** JAX/PyTorch integration for gradient-based optimization.
-
-### ~~L3 – `analyze_pareto` duplicate cleanup~~ ✅
-- **Where:** `paretofront.py`
-- **Problem:** Two identical `analyze_pareto` definitions existed (second
-  shadowed the first), plus ~160 lines of commented-out benchmark-specific
-  legacy code.
-- **Fix:** Consolidated into a single clean stub with proper docstring.
-- **Status:** Complete.
 
 ### L4 – Background analysis process
 - **Where:** `analyze_generation()` in `trees.py` (P9)
@@ -375,44 +450,8 @@
   1. Size-aware tournament selection for crossover (prefer smaller parents).
   2. Crossover rejection when both parents are at `nodes_max` (product tree
      would be pruned anyway).
-  3. ~~Lighter-weight deepcopy (e.g. copy-on-write or structural sharing).~~ ✅
-     **Implemented (2026-04-09):** `fast_tree_copy()` rollout replaced all
-     `copy.deepcopy()` on Node trees with ~4.6× faster structural copy.
 - **Impact:** Low.  At `pop=50` and `crossover_rate=0.2`, only ~10 crossovers
   per generation.  The 19ms increase is ~190ms total — dwarfed by evaluation.
-
-### ~~L6 – Generation count exceeds `gen_end`~~ ✅
-- **Where:** `_test_simple()` in `plagih_gp.py` (not `_gp_engine.py`)
-- **Cause found:** `gen_end` was fixed to `20`, but `_test_simple()` executed
-  a hard-coded plan of **24** generations (`1 + 1 + 2 + 10 + 10`).
-  The misleading logs like `21/20` were therefore caused by a demo/test-plan
-  mismatch, not by the core generation counter.
-- **Fix:** `_test_simple()` now derives `gen_end` from the declared strategy
-  plan, so the log output ends cleanly at `24/24`.
-- **Status:** Complete.
-
-### ~~L7 – Population shrinks below `pop_max_size`~~ ✅
-- **Where:** `run_generation()` in `trees/_gp_engine.py`
-- **Observed:** `genepool=44` to `genepool=48` when `pop_max=50`. Some
-  candidates are rejected (fail counts), but the population is not
-  back-filled.
-- **Implemented (2026-03-26):** After main generation execution, if failures
-  reduced the population below the expected task count, remaining slots are
-  back-filled with `random_new` trees. Only triggers on failure-induced
-  shortfall (not when strategy rates intentionally produce fewer candidates).
-- **Status:** Complete (526 tests pass).
-
-### ~~L8 – Logging handlers can outlive their stdout/stderr streams~~ ✅
-- **Where:** `logging_utils.py` / benchmark harnesses / tests
-- **Observed:** During repeated pytest benchmark runs, the global logger can
-  keep a console handler whose underlying stream has already been closed,
-  leading to `ValueError: I/O operation on closed file` on later `log()` calls.
-- **Fix:** `_handler_has_closed_stream()`, `_prune_closed_handlers()`, and
-  `_ensure_live_console_handler()` were added to `logging_utils.py`.  Every
-  `log()` / `log_*()` call now auto-prunes stale handlers and reattaches a
-  fresh console handler when needed.  `setup_logging()` also removes all
-  existing handlers before adding new ones.
-- **Status:** Complete.
 
 ---
 
@@ -421,13 +460,22 @@
 > Ideas migrated from the old README and other sources. Not yet prioritised
 > or scoped — promote to L*/M*/H* when ready to act on them.
 
-### I1 – NaN-escape operator
-- **Idea:** New node type that returns a default value when evaluation produces
-  NaN or a complex number. Two inputs: `(expression, fallback)`.
-- **Distinction:** Separate between NaN from SymPy (imaginary/zoo) and NaN from
-  NumPy evaluation (data-dependent). The former is already caught by
-  `get_sympy_expr()`, the latter is a runtime concern.
-- **Related:** D9 (RuntimeWarning suppression), P20 (NaN check fix).
+### I1 – NaN-escape operator ⏸️ (reverted → D10)
+- **History:** An `IfNan(expr, fallback)` operator was implemented (2026-04-13)
+  as `IfNanDummy(sympy.Function)` + `IfNan(MathOperator)` node class.
+  **Reverted** because the SymPy function approach broke simplification —
+  SymPy could not simplify through `IfNanDummy`, making trees un-reducible
+  at the NaN-guard boundary.
+- **Current status:** Implementation deleted. The evaluation pipeline now uses
+  **NaN-tolerant scoring** in `tree_to_candidate()` (`_gp_engine.py`):
+  trees with ≤50% non-finite results get a penalty value instead of rejection.
+  This keeps simple-but-fragile formulas (e.g. `Log(x)` with some `x ≤ 0`)
+  alive with degraded fitness.
+- **Motivation preserved:** Formulas that are structurally good and simple but
+  produce NaN/Inf on edge-case datapoints should remain viable GP candidates
+  instead of being discarded outright.
+- **Full redesign discussion:** → D10 in Design Discussions.
+- **Related:** D9 (5.4% evaluate failures dominated by Div/Sqrt/Log NaN).
 
 ### I2 – Best-overlapping candidates / Partnering
 - **Idea:** Identify candidates that perform well in regions where others fail.
@@ -466,22 +514,6 @@
   clean up evolved constants. E.g. `3.333*x → (10/3)*x`, or
   `x**1.999 → x**2`. Especially useful for power exponents.
 - **Related:** D4 (rational Number terminals), D6 (simplification pipeline).
-
-### ~~I7 – Terminal-only mutation~~ ✅
-- **Idea:** Mutation variant that only changes terminal values (Numbers,
-  Symbols) without altering tree structure. Preserves proven operator
-  structure while fine-tuning constants.
-- **Implemented (2026-04-09):** `evolve_mutate_terminals(tree, n_terminals=1,
-  p_symbol=0.5)` on `Evolution` class in `_evolution.py`.  Replaces 1–k random
-  mutable terminals with new ones of the same `xtype`.  Fixed terminals
-  (`is_fix=True`) are never touched.  Registered as `mutation_terminal`
-  strategy in `BUILTIN_STRATEGIES` / `_STRATEGIES_ONE_PARENT` in `parallel.py`.
-  9 unit tests in `test_evolution.py::TestMutateTerminals`.
-- **Bonus fix:** `_strategy_pareto_revive` and `_strategy_targeted_ifte` still
-  used `copy.deepcopy` — replaced with `fast_tree_copy()`.
-- **Note:** `choose_terminal_node(p_observation)` has inverted semantics
-  (high p_observation → fewer symbols, despite docstring). Filed as P22.
-- **Related:** D5 Phase 3 (node-level optimisation).
 
 ### I8 – Special constants (π, e) as terminals
 - **Idea:** Allow `sympy.pi`, `sympy.E` etc. as terminal values in the
@@ -524,36 +556,16 @@
   renders, Pareto plots, merge trees, etc.
 - **Related:** D8 (demo notebook).
 
----
+## Plan continuation: Next priorities
 
-## Completed
-
-- ✅ Shared memory for `df_train` — 1.68× faster worker startup
-- ✅ Pre-selection replaces legacy full-population IPC — 4.8× less IPC cost
-- ✅ `get_sympy_expr()` removed from monitoring hot path (P10)
-- ✅ Relational-on-Piecewise guard in `get_sympy_expr()` (P12)
-- ✅ Physical core detection via `cpu_count_physical()` (P11)
-- ✅ Chunked batching with progress diagnostics in parallel (P12)
-- ✅ **M5** — Legacy `printpl`/`printez`/`print_warning`/`print_caution` migrated to `log()`/`log_error()`
-- ✅ **P18** — `MemoryError` guard in `get_sympy_expr()` for `sympy.exp()` on huge arguments
-- ✅ **L6** — `_test_simple()` now maps its fixed strategy plan to the correct `gen_end`, eliminating misleading `21/20`-style logs
-- ✅ **D5 Phase 2b** — `targeted_ifte` strategy integrated into `parallel.py` with automatic df_train/target injection
-- ✅ **L7** — Population back-fill after failure-induced shortfall in `run_generation()`
-- ✅ **CuriosityError cleanup** — All remaining `raise CuriosityError` in production code replaced with proper exceptions: `SympyError` (RoundDummy), `ValueError` (export_tree), log warnings (revoke_useless_nodes), or handled gracefully (tree_node_grouping Mul×1)
-- ✅ **Node.__eq__/__hash__** — Identity-based equality prevents infinite recursion from circular parent_node refs in dataclass-generated `__eq__`
-- ✅ **set_new_node deepcopy fix** — Back-references (parent_node, root_node, depth) are now saved before deepcopy and passed to `repair_all()` correctly
-- ✅ **mychlds_remove identity fix** — `tree_node_grouping` Mul-factor removal now uses identity (`is`) instead of value equality, fixing double-removal of equal Number nodes
-- ✅ **Object-dtype coercion** — `eval_predict_numpy_now` retries with float64 coercion when numpy ufuncs fail on object-dtype child arrays
-- ✅ **L3** — Duplicate `analyze_pareto` consolidated into a single clean stub; ~160 lines of commented-out legacy code removed
-- ✅ **L8** — Stale logging handler pruning already implemented (`_ensure_live_console_handler`); marked as complete
-- ✅ **H4 (partial)** — Fused `canonicalize_and_get_lut_id()` (2.3× speedup), cached `true_values`, fixed NaN check (`np_fitness == np.nan` → `np.isfinite`)
-- ✅ **README cleanup** — Restructured from chaotic ~500-line dump to professional ~200-line document. ~100+ scattered TODOs migrated to Ideas Backlog (I1–I14). Removed: TensorFlow references, Python-3.9/Anaconda setup, LaTeX/tikzplotlib deps, biography, debug dumps, `====Everything below here is garbage====` section
-- ✅ **H2** — Batch tournament selection with NumPy (`_batch_tournament_select`), `pareto_revive` → `fast_tree_copy`, eliminated per-task `selection_tournament()`. Index-deferral to workers rejected (IPC cost ~10× higher than `fast_tree_copy` savings)
-- ✅ **P21 fix** — Mul grouping early-return bug: `0 < mul1 < 1` branch without `else: continue` skipped DivFraction handler; degenerate `Mul(single_child)` in DivFraction handler
-- ✅ **`fast_tree_copy` rollout** — All `copy.deepcopy()` on Node trees replaced with `fast_tree_copy()` (~4.6× faster): `set_new_node`, `tree_simplification` (4×), `evolve_reduce_simplicate`, `evolve_new_tree_depth`, `evolve_mutate_node`, `evolve_crossover`. `import copy` removed from `_nodes.py` and `_evolution.py`
-- ✅ **I7** — `mutation_terminal` strategy: `evolve_mutate_terminals()` replaces random terminals while preserving operator topology. 9 tests. Also fixed remaining `copy.deepcopy` in `_strategy_pareto_revive` / `_strategy_targeted_ifte`
-
-
-
-
-
+- ✅ **P12 extension** — `_contains_piecewise_like` guard extended to also catch `BaseMinMax` (Min, Max, Clip) which SymPy internally represents as Piecewise. Prevents `Lt(Min(a,b), c)` patterns from hanging SymPy. Thread-based timeouts added: `SYMPY_SIMPLIFICATION_TIMEOUT_S=15s` for `tree_simplification()`, `SYMPY_EQUIVALENCE_TIMEOUT_S=5s` for `_sympy_exprs_equivalent()`. 5 new tests
+- ✅ **P24 — Simplification performance** — `tree_simplification()` validation reduced from 3–4× SymPy work to 1×: `roundtrip_tree.get_sympy_expr()` deferred to logging-only path, timeouts lowered (simplify 15→5s, equiv 5→2s), `get_sympy_expr()` in `tree_to_candidate()` uses LUT cache. `print_generation_done()` now displays seconds instead of milliseconds. Data-driven: generation 4 in `simple-MTC200_RMSE_scratch` spent 585s (27%) on simplify validation alone
+- ✅ **D7 diagnostics + grouping-only mode** — Frequency analysis
+  (`scripts/analyze_simplification_rejections.py`) over 302 rejections
+  confirms: 100% are "changed semantics" (0% "grew"), dominated by
+  Min/Max/sign/Abs (SymPy Piecewise drift). Implemented **grouping-only
+  simplification** for trees containing Piecewise-like operators — skips
+  the SymPy round-trip entirely, only applies `tree_node_grouping()`.
+  Eliminates the entire class of semantic rejections for these trees. 4 tests.
+- 🔜 **D5 Phase 3 (node-level optimisation):** General node-level optimization with invertible operators — extend beyond Ifte/Piecewise.
+- 🔜 **D8 demo notebook hardening:** Keep notebook/examples in sync with recent strategy additions (`mutation_terminal`, `targeted_ifte`) and add one visual regression smoke pass.

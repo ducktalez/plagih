@@ -1,0 +1,14 @@
+matplotlib
+numpy
+graphviz
+tikzplotlib
+apted
+gym
+scikit-learn
+PyYAML
+scipy
+pandas
+tensorflow
+sympy
+pathlib
+

@@ -305,10 +305,12 @@ def print_generation_done(
         _reset_progress_tracking()
         return
     ts = time.strftime("%H:%M:%S", time.localtime())
+    time_s = time_ms / 1000.0
+    tracker_total_s = tracker_total_ms / 1000.0
     msg = (
-        f"[{ts}] generation {gen_id}/{gen_end} done: {time_ms:.1f}ms"
+        f"[{ts}] generation {gen_id}/{gen_end} done: {time_s:.1f}s"
         f" | created={created} | pareto_pre={pareto_pre}"
-        f" | ok={ok}, fail={fail}, tracker_total={tracker_total_ms:.1f}ms"
+        f" | ok={ok}, fail={fail}, tracker_total={tracker_total_s:.1f}s"
     )
     _reset_progress_tracking()
     _write_progress_line(msg, close=True)

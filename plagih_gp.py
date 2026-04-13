@@ -10,6 +10,7 @@ Contains:
 
 Run this file to see the GP in action:
     python plagih_gp.py
+    python plagih_gp.py fresh      # Like 'full', but with timestamped output dir
 """
 
 import logging
@@ -599,7 +600,7 @@ def demo_longrun(*args, **kwargs):
 # =============================================================================
 
 
-def _test_simple(dir_name, chained_on=True):
+def _test_simple(dir_name, chained_on=True, enable_analysis=None):
     """SIMPLE"""
 
     strategy_plan = [
@@ -627,6 +628,7 @@ def _test_simple(dir_name, chained_on=True):
         eval_autocast=eval_autocast,
         allow_chain=chained_on,
         eval_error_metric=eval_error_metric,
+        enable_analysis=enable_analysis,
     )
 
     gp.gen_create_initial()
@@ -641,7 +643,7 @@ def _test_simple(dir_name, chained_on=True):
     # sys.exit()
 
 
-def _test_random_pop(dir_name, chained_on=True, simplicate=False, try_load_backup=False):
+def _test_random_pop(dir_name, chained_on=True, simplicate=False, try_load_backup=False, enable_analysis=None):
     """Testrun"""
 
     # Setup logging for this comprehensive test
@@ -691,6 +693,7 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False, try_load_backu
         gen_end=20,
         eval_autocast=eval_autocast,
         eval_error_metric=eval_error_metric,
+        enable_analysis=enable_analysis,
     )
     try:
         if try_load_backup:
@@ -743,6 +746,33 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False, try_load_backu
     # sys.exit()
 
 
+def _make_timestamped_subdir(run_name: str, base: str = ".testruns") -> Path:
+    """Create a timestamped subdir under ``<base>/<run_name>/``.
+
+    Structure: ``<base>/<run_name>/<YYYYMMDD-HHMMSS>/``
+
+    Each run configuration keeps its own top-level folder, with individual
+    launches stored in timestamped subdirectories. This makes it easy to
+    compare multiple launches of the same configuration.
+    """
+    timestamp = time.strftime("%Y%m%d-%H%M%S", time.localtime())
+    out = Path.cwd() / base / run_name / timestamp
+    out.mkdir(parents=True, exist_ok=True)
+    return out
+
+
+def _setup_test_data():
+    """Common Mountain Car dataset setup shared by test / full / fresh modes."""
+    col_names = ["cartVel", "cartPos"]
+    df = pd.read_csv(Path(__file__).parent.absolute() / "benchmarks/mc/gp_files/samples200.csv").astype("float32")
+    DATA_SYMBOLS = sympy.symbols(df[col_names].columns, real=True)
+    operator_dict = Evolution.operator_presets["math_simple"]
+    eval_autocast = lambda x: np.rint(np.clip(np.asarray(x, dtype=np.float64), 0.0, 2.0)).astype(np.int64)
+    df_train, df_control = train_test_split(df, test_size=0.2, random_state=0)
+    eval_error_metric = lambda y_true, y_pred: np.sqrt(np.mean((y_true - y_pred) ** 2))
+    return DATA_SYMBOLS, operator_dict, eval_autocast, df_train, df_control, eval_error_metric
+
+
 if __name__ == "__main__":
     import sys
 
@@ -765,28 +795,31 @@ if __name__ == "__main__":
         )
         demo_active_usability_test()
 
-    elif mode == "test" or mode == "full":
-        # Full test runs (several minutes)
-        """All runs: Experiment: Mountain Car dataset setup"""
-        col_names = ["cartVel", "cartPos"]
-        df = pd.read_csv(Path(__file__).parent.absolute() / "benchmarks/mc/gp_files/samples200.csv").astype("float32")
-        DATA_SYMBOLS = sympy.symbols(df[col_names].columns, real=True)
-        operator_dict = Evolution.operator_presets["math_simple"]
+    elif mode in ("test", "full", "fresh"):
+        # test / full  — static dirs (backwards-compatible, can resume from backup)
+        # fresh        — timestamped dir, always starts from scratch
+        DATA_SYMBOLS, operator_dict, eval_autocast, df_train, df_control, eval_error_metric = _setup_test_data()
 
-        eval_autocast = lambda x: np.rint(np.clip(np.asarray(x, dtype=np.float64), 0.0, 2.0)).astype(np.int64)
-
-        df_train, df_control = train_test_split(df, test_size=0.2, random_state=0)
-        eval_error_metric = lambda y_true, y_pred: np.sqrt(np.mean((y_true - y_pred) ** 2))
-
-        rootdir = Path.cwd() / ".testruns"
+        if mode == "fresh":
+            # Each sub-run gets its own timestamped dir: .testruns/<run_name>/<timestamp>/
+            rootdir = Path.cwd() / ".testruns"  # base only; _test_* receive full paths
+            timestamp = time.strftime("%Y%m%d-%H%M%S", time.localtime())
+            print(f"Fresh run (timestamp {timestamp})")
+        else:
+            rootdir = Path.cwd() / ".testruns"
 
         if mode == "test":
             _test_simple(dir_name="simple-MTC200_RMSE_scratch", chained_on=False)
 
-        if mode == "full":
+        elif mode == "full":
             _test_simple(dir_name="simple-MTC200_RMSE_scratch", chained_on=False)
             _test_random_pop(dir_name="MTC200_RMSE_scratch", chained_on=False)
             _test_random_pop(dir_name="MTC200_RMSE_scratch_chained", chained_on=True)
+
+        elif mode == "fresh":
+            _test_simple(dir_name=f"simple-MTC200_RMSE_scratch/{timestamp}", chained_on=False, enable_analysis=True)
+            _test_random_pop(dir_name=f"MTC200_RMSE_scratch/{timestamp}", chained_on=False, enable_analysis=True)
+            _test_random_pop(dir_name=f"MTC200_RMSE_scratch_chained/{timestamp}", chained_on=True, enable_analysis=True)
 
     else:
         print("""
@@ -798,13 +831,15 @@ if __name__ == "__main__":
               demo   - Quick demonstration (~30 seconds) [default]
               active-test - Non-standard active usability test (pop=5000, gen=1000)
               usability-test - Alias for active-test
+              fresh  - Like 'full', but with timestamped output dir (always from scratch)
+              test   - Basic test run with _test_simple (static dir, can resume)
+              full   - Complete test runs with all features (static dir, can resume)
               longrun - Deprecated alias for active-test
               observe - Deprecated alias for active-test
-              test   - Basic test run with _test_simple
-              full   - Complete test runs with all features
 
             Examples:
               python plagih_gp.py demo
+              python plagih_gp.py fresh
               python plagih_gp.py active-test
               python plagih_gp.py test
               python plagih_gp.py full

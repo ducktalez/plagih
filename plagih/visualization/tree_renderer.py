@@ -499,8 +499,114 @@ class TreeLayoutEngine:
 # =============================================================================
 
 
+# -------------------------------------------------------------------------
+# Operator visualization labels: class name → compact math symbol.
+# Used by get_node_label_simple (normal trees) and build_layout_tree_from_merged
+# (merged trees) so both rendering paths produce consistent labels.
+# -------------------------------------------------------------------------
+_OPERATOR_VIZ_LABELS: Dict[str, str] = {
+    # Arithmetic
+    "Add": "+",
+    "Mul": "×",  # noqa: RUF001
+    "Sub": "−",  # noqa: RUF001
+    "Div": "÷",
+    "DivFraction": "1/x",
+    "Scale": "·",
+    "Usub": "−()",  # noqa: RUF001
+    # Powers / roots
+    "Pow": "^",
+    "PowRounded": "^≈",
+    "Square": "x²",
+    "Sqrt": "√",
+    "NthRoot": "ⁿ√",
+    "Exp": "eˣ",
+    "Exp2": "2ˣ",
+    # Misc math
+    "Abs": "|x|",
+    "Sign": "sgn",
+    "Log": "ln",
+    "Round": "≈",
+    "Clip": "clip",
+    # Trigonometry
+    "Cos": "cos",
+    "Sin": "sin",
+    "Tan": "tan",
+    "Acos": "acos",
+    "Asin": "asin",
+    "Atan": "atan",
+    "Tanh": "tanh",
+    "Sinh": "sinh",
+    "Cosh": "cosh",
+    # Logic
+    "Not": "¬",
+    "And": "∧",
+    "Or": "∨",  # noqa: RUF001
+    "Xor": "⊕",
+    "ITE": "ite",
+    # Relational
+    "Lt": "<",
+    "Le": "≤",
+    "Gt": ">",
+    "Ge": "≥",
+    "Eq": "=",
+    "Ne": "≠",
+    # Min / Max
+    "Min": "min",
+    "Max": "max",
+    # Control flow
+    "Ifte": "if-else",
+    "Piecewise": "pw",
+    "ExprCondPair_Dummy": "case",
+}
+
+
+def _format_terminal_for_viz(sympy_expr) -> str:
+    """Format a terminal sympy expression for visualization.
+
+    Numbers are shown in compact form (e.g. 0.5 instead of 0.500000000),
+    symbols are shown by name, booleans as True/False.
+    """
+    import sympy as sp
+
+    if isinstance(sympy_expr, sp.Symbol):
+        return str(sympy_expr)
+    if isinstance(sympy_expr, sp.logic.boolalg.BooleanAtom):
+        return str(sympy_expr)
+    if isinstance(sympy_expr, (bool,)):
+        return str(sympy_expr)
+    if hasattr(sympy_expr, "is_number") and sympy_expr.is_number:
+        try:
+            fval = float(sympy_expr)
+            if fval == int(fval) and abs(fval) < 1e12:
+                return str(int(fval))
+            return f"{fval:.4g}"
+        except (TypeError, ValueError, OverflowError):
+            pass
+    # Fallback: short string
+    s = str(sympy_expr)
+    return s
+
+
+def _format_sympy_for_viz(sympy_expr, max_len: int = 40) -> str:
+    """Format a sympy expression for merged tree FULL_EXPRESSION mode.
+
+    Uses compact number formatting and wraps (not truncates) long expressions.
+    """
+    s = str(sympy_expr)
+    # Compact floats: remove trailing zeros after decimal point
+    import re
+
+    s = re.sub(r"(\d+\.\d*?)0+(?=\D|$)", r"\1", s)
+    s = re.sub(r"\.(?=\D|$)", "", s)
+    return s
+
+
 def get_node_label_simple(node: Node) -> str:
-    """Get a simple label for a regular tree node."""
+    """Get a simple label for a regular tree node.
+
+    Uses the node's ``_viz_label`` (compact math symbol, e.g. "+" for Add)
+    if available, falling back to ``showme`` or the class name.
+    """
     if node.is_term():
         val = node.get_value()
         # Check if it's a Number node
@@ -512,7 +618,9 @@ def get_node_label_simple(node: Node) -> str:
                 return str(int(fval))
             return f"{fval:.4g}"
         return str(val)
-    return node.showme or type(node).__name__
+    # Prefer _viz_label (compact math symbol) over showme (class-name-like)
+    viz = getattr(node, "_viz_label", "")
+    return viz or node.showme or type(node).__name__
 
 
 _SHAPE_MAP = {"ellipse": NodeShape.ELLIPSE, "diamond": NodeShape.DIAMOND, "rounded": NodeShape.ROUNDED_RECTANGLE}
@@ -593,13 +701,17 @@ def build_layout_tree_from_merged(
     for node_id, merged_node in graph.nodes.items():
         # Generate label based on display mode
         if config.merged_display_mode == MergedDisplayMode.LABEL_ONLY:
-            label = merged_node.operator_name or str(merged_node.sympy_expr)
-            if len(label) > 15:
-                label = label[:12] + "..."
+            if merged_node.node_type == "terminal":
+                # Terminals: show the actual value (e.g. "x", "0.5", "True")
+                label = _format_terminal_for_viz(merged_node.sympy_expr)
+            else:
+                # Operators: show compact math symbol (e.g. "+", "x", "sin")
+                label = _OPERATOR_VIZ_LABELS.get(
+                    merged_node.operator_name,
+                    merged_node.operator_name,
+                )
         else:  # FULL_EXPRESSION
-            label = str(merged_node.sympy_expr)
-            if len(label) > config.max_expression_length:
-                label = label[: config.max_expression_length - 3] + "..."
+            label = _format_sympy_for_viz(merged_node.sympy_expr)
 
         # Add usage count
         if config.show_usage_count:

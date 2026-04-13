@@ -691,6 +691,22 @@ def evaluate_tree_standalone(
             warnings.simplefilter("ignore", RuntimeWarning)
             np_results_raw = evotree.eval_predict_numpy_now(df_train)
             np_results = eval_autocast(np_results_raw)
+
+            # --- NaN-tolerant evaluation (I1 replacement) ---
+            np_results_arr = np.asarray(np_results, dtype=np.float64)
+            finite_mask = np.isfinite(np_results_arr)
+            n_bad = int((~finite_mask).sum())
+            if n_bad > 0:
+                n_total = len(np_results_arr)
+                if n_bad > n_total // 2:
+                    err_txt = f"NaN in results ({n_bad}/{n_total} non-finite)"
+                    local_lut_tree[tree_id]["error"] = err_txt
+                    raise TreeError(err_txt)
+                tv_min, tv_max = float(true_values.min()), float(true_values.max())
+                tv_range = tv_max - tv_min if tv_max > tv_min else 1.0
+                penalty_value = tv_max + tv_range
+                np_results = np.where(finite_mask, np_results_arr, penalty_value)
+
             np_fitness = eval_error_metric(np_results, true_values)
             np_fitness = round(np_fitness, _cfg.float_precision)
 

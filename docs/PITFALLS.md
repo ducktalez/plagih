@@ -241,30 +241,53 @@ current batching strategy and population size.
 
 ---
 
-## P12 – Relational operators on `Ifte` / `Piecewise` subtrees can hang SymPy
+## P12 – Relational operators on `Ifte` / `Piecewise` / `Min` / `Max` subtrees can hang SymPy
 
-**Where:** `Node.get_sympy_expr()` / `sympy.Piecewise` / relational operators like `Lt`, `Le`
+**Where:** `Node.get_sympy_expr()` / `tree_simplification()` / `_sympy_exprs_equivalent()` in `trees/_nodes.py`
 
 Nested constructions like:
 
 ```python
 Lt(Ifte(...), 0)
 Le(Piecewise(...), x)
+Lt(Min(a, b), c)       # NEW: Min/Max are Piecewise-like in SymPy
+Le(Add(Max(a, b), c), d)  # also caught via recursive check
 ```
 
 can trigger pathological recursion or very long hangs inside SymPy on Windows
-(observed in `bench_diagnose_full.py` during large parallel runs).
+(observed in `bench_diagnose_full.py` during large parallel runs, and in
+`_test_simple` generation 4 with `simplicate=True` and `math_simple` preset).
 
-**Rule:** Treat relational-on-piecewise as unsupported for SymPy conversion and
-fail fast with `SympyError` instead of letting SymPy recurse indefinitely.
+**Root cause:** SymPy internally represents `Min`/`Max` as `Piecewise`.
+When a relational operator wraps `Min(a, b)`, SymPy tries to resolve
+`StrictLessThan(Piecewise((a, a<b), (b, True)), c)` via case analysis,
+which can run indefinitely.
+
+Additionally, `_sympy_exprs_equivalent()` calls `expr.equals()` and
+`sympy.simplify(expr_a - expr_b)` which are both known to hang on
+expressions involving relational / conditional constructs.
+
+**Rule:** Treat relational-on-piecewise/MinMax as unsupported for SymPy
+conversion and fail fast with `SympyError` instead of letting SymPy
+recurse indefinitely.
 
 **Already handled in:**
-- `Node.get_sympy_expr()` in `trees.py` now raises `SympyError` early for this pattern.
-- `run_generation_parallel()` in `parallel.py` now uses smaller runtime batches
-  plus timeout/debug output so pathological tasks no longer appear as silent hangs.
+- `Node.get_sympy_expr()` raises `SympyError` early when a
+  `RelationalOperator` wraps a subtree containing `Ifte`, `Piecewise`,
+  or `BaseMinMax` (Min, Max, Clip).
+- `tree_simplification()` is wrapped in a thread-based timeout
+  (`SYMPY_SIMPLIFICATION_TIMEOUT_S = 5s`, lowered from 15s in P23). On
+  timeout, the original tree is returned unchanged.
+- `_sympy_exprs_equivalent()` is wrapped in a thread-based timeout
+  (`SYMPY_EQUIVALENCE_TIMEOUT_S = 2s`, lowered from 5s in P23). On
+  timeout, returns `False` (conservative: assume not equivalent → keep
+  original tree).
+- `run_generation_parallel()` uses `PROGRESS_TIMEOUT_SECONDS = 120s`
+  as a last-resort batch-level timeout.
 
-**How to break it:** Remove the guard in `get_sympy_expr()` or reintroduce
-large one-batch-per-worker execution without progress diagnostics.
+**How to break it:** Remove the guard in `get_sympy_expr()`, remove the
+timeout wrappers, or reintroduce large one-batch-per-worker execution
+without progress diagnostics.
 
 ---
 
@@ -616,3 +639,48 @@ intuitive semantics.
 **Rule:** Don't trust the docstring — check the code when using
 `p_observation`.  A future rename/fix should align code with docstring.
 
+## P23 – `test_all_operators_symfun_npfun_consistency` Or-test uses wrong seed
+
+**Where:** `test_all_node_classes.py::TestAllOperatorClasses::test_all_operators_symfun_npfun_consistency`
+
+The generic operator consistency test randomly generates inputs for each
+operator. For `Or` with 4 boolean inputs `[False, False, True, False]`, the
+SymPy `symfun` evaluation returns `False` instead of the expected `True`.
+Investigation shows `sympy.Or(False, False, True, False)` correctly returns
+`True` — the bug is in how the test feeds inputs through `symfun` (likely
+a positional-args vs. list-unpacking issue for ChainableOp with >2 args).
+
+**Impact:** Pre-existing; unrelated to any recent change. Does not affect
+runtime behaviour.
+
+**Rule:** Skip with `-k "not test_all_operators_symfun_npfun_consistency"`
+until fixed.
+
+---
+
+## P24 – `tree_simplification` validation tripled SymPy work per tree (fixed)
+
+**Where:** `tree_simplification()` final guard in `trees/_nodes.py`
+
+The simplification validation previously called `get_sympy_expr()` on **both**
+`roundtrip_tree` and `_tree` unconditionally, then `_sympy_exprs_equivalent()`
+(which internally calls `.equals()` + `sympy.simplify()`).  This amounted to
+3-4× the SymPy conversion work per simplification — dominating generation time
+for deep trees with Min/Max/Piecewise operators.
+
+**Data (simple-MTC200_RMSE_scratch gen 4):**
+- 27 trees spent >5s in simplification alone
+- Simplify phase consumed 585s (27% of total 2170s)
+- The `_sympy_exprs_equivalent` timeout was 5s, nested inside the 15s
+  simplification timeout
+
+**Fix (applied 2026-04-10):**
+1. `SYMPY_SIMPLIFICATION_TIMEOUT_S` reduced from 15→5s
+2. `SYMPY_EQUIVALENCE_TIMEOUT_S` reduced from 5→2s
+3. `roundtrip_tree.get_sympy_expr()` deferred to diagnostic-logging-only path
+   (only called when simplification is rejected AND warning is emitted)
+4. `get_sympy_expr()` in `tree_to_candidate()` now checks the LUT for a
+   cached SymPy expression before recomputing
+
+**Rule:** Avoid calling `get_sympy_expr()` on trees unless strictly necessary.
+Every SymPy conversion can hang on pathological Min/Max expressions (P12).

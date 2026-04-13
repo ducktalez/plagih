@@ -23,6 +23,7 @@ from plagih.trees import (
     Div,
     DivFraction,
     Ifte,
+    Le,
     Lt,
     Max,
     Min,
@@ -300,6 +301,137 @@ class TestTreeSimplification:
 
         assert isinstance(target, Symbol)
         assert target.get_value() == sympy.Symbol("b")
+
+    def test_relational_on_min_rejects_for_sympy(self):
+        """P12 extension: Lt(Min(a, b), c) must raise SympyError to prevent SymPy hangs."""
+        from plagih.exceptions import SympyError
+
+        a, b = sympy.Symbol("a"), sympy.Symbol("b")
+        tree = Lt(Min(Symbol(a), Symbol(b)), Number(0.5))
+        tree.repair_depth()
+
+        with pytest.raises(SympyError, match="MinMax"):
+            tree.get_sympy_expr()
+
+    def test_relational_on_max_rejects_for_sympy(self):
+        """P12 extension: Le(Max(a, b), c) must raise SympyError to prevent SymPy hangs."""
+        from plagih.exceptions import SympyError
+        from plagih.trees import Le
+
+        a, b = sympy.Symbol("a"), sympy.Symbol("b")
+        tree = Le(Max(Symbol(a), Symbol(b)), Number(1.0))
+        tree.repair_depth()
+
+        with pytest.raises(SympyError, match="MinMax"):
+            tree.get_sympy_expr()
+
+    def test_relational_on_nested_min_rejects_for_sympy(self):
+        """P12 extension: Lt(Add(Min(a, b), c), d) must also be caught (recursive check)."""
+        from plagih.exceptions import SympyError
+
+        a, b, c = sympy.Symbol("a"), sympy.Symbol("b"), sympy.Symbol("c")
+        tree = Lt(Add(Min(Symbol(a), Symbol(b)), Symbol(c)), Number(0.5))
+        tree.repair_depth()
+
+        with pytest.raises(SympyError, match="MinMax"):
+            tree.get_sympy_expr()
+
+    def test_simplification_with_min_max_returns_original(self):
+        """Trees containing Lt(Min(...), ...) should survive tree_simplification gracefully."""
+        a, b = sympy.Symbol("a"), sympy.Symbol("b")
+        # Build a tree that contains Min but where simplification should not hang
+        tree = Add(Min(Symbol(a), Symbol(b)), Number(1.0))
+        tree.repair_depth()
+
+        # Should not hang — simplification may succeed or return original
+        result = tree_simplification(tree, allow_chain=False)
+        assert result is not None
+        assert len(result) >= 1
+
+    def test_simplification_timeout_returns_original(self, monkeypatch):
+        """tree_simplification must return original tree on SymPy timeout."""
+        import plagih.trees._nodes as _nodes_mod
+
+        # Set a very short timeout to force the timeout path
+        monkeypatch.setattr(_nodes_mod, "SYMPY_SIMPLIFICATION_TIMEOUT_S", 0.001)
+
+        a = sympy.Symbol("a")
+        original = Add(Symbol(a), Mul(Number(2.0), Symbol(a)))
+        original.repair_depth()
+        original_str = str(original)
+
+        # Patch get_sympy_expr to simulate a slow SymPy call
+        real_get_sympy = Node.get_sympy_expr
+
+        def _slow_get_sympy_expr(self_node, simplimore=False):
+            import time
+
+            time.sleep(0.5)  # Much longer than 0.001s timeout
+            return real_get_sympy(self_node, simplimore=simplimore)
+
+        monkeypatch.setattr(Node, "get_sympy_expr", _slow_get_sympy_expr)
+
+        result = tree_simplification(original, allow_chain=False)
+
+        # Should return the original tree (timeout fallback)
+        assert str(result) == original_str
+
+    def test_grouping_only_mode_for_trees_with_min(self):
+        """D7: Trees containing Min/Max skip SymPy roundtrip, use grouping-only."""
+        from plagih.trees._nodes import _tree_has_piecewise_like
+
+        a, b = sympy.Symbol("a"), sympy.Symbol("b")
+        # Mul(2, Min(a, b)) — should trigger grouping-only
+        tree = Mul(Number(2.0), Min(Symbol(a), Symbol(b)))
+        tree.repair_depth()
+        assert _tree_has_piecewise_like(tree)
+
+        result = tree_simplification(tree, allow_chain=False)
+        # Must not hang and must not grow
+        assert len(result) <= len(tree)
+
+    def test_grouping_only_mode_for_trees_with_abs(self):
+        """D7: Trees containing Abs skip SymPy roundtrip (Abs → Piecewise internally)."""
+        from plagih.trees._nodes import _tree_has_piecewise_like
+
+        a = sympy.Symbol("a")
+        tree = Mul(Abs(Symbol(a)), Number(3.0))
+        tree.repair_depth()
+        assert _tree_has_piecewise_like(tree)
+
+        result = tree_simplification(tree, allow_chain=False)
+        assert len(result) <= len(tree)
+
+    def test_non_piecewise_tree_uses_full_roundtrip(self):
+        """D7: Trees without Min/Max/Abs/sign still use full SymPy roundtrip."""
+        from plagih.trees._nodes import _tree_has_piecewise_like
+
+        a = sympy.Symbol("a")
+        # Add(a, 0) — no Piecewise-like ops, should use full roundtrip
+        tree = Add(Symbol(a), Number(0.0))
+        tree.repair_depth()
+        assert not _tree_has_piecewise_like(tree)
+
+        result = tree_simplification(tree, allow_chain=False)
+        # SymPy should simplify a+0 → a
+        assert len(result) <= len(tree)
+
+    def test_tree_has_piecewise_like_detection(self):
+        """D7: _tree_has_piecewise_like correctly detects nested Piecewise-like nodes."""
+        from plagih.trees._nodes import _tree_has_piecewise_like
+
+        a, b = sympy.Symbol("a"), sympy.Symbol("b")
+
+        # Direct Min
+        assert _tree_has_piecewise_like(Min(Symbol(a), Symbol(b)))
+        # Nested in Add
+        assert _tree_has_piecewise_like(Add(Number(1.0), Max(Symbol(a), Symbol(b))))
+        # Abs
+        assert _tree_has_piecewise_like(Abs(Symbol(a)))
+        # No Piecewise-like
+        assert not _tree_has_piecewise_like(Add(Symbol(a), Number(1.0)))
+        assert not _tree_has_piecewise_like(Sin(Symbol(a)))
+        assert not _tree_has_piecewise_like(Mul(Symbol(a), Number(2.0)))
 
 
 # =============================================================================

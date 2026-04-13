@@ -638,6 +638,7 @@ def _test_simple(dir_name, chained_on=True, enable_analysis=None):
             gp.run_generation(strategies)
 
     gp.evoloop_monitoring_plots()
+    gp.backup_save()
 
     print("***Program ending***\n********************\n\n")
     # sys.exit()

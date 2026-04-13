@@ -136,6 +136,9 @@ class TestLongrunHelpers:
             def evoloop_monitoring_plots(self):
                 captured["plots_called"] = True
 
+            def backup_save(self):
+                captured["backup_called"] = True
+
         monkeypatch.setattr(plagih_gp, "setup_logging", lambda **kwargs: None)
         monkeypatch.setattr(plagih_gp, "log_info", lambda *args, **kwargs: None)
         monkeypatch.setattr(plagih_gp, "rootdir", tmp_path, raising=False)
@@ -153,3 +156,4 @@ class TestLongrunHelpers:
         assert captured["run_generation_calls"] == 24
         assert captured["gen_end"] == 24
         assert captured["plots_called"] is True
+        assert captured["backup_called"] is True

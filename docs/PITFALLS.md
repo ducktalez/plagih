@@ -684,3 +684,24 @@ for deep trees with Min/Max/Piecewise operators.
 
 **Rule:** Avoid calling `get_sympy_expr()` on trees unless strictly necessary.
 Every SymPy conversion can hang on pathological Min/Max expressions (P12).
+
+---
+
+## P25 – Tree timing CSVs written unconditionally (fixed)
+
+**Where:** `_gp_engine.py` → `analyze_generation` → `_persist_generation_tree_timings`
+
+The per-tree timing CSV (`performance/tree_timings_gen_NNNN.csv`) was written
+**every generation regardless of `enable_analysis`**. With pop_max_size=1000
+the `expr_short` column alone produced ~300 KB per generation, accumulating
+several MB in a short run and being the **only** visible output when
+`PLAGIH_VISUALIZATION=false`.
+
+**Fix (applied 2026-04-13):**
+1. Renamed method to `_analyze_generation_tree_timings(persist_csv=…)`
+2. The anomaly-warning analysis still runs unconditionally (lightweight)
+3. CSV persistence is now gated by `persist_csv=self.enable_analysis`
+4. Also added missing `gp.backup_save()` at end of `_test_simple`
+
+**Rule:** IO-heavy diagnostics must be gated behind `enable_analysis` or a
+dedicated config flag. Lightweight analysis/warnings should always run.

@@ -1590,7 +1590,7 @@ class ExplainableGP:
                 f" | time={gen_time:4.2f}s",
             )
 
-        self._persist_generation_tree_timings(gen_id=self.gen_id)
+        self._analyze_generation_tree_timings(gen_id=self.gen_id, persist_csv=self.enable_analysis)
 
         # Generate merged population tree visualization
         if self.enable_analysis and _cfg.merged_tree:
@@ -1610,18 +1610,27 @@ class ExplainableGP:
             if (self.gen_id >= _cfg.backup_interval and self.gen_id % _cfg.backup_interval == 0) or self.gen_id == 10:
                 self.backup_save()
 
-    def _persist_generation_tree_timings(self, gen_id: int) -> None:
-        """Persist per-tree timing records and emit warnings only for real anomalies."""
+    def _analyze_generation_tree_timings(self, gen_id: int, *, persist_csv: bool = False) -> None:
+        """Analyze per-tree timing records for anomalies; optionally persist to CSV.
+
+        The warning analysis is lightweight and always useful.  CSV persistence
+        (one file per generation, ~200-400 KB each) is gated by *persist_csv*
+        so that standard runs don't accumulate large performance/ directories.
+        """
         records = list(self._generation_tree_timings)
         self._latest_generation_tree_timings = records
         if not records:
             return
 
-        perf_dir = self.rootdir / "performance"
-        perf_dir.mkdir(parents=True, exist_ok=True)
-        csv_path = perf_dir / f"tree_timings_gen_{gen_id:04d}.csv"
-        pd.DataFrame(records).to_csv(csv_path, index=False)
+        # --- optional CSV persistence ---
+        csv_path: Optional[Path] = None
+        if persist_csv:
+            perf_dir = self.rootdir / "performance"
+            perf_dir.mkdir(parents=True, exist_ok=True)
+            csv_path = perf_dir / f"tree_timings_gen_{gen_id:04d}.csv"
+            pd.DataFrame(records).to_csv(csv_path, index=False)
 
+        # --- anomaly analysis (always runs) ---
         ok_records = [record for record in records if record.get("status") == "ok"]
         error_records = [record for record in records if record.get("status") == "error"]
 
@@ -1665,7 +1674,8 @@ class ExplainableGP:
                 f"{stage_counts['create']}/{stage_counts['simplify']}/{stage_counts['evaluate']}/{stage_counts['other']}",
             )
             self._log_tree_timing_outliers(gen_id=gen_id, records=outliers)
-            log("f", f"Tree timing CSV saved to: {csv_path}")
+            if csv_path is not None:
+                log("f", f"Tree timing CSV saved to: {csv_path}")
 
     @staticmethod
     def _tree_timing_dominant_phase(record: Dict[str, Any]) -> str:

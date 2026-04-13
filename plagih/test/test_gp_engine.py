@@ -182,7 +182,8 @@ class TestGenerationSummaryLogging:
         assert cached.parsimony == first.parsimony
 
     def test_gen_create_initial_persists_tree_timing_csv(self, gp_instance):
-        """Generation analysis should persist per-tree timing records for later inspection."""
+        """Generation analysis should persist per-tree timing records when enable_analysis=True."""
+        gp_instance.enable_analysis = True
         gp_instance.gen_create_initial()
 
         timing_path = gp_instance.rootdir / "performance" / "tree_timings_gen_0000.csv"
@@ -193,7 +194,7 @@ class TestGenerationSummaryLogging:
         assert {"tag", "status", "create_ms_shared", "total_ms"}.issubset(df.columns)
         assert len(gp_instance._latest_generation_tree_timings) == len(df)
 
-    def test_persist_generation_tree_timings_logs_only_real_outliers(self, gp_instance, monkeypatch):
+    def test_analyze_generation_tree_timings_logs_only_real_outliers(self, gp_instance, monkeypatch):
         """Only genuinely anomalous slow trees should be logged for diagnosis."""
         messages = []
 
@@ -226,15 +227,15 @@ class TestGenerationSummaryLogging:
             },
         ]
 
-        gp_instance._persist_generation_tree_timings(gen_id=0)
+        gp_instance._analyze_generation_tree_timings(gen_id=0)
 
         warning_messages = [message for msg_type, message in messages if msg_type == "w"]
         assert any("tree timing warning" in message for message in warning_messages)
         assert any("Tree timing outlier #1" in message and "phase=evaluate" in message for message in warning_messages)
         assert any("expr=Mul(cartPos, cartVel)" in message for message in warning_messages)
 
-    def test_persist_generation_tree_timings_skips_normal_cases(self, gp_instance, monkeypatch):
-        """Normal generations should persist CSVs silently without extra per-tree spam."""
+    def test_analyze_generation_tree_timings_skips_normal_cases(self, gp_instance, monkeypatch):
+        """Normal generations should not emit warnings."""
         messages = []
 
         def _capture_log(msg_type, message):
@@ -266,11 +267,11 @@ class TestGenerationSummaryLogging:
             },
         ]
 
-        gp_instance._persist_generation_tree_timings(gen_id=0)
+        gp_instance._analyze_generation_tree_timings(gen_id=0)
 
         assert not [message for msg_type, message in messages if msg_type in {"w", "f", "pp"}]
 
-    def test_persist_generation_tree_timings_skips_single_noncreate_error(self, gp_instance, monkeypatch):
+    def test_analyze_generation_tree_timings_skips_single_noncreate_error(self, gp_instance, monkeypatch):
         """A single isolated simplify/evaluate error should not already trigger a warning in long-run mode."""
         messages = []
 
@@ -300,6 +301,6 @@ class TestGenerationSummaryLogging:
             },
         ]
 
-        gp_instance._persist_generation_tree_timings(gen_id=0)
+        gp_instance._analyze_generation_tree_timings(gen_id=0)
 
         assert not [message for msg_type, message in messages if msg_type in {"w", "f", "pp"}]

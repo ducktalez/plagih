@@ -18,6 +18,7 @@ python plagih_gp.py
 
 ## Ablage/Todos
 
+- Geht das mit automatisch backup laden immernoch? Sollte man vllt. einen passenden Ordner benennen?
 - display pareto candidates as png trees
 - evaluation alternatives
   - compare runtime
@@ -29,6 +30,7 @@ python plagih_gp.py
 - simplification
 - introduce breath-first-representation!
 - use logging
+- Paper-idee: meth. formelbestandteile (genpool) in nn einbinden und mit ReLu aktivieren.
 
 # Sub-todos
 

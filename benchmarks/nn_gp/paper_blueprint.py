@@ -12,7 +12,7 @@ Usage::
 
 Or from the CLI::
 
-    python -m benchmarks.nn_gp.paper_blueprint results/nn_gp/20260515-120000/experiment.json
+    python -m benchmarks.nn_gp.paper_blueprint .results/nn_gp/20260515-120000/experiment.json
 """
 
 from __future__ import annotations

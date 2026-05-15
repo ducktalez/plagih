@@ -96,7 +96,7 @@ def demo_minimal():
     # STEP 3: Create GP system (simplified with factory method)
     # -------------------------------------------------------------------------
     # Create output directory
-    output_dir = Path.cwd() / ".testruns" / "demo_minimal"
+    output_dir = Path.cwd() / ".results" / "demo_minimal"
 
     # NEW: Much simpler initialization with ExplainableGP.create()
     gp = ExplainableGP.create(
@@ -226,7 +226,7 @@ def demo_cartpole():
     # -------------------------------------------------------------------------
     # STEP 3: Create GP system
     # -------------------------------------------------------------------------
-    output_dir = Path.cwd() / ".testruns" / "demo_cartpole"
+    output_dir = Path.cwd() / ".results" / "demo_cartpole"
 
     gp = ExplainableGP.create(
         symbols=["cartPos", "cartVel", "poleAngle", "poleVel"],
@@ -355,7 +355,7 @@ def demo_symbolic_regression():
     # -------------------------------------------------------------------------
     # STEP 3: Create GP system
     # -------------------------------------------------------------------------
-    output_dir = Path.cwd() / ".testruns" / "demo_symbolic_regression"
+    output_dir = Path.cwd() / ".results" / "demo_symbolic_regression"
 
     gp = ExplainableGP.create(
         symbols=["x"],
@@ -501,7 +501,7 @@ def demo_active_usability_test(
     if run_name is None:
         run_name = f"NONSTANDARD-observe-MTC200-RMSE-pop{pop_max_size}-gen{gen_end}-{timestamp}"
 
-    output_dir = Path.cwd() / ".testruns" / run_name
+    output_dir = Path.cwd() / ".results" / run_name
     setup_logging(log_file=output_dir / "run.log", console_level=logging.INFO, file_level=logging.DEBUG, verbose=False)
     log_info(f"Starting non-standard active usability test: {run_name}")
 
@@ -747,7 +747,7 @@ def _test_random_pop(dir_name, chained_on=True, simplicate=False, try_load_backu
     # sys.exit()
 
 
-def _make_timestamped_subdir(run_name: str, base: str = ".testruns") -> Path:
+def _make_timestamped_subdir(run_name: str, base: str = ".results") -> Path:
     """Create a timestamped subdir under ``<base>/<run_name>/``.
 
     Structure: ``<base>/<run_name>/<YYYYMMDD-HHMMSS>/``
@@ -802,12 +802,12 @@ if __name__ == "__main__":
         DATA_SYMBOLS, operator_dict, eval_autocast, df_train, df_control, eval_error_metric = _setup_test_data()
 
         if mode == "fresh":
-            # Each sub-run gets its own timestamped dir: .testruns/<run_name>/<timestamp>/
-            rootdir = Path.cwd() / ".testruns"  # base only; _test_* receive full paths
+            # Each sub-run gets its own timestamped dir: .results/<run_name>/<timestamp>/
+            rootdir = Path.cwd() / ".results"  # base only; _test_* receive full paths
             timestamp = time.strftime("%Y%m%d-%H%M%S", time.localtime())
             print(f"Fresh run (timestamp {timestamp})")
         else:
-            rootdir = Path.cwd() / ".testruns"
+            rootdir = Path.cwd() / ".results"
 
         if mode == "test":
             _test_simple(dir_name="simple-MTC200_RMSE_scratch", chained_on=False)

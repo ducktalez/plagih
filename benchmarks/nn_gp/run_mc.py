@@ -13,7 +13,7 @@ Usage:
 
 The MountainCar benchmark predicts 'action' (0/1/2) from
 'cartPos' and 'cartVel'.  Results are written to
-``results/nn_gp/<timestamp>/``.
+```.results/nn_gp/<timestamp>/```.
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ from benchmarks.nn_gp.paper_figures import generate_all_figures
 # ---------------------------------------------------------------------------
 
 MC_CSV = _PROJECT_ROOT / "benchmarks" / "mc" / "gp_files" / "samples200.csv"
-RESULTS_BASE = _PROJECT_ROOT / "results" / "nn_gp"
+RESULTS_BASE = _PROJECT_ROOT / ".results" / "nn_gp"
 
 TARGET_COL = "action"
 SYMBOLS = ["cartPos", "cartVel"]

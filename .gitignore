@@ -17,7 +17,7 @@ run_examples/
 *.png
 *.log
 /MTC200_RMSE_scratch/
-/.testruns/
+/.results/
 # Demo notebook outputs (regenerate locally with docs/demo.ipynb)
 docs/demo_output/
 demo_executed.ipynb

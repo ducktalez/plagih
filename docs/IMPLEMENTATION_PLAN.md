@@ -525,12 +525,22 @@
   larger tournaments (more exploitation).
 - **Related:** I3 (population mining).
 
-### I10 – GP/NN co-evolution (EM-style)
-- **Idea:** Iterative process: (1) Train a GP to approximate an NN.
-  (2) Use Pareto-optimal GP trees as features for a smaller NN.
-  (3) GP focuses on the residual. Repeat.
-- **Variant:** NN identifies regions where GP fails → GP evolves `Ifte`
-  structures for those regions.
+### I10 – GP/NN co-evolution (EM-style) 🚧 (initial implementation done)
+- **History:** Concept documented (2026-04-xx) as iterative EM loop.
+  **Initial implementation delivered (2026-05-15)** in `benchmarks/nn_gp/`.
+- **Current status:** Pipeline is functional and tested on MountainCar.
+  - `data_utils.py` — normalisation, GP feature matrix, residual computation
+  - `nn_models.py` — PyTorch MLP, `find_minimal_nn` grid search
+  - `em_loop.py` — full EM loop runner, `GPConfig`, `NNConfig`
+  - `experiment_tracker.py` — crash-safe JSON persistence
+  - `paper_figures.py` — auto-generates all standard figures (PDF+SVG+PNG)
+  - `paper_blueprint.py` — fills `docs/nn_gp_paper_template.md` with measured values
+  - `run_mc.py` — MountainCar entry point; `--fast --baseline-only` for dev runs
+- **Run:** `python benchmarks/nn_gp/run_mc.py --fast` (dev) or without `--fast` (full)
+- **Next steps:**
+  - Run full 3-iteration EM loop and measure param reduction
+  - Fix gp_pop_size/gp_gen_end placeholders in blueprint (currently `?`)
+  - Consider adaptive GP hyperparameters for later iterations
 - **Related:** D5 (targeted optimisation), I2 (partnering).
 
 ### I11 – Merged-tree visualisation improvements

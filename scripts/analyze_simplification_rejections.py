@@ -12,7 +12,7 @@ produces a summary of:
 Usage:
     python scripts/analyze_simplification_rejections.py [log_file ...]
 
-    If no log files are given, scans .testruns/**/run.log automatically.
+    If no log files are given, scans .results/**/run.log automatically.
 """
 
 from __future__ import annotations
@@ -332,10 +332,10 @@ def main():
         log_files = [Path(p) for p in sys.argv[1:]]
     else:
         # Auto-discover
-        base = Path.cwd() / ".testruns"
-        log_files = sorted(base.rglob("run.log"))
+        base = Path.cwd() / ".results"
+        log_files = sorted(base.glob("**/run.log"))
         if not log_files:
-            print("No log files found in .testruns/. Pass paths as arguments.")
+            print("No log files found in .results/. Pass paths as arguments.")
             sys.exit(1)
 
     print(f"Scanning {len(log_files)} log file(s)...\n")

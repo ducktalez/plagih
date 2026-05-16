@@ -1,23 +1,24 @@
 *.pyc
 __pycache__/
 .ruff_cache/
+.pytest_cache/
 .venv/
 .env
-run_examples/
-/kessi_deletable.py
-/benchmarks/slurm_runs/
-/benchmarks/slurm_runs2/
-/start_all_slurm_sbatch_jobs.sh
-/benchmarks/#lol MTC200_MAE_simonBest/
-*.p
-*.pkl
+.idea/
 *.idea
 *.xml
 *.iml
+
+# Run artefacts (all GP + nn_gp pipeline outputs live in .results/)
+/.results/
+/logs/
+
+# Pickles, plots, logs
+*.p
+*.pkl
 *.png
 *.log
-/MTC200_RMSE_scratch/
-/.results/
+
 # Demo notebook outputs (regenerate locally with docs/demo.ipynb)
 docs/demo_output/
 demo_executed.ipynb
@@ -29,3 +30,11 @@ docs/.ipynb_checkpoints/
 # Python packaging build artefacts
 plagih.egg-info/
 *.egg-info/
+
+# Legacy / scratch paths (kept for back-compat with old local clones)
+run_examples/
+/kessi_deletable.py
+/benchmarks/slurm_runs/
+/benchmarks/slurm_runs2/
+/start_all_slurm_sbatch_jobs.sh
+/MTC200_RMSE_scratch/

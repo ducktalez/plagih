@@ -525,22 +525,39 @@
   larger tournaments (more exploitation).
 - **Related:** I3 (population mining).
 
-### I10 – GP/NN co-evolution (EM-style) 🚧 (initial implementation done)
+### I10 – GP/NN co-evolution (EM-style) 🚧 (pipeline done, paper experiments pending)
 - **History:** Concept documented (2026-04-xx) as iterative EM loop.
   **Initial implementation delivered (2026-05-15)** in `benchmarks/nn_gp/`.
-- **Current status:** Pipeline is functional and tested on MountainCar.
-  - `data_utils.py` — normalisation, GP feature matrix, residual computation
+- **Pipeline modules (all in `benchmarks/nn_gp/`):**
+  - `data_utils.py` — MinMax normalisation, GP feature matrix, residual computation
   - `nn_models.py` — PyTorch MLP, `find_minimal_nn` grid search
   - `em_loop.py` — full EM loop runner, `GPConfig`, `NNConfig`
   - `experiment_tracker.py` — crash-safe JSON persistence
-  - `paper_figures.py` — auto-generates all standard figures (PDF+SVG+PNG)
+  - `paper_figures.py` — auto-generates standard figures (PDF+SVG+PNG)
   - `paper_blueprint.py` — fills `docs/nn_gp_paper_template.md` with measured values
   - `run_mc.py` — MountainCar entry point; `--fast --baseline-only` for dev runs
 - **Run:** `python benchmarks/nn_gp/run_mc.py --fast` (dev) or without `--fast` (full)
-- **Next steps:**
-  - Run full 3-iteration EM loop and measure param reduction
-  - Fix gp_pop_size/gp_gen_end placeholders in blueprint (currently `?`)
-  - Consider adaptive GP hyperparameters for later iterations
+- **Open tasks (sorted by priority):**
+  1. **Run full 3-iteration EM loop** on MountainCar and capture baseline metrics
+     (NN-param reduction, residual decay, GP convergence per iteration).
+  2. **Wire GP config into the tracker** so `{{gp_pop_size}}` / `{{gp_gen_end}}`
+     placeholders in `PAPER_BLUEPRINT.md` resolve (currently shown as `?`).
+  3. **Smoke test in CI**: add `tests/test_nn_gp_pipeline.py` that runs
+     `run_mc.py --fast --baseline-only` end-to-end and asserts blueprint exists
+     and contains no `{{…}}` placeholders.
+  4. **Categorical-target handling**: MountainCar action is 3-class discrete.
+     Current pipeline normalises labels to [0, 1] floats and uses MSE. Document
+     this trade-off in the blueprint; consider one-hot + cross-entropy variant
+     as a future extension.
+  5. **Adaptive GP hyperparameters per iteration** (e.g. smaller `nodes_max` for
+     residuals which should be simpler). Open question — keep fixed for now to
+     ensure reproducibility, revisit after first full runs.
+  6. **Second benchmark** (CartPole, SR) to validate generalisation of the
+     pipeline once MountainCar produces clean results.
+  7. **Per-iteration GP feature retention**: currently all Pareto candidates of
+     the latest iteration become NN features. Decide whether to also retain
+     candidates from earlier iterations (richer features) or fully replace
+     (cleaner attribution).
 - **Related:** D5 (targeted optimisation), I2 (partnering).
 
 ### I11 – Merged-tree visualisation improvements
@@ -566,16 +583,40 @@
   renders, Pareto plots, merge trees, etc.
 - **Related:** D8 (demo notebook).
 
-## Plan continuation: Next priorities
+## Recent completions (changelog)
 
-- ✅ **P12 extension** — `_contains_piecewise_like` guard extended to also catch `BaseMinMax` (Min, Max, Clip) which SymPy internally represents as Piecewise. Prevents `Lt(Min(a,b), c)` patterns from hanging SymPy. Thread-based timeouts added: `SYMPY_SIMPLIFICATION_TIMEOUT_S=15s` for `tree_simplification()`, `SYMPY_EQUIVALENCE_TIMEOUT_S=5s` for `_sympy_exprs_equivalent()`. 5 new tests
-- ✅ **P24 — Simplification performance** — `tree_simplification()` validation reduced from 3–4× SymPy work to 1×: `roundtrip_tree.get_sympy_expr()` deferred to logging-only path, timeouts lowered (simplify 15→5s, equiv 5→2s), `get_sympy_expr()` in `tree_to_candidate()` uses LUT cache. `print_generation_done()` now displays seconds instead of milliseconds. Data-driven: generation 4 in `simple-MTC200_RMSE_scratch` spent 585s (27%) on simplify validation alone
-- ✅ **D7 diagnostics + grouping-only mode** — Frequency analysis
-  (`scripts/analyze_simplification_rejections.py`) over 302 rejections
-  confirms: 100% are "changed semantics" (0% "grew"), dominated by
-  Min/Max/sign/Abs (SymPy Piecewise drift). Implemented **grouping-only
-  simplification** for trees containing Piecewise-like operators — skips
-  the SymPy round-trip entirely, only applies `tree_node_grouping()`.
-  Eliminates the entire class of semantic rejections for these trees. 4 tests.
-- 🔜 **D5 Phase 3 (node-level optimisation):** General node-level optimization with invertible operators — extend beyond Ifte/Piecewise.
-- 🔜 **D8 demo notebook hardening:** Keep notebook/examples in sync with recent strategy additions (`mutation_terminal`, `targeted_ifte`) and add one visual regression smoke pass.
+> Promote items here once delivered. Older entries can be trimmed after a
+> few months — full history lives in git.
+
+- ✅ **Repo cleanup (2026-05-16)** — Removed leaked GitHub token from README,
+  deleted obsolete migration scripts (`migrate_trees_package.py`,
+  `split_trees.py`, `_scan_trees.py`), consolidated 3 redundant setup scripts
+  into a single `setup.sh`, removed `SETUP_GUIDE.md`, archived old root-level
+  `paper.md` as `docs/legacy_paper_draft.md`, rewrote README without legacy
+  TODO dump, added `/logs/` to `.gitignore`.
+- ✅ **NN+GP pipeline scaffolding (2026-05-15)** — Initial implementation of
+  EM-style co-evolution loop in `benchmarks/nn_gp/` with auto-generated paper
+  blueprint. See I10 above for current open tasks.
+- ✅ **Output directory unification (2026-05-15)** — Consolidated `.testruns/`
+  and `results/` into a single `.results/` dotfolder.
+- ✅ **P25 — Gate tree-timing CSVs behind `enable_analysis`** —
+  `_analyze_generation_tree_timings()` now only writes CSV when analysis is on.
+- ✅ **P12 extension + thread-based timeouts** — `_contains_piecewise_like`
+  guard extended to `BaseMinMax`. `SYMPY_SIMPLIFICATION_TIMEOUT_S=5s`,
+  `SYMPY_EQUIVALENCE_TIMEOUT_S=2s`.
+- ✅ **P24 — Simplification performance** — Validation reduced from 3–4× SymPy
+  work to 1×; `get_sympy_expr()` uses LUT cache.
+- ✅ **D7 — Grouping-only simplification for Piecewise-heavy trees** — Skips
+  SymPy round-trip for trees containing `Min`/`Max`/`Abs`/`Sign`, eliminating
+  the entire class of semantic rejections (100% of analysed cases).
+
+## Open next priorities
+
+- 🔜 **D5 Phase 3 (node-level optimisation):** General node-level optimization
+  with invertible operators — extend beyond Ifte/Piecewise.
+- 🔜 **D8 demo notebook hardening:** Keep notebook/examples in sync with recent
+  strategy additions (`mutation_terminal`, `targeted_ifte`) and add one visual
+  regression smoke pass.
+- 🔜 **I10 next experiments:** Run full EM loop on MountainCar (see I10 open
+  tasks above) and produce the first end-to-end paper blueprint with real
+  measured values.

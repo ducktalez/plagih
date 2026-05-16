@@ -57,7 +57,7 @@ class GPConfig:
 
     symbols: List[str]
     target_col: str = "action"
-    rootdir_base: Path = Path(".testruns/nn_gp")
+    rootdir_base: Path = Path(".results/nn_gp")
     pop_max_size: int = 100
     gen_end: int = 30
     depth_max: int = 6

@@ -93,7 +93,7 @@ class TestLongrunHelpers:
         assert fake_gp.run_generation_calls == 1
         assert fake_gp.backup_saved is True
         assert fake_gp.plots_saved is True
-        assert create_kwargs["rootdir"] == tmp_path / ".testruns" / "pytest-active-test"
+        assert create_kwargs["rootdir"] == tmp_path / ".results" / "pytest-active-test"
         assert create_kwargs["pop_max_size"] == 5000
         assert create_kwargs["gen_end"] == 1000
         assert create_kwargs["error_metric"] == "rmse"

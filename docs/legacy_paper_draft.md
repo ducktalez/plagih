@@ -1,3 +1,7 @@
+<!-- LEGACY DRAFT (preserved 2026-05-16 cleanup): originally root-level paper.md.
+Unrelated to the current NN+GP paper effort — see docs/nn_gp_paper_template.md.
+Kept here for reference only; consider deleting once superseded. -->
+
 # we
 We propose unifying the architecture of GP candidates mathematically, which offers possibilities in fine-tuning of
 candidates, comparing their similarity or by reducing overfitting.

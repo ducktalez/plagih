@@ -1,47 +1,32 @@
 #!/bin/bash
-# Setup Script fuer PLAGIH
-
+# Minimal setup for plagih (Linux/macOS).
+# Windows users: see README.md "Quick Start" — use PowerShell instead.
 set -e
 
-echo "PLAGIH Setup wird gestartet..."
-echo ""
-
-# Pruefe Python
-if ! command -v python3 &> /dev/null; then
-    echo "Fehler: Python3 ist nicht installiert!"
+if ! command -v python3 &>/dev/null; then
+    echo "Error: python3 not found." >&2
     exit 1
 fi
 
-echo "Python $(python3 --version) gefunden"
-echo ""
+VENV_DIR=".venv"
 
-# Erstelle Virtual Environment
-if [ ! -d "venv" ]; then
-    echo "Erstelle Virtual Environment..."
-    python3 -m venv venv
-    echo "Virtual Environment erstellt"
-else
-    echo "Virtual Environment existiert bereits"
+if [ ! -d "$VENV_DIR" ]; then
+    echo "Creating virtual environment in $VENV_DIR ..."
+    python3 -m venv "$VENV_DIR"
 fi
-echo ""
 
-# Aktiviere Environment
-echo "Aktiviere Environment und installiere Pakete..."
-source venv/bin/activate
+# shellcheck disable=SC1091
+source "$VENV_DIR/bin/activate"
 
-# Upgrade pip
+echo "Upgrading pip ..."
 pip install --upgrade pip --quiet
 
-# Installiere requirements
-echo "Installiere Abhaengigkeiten..."
-pip install -r requirements.txt
+echo "Installing plagih (editable) + dev extras ..."
+pip install -e ".[dev]"
 
 echo ""
-echo "Setup abgeschlossen!"
+echo "Setup complete. Activate the environment with:"
+echo "  source $VENV_DIR/bin/activate"
 echo ""
-echo "Naechste Schritte:"
-echo "   1. Aktiviere das Environment: source venv/bin/activate"
-echo "   2. Starte das Projekt: python plagih_gp.py"
-echo "   3. Deaktiviere spaeter mit: deactivate"
-echo ""
-
+echo "Run the minimal demo with:"
+echo "  python plagih_gp.py"

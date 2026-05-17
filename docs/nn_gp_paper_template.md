@@ -98,6 +98,15 @@ The first architecture achieving `MSE ≤ baseline × 1.05` (5% tolerance) is se
 | NN max epochs | {{nn_epochs}} |
 | EM iterations | {{n_iterations}} |
 
+> **Note — categorical targets.** On MountainCar the target (`action`) is a
+> 3-class discrete signal (0/1/2). The current pipeline normalises the labels
+> to `[0, 1]` floats and uses **MSE** as the loss for both GP and NN. This
+> keeps the pipeline uniform across regression and classification benchmarks
+> but loses the categorical structure (e.g. mistaking class 0 for 2 is
+> penalised four times as hard as mistaking 0 for 1). A future variant should
+> compare against one-hot targets + cross-entropy. Tracked in
+> `docs/IMPLEMENTATION_PLAN.md` (I10.4).
+
 ---
 
 ## 4. Results

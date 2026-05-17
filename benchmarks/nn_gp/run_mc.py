@@ -170,6 +170,23 @@ def run(
         baseline_nn_param_count=baseline_result.param_count,
         baseline_nn_hidden_sizes=baseline_result.hidden_sizes,
         start_time=time.strftime("%Y-%m-%dT%H:%M:%S"),
+        gp_config={
+            "pop_max_size": gp_cfg.pop_max_size,
+            "gen_end": gp_cfg.gen_end,
+            "depth_max": gp_cfg.depth_max,
+            "nodes_max": gp_cfg.nodes_max,
+            "preset": gp_cfg.preset,
+            "clip_range": list(gp_cfg.clip_range) if gp_cfg.clip_range else None,
+            "error_metric": gp_cfg.error_metric,
+            "parallel": gp_cfg.parallel,
+        },
+        nn_config={
+            "epochs": nn_cfg.epochs,
+            "lr": nn_cfg.lr,
+            "batch_size": nn_cfg.batch_size,
+            "patience": nn_cfg.patience,
+            "tolerance": nn_cfg.tolerance,
+        },
     )
     tracker.set_meta(meta)
 

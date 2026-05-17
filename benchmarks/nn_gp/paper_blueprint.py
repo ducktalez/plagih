@@ -120,10 +120,12 @@ def generate_blueprint(
     n_features = meta.n_features if meta else 0
     exp_id = tracker.results_dir.name
 
-    # GP config fields (read from first iteration result notes or defaults)
-    gp_pop_size = "?"
-    gp_gen_end = "?"
-    nn_epochs = "?"
+    # GP / NN hyperparameter snapshots (set by run_mc.py before EM loop)
+    gp_cfg = (meta.gp_config if meta else {}) or {}
+    nn_cfg = (meta.nn_config if meta else {}) or {}
+    gp_pop_size = str(gp_cfg.get("pop_max_size", "?"))
+    gp_gen_end = str(gp_cfg.get("gen_end", "?"))
+    nn_epochs = str(nn_cfg.get("epochs", "?"))
 
     # --- Substitutions --------------------------
     replacements = {

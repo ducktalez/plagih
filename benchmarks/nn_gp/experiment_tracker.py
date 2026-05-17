@@ -82,6 +82,11 @@ class ExperimentMeta:
     start_time: str = ""
     end_time: str = ""
     notes: str = ""
+    # Frozen hyperparameter snapshots (free-form dicts to avoid coupling
+    # the tracker to concrete config classes). Resolved by the blueprint
+    # generator to fill {{gp_pop_size}}, {{gp_gen_end}}, {{nn_epochs}}, ...
+    gp_config: Dict[str, Any] = field(default_factory=dict)
+    nn_config: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -169,6 +174,9 @@ class ExperimentTracker:
         tracker = cls(results_dir)
         if data.get("meta"):
             m = data["meta"]
+            # Tolerate older JSONs that lack the gp_config / nn_config fields.
+            known = {f.name for f in ExperimentMeta.__dataclass_fields__.values()}
+            m = {k: v for k, v in m.items() if k in known}
             tracker.meta = ExperimentMeta(**m)
         for it in data.get("iterations", []):
             tracker.iterations.append(IterationResult(**it))

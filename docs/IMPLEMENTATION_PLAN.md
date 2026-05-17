@@ -540,15 +540,18 @@
 - **Open tasks (sorted by priority):**
   1. **Run full 3-iteration EM loop** on MountainCar and capture baseline metrics
      (NN-param reduction, residual decay, GP convergence per iteration).
-  2. **Wire GP config into the tracker** so `{{gp_pop_size}}` / `{{gp_gen_end}}`
-     placeholders in `PAPER_BLUEPRINT.md` resolve (currently shown as `?`).
-  3. **Smoke test in CI**: add `tests/test_nn_gp_pipeline.py` that runs
-     `run_mc.py --fast --baseline-only` end-to-end and asserts blueprint exists
-     and contains no `{{…}}` placeholders.
-  4. **Categorical-target handling**: MountainCar action is 3-class discrete.
-     Current pipeline normalises labels to [0, 1] floats and uses MSE. Document
-     this trade-off in the blueprint; consider one-hot + cross-entropy variant
-     as a future extension.
+  2. ✅ **Wire GP config into the tracker** (2026-05-16) — `ExperimentMeta`
+     now carries `gp_config` / `nn_config` dicts; `run_mc.py` populates them
+     and `paper_blueprint.py` reads `pop_max_size`, `gen_end`, `epochs` from
+     there. Backward-compatible JSON loading (unknown fields tolerated).
+  3. ✅ **Smoke test** (2026-05-16) — `plagih/test/test_nn_gp_pipeline.py`
+     runs `run_mc.run(baseline_only=True, fast=True)` end-to-end (49 s),
+     asserts blueprint exists and contains **zero** unresolved `{{…}}`
+     placeholders. Marked `@pytest.mark.performance` (opt-in via `--run-perf`).
+  4. ✅ **Categorical-target handling documented** (2026-05-16) — Added an
+     explicit *Note* block to `docs/nn_gp_paper_template.md` explaining the
+     MSE-on-[0,1] trade-off vs. one-hot + cross-entropy. Implementation of
+     the cross-entropy variant remains open.
   5. **Adaptive GP hyperparameters per iteration** (e.g. smaller `nodes_max` for
      residuals which should be simpler). Open question — keep fixed for now to
      ensure reproducibility, revisit after first full runs.
@@ -558,6 +561,10 @@
      the latest iteration become NN features. Decide whether to also retain
      candidates from earlier iterations (richer features) or fully replace
      (cleaner attribution).
+  8. **Cross-entropy variant for categorical targets** (split off from old
+     point 4): one-hot encode the target, swap loss to CE, adapt the residual
+     definition (probabilities vs. floats). Decide whether GP candidates emit
+     logits per class or per-class scalars. Track as a separate experiment.
 - **Related:** D5 (targeted optimisation), I2 (partnering).
 
 ### I11 – Merged-tree visualisation improvements
@@ -587,6 +594,17 @@
 
 > Promote items here once delivered. Older entries can be trimmed after a
 > few months — full history lives in git.
+
+- ✅ **NN+GP pipeline polish (2026-05-16)** — Resolved I10.2/3/4:
+  `ExperimentMeta.gp_config` / `nn_config` carry the frozen hyperparameter
+  snapshot so `{{gp_pop_size}}`, `{{gp_gen_end}}`, `{{nn_epochs}}` are filled;
+  added smoke test `plagih/test/test_nn_gp_pipeline.py` (49 s,
+  `@pytest.mark.performance`) that asserts zero unresolved `{{…}}` placeholders
+  in the generated blueprint; documented the MSE-on-[0,1] trade-off for the
+  3-class MountainCar target directly in the paper template.
+- ✅ **README restored (2026-05-16)** — Previous edit had silently failed and
+  only the `placeholder` stub was committed; rewrote with quick-start,
+  module overview, NN+GP section, and documentation index.
 
 - ✅ **Repo cleanup (2026-05-16)** — Removed leaked GitHub token from README,
   deleted obsolete migration scripts (`migrate_trees_package.py`,

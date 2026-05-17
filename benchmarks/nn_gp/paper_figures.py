@@ -165,12 +165,12 @@ def plot_top_gp_trees(
 ) -> Optional["plt.Figure"]:
     """Render the top-n GP trees using plagih's tree_renderer."""
     try:
-        import sys
-
-        sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-        from visualization.tree_renderer import render_tree
+        # tree_renderer was moved into the plagih package; keep import lazy
+        # so the rest of the figure generation still works without matplotlib
+        # backends configured for tree rendering.
+        from plagih.visualization.tree_renderer import _render_tree_on_axes
     except ImportError:
-        print("  [figures] tree_renderer not available — skipping tree renders.")
+        print("  [figures] tree_renderer not available  skipping tree renders.")
         return None
 
     import matplotlib.pyplot as plt
@@ -186,7 +186,7 @@ def plot_top_gp_trees(
 
     for ax, cand in zip(axes, candidates):
         try:
-            render_tree(cand.tree, ax=ax)
+            _render_tree_on_axes(ax, cand.tree)
             ax.set_title(f"MSE={cand.fitness:.4f}  par={cand.parsimony}", fontsize=9)
         except Exception as exc:
             ax.text(0.5, 0.5, f"render error:\n{exc}", ha="center", va="center", fontsize=8)
@@ -255,7 +255,7 @@ def generate_all_figures(
         matplotlib.use("Agg")  # non-interactive backend
     import matplotlib.pyplot as plt
 
-    print("\n[figures] Generating all figures …")
+    print("\n[figures] Generating all figures ...")
     plot_em_progress(tracker)
     plot_nn_size_comparison(tracker)
 

@@ -540,6 +540,13 @@
 - **Open tasks (sorted by priority):**
   1. **Run full 3-iteration EM loop** on MountainCar and capture baseline metrics
      (NN-param reduction, residual decay, GP convergence per iteration).
+     *Partial — 2026-05-17:* A `--fast --iterations 2 --gp-pop 30 --gp-gen 10`
+     run completed end-to-end (~2.5 min, results in
+     `.results/nn_gp/20260517-231031/`). Observation: with these tiny settings
+     the NN actually **grows** from baseline 129 → 801 params; the GP candidates
+     do not yet provide enough signal. A proper run (default `--gp-pop 50
+     --gp-gen 20`, full 3 iterations, no `--fast`) is still pending and is the
+     real I10.1 deliverable.
   2. ✅ **Wire GP config into the tracker** (2026-05-16) — `ExperimentMeta`
      now carries `gp_config` / `nn_config` dicts; `run_mc.py` populates them
      and `paper_blueprint.py` reads `pop_max_size`, `gen_end`, `epochs` from
@@ -565,6 +572,12 @@
      point 4): one-hot encode the target, swap loss to CE, adapt the residual
      definition (probabilities vs. floats). Decide whether GP candidates emit
      logits per class or per-class scalars. Track as a separate experiment.
+  9. **Promote `_render_tree_on_axes` to public API.** `benchmarks/nn_gp/
+     paper_figures.py` currently reaches into the private helper of
+     `plagih.visualization.tree_renderer` to draw GP candidates as subplot
+     panels. Either expose a thin `render_tree_on_axes(ax, tree, ...)` wrapper
+     or extend `render_tree()` with an `ax=` keyword so this consumer (and any
+     future paper-figure code) does not depend on a `_`-prefixed symbol.
 - **Related:** D5 (targeted optimisation), I2 (partnering).
 
 ### I11 – Merged-tree visualisation improvements
@@ -595,6 +608,23 @@
 > Promote items here once delivered. Older entries can be trimmed after a
 > few months — full history lives in git.
 
+- ✅ **NN+GP first end-to-end run + bugfixes (2026-05-17)** —
+  Completed the first full `run_mc.py --fast --iterations 2` run on Windows.
+  Three real bugs were discovered and fixed along the way:
+  (1) `experiment_tracker.finalize()` / `paper_blueprint.generate_blueprint` /
+  `paper_figures.generate_all_figures` crashed on Windows with
+  `UnicodeEncodeError` because their progress prints used `→` / `…`;
+  replaced with ASCII (`->`, `...`).
+  (2) `paper_figures._plot_gp_trees_for_iter` imported `tree_renderer` from
+  the stale top-level `visualization.*` path (the module lives in
+  `plagih.visualization.*` since the package restructure) and called
+  `render_tree(ax=...)` with a kwarg that never existed; now uses
+  `plagih.visualization.tree_renderer._render_tree_on_axes`
+  (see I10.9 for promoting that to a public API).
+  (3) Paper template wording said *"a reduction of X%"* even when the NN
+  parameter count actually **grew** between baseline and final iteration —
+  rewrote both the abstract and §4.3 to use neutral *"change … by X%"*
+  with the `{{param_reduction_direction}}` word.
 - ✅ **NN+GP pipeline polish (2026-05-16)** — Resolved I10.2/3/4:
   `ExperimentMeta.gp_config` / `nn_config` carry the frozen hyperparameter
   snapshot so `{{gp_pop_size}}`, `{{gp_gen_end}}`, `{{nn_epochs}}` are filled;

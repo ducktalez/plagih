@@ -295,7 +295,7 @@ def run_baseline_only(
     X_raw = build_nn_input(df_norm, target_col)
     grid = _ARCHITECTURE_GRID[:max_arch_count]
 
-    print(f"\n[baseline] Training baseline NN on raw features ({len(grid)} architectures) …")
+    print(f"\n[baseline] Training baseline NN on raw features ({len(grid)} architectures) ...")
     t0 = time.perf_counter()
     all_results: List[TrainResult] = []
     for hidden_sizes in grid:

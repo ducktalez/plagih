@@ -150,7 +150,7 @@ class ExperimentTracker:
             self.meta.end_time = time.strftime("%Y-%m-%dT%H:%M:%S")
             self.meta.notes = notes
         self._save()
-        print(f"  [tracker] experiment saved → {self.json_path}")
+        print(f"  [tracker] experiment saved -> {self.json_path}")
 
     # ------------------------------------------------------------------
 

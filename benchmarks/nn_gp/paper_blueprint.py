@@ -162,7 +162,7 @@ def generate_blueprint(
     with open(out, "w", encoding="utf-8") as fh:
         fh.write(text)
 
-    print(f"\n[blueprint] Paper blueprint written → {out}")
+    print(f"\n[blueprint] Paper blueprint written -> {out}")
     return out
 
 

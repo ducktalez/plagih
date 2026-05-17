@@ -20,9 +20,9 @@ progressively shifting the GP towards modeling structure that the NN cannot yet 
 On the **{{benchmark}}** benchmark (`{{n_train_rows}}` training rows, `{{n_features}}` raw
 features), a baseline MLP requires **{{baseline_nn_params}} parameters** (architecture:
 `{{baseline_nn_arch}}`) to achieve MSE `{{baseline_nn_mse:.5f}}`.  After **{{n_iterations}}
-EM iterations**, the GP-enriched NN achieves MSE `{{final_nn_mse:.5f}}` with only
-**{{final_nn_params}} parameters** (architecture: `{{final_nn_arch}}`), a reduction of
-**{{param_reduction_pct:.1f}}%**.
+EM iterations**, the GP-enriched NN achieves MSE `{{final_nn_mse:.5f}}` with
+**{{final_nn_params}} parameters** (architecture: `{{final_nn_arch}}`); the NN parameter
+count **{{param_reduction_direction}} by {{param_reduction_pct:.1f}}%**.
 
 ---
 
@@ -125,11 +125,11 @@ The first architecture achieving `MSE ≤ baseline × 1.05` (5% tolerance) is se
 |------|-----------|-------------|-----------------|-----------|--------|--------------|-------------|-------------|
 {{iteration_table_rows}}
 
-### 4.3 Parameter Reduction
+### 4.3 Parameter Change
 
 Baseline parameters: **{{baseline_nn_params}}**
 Final GP-enriched NN parameters: **{{final_nn_params}}**
-Reduction: **{{param_reduction_pct:.1f}}%**
+Change: **{{param_reduction_direction}} by {{param_reduction_pct:.1f}}%**
 
 *Figure 1 — EM progress (residual MSE + NN params per iteration):*
 ![EM Progress](figures/em_progress.png)

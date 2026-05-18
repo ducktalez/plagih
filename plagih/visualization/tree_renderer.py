@@ -1496,7 +1496,7 @@ def _compute_simple_tree_layout(root: Node) -> tuple:
     return positions, labels, colors, edges, obj_ids
 
 
-def _render_tree_on_axes(
+def render_tree_on_axes(
     ax,
     tree: Node,
     node_size_scale: float = 1.0,
@@ -1580,7 +1580,7 @@ def _visualize_single_tree_to_file(
     fig_w = max(figsize[0], width * 1.2)
     fig_h = max(figsize[1], depth * 1.5)
     fig, ax = plt.subplots(figsize=(fig_w, fig_h))
-    _render_tree_on_axes(ax, tree, node_size_scale=3.0)
+    render_tree_on_axes(ax, tree, node_size_scale=3.0)
     if title:
         ax.set_title(title, fontsize=12, fontweight="bold")
     plt.tight_layout()
@@ -1658,7 +1658,7 @@ def visualize_paretofront(
 
     for idx, cand in enumerate(sorted_front):
         ax = axes[idx // n_cols, idx % n_cols]
-        _render_tree_on_axes(ax, cand.get_evotree(), node_size_scale=2.0)
+        render_tree_on_axes(ax, cand.get_evotree(), node_size_scale=2.0)
         p, f = cand.get_parsim(), cand.get_fitness()
         ax.set_title(f"P={p:.0f}, F={f:.4g}", fontsize=10, fontweight="bold")
 
@@ -1674,3 +1674,14 @@ def visualize_paretofront(
 
     log("ff", f"Paretofront visualization saved to: {output_path}")
     return str(output_path)
+
+
+# ---------------------------------------------------------------------------
+# Backwards-compatibility alias
+# ---------------------------------------------------------------------------
+# The axes-level renderer used to live behind a private name. Several
+# downstream consumers (demo_helpers.py, benchmarks/nn_gp/paper_figures.py)
+# already reached into the underscore symbol, which made the API contract
+# implicit. The function is now public as ``render_tree_on_axes``; keep this
+# alias so any external code that imported the old name keeps working.
+_render_tree_on_axes = render_tree_on_axes

@@ -278,10 +278,10 @@ def show_tree(tree, title: str = "", figsize: tuple = (5, 4)) -> None:
         title: Optional subplot title.
         figsize: Figure size ``(width, height)`` in inches.
     """
-    from plagih.visualization.tree_renderer import _render_tree_on_axes
+    from plagih.visualization.tree_renderer import render_tree_on_axes
 
     fig, ax = plt.subplots(figsize=figsize)
-    _render_tree_on_axes(ax, tree)
+    render_tree_on_axes(ax, tree)
     if title:
         ax.set_title(title, fontsize=11, fontweight="bold")
     plt.tight_layout()
@@ -296,14 +296,14 @@ def show_trees(trees_titles: List[Tuple], suptitle: str = "", figsize_per: tuple
         suptitle: Optional super-title for the entire figure.
         figsize_per: Per-panel ``(width, height)`` in inches.
     """
-    from plagih.visualization.tree_renderer import _render_tree_on_axes
+    from plagih.visualization.tree_renderer import render_tree_on_axes
 
     n = len(trees_titles)
     fig, axes = plt.subplots(1, n, figsize=(figsize_per[0] * n, figsize_per[1]))
     if n == 1:
         axes = [axes]
     for ax, (tree, title) in zip(axes, trees_titles):
-        _render_tree_on_axes(ax, tree)
+        render_tree_on_axes(ax, tree)
         if title:
             ax.set_title(title, fontsize=9, fontweight="bold")
     if suptitle:
@@ -324,10 +324,10 @@ def show_tree_with_scores(tree, node_scores: Dict[int, float], title: str = "", 
         title: Optional subplot title.
         figsize: Figure size in inches.
     """
-    from plagih.visualization.tree_renderer import _render_tree_on_axes
+    from plagih.visualization.tree_renderer import render_tree_on_axes
 
     fig, ax = plt.subplots(figsize=figsize)
-    _render_tree_on_axes(ax, tree, node_scores=node_scores)
+    render_tree_on_axes(ax, tree, node_scores=node_scores)
     if title:
         ax.set_title(title, fontsize=11, fontweight="bold")
 

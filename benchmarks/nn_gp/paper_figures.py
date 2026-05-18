@@ -168,7 +168,7 @@ def plot_top_gp_trees(
         # tree_renderer was moved into the plagih package; keep import lazy
         # so the rest of the figure generation still works without matplotlib
         # backends configured for tree rendering.
-        from plagih.visualization.tree_renderer import _render_tree_on_axes
+        from plagih.visualization.tree_renderer import render_tree_on_axes
     except ImportError:
         print("  [figures] tree_renderer not available  skipping tree renders.")
         return None
@@ -186,7 +186,7 @@ def plot_top_gp_trees(
 
     for ax, cand in zip(axes, candidates):
         try:
-            _render_tree_on_axes(ax, cand.tree)
+            render_tree_on_axes(ax, cand.tree)
             ax.set_title(f"MSE={cand.fitness:.4f}  par={cand.parsimony}", fontsize=9)
         except Exception as exc:
             ax.text(0.5, 0.5, f"render error:\n{exc}", ha="center", va="center", fontsize=8)

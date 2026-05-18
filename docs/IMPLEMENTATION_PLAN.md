@@ -572,12 +572,15 @@
      point 4): one-hot encode the target, swap loss to CE, adapt the residual
      definition (probabilities vs. floats). Decide whether GP candidates emit
      logits per class or per-class scalars. Track as a separate experiment.
-  9. **Promote `_render_tree_on_axes` to public API.** `benchmarks/nn_gp/
-     paper_figures.py` currently reaches into the private helper of
-     `plagih.visualization.tree_renderer` to draw GP candidates as subplot
-     panels. Either expose a thin `render_tree_on_axes(ax, tree, ...)` wrapper
-     or extend `render_tree()` with an `ax=` keyword so this consumer (and any
-     future paper-figure code) does not depend on a `_`-prefixed symbol.
+  9. ✅ **Promote `_render_tree_on_axes` to public API** (2026-05-18) —
+     Renamed to `render_tree_on_axes` in
+     `plagih/visualization/tree_renderer.py`, exported via
+     `plagih.visualization.__init__.__getattr__`, and updated all callers
+     (`demo_helpers.py` x3, `benchmarks/nn_gp/paper_figures.py`, the two
+     internal `tree_renderer` uses). A `_render_tree_on_axes` alias remains
+     for backward compatibility. Also fixed a latent bug in
+     `plagih/visualization/__init__.py` whose lazy importer pointed at the
+     stale top-level `visualization` package path.
 - **Related:** D5 (targeted optimisation), I2 (partnering).
 
 ### I11 – Merged-tree visualisation improvements

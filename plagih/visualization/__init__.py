@@ -13,11 +13,11 @@ Provides unified tree visualization functionality for:
 def __getattr__(name):
     """Lazy import of visualization components."""
     if name in _EXPORTS:
-        from visualization import tree_renderer
+        from plagih.visualization import tree_renderer
 
         return getattr(tree_renderer, name)
 
-    raise AttributeError(f"module 'visualization' has no attribute {name!r}")
+    raise AttributeError(f"module 'plagih.visualization' has no attribute {name!r}")
 
 
 _EXPORTS = {
@@ -34,6 +34,7 @@ _EXPORTS = {
     "NodeStyle",
     # High-level functions
     "render_tree",
+    "render_tree_on_axes",
     "render_merged_tree",
     "visualize_paretofront",
 }

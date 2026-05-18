@@ -4,10 +4,19 @@ __pycache__/
 .pytest_cache/
 .venv/
 .env
-.idea/
-*.idea
-*.xml
-*.iml
+# PyCharm project folder — ignore generated/machine-specific state,
+# but keep .idea/runConfigurations/ so PyCharm picks up the shared run configs.
+# Note: .idea/ must NOT be ignored as a whole for sub-directory negations to work.
+.idea/workspace.xml
+.idea/shelf/
+.idea/*.iml
+.idea/copilot*.xml
+.idea/copilotDiff*.xml
+.idea/csv-*.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/ruff.xml
+.idea/vcs.xml
 
 # Run artefacts (all GP + nn_gp pipeline outputs live in .results/)
 /.results/

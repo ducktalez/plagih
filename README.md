@@ -8,6 +8,23 @@ Key features:
 - Built-in monitoring, visualisation, and benchmarks
 - Optional **NN+GP co-evolution pipeline** (see `benchmarks/nn_gp/`)
 ---
+## Running in PyCharm
+
+Ready-made **Run Configurations** are committed in `.idea/runConfigurations/` and
+appear automatically in PyCharm's run menu (top-right drop-down):
+
+| Configuration | What it does | Approx. time |
+|---|---|---|
+| **NN+GP – Baseline only** | Trains baseline NN only (`--fast --baseline-only`), sanity check + blueprint | ~2 min |
+| **NN+GP – Dev run, fast** | 3 EM iterations, small pop/gen (`--fast`), produces real blueprint | ~10 min |
+| **NN+GP – Full run, 3 iterations** | Full-scale run: pop=50, gen=20, 400 epochs per NN | ~1 h |
+| **NN+GP – Regenerate blueprint** | Re-renders `PAPER_BLUEPRINT.md` from an existing `experiment.json` | seconds |
+| **Plagih GP – Fresh Run** | Runs `plagih_gp.py fresh` — a clean GP demo run | minutes |
+
+> **Output** lands in `.results/nn_gp/<timestamp>/` (gitignored).
+> Open `PAPER_BLUEPRINT.md` in that folder once the run finishes.
+
+---
 ## Quick Start
 ```bash
 # 1. Clone and enter the repo

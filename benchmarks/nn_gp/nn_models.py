@@ -213,6 +213,7 @@ def find_minimal_nn(
     all_results: List[TrainResult] = []
 
     for hidden_sizes in _ARCHITECTURE_GRID:
+        print(f"    [find_min_nn] trying arch={hidden_sizes} (threshold MSE <= {threshold:.5f})...", flush=True)
         result = train_nn(
             X,
             y,
@@ -224,8 +225,18 @@ def find_minimal_nn(
             device=device,
         )
         all_results.append(result)
+        print(
+            f"    [find_min_nn]   -> {result}  "
+            f"{'OK (under threshold)' if result.final_mse <= threshold else 'NOT YET'}",
+            flush=True,
+        )
         if result.final_mse <= threshold:
             return result, all_results
 
     # Return largest tried if nothing succeeded
+    print(
+        f"    [find_min_nn] no architecture beat threshold; returning largest "
+        f"({all_results[-1].hidden_sizes}, mse={all_results[-1].final_mse:.5f}).",
+        flush=True,
+    )
     return all_results[-1], all_results

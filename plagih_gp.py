@@ -783,7 +783,17 @@ if __name__ == "__main__":
     else:
         mode = "demo"  # Default to demo
 
-    if mode == "demo":
+    if mode == "gui":
+        # Launch the PySide6 desktop monitoring GUI
+        try:
+            from plagih.gui.desktop.app import main as _gui_main
+        except ImportError as e:
+            print(f"GUI not available: {e}")
+            print("Install with: pip install 'plagih[gui]'")
+            sys.exit(1)
+        _gui_main()
+
+    elif mode == "demo":
         # Quick demonstration (~30 seconds)
         demo_minimal()
 
@@ -829,6 +839,7 @@ if __name__ == "__main__":
             Usage: python plagih_gp.py [mode]
 
             Modes:
+              gui    - Launch the PySide6 desktop monitoring GUI
               demo   - Quick demonstration (~30 seconds) [default]
               active-test - Non-standard active usability test (pop=5000, gen=1000)
               usability-test - Alias for active-test
@@ -839,6 +850,7 @@ if __name__ == "__main__":
               observe - Deprecated alias for active-test
 
             Examples:
+              python plagih_gp.py gui
               python plagih_gp.py demo
               python plagih_gp.py fresh
               python plagih_gp.py active-test

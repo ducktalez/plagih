@@ -81,6 +81,14 @@ class NNConfig:
     patience: int = 40
     tolerance: float = 0.05
     device: Optional[str] = None
+    # Feature retention across EM iterations:
+    #   "replace"    – only the latest iteration's Pareto candidates feed the NN
+    #                  (default; cleanest attribution).
+    #   "accumulate" – all Pareto candidates from all past iterations are kept
+    #                  as NN feature columns (richer features, but the NN input
+    #                  grows linearly with iteration count).
+    # Implements I10.7.
+    feature_retention: str = "replace"
 
 
 # ---------------------------------------------------------------------------
@@ -180,6 +188,10 @@ def run_em_loop(
 
     current_target = target_norm.copy()  # Updated per iteration
     all_results: List[IterationResult] = []
+    # I10.7: keep accumulated Pareto candidates across iterations when
+    # nn_cfg.feature_retention == "accumulate". With "replace" (default) this
+    # list is reset each iteration to only carry the latest front.
+    retained_candidates: List[Any] = []
 
     baseline_mse = tracker.baseline_mse
 
@@ -217,7 +229,16 @@ def run_em_loop(
         # ----------------------------------------------------------------
         # Build GP feature matrix from Pareto candidates
         # ----------------------------------------------------------------
-        gp_feats = build_gp_feature_matrix(pareto, df_norm)
+        if nn_cfg.feature_retention == "accumulate":
+            retained_candidates.extend(pareto)
+            feature_candidates = retained_candidates
+        elif nn_cfg.feature_retention == "replace":
+            feature_candidates = pareto
+        else:
+            raise ValueError(
+                f"Unknown feature_retention mode {nn_cfg.feature_retention!r}; expected 'replace' or 'accumulate'."
+            )
+        gp_feats = build_gp_feature_matrix(feature_candidates, df_norm)
         X_enriched = build_nn_input(df_norm, target_col, gp_feats)
 
         # ----------------------------------------------------------------

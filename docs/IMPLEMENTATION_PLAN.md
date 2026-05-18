@@ -564,10 +564,14 @@
      ensure reproducibility, revisit after first full runs.
   6. **Second benchmark** (CartPole, SR) to validate generalisation of the
      pipeline once MountainCar produces clean results.
-  7. **Per-iteration GP feature retention**: currently all Pareto candidates of
-     the latest iteration become NN features. Decide whether to also retain
-     candidates from earlier iterations (richer features) or fully replace
-     (cleaner attribution).
+  7. ✅ **Per-iteration GP feature retention** (2026-05-18) — Added
+     `NNConfig.feature_retention` flag with two modes: `"replace"` (default,
+     current behaviour — only the latest iteration's Pareto candidates feed
+     the NN) and `"accumulate"` (keep all past Pareto candidates as NN
+     features). Exposed in `run_mc.py` via `--feature-retention`; recorded in
+     `ExperimentMeta.nn_config` so the blueprint can report which mode was
+     used. The two modes can now be A/B-compared once the first full
+     baseline run finishes.
   8. **Cross-entropy variant for categorical targets** (split off from old
      point 4): one-hot encode the target, swap loss to CE, adapt the residual
      definition (probabilities vs. floats). Decide whether GP candidates emit

@@ -84,6 +84,7 @@ def run(
     baseline_only: bool = False,
     show_figures: bool = False,
     fast: bool = False,
+    feature_retention: str = "replace",
 ) -> Path:
     """Run the full NN+GP EM pipeline on MountainCar data.
 
@@ -94,6 +95,8 @@ def run(
         baseline_only: If True, only run the baseline NN (no GP).
         show_figures: If True, call plt.show() after figure generation.
         fast: If True, use reduced epochs/architectures for quick dev runs.
+        feature_retention: ``"replace"`` (default) or ``"accumulate"``; see
+            ``NNConfig.feature_retention`` for semantics (I10.7).
 
     Returns:
         Path to the generated PAPER_BLUEPRINT.md.
@@ -104,6 +107,7 @@ def run(
         batch_size=64,
         patience=20 if fast else 40,
         tolerance=0.05,
+        feature_retention=feature_retention,
     )
     # How many baseline architectures to try (fewer = faster for dev)
     baseline_max_arch = 5 if fast else 9
@@ -186,6 +190,7 @@ def run(
             "batch_size": nn_cfg.batch_size,
             "patience": nn_cfg.patience,
             "tolerance": nn_cfg.tolerance,
+            "feature_retention": nn_cfg.feature_retention,
         },
     )
     tracker.set_meta(meta)
@@ -251,6 +256,13 @@ if __name__ == "__main__":
     parser.add_argument("--baseline-only", action="store_true", help="Only run baseline NN, skip GP")
     parser.add_argument("--fast", action="store_true", help="Faster dev run (fewer epochs/architectures)")
     parser.add_argument("--show", action="store_true", help="Show figures interactively")
+    parser.add_argument(
+        "--feature-retention",
+        choices=["replace", "accumulate"],
+        default="replace",
+        help="GP feature retention across iterations (I10.7): 'replace' keeps only the latest "
+        "Pareto candidates as NN features, 'accumulate' keeps candidates from all past iterations.",
+    )
     args = parser.parse_args()
 
     blueprint = run(
@@ -260,5 +272,6 @@ if __name__ == "__main__":
         baseline_only=args.baseline_only,
         show_figures=args.show,
         fast=args.fast,
+        feature_retention=args.feature_retention,
     )
     print(f"Blueprint: {blueprint}")

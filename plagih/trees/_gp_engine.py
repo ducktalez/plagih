@@ -1548,9 +1548,23 @@ class ExplainableGP:
                 candidate.tree.repair_all()
             for candidate in self.paretofront:
                 candidate.tree.repair_all()
-            # Recreate monitor from loaded DataFrame (for backwards compatibility)
-            # The monitor will be repopulated if evolution continues
-            self.monitor = GPMonitor()
+            # Restore monitoring history from the loaded DataFrame.
+            # Best-effort: a malformed / unexpected payload falls back to a
+            # fresh empty monitor with a warning, never an exception, so a
+            # damaged monitor table cannot block resuming a backup.
+            try:
+                self.monitor = GPMonitor.from_dataframe(loaded_monitor_df)
+                log(
+                    "g",
+                    f"Restored monitor with {len(self.monitor)} generation entries from backup.",
+                )
+            except Exception as exc:
+                log(
+                    "w",
+                    f"Could not restore monitor history from backup ({type(exc).__name__}: {exc}); "
+                    "starting with empty monitor. New generations will still be recorded.",
+                )
+                self.monitor = GPMonitor()
             self.backup_save(opt_path_backup=self.rootdir / f"backup/backup-{self.gen_id}.pkl")
             log("g", f"Successfully loaded backup file. Generation: {self.gen_id}")
         else:

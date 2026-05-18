@@ -12,4 +12,7 @@ tensorflow
 sympy
 pathlib
 torch
+# Optional: desktop GUI (see plagih/gui/).
+# Pinned <6.8 — newer PySide6 wheels conflict with some Conda Pythons on Windows.
+PySide6>=6.5,<6.8
 

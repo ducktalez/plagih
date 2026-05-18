@@ -20,6 +20,7 @@ appear automatically in PyCharm's run menu (top-right drop-down):
 | **NN+GP – Full run, 3 iterations** | Full-scale run: pop=50, gen=20, 400 epochs per NN | ~1 h |
 | **NN+GP – Regenerate blueprint** | Re-renders `PAPER_BLUEPRINT.md` from an existing `experiment.json` | seconds |
 | **Plagih GP – Fresh Run** | Runs `plagih_gp.py fresh` — a clean GP demo run | minutes |
+| **Plagih GUI** | Opens the desktop monitoring GUI (`python -m plagih.gui`) — configure, start, pause and inspect runs interactively | instant |
 
 > **Output** lands in `.results/nn_gp/<timestamp>/` (gitignored).
 > Open `PAPER_BLUEPRINT.md` in that folder once the run finishes.

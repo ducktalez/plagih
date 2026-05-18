@@ -18,10 +18,10 @@ crossover, and simplification, evaluated against training data.
 | Module | Responsibility |
 |---|---|
 | `plagih/trees/` | plagih.trees — Node hierarchy, evolution, and GP engine. |
-| `plagih/trees/_nodes.py` | plagih_tree contain a new implementation of trees that we use in genetic programming to display a program. (62C/17F) |
+| `plagih/trees/_nodes.py` | plagih_tree contain a new implementation of trees that we use in genetic programming to display a program. (62C/22F) |
 | `plagih/trees/_evolution.py` | Evolution module: Candidate, NodeSelect, Evolution, and population helpers. (3C/8F) |
 | `plagih/trees/_gp_engine.py` | GP Engine module: ExplainableGP and picklable helper callables. (2C/5F) |
-| `plagih/parallel.py` | Parallel execution engine for plagih GP. (5C/37F) |
+| `plagih/parallel.py` | Parallel execution engine for plagih GP. (5C/39F) |
 | `plagih/paretofront.py` | Pareto-front dominance filter for GP candidates. (0C/5F) |
 | `plagih/monitoring.py` | GP Monitoring Module (2C/0F) |
 | `plagih/evaluation_context.py` | Unified Evaluation Context System for Plagih GP Trees. (3C/5F) |
@@ -60,25 +60,12 @@ Mixins: ChainableOp, CustomOperator, NoSymCapitalized, PleaseUsePartnerOp
 
 ## Area-specific instructions
 
-Detailed rules live in `.github/instructions/*.instructions.md` (with `applyTo`
-frontmatter). They are automatically injected when editing matching files:
+Additional rules live in `.github/instructions/*.instructions.md`.
+Each file declares an `applyTo` glob in its frontmatter and is **auto-injected**
+when matching files are edited — no need to look them up manually.
 
-| File | Scope |
-|---|---|
-| `trees.instructions.md` | `plagih/trees/**` — pitfalls, new-operator pointer |
-| `parallel.instructions.md` | `plagih/parallel.py` — pickle, IPC, batching |
-| `monitoring.instructions.md` | `plagih/monitoring.py` — metrics, callbacks, DataFrame mapping |
-| `evaluation-context.instructions.md` | `plagih/evaluation_context.py` — modes, LUT caching |
-| `population-merge.instructions.md` | `plagih/population_merge.py` — DAG merge |
-| `paretofront.instructions.md` | `plagih/paretofront.py` — dominance filter |
-| `config.instructions.md` | `plagih/config.py` — PlagihConfig, verbosity |
-| `logging-utils.instructions.md` | `plagih/logging_utils.py` — `log()`, verbosity gating |
-| `plagih-gp.instructions.md` | `plagih_gp.py` — entry point, demos |
-| `visualization.instructions.md` | `visualization/**` — rendering attributes |
-| `tests.instructions.md` | `plagih/test/**` — pytest config, fixtures |
-| `tree-complexity.instructions.md` | `plagih/tree_complexity/**` — TED, bytecode |
-| `benchmarks.instructions.md` | `benchmarks/**` — environments, samples format |
-| `targeted-optimization.instructions.md` | `plagih/targeted_optimization.py` — analysis, scoring, no side effects |
+When adding new cross-cutting conventions, prefer creating a new
+`*.instructions.md` with a narrow `applyTo` over expanding this central file.
 
 ## Key docs in `docs/`
 
@@ -114,6 +101,10 @@ frontmatter). They are automatically injected when editing matching files:
 - **Raise concerns**: If an approach seems risky, fragile, or
   architecturally problematic, voice the concern explicitly before or
   alongside the implementation.
+- **GUI compatibility**: New config keys, monitor metrics, or
+  `ExplainableGP` entry points must stay usable from the desktop GUI in
+  `plagih/gui/`. Details in `.github/instructions/gui-compatibility.instructions.md`
+  (auto-injected when editing the relevant core files).
 
 ## Maintaining these docs
 

@@ -610,6 +610,26 @@
   renders, Pareto plots, merge trees, etc.
 - **Related:** D8 (demo notebook).
 
+### I15 – GUI ideas backlog
+- **Status:** First desktop GUI shipped in `plagih/gui/` (PySide6).
+  Documented in `docs/GUI.md`.
+- **Open follow-ups:**
+  1. **Click-to-render** any Pareto entry in the "Best candidate" tab,
+     not just the most recently added.
+  2. **Diff view** between consecutive Pareto entries (which subtree changed?).
+  3. **Merged-population-tree tab** rendered via
+     `plagih.population_merge.build_one_evaluation_tree`.
+  4. **Subtree drill-down** with targeted-optimization scores from
+     `plagih/targeted_optimization.py` (per-node intermediate values,
+     Oracle Bound, Ifte / Piecewise component scores).
+  5. **Finer-grained pause** *inside* a generation — requires cooperative
+     check-points in `parallel.run_generation_*`.
+  6. **Optional FastAPI / WebSocket adapter** so the same
+     `RunController` can drive a browser view alongside the desktop UI.
+  7. **Live log streaming from `plagih.logging_utils.log()`** — currently
+     only events explicitly emitted by the controller reach the GUI log
+     panel; standard `log()` calls only show in the terminal.
+
 ## Recent completions (changelog)
 
 > Promote items here once delivered. Older entries can be trimmed after a

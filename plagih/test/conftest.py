@@ -24,6 +24,12 @@ Test tiers
       python plagih/test/benchmarks/bench_performance.py
 """
 
+# ---------------------------------------------------------------------------
+# Default Qt to offscreen for the whole test session.
+# Importing PySide6 modules (e.g. via GUI tests) inherits this and works
+# on headless CI without a real display server.
+# ---------------------------------------------------------------------------
+import os as _os
 import shutil
 import tempfile
 from pathlib import Path
@@ -32,6 +38,8 @@ import numpy as np
 import pandas as pd
 import pytest
 import sympy
+
+_os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 # ---------------------------------------------------------------------------
 # Exclude standalone benchmark scripts from pytest collection.

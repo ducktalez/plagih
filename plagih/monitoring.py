@@ -198,25 +198,45 @@ class GPMonitor:
             improvement = self._best_fitness_ever - current_best
             self._best_fitness_ever = current_best
             for cb in self._on_improvement_callbacks:
-                try:
-                    cb(metrics, improvement)
-                except Exception:
-                    pass
+                self._safe_invoke_callback(cb, "on_improvement", metrics, improvement)
 
         # Fire pareto update callbacks
         if pareto_updated:
             for cb in self._on_pareto_update_callbacks:
-                try:
-                    cb(metrics)
-                except Exception:
-                    pass
+                self._safe_invoke_callback(cb, "on_pareto_update", metrics)
 
         # Fire generation callbacks
         for cb in self._on_generation_callbacks:
-            try:
-                cb(metrics)
-            except Exception:
-                pass
+            self._safe_invoke_callback(cb, "on_generation", metrics)
+
+    @staticmethod
+    def _safe_invoke_callback(callback: Callable, kind: str, *args) -> None:
+        """Invoke a user-registered monitor callback with bounded error scope.
+
+        Rationale: callbacks are user code (e.g. GUI bridges, custom loggers,
+        live plotting). A misbehaving callback must **not** crash the GP
+        worker thread — but silent failures make debugging painful, so
+        each exception is logged exactly once (with traceback) before being
+        suppressed.
+
+        Only :class:`Exception` is caught — :class:`BaseException` subclasses
+        such as :class:`KeyboardInterrupt` and :class:`SystemExit` still
+        propagate so the user can interrupt the run.
+        """
+        try:
+            callback(*args)
+        except Exception:
+            import traceback
+
+            from plagih.logging_utils import log_warning
+
+            cb_name = getattr(callback, "__qualname__", None) or getattr(callback, "__name__", repr(callback))
+            log_warning(
+                "GPMonitor %s callback %r raised; suppressed to keep the GP loop alive.\n%s",
+                kind,
+                cb_name,
+                traceback.format_exc(),
+            )
 
     def _compute_population_metrics(self, population: List["Candidate"]) -> Dict[str, Any]:
         """Compute standard population metrics."""
@@ -364,28 +384,108 @@ class GPMonitor:
         df = pd.DataFrame(data, index=index)
         df.index.name = "gen_id"
 
-        # Rename columns for backwards compatibility with existing code
-        rename_map = {
-            "pop_size": "pop_len",
-            "gen_time": "time",
-            "fit_mean": "fit_avg",
-            "fit_std": "fit_var",
-            "parsim_mean": "parsim_avg",
-            "parsim_std": "parsim_var",
-            "fit_q25": "fit_quantile_25",
-            "fit_median": "fit_quantile_50",
-            "fit_q75": "fit_quantile_75",
-            "parsim_q25": "parsim_quantile_25",
-            "parsim_median": "parsim_quantile_50",
-            "parsim_q75": "parsim_quantile_75",
-            "gens_since_pareto": "gens_since_last_pareto",
-            "lut_size": "lut_symex_fitness-len",
-        }
-
-        rename_map = {k: v for k, v in rename_map.items() if k in df.columns}
+        # Rename columns for backwards compatibility with existing code.
+        # Source of truth lives on the class so to_dataframe() and
+        # from_dataframe() can never drift apart.
+        rename_map = {k: v for k, v in self._BACKWARDS_COMPAT_RENAME.items() if k in df.columns}
         df = df.rename(columns=rename_map)
 
         return df
+
+    # ---------------------------------------------------------------
+    # Restore
+    # ---------------------------------------------------------------
+    # Inverse of the rename map in to_dataframe(); single source of truth so
+    # to_dataframe() ↔ from_dataframe() stay in sync.
+    _BACKWARDS_COMPAT_RENAME: Dict[str, str] = {
+        "pop_size": "pop_len",
+        "gen_time": "time",
+        "fit_mean": "fit_avg",
+        "fit_std": "fit_var",
+        "parsim_mean": "parsim_avg",
+        "parsim_std": "parsim_var",
+        "fit_q25": "fit_quantile_25",
+        "fit_median": "fit_quantile_50",
+        "fit_q75": "fit_quantile_75",
+        "parsim_q25": "parsim_quantile_25",
+        "parsim_median": "parsim_quantile_50",
+        "parsim_q75": "parsim_quantile_75",
+        "gens_since_pareto": "gens_since_last_pareto",
+        "lut_size": "lut_symex_fitness-len",
+    }
+
+    @classmethod
+    def from_dataframe(cls, df) -> "GPMonitor":
+        """Recreate a monitor instance from a previously-exported DataFrame.
+
+        Inverse of :meth:`to_dataframe`. Internal-name columns are taken as
+        given; legacy export-only column names (``pop_len``, ``time``, …)
+        are mapped back to their internal counterparts via
+        :attr:`_BACKWARDS_COMPAT_RENAME`.
+
+        The restored monitor has no live callbacks attached and a fresh
+        ``start_time`` — only the recorded per-generation metrics are
+        reconstructed, plus ``best_fitness_ever`` and ``gens_since_pareto``
+        derived from the data.
+
+        Args:
+            df: DataFrame produced by :meth:`to_dataframe`. ``None`` or an
+                empty DataFrame yields an empty monitor.
+
+        Raises:
+            TypeError: If *df* is not a DataFrame.
+        """
+        import pandas as pd
+
+        monitor = cls()
+        if df is None:
+            return monitor
+        if not isinstance(df, pd.DataFrame):
+            raise TypeError(f"GPMonitor.from_dataframe expects a DataFrame, got {type(df).__name__}")
+        if len(df) == 0:
+            return monitor
+
+        inverse_map = {export: internal for internal, export in cls._BACKWARDS_COMPAT_RENAME.items()}
+        cumulative_time = 0.0
+        for gen_id, row in df.iterrows():
+            metrics_dict: Dict[str, Any] = {}
+            for col, value in row.items():
+                # Skip pandas NaN where possible to keep metrics dicts tidy
+                internal = inverse_map.get(str(col), str(col))
+                metrics_dict[internal] = value
+
+            gen_time = metrics_dict.get("gen_time")
+            try:
+                gen_time_f = float(gen_time) if gen_time is not None else 0.0
+            except (TypeError, ValueError):
+                gen_time_f = 0.0
+            if np.isnan(gen_time_f):
+                gen_time_f = 0.0
+            cumulative_time += gen_time_f
+
+            try:
+                gid = int(gen_id)
+            except (TypeError, ValueError):
+                gid = len(monitor.generations)
+
+            monitor.generations.append(GenerationMetrics(gen_id=gid, timestamp=cumulative_time, metrics=metrics_dict))
+
+        # Restore best-fitness-ever from history
+        fit_best = monitor.get_metric_series("fit_best")
+        if len(fit_best) and np.any(np.isfinite(fit_best)):
+            monitor._best_fitness_ever = float(np.nanmin(fit_best))
+
+        # Restore "generations since last pareto" from the most recent entry
+        last = monitor.generations[-1]
+        gsl = last.get("gens_since_pareto", 0)
+        try:
+            monitor.gens_since_last_pareto = (
+                int(gsl) if gsl is not None and not (isinstance(gsl, float) and np.isnan(gsl)) else 0
+            )
+        except (TypeError, ValueError):
+            monitor.gens_since_last_pareto = 0
+
+        return monitor
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""

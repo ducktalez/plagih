@@ -31,6 +31,24 @@ from plagih.gui.core.config_schema import LIVE_EDITABLE_FIELDS, RunConfig
 from plagih.gui.core.events import EventBus, EventType, RunEvent, RunState
 
 
+def _resolve_str_weights(weights: Dict[str, float]) -> Dict:
+    """Convert ``{op_name_str: weight}`` → ``{NodeClass: weight}`` for :class:`Evolution`.
+
+    Unknown names are silently skipped (avoids crashing on typos in saved configs).
+    Only operators with ``weight > 0`` are included.
+    """
+    from plagih.trees import _nodes as _n
+
+    result: Dict = {}
+    for name, w in weights.items():
+        if w <= 0:
+            continue
+        cls = getattr(_n, name, None)
+        if cls is not None:
+            result[cls] = float(w)
+    return result
+
+
 class RunController:
     """Drives a single :class:`ExplainableGP` instance from the GUI."""
 
@@ -140,7 +158,21 @@ class RunController:
 
             # Initial population (generation 0)
             if self.gp.gen_id == 0:
-                self.gp.gen_create_initial()
+                # Optionally seed with a stored origin tree
+                origin_tree = None
+                if self.config.origin_tree_path:
+                    try:
+                        import pickle
+
+                        from plagih.trees._nodes import repair_all
+
+                        with open(self.config.origin_tree_path, "rb") as fh:
+                            origin_tree = pickle.load(fh)
+                        repair_all(origin_tree)
+                        self._emit_log("info", f"Origin tree loaded from {self.config.origin_tree_path}")
+                    except Exception as exc:
+                        self._emit_log("warning", f"Could not load origin_tree: {exc}")
+                self.gp.gen_create_initial(origin_tree=origin_tree)
 
             # Main generation loop
             while not self._stop_event.is_set() and self.gp.gen_id < self.config.gen_end:
@@ -179,6 +211,7 @@ class RunController:
         import pandas as pd
 
         from plagih.config import cfg as _cfg
+        from plagih.gui.core.config_schema import OPERATOR_PRESET_WEIGHTS
         from plagih.trees import ExplainableGP
 
         cfg = self.config
@@ -195,11 +228,20 @@ class RunController:
         # If symbols are unset, default to all non-target columns.
         symbols = cfg.symbols or [c for c in df_train.columns if c != cfg.target_column]
 
+        # Resolve operators: custom weights > named preset
+        if cfg.operator_weights:
+            ops = _resolve_str_weights(cfg.operator_weights)
+        elif cfg.preset in OPERATOR_PRESET_WEIGHTS:
+            ops = _resolve_str_weights(OPERATOR_PRESET_WEIGHTS[cfg.preset])
+        else:
+            ops = cfg.preset  # pass string, Evolution resolves via operator_presets
+
         self.gp = ExplainableGP.create(
             symbols=symbols,
             df_train=df_train,
             rootdir=cfg.rootdir,
-            preset=cfg.preset,
+            operators=ops if isinstance(ops, dict) else None,
+            preset=cfg.preset if not isinstance(ops, dict) else "math_simple",
             depth_max=cfg.depth_max,
             nodes_max=cfg.nodes_max,
             pop_max_size=cfg.pop_max_size,

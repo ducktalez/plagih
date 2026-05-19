@@ -21,6 +21,109 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 # ---------------------------------------------------------------------------
+# Operator catalogue  (string keys → used by OperatorPanel + ResolveFn)
+# ---------------------------------------------------------------------------
+
+#: All operators grouped by visual category.
+OPERATOR_CATALOGUE: Dict[str, List[str]] = {
+    "Math": [
+        "Add",
+        "Mul",
+        "Sub",
+        "Div",
+        "Scale",
+        "Square",
+        "Sqrt",
+        "Abs",
+        "Sign",
+        "Log",
+        "Exp",
+        "Exp2",
+        "Pow",
+        "NthRoot",
+        "Usub",
+        "Round",
+        "PowRounded",
+    ],
+    "Trigonometry": ["Sin", "Cos", "Tan", "Tanh", "Sinh", "Cosh", "Asin", "Acos", "Atan"],
+    "MinMax": ["Min", "Max", "Clip"],
+    "Logic": ["Not", "And", "Or", "Xor"],
+    "Relational": ["Lt", "Le", "Eq", "Ne"],  # Gt/Ge are PleaseUsePartnerOp - discouraged
+    "Conditional": ["Ifte", "Piecewise"],
+}
+
+#: Named operator presets as ``{op_name: weight}`` dicts.
+#: Mirrors the weights in ``Evolution.operator_presets`` but as plain strings.
+OPERATOR_PRESET_WEIGHTS: Dict[str, Dict[str, float]] = {
+    "math_simple": {
+        "Add": 2.0,
+        "Mul": 2.0,
+        "Scale": 0.5,
+        "Div": 1.0,
+        "Square": 0.75,
+        "Abs": 0.5,
+        "Sign": 0.5,
+        "Sqrt": 0.1,
+        "Log": 0.1,
+        "Sin": 0.5,
+        "Not": 0.5,
+        "Lt": 0.5,
+        "Le": 0.5,
+        "And": 1.0,
+        "Or": 1.0,
+        "Min": 1.0,
+        "Max": 1.0,
+    },
+    "math_full": {
+        "Add": 2.0,
+        "Mul": 2.0,
+        "Sub": 1.0,
+        "Div": 1.0,
+        "Scale": 0.5,
+        "Square": 0.75,
+        "Abs": 0.5,
+        "Sign": 0.5,
+        "Sqrt": 0.2,
+        "Log": 0.2,
+        "Exp": 0.1,
+        "Pow": 0.1,
+        "Sin": 0.5,
+        "Cos": 0.5,
+        "Tan": 0.1,
+        "Tanh": 0.1,
+        "Not": 0.5,
+        "Lt": 0.5,
+        "Le": 0.5,
+        "And": 1.0,
+        "Or": 1.0,
+        "Min": 1.0,
+        "Max": 1.0,
+    },
+    "with_logic": {
+        "Add": 2.0,
+        "Mul": 2.0,
+        "Scale": 0.5,
+        "Div": 1.0,
+        "Square": 0.75,
+        "Abs": 0.5,
+        "Sign": 0.5,
+        "Sqrt": 0.1,
+        "Log": 0.1,
+        "Sin": 0.5,
+        "Not": 1.0,
+        "And": 2.0,
+        "Or": 2.0,
+        "Xor": 0.5,
+        "Lt": 1.0,
+        "Le": 1.0,
+        "Ifte": 1.0,
+        "Piecewise": 0.5,
+        "Min": 1.0,
+        "Max": 1.0,
+    },
+}
+
+# ---------------------------------------------------------------------------
 # Strategy spec
 # ---------------------------------------------------------------------------
 
@@ -100,6 +203,15 @@ class RunConfig:
     backup_interval: int = 10
     tree_min_parsimony: int = 3
     float_precision: int = 3
+
+    # -- Operator configuration -----------------------------------------
+    #: Custom operator weights as {op_name: weight}.  Empty dict → use ``preset``.
+    operator_weights: Dict[str, float] = field(default_factory=dict)
+
+    # -- Origin tree (optional seed) ------------------------------------
+    #: Path to a pickled :class:`~plagih.trees._nodes.Node` used as origin seed.
+    #: When set, the tree is added to the initial population and used for TED parsimony.
+    origin_tree_path: Optional[str] = None
 
     # -- Strategies (per-generation evolution plan) ---------------------
     strategies: List[StrategySpec] = field(default_factory=lambda: list(DEFAULT_STRATEGIES))

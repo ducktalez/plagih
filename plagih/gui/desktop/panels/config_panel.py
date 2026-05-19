@@ -1,8 +1,14 @@
 """Config & strategy editor panel.
 
-Builds a form widget from :class:`RunConfig` dataclass fields.  Fields
-listed in :data:`LIVE_EDITABLE_FIELDS` are tagged ``[live]``; others are
-tagged ``[reload]`` to warn the user that applying them rebuilds the GP.
+Builds a form widget from :class:`RunConfig` dataclass fields arranged in
+collapsible sections.  Fields listed in :data:`LIVE_EDITABLE_FIELDS` are
+tagged ``[live]``; others are tagged ``[reload]``.
+
+Layout:
+  - Header row: "Settings" title + "Save settings" + "Load settings"  (same line)
+  - Scrollable collapsible sections: Data & output | Engine | PlagihConfig |
+    Operators & Variables | Strategies
+  - Footer: "Apply changes" button
 """
 
 from __future__ import annotations
@@ -10,7 +16,7 @@ from __future__ import annotations
 import dataclasses
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
@@ -18,8 +24,8 @@ from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
     QFormLayout,
-    QGroupBox,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
     QMessageBox,
     QPlainTextEdit,
@@ -36,8 +42,9 @@ from plagih.gui.core.config_schema import (
     RunConfig,
     StrategySpec,
 )
+from plagih.gui.desktop.panels.operator_panel import OperatorPanel
+from plagih.gui.desktop.widgets.collapsible_section import CollapsibleSection
 
-_PRESETS = ["math_simple", "math_full", "with_logic"]
 _ERROR_METRICS = ["rmse", "mse", "mae"]
 
 
@@ -62,18 +69,23 @@ class ConfigPanel(QWidget):
 
     def _build_ui(self) -> None:
         outer = QVBoxLayout(self)
+        outer.setSpacing(4)
 
-        # Save/load row
-        io_row = QHBoxLayout()
+        # ── Header row: "Settings"  [Save settings…]  [Load settings…] ──
+        header_row = QHBoxLayout()
+        title_lbl = QLabel("Settings")
+        title_lbl.setStyleSheet("font-size: 14px; font-weight: bold; padding-right: 8px;")
+        header_row.addWidget(title_lbl)
         btn_save = QPushButton("Save settings…")
         btn_load = QPushButton("Load settings…")
         btn_save.clicked.connect(self._on_save)
         btn_load.clicked.connect(self._on_load)
-        io_row.addWidget(btn_save)
-        io_row.addWidget(btn_load)
-        io_row.addStretch(1)
-        outer.addLayout(io_row)
+        header_row.addWidget(btn_save)
+        header_row.addWidget(btn_load)
+        header_row.addStretch(1)
+        outer.addLayout(header_row)
 
+        # ── Scrollable content ─────────────────────────────────────────
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         content = QWidget()
@@ -81,70 +93,104 @@ class ConfigPanel(QWidget):
         outer.addWidget(scroll, 1)
 
         form_outer = QVBoxLayout(content)
+        form_outer.setSpacing(2)
 
-        # --- Data & output ----------------------------------------------------
-        gb_data = QGroupBox("Data & output")
-        f_data = QFormLayout(gb_data)
+        # ── 1. Data & output ──────────────────────────────────────────
+        sec_data = CollapsibleSection("Data & output", expanded=True)
+        f_data = QFormLayout()
         self._add_path_field(f_data, "df_train_csv", "Training CSV", file_filter="CSV (*.csv)")
         self._add_path_field(f_data, "rootdir", "Output directory", is_dir=True)
         self._add_text_field(f_data, "target_column", "Target column")
-        self._add_text_field(
-            f_data,
-            "symbols",
-            "Symbols (comma-separated, empty = auto)",
-            placeholder="cartPos,cartVel",
-        )
-        form_outer.addWidget(gb_data)
+        sec_data.set_content_layout(f_data)
+        form_outer.addWidget(sec_data)
 
-        # --- Engine ------------------------------------------------------------
-        gb_engine = QGroupBox("Engine")
-        f_eng = QFormLayout(gb_engine)
-        self._add_combo_field(f_eng, "preset", "Preset", _PRESETS)
+        # ── 2. Engine ──────────────────────────────────────────────────
+        sec_eng = CollapsibleSection("Engine", expanded=True)
+        f_eng = QFormLayout()
         self._add_int_field(f_eng, "depth_max", "depth_max", 1, 32)
         self._add_int_field(f_eng, "nodes_max", "nodes_max", 1, 500)
         self._add_int_field(f_eng, "pop_max_size", "pop_max_size", 1, 100_000)
         self._add_int_field(f_eng, "gen_end", "gen_end", 1, 1_000_000)
         self._add_text_field(f_eng, "clip_range", "clip_range (min,max or empty)", placeholder="0,2")
         self._add_combo_field(f_eng, "error_metric", "error_metric", _ERROR_METRICS)
-        self._add_bool_field(f_eng, "allow_chain", "allow_chain")
         self._add_int_field(f_eng, "parallel", "parallel workers (0=seq)", 0, 256)
         self._add_bool_field(f_eng, "enable_analysis", "enable_analysis (plots/backups)")
-        form_outer.addWidget(gb_engine)
+        sec_eng.set_content_layout(f_eng)
+        form_outer.addWidget(sec_eng)
 
-        # --- PlagihConfig ------------------------------------------------------
-        gb_cfg = QGroupBox("PlagihConfig (cfg.*)")
-        f_cfg = QFormLayout(gb_cfg)
+        # ── 3. PlagihConfig ────────────────────────────────────────────
+        sec_cfg = CollapsibleSection("PlagihConfig (cfg.*)", expanded=False)
+        f_cfg = QFormLayout()
         self._add_text_field(f_cfg, "verbosity", "verbosity")
         self._add_bool_field(f_cfg, "simplification", "simplification")
         self._add_bool_field(f_cfg, "visualization", "visualization")
         self._add_bool_field(f_cfg, "merged_tree", "merged_tree")
-        self._add_bool_field(f_cfg, "origin_tree", "origin_tree")
+        self._add_bool_field(f_cfg, "origin_tree", "origin_tree (track metadata)")
         self._add_bool_field(f_cfg, "lut_enabled", "lut_enabled")
         self._add_int_field(f_cfg, "plots_interval", "plots_interval", 1, 10_000)
         self._add_int_field(f_cfg, "backup_interval", "backup_interval", 1, 10_000)
-        self._add_int_field(f_cfg, "tree_min_parsimony", "tree_min_parsimony", 0, 1000)
+        self._add_int_field(f_cfg, "tree_min_parsimony", "tree_min_parsimony", 0, 1_000)
         self._add_int_field(f_cfg, "float_precision", "float_precision", 0, 12)
-        form_outer.addWidget(gb_cfg)
+        sec_cfg.set_content_layout(f_cfg)
+        form_outer.addWidget(sec_cfg)
 
-        # --- Strategies --------------------------------------------------------
-        gb_strat = QGroupBox("Strategies (JSON list — one per generation)")
-        v_strat = QVBoxLayout(gb_strat)
+        # ── 4. Operators & Variables ───────────────────────────────────
+        sec_ops = CollapsibleSection("Operators & Variables", expanded=False)
+        ops_vbox = QVBoxLayout()
+        ops_vbox.setContentsMargins(0, 0, 0, 0)
+
+        # origin_tree path (seed tree file)
+        origin_row = QHBoxLayout()
+        origin_edit = QLineEdit()
+        origin_edit.setPlaceholderText("(optional) path to seed-tree .pkl")
+        origin_edit.setToolTip(
+            "Pickled Node tree (.pkl) to add as origin candidate and use for TED parsimony.\nLeave empty to disable."
+        )
+        btn_origin = QPushButton("Browse…")
+
+        def _pick_origin():
+            p, _ = QFileDialog.getOpenFileName(self, "Select origin tree", "", "Pickle (*.pkl)")
+            if p:
+                origin_edit.setText(p)
+
+        btn_origin.clicked.connect(_pick_origin)
+        origin_row.addWidget(QLabel("Origin tree:"))
+        origin_row.addWidget(origin_edit, 1)
+        origin_row.addWidget(btn_origin)
+        ops_vbox.addLayout(origin_row)
+        self._widgets["origin_tree_path"] = origin_edit
+
+        # Operator panel
+        self._operator_panel = OperatorPanel(config=self._config)
+        ops_vbox.addWidget(self._operator_panel)
+        sec_ops.set_content_layout(ops_vbox)
+        form_outer.addWidget(sec_ops)
+
+        # ── 5. Strategies ──────────────────────────────────────────────
+        sec_strat = CollapsibleSection("Strategies (JSON — one per generation)", expanded=False)
+        strat_vbox = QVBoxLayout()
         self._strategies_edit = QPlainTextEdit()
         self._strategies_edit.setPlaceholderText('[{"name": "mutation", "rate": 0.4, ...}]')
-        v_strat.addWidget(self._strategies_edit)
+        strat_vbox.addWidget(self._strategies_edit)
         btn_default = QPushButton("Reset to default strategies")
         btn_default.clicked.connect(self._reset_default_strategies)
-        v_strat.addWidget(btn_default)
-        form_outer.addWidget(gb_strat)
+        strat_vbox.addWidget(btn_default)
+        sec_strat.set_content_layout(strat_vbox)
+        form_outer.addWidget(sec_strat)
 
         form_outer.addStretch(1)
 
-        # Apply row
+        # ── Footer: Apply button ───────────────────────────────────────
         apply_row = QHBoxLayout()
         self._btn_apply = QPushButton("Apply changes")
         self._btn_apply.setToolTip(
             "Pushes changed fields to the running controller.\n"
             "Fields tagged [reload] trigger a backup→recreate→restore cycle."
+        )
+        self._btn_apply.setStyleSheet(
+            "QPushButton { font-weight: bold; padding: 6px 16px;"
+            " border: 1px solid #555; border-radius: 4px; }"
+            "QPushButton:hover { background: palette(midlight); }"
         )
         self._btn_apply.clicked.connect(self._on_apply)
         apply_row.addStretch(1)
@@ -174,7 +220,7 @@ class ConfigPanel(QWidget):
         self._widgets[name] = w
         form.addRow(f"{label}  {self._badge(name)}", w)
 
-    def _add_combo_field(self, form: QFormLayout, name: str, label: str, items: list[str]) -> None:
+    def _add_combo_field(self, form: QFormLayout, name: str, label: str, items: List[str]) -> None:
         w = QComboBox()
         w.addItems(items)
         self._widgets[name] = w
@@ -216,7 +262,7 @@ class ConfigPanel(QWidget):
     def _populate_from_config(self) -> None:
         c = self._config
         for f in dataclasses.fields(c):
-            if f.name == "strategies":
+            if f.name in ("strategies", "operator_weights", "origin_tree_path"):
                 continue
             w = self._widgets.get(f.name)
             if w is None:
@@ -233,8 +279,16 @@ class ConfigPanel(QWidget):
             elif isinstance(w, QLineEdit):
                 w.setText(self._format_value(f.name, v))
 
+        # origin_tree_path widget is in _widgets (keyed by field name) but not a dataclass field
+        # handled separately here:
+        path_w = self._widgets.get("origin_tree_path")
+        if isinstance(path_w, QLineEdit):
+            path_w.setText(c.origin_tree_path or "")
+
         # strategies → JSON
         self._strategies_edit.setPlainText(json.dumps([dataclasses.asdict(s) for s in c.strategies], indent=2))
+        # operator panel
+        self._operator_panel.set_from_config(c)
 
     @staticmethod
     def _format_value(name: str, value: Any) -> str:
@@ -246,13 +300,13 @@ class ConfigPanel(QWidget):
             return ",".join(value)
         return str(value)
 
-    def _collect_from_form(self) -> Tuple[Dict[str, Any], list[str]]:
+    def _collect_from_form(self) -> Tuple[Dict[str, Any], List[str]]:
         """Read widget state into a dict; return (values, errors)."""
-        errors: list[str] = []
+        errors: List[str] = []
         out: Dict[str, Any] = {}
         c = self._config
         for f in dataclasses.fields(c):
-            if f.name == "strategies":
+            if f.name in ("strategies", "operator_weights", "symbols", "allow_chain", "origin_tree_path", "preset"):
                 continue
             w = self._widgets.get(f.name)
             if w is None:
@@ -268,6 +322,16 @@ class ConfigPanel(QWidget):
                     out[f.name] = self._parse_value(f.name, w.text())
             except ValueError as exc:
                 errors.append(f"{f.name}: {exc}")
+
+        # origin_tree_path
+        path_w = self._widgets.get("origin_tree_path")
+        if isinstance(path_w, QLineEdit):
+            out["origin_tree_path"] = path_w.text().strip() or None
+
+        # operator panel: operator_weights, symbols, allow_chain
+        out["operator_weights"] = self._operator_panel.get_operator_weights()
+        out["symbols"] = self._operator_panel.get_symbols()
+        out["allow_chain"] = self._operator_panel.get_allow_chain()
 
         # strategies
         try:
@@ -291,8 +355,6 @@ class ConfigPanel(QWidget):
             if len(parts) != 2:
                 raise ValueError("expected 'min,max'")
             return (float(parts[0]), float(parts[1]))
-        if name == "symbols":
-            return [p.strip() for p in raw.split(",") if p.strip()]
         return raw
 
     # ------------------------------------------------------------------
@@ -315,7 +377,6 @@ class ConfigPanel(QWidget):
             QMessageBox.information(self, "Apply changes", "No changes detected.")
             return
 
-        # Apply to local config object so future reads see them.
         for k, v in changes.items():
             setattr(self._config, k, v)
 
@@ -348,7 +409,6 @@ class ConfigPanel(QWidget):
         except Exception as exc:
             QMessageBox.critical(self, "Load failed", str(exc))
             return
-        # Replace in-place
         for f in dataclasses.fields(self._config):
             setattr(self._config, f.name, getattr(new_cfg, f.name))
         self._populate_from_config()

@@ -113,11 +113,19 @@ class TestPanelsConstruct:
         ctrl = RunController(RunConfig())
         panel = ControlPanel(ctrl)
         keep_alive(panel)
+        # Idle state → play button enabled, stop disabled
+        panel.update_state(RunState.IDLE)
+        assert panel._btn_play.isEnabled()
+        assert "Start" in panel._btn_play.text()
+        assert not panel._btn_stop.isEnabled()
+        # Running → play toggles to Pause
         panel.update_state(RunState.RUNNING)
-        assert panel._btn_pause.isEnabled()
-        assert panel._btn_start.isEnabled() is not False  # idle alive=False → start enabled
+        assert panel._btn_play.isEnabled()
+        assert "Pause" in panel._btn_play.text()
+        # Paused → play toggles to Resume
         panel.update_state(RunState.PAUSED)
-        assert panel._btn_resume.isEnabled()
+        assert panel._btn_play.isEnabled()
+        assert "Resume" in panel._btn_play.text()
 
     def test_config_panel_populates_from_config(self, qapp, keep_alive):
         from plagih.gui.desktop.panels.config_panel import ConfigPanel

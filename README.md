@@ -1,5 +1,13 @@
 # plagih — Explainable Genetic Programming Framework
+
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)
+![License: MIT](https://img.shields.io/badge/License-MIT-green)
+![Status](https://img.shields.io/badge/status-active-brightgreen)
+
 **plagih** (PLAusible Genetic Improvements to Heuristics) is a genetic programming framework for **explainable AI**. It evolves symbolic expression trees (math / logic / conditional) via selection, mutation, crossover, and simplification, evaluated against training data.
+
+> **Why this project?**  Standard neural networks are black boxes — plagih evolves human-readable formulas (e.g. `sin(x) * (a + b) > 0.5`) that can be directly inspected, debugged, and trusted. It has been applied to control-policy discovery (CartPole, MountainCar), symbolic regression, and a hybrid **NN+GP co-evolution** pipeline where a GP formula feeds feature signals into a downstream PyTorch model.
+
 Key features:
 - Tree-based GP with strongly-typed nodes (`float`, `bool`)
 - Parallel evaluation via multiprocessing (Windows + Linux)

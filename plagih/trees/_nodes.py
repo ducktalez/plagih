@@ -691,10 +691,12 @@ class Node(ABC):
         if self.is_term():
             pass
         else:
-            if isinstance(self, (Add, Mul)):
+            # is_fix contract: frozen nodes (origin_tree skeletons) keep
+            # their structure — no child removal, no arity collapse.
+            if isinstance(self, (Add, Mul)) and not self.is_fix:
                 if isinstance(self, Add):
                     for cc in self.get_childs():
-                        if is_terminal(cc):
+                        if is_terminal(cc) and not cc.is_fix:
                             if cc.get_value() in [0, sympy.S.Zero, 0.0]:
                                 childs_new = self.get_childs()
                                 childs_new.remove(cc)
@@ -702,7 +704,7 @@ class Node(ABC):
                                 # Additive identity removed — can happen during crossover/simplification
                 elif isinstance(self, Mul):
                     for cc in self.get_childs():
-                        if is_terminal(cc):
+                        if is_terminal(cc) and not cc.is_fix:
                             if cc.get_value() in [1, sympy.S.One, 1.0]:
                                 childs_new = self.get_childs()
                                 childs_new.remove(cc)
@@ -717,7 +719,7 @@ class Node(ABC):
             num_childs = len(self.get_childs())
 
             # Check for simplifications based on arity
-            if num_childs < arity:
+            if num_childs < arity and not self.is_fix:
                 # e.g. Mul(a) -> a
                 cc = self.get_childs()[0]
                 self.set_new_node(cc)
@@ -1842,6 +1844,12 @@ def tree_simplification(_tree: Node, allow_chain: bool) -> Node:
         for _ in range(max_grouping_iters):
             previous_repr = str(_tree)
             _tree.tree_node_grouping(tolerance=0)
+
+            # D11: local SymPy-free rewrites (constant fold, neutral elements).
+            # Exact + never grows; validated by the guards below anyway.
+            from plagih.trees._rewrite import rewrite_fixpoint
+
+            _tree = rewrite_fixpoint(_tree)
 
             current_len = len(_tree)
             if current_len < best_len:

@@ -425,6 +425,36 @@
 - **Decision needed:** Is the optimisable fallback value worth the
   complexity? Or is the current penalty-based approach sufficient?
 
+### D11 – SymPy coupling strategy (decided: keep loose, harden boundary)
+
+- **Question (2026-09-01):** Should the framework bind tighter to SymPy,
+  possibly extending SymPy classes directly?
+- **Decision: No.** Keep the own `Node` IR with SymPy behind a boundary.
+  Evidence from our own pitfalls: P10 (slow conversion), P12 (hangs),
+  P13 (Scale round-trip loss), P18 (memory), D6 (non-idempotent
+  simplification), D7 (Piecewise drift = 100% of rejections), I1 (custom
+  `sympy.Function` subclass killed simplification → reverted).
+- **Why subclassing SymPy fails:** auto-evaluation collapses custom
+  structure on every `simplify()`; version coupling to SymPy internals;
+  three eval backends (SymPy/NumPy/TF-DAG) need a neutral IR, not a
+  SymPy-centric one.
+- **Direction instead ("harden the boundary"):**
+  1. SymPy as *service with contract*: one import site, every call has
+     timeout + size/equivalence validation, rejection is normal (exists —
+     keep enforcing).
+  2. ✅ **Started (2026-09-01):** own rewrite engine in
+     `plagih/trees/_rewrite.py` — constant folding + neutral/absorbing
+     elements + double negation, fixpoint-iterated, `is_fix`-safe, exact
+     in float semantics. Wired into the `tree_simplification()` grouping
+     loop (both paths, inside timeout + growth/semantic guards).
+     Next: migrate more `tree_node_grouping()` patterns (→ M4/D6.3).
+  3. Minimise `sympy_to_tree()` round-trips instead of making them more
+     robust — simplification working on the own tree needs no return path.
+  4. Far-future option if simplification becomes the bottleneck:
+     equality saturation / e-graphs (`egglog`) instead of more SymPy.
+- **Refactor hook:** When tackling (2), split `_nodes.py` (3300+ lines)
+  into `_grouping.py` / `_sympy_bridge.py`.
+
 ---
 
 ## Low Priority
@@ -734,6 +764,14 @@
 - ✅ **D7 — Grouping-only simplification for Piecewise-heavy trees** — Skips
   SymPy round-trip for trees containing `Min`/`Max`/`Abs`/`Sign`, eliminating
   the entire class of semantic rejections (100% of analysed cases).
+
+- ✅ **D11 — SymPy coupling decided + local rewrite engine (2026-09-01)** —
+  Decision: keep own Node IR, do NOT subclass SymPy (evidence: P10/P12/P13/
+  P18/D6/D7/I1). New `plagih/trees/_rewrite.py`: SymPy-free constant
+  folding, neutral/absorbing elements, double negation; fixpoint-iterated,
+  `is_fix`-safe, wired into `tree_simplification()`. Also fixed along the
+  way: `revoke_useless_nodes()` ignored `is_fix` and collapsed frozen
+  origin_tree skeletons (child removal + arity collapse now guarded).
 
 - ✅ **I5 benchmark + two real bugs (2026-09-01)** —
   `bench_i5_races.py` compares races against budget-matched single-population

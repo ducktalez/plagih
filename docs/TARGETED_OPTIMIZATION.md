@@ -268,6 +268,10 @@ Automatic detection and countermeasures for population pathologies:
 
 ### 4.4 Separate sub-population training
 
+> Core loop implemented in `plagih/population_races.py` (I5): epoch-based
+> races with candidate exchange and trunk-template reseeding
+> (core / anti-core).
+
 - **Core extraction:** If top candidates share a structural core, start a
   new sub-population with that core as `origin_tree`.
 - **Anti-core population:** Simultaneously start a population that

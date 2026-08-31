@@ -515,11 +515,16 @@
   dimensionality model.
 - **Related:** L2 (gradient tracking / JAX integration).
 
-### I5 – Sub-populations / races
-- **Idea:** Evolve separate sub-populations that occasionally exchange
-  individuals. Variant: mine common trunk structure from good candidates and
-  seed a new sub-population with just that trunk (or explicitly without it).
-- **Related:** I2 (partnering), M3 (merge strategies).
+### I5 – Sub-populations / races 🚧 (core loop shipped 2026-09-01)
+- **Implemented:** `plagih/population_races.py` — `run_races()` drives N
+  `ExplainableGP` instances in epochs, `exchange_candidates()` injects
+  top-Pareto copies across races, `reseed_templates_from_trunks()` sets
+  race `origin_tree` templates from combined-Pareto trunks (last race is
+  always the anti-core: `origin_tree=None`, free exploration).
+- **Open:** run races in parallel processes (currently sequential);
+  diversity-aware exchange (don't inject near-duplicates); adaptive epoch
+  length; benchmark vs. single-population baseline.
+- **Related:** I2 (partnering), M3 (merge strategies), D5 §3.5 (trunks).
 
 ### I6 – `nsimplify` for terminals and expressions
 - **Idea:** Use `sympy.nsimplify(expr, tolerance=..., rational=True)` to
@@ -703,6 +708,12 @@
   SymPy round-trip for trees containing `Min`/`Max`/`Abs`/`Sign`, eliminating
   the entire class of semantic rejections (100% of analysed cases).
 
+- ✅ **I5 — Multi-population races, core loop (2026-09-01)** —
+  New `plagih/population_races.py`: `run_races()` (epochs × races ×
+  generations), `exchange_candidates()` (top-Pareto copies re-evaluated by
+  the receiving race), `reseed_templates_from_trunks()` (core races get
+  frozen trunk templates, last race stays anti-core). Sequential for now.
+
 - ✅ **D5 follow-up — Origin-tree templates from trunks (2026-09-01)** —
   `trunk_to_origin_tree()` freezes trunk operators (`is_fix=True`), keeps
   terminals mutable as regrow slots; `suggest_origin_templates()` wraps
@@ -729,8 +740,8 @@
 
 ## Open next priorities
 
-- 🔜 **I5 multi-population races:** Orchestrate parallel sub-populations
-  seeded via `suggest_origin_templates()` (core/anti-core, exchange).
+- 🔜 **I5 follow-ups:** Parallel race execution, diversity-aware exchange,
+  benchmark races vs. single-population baseline.
 - 🔜 **D5 Phase 5:** Hybrid GP↔NN experiments (→ I10).
 - 🔜 **D8 demo notebook hardening:** Keep notebook/examples in sync with recent
   strategy additions (`mutation_terminal`, `targeted_ifte`, `targeted_gap`) and

@@ -78,6 +78,11 @@ be strictly smaller.  The string comparison already catches most matches; the
 expensive ``.equals()``/``simplify()`` path rarely succeeds within 2-5s when
 it doesn't succeed in <1s."""
 
+GROUPING_DIV_MAX_DENOMINATOR = 20
+"""I13: cap for Mul(c, expr) -> Div(expr, 1/c) rewrite in tree_node_grouping.
+Big denom (e.g. 361/x**2) look wrong, intent was small fracs (a/2). Above cap,
+keep Scale instead of Div."""
+
 
 def _call_with_timeout(fn, timeout_s: float):
     """Run *fn()* in a daemon thread; return ``(result, True)`` or ``(None, False)`` on timeout.
@@ -1323,9 +1328,19 @@ class Node(ABC):
                             self.replace_with(Usub, [Mul(*mychlds_remove(cc))])
                         elif 0 < mul1 < 1:
                             if (1 / mul1) % 1 == 0:  # check if the result is a natural number
-                                node_sub = Mul(*mychlds_remove(cc))
                                 new_num = 1 / mul1
-                                self.replace_with(Div, [node_sub, Number(new_num)])
+                                rest = mychlds_remove(cc)
+                                if new_num <= GROUPING_DIV_MAX_DENOMINATOR:
+                                    node_sub = Mul(*rest)
+                                    self.replace_with(Div, [node_sub, Number(new_num)])
+                                else:
+                                    # I13: big denom (e.g. 361) look wrong -> keep Scale
+                                    has_other_numbers = any(isinstance(r, Number) for r in rest)
+                                    if not has_other_numbers and len(rest) >= 1:
+                                        if len(rest) == 1:
+                                            self.replace_with(Scale, [cc, rest[0]])
+                                        else:
+                                            self.replace_with(Scale, [cc, Mul(*rest)])
                             else:
                                 # Non-integer reciprocal (e.g. 0.785 → 1.274…) —
                                 # no Div rewrite possible.  Continue to let

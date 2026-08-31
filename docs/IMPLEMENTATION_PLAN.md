@@ -598,10 +598,12 @@
   mutable" (optimised for further evolution). Currently only raw + simplified
   exist.
 
-### I13 – DivFraction factor limits
-- **Observed:** Grouping rewrites `Mul → DivFraction` with large factors
-  (e.g. `361/x²`), where the original intent was small factors (`a/2`).
-  Consider limiting DivFraction rewrite to small denominators.
+### I13 – DivFraction factor limits ✅ (2026-08-31)
+- **Fix:** `GROUPING_DIV_MAX_DENOMINATOR = 20` cap in `tree_node_grouping()`
+  (`trees/_nodes.py`). `Mul(c, expr)` with `1/c <= 20` → `Div` (small denom,
+  e.g. `a/2`). Above cap (e.g. `361`) → `Scale` instead, semantics unchanged.
+- **Tests:** `test_mul_small_denom_becomes_div`,
+  `test_mul_big_denom_becomes_scale_not_div` in `test_tree_operations.py`.
 - **Related:** D6 (idempotent simplification), D7 (rejected simplifications).
 
 ### I14 – Showcase markdown document
@@ -634,6 +636,10 @@
 
 > Promote items here once delivered. Older entries can be trimmed after a
 > few months — full history lives in git.
+
+- ✅ **I13 — DivFraction/Scale denominator cap (2026-08-31)** — Grouping no
+  longer rewrites `Mul(c, expr)` into `Div(expr, 361)` for big denominators;
+  caps at `GROUPING_DIV_MAX_DENOMINATOR=20`, falls back to `Scale` above cap.
 
 - ✅ **NN+GP first end-to-end run + bugfixes (2026-05-17)** —
   Completed the first full `run_mc.py --fast --iterations 2` run on Windows.

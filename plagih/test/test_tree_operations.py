@@ -34,6 +34,7 @@ from plagih.trees import (
     Pow,
     PowRounded,
     Round,
+    Scale,
     Sin,
     Sqrt,
     Square,
@@ -509,6 +510,25 @@ class TestTreeNodeGrouping:
 
         tree.tree_node_grouping()
 
+        expr_after = tree.get_sympy_expr()
+        assert sympy.simplify(expr_before - expr_after) == 0
+
+    def test_mul_small_denom_becomes_div(self):
+        """I13: small denom (<=cap) -> Div, e.g. a * (1/2) -> a/2."""
+        tree = Mul(Symbol(sympy.Symbol("a")), Number(0.5))
+        tree.tree_node_grouping()
+
+        assert isinstance(tree, Div)
+        assert float(tree.get_childs()[1].get_value()) == pytest.approx(2.0)
+
+    def test_mul_big_denom_becomes_scale_not_div(self):
+        """I13: big denom (>cap, e.g. 361) stays Scale, not Div — looks wrong (a/361 vs 0.00277*a)."""
+        tree = Mul(Symbol(sympy.Symbol("a")), Number(1.0 / 361.0))
+        expr_before = tree.get_sympy_expr()
+
+        tree.tree_node_grouping()
+
+        assert isinstance(tree, Scale)
         expr_after = tree.get_sympy_expr()
         assert sympy.simplify(expr_before - expr_after) == 0
 

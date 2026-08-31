@@ -1024,6 +1024,123 @@ def _strategy_targeted_gap(evolve, pop_genepool, paretofront, allow_chain, **par
     return evotree
 
 
+def _strategy_chain_mutation(evolve, pop_genepool, paretofront, allow_chain, **params):
+    """Targeted mutation of chainable operators (Add/Mul/Min/Max/And/Or).
+
+    Phase 4 of Targeted Evolutionary Optimization (§3.4, D5).  Picks a
+    chainable node and applies one of:
+
+    - ``add``: append a new random operand (grows the chain; requires
+      ``allow_chain`` to exceed arity 2)
+    - ``remove``: drop one operand (arity never falls below 2)
+    - ``replace``: regrow one operand
+
+    With training data available, the operand to remove/replace is the one
+    with the largest optimization gap (Phase 3); otherwise random.
+    Falls back to standard branch mutation when the tree has no mutable
+    chainable node.
+    """
+    import random as _random
+
+    from plagih.trees._nodes import ChainableOp, Terminal, fast_tree_copy
+
+    pre = params.pop("_pre_selected", None)
+    tournament_n = params.get("tournament_n", 5)
+    depth_goal = params.get("depth_goal", 3)
+    operand_depth = params.get("operand_depth", 2)
+    p_term = params.get("p_term", 0.2)
+    df_train = params.get("_df_train")
+    target = params.get("_target")
+
+    if pre:
+        tree = pre[0]
+    else:
+        from plagih.trees import selection_tournament
+
+        tree = selection_tournament(pop_genepool, n=tournament_n)
+
+    evotree = fast_tree_copy(tree)
+
+    def _fallback():
+        return evolve.evolve_mutate_branch_depth(evotree, depth_goal, allow_chain, p_term=p_term)
+
+    # Collect mutable chainable nodes
+    chain_nodes = []
+
+    def _collect(node):
+        if isinstance(node, Terminal):
+            return
+        if isinstance(node, ChainableOp) and not node.is_fix:
+            chain_nodes.append(node)
+        for cc in node.get_childs():
+            _collect(cc)
+
+    _collect(evotree)
+    if not chain_nodes:
+        return _fallback()
+
+    chain_node = _random.choice(chain_nodes)
+    childs = chain_node.get_childs()
+
+    # Feasible actions
+    actions = ["replace"]
+    if allow_chain or len(childs) < 2:
+        actions.append("add")
+    if len(childs) > 2:
+        actions.append("remove")
+    action = _random.choice(actions)
+
+    def _pick_operand_index() -> int:
+        """Worst operand by gap when data present, else random."""
+        if df_train is not None and target is not None:
+            from plagih.targeted_optimization import node_optimization_gaps
+
+            try:
+                gaps = node_optimization_gaps(evotree, df_train, target)
+                by_id = {g.node_id: g.gap_mean for g in gaps if g.n_finite > 0 and np.isfinite(g.gap_mean)}
+                scored = [(by_id.get(id(cc), -1.0), ii) for ii, cc in enumerate(childs)]
+                best_gap, best_ii = max(scored)
+                if best_gap >= 0:
+                    return best_ii
+            except Exception:
+                pass
+        return _random.randrange(len(childs))
+
+    operand_xtype = getattr(type(chain_node), "xtype_input", None) or float
+
+    if action == "add":
+        n_init = len(evotree)
+        branch = evolve.evolve_create_random(
+            operand_xtype,
+            operand_depth,
+            num_rest=max(1, evolve.nodes_max - n_init),
+            depth=(chain_node.depth or 0) + 1,
+            p_term=p_term,
+        )
+        chain_node.add_child(branch)
+    elif action == "remove":
+        idx = _pick_operand_index()
+        new_childs = [cc for ii, cc in enumerate(childs) if ii != idx]
+        chain_node.set_childs(new_childs)
+    else:  # replace
+        idx = _pick_operand_index()
+        n_init = len(evotree)
+        branch = evolve.evolve_create_random(
+            childs[idx].get_xtype_self(),
+            operand_depth,
+            num_rest=max(1, evolve.nodes_max - n_init),
+            depth=(chain_node.depth or 0) + 1,
+            p_term=p_term,
+        )
+        childs[idx].set_new_node(branch)
+
+    evotree.repair_all()
+    if len(evotree) > evolve.nodes_max:
+        evotree = evolve.evolve_prune_tree(evotree)
+
+    return evotree
+
+
 def _tree_has_ifte(tree) -> bool:
     """Check if a tree contains any Ifte or Piecewise nodes."""
     from plagih.trees._nodes import Ifte, Piecewise, Terminal
@@ -1063,6 +1180,7 @@ BUILTIN_STRATEGIES: Dict[str, Callable] = {
     "pareto_revive": _strategy_pareto_revive,
     "targeted_ifte": _strategy_targeted_ifte,
     "targeted_gap": _strategy_targeted_gap,
+    "chain_mutation": _strategy_chain_mutation,
 }
 
 # Strategies grouped by how many parent trees they need from the genepool.
@@ -1078,6 +1196,7 @@ _STRATEGIES_ONE_PARENT = frozenset(
         "simplicate",
         "targeted_ifte",
         "targeted_gap",
+        "chain_mutation",
     }
 )
 _STRATEGIES_TWO_PARENTS = frozenset({"crossover"})
@@ -1085,7 +1204,7 @@ _STRATEGIES_NO_PARENT = frozenset({"random_new"})
 _STRATEGIES_PARETO = frozenset({"pareto_revive"})
 
 # Strategies that need `_df_train` / `_target` injected at task runtime.
-_STRATEGIES_NEEDING_TRAINING_DATA = frozenset({"targeted_ifte", "targeted_gap"})
+_STRATEGIES_NEEDING_TRAINING_DATA = frozenset({"targeted_ifte", "targeted_gap", "chain_mutation"})
 
 
 def _batch_tournament_select(

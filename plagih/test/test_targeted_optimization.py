@@ -702,3 +702,178 @@ class TestTargetedGapStrategy:
             _target=target,
         )
         assert str(tree) == before
+
+
+# =============================================================================
+# Phase 4 — chain_mutation strategy
+# =============================================================================
+
+
+class TestChainMutationStrategy:
+    """Tests for the _strategy_chain_mutation builtin strategy (§3.4)."""
+
+    @pytest.fixture
+    def evolve_and_df(self):
+        from plagih.trees._evolution import Evolution
+
+        operators = {Add: 1, Mul: 1, Sub: 1, Min: 1, Max: 1, Square: 1, Ifte: 1, Le: 1}
+        terminals_float = [sympy.Symbol("a"), sympy.Symbol("b")]
+
+        ev = Evolution(
+            symbol_list=terminals_float,
+            operators=operators,
+            nodes_max=30,
+            depth_max=6,
+        )
+        df = pd.DataFrame(
+            {
+                "a": np.linspace(-5, 5, 20),
+                "b": np.linspace(0, 10, 20),
+                "action": np.linspace(1, 3, 20),
+            }
+        )
+        return ev, df, df["action"].to_numpy()
+
+    def test_strategy_registered_in_builtins(self):
+        from plagih.parallel import BUILTIN_STRATEGIES
+
+        assert "chain_mutation" in BUILTIN_STRATEGIES
+
+    def test_strategy_returns_valid_tree(self, evolve_and_df):
+        from plagih.parallel import _strategy_chain_mutation
+
+        ev, df, target = evolve_and_df
+        tree = Add(Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b")))
+        tree.repair_all()
+
+        result = _strategy_chain_mutation(
+            ev,
+            [],
+            [],
+            True,
+            _pre_selected=[copy.deepcopy(tree)],
+            _df_train=df,
+            _target=target,
+        )
+        assert result is not None
+        # Result must still evaluate
+        out = result.eval_predict_numpy_now(df)
+        assert len(out) == len(df)
+
+    def test_no_chain_node_falls_back(self, evolve_and_df):
+        """Tree without chainable operators must fall back to branch mutation."""
+        from plagih.parallel import _strategy_chain_mutation
+
+        ev, df, target = evolve_and_df
+        tree = Square(Symbol(sympy.Symbol("a")))
+        tree.repair_all()
+
+        result = _strategy_chain_mutation(
+            ev,
+            [],
+            [],
+            True,
+            _pre_selected=[copy.deepcopy(tree)],
+        )
+        assert result is not None
+
+    def test_add_grows_chain(self, evolve_and_df):
+        """With allow_chain, the 'add' action must be able to create arity 3."""
+        from plagih.parallel import _strategy_chain_mutation
+
+        ev, df, target = evolve_and_df
+        rng_hits = 0
+        for _ in range(30):
+            tree = Add(Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b")))
+            tree.repair_all()
+            result = _strategy_chain_mutation(
+                ev,
+                [],
+                [],
+                True,  # allow_chain
+                _pre_selected=[tree],
+            )
+            if hasattr(result, "get_childs") and len(result.get_childs()) == 3:
+                rng_hits += 1
+                # Chained tree must still evaluate correctly
+                out = result.eval_predict_numpy_now(df)
+                assert np.all(np.isfinite(out))
+        assert rng_hits > 0, "add action never produced a 3-operand chain"
+
+    def test_no_chain_growth_without_allow_chain(self, evolve_and_df):
+        """Without allow_chain, arity must stay at 2."""
+        from plagih.parallel import _strategy_chain_mutation
+
+        ev, df, target = evolve_and_df
+        for _ in range(20):
+            tree = Mul(Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b")))
+            tree.repair_all()
+            result = _strategy_chain_mutation(
+                ev,
+                [],
+                [],
+                False,  # no chains
+                _pre_selected=[tree],
+            )
+            if hasattr(result, "get_childs") and result.get_childs():
+                assert len(result.get_childs()) <= 2
+
+    def test_remove_shrinks_chain(self, evolve_and_df):
+        """A 4-operand chain must eventually lose an operand."""
+        from plagih.parallel import _strategy_chain_mutation
+
+        ev, df, target = evolve_and_df
+        shrunk = 0
+        for _ in range(30):
+            tree = Add(
+                Symbol(sympy.Symbol("a")),
+                Symbol(sympy.Symbol("b")),
+                Number(1.0),
+                Number(2.0),
+            )
+            tree.repair_all()
+            result = _strategy_chain_mutation(
+                ev,
+                [],
+                [],
+                True,
+                _pre_selected=[tree],
+            )
+            if hasattr(result, "get_childs") and len(result.get_childs()) == 3:
+                shrunk += 1
+        assert shrunk > 0, "remove action never shrank the chain"
+
+    def test_inputs_not_modified(self, evolve_and_df):
+        from plagih.parallel import _strategy_chain_mutation
+
+        ev, df, target = evolve_and_df
+        tree = Add(Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b")))
+        tree.repair_all()
+        before = str(tree)
+
+        _strategy_chain_mutation(
+            ev,
+            [],
+            [],
+            True,
+            _pre_selected=[tree],
+            _df_train=df,
+            _target=target,
+        )
+        assert str(tree) == before
+
+    def test_respects_nodes_max(self, evolve_and_df):
+        from plagih.parallel import _strategy_chain_mutation
+
+        ev, df, target = evolve_and_df
+        for _ in range(20):
+            tree = Add(Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b")))
+            tree.repair_all()
+            result = _strategy_chain_mutation(
+                ev,
+                [],
+                [],
+                True,
+                _pre_selected=[tree],
+            )
+            assert len(result) <= ev.nodes_max

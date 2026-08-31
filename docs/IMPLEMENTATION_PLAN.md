@@ -166,12 +166,11 @@
 - **Primary focus:** Ifte/Piecewise pseudo-backpropagation (§3.1).
 - **Done:** Phase 1 (analysis), Phase 2 (`targeted_ifte`), Phase 3
   (`node_optimization_gaps()`, `largest_gap_node()`, `targeted_gap` strategy),
-  Phase 4 partial: Minimum Set (`_greedy_minimum_set()`) and merged-tree
-  trunk analysis (`find_trunks()` / `suggest_origin_trees()` in
-  `population_merge.py`).
-- **Next:** Phase 4 rest — chained-operator targeted mutation (§3.4) as new
-  `Strategy`; wire `suggest_origin_trees()` into a sub-population workflow
-  (→ I5).
+  Phase 4: Minimum Set (`_greedy_minimum_set()`), merged-tree trunk analysis
+  (`find_trunks()` / `suggest_origin_trees()` in `population_merge.py`),
+  chained-operator mutation (`chain_mutation` strategy in `parallel.py`).
+- **Next:** Phase 5 (hybrid GP↔NN, → I10); wire `suggest_origin_trees()`
+  into a sub-population workflow (→ I5).
 - **Open question (Phase 3 follow-up):** Non-invertible operators currently
   stop the backward propagation entirely.  Should `Square`/`Abs` use a
   sign-preserving *approximate* inverse (flagged as inexact), or interval
@@ -702,6 +701,11 @@
   SymPy round-trip for trees containing `Min`/`Max`/`Abs`/`Sign`, eliminating
   the entire class of semantic rejections (100% of analysed cases).
 
+- ✅ **D5 Phase 4 complete — chain_mutation strategy (2026-09-01)** —
+  `_strategy_chain_mutation` in `parallel.py`: add/remove/replace operands
+  on chainable nodes (Add/Mul/Min/Max/And/Or). Gap-guided operand selection
+  when training data is available. D5 Phases 1–4 now fully implemented.
+
 - ✅ **D5 Phase 4 (partial) — Trunk analysis + Minimum Set (2026-09-01)** —
   `find_trunks()` ranks shared subtrees in the merged DAG by
   `n_trees * subtree_size` (nested trunks with equal coverage filtered);
@@ -717,8 +721,8 @@
 
 ## Open next priorities
 
-- 🔜 **D5 Phase 4 rest:** Chained-operator targeted mutation (§3.4) as new
-  `Strategy`; sub-population workflow using `suggest_origin_trees()` (→ I5).
+- 🔜 **D5 follow-ups:** Sub-population workflow using `suggest_origin_trees()`
+  (→ I5); Phase 5 hybrid GP↔NN experiments (→ I10).
 - 🔜 **D8 demo notebook hardening:** Keep notebook/examples in sync with recent
   strategy additions (`mutation_terminal`, `targeted_ifte`, `targeted_gap`) and
   add one visual regression smoke pass.

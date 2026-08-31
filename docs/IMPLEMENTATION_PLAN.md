@@ -164,8 +164,15 @@
   SoftOptimum population bound, chained-operator mutation, merged-tree
   trunk analysis.
 - **Primary focus:** Ifte/Piecewise pseudo-backpropagation (§3.1).
-- **Next:** Phase 3 — General node-level optimization (§3.2) with invertible
-  operators.
+- **Done:** Phase 1 (analysis), Phase 2 (`targeted_ifte`), Phase 3
+  (`node_optimization_gaps()`, `largest_gap_node()`, `targeted_gap` strategy).
+- **Next:** Phase 4 — Population-level orchestration (§3.3/§3.4/§3.5):
+  Minimum Set, chained-operator targeted mutation, merged-tree trunk analysis.
+- **Open question (Phase 3 follow-up):** Non-invertible operators currently
+  stop the backward propagation entirely.  Should `Square`/`Abs` use a
+  sign-preserving *approximate* inverse (flagged as inexact), or interval
+  analysis (§3.2)?  And is `gap_mean` the right ranking criterion, or should
+  it be normalised by subtree size to avoid always picking deep leaves?
 
 ### D6 – Idempotent simplification pipeline (→ P19)
 - **Where:** `tree_simplification()` → `sympy_to_tree()` →
@@ -691,13 +698,19 @@
   SymPy round-trip for trees containing `Min`/`Max`/`Abs`/`Sign`, eliminating
   the entire class of semantic rejections (100% of analysed cases).
 
+- ✅ **D5 Phase 3 — Node-level optimisation gaps** — `node_optimization_gaps()` /
+  `largest_gap_node()` invert `Add`/`Sub`/`Mul`/`Div`/`Scale`/`Usub`/
+  `DivFraction` to find the weakest subtree; new `targeted_gap` strategy
+  mutates it. Also fixed: targeted strategies never received `_df_train` in
+  **parallel** mode and silently degraded to plain branch mutation.
+
 ## Open next priorities
 
-- 🔜 **D5 Phase 3 (node-level optimisation):** General node-level optimization
-  with invertible operators — extend beyond Ifte/Piecewise.
+- 🔜 **D5 Phase 4 (population-level orchestration):** Minimum Set,
+  chained-operator targeted mutation, merged-tree trunk analysis.
 - 🔜 **D8 demo notebook hardening:** Keep notebook/examples in sync with recent
-  strategy additions (`mutation_terminal`, `targeted_ifte`) and add one visual
-  regression smoke pass.
+  strategy additions (`mutation_terminal`, `targeted_ifte`, `targeted_gap`) and
+  add one visual regression smoke pass.
 - 🔜 **I10 next experiments:** Run full EM loop on MountainCar (see I10 open
   tasks above) and produce the first end-to-end paper blueprint with real
   measured values.

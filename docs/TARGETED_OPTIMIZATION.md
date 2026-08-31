@@ -4,7 +4,7 @@
 > random evolution. Covers pseudo-backpropagation, node-level analysis,
 > population-wide orchestration, and hybrid GP↔NN approaches.
 >
-> Status: **Phase 1 + 2 implemented** — Phase 3+ pending.
+> Status: **Phase 1 + 2 + 3 implemented** — Phase 4+ pending.
 > Tracked in `IMPLEMENTATION_PLAN.md` § D5.
 
 ---
@@ -368,11 +368,31 @@ can NumPy + CuPy suffice?
 
 ### Phase 3 — General node-level optimization
 
-- [ ] **Optimal-value computation** (§3.2) for invertible operators
-      (`Add`, `Mul`, `Sub`, `Div`).
-- [ ] **Optimization-gap metric**: Report per-node gap as analysis output.
-- [ ] **Gap-guided mutation**: Preferentially mutate the child with the
-      largest gap.
+```
+  root (ideal == target)
+    │  invert through Add / Sub / Mul / Div / Scale / Usub / DivFraction
+    ▼
+  child ideal value  ──►  gap = |actual − ideal|
+    │
+    ▼
+  largest_gap_node()  ──►  focused mutation ("targeted_gap")
+```
+
+- [x] **Optimal-value computation** (§3.2) for invertible operators
+      (`Add`, `Sub`, `Mul`, `Div`, `Scale`, `Usub`, `DivFraction`).
+      → `node_optimization_gaps()` in `plagih/targeted_optimization.py`.
+      Non-invertible operators (`Abs`, `Sign`, `Square`, trigonometry,
+      `Ifte`, `Piecewise`) terminate the backward propagation.
+- [x] **Optimization-gap metric**: `NodeGap` (per node: `gap_mean`,
+      `gap_sum`, `n_finite`, `depth`, `operator`) as analysis output.
+- [x] **Gap-guided mutation**: `Strategy("targeted_gap", rate=…)` in
+      `parallel.py` regrows the subtree returned by `largest_gap_node()`.
+      Falls back to standard branch mutation when no gap is computable.
+
+> **Note:** Both targeted strategies need `_df_train` / `_target`.  These are
+> injected automatically in **sequential** (`run_task_sequential`) *and*
+> **parallel** (`_worker_run_task`) mode for every name in
+> `_STRATEGIES_NEEDING_TRAINING_DATA`.
 
 ### Phase 4 — Population-level orchestration
 

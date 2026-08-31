@@ -19,6 +19,8 @@ design document.
 | `soft_optimum_error()` | 1 | Population-level lower bound (Oracle Bound) |
 | `ifte_component_scores()` | 2 | Pseudo-backprop scoring for Ifte nodes |
 | `piecewise_component_scores()` | 2 | Pseudo-backprop scoring for Piecewise nodes |
+| `node_optimization_gaps()` | 3 | Per-node ideal value via inverse propagation |
+| `largest_gap_node()` | 3 | Weakest link → target for `targeted_gap` mutation |
 
 ## Rules
 
@@ -33,4 +35,13 @@ design document.
    but should not be called in hot-path evolution loops.
 5. **Target column**: The caller provides `target` as a numpy array. The
    functions do not assume a column name like `"action"`.
+6. **Invertibility is opt-in**: Only operators listed in
+   `INVERTIBLE_OPERATORS` propagate an ideal value to their children.
+   When adding a new operator there, the inverse must be *exact* — add
+   the case to `_invert_operator()` and guard divisions by zero with
+   `np.divide(..., where=...)` so bad rows become NaN (and are masked).
+7. **Strategies needing training data** must be listed in
+   `_STRATEGIES_NEEDING_TRAINING_DATA` (`parallel.py`), otherwise
+   `_df_train` / `_target` are not injected and the strategy silently
+   degrades to plain branch mutation.
 

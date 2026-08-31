@@ -2,7 +2,7 @@
 Targeted Optimization Module for plagih GP Framework.
 
 Provides analysis tools for per-tree and per-population optimization
-beyond random evolution. This is the implementation of Phase 1 & 2
+beyond random evolution. This is the implementation of Phase 1, 2 & 3
 from docs/TARGETED_OPTIMIZATION.md.
 
 Key features:
@@ -10,6 +10,7 @@ Key features:
 - Best-per-datapoint (Oracle Selector) analysis
 - SoftOptimum error bound computation
 - Ifte/Piecewise pseudo-backpropagation scoring
+- Node-level optimization gaps for invertible operators
 
 Usage::
 
@@ -18,6 +19,7 @@ Usage::
         best_per_datapoint,
         soft_optimum_error,
         ifte_component_scores,
+        node_optimization_gaps,
     )
 
     # Phase 1: Analysis
@@ -27,12 +29,16 @@ Usage::
 
     # Phase 2: Ifte scoring
     scores = ifte_component_scores(tree, df, target)
+
+    # Phase 3: Node-level optimization gaps
+    gaps = node_optimization_gaps(tree, df, target)
+    worst = largest_gap_node(gaps)
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -507,7 +513,7 @@ def piecewise_component_scores(
     tree: Node,
     df: pd.DataFrame,
     target: np.ndarray,
-) -> List[Dict[str, any]]:
+) -> List[Dict[str, Any]]:
     """Analyse all Piecewise nodes in a tree.
 
     For each ``Piecewise`` node, evaluates every branch independently
@@ -618,3 +624,265 @@ def _score_single_piecewise(node, df, target):
         "branches": branch_scores,
         "weakest_branch": weakest,
     }
+
+
+# ---------------------------------------------------------------------------
+# Phase 3 — General node-level optimization (§3.2)
+# ---------------------------------------------------------------------------
+
+# Operators whose output can be inverted exactly for one child, given the
+# node's ideal output and the actual values of the sibling children.
+# Non-invertible operators (Abs, Sign, Square, trigonometry, Ifte, ...) stop
+# the backward propagation — their children get no ideal value.
+INVERTIBLE_OPERATORS = frozenset(
+    {
+        "Add",
+        "Sub",
+        "Mul",
+        "Div",
+        "Scale",
+        "Usub",
+        "DivFraction",
+    }
+)
+
+
+@dataclass
+class NodeGap:
+    """Optimization gap of one node (§3.2 in docs/TARGETED_OPTIMIZATION.md).
+
+    The *ideal value* is what this node would have to output — with the rest
+    of the tree unchanged — so the tree output equals the target.  The gap is
+    the distance between actual and ideal output.
+
+    Attributes:
+        node_id: ``id()`` of the node.  Valid only for the analysed tree object.
+        operator: Class name of the node (e.g. ``"Add"``, ``"Symbol"``).
+        depth: Distance from the root (root = 0).
+        gap_mean: Mean ``|actual - ideal|`` over rows with finite values.
+        gap_sum: Sum of ``|actual - ideal|`` over those rows.
+        n_finite: Number of rows where the ideal value is finite.
+        is_root: Whether this node is the analysed tree's root.
+    """
+
+    node_id: int
+    operator: str
+    depth: int
+    gap_mean: float
+    gap_sum: float
+    n_finite: int
+    is_root: bool
+
+
+def node_optimization_gaps(
+    tree: Node,
+    df: pd.DataFrame,
+    target: np.ndarray,
+) -> List[NodeGap]:
+    """Compute per-node optimization gaps by inverse (backward) propagation.
+
+    Starting at the root — whose ideal output *is* the target — the ideal
+    value is pushed down through invertible operators
+    (:data:`INVERTIBLE_OPERATORS`).  For each reached node the gap between
+    its actual and ideal output is recorded.
+
+    Example: for ``Add(a, b, c)`` the ideal value of ``c`` on row ``i`` is
+    ``target_i - a_i - b_i``; the gap of ``c`` is ``|c_i - ideal_c_i|``.
+
+    Non-invertible operators (``Abs``, ``Sign``, ``Square``, trigonometry,
+    ``Ifte``, ...) terminate the propagation: they still get their own gap,
+    but their children do not.  Use :func:`ifte_component_scores` for the
+    Ifte/Piecewise-specific analysis instead.
+
+    Args:
+        tree: Root node of the tree to analyse (read-only, never modified).
+        df: Training DataFrame.
+        target: ``(n_rows,)`` target values.
+
+    Returns:
+        List of :class:`NodeGap`, ordered depth-first from the root.
+        Empty list if the tree cannot be evaluated.
+
+    Examples::
+
+        from plagih.targeted_optimization import largest_gap_node, node_optimization_gaps
+
+        gaps = node_optimization_gaps(tree, df, target)
+        for g in gaps:
+            print(f"{g.operator:12s} depth={g.depth} gap_mean={g.gap_mean:.3f}")
+
+        worst = largest_gap_node(gaps)  # best candidate for targeted mutation
+    """
+    try:
+        intermediates = eval_node_intermediates(tree, df)
+    except Exception:
+        return []
+
+    target_arr = np.asarray(target, dtype=np.float64)
+    gaps: List[NodeGap] = []
+    _propagate_ideal(tree, target_arr, intermediates, gaps, depth=0, is_root=True)
+    return gaps
+
+
+def largest_gap_node(
+    gaps: List[NodeGap],
+    exclude_root: bool = True,
+) -> Optional[NodeGap]:
+    """Return the node with the largest mean optimization gap.
+
+    This is the "weakest link" — the preferred target for gap-guided
+    mutation (Phase 3 of docs/TARGETED_OPTIMIZATION.md).
+
+    Args:
+        gaps: Output of :func:`node_optimization_gaps`.
+        exclude_root: Skip the root node.  Mutating the root replaces the
+            whole tree, which is what plain branch mutation already does.
+
+    Returns:
+        The :class:`NodeGap` with the highest ``gap_mean``, or ``None`` if
+        no node has a usable (finite, non-zero-row) gap.
+    """
+    usable = [g for g in gaps if g.n_finite > 0 and np.isfinite(g.gap_mean)]
+    if exclude_root:
+        usable = [g for g in usable if not g.is_root]
+    if not usable:
+        return None
+    return max(usable, key=lambda g: g.gap_mean)
+
+
+def _propagate_ideal(
+    node: Node,
+    ideal: np.ndarray,
+    intermediates: Dict[int, np.ndarray],
+    out: List[NodeGap],
+    depth: int,
+    is_root: bool = False,
+) -> None:
+    """Record the gap of *node* and push ideal values down to its children."""
+    actual = intermediates.get(id(node))
+    if actual is None:
+        return
+
+    out.append(_make_node_gap(node, actual, ideal, depth, is_root))
+
+    if not node.has_childs():
+        return
+
+    childs = node.get_childs()
+    if type(node).__name__ not in INVERTIBLE_OPERATORS:
+        return  # non-invertible — stop propagation here
+
+    child_vals = [intermediates.get(id(c)) for c in childs]
+    if any(v is None for v in child_vals):
+        return
+
+    child_ideals = _invert_operator(node, ideal, child_vals)
+    if child_ideals is None:
+        return
+
+    for child, child_ideal in zip(childs, child_ideals):
+        if child_ideal is not None:
+            _propagate_ideal(child, child_ideal, intermediates, out, depth + 1)
+
+
+def _make_node_gap(
+    node: Node,
+    actual: np.ndarray,
+    ideal: np.ndarray,
+    depth: int,
+    is_root: bool,
+) -> NodeGap:
+    """Build a :class:`NodeGap` from actual vs. ideal output vectors."""
+    actual_f = np.asarray(actual, dtype=np.float64)
+    diff = np.abs(actual_f - ideal)
+    finite = np.isfinite(diff)
+    n_finite = int(np.sum(finite))
+
+    if n_finite > 0:
+        gap_sum = float(np.sum(diff[finite]))
+        gap_mean = gap_sum / n_finite
+    else:
+        gap_sum = float("inf")
+        gap_mean = float("inf")
+
+    return NodeGap(
+        node_id=id(node),
+        operator=type(node).__name__,
+        depth=depth,
+        gap_mean=gap_mean,
+        gap_sum=gap_sum,
+        n_finite=n_finite,
+        is_root=is_root,
+    )
+
+
+def _invert_operator(
+    node: Node,
+    ideal: np.ndarray,
+    child_vals: List[np.ndarray],
+) -> Optional[List[Optional[np.ndarray]]]:
+    """Compute the ideal value of each child, given the node's ideal output.
+
+    Args:
+        node: The (invertible) operator node.
+        ideal: ``(n_rows,)`` ideal output of *node*.
+        child_vals: Actual output of each child.
+
+    Returns:
+        List with one entry per child — an ideal-value array, or ``None``
+        when that child cannot be inverted.  Returns ``None`` entirely if
+        the operator arity does not match expectations.
+    """
+    op = type(node).__name__
+    vals = [np.asarray(v, dtype=np.float64) for v in child_vals]
+
+    # Division by zero produces inf/nan; those rows are masked out later.
+    with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
+        if op == "Add":
+            total = np.sum(vals, axis=0)
+            # ideal_ci = ideal - sum(siblings) = ideal - (total - ci)
+            return [ideal - (total - v) for v in vals]
+
+        if op == "Sub":
+            if len(vals) != 2:
+                return None
+            a, b = vals
+            return [ideal + b, a - ideal]
+
+        if op == "Mul":
+            product = np.prod(vals, axis=0)
+            result: List[Optional[np.ndarray]] = []
+            for v in vals:
+                siblings = np.divide(product, v, out=np.full_like(product, np.nan), where=v != 0)
+                result.append(np.divide(ideal, siblings, out=np.full_like(ideal, np.nan), where=siblings != 0))
+            return result
+
+        if op == "Div":
+            if len(vals) != 2:
+                return None
+            a, b = vals
+            ideal_a = ideal * b
+            ideal_b = np.divide(a, ideal, out=np.full_like(a, np.nan), where=ideal != 0)
+            return [ideal_a, ideal_b]
+
+        if op == "Scale":
+            # Scale(c, expr) == c * expr, c is a Number terminal
+            if len(vals) != 2:
+                return None
+            c, expr = vals
+            ideal_c = np.divide(ideal, expr, out=np.full_like(ideal, np.nan), where=expr != 0)
+            ideal_expr = np.divide(ideal, c, out=np.full_like(ideal, np.nan), where=c != 0)
+            return [ideal_c, ideal_expr]
+
+        if op == "Usub":
+            if len(vals) != 1:
+                return None
+            return [-ideal]
+
+        if op == "DivFraction":
+            # out == 1 / a  =>  ideal_a == 1 / ideal
+            if len(vals) != 1:
+                return None
+            return [np.divide(1.0, ideal, out=np.full_like(ideal, np.nan), where=ideal != 0)]
+
+    return None

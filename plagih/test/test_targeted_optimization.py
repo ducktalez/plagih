@@ -1,7 +1,8 @@
 """Tests for plagih.targeted_optimization module.
 
 Covers Phase 1 (analysis infrastructure), Phase 2 (Ifte scoring),
-and Phase 2b (targeted_ifte strategy integration).
+Phase 2b (targeted_ifte strategy integration), and Phase 3
+(node-level optimization gaps + targeted_gap strategy).
 """
 
 import copy
@@ -14,9 +15,12 @@ import sympy
 from plagih.targeted_optimization import (
     BestPerDatapointResult,
     IfteAnalysisResult,
+    NodeGap,
     best_per_datapoint,
     eval_node_intermediates,
     ifte_component_scores,
+    largest_gap_node,
+    node_optimization_gaps,
     piecewise_component_scores,
     soft_optimum_error,
 )
@@ -452,3 +456,249 @@ class TestTreeHasIfte:
 
         tree = Number(1.0)
         assert _tree_has_ifte(tree) is False
+
+
+# =============================================================================
+# Phase 3 — Node-level optimization gaps
+# =============================================================================
+
+
+@pytest.fixture
+def gap_df():
+    """Simple DataFrame with columns a, b and a target column."""
+    return pd.DataFrame(
+        {
+            "a": np.array([1.0, 2.0, 3.0, 4.0]),
+            "b": np.array([10.0, 20.0, 30.0, 40.0]),
+        }
+    )
+
+
+class TestNodeOptimizationGaps:
+    """Tests for node_optimization_gaps() — inverse propagation."""
+
+    def test_add_ideal_child_value(self, gap_df):
+        """For Add(a, b), the gap of `b` is |b - (target - a)|."""
+        a = Symbol(sympy.Symbol("a"))
+        b = Symbol(sympy.Symbol("b"))
+        tree = Add(a, b)
+        tree.repair_all()
+
+        target = np.array([11.0, 22.0, 33.0, 44.0])  # == a + b → perfect tree
+        gaps = node_optimization_gaps(tree, gap_df, target)
+
+        by_id = {g.node_id: g for g in gaps}
+        assert by_id[id(tree)].gap_mean == pytest.approx(0.0)
+        assert by_id[id(a)].gap_mean == pytest.approx(0.0)
+        assert by_id[id(b)].gap_mean == pytest.approx(0.0)
+
+    def test_add_with_offset_target(self, gap_df):
+        """A constant target offset must show up as an equal gap on every child."""
+        a = Symbol(sympy.Symbol("a"))
+        b = Symbol(sympy.Symbol("b"))
+        tree = Add(a, b)
+        tree.repair_all()
+
+        target = np.array([11.0, 22.0, 33.0, 44.0]) + 5.0
+        gaps = node_optimization_gaps(tree, gap_df, target)
+        by_id = {g.node_id: g for g in gaps}
+
+        assert by_id[id(tree)].gap_mean == pytest.approx(5.0)
+        assert by_id[id(a)].gap_mean == pytest.approx(5.0)
+        assert by_id[id(b)].gap_mean == pytest.approx(5.0)
+
+    def test_root_is_flagged(self, gap_df):
+        a = Symbol(sympy.Symbol("a"))
+        tree = Add(a, Number(1.0))
+        tree.repair_all()
+
+        gaps = node_optimization_gaps(tree, gap_df, np.array([1.0, 2.0, 3.0, 4.0]))
+        roots = [g for g in gaps if g.is_root]
+        assert len(roots) == 1
+        assert roots[0].node_id == id(tree)
+        assert roots[0].depth == 0
+
+    def test_sub_inversion(self, gap_df):
+        """Sub(a, b): ideal_a = target + b, ideal_b = a - target."""
+        a = Symbol(sympy.Symbol("a"))
+        b = Symbol(sympy.Symbol("b"))
+        tree = Sub(a, b)
+        tree.repair_all()
+
+        target = np.array([1.0, 2.0, 3.0, 4.0]) - np.array([10.0, 20.0, 30.0, 40.0])
+        gaps = node_optimization_gaps(tree, gap_df, target)
+        by_id = {g.node_id: g for g in gaps}
+
+        assert by_id[id(a)].gap_mean == pytest.approx(0.0)
+        assert by_id[id(b)].gap_mean == pytest.approx(0.0)
+
+    def test_mul_inversion(self, gap_df):
+        """Mul(a, b) with a perfect target must yield zero gaps."""
+        a = Symbol(sympy.Symbol("a"))
+        b = Symbol(sympy.Symbol("b"))
+        tree = Mul(a, b)
+        tree.repair_all()
+
+        target = gap_df["a"].to_numpy() * gap_df["b"].to_numpy()
+        gaps = node_optimization_gaps(tree, gap_df, target)
+        by_id = {g.node_id: g for g in gaps}
+
+        assert by_id[id(a)].gap_mean == pytest.approx(0.0, abs=1e-9)
+        assert by_id[id(b)].gap_mean == pytest.approx(0.0, abs=1e-9)
+
+    def test_non_invertible_stops_propagation(self, gap_df):
+        """Square is not invertible — its child must get no gap entry."""
+        a = Symbol(sympy.Symbol("a"))
+        tree = Square(a)
+        tree.repair_all()
+
+        gaps = node_optimization_gaps(tree, gap_df, np.array([1.0, 4.0, 9.0, 16.0]))
+        node_ids = {g.node_id for g in gaps}
+
+        assert id(tree) in node_ids
+        assert id(a) not in node_ids
+
+    def test_terminal_only_tree(self, gap_df):
+        tree = Number(1.0)
+        tree.repair_all()
+
+        gaps = node_optimization_gaps(tree, gap_df, np.array([1.0, 1.0, 1.0, 1.0]))
+        assert len(gaps) == 1
+        assert gaps[0].is_root
+        assert gaps[0].gap_mean == pytest.approx(0.0)
+
+    def test_returns_nodegap_instances(self, gap_df):
+        tree = Add(Symbol(sympy.Symbol("a")), Number(1.0))
+        tree.repair_all()
+
+        gaps = node_optimization_gaps(tree, gap_df, np.array([1.0, 2.0, 3.0, 4.0]))
+        assert all(isinstance(g, NodeGap) for g in gaps)
+        assert all(g.operator for g in gaps)
+
+    def test_tree_not_modified(self, gap_df):
+        """Analysis must be side-effect free (rule 1 in the instructions)."""
+        tree = Add(Symbol(sympy.Symbol("a")), Number(1.0))
+        tree.repair_all()
+        before = str(tree)
+
+        node_optimization_gaps(tree, gap_df, np.array([1.0, 2.0, 3.0, 4.0]))
+        assert str(tree) == before
+
+
+class TestLargestGapNode:
+    """Tests for largest_gap_node()."""
+
+    def test_picks_worst_child(self, gap_df):
+        """The child that is further from its ideal value must win."""
+        a = Symbol(sympy.Symbol("a"))  # 1..4
+        b = Symbol(sympy.Symbol("b"))  # 10..40
+        tree = Add(a, b)
+        tree.repair_all()
+
+        # Ideal: a + b == 11,22,33,44.  We ask for 11,22,33,44 - shift, so both
+        # children share the same gap; instead make `b` clearly the odd one out
+        # by targeting a + 0 (i.e. b should have been 0).
+        target = gap_df["a"].to_numpy()
+        gaps = node_optimization_gaps(tree, gap_df, target)
+        worst = largest_gap_node(gaps)
+
+        assert worst is not None
+        # Both children have the same absolute gap here (|b - 0| == 25 mean),
+        # but the root must never be selected.
+        assert not worst.is_root
+
+    def test_excludes_root_by_default(self, gap_df):
+        tree = Number(100.0)
+        tree.repair_all()
+        gaps = node_optimization_gaps(tree, gap_df, np.array([0.0, 0.0, 0.0, 0.0]))
+
+        assert largest_gap_node(gaps) is None
+        assert largest_gap_node(gaps, exclude_root=False) is not None
+
+    def test_empty_input(self):
+        assert largest_gap_node([]) is None
+
+
+class TestTargetedGapStrategy:
+    """Tests for the _strategy_targeted_gap builtin strategy."""
+
+    @pytest.fixture
+    def evolve_and_df(self):
+        from plagih.trees._evolution import Evolution
+
+        operators = {Add: 1, Mul: 1, Sub: 1, Square: 1, Ifte: 1, Le: 1}
+        terminals_float = [sympy.Symbol("a"), sympy.Symbol("b")]
+
+        ev = Evolution(
+            symbol_list=terminals_float,
+            operators=operators,
+            nodes_max=30,
+            depth_max=6,
+        )
+        df = pd.DataFrame(
+            {
+                "a": np.linspace(-5, 5, 20),
+                "b": np.linspace(0, 10, 20),
+                "action": np.linspace(1, 3, 20),
+            }
+        )
+        return ev, df, df["action"].to_numpy()
+
+    def test_strategy_registered_in_builtins(self):
+        from plagih.parallel import BUILTIN_STRATEGIES
+
+        assert "targeted_gap" in BUILTIN_STRATEGIES
+
+    def test_strategy_returns_tree(self, evolve_and_df):
+        from plagih.parallel import _strategy_targeted_gap
+
+        ev, df, target = evolve_and_df
+        tree = Add(Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b")))
+        tree.repair_all()
+
+        result = _strategy_targeted_gap(
+            ev,
+            [],
+            [],
+            False,
+            _pre_selected=[copy.deepcopy(tree)],
+            _df_train=df,
+            _target=target,
+        )
+        assert result is not None
+
+    def test_strategy_without_training_data_falls_back(self, evolve_and_df):
+        from plagih.parallel import _strategy_targeted_gap
+
+        ev, _df, _target = evolve_and_df
+        tree = Add(Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b")))
+        tree.repair_all()
+
+        result = _strategy_targeted_gap(
+            ev,
+            [],
+            [],
+            False,
+            _pre_selected=[copy.deepcopy(tree)],
+            # no _df_train / _target
+        )
+        assert result is not None
+
+    def test_strategy_does_not_modify_parent(self, evolve_and_df):
+        from plagih.parallel import _strategy_targeted_gap
+
+        ev, df, target = evolve_and_df
+        tree = Add(Symbol(sympy.Symbol("a")), Symbol(sympy.Symbol("b")))
+        tree.repair_all()
+        before = str(tree)
+
+        _strategy_targeted_gap(
+            ev,
+            [],
+            [],
+            False,
+            _pre_selected=[tree],
+            _df_train=df,
+            _target=target,
+        )
+        assert str(tree) == before

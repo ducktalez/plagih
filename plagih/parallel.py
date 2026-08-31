@@ -960,6 +960,70 @@ def _strategy_targeted_ifte(evolve, pop_genepool, paretofront, allow_chain, **pa
     return evotree
 
 
+def _strategy_targeted_gap(evolve, pop_genepool, paretofront, allow_chain, **params):
+    """Mutate the subtree with the largest node-level optimization gap.
+
+    Phase 3 of Targeted Evolutionary Optimization (D5 in IMPLEMENTATION_PLAN).
+    Pushes the ideal output value backwards through invertible operators
+    (Add, Sub, Mul, Div, Scale, Usub, DivFraction) and replaces the child
+    whose actual output deviates most from its ideal value.
+
+    Falls back to standard branch mutation when no gap can be computed
+    (no training data, non-invertible root, or evaluation failure).
+    """
+    from plagih.trees._nodes import fast_tree_copy
+
+    pre = params.pop("_pre_selected", None)
+    tournament_n = params.get("tournament_n", 5)
+    depth_goal = params.get("depth_goal", 3)
+    p_term = params.get("p_term", 0.2)
+    df_train = params.get("_df_train")
+    target = params.get("_target")
+
+    if pre:
+        tree = pre[0]
+    else:
+        from plagih.trees import selection_tournament
+
+        tree = selection_tournament(pop_genepool, n=tournament_n)
+
+    evotree = fast_tree_copy(tree)
+
+    def _fallback():
+        return evolve.evolve_mutate_branch_depth(evotree, depth_goal, allow_chain, p_term=p_term)
+
+    if df_train is None or target is None:
+        return _fallback()
+
+    from plagih.targeted_optimization import largest_gap_node, node_optimization_gaps
+
+    try:
+        gaps = node_optimization_gaps(evotree, df_train, target)
+    except Exception:
+        return _fallback()
+
+    worst = largest_gap_node(gaps)
+    if worst is None:
+        return _fallback()
+
+    mutation_target = _find_node_by_id(evotree, worst.node_id)
+    if mutation_target is None or mutation_target.is_fix:
+        return _fallback()
+
+    # Focused mutation: regrow only the weakest subtree
+    n_init = len(evotree)
+    branch = evolve.evolve_create_random(
+        mutation_target.get_xtype_self(),
+        depth_goal,
+        num_rest=max(1, evolve.nodes_max - n_init),
+        depth=mutation_target.depth or 0,
+        p_term=p_term,
+    )
+    mutation_target.set_new_node(branch)
+
+    return evotree
+
+
 def _tree_has_ifte(tree) -> bool:
     """Check if a tree contains any Ifte or Piecewise nodes."""
     from plagih.trees._nodes import Ifte, Piecewise, Terminal
@@ -998,6 +1062,7 @@ BUILTIN_STRATEGIES: Dict[str, Callable] = {
     "simplicate": _strategy_simplicate,
     "pareto_revive": _strategy_pareto_revive,
     "targeted_ifte": _strategy_targeted_ifte,
+    "targeted_gap": _strategy_targeted_gap,
 }
 
 # Strategies grouped by how many parent trees they need from the genepool.
@@ -1012,11 +1077,15 @@ _STRATEGIES_ONE_PARENT = frozenset(
         "mutation_terminal",
         "simplicate",
         "targeted_ifte",
+        "targeted_gap",
     }
 )
 _STRATEGIES_TWO_PARENTS = frozenset({"crossover"})
 _STRATEGIES_NO_PARENT = frozenset({"random_new"})
 _STRATEGIES_PARETO = frozenset({"pareto_revive"})
+
+# Strategies that need `_df_train` / `_target` injected at task runtime.
+_STRATEGIES_NEEDING_TRAINING_DATA = frozenset({"targeted_ifte", "targeted_gap"})
 
 
 def _batch_tournament_select(
@@ -1198,6 +1267,18 @@ def _worker_run_task(task: TaskSpec, shared_lut_tree=None, shared_lut_symex=None
                 tree.repair_all()
             call_params = dict(task.strategy_params)
             call_params["_pre_selected"] = task.selected_trees
+
+        # Inject runtime context for targeted strategies (they need training
+        # data).  Without this they silently degrade to plain branch mutation
+        # in parallel mode.
+        if task.strategy_name in _STRATEGIES_NEEDING_TRAINING_DATA:
+            if call_params is task.strategy_params:
+                call_params = dict(task.strategy_params)
+            call_params.setdefault("_df_train", _worker_df_train)
+            _wrk_target = _worker_true_values
+            if _wrk_target is None and _worker_df_train is not None and _worker_target_column:
+                _wrk_target = _worker_df_train[_worker_target_column].values
+            call_params.setdefault("_target", _wrk_target)
 
         result = strategy_fn(
             _worker_evolve,
@@ -1412,7 +1493,7 @@ def run_task_sequential(
 
         # Inject runtime context for strategies that need training data
         _effective_params = dict(task.strategy_params)
-        if task.strategy_name == "targeted_ifte":
+        if task.strategy_name in _STRATEGIES_NEEDING_TRAINING_DATA:
             _effective_params.setdefault("_df_train", df_train)
             if target_column and df_train is not None:
                 _effective_params.setdefault("_target", df_train[target_column].values)

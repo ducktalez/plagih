@@ -9,7 +9,8 @@ Concepts:
 - **Race**: One independent ExplainableGP instance with its own population.
 - **Epoch**: A block of generations, followed by an exchange step.
 - **Exchange**: Top Pareto candidates of every race are injected as copies
-  into all other races.
+  into all other races.  Optionally gated by a **diversity filter**
+  (normalised structural TED) so near-duplicates are not injected.
 - **Trunk reseed** (optional): After each epoch, the combined Pareto front
   is mined for shared trunks; race templates (`Evolution.origin_tree`) are
   updated so new random trees grow around proven skeletons.  The last race
@@ -24,6 +25,7 @@ Usage::
         strategies=strategies,
         n_epochs=3,
         gens_per_epoch=5,
+        min_diversity=0.15,  # reject near-duplicate injections
     )
     best = result.combined_pareto[0]
 """
@@ -51,6 +53,7 @@ class EpochStats:
     pareto_size: int
     best_fitness: float
     injected: int = 0
+    diversity: Optional[float] = None
 
 
 @dataclass
@@ -72,12 +75,95 @@ def _best_candidates(gp: ExplainableGP, top_n: int) -> List[Candidate]:
     return front[:top_n]
 
 
-def exchange_candidates(races: Sequence[ExplainableGP], top_n: int = 2) -> List[int]:
+def normalized_ted(tree_a, tree_b, mode: str = "structural") -> float:
+    """Structural distance in ``[0, 1]``.
+
+    TED normalised by the summed tree size, so results are comparable
+    across differently sized trees.  ``0.0`` = identical structure,
+    ``1.0`` = maximally different.
+
+    Measured reference values (small trees, ``structural`` mode)::
+
+        identical                      0.00
+        Add(a,b) vs Mul(a,b)           0.17
+        Add(a,b) vs Add(a,1)           0.17
+        Add(a,Mul(b,2)) vs Add(a,b)    0.25
+        Add(a,Mul(b,2)) vs 1           0.67
+
+    Useful ``min_diversity`` band is therefore roughly ``0.1 .. 0.3``.
+
+    Args:
+        tree_a: First tree.
+        tree_b: Second tree.
+        mode: `TedConfig` mode (``"structural"`` by default — values of
+            terminals are ignored, only shape/operators count).
+
+    Returns:
+        Normalised distance.  Returns ``1.0`` if TED fails.
+    """
+    from plagih.tree_complexity.tree_edit_distance import TedConfig
+
+    n_total = len(tree_a) + len(tree_b)
+    if n_total == 0:
+        return 0.0
+    try:
+        dist = tree_a.compute_ted(tree_b, TedConfig(mode=mode)).distance
+    except Exception:
+        return 1.0
+    return min(1.0, float(dist) / n_total)
+
+
+def is_diverse_enough(
+    tree,
+    reference_trees: Sequence,
+    min_distance: float,
+    mode: str = "structural",
+) -> bool:
+    """Check whether *tree* is structurally novel vs. *reference_trees*.
+
+    Cheap identity pre-filter (`str(tree)`) runs first; TED is only used
+    when ``min_distance > 0`` — it is O(n²·m²), so keep the reference set
+    small (Pareto fronts, not whole populations).
+
+    Args:
+        tree: Candidate tree to test.
+        reference_trees: Trees already present in the target population.
+        min_distance: Required minimum normalised distance (0 disables
+            the TED check, duplicates are still rejected).
+        mode: `TedConfig` mode forwarded to :func:`normalized_ted`.
+
+    Returns:
+        True when the tree should be accepted.
+    """
+    tree_str = str(tree)
+    ref_strs = [str(t) for t in reference_trees]
+    if tree_str in ref_strs:
+        return False  # exact duplicate
+    if min_distance <= 0.0:
+        return True
+    return all(normalized_ted(tree, ref, mode=mode) >= min_distance for ref in reference_trees)
+
+
+def exchange_candidates(
+    races: Sequence[ExplainableGP],
+    top_n: int = 2,
+    min_diversity: float = 0.0,
+    diversity_mode: str = "structural",
+) -> List[int]:
     """Inject each race's best Pareto candidates into all other races.
 
     Trees are copied (`fast_tree_copy`) and re-evaluated by the receiving
     race via `tree_to_candidate` — LUTs and fitness stay race-local.
     Failing injections (size/sympy errors) are skipped silently.
+
+    Args:
+        races: Participating GP instances.
+        top_n: Pareto candidates offered per donor race.
+        min_diversity: Minimum normalised TED distance a donor must have
+            to every tree already in the receiver's Pareto front (plus the
+            donors accepted in this round).  ``0.0`` only filters exact
+            duplicates.
+        diversity_mode: `TedConfig` mode used for the distance.
 
     Returns:
         Injected-candidate count per race.
@@ -88,17 +174,22 @@ def exchange_candidates(races: Sequence[ExplainableGP], top_n: int = 2) -> List[
     injected = [0] * len(races)
 
     for ii, gp in enumerate(races):
+        # Reference set stays small: own Pareto front + accepted donors
+        refs = [c.tree for c in gp.paretofront]
         for jj, donors in enumerate(donors_per_race):
             if ii == jj:
                 continue
             for cand in donors:
                 tree = fast_tree_copy(cand.tree)
                 tree.repair_all()
+                if not is_diverse_enough(tree, refs, min_diversity, mode=diversity_mode):
+                    continue
                 try:
                     new_cand = gp.tree_to_candidate(tree, raise_if_useless=False, tag="race_exchange")
                 except Exception:
                     continue  # not viable in this race — skip
                 gp.pop_genepool.append(new_cand)
+                refs.append(new_cand.tree)
                 injected[ii] += 1
         if injected[ii]:
             gp.run_update_paretofront(gp.pop_genepool)
@@ -139,13 +230,30 @@ def reseed_templates_from_trunks(
     return changed
 
 
+def population_diversity(gp: ExplainableGP, sample_n: int = 8, mode: str = "structural") -> float:
+    """Mean pairwise normalised TED over a Pareto-front sample.
+
+    Bounded work: at most ``sample_n`` trees → ``sample_n²/2`` TED calls.
+
+    Returns:
+        Mean distance in ``[0, 1]``; ``0.0`` for fewer than 2 trees.
+    """
+    trees = [c.tree for c in sorted(gp.paretofront, key=lambda c: c.fitness)[:sample_n]]
+    if len(trees) < 2:
+        return 0.0
+    dists = [normalized_ted(trees[i], trees[j], mode=mode) for i in range(len(trees)) for j in range(i + 1, len(trees))]
+    return float(sum(dists) / len(dists))
+
+
 def run_races(
     races: Sequence[ExplainableGP],
     strategies,
     n_epochs: int = 3,
     gens_per_epoch: int = 5,
     exchange_top_n: int = 2,
+    min_diversity: float = 0.0,
     reseed_trunks: bool = False,
+    track_diversity: bool = False,
     seed: Optional[int] = None,
 ) -> RaceResult:
     """Run multiple GP races with periodic candidate exchange.
@@ -158,8 +266,12 @@ def run_races(
         gens_per_epoch: Generations per race per epoch.
         exchange_top_n: Pareto candidates exchanged per donor race
             (0 disables exchange).
+        min_diversity: Minimum normalised TED distance for an injected
+            candidate (see :func:`exchange_candidates`).
         reseed_trunks: Update race `origin_tree` templates from combined
             Pareto trunks after each exchange (last race stays free).
+        track_diversity: Record per-race Pareto diversity in the history
+            (costs TED calls — off by default).
         seed: Optional seed forwarded to generation runs.
 
     Returns:
@@ -184,7 +296,7 @@ def run_races(
 
         injected = [0] * len(races)
         if exchange_top_n > 0:
-            injected = exchange_candidates(races, top_n=exchange_top_n)
+            injected = exchange_candidates(races, top_n=exchange_top_n, min_diversity=min_diversity)
 
         if reseed_trunks:
             n_reseeded = reseed_templates_from_trunks(races)
@@ -202,6 +314,7 @@ def run_races(
                     pareto_size=len(gp.paretofront),
                     best_fitness=float(best_fit),
                     injected=injected[race_idx],
+                    diversity=population_diversity(gp) if track_diversity else None,
                 )
             )
 

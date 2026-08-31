@@ -515,15 +515,21 @@
   dimensionality model.
 - **Related:** L2 (gradient tracking / JAX integration).
 
-### I5 – Sub-populations / races 🚧 (core loop shipped 2026-09-01)
+### I5 – Sub-populations / races 🚧 (core loop + diversity gate shipped)
 - **Implemented:** `plagih/population_races.py` — `run_races()` drives N
   `ExplainableGP` instances in epochs, `exchange_candidates()` injects
   top-Pareto copies across races, `reseed_templates_from_trunks()` sets
   race `origin_tree` templates from combined-Pareto trunks (last race is
   always the anti-core: `origin_tree=None`, free exploration).
+- **Implemented (2026-09-01):** Diversity-aware exchange —
+  `normalized_ted()` (structural TED / summed tree size, in `[0,1]`),
+  `is_diverse_enough()` (cheap `str()` duplicate pre-filter, then TED),
+  `population_diversity()` (mean pairwise distance over a Pareto sample).
+  `run_races(min_diversity=…, track_diversity=…)`.  Measured band:
+  identical `0.00`, small op swap `0.17`, deep vs. flat `0.25`,
+  unrelated `0.67` → useful thresholds are `0.1 .. 0.3`.
 - **Open:** run races in parallel processes (currently sequential);
-  diversity-aware exchange (don't inject near-duplicates); adaptive epoch
-  length; benchmark vs. single-population baseline.
+  adaptive epoch length; benchmark vs. single-population baseline.
 - **Related:** I2 (partnering), M3 (merge strategies), D5 §3.5 (trunks).
 
 ### I6 – `nsimplify` for terminals and expressions
@@ -708,6 +714,13 @@
   SymPy round-trip for trees containing `Min`/`Max`/`Abs`/`Sign`, eliminating
   the entire class of semantic rejections (100% of analysed cases).
 
+- ✅ **I5 — Diversity-aware exchange (2026-09-01)** — `normalized_ted()`
+  (structural TED / summed size), `is_diverse_enough()` (str duplicate
+  pre-filter then TED), `population_diversity()`. `exchange_candidates()`
+  and `run_races()` gained `min_diversity`; `EpochStats.diversity` is
+  populated with `track_diversity=True`. TED reference band documented
+  in the `normalized_ted` docstring (useful thresholds `0.1 .. 0.3`).
+
 - ✅ **I5 — Multi-population races, core loop (2026-09-01)** —
   New `plagih/population_races.py`: `run_races()` (epochs × races ×
   generations), `exchange_candidates()` (top-Pareto copies re-evaluated by
@@ -740,7 +753,7 @@
 
 ## Open next priorities
 
-- 🔜 **I5 follow-ups:** Parallel race execution, diversity-aware exchange,
+- 🔜 **I5 follow-ups:** Parallel race execution, adaptive epoch length,
   benchmark races vs. single-population baseline.
 - 🔜 **D5 Phase 5:** Hybrid GP↔NN experiments (→ I10).
 - 🔜 **D8 demo notebook hardening:** Keep notebook/examples in sync with recent

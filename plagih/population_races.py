@@ -272,7 +272,9 @@ def run_races(
             Pareto trunks after each exchange (last race stays free).
         track_diversity: Record per-race Pareto diversity in the history
             (costs TED calls — off by default).
-        seed: Optional seed forwarded to generation runs.
+        seed: Base seed.  A distinct seed is derived per race and
+            generation — races must not share an RNG stream, otherwise
+            they evolve identically and exchange degenerates to duplicates.
 
     Returns:
         :class:`RaceResult` with combined Pareto front and history.
@@ -283,16 +285,21 @@ def run_races(
     if len(races) < 2:
         raise ValueError("Need at least 2 races")
 
-    for gp in races:
+    for gp_idx, gp in enumerate(races):
         if not gp.pop_genepool:
-            gp.gen_create_initial(seed=seed)
+            # Distinct seeds — identical seeds would make races clones
+            gp.gen_create_initial(seed=None if seed is None else seed + 1000 * gp_idx)
 
     result = RaceResult()
 
     for epoch in range(n_epochs):
         for race_idx, gp in enumerate(races):
-            for _ in range(gens_per_epoch):
-                gp.run_generation(strategies, seed=seed)
+            for gen in range(gens_per_epoch):
+                gen_seed = None
+                if seed is not None:
+                    # Unique per race AND generation, else all races evolve alike
+                    gen_seed = seed + 1000 * race_idx + 10 * epoch + gen
+                gp.run_generation(strategies, seed=gen_seed)
 
         injected = [0] * len(races)
         if exchange_top_n > 0:

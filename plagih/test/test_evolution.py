@@ -436,6 +436,79 @@ class TestPruning:
 
         assert len(pruned) <= evolution_instance.nodes_max
 
+    def test_prune_returns_root_not_subtree(self, evolution_instance):
+        """Regression: pruning must return the root object, not a random subtree."""
+        import sympy
+
+        from plagih.trees import Add, Number, Symbol
+
+        evolution_instance.nodes_max = 5
+        tree = Symbol(sympy.Symbol("a"))
+        for _ in range(8):
+            tree = Add(tree, Number(1.0))
+        tree.repair_all()
+        assert len(tree) > evolution_instance.nodes_max
+
+        pruned = evolution_instance.evolve_prune_tree(tree)
+
+        assert pruned is tree, "must return the same root object"
+        assert len(pruned) <= evolution_instance.nodes_max
+
+    def test_prune_oversized_tree_reaches_limit(self, evolution_instance):
+        """Regression: loop must measure the root, not the pruned branch."""
+        import sympy
+
+        from plagih.trees import Add, Number, Symbol
+
+        evolution_instance.nodes_max = 7
+        for _ in range(10):
+            tree = Symbol(sympy.Symbol("a"))
+            for _ in range(12):
+                tree = Add(tree, Number(1.0))
+            tree.repair_all()
+
+            pruned = evolution_instance.evolve_prune_tree(tree)
+            assert len(pruned) <= evolution_instance.nodes_max
+
+    def test_prune_fully_fixed_tree_does_not_crash(self, evolution_instance):
+        """Regression: frozen origin_tree skeletons have no prunable branch."""
+        import sympy
+
+        from plagih.trees import Add, Number, Symbol
+
+        evolution_instance.nodes_max = 3
+        tree = Symbol(sympy.Symbol("a"))
+        for _ in range(5):
+            tree = Add(tree, Number(1.0))
+        tree.repair_all()
+
+        # Freeze everything
+        for node in tree.to_traversal("pre"):
+            node.is_fix = True
+
+        pruned = evolution_instance.evolve_prune_tree(tree)  # must not raise
+        assert pruned is tree
+
+    def test_prune_mostly_fixed_tree_does_not_crash(self, evolution_instance):
+        """Regression: IndexError when no mutable branch reaches prune_now."""
+        import sympy
+
+        from plagih.trees import Add, Number, Symbol
+
+        evolution_instance.nodes_max = 4
+        tree = Symbol(sympy.Symbol("a"))
+        for _ in range(10):
+            tree = Add(tree, Number(1.0))
+        tree.repair_all()
+
+        # Freeze all operators; only terminals stay mutable (len 1 each)
+        for node in tree.to_traversal("pre"):
+            if node.has_childs():
+                node.is_fix = True
+
+        pruned = evolution_instance.evolve_prune_tree(tree)  # must not raise
+        assert pruned is tree
+
 
 # =============================================================================
 # Node Selector Tests

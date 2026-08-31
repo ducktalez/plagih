@@ -528,8 +528,29 @@
   `run_races(min_diversity=…, track_diversity=…)`.  Measured band:
   identical `0.00`, small op swap `0.17`, deep vs. flat `0.25`,
   unrelated `0.67` → useful thresholds are `0.1 .. 0.3`.
-- **Open:** run races in parallel processes (currently sequential);
-  adaptive epoch length; benchmark vs. single-population baseline.
+- **Benchmark (2026-09-01):** `plagih/test/benchmarks/bench_i5_races.py`.
+  Budget-matched arms (equal total generations × population = equal
+  evaluations): `races` (3 races), `races_plain` (no diversity gate /
+  no trunk reseed), `base_long` (1 pop, 3× generations), `base_wide`
+  (1 pop, 3× size). MountainCar, 6 seeds, pop=60, 5 gens/race:
+
+  | arm | mean fitness | std | wins vs base_long |
+  |---|---:|---:|---:|
+  | races | 0.5828 | 0.0183 | 4/6 |
+  | races_plain | 0.5872 | 0.0211 | 3/6 |
+  | base_long | 0.5882 | 0.0229 | — |
+  | base_wide | 0.5898 | 0.0231 | — |
+
+  **Verdict: no significant effect.** Races win 4/6 seeds, but the mean
+  gap (+0.0053) is **well within** the seed-to-seed std (0.023) — i.e.
+  indistinguishable from noise at this budget. The diversity gate changed
+  injection counts (19 vs 27) but not the outcome. Races are *not* worse
+  either, and cost no extra runtime.
+  **Do not claim an improvement** until a larger study (≥30 seeds, bigger
+  populations, harder targets) is run.
+- **Open:** larger benchmark study before promoting races beyond opt-in;
+  run races in parallel processes (currently sequential); adaptive epoch
+  length.
 - **Related:** I2 (partnering), M3 (merge strategies), D5 §3.5 (trunks).
 
 ### I6 – `nsimplify` for terminals and expressions
@@ -714,6 +735,15 @@
   SymPy round-trip for trees containing `Min`/`Max`/`Abs`/`Sign`, eliminating
   the entire class of semantic rejections (100% of analysed cases).
 
+- ✅ **I5 benchmark + two real bugs (2026-09-01)** —
+  `bench_i5_races.py` compares races against budget-matched single-population
+  baselines. Result: **no significant effect** (gap within seed noise).
+  Two bugs found while building it:
+  **P26** `evolve_prune_tree()` returned a random subtree instead of the root
+  and stopped pruning early (oversized trees collapsed to a terminal);
+  **P27** `run_races()` gave every race the same seed, so all races were
+  clones and exchange injected nothing.
+
 - ✅ **I5 — Diversity-aware exchange (2026-09-01)** — `normalized_ted()`
   (structural TED / summed size), `is_diverse_enough()` (str duplicate
   pre-filter then TED), `population_diversity()`. `exchange_candidates()`
@@ -753,8 +783,11 @@
 
 ## Open next priorities
 
-- 🔜 **I5 follow-ups:** Parallel race execution, adaptive epoch length,
-  benchmark races vs. single-population baseline.
+- 🔜 **I5 larger benchmark study:** ≥30 seeds / bigger populations to decide
+  whether races give a real improvement (current result: within noise).
+- 🔜 **P26 follow-up:** The pruning *strategy* is still random-branch
+  (see the `# sfeh` note in `evolve_prune_tree`). Now that pruning actually
+  reaches `nodes_max`, compare random vs. deepest-first pruning.
 - 🔜 **D5 Phase 5:** Hybrid GP↔NN experiments (→ I10).
 - 🔜 **D8 demo notebook hardening:** Keep notebook/examples in sync with recent
   strategy additions (`mutation_terminal`, `targeted_ifte`, `targeted_gap`) and

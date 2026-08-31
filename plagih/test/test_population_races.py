@@ -309,6 +309,38 @@ class TestRunRaces:
         result = run_races(two_races, STRATEGIES, n_epochs=1, gens_per_epoch=1)
         assert all(h.diversity is None for h in result.history)
 
+    def test_seeded_races_get_distinct_seeds(self, two_races):
+        """Regression: a shared base seed must not give races the same RNG stream."""
+        seen = []
+        for gp in two_races:
+            original = gp.run_generation
+
+            def spy(strategies, *args, _orig=original, **kwargs):
+                seen.append(kwargs.get("seed"))
+                return _orig(strategies, *args, **kwargs)
+
+            gp.run_generation = spy
+
+        run_races(two_races, STRATEGIES, n_epochs=1, gens_per_epoch=2, exchange_top_n=0, seed=7)
+
+        assert len(seen) == 4  # 2 races * 2 generations
+        assert all(s is not None for s in seen)
+        assert len(set(seen)) == 4, f"seeds must all differ, got {seen}"
+
+    def test_no_seed_stays_none(self, two_races):
+        seen = []
+        for gp in two_races:
+            original = gp.run_generation
+
+            def spy(strategies, *args, _orig=original, **kwargs):
+                seen.append(kwargs.get("seed"))
+                return _orig(strategies, *args, **kwargs)
+
+            gp.run_generation = spy
+
+        run_races(two_races, STRATEGIES, n_epochs=1, gens_per_epoch=1, exchange_top_n=0)
+        assert all(s is None for s in seen)
+
 
 class TestPopulationDiversity:
     def test_bounded(self, two_races):

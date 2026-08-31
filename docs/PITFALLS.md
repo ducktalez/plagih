@@ -705,3 +705,76 @@ several MB in a short run and being the **only** visible output when
 
 **Rule:** IO-heavy diagnostics must be gated behind `enable_analysis` or a
 dedicated config flag. Lightweight analysis/warnings should always run.
+
+---
+
+## P26 – `evolve_prune_tree` returned a subtree and stopped early (fixed)
+
+**Where:** `Evolution.evolve_prune_tree()` in `trees/_evolution.py`
+
+The node-count pruning loop **rebound the local name `_tree`** to the branch
+it was about to prune:
+
+```python
+_tree = random.choice(nodelist)      # now points at a SUBTREE
+_tree.set_new_node(new_node)
+prune_amount = len(_tree) - self.nodes_max   # measures the subtree!
+```
+
+Two consequences:
+
+1. **Wrong return value.** The function returned the pruned *branch*, not the
+   root — contradicting its own docstring ("Returns: The pruned tree").
+   Callers do `evotree = evolve.evolve_prune_tree(evotree)`, so an oversized
+   tree was silently replaced by a random terminal.
+2. **Pruning stopped too early.** `prune_amount` was recomputed on the small
+   branch, so the loop exited while the actual root was still oversized.
+
+Measured before the fix (`nodes_max=5`, input tree of 17 nodes):
+returned `Symbol b` (1 node), root left at 9 nodes — still over the limit.
+
+A third failure mode surfaced with frozen `origin_tree` skeletons
+(`is_fix=True` on all operators): `list_mutable_nodes()` then returns only
+size-1 terminals, so the `len(x) >= prune_now` filter emptied the list and
+`random.choice([])` raised `IndexError: Cannot choose from an empty sequence`.
+
+**Fix (applied 2026-09-01):**
+1. Prune target is a separate variable (`victim`); `_tree` keeps pointing at
+   the root, which is also what gets returned.
+2. `prune_amount` is recomputed on the **root**.
+3. Candidate branches exclude the root itself and terminals; when no branch
+   reaches `prune_now`, the largest one is used instead of crashing.
+4. If nothing is prunable at all (fully fixed tree), the loop breaks and logs.
+
+**Rule:** Never rebind the parameter name that a function returns. When a
+loop shrinks a structure, measure the *root*, not the part just modified.
+
+---
+
+## P27 – Shared seed made all races evolve identically (fixed)
+
+**Where:** `run_races()` in `population_races.py`
+
+`run_races(seed=…)` forwarded the **same** seed to every `run_generation()`
+call of **every** race:
+
+```python
+for race_idx, gp in enumerate(races):
+    for _ in range(gens_per_epoch):
+        gp.run_generation(strategies, seed=seed)   # identical stream
+```
+
+All races therefore produced identical populations. `exchange_candidates()`
+then saw only exact duplicates and injected **nothing** (`inj=0`), silently
+defeating the entire point of multi-population races — while still costing
+the full runtime.
+
+**Fix (applied 2026-09-01):** derive a distinct seed per race *and* per
+generation (`seed + 1000*race_idx + 10*epoch + gen`); `gen_create_initial()`
+likewise gets a per-race offset. `seed=None` still means "unseeded".
+
+**Rule:** Parallel/independent populations must never share an RNG stream.
+When adding a `seed` parameter to a multi-instance runner, derive per-instance
+seeds — and assert in a test that they differ.
+
+

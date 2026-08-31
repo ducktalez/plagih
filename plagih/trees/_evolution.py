@@ -466,15 +466,21 @@ class Evolution:
         prune_amount = len(_tree) - self.nodes_max
         while prune_amount > 0:
             log("wwww", f"Tree too complex: {len(_tree)} > {self.nodes_max}, pruning {prune_amount}.")
-            nodelist = _tree.list_mutable_nodes()
+            # Only prunable branches: mutable AND not the root itself
+            nodelist = [x for x in _tree.list_mutable_nodes() if x is not _tree and x.has_childs()]
+            if not nodelist:
+                # Nothing prunable (e.g. fully fixed origin_tree skeleton)
+                log("wwww", f"Tree {len(_tree)} > {self.nodes_max} but has no prunable branch; keeping as is.")
+                break
             prune_now = 1 + np.random.randint(prune_amount)  # 19 -> prune branch with 1 to max. 19 nodes
 
-            nodelist = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
-            _tree = random.choice(nodelist)
-            new_node = self.node_selector.choose_terminal_node(_tree.get_xtype_self())
-            new_node.depth = _tree.depth
-            _tree.set_new_node(new_node)
-            prune_amount = len(_tree) - self.nodes_max
+            big_enough = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
+            # No branch reaches prune_now: take the largest one instead of crashing
+            victim = random.choice(big_enough) if big_enough else max(nodelist, key=len)
+            new_node = self.node_selector.choose_terminal_node(victim.get_xtype_self())
+            new_node.depth = victim.depth
+            victim.set_new_node(new_node)
+            prune_amount = len(_tree) - self.nodes_max  # measure the ROOT, not the victim
 
         return _tree
 

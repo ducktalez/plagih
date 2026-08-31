@@ -509,6 +509,63 @@ class TestPruning:
         pruned = evolution_instance.evolve_prune_tree(tree)  # must not raise
         assert pruned is tree
 
+    def test_prune_deepest_respects_limit(self, evolution_instance):
+        """Deepest strategy must also reach nodes_max."""
+        import sympy
+
+        from plagih.trees import Add, Number, Symbol
+
+        evolution_instance.nodes_max = 7
+        for _ in range(10):
+            tree = Symbol(sympy.Symbol("a"))
+            for _ in range(12):
+                tree = Add(tree, Number(1.0))
+            tree.repair_all()
+
+            pruned = evolution_instance.evolve_prune_tree(tree, strategy="deepest")
+            assert pruned is tree
+            assert len(pruned) <= evolution_instance.nodes_max
+
+    def test_prune_deepest_keeps_shallow_structure(self, evolution_instance):
+        """Deepest strategy removes deep branches, root stays intact."""
+        import sympy
+
+        from plagih.trees import Add, Mul, Number, Symbol
+
+        evolution_instance.nodes_max = 9
+        # Root: Add(shallow_mul, deep_chain) — deep chain must be pruned first
+        deep = Symbol(sympy.Symbol("a"))
+        for _ in range(6):
+            deep = Add(deep, Number(1.0))
+        tree = Add(Mul(Symbol(sympy.Symbol("b")), Number(2.0)), deep)
+        tree.repair_all()
+        assert len(tree) > evolution_instance.nodes_max
+
+        pruned = evolution_instance.evolve_prune_tree(tree, strategy="deepest")
+
+        assert len(pruned) <= evolution_instance.nodes_max
+        # Shallow Mul(b, 2) branch must survive
+        assert type(pruned) is Add
+        mul_child = pruned.get_childs()[0]
+        assert type(mul_child) is Mul
+        assert len(mul_child) == 3
+
+    def test_prune_strategy_from_instance_default(self, evolution_instance):
+        """self.prune_strategy is used when no override is given."""
+        import sympy
+
+        from plagih.trees import Add, Number, Symbol
+
+        evolution_instance.nodes_max = 7
+        evolution_instance.prune_strategy = "deepest"
+        tree = Symbol(sympy.Symbol("a"))
+        for _ in range(12):
+            tree = Add(tree, Number(1.0))
+        tree.repair_all()
+
+        pruned = evolution_instance.evolve_prune_tree(tree)
+        assert len(pruned) <= evolution_instance.nodes_max
+
 
 # =============================================================================
 # Node Selector Tests

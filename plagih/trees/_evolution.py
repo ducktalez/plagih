@@ -3,7 +3,7 @@
 import random
 import warnings
 from collections import deque
-from typing import Dict, List, Tuple, Type, Union
+from typing import Dict, List, Optional, Tuple, Type, Union
 
 import numpy as np
 import pandas as pd
@@ -386,6 +386,7 @@ class Evolution:
         nodes_max=100,
         complexity_metric="tree_node_count_fair",
         allow_chain=None,
+        prune_strategy="random",
     ):
         """Initialize evolution with operator pool and constraints.
 
@@ -401,6 +402,9 @@ class Evolution:
                 'tree_python_bytecode_weighted_count', 'tree_cpu_cost_proxy',
                 or 'tree_flops_proxy'.
             allow_chain: Whether to allow chained operators.
+            prune_strategy: ``"random"`` (random branch, big steps) or
+                ``"deepest"`` (smallest deepest branch first, keeps the
+                shallow structure intact). See P26 follow-up benchmark.
         """
         self.origin_xtype = origin_xtype
         self.origin_tree = origin_tree
@@ -430,25 +434,26 @@ class Evolution:
 
         self.depth_max = depth_max
         self.nodes_max = nodes_max
+        self.prune_strategy = prune_strategy
 
         self.allow_a_chain = allow_chain
 
-    def evolve_prune_tree(self, _tree: Node) -> Node:
+    def evolve_prune_tree(self, _tree: Node, strategy: Optional[str] = None) -> Node:
         """Prunes a tree to meet depth and node count constraints.
 
-        Strategies:
-        - Depth pruning: Replaces nodes exceeding max depth with terminals
-        - Node pruning: Randomly replaces branches to reduce total count
-
-        Note: Pruning should ideally be handled during creation, as it
-        strongly affects tree structure and randomly removes nodes.
+        Strategies (node-count pruning):
+        - ``"random"``: random big-step branch replacement (legacy default)
+        - ``"deepest"``: smallest branch at max depth first — keeps the
+          shallow structure (and thus semantics) intact as long as possible
 
         Args:
             _tree: The tree to prune.
+            strategy: Override; defaults to ``self.prune_strategy``.
 
         Returns:
             The pruned tree (modified in place).
         """
+        strategy = strategy or self.prune_strategy
         nodelist = _tree.list_mutable_nodes()
         for dnode in nodelist:
             if dnode.depth == self.nodes_max and dnode.get_arity() > 0:
@@ -457,13 +462,13 @@ class Evolution:
                 new_node.depth = dnode.depth
                 dnode.set_new_node(new_node)
 
-        # sfeh not as trivial as pruning the max. tree depth: Which nodes to prune randomly?
-        #   This strongly affects the tree structure and should thus be decided in the creation process
-        #   Pruning strategies:
-        #   - Randomly prune nodes until complexity is met
-        #   - Prune the deepest nodes first, every depth level completely
-        #   - check crossover
+        # P26 benchmark (bench_p26_pruning.py): random beats deepest-first
+        # 34:23 on semantic preservation and is 12x faster. The replacement
+        # VALUE dominates the damage, not the cut position -> I16
+        # (semantic pruning: replace branch with its mean output).
         prune_amount = len(_tree) - self.nodes_max
+        if prune_amount > 0 and strategy == "deepest":
+            _tree.repair_all()  # depth values must be current
         while prune_amount > 0:
             log("wwww", f"Tree too complex: {len(_tree)} > {self.nodes_max}, pruning {prune_amount}.")
             # Only prunable branches: mutable AND not the root itself
@@ -472,11 +477,18 @@ class Evolution:
                 # Nothing prunable (e.g. fully fixed origin_tree skeleton)
                 log("wwww", f"Tree {len(_tree)} > {self.nodes_max} but has no prunable branch; keeping as is.")
                 break
-            prune_now = 1 + np.random.randint(prune_amount)  # 19 -> prune branch with 1 to max. 19 nodes
 
-            big_enough = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
-            # No branch reaches prune_now: take the largest one instead of crashing
-            victim = random.choice(big_enough) if big_enough else max(nodelist, key=len)
+            if strategy == "deepest":
+                # Smallest branch among the deepest — minimal semantic damage per step
+                max_d = max(x.depth or 0 for x in nodelist)
+                deepest = [x for x in nodelist if (x.depth or 0) == max_d]
+                victim = min(deepest, key=len)
+            else:
+                prune_now = 1 + np.random.randint(prune_amount)  # 19 -> prune branch with 1 to max. 19 nodes
+                big_enough = [x for x in nodelist if len(x) >= prune_now]  # only (operator-) nodes
+                # No branch reaches prune_now: take the largest one instead of crashing
+                victim = random.choice(big_enough) if big_enough else max(nodelist, key=len)
+
             new_node = self.node_selector.choose_terminal_node(victim.get_xtype_self())
             new_node.depth = victim.depth
             victim.set_new_node(new_node)

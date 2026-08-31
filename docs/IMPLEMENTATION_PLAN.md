@@ -12,12 +12,10 @@
 1. **I5 benchmark study** — ≥30 seeds / bigger populations to decide whether
    races beat single-population (current result: within noise,
    `bench_i5_races.py`).
-2. **P26 follow-up** — pruning strategy is still random-branch
-   (`# sfeh` in `evolve_prune_tree`). Compare random vs. deepest-first.
-3. **I10.1** — full 3-iteration EM loop on MountainCar
+2. **I10.1** — full 3-iteration EM loop on MountainCar
    (`python benchmarks/nn_gp/run_mc.py`, no `--fast`), fill paper blueprint
    with real values.
-4. **D8** — sync `docs/demo.ipynb` with new strategies
+3. **D8** — sync `docs/demo.ipynb` with new strategies
    (`mutation_terminal`, `targeted_ifte`, `targeted_gap`, `chain_mutation`).
 
 ---
@@ -85,6 +83,11 @@ at `nodes_max`.
 - **I15 GUI follow-ups:** click-to-render any Pareto entry; diff view;
   merged-tree tab; subtree drill-down with targeted-opt scores; pause
   inside generation; WebSocket adapter; live `log()` streaming.
+- **I16 Semantic pruning:** replace pruned branches with a `Number` equal
+  to the branch's *mean output* on training data instead of a random
+  terminal (P26 benchmark showed the replacement value dominates semantic
+  damage). Needs training data in `evolve_prune_tree` — inject like
+  `_STRATEGIES_NEEDING_TRAINING_DATA`.
 
 ---
 
@@ -130,11 +133,19 @@ drop the back-conversion entirely (→ D11.3)? Accept SymPy constant folding
   `_nodes.py` into `_grouping.py` / `_sympy_bridge.py`.
 - **I5 benchmark:** Races ≈ baseline at small budget (within seed noise).
   Keep opt-in; don't claim improvement without a larger study.
+- **P26 pruning strategy:** Random stays default. Benchmark
+  (`bench_p26_pruning.py`, 60 trees): deepest-first loses head-to-head
+  34:23, is 12× slower, and prunes less. Root cause: each prune step
+  inserts a *random* terminal — many small deep steps inject more noise
+  than 1–2 big random cuts. Real lever is the replacement *value*, not
+  the cut position (→ I16).
 
 ---
 
 ## Changelog (max 5 entries, one line each — older history in git)
 
+- 2026-09-01 **P26 follow-up**: `prune_strategy="deepest"` option added +
+  benchmarked — random stays default (see Decided); spawned I16.
 - 2026-09-01 **D11**: rewrite engine `_rewrite.py`; `revoke_useless_nodes()`
   now respects `is_fix`.
 - 2026-09-01 **I5**: races core loop + diversity gate + benchmark; fixed
@@ -143,7 +154,6 @@ drop the back-conversion entirely (→ D11.3)? Accept SymPy constant folding
   `chain_mutation` strategy — D5 Phases 1–4 complete.
 - 2026-09-01 **D5 Phase 3**: node optimization gaps + `targeted_gap`;
   fixed missing `_df_train` injection in parallel mode.
-- 2026-08-31 **I13**: `GROUPING_DIV_MAX_DENOMINATOR=20` cap (done, closed).
 
 ---
 

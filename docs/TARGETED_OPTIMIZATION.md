@@ -411,6 +411,9 @@ can NumPy + CuPy suffice?
       `n_trees * subtree_size`; nested trunks with equal coverage are
       filtered.  `suggest_origin_trees()` returns **copies** (read-only
       analysis, inputs never modified).
+      → `trunk_to_origin_tree()` / `suggest_origin_templates()` freeze the
+      trunk skeleton (`is_fix=True` on operators, terminals stay mutable)
+      so `Evolution(origin_tree=template)` regrows only the variable slots.
 
 ### Phase 5 — Hybrid GP↔NN (research / exploratory)
 

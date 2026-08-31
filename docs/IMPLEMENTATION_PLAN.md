@@ -168,9 +168,11 @@
   (`node_optimization_gaps()`, `largest_gap_node()`, `targeted_gap` strategy),
   Phase 4: Minimum Set (`_greedy_minimum_set()`), merged-tree trunk analysis
   (`find_trunks()` / `suggest_origin_trees()` in `population_merge.py`),
-  chained-operator mutation (`chain_mutation` strategy in `parallel.py`).
-- **Next:** Phase 5 (hybrid GP↔NN, → I10); wire `suggest_origin_trees()`
-  into a sub-population workflow (→ I5).
+  chained-operator mutation (`chain_mutation` strategy in `parallel.py`),
+  origin-tree templates (`trunk_to_origin_tree()` /
+  `suggest_origin_templates()` — frozen skeleton, mutable slots).
+- **Next:** Phase 5 (hybrid GP↔NN, → I10); full multi-population race
+  orchestration around the templates (→ I5).
 - **Open question (Phase 3 follow-up):** Non-invertible operators currently
   stop the backward propagation entirely.  Should `Square`/`Abs` use a
   sign-preserving *approximate* inverse (flagged as inexact), or interval
@@ -701,6 +703,12 @@
   SymPy round-trip for trees containing `Min`/`Max`/`Abs`/`Sign`, eliminating
   the entire class of semantic rejections (100% of analysed cases).
 
+- ✅ **D5 follow-up — Origin-tree templates from trunks (2026-09-01)** —
+  `trunk_to_origin_tree()` freezes trunk operators (`is_fix=True`), keeps
+  terminals mutable as regrow slots; `suggest_origin_templates()` wraps
+  trunk analysis + freezing. `Evolution(origin_tree=template)` verified to
+  preserve the skeleton end-to-end (test).
+
 - ✅ **D5 Phase 4 complete — chain_mutation strategy (2026-09-01)** —
   `_strategy_chain_mutation` in `parallel.py`: add/remove/replace operands
   on chainable nodes (Add/Mul/Min/Max/And/Or). Gap-guided operand selection
@@ -721,8 +729,9 @@
 
 ## Open next priorities
 
-- 🔜 **D5 follow-ups:** Sub-population workflow using `suggest_origin_trees()`
-  (→ I5); Phase 5 hybrid GP↔NN experiments (→ I10).
+- 🔜 **I5 multi-population races:** Orchestrate parallel sub-populations
+  seeded via `suggest_origin_templates()` (core/anti-core, exchange).
+- 🔜 **D5 Phase 5:** Hybrid GP↔NN experiments (→ I10).
 - 🔜 **D8 demo notebook hardening:** Keep notebook/examples in sync with recent
   strategy additions (`mutation_terminal`, `targeted_ifte`, `targeted_gap`) and
   add one visual regression smoke pass.

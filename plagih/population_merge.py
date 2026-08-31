@@ -17,6 +17,9 @@ IMPLEMENTED STRATEGIES:
 - `find_trunks()`: ranks shared subtrees ("thickest trunks") in the merged DAG.
 - `suggest_origin_trees()`: returns copies of the best trunks as `origin_tree`
   seeds for new sub-populations.
+- `trunk_to_origin_tree()` / `suggest_origin_templates()`: freeze the trunk
+  skeleton (`is_fix=True` on operators) so `Evolution(origin_tree=...)` only
+  regrows the variable slots.
 
 =============================================================================
 PLANNED STRATEGIES (TODO):
@@ -772,6 +775,62 @@ def suggest_origin_trees(
         copy_tree.repair_all()
         suggestions.append((copy_tree, trunk))
     return suggestions
+
+
+def trunk_to_origin_tree(trunk: Node, mutable_terminals: bool = True) -> Node:
+    """Prepare a trunk as `origin_tree` template for a sub-population.
+
+    Copies the trunk and marks all operator nodes `is_fix=True` so the
+    skeleton survives `evolve_new_tree_depth()`.  Terminals stay mutable
+    (default) and act as variable slots that evolution regrows.
+
+    With ``mutable_terminals=False`` the whole trunk is frozen — useful when
+    only appending structure around the trunk is desired (root stays the
+    single mutable entry point via crossover/mutation).
+
+    Args:
+        trunk: Trunk root (e.g. from :func:`suggest_origin_trees`).
+        mutable_terminals: Keep terminals mutable as regrow slots.
+
+    Returns:
+        Independent template copy, back-references repaired.
+    """
+    from plagih.trees._nodes import Terminal, fast_tree_copy
+
+    template = fast_tree_copy(trunk)
+
+    def _mark(node: Node) -> None:
+        if isinstance(node, Terminal):
+            node.is_fix = not mutable_terminals
+            return
+        node.is_fix = True
+        for cc in node.get_childs():
+            _mark(cc)
+
+    _mark(template)
+    template.repair_all()
+    return template
+
+
+def suggest_origin_templates(
+    population: List[Union[Node, Candidate]],
+    top_n: int = 3,
+    min_trees: int = 2,
+    min_size: int = 2,
+    mutable_terminals: bool = True,
+) -> List[Tuple[Node, TrunkInfo]]:
+    """Ready-to-use `origin_tree` templates from population trunks.
+
+    Convenience wrapper: :func:`suggest_origin_trees` +
+    :func:`trunk_to_origin_tree`.  Pass a template to
+    ``Evolution(origin_tree=...)`` to seed a sub-population that keeps the
+    shared skeleton fixed and only evolves the variable slots.
+
+    Returns:
+        List of ``(template, TrunkInfo)`` tuples, best trunk first.
+    """
+    suggestions = suggest_origin_trees(population, top_n=top_n, min_trees=min_trees, min_size=min_size)
+    return [(trunk_to_origin_tree(tree, mutable_terminals=mutable_terminals), info) for tree, info in suggestions]
 
 
 def visualize_merged_graph(

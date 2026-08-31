@@ -16,7 +16,9 @@ from plagih.population_merge import (
     build_one_evaluation_tree,
     find_trunks,
     get_expressions_by_depth,
+    suggest_origin_templates,
     suggest_origin_trees,
+    trunk_to_origin_tree,
 )
 from plagih.trees import Abs, Add, Mul, Number, Symbol
 
@@ -493,6 +495,73 @@ class TestSuggestOriginTrees:
             Mul(make_symbol("b"), make_number(2)),
         ]
         assert suggest_origin_trees(population) == []
+
+
+class TestTrunkToOriginTree:
+    """Tests for trunk_to_origin_tree() / suggest_origin_templates()."""
+
+    def test_operators_frozen_terminals_mutable(self):
+        trunk = Mul(Add(make_symbol("a"), make_symbol("b")), make_symbol("c"))
+        template = trunk_to_origin_tree(trunk)
+
+        assert template.is_fix
+        add_node = template.get_childs()[0]
+        assert add_node.is_fix
+        # Terminals stay mutable
+        for term in [*add_node.get_childs(), template.get_childs()[1]]:
+            assert not term.is_fix
+
+    def test_fully_frozen(self):
+        trunk = Add(make_symbol("a"), make_symbol("b"))
+        template = trunk_to_origin_tree(trunk, mutable_terminals=False)
+
+        assert template.is_fix
+        assert all(cc.is_fix for cc in template.get_childs())
+
+    def test_input_not_modified(self):
+        trunk = Add(make_symbol("a"), make_symbol("b"))
+        trunk.repair_all()
+        template = trunk_to_origin_tree(trunk)
+
+        assert id(template) != id(trunk)
+        assert not trunk.is_fix
+
+    def test_suggest_origin_templates(self):
+        population = [
+            Add(make_symbol("a"), make_symbol("b")),
+            Mul(Add(make_symbol("a"), make_symbol("b")), make_symbol("c")),
+        ]
+        templates = suggest_origin_templates(population)
+
+        assert templates
+        template, info = templates[0]
+        assert isinstance(info, TrunkInfo)
+        assert template.is_fix
+
+    def test_evolution_preserves_skeleton(self):
+        """Evolution(origin_tree=template) must keep the frozen skeleton."""
+        from plagih.trees import Sub
+        from plagih.trees._evolution import Evolution
+        from plagih.trees._nodes import Ifte, Le
+
+        trunk = Mul(Add(make_symbol("a"), make_symbol("b")), make_symbol("c"))
+        template = trunk_to_origin_tree(trunk)
+
+        ev = Evolution(
+            symbol_list=[sympy.Symbol("a"), sympy.Symbol("b"), sympy.Symbol("c")],
+            operators={Add: 1, Mul: 1, Sub: 1, Ifte: 1, Le: 1},
+            nodes_max=30,
+            depth_max=6,
+            origin_tree=template,
+        )
+
+        for _ in range(5):
+            tree = ev.evolve_new_tree_depth(float, depth_goal=2, p_term=0.3)
+            # Skeleton: root Mul with fixed Add child survives
+            assert type(tree) is Mul
+            assert tree.is_fix
+            assert type(tree.get_childs()[0]) is Add
+            assert tree.get_childs()[0].is_fix
 
 
 # =============================================================================

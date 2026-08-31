@@ -10,6 +10,9 @@ applyTo: "plagih/population_merge.py"
   `find_trunks()` ranks shared subtrees by `n_trees * subtree_size`;
   `suggest_origin_trees()` returns **copies** via `fast_tree_copy` +
   `repair_all()` — never hand out original node references.
+- **Implemented**: Origin templates — `trunk_to_origin_tree()` freezes
+  operators (`is_fix=True`), terminals stay mutable as regrow slots for
+  `Evolution(origin_tree=...)`; `suggest_origin_templates()` combines both.
 - **DAG invariant**: Every `MergedNode` appears at most once in the graph.
   Shared sub-expressions point to the same node instance.
 - **Read-only analysis**: All analysis functions must not modify input trees

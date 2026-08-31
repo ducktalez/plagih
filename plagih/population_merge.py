@@ -13,6 +13,11 @@ IMPLEMENTED STRATEGIES:
 - Builds a DAG (Directed Acyclic Graph) where no expression is computed twice.
 - Suitable for feed-forward batch evaluation (e.g., with TensorFlow).
 
+### Trunk analysis (IMPLEMENTED — Targeted Optimization §3.5)
+- `find_trunks()`: ranks shared subtrees ("thickest trunks") in the merged DAG.
+- `suggest_origin_trees()`: returns copies of the best trunks as `origin_tree`
+  seeds for new sub-populations.
+
 =============================================================================
 PLANNED STRATEGIES (TODO):
 =============================================================================
@@ -619,6 +624,154 @@ def analyze_population_sharing(population: List[Union[Node, Candidate]]) -> Dict
     ]
 
     return stats
+
+
+# =============================================================================
+# Trunk Analysis (Targeted Optimization §3.5)
+# =============================================================================
+
+
+@dataclass
+class TrunkInfo:
+    """A shared subtree ("trunk") found in the merged graph.
+
+    Attributes:
+        node_id: MergedNode id of the trunk root.
+        expr: String form of the trunk expression.
+        n_trees: Number of distinct trees containing this trunk.
+        tree_indices: Sorted tree indices sharing the trunk.
+        subtree_size: Node count of the trunk subgraph (incl. terminals).
+        depth: Depth of the trunk root in the merged graph.
+        score: Ranking score = ``n_trees * subtree_size``.
+    """
+
+    node_id: str
+    expr: str
+    n_trees: int
+    tree_indices: List[int]
+    subtree_size: int
+    depth: int
+    score: float
+
+
+def _collect_subtree_ids(graph: MergedEvaluationGraph, node_id: str) -> Set[str]:
+    """All node ids in the subgraph rooted at *node_id* (incl. itself)."""
+    seen: Set[str] = set()
+    stack = [node_id]
+    while stack:
+        nid = stack.pop()
+        if nid in seen or nid not in graph.nodes:
+            continue
+        seen.add(nid)
+        stack.extend(graph.nodes[nid].child_ids)
+    return seen
+
+
+def find_trunks(
+    graph: MergedEvaluationGraph,
+    min_trees: int = 2,
+    min_size: int = 2,
+    exclude_nested: bool = True,
+) -> List[TrunkInfo]:
+    """Find shared subtrees ("thickest trunks") in a merged graph.
+
+    A trunk is an operator node used by at least *min_trees* distinct trees
+    whose subgraph has at least *min_size* nodes.  Trunks are ranked by
+    ``n_trees * subtree_size`` (big + widely shared wins).
+
+    Args:
+        graph: Merged DAG from :func:`build_one_evaluation_tree`.
+        min_trees: Minimum number of distinct trees sharing the trunk.
+        min_size: Minimum node count of the trunk subgraph.
+        exclude_nested: Drop trunks fully contained in an already-selected
+            trunk with equal-or-broader tree coverage.
+
+    Returns:
+        List of :class:`TrunkInfo`, best trunk first.
+    """
+    candidates: List[TrunkInfo] = []
+
+    for node in graph.nodes.values():
+        if node.node_type != "operator":
+            continue  # bare terminals are not useful trunks
+        trees = sorted({t for t, _ in node.original_nodes})
+        if len(trees) < min_trees:
+            continue
+        size = len(_collect_subtree_ids(graph, node.node_id))
+        if size < min_size:
+            continue
+        candidates.append(
+            TrunkInfo(
+                node_id=node.node_id,
+                expr=str(node.sympy_expr),
+                n_trees=len(trees),
+                tree_indices=trees,
+                subtree_size=size,
+                depth=node.depth,
+                score=float(len(trees) * size),
+            )
+        )
+
+    # Best first; node_id as deterministic tiebreaker
+    candidates.sort(key=lambda t: (-t.score, -t.n_trees, t.node_id))
+
+    if not exclude_nested:
+        return candidates
+
+    # Drop trunks nested inside an already-kept trunk with >= coverage
+    kept: List[TrunkInfo] = []
+    kept_subtrees: List[Tuple[Set[str], Set[int]]] = []  # (subtree ids, tree set)
+    for cand in candidates:
+        cand_trees = set(cand.tree_indices)
+        nested = any(cand.node_id in ids and cand_trees <= trees for ids, trees in kept_subtrees)
+        if nested:
+            continue
+        kept.append(cand)
+        kept_subtrees.append((_collect_subtree_ids(graph, cand.node_id), cand_trees))
+    return kept
+
+
+def suggest_origin_trees(
+    population: List[Union[Node, Candidate]],
+    top_n: int = 3,
+    min_trees: int = 2,
+    min_size: int = 2,
+    normalize_strategy: str = "sympify",
+) -> List[Tuple[Node, TrunkInfo]]:
+    """Suggest `origin_tree` candidates from shared population structure.
+
+    Builds the merged DAG, finds the thickest trunks (§3.5), and returns a
+    **copy** of one original subtree per trunk.  These copies can seed a new
+    sub-population (`origin_tree`) that optimises only the variable parts.
+
+    Input trees are never modified (read-only analysis).
+
+    Args:
+        population: List of Node trees or Candidate objects.
+        top_n: Maximum number of suggestions.
+        min_trees: Minimum trees sharing a trunk.
+        min_size: Minimum trunk subgraph size.
+        normalize_strategy: Expression normalisation for deduplication.
+
+    Returns:
+        List of ``(tree_copy, TrunkInfo)`` tuples, best trunk first.
+    """
+    from plagih.trees._nodes import fast_tree_copy
+
+    graph = build_one_evaluation_tree(population, normalize_strategy=normalize_strategy)
+    trunks = find_trunks(graph, min_trees=min_trees, min_size=min_size)
+
+    suggestions: List[Tuple[Node, TrunkInfo]] = []
+    for trunk in trunks[:top_n]:
+        merged = graph.nodes.get(trunk.node_id)
+        if merged is None or not merged.original_nodes:
+            continue
+        # Any original node works — they are all the same expression
+        _tree_idx, original = merged.original_nodes[0]
+        copy_tree = fast_tree_copy(original)
+        copy_tree.repair_all()
+        suggestions.append((copy_tree, trunk))
+    return suggestions
 
 
 def visualize_merged_graph(

@@ -11,9 +11,12 @@ import sympy
 from plagih.population_merge import (
     MergedEvaluationGraph,
     MergedNode,
+    TrunkInfo,
     analyze_population_sharing,
     build_one_evaluation_tree,
+    find_trunks,
     get_expressions_by_depth,
+    suggest_origin_trees,
 )
 from plagih.trees import Abs, Add, Mul, Number, Symbol
 
@@ -376,6 +379,120 @@ class TestIntegration:
             for child_id in node.child_ids:
                 child_idx = order.index(child_id)
                 assert child_idx < node_idx, f"Child {child_id} should come before parent {node_id}"
+
+
+# =============================================================================
+# Trunk Analysis (Targeted Optimization §3.5)
+# =============================================================================
+
+
+class TestFindTrunks:
+    """Tests for find_trunks()."""
+
+    def _make_population(self):
+        """3 trees sharing the (a + b) trunk, 1 unrelated."""
+        return [
+            Add(make_symbol("a"), make_symbol("b")),  # a + b
+            Mul(Add(make_symbol("a"), make_symbol("b")), make_symbol("c")),  # (a+b)*c
+            Abs(Add(make_symbol("a"), make_symbol("b"))),  # |a+b|
+            Mul(make_symbol("a"), make_number(2)),  # a*2 — no trunk
+        ]
+
+    def test_finds_shared_trunk(self):
+        graph = build_one_evaluation_tree(self._make_population())
+        trunks = find_trunks(graph)
+
+        assert trunks, "Expected at least one trunk"
+        best = trunks[0]
+        assert best.n_trees == 3
+        assert set(best.tree_indices) == {0, 1, 2}
+        assert best.subtree_size == 3  # Add + a + b
+        assert "a" in best.expr and "b" in best.expr
+
+    def test_min_trees_filter(self):
+        graph = build_one_evaluation_tree(self._make_population())
+        trunks = find_trunks(graph, min_trees=4)
+        assert trunks == []
+
+    def test_min_size_filter(self):
+        graph = build_one_evaluation_tree(self._make_population())
+        trunks = find_trunks(graph, min_size=10)
+        assert trunks == []
+
+    def test_no_sharing_no_trunks(self):
+        population = [
+            Add(make_symbol("a"), make_number(1)),
+            Mul(make_symbol("b"), make_number(2)),
+        ]
+        graph = build_one_evaluation_tree(population)
+        assert find_trunks(graph) == []
+
+    def test_nested_trunk_excluded(self):
+        """Inner trunk with same coverage must be dropped when nested."""
+        # Both trees share the whole (a+b)*c — inner (a+b) has same coverage
+        population = [
+            Mul(Add(make_symbol("a"), make_symbol("b")), make_symbol("c")),
+            Mul(Add(make_symbol("a"), make_symbol("b")), make_symbol("c")),
+        ]
+        graph = build_one_evaluation_tree(population)
+
+        trunks = find_trunks(graph)
+        assert len(trunks) == 1  # only the outer trunk survives
+
+        all_trunks = find_trunks(graph, exclude_nested=False)
+        assert len(all_trunks) == 2  # outer + inner
+
+    def test_ranked_by_score(self):
+        graph = build_one_evaluation_tree(self._make_population())
+        trunks = find_trunks(graph, exclude_nested=False)
+        scores = [t.score for t in trunks]
+        assert scores == sorted(scores, reverse=True)
+
+
+class TestSuggestOriginTrees:
+    """Tests for suggest_origin_trees()."""
+
+    def test_returns_tree_copies(self):
+        population = [
+            Add(make_symbol("a"), make_symbol("b")),
+            Mul(Add(make_symbol("a"), make_symbol("b")), make_symbol("c")),
+        ]
+        suggestions = suggest_origin_trees(population)
+
+        assert suggestions
+        tree, info = suggestions[0]
+        assert isinstance(info, TrunkInfo)
+        # Copy — not one of the original node objects
+        original_ids = set()
+        for t in population:
+            original_ids.add(id(t))
+            for child in t.get_childs():
+                original_ids.add(id(child))
+        assert id(tree) not in original_ids
+
+    def test_inputs_not_modified(self):
+        population = [
+            Add(make_symbol("a"), make_symbol("b")),
+            Mul(Add(make_symbol("a"), make_symbol("b")), make_symbol("c")),
+        ]
+        before = [str(t) for t in population]
+        suggest_origin_trees(population)
+        assert [str(t) for t in population] == before
+
+    def test_top_n_limit(self):
+        population = [
+            Mul(Add(make_symbol("a"), make_symbol("b")), Add(make_symbol("c"), make_number(1))),
+            Mul(Add(make_symbol("a"), make_symbol("b")), Add(make_symbol("c"), make_number(1))),
+        ]
+        suggestions = suggest_origin_trees(population, top_n=1, min_trees=2)
+        assert len(suggestions) <= 1
+
+    def test_empty_population_like_input(self):
+        population = [
+            Add(make_symbol("a"), make_number(1)),
+            Mul(make_symbol("b"), make_number(2)),
+        ]
+        assert suggest_origin_trees(population) == []
 
 
 # =============================================================================

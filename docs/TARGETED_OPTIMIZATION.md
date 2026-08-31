@@ -4,7 +4,8 @@
 > random evolution. Covers pseudo-backpropagation, node-level analysis,
 > population-wide orchestration, and hybrid GP↔NN approaches.
 >
-> Status: **Phase 1 + 2 + 3 implemented** — Phase 4+ pending.
+> Status: **Phase 1 + 2 + 3 implemented, Phase 4 partial** (Minimum Set +
+> trunk analysis done, chained-operator mutation pending).
 > Tracked in `IMPLEMENTATION_PLAN.md` § D5.
 
 ---
@@ -396,10 +397,17 @@ can NumPy + CuPy suffice?
 
 ### Phase 4 — Population-level orchestration
 
-- [ ] **Minimum Set computation** (§3.3): Greedy set-cover approximation.
+- [x] **Minimum Set computation** (§3.3): Greedy set-cover approximation.
+      → `_greedy_minimum_set()` in `plagih/targeted_optimization.py`;
+      exposed as `BestPerDatapointResult.minimum_set_indices`.
 - [ ] **Chained-operator targeted mutation** (§3.4) as new `Strategy`.
-- [ ] **Merged-tree trunk analysis** (§3.5): Identify shared subtrees,
+- [x] **Merged-tree trunk analysis** (§3.5): Identify shared subtrees,
       suggest `origin_tree` candidates.
+      → `find_trunks()` + `suggest_origin_trees()` in
+      `plagih/population_merge.py`.  Trunks are ranked by
+      `n_trees * subtree_size`; nested trunks with equal coverage are
+      filtered.  `suggest_origin_trees()` returns **copies** (read-only
+      analysis, inputs never modified).
 
 ### Phase 5 — Hybrid GP↔NN (research / exploratory)
 

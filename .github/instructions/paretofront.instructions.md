@@ -8,6 +8,6 @@ applyTo: "plagih/paretofront.py"
   `A.fitness ≤ B.fitness` with at least one strict inequality.
 - **Algorithm**: `pareto_from_pop()` sorts by (parsimony, fitness), then
   single-pass filter. O(n²) worst case but population sizes are small.
-- **Code smell**: Two similar `analyze_pareto`-like functions exist — see
-  `IMPLEMENTATION_PLAN.md` L3 for cleanup task.
+- **Code smell**: Two similar `analyze_pareto`-like functions exist —
+  consolidate when touching this module.
 

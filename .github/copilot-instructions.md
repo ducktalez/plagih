@@ -21,11 +21,11 @@ crossover, and simplification, evaluated against training data.
 | `plagih/trees/_nodes.py` | plagih_tree contain a new implementation of trees that we use in genetic programming to display a program. (62C/22F) |
 | `plagih/trees/_evolution.py` | Evolution module: Candidate, NodeSelect, Evolution, and population helpers. (3C/8F) |
 | `plagih/trees/_gp_engine.py` | GP Engine module: ExplainableGP and picklable helper callables. (2C/5F) |
-| `plagih/parallel.py` | Parallel execution engine for plagih GP. (5C/39F) |
+| `plagih/parallel.py` | Parallel execution engine for plagih GP. (5C/41F) |
 | `plagih/paretofront.py` | Pareto-front dominance filter for GP candidates. (0C/5F) |
 | `plagih/monitoring.py` | GP Monitoring Module (2C/0F) |
 | `plagih/evaluation_context.py` | Unified Evaluation Context System for Plagih GP Trees. (3C/5F) |
-| `plagih/population_merge.py` | Population Merge Module for plagih GP Framework (3C/8F) |
+| `plagih/population_merge.py` | Population Merge Module for plagih GP Framework (4C/13F) |
 | `plagih/util.py` | *(no docstring)* (1C/14F) |
 | `visualization/tree_renderer.py` | *(file not found)* |
 | `visualization/visualize_trees.py` | *(file not found)* |
@@ -94,10 +94,19 @@ When adding new cross-cutting conventions, prefer creating a new
   `WHATHAPPENED`, `sfeh`, `# discuss` are investigation aids, not dead code.
 - **Open tasks**: Add new TODOs to `docs/IMPLEMENTATION_PLAN.md` instead of
   writing `# TODO` comments in source code.
+- **Plan hygiene — the plan must shrink**: When an item is completed,
+  **delete it** from `IMPLEMENTATION_PLAN.md` (git keeps the history).
+  Durable findings go to `PITFALLS.md` (bugs/gotchas), `ARCHITECTURE.md`
+  (structure), or the feature doc. Decisions become **one line** in the
+  plan's "Decided" section. The changelog is capped at **5 one-line
+  entries**; measurement tables never go into the plan. Target: plan stays
+  under ~200 lines.
 - **Design discussions**: Open architectural questions, trade-off decisions,
   and "should we?" debates go into the **Design Discussions** section of
-  `docs/IMPLEMENTATION_PLAN.md` (items D1, D2, …). Do **not** embed them
-  inline in `PITFALLS.md` or source code — add a cross-reference instead.
+  `docs/IMPLEMENTATION_PLAN.md` (items D1, D2, …). Once decided, compress
+  to one line in "Decided" and move the rationale to the relevant doc or
+  commit message. Do **not** embed discussions inline in `PITFALLS.md`
+  or source code — add a cross-reference instead.
 - **Raise concerns**: If an approach seems risky, fragile, or
   architecturally problematic, voice the concern explicitly before or
   alongside the implementation.
@@ -112,5 +121,7 @@ When adding new cross-cutting conventions, prefer creating a new
   (`scripts/update_copilot_instructions.py`). No manual work needed.
 - **When you discover a new pitfall**, add it to `docs/PITFALLS.md`.
 - **When you identify an open task**, add it to `docs/IMPLEMENTATION_PLAN.md`.
+- **When you complete a task**, delete it from the plan (see "Plan hygiene"
+  above) — never leave ✅-graveyards.
 - **Coding conventions** (linting, type hints, test config) live in
   `pyproject.toml` — do **not** duplicate them here.

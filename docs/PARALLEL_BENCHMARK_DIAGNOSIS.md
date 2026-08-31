@@ -1,9 +1,9 @@
 # Parallel Benchmark Diagnosis
 
 > **⚠️ Keep this file intact.** The measurement data in this document is the
-> baseline for a planned rework of the parallelization system (see
-> `IMPLEMENTATION_PLAN.md` H1–H3). Do not condense or remove data tables —
-> they will be needed for before/after comparison.
+> baseline for any future rework of the parallelization system (H1–H3 are
+> closed, see "Decided" in `IMPLEMENTATION_PLAN.md`). Do not condense or
+> remove data tables — they are needed for before/after comparison.
 
 > Final evaluation of the current Windows parallelization in `plagih`.
 >
@@ -419,7 +419,8 @@ This confirms that the newly added error diagnostics in `parallel.py` and
 
 ## 10. Open tasks
 
-> **Note:** These items are also tracked in `docs/IMPLEMENTATION_PLAN.md` (H1–H3).
+> **Note:** H1–H3 have since been resolved/closed — see the "Decided"
+> section in `docs/IMPLEMENTATION_PLAN.md`.
 
 - [ ] **Further optimize parallelization:** Specifically re-examine worker RAM, pre-selection, and the post-H1 generation-0 runner. Current measurements suggest untapped potential.
 - [ ] **Repeat resource profiling with `gens>=2`** to get CPU/RAM cross-tables not just for the first generation run but also for steady state.

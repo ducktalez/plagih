@@ -83,11 +83,6 @@ at `nodes_max`.
 - **I15 GUI follow-ups:** click-to-render any Pareto entry; diff view;
   merged-tree tab; subtree drill-down with targeted-opt scores; pause
   inside generation; WebSocket adapter; live `log()` streaming.
-- **I16 Semantic pruning:** replace pruned branches with a `Number` equal
-  to the branch's *mean output* on training data instead of a random
-  terminal (P26 benchmark showed the replacement value dominates semantic
-  damage). Needs training data in `evolve_prune_tree` — inject like
-  `_STRATEGIES_NEEDING_TRAINING_DATA`.
 
 ---
 
@@ -139,11 +134,17 @@ drop the back-conversion entirely (→ D11.3)? Accept SymPy constant folding
   inserts a *random* terminal — many small deep steps inject more noise
   than 1–2 big random cuts. Real lever is the replacement *value*, not
   the cut position (→ I16).
+- **I16 semantic pruning:** `evolve_prune_tree(df_train=...)` replaces
+  pruned branches with their mean output (bool: majority). Benchmark
+  60 trees: semantic wins 39 | deepest 11 | random 4; median RMSE
+  1.5 vs 18.4. Wired into all engine prune call sites.
 
 ---
 
 ## Changelog (max 5 entries, one line each — older history in git)
 
+- 2026-09-01 **I16**: semantic pruning (mean-output replacement) +
+  benchmark win 39/60; df_train wired into all prune call sites.
 - 2026-09-01 **P26 follow-up**: `prune_strategy="deepest"` option added +
   benchmarked — random stays default (see Decided); spawned I16.
 - 2026-09-01 **D11**: rewrite engine `_rewrite.py`; `revoke_useless_nodes()`
@@ -152,8 +153,6 @@ drop the back-conversion entirely (→ D11.3)? Accept SymPy constant folding
   P26 (`evolve_prune_tree` returned subtree) and P27 (races shared seed).
 - 2026-09-01 **D5 Phase 4**: trunk analysis, origin templates,
   `chain_mutation` strategy — D5 Phases 1–4 complete.
-- 2026-09-01 **D5 Phase 3**: node optimization gaps + `targeted_gap`;
-  fixed missing `_df_train` injection in parallel mode.
 
 ---
 

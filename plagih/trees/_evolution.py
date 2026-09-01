@@ -15,6 +15,33 @@ from plagih.trees._nodes import *
 from plagih.util import *
 
 
+def semantic_replacement_terminal(branch: "Node", df_train: pd.DataFrame) -> Optional["Node"]:
+    """Constant terminal matching the branch's output on training data (I16).
+
+    Float branch -> ``Number(mean(output))``; bool branch -> ``Boolean``
+    (majority vote).  Returns None when the branch cannot be evaluated or
+    produces no finite values — caller falls back to a random terminal.
+    """
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        try:
+            out = np.asarray(branch.eval_predict_numpy_now(df_train))
+        except Exception:
+            return None
+
+    if out.shape != (len(df_train),):
+        return None
+
+    if branch.get_xtype_self() is bool or out.dtype == np.bool_:
+        return Boolean(bool(np.mean(out.astype(np.float64)) >= 0.5))
+
+    out = out.astype(np.float64)
+    finite = out[np.isfinite(out)]
+    if finite.size == 0:
+        return None
+    return Number(float(np.mean(finite)))
+
+
 class Candidate:
     """A finalized individual in the genetic programming population.
 
@@ -438,7 +465,7 @@ class Evolution:
 
         self.allow_a_chain = allow_chain
 
-    def evolve_prune_tree(self, _tree: Node, strategy: Optional[str] = None) -> Node:
+    def evolve_prune_tree(self, _tree: Node, strategy: Optional[str] = None, df_train=None) -> Node:
         """Prunes a tree to meet depth and node count constraints.
 
         Strategies (node-count pruning):
@@ -446,9 +473,16 @@ class Evolution:
         - ``"deepest"``: smallest branch at max depth first — keeps the
           shallow structure (and thus semantics) intact as long as possible
 
+        Semantic replacement (I16): when *df_train* is given, a pruned
+        branch is replaced by a constant equal to its **mean output** on
+        the training data (majority vote for bool branches) instead of a
+        random terminal.  P26 benchmark showed the replacement value —
+        not the cut position — dominates the semantic damage.
+
         Args:
             _tree: The tree to prune.
             strategy: Override; defaults to ``self.prune_strategy``.
+            df_train: Optional training DataFrame for semantic replacement.
 
         Returns:
             The pruned tree (modified in place).
@@ -458,7 +492,9 @@ class Evolution:
         for dnode in nodelist:
             if dnode.depth == self.nodes_max and dnode.get_arity() > 0:
                 log("wwww", f"Node in fintree is too deep: {dnode.depth}")
-                new_node = self.node_selector.choose_terminal_node(dnode.get_xtype_self())
+                new_node = semantic_replacement_terminal(dnode, df_train) if df_train is not None else None
+                if new_node is None:
+                    new_node = self.node_selector.choose_terminal_node(dnode.get_xtype_self())
                 new_node.depth = dnode.depth
                 dnode.set_new_node(new_node)
 
@@ -489,7 +525,11 @@ class Evolution:
                 # No branch reaches prune_now: take the largest one instead of crashing
                 victim = random.choice(big_enough) if big_enough else max(nodelist, key=len)
 
-            new_node = self.node_selector.choose_terminal_node(victim.get_xtype_self())
+            new_node = None
+            if df_train is not None:
+                new_node = semantic_replacement_terminal(victim, df_train)
+            if new_node is None:
+                new_node = self.node_selector.choose_terminal_node(victim.get_xtype_self())
             new_node.depth = victim.depth
             victim.set_new_node(new_node)
             prune_amount = len(_tree) - self.nodes_max  # measure the ROOT, not the victim

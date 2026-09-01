@@ -71,7 +71,7 @@ def run_benchmark(n_trees: int, seed: int = 42) -> Dict[str, Any]:
     df, _ = load_mountaincar_train_split(seed=0)
     ev = _make_evolution(NODES_MAX)
 
-    per_strategy: Dict[str, List[Dict[str, float]]] = {"random": [], "deepest": []}
+    per_strategy: Dict[str, List[Dict[str, float]]] = {"random": [], "deepest": [], "semantic": []}
     skipped = 0
 
     attempts = 0
@@ -91,11 +91,15 @@ def run_benchmark(n_trees: int, seed: int = 42) -> Dict[str, Any]:
             continue  # original already broken — no useful comparison
 
         produced += 1
-        for strat in ("random", "deepest"):
+        for strat in ("random", "deepest", "semantic"):
             copy_tree = fast_tree_copy(tree)
             copy_tree.repair_all()
             t0 = time.perf_counter()
-            pruned = ev.evolve_prune_tree(copy_tree, strategy=strat)
+            if strat == "semantic":
+                # I16: random cut position + mean-output replacement
+                pruned = ev.evolve_prune_tree(copy_tree, strategy="random", df_train=df)
+            else:
+                pruned = ev.evolve_prune_tree(copy_tree, strategy=strat)
             elapsed = time.perf_counter() - t0
 
             out = _safe_eval(pruned, df)
@@ -130,21 +134,25 @@ def run_benchmark(n_trees: int, seed: int = 42) -> Dict[str, Any]:
             "n_inf": sum(1 for r in records if not np.isfinite(r["sem_rmse"])),
         }
 
-    # Head-to-head: per tree, which strategy has lower semantic RMSE?
-    wins = {"random": 0, "deepest": 0, "tie": 0}
-    for r_rec, d_rec in zip(per_strategy["random"], per_strategy["deepest"]):
-        if abs(r_rec["sem_rmse"] - d_rec["sem_rmse"]) < 1e-12:
+    # Head-to-head: per tree, which strategy has the lowest semantic RMSE?
+    arms = ("random", "deepest", "semantic")
+    wins = {a: 0 for a in arms}
+    wins["tie"] = 0
+    for recs in zip(*(per_strategy[a] for a in arms)):
+        rmses = [r["sem_rmse"] for r in recs]
+        best = min(rmses)
+        winners = [a for a, r in zip(arms, rmses) if abs(r - best) < 1e-12]
+        if len(winners) > 1:
             wins["tie"] += 1
-        elif d_rec["sem_rmse"] < r_rec["sem_rmse"]:
-            wins["deepest"] += 1
         else:
-            wins["random"] += 1
+            wins[winners[0]] += 1
 
     return {
         "n_trees": produced,
         "skipped_broken": skipped,
         "random": _agg(per_strategy["random"]),
         "deepest": _agg(per_strategy["deepest"]),
+        "semantic": _agg(per_strategy["semantic"]),
         "wins": wins,
     }
 
@@ -156,7 +164,7 @@ def main() -> int:
     args = parser.parse_args()
 
     print("=" * 64)
-    print("P26 BENCHMARK — random vs deepest-first pruning")
+    print("P26/I16 BENCHMARK — random vs deepest vs semantic pruning")
     print("=" * 64)
     print(f"trees={args.trees}  nodes_max={NODES_MAX}  create_depth={CREATE_DEPTH}\n")
 
@@ -164,7 +172,7 @@ def main() -> int:
 
     print(f"trees compared: {result['n_trees']} (skipped broken: {result['skipped_broken']})\n")
     print(f"{'strategy':10s} {'rmse_med':>10s} {'rmse_mean':>10s} {'kept%':>7s} {'size':>6s} {'ms':>6s} {'inf':>4s}")
-    for strat in ("random", "deepest"):
+    for strat in ("random", "deepest", "semantic"):
         a = result[strat]
         print(
             f"{strat:10s} {a['rmse_median']:10.4f} {a['rmse_mean']:10.4f} "
@@ -173,17 +181,20 @@ def main() -> int:
 
     w = result["wins"]
     n = result["n_trees"]
-    print(f"\nhead-to-head (lower semantic RMSE): deepest {w['deepest']} | random {w['random']} | tie {w['tie']}")
+    print(
+        f"\nhead-to-head (lowest semantic RMSE): semantic {w['semantic']} | "
+        f"random {w['random']} | deepest {w['deepest']} | tie {w['tie']}"
+    )
 
     print(f"\n{'=' * 64}")
     print("VERDICT")
     print("=" * 64)
-    if w["deepest"] > n * 0.6:
-        print("deepest-first preserves semantics clearly better -> make it default.")
-    elif w["deepest"] > w["random"]:
-        print("deepest-first mildly better -> keep as opt-in, consider default later.")
+    if w["semantic"] > n * 0.5:
+        print("semantic replacement (I16) wins the majority -> keep df_train wiring.")
+    elif w["semantic"] > max(w["random"], w["deepest"]):
+        print("semantic replacement mildly best -> keep, re-check at larger scale.")
     else:
-        print("random pruning is not worse -> keep random as default (simpler).")
+        print("semantic replacement does NOT help -> reconsider I16 wiring.")
 
     out = Path(__file__).with_name("bench_p26_output.json")
     out.write_text(json.dumps(result, indent=2, default=str), encoding="utf-8")

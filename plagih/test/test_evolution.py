@@ -567,6 +567,88 @@ class TestPruning:
         assert len(pruned) <= evolution_instance.nodes_max
 
 
+class TestSemanticPruning:
+    """I16: pruned branches replaced by their mean output constant."""
+
+    def _df(self):
+        import pandas as pd
+
+        return pd.DataFrame({"a": [1.0, 2.0, 3.0, 4.0], "b": [10.0, 10.0, 10.0, 10.0]})
+
+    def test_semantic_replacement_float_mean(self):
+        import sympy
+
+        from plagih.trees import Add, Number, Symbol
+        from plagih.trees._evolution import semantic_replacement_terminal
+
+        branch = Add(Symbol(sympy.Symbol("a")), Number(1.0))  # outputs 2,3,4,5
+        branch.repair_all()
+
+        term = semantic_replacement_terminal(branch, self._df())
+        assert term is not None
+        assert float(term.get_value()) == pytest.approx(3.5)
+
+    def test_semantic_replacement_bool_majority(self):
+        import sympy
+
+        from plagih.trees import Le, Number, Symbol
+        from plagih.trees._evolution import semantic_replacement_terminal
+        from plagih.trees._nodes import Boolean
+
+        branch = Le(Symbol(sympy.Symbol("a")), Number(3.5))  # True,True,True,False
+        branch.repair_all()
+
+        term = semantic_replacement_terminal(branch, self._df())
+        assert isinstance(term, Boolean)
+        assert bool(term.get_value()) is True
+
+    def test_semantic_replacement_broken_branch_returns_none(self):
+        import sympy
+
+        from plagih.trees import Add, Symbol
+        from plagih.trees._evolution import semantic_replacement_terminal
+
+        branch = Add(Symbol(sympy.Symbol("missing_col")), Symbol(sympy.Symbol("a")))
+        branch.repair_all()
+
+        assert semantic_replacement_terminal(branch, self._df()) is None
+
+    def test_prune_with_df_uses_semantic_value(self, evolution_instance):
+        """Pruned tree evaluates close to original when df_train is given."""
+        import sympy
+
+        from plagih.trees import Add, Number, Symbol
+
+        evolution_instance.nodes_max = 5
+        df = self._df()
+        tree = Symbol(sympy.Symbol("a"))
+        for _ in range(8):
+            tree = Add(tree, Number(1.0))  # a + 8
+        tree.repair_all()
+        base = tree.eval_predict_numpy_now(df).copy()
+
+        pruned = evolution_instance.evolve_prune_tree(tree, df_train=df)
+
+        assert len(pruned) <= evolution_instance.nodes_max
+        out = pruned.eval_predict_numpy_now(df)
+        # Semantic replacement keeps the mean level: means must match closely
+        assert abs(float(np.mean(out)) - float(np.mean(base))) < 1.0
+
+    def test_prune_without_df_still_works(self, evolution_instance):
+        import sympy
+
+        from plagih.trees import Add, Number, Symbol
+
+        evolution_instance.nodes_max = 5
+        tree = Symbol(sympy.Symbol("a"))
+        for _ in range(8):
+            tree = Add(tree, Number(1.0))
+        tree.repair_all()
+
+        pruned = evolution_instance.evolve_prune_tree(tree)  # no df — random fallback
+        assert len(pruned) <= evolution_instance.nodes_max
+
+
 # =============================================================================
 # Node Selector Tests
 # =============================================================================

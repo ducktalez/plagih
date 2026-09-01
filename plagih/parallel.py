@@ -654,7 +654,7 @@ def evaluate_tree_standalone(
 
     # Prepare tree for evaluation
     evotree.force_input_node(evolve)
-    evotree = evolve.evolve_prune_tree(evotree)
+    evotree = evolve.evolve_prune_tree(evotree, df_train=df_train)  # I16: semantic replacement
     evotree.repair_depth()
     tree_id = evotree.canonicalize_and_get_lut_id()  # Fused: canonicalize + LUT key in one traversal
 
@@ -1136,7 +1136,7 @@ def _strategy_chain_mutation(evolve, pop_genepool, paretofront, allow_chain, **p
 
     evotree.repair_all()
     if len(evotree) > evolve.nodes_max:
-        evotree = evolve.evolve_prune_tree(evotree)
+        evotree = evolve.evolve_prune_tree(evotree, df_train=df_train)  # I16: semantic replacement
 
     return evotree
 

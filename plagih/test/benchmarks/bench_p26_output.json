@@ -1,0 +1,37 @@
+{
+  "n_trees": 60,
+  "skipped_broken": 29,
+  "random": {
+    "n": 60,
+    "rmse_median": 18.40008838959185,
+    "rmse_mean": 47057262136208.42,
+    "kept_frac_mean": 0.06984210516794055,
+    "size_after_mean": 5.266666666666667,
+    "ms_mean": 1.1735850401843586,
+    "n_inf": 0
+  },
+  "deepest": {
+    "n": 60,
+    "rmse_median": 16.628801354730328,
+    "rmse_mean": 47057253968131.73,
+    "kept_frac_mean": 0.1530477315936943,
+    "size_after_mean": 11.516666666666667,
+    "ms_mean": 12.44112168593953,
+    "n_inf": 0
+  },
+  "semantic": {
+    "n": 60,
+    "rmse_median": 1.5077959298458434,
+    "rmse_mean": 47033932536216.54,
+    "kept_frac_mean": 0.22937116115878545,
+    "size_after_mean": 4.833333333333333,
+    "ms_mean": 2.161048329435289,
+    "n_inf": 0
+  },
+  "wins": {
+    "random": 4,
+    "deepest": 11,
+    "semantic": 39,
+    "tie": 6
+  }
+}

@@ -1194,7 +1194,7 @@ class ExplainableGP:
         if compare_with_sympy is None:
             compare_with_sympy = _cfg.debug
         evotree.force_input_node(self.evolve)
-        evotree = self.evolve.evolve_prune_tree(evotree)
+        evotree = self.evolve.evolve_prune_tree(evotree, df_train=self.df_train)  # I16
         evotree.repair_depth()
         tree_id = evotree.canonicalize_and_get_lut_id()  # Fused: canonicalize + LUT key in one traversal
 
